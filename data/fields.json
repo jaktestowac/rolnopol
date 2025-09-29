@@ -1,0 +1,124 @@
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "name": "Polana 1231",
+    "area": 12
+  },
+  {
+    "id": 2,
+    "userId": 1,
+    "name": "Ubytek",
+    "area": 12
+  },
+  {
+    "id": 3,
+    "userId": 1,
+    "name": "Polanica",
+    "area": 12
+  },
+  {
+    "id": 4,
+    "userId": 1,
+    "name": "Konopka",
+    "area": 111
+  },
+  {
+    "id": 5,
+    "userId": 1,
+    "name": "Słonecznik",
+    "area": 15
+  },
+  {
+    "id": 6,
+    "userId": 1,
+    "name": "Sad",
+    "area": 101
+  },
+  {
+    "id": 7,
+    "userId": 1,
+    "name": "Słoneczna Polana",
+    "area": 112
+  },
+  {
+    "id": 8,
+    "userId": 1,
+    "name": "Nad Strumykiem",
+    "area": 113
+  },
+  {
+    "id": 9,
+    "userId": 2,
+    "name": "Dąb",
+    "area": 12
+  },
+  {
+    "id": 10,
+    "userId": 1,
+    "name": "Pańszczyzna",
+    "area": 12
+  },
+  {
+    "id": 11,
+    "userId": 3,
+    "name": "Moje Pole 3",
+    "area": 123
+  },
+  {
+    "id": 12,
+    "userId": 1,
+    "name": "Moje Pole 4",
+    "area": 123
+  },
+  {
+    "userId": 1,
+    "name": "Moje Pole 5",
+    "area": 132,
+    "id": 13
+  },
+  { "id": 14, "userId": 2, "name": "Green Meadow", "area": 120, "district": "powiat sławieński" },
+  { "id": 15, "userId": 2, "name": "Sunny Acres", "area": 45, "district": "powiat sławieński" },
+  { "id": 16, "userId": 2, "name": "Doe's Field", "area": 130, "district": "powiat sztumski" },
+  { "id": 17, "userId": 3, "name": "Riverbank", "area": 128, "district": "powiat sztumski" },
+  { "id": 18, "userId": 4, "name": "Smith's Patch", "area": 22, "district": "powiat sztumski" },
+  { "id": 19, "userId": 4, "name": "Golden Plain", "area": 227, "district": "powiat Poznań" },
+  { "id": 20, "userId": 5, "name": "Dev Field", "area": 19, "district": "powiat łaski" },
+  { "id": 21, "userId": 3, "name": "Innovation Acres", "area": 23, "district": "powiat ostrowiecki" },
+  { "id": 22, "userId": 2, "name": "Willow Grove", "area": 28, "district": "powiat sławieński" },
+  { "id": 23, "userId": 3, "name": "Maple Ridge", "area": 35, "district": "powiat ostrowiecki" },
+  { "id": 24, "userId": 5, "name": "Sunset Valley", "area": 240, "district": "powiat sławieński" },
+  { "id": 25, "userId": 4, "name": "Birch Pasture", "area": 122, "district": "powiat sławieński" },
+  { "id": 26, "userId": 2, "name": "Cedar Hill", "area": 331, "district": "powiat sławieński" },
+  { "id": 27, "userId": 6, "name": "Research Field Alpha", "area": 150, "district": "powiat łaski" },
+  { "id": 28, "userId": 6, "name": "Research Field Beta", "area": 275, "district": "powiat łaski" },
+  { "id": 29, "userId": 6, "name": "Research Orchard Delta", "area": 120, "district": "powiat łaski" },
+  { "id": 30, "userId": 6, "name": "Research Field Gamma", "area": 160, "district": "powiat łaski" },
+  { "id": 31, "userId": 6, "name": "Research Meadow", "area": 100, "district": "powiat łaski" },
+  { "id": 32, "userId": 6, "name": "Experimental Plot Delta", "area": 80, "district": "powiat sieradzki" },
+  { "id": 33, "userId": 6, "name": "Solar Field", "area": 350, "district": "powiat częstochowski" },
+  {
+    "id": 34,
+    "userId": 7,
+    "name": "AI Research Lab",
+    "area": 750,
+    "protected": true,
+    "district": "powiat płocki"
+  },
+  {
+    "id": 35,
+    "userId": 7,
+    "name": "AI Research Center",
+    "area": 1000,
+    "protected": true,
+    "district": "powiat płoński"
+  },
+  {
+    "id": 36,
+    "userId": 7,
+    "name": "AI Research Center",
+    "area": 500,
+    "protected": true,
+    "district": "powiat brzeziński"
+  }
+]

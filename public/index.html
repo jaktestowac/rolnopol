@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rolnopol</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    /* Custom tooltip styles for statistics */
+    .stat-block {
+      position: relative;
+      cursor: help;
+    }
+
+    .stat-block:hover {
+      z-index: 99998;
+    }
+
+    .stat-block:hover::after {
+      content: attr(title);
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      width: max-content;
+      max-width: 300px;
+      min-width: 200px;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 0.8rem 1rem;
+      border-radius: 0.6rem;
+      font-size: 0.85rem;
+      white-space: normal;
+      line-height: 1.4;
+      z-index: 99999;
+      margin-top: 0.3rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .stat-block:hover::before {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 8px solid transparent;
+      border-bottom-color: rgba(0, 0, 0, 0.9);
+      margin-top: -0.3rem;
+      z-index: 99999;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body class="bg-agri-pattern">
+  <!-- Dynamic Header Component -->
+  <div id="header-component"></div>
+
+  <div class="container" style="margin-top: 1rem; max-width: 900px">
+    <header class="header glass" style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 1.2rem 0 1.2rem 0;
+          margin-bottom: 1.2rem;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+          border-radius: 1.2rem 1.2rem 0 0;
+        ">
+      <div style="
+            display: flex;
+            align-items: center;
+            gap: 1.1rem;
+            width: 100%;
+            justify-content: center;
+          ">
+        <h1 style="
+              display: flex;
+              align-items: center;
+              gap: 0.6rem;
+              font-size: 2rem;
+            ">
+          <span class="bg-agri-gradient"><i class="fas fa-tractor"></i></span>
+        </h1>
+        <div style="
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+            ">
+          <span class="main-title">Rolnopol</span>
+          <span style="
+                font-size: 1.08rem;
+                color: #6a7b5e;
+                font-weight: 400;
+                margin-top: 0.1rem;
+              ">Futuristic Farm & Resource Management</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main" style="padding-top: 0">
+      <div class="welcome-section bg-futuristic-alt glass fade-in farm-pattern-overlay" style="
+            margin-bottom: 1.2rem;
+            padding: 1.5rem 1.2rem;
+            min-height: unset;
+          ">
+        <h2 style="
+              display: flex;
+              align-items: center;
+              gap: 0.4rem;
+              font-size: 1.3rem;
+              margin-bottom: 0.2rem;
+              font-weight: 500;
+              justify-content: center;
+            ">
+          <i class="fas fa-seedling"></i>
+          Welcome to Rolnopol
+        </h2>
+        <p style="font-size: 1rem; margin: 0">
+          Manage your farms, resources, and transactions in a secure, modern
+          environment. Empowering staff, admins, and superadmins for the
+          future of agriculture.
+        </p>
+      </div>
+
+      <!-- Enhanced General Statistics Section -->
+      <div id="general-stats" class="glass futuristic-card" style="
+            margin-bottom: 1.2rem;
+            padding: 1rem 0.8rem;
+            position: relative;
+            overflow: visible;
+          ">
+        <div style="
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              height: 3px;
+              background: linear-gradient(90deg, #6a7b5e, #8ba888, #6a7b5e);
+            "></div>
+
+        <div style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+              gap: 0.8rem;
+              align-items: center;
+            ">
+          <div class="stat-block" style="
+                text-align: center;
+                padding: 0.7rem;
+                border-radius: 0.6rem;
+                background: rgba(106, 123, 94, 0.05);
+                transition: transform 0.2s ease;
+              " title="Total number of registered users in the Rolnopol agricultural management system">
+            <div style="font-size: 2rem; color: #6a7b5e; margin-bottom: 0.3rem; display: flex; align-items: center; flex-direction: row;">
+              <i class="fas fa-users"></i>
+            </div>
+            <div id="stat-users" style="
+                  font-size: 1.4rem;
+                  font-weight: 700;
+                  color: #2d3a2d;
+                  margin-bottom: 0.2rem;
+                ">
+              -
+            </div>
+            <div style="font-size: 0.9rem; color: #6a7b5e; font-weight: 500">
+              Active Users
+            </div>
+            <div style="font-size: 0.75rem; color: #888; margin-top: 0.1rem">
+              Growing Community
+              <i class="fas fa-info-circle" style="font-size: 0.6rem; margin-left: 0.2rem; opacity: 0.6"></i>
+            </div>
+          </div>
+
+          <div class="stat-block" style="
+                text-align: center;
+                padding: 0.7rem;
+                border-radius: 0.6rem;
+                background: rgba(106, 123, 94, 0.05);
+                transition: transform 0.2s ease;
+              " title="Total number of farms and agricultural properties managed through the platform">
+            <div style="font-size: 2rem; color: #6a7b5e; margin-bottom: 0.3rem">
+              <i class="fas fa-tractor"></i>
+            </div>
+            <div id="stat-farms" style="
+                  font-size: 1.4rem;
+                  font-weight: 700;
+                  color: #2d3a2d;
+                  margin-bottom: 0.2rem;
+                ">
+              -
+            </div>
+            <div style="font-size: 0.9rem; color: #6a7b5e; font-weight: 500">
+              Managed Farms
+            </div>
+            <div style="font-size: 0.75rem; color: #888; margin-top: 0.1rem">
+              Digital Agriculture
+              <i class="fas fa-info-circle" style="font-size: 0.6rem; margin-left: 0.2rem; opacity: 0.6"></i>
+            </div>
+          </div>
+
+          <div class="stat-block" style="
+                text-align: center;
+                padding: 0.7rem;
+                border-radius: 0.6rem;
+                background: rgba(106, 123, 94, 0.05);
+                transition: transform 0.2s ease;
+              " title="Total agricultural land area managed across all farms in hectares and acres">
+            <div style="font-size: 2rem; color: #6a7b5e; margin-bottom: 0.3rem">
+              <i class="fas fa-ruler-combined"></i>
+            </div>
+            <div id="stat-area" style="
+                  font-size: 1.4rem;
+                  font-weight: 700;
+                  color: #2d3a2d;
+                  margin-bottom: 0.2rem;
+                ">
+              -
+            </div>
+            <div style="font-size: 0.9rem; color: #6a7b5e; font-weight: 500">
+              Total Area (ha)
+            </div>
+            <div style="font-size: 0.75rem; color: #888; margin-top: 0.1rem">
+              Land Management
+              <i class="fas fa-info-circle" style="font-size: 0.6rem; margin-left: 0.2rem; opacity: 0.6"></i>
+            </div>
+          </div>
+
+          <div class="stat-block" style="
+                text-align: center;
+                padding: 0.7rem;
+                border-radius: 0.6rem;
+                background: rgba(106, 123, 94, 0.05);
+                transition: transform 0.2s ease;
+              " title="Total number of staff members and workers employed across all agricultural operations">
+            <div style="font-size: 2rem; color: #6a7b5e; margin-bottom: 0.3rem">
+              <i class="fas fa-users-cog"></i>
+            </div>
+            <div id="stat-staff" style="
+                  font-size: 1.4rem;
+                  font-weight: 700;
+                  color: #2d3a2d;
+                  margin-bottom: 0.2rem;
+                ">
+              -
+            </div>
+            <div style="font-size: 0.9rem; color: #6a7b5e; font-weight: 500">
+              Total Staff
+            </div>
+            <div style="font-size: 0.75rem; color: #888; margin-top: 0.1rem">
+              Team Management
+              <i class="fas fa-info-circle" style="font-size: 0.6rem; margin-left: 0.2rem; opacity: 0.6"></i>
+            </div>
+          </div>
+
+          <div class="stat-block" style="
+                text-align: center;
+                padding: 0.7rem;
+                border-radius: 0.6rem;
+                background: rgba(106, 123, 94, 0.05);
+                transition: transform 0.2s ease;
+              " title="Total number of livestock animals including cattle, pigs, chickens, and other farm animals">
+            <div style="font-size: 2rem; color: #6a7b5e; margin-bottom: 0.3rem">
+              <i class="fas fa-cow"></i>
+            </div>
+            <div id="stat-animals" style="
+                  font-size: 1.4rem;
+                  font-weight: 700;
+                  color: #2d3a2d;
+                  margin-bottom: 0.2rem;
+                ">
+              -
+            </div>
+            <div style="font-size: 0.9rem; color: #6a7b5e; font-weight: 500">
+              Stock Animals
+            </div>
+            <div style="font-size: 0.75rem; color: #888; margin-top: 0.1rem">
+              Livestock Count
+              <i class="fas fa-info-circle" style="font-size: 0.6rem; margin-left: 0.2rem; opacity: 0.6"></i>
+            </div>
+          </div>
+        </div>
+
+        <div style="
+              text-align: center;
+              margin-top: 1.5rem;
+              padding-top: 1rem;
+              border-top: 1px solid rgba(106, 123, 94, 0.1);
+            ">
+          <p style="font-size: 0.95rem; color: #6a7b5e; margin: 0 0 1rem 0">
+            <i class="fas fa-info-circle" style="margin-right: 0.5rem"></i>
+            Join thousands of farmers already using Rolnopol to modernize
+            their operations
+          </p>
+          <div id="staff-info" style="
+                display: none;
+                font-size: 0.85rem;
+                color: #888;
+                margin-bottom: 1rem;
+              ">
+
+          </div>
+          <div id="cta-section" style="display: none">
+            <div style="
+                  display: flex;
+                  gap: 1rem;
+                  justify-content: center;
+                  flex-wrap: wrap;
+                ">
+              <a href="/register.html" class="btn btn-agri" style="
+                    padding: 0.8rem 1.5rem;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    text-decoration: none;
+                    border-radius: 0.8rem;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 15px rgba(106, 123, 94, 0.2);
+                  ">
+                <i class="fas fa-user-plus" style="margin-right: 0.5rem"></i>
+                Get Started Free
+              </a>
+              <a href="/login.html" class="btn" style="
+                    padding: 0.8rem 1.5rem;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    text-decoration: none;
+                    border-radius: 0.8rem;
+                    background: rgba(106, 123, 94, 0.1);
+                    color: #6a7b5e;
+                    transition: all 0.3s ease;
+                  ">
+                <i class="fas fa-sign-in-alt" style="margin-right: 0.5rem"></i>
+                Sign In
+              </a>
+            </div>
+            <p style="
+                  font-size: 0.85rem;
+                  color: #888;
+                  margin-top: 0.8rem;
+                  margin-bottom: 0;
+                ">
+              <i class="fas fa-clock" style="margin-right: 0.3rem"></i>
+              Setup takes less than 2 minutes
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Dynamic Footer Component -->
+    <div id="footer-component"></div>
+  </div>
+
+  <!-- Core Dependencies -->
+  <script src="/js/core/event-bus.js"></script>
+  <script src="/js/core/storage.js"></script>
+  <script src="/js/core/app.js"></script>
+  <!-- Services -->
+  <script src="/js/services/api-service.js"></script>
+  <script src="/js/services/auth-service.js"></script>
+
+  <!-- Components -->
+  <script src="/js/components/notification.js"></script>
+  <script src="/js/components/navigation.js"></script>
+  <script src="/js/components/form.js"></script>
+  <script src="/js/components.js"></script>
+
+  <!-- API Functions -->
+  <script src="/js/api.js"></script>
+
+  <!-- Utilities -->
+  <script src="/js/utils/error-logger.js"></script>
+  <script src="/js/utils/utils.js"></script>
+  <script src="/js/utils/router.js"></script>
+  <script src="/js/utils/global-compat.js"></script>
+
+  <!-- Main Application -->
+  <script src="/js/app.js"></script>
+  <script>
+    // Global logout function
+    function logout() {
+      if (window.App && window.App.getModule("authService")) {
+        const authService = window.App.getModule("authService");
+        authService
+          .logout()
+          .then(() => {
+            window.location.reload();
+          })
+          .catch((error) => {
+            errorLogger.log("Logout", error, { showToUser: false });
+            window.location.reload();
+          });
+      } else {
+        // Fallback logout
+        localStorage.removeItem("authToken");
+        sessionStorage.removeItem("authToken");
+        window.location.reload();
+      }
+    }
+
+    // Initialize navigation after DOM is loaded
+    document.addEventListener("DOMContentLoaded", async function () {
+      // Load the header component
+      const headerElement = document.getElementById("header-component");
+      if (headerElement) {
+        try {
+          const response = await fetch("/components/header.html");
+          const html = await response.text();
+          headerElement.innerHTML = html;
+
+          // Initialize navigation after header is loaded
+          if (typeof updateHeaderNav === "function") {
+            // Check authentication status using standardized cookie names
+            const token = getCookie("rolnopolToken");
+            const isLogged = getCookie("rolnopolIsLogged");
+            const username = getCookie("rolnopolUserLabel") || getCookie("rolnopolUsername");
+            if (token && (isLogged === "true" || isLogged === true)) {
+              try {
+                const userData = await getUserInfo();
+                updateHeaderNav(
+                  userData.displayedName ||
+                  userData.email ||
+                  username ||
+                  "User",
+                );
+              } catch (error) {
+                errorLogger.log("User Info Loading", error, {
+                  showToUser: false,
+                });
+                updateHeaderNav(username || "User");
+              }
+            } else {
+              updateHeaderNav();
+            }
+
+            // Set active navigation link for home page
+            // setActiveNavLink('home'); // This line is now handled by initNavigation
+          }
+        } catch (error) {
+          errorLogger.log("Header Component Loading", error, {
+            showToUser: false,
+          });
+        }
+      }
+
+      // Load the footer component
+      if (typeof initFooter === "function") {
+        await initFooter();
+      }
+    });
+  </script>
+  <script>
+    // Dashboard dynamic info loader
+    document.addEventListener("DOMContentLoaded", async function () {
+      // User info summary
+      const recentActivityDiv = document.getElementById("recent-activity");
+      let userData = null;
+      let isLogged = false;
+      let role = "Guest";
+      let group = "-";
+      let balance = "-";
+
+      // Try to get user info if logged in
+      try {
+        if (window.App && window.App.getModule("authService")) {
+          const authService = window.App.getModule("authService");
+          isLogged = await authService.isAuthenticated();
+          if (isLogged) {
+            userData = await authService.getCurrentUser();
+            role = userData.role || userData.userRole || "User";
+            group = userData.groupName || userData.group || "-";
+            balance =
+              typeof userData.balance !== "undefined"
+                ? userData.balance + " ₡"
+                : "-";
+          }
+        }
+      } catch (e) {
+        // fallback to guest
+      }
+
+      // Update dashboard links if pages exist
+      const links = [
+        { selector: ".dashboard-card .btn.btn-agri", href: "/farms.html" },
+        { selector: ".dashboard-card .btn.btn-earth", href: "/group.html" },
+        {
+          selector: ".dashboard-card .btn.btn-futuristic",
+          href: "/marketplace.html",
+        },
+        { selector: ".dashboard-card .btn.btn-agri", href: "/shop.html" },
+        { selector: ".dashboard-card .btn.btn-earth", href: "/finance.html" },
+        {
+          selector: ".dashboard-card .btn.btn-futuristic",
+          href: "/admin.html",
+        },
+      ];
+      // Only update if those pages exist, otherwise leave as #
+      links.forEach((link, i) => {
+        const btns = document.querySelectorAll(link.selector);
+        if (btns[i]) btns[i].setAttribute("href", link.href);
+      });
+    });
+  </script>
+  <script>
+    // Header auth links dynamic loader
+    document.addEventListener("DOMContentLoaded", async function () {
+      const authLinks = document.getElementById("header-auth-links");
+      let isLogged = false;
+      let userData = null;
+      try {
+        if (window.App && window.App.getModule("authService")) {
+          const authService = window.App.getModule("authService");
+          isLogged = await authService.isAuthenticated();
+          if (isLogged) {
+            userData = await authService.getCurrentUser();
+          }
+        }
+      } catch (e) { }
+      if (authLinks) {
+        if (isLogged) {
+          authLinks.innerHTML = `
+                        <a href="/profile.html" class="nav-link" style="font-size:1.05rem;padding:0.4rem 1.1rem;border-radius:0.7rem;text-decoration:none;color:#2d3a2d;font-weight:500;"><i class='fas fa-user'></i> ${(userData && (userData.displayedName || userData.email)) || "Profile"}</a>
+                        <a href="#" onclick="logout();return false;" class="nav-link" style="font-size:1.05rem;padding:0.4rem 1.1rem;border-radius:0.7rem;text-decoration:none;color:#b23b3b;font-weight:500;"><i class='fas fa-sign-out-alt'></i> Logout</a>
+                    `;
+        } else {
+          authLinks.innerHTML = `
+                        <a href="/login.html" class="nav-link" style="font-size:1.05rem;padding:0.4rem 1.1rem;border-radius:0.7rem;text-decoration:none;color:#2d3a2d;font-weight:500;">Login</a>
+                        <a href="/register.html" class="nav-link" style="font-size:1.05rem;padding:0.4rem 1.1rem;border-radius:0.7rem;text-decoration:none;color:#2d3a2d;font-weight:500;">Register</a>
+                    `;
+        }
+      }
+    });
+  </script>
+  <script>
+    // Enhanced general statistics loader with animations
+    document.addEventListener("DOMContentLoaded", async function () {
+      // Add hover effects to stat blocks
+      const statBlocks = document.querySelectorAll(".stat-block");
+      statBlocks.forEach((block) => {
+        block.addEventListener("mouseenter", function () {
+          this.style.transform = "translateY(-5px)";
+          this.style.boxShadow = "0 8px 25px rgba(106,123,94,0.15)";
+        });
+        block.addEventListener("mouseleave", function () {
+          this.style.transform = "translateY(0)";
+          this.style.boxShadow = "none";
+        });
+      });
+
+      // Check if user is logged in and show/hide CTA accordingly
+      let isLoggedIn = false;
+      try {
+        if (window.App && window.App.getModule("authService")) {
+          const authService = window.App.getModule("authService");
+          isLoggedIn = await authService.isAuthenticated();
+        } else {
+          // Fallback check
+          const token = getCookie("rolnopolToken");
+          const isLogged = getCookie("rolnopolIsLogged");
+          isLoggedIn = token && (isLogged === "true" || isLogged === true);
+        }
+      } catch (e) {
+        isLoggedIn = false;
+      }
+
+      // Show CTA section for non-logged-in users
+      const ctaSection = document.getElementById("cta-section");
+      if (ctaSection && !isLoggedIn) {
+        ctaSection.style.display = "block";
+        // Add fade-in animation
+        ctaSection.style.opacity = "0";
+        ctaSection.style.transform = "translateY(20px)";
+        ctaSection.style.transition = "all 0.6s ease";
+        setTimeout(() => {
+          ctaSection.style.opacity = "1";
+          ctaSection.style.transform = "translateY(0)";
+        }, 500);
+      }
+
+      // Helper functions for statistics animation and formatting
+      // Animate statistics loading with formatting and tooltips
+      const animateValue = (
+        element,
+        start,
+        end,
+        duration,
+        isArea = false,
+        type = "",
+      ) => {
+        const startTime = performance.now();
+
+        // Add tooltip with full value and context
+        const fullValue = isArea
+          ? formatFullArea(end)
+          : formatFullNumber(end, type);
+        element.title = fullValue;
+
+        const updateValue = (currentTime) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const current = Math.floor(start + (end - start) * progress);
+          element.textContent = isArea
+            ? formatArea(current)
+            : formatNumber(current);
+
+          if (progress < 1) {
+            requestAnimationFrame(updateValue);
+          }
+        };
+        requestAnimationFrame(updateValue);
+      };
+
+      // Safe value converter and formatter for frontend
+      const safeValue = (value) => {
+        const num = parseInt(value);
+        if (isNaN(num) || num < 0) {
+          return Math.floor(Math.random() * 100) + 10;
+        }
+        return num;
+      };
+
+      // Format large numbers with K, M, G, T, P, E suffixes using Polish locale
+      const formatNumber = (num) => {
+        if (num >= 1000000000000000000) {
+          // Quintillion
+          return (
+            (num / 1000000000000000000).toLocaleString("pl-PL", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }) + "E"
+          );
+        } else if (num >= 1000000000000000) {
+          // Quadrillion
+          return (
+            (num / 1000000000000000).toLocaleString("pl-PL", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }) + "P"
+          );
+        } else if (num >= 1000000000000) {
+          // Trillion
+          return (
+            (num / 1000000000000).toLocaleString("pl-PL", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }) + "T"
+          );
+        } else if (num >= 1000000000) {
+          // Billion
+          return (
+            (num / 1000000000).toLocaleString("pl-PL", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }) + "G"
+          );
+        } else if (num >= 1000000) {
+          // Million
+          return (
+            (num / 1000000).toLocaleString("pl-PL", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }) + "M"
+          );
+        } else if (num >= 1000) {
+          // Thousand
+          return (
+            (num / 1000).toLocaleString("pl-PL", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }) + "K"
+          );
+        }
+        return num.toLocaleString("pl-PL");
+      };
+
+      // Format area with appropriate units using Polish locale
+      const formatArea = (num) => {
+        if (num >= 1000000) {
+          // Million hectares
+          return (
+            (num / 1000000).toLocaleString("pl-PL", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }) + "M ha"
+          );
+        } else if (num >= 1000) {
+          // Thousand hectares
+          return (
+            (num / 1000).toLocaleString("pl-PL", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }) + "K ha"
+          );
+        } else if (num >= 1) {
+          // Hectares
+          return (
+            num.toLocaleString("pl-PL", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            }) + " ha"
+          );
+        } else if (num >= 0.01) {
+          // Centihectares (100 m²)
+          return (
+            (num * 100).toLocaleString("pl-PL", {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }) + " m²"
+          );
+        } else {
+          // Square meters
+          return (
+            (num * 10000).toLocaleString("pl-PL", {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }) + " m²"
+          );
+        }
+      };
+
+      // Format full number with Polish locale and context for tooltip
+      const formatFullNumber = (num, type) => {
+        const formatted = num.toLocaleString("pl-PL");
+        switch (type) {
+          case "users":
+            return `${formatted} registered users across all farms`;
+          case "farms":
+            return `${formatted} managed farms and agricultural properties`;
+          case "staff":
+            return `${formatted} staff members working in agriculture`;
+          case "animals":
+            return `${formatted} livestock animals across all farms`;
+          default:
+            return formatted;
+        }
+      };
+
+      // Format full area with detailed context for tooltip using Polish locale
+      const formatFullArea = (num) => {
+        if (num >= 1) {
+          const hectares = num.toLocaleString("pl-PL");
+          const acres = Math.round(num * 2.471).toLocaleString("pl-PL");
+          return `${hectares} hectares (${acres} acres) of agricultural land`;
+        } else {
+          const sqMeters = (num * 10000).toLocaleString("pl-PL");
+          const sqFeet = Math.round(num * 10000 * 10.764).toLocaleString(
+            "pl-PL",
+          );
+          return `${sqMeters} square meters (${sqFeet} sq ft) of land`;
+        }
+      };
+
+      // Load statistics with animation
+      try {
+        const res = await fetch("/api/v1/statistics");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const stats = await res.json();
+
+        // Animate each statistic with safe values and formatting
+        const usersElement = document.getElementById("stat-users");
+        const farmsElement = document.getElementById("stat-farms");
+        const areaElement = document.getElementById("stat-area");
+        const staffElement = document.getElementById("stat-staff");
+        const animalsElement = document.getElementById("stat-animals");
+
+        if (usersElement && stats.users !== undefined) {
+          const safeUsers = safeValue(stats.users);
+          animateValue(usersElement, 0, safeUsers, 1500, false, "users");
+        }
+        if (farmsElement && stats.farms !== undefined) {
+          const safeFarms = safeValue(stats.farms);
+          animateValue(farmsElement, 0, safeFarms, 1500, false, "farms");
+        }
+        if (areaElement && stats.area !== undefined) {
+          const safeArea = safeValue(stats.area);
+          animateValue(areaElement, 0, safeArea, 1500, true); // true for area formatting
+        }
+        if (staffElement && stats.staff !== undefined) {
+          const safeStaff = safeValue(stats.staff);
+          animateValue(staffElement, 0, safeStaff, 1500, false, "staff");
+        }
+        if (animalsElement && stats.animals !== undefined) {
+          const safeAnimals = safeValue(stats.animals);
+          animateValue(
+            animalsElement,
+            0,
+            safeAnimals,
+            1500,
+            false,
+            "animals",
+          );
+        }
+
+        // Show staff info if available with safe values
+        const staffInfoElement = document.getElementById("staff-info");
+        if (
+          staffInfoElement
+        ) {
+          staffInfoElement.style.display = "block";
+          // Add fade-in animation
+          staffInfoElement.style.opacity = "0";
+          staffInfoElement.style.transition = "opacity 0.6s ease";
+          setTimeout(() => {
+            staffInfoElement.style.opacity = "1";
+          }, 2000);
+          // Display one random info about stats
+          // Calculate contextual stats
+          const users = safeValue(stats.users);
+          const farms = safeValue(stats.farms);
+          const area = safeValue(stats.area);
+          const staff = safeValue(stats.staff);
+          const animals = safeValue(stats.animals);
+          const avgStaffAge = safeValue(stats.avgStaffAge);
+          const safeAvgAge = safeValue(stats.avgStaffAge);
+
+          // Calculated facts
+          const avgAreaPerFarm = farms > 0 ? (area / farms).toFixed(2) : '-';
+          const avgAnimalsPerFarm = farms > 0 ? Math.round(animals / farms) : '-';
+          const avgStaffPerFarm = farms > 0 ? Math.round(staff / farms) : '-';
+          const avgAnimalsPerStaff = staff > 0 ? Math.round(animals / staff) : '-';
+
+          const statFacts = [
+            `Each farm manages on average ${avgAreaPerFarm} hectares of land.`,
+            `There are about ${avgAnimalsPerFarm} animals per farm.`,
+            `Each staff member cares for about ${avgAnimalsPerStaff} animals.`,
+            `Average staff per farm: ${avgStaffPerFarm}.`,
+            `Average staff age: ${avgStaffAge} years.`
+          ];
+          const randomFact = statFacts[Math.floor(Math.random() * statFacts.length)];
+          const factSpan = document.createElement('span');
+          factSpan.style.display = 'block';
+          factSpan.style.marginTop = '0.4rem';
+          factSpan.style.fontSize = '0.85rem';
+          factSpan.style.color = '#6a7b5e';
+          factSpan.textContent = randomFact;
+          const icon = document.createElement('i');
+          icon.className = 'fas fa-leaf';
+          icon.style.marginRight = '0.3rem';
+          // append at beginning
+          factSpan.prepend(icon);
+          staffInfoElement.appendChild(factSpan);
+        }
+      } catch (e) {
+        // Fallback values with animation
+        const elements = [
+          { id: "stat-users", isArea: false, type: "users" },
+          { id: "stat-farms", isArea: false, type: "farms" },
+          { id: "stat-area", isArea: true, type: "" },
+          { id: "stat-staff", isArea: false, type: "staff" },
+          { id: "stat-animals", isArea: false, type: "animals" },
+        ];
+        elements.forEach((item) => {
+          const element = document.getElementById(item.id);
+          if (element) {
+            const fallbackValue = Math.floor(Math.random() * 50) + 10;
+            animateValue(
+              element,
+              0,
+              fallbackValue,
+              1000,
+              item.isArea,
+              item.type,
+            );
+          }
+        });
+      }
+    });
+  </script>
+
+  <!-- Load necessary JavaScript files -->
+  <script src="/js/app.js"></script>
+  <script src="/js/utils/init-navigation.js"></script>
+
+  <script>
+    initNavigation("home");
+  </script>
+</body>
+
+</html>

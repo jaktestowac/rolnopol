@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 Not Found Stats - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+    />
+  </head>
+
+  <body>
+    <div class="section">
+      <div class="section-header">
+        <h2><i class="fas fa-bug"></i> 404 Not Found Stats</h2>
+        <button
+          id="refreshNotFoundBtn"
+          class="btn-enhanced btn-primary-enhanced"
+        >
+          <span class="spinner-enhanced hidden"></span>
+          <i class="fas fa-sync-alt btn-icon"></i>
+          Refresh
+        </button>
+      </div>
+      <div class="stats-section">
+        <h3>HTML 404s</h3>
+        <div id="htmlStats"></div>
+      </div>
+      <div class="stats-section">
+        <h3>API 404s</h3>
+        <div id="apiStats"></div>
+      </div>
+    </div>
+    <script src="../js/kraken-utils.js"></script>
+    <script>
+      async function fetchStats() {
+        const btn = document.getElementById("refreshNotFoundBtn");
+        btn.disabled = true;
+        btn.querySelector(".spinner-enhanced").classList.remove("hidden");
+        try {
+          const res = await fetch("/api/notfound-stats");
+          const data = await res.json();
+          renderStats("htmlStats", data.html);
+          renderStats("apiStats", data.api);
+        } finally {
+          btn.disabled = false;
+          btn.querySelector(".spinner-enhanced").classList.add("hidden");
+        }
+      }
+      function renderStats(containerId, stats) {
+        const container = document.getElementById(containerId);
+        let html = `<p><strong>Total:</strong> ${stats.total}</p>`;
+        if (stats.paths && Object.keys(stats.paths).length > 0) {
+          html +=
+            '<div class="table-container"><table class="table-enhanced"><thead><tr><th>Path</th><th>Hits</th></tr></thead><tbody>';
+          Object.entries(stats.paths).forEach(([path, hits]) => {
+            html += `<tr><td class="path">${path}</td><td>${hits}</td></tr>`;
+          });
+          html += "</tbody></table></div>";
+        } else {
+          html += "<p>No 404s recorded.</p>";
+        }
+        container.innerHTML = html;
+      }
+      document.getElementById("refreshNotFoundBtn").onclick = fetchStats;
+      window.addEventListener("DOMContentLoaded", fetchStats);
+    </script>
+    <style>
+      .stats-section {
+        margin-bottom: 2rem;
+      }
+
+      .path {
+        font-family: monospace;
+        color: var(--color-accent, #0074d9);
+      }
+    </style>
+  </body>
+</html>

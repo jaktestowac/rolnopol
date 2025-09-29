@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resources - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="resources-section">
+      <div class="resources-header">
+        <h2 class="resources-title">
+          <i class="fas fa-database"></i> Resource Management
+        </h2>
+        <div class="resources-actions">
+          <button
+            id="refreshResourcesBtn"
+            class="btn-enhanced btn-primary-enhanced"
+          >
+            <span class="spinner-enhanced hidden"></span>
+            <i class="fas fa-sync-alt btn-icon"></i>
+            Refresh All
+          </button>
+        </div>
+      </div>
+
+      <!-- Resource Statistics -->
+      <div class="stats-grid" id="resourceStats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-map"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalFields">-</div>
+            <div class="stat-label">Total Fields</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon active">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalStaff">-</div>
+            <div class="stat-label">Total Staff</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-cow"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalAnimals">-</div>
+            <div class="stat-label">Total Animals</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-user-farm"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="activeUsers">-</div>
+            <div class="stat-label">Active Users</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resource Tabs -->
+      <div class="resource-tabs">
+        <button class="resource-tab-button active" data-resource="fields">
+          <i class="fas fa-map"></i>
+          Fields
+        </button>
+        <button class="resource-tab-button" data-resource="staff">
+          <i class="fas fa-users"></i>
+          Staff
+        </button>
+        <button class="resource-tab-button" data-resource="animals">
+          <i class="fas fa-cow"></i>
+          Animals
+        </button>
+      </div>
+
+      <!-- Fields Table -->
+      <div
+        id="fieldsTableContainer"
+        class="table-container resource-table active"
+      >
+        <table class="table-enhanced" id="fieldsTable">
+          <thead>
+            <tr>
+              <th><i class="fas fa-id-badge"></i> ID</th>
+              <th><i class="fas fa-user"></i> Owner</th>
+              <th><i class="fas fa-map-marker-alt"></i> Field Name</th>
+              <th><i class="fas fa-ruler-combined"></i> Area (ha)</th>
+              <th><i class="fas fa-calendar"></i> Created</th>
+            </tr>
+          </thead>
+          <tbody id="fieldsTableBody">
+            <tr>
+              <td colspan="5" class="text-center loading-enhanced">
+                <span class="spinner-enhanced"></span>
+                Loading fields...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Staff Table -->
+      <div
+        id="staffTableContainer"
+        class="table-container resource-table"
+        style="display: none"
+      >
+        <table class="table-enhanced" id="staffTable">
+          <thead>
+            <tr>
+              <th><i class="fas fa-id-badge"></i> ID</th>
+              <th><i class="fas fa-user"></i> Owner</th>
+              <th><i class="fas fa-user-circle"></i> Name</th>
+              <th><i class="fas fa-user-circle"></i> Surname</th>
+              <th><i class="fas fa-birthday-cake"></i> Age</th>
+              <th><i class="fas fa-calendar"></i> Created</th>
+            </tr>
+          </thead>
+          <tbody id="staffTableBody">
+            <tr>
+              <td colspan="6" class="text-center loading-enhanced">
+                <span class="spinner-enhanced"></span>
+                Loading staff...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Animals Table -->
+      <div
+        id="animalsTableContainer"
+        class="table-container resource-table"
+        style="display: none"
+      >
+        <table class="table-enhanced" id="animalsTable">
+          <thead>
+            <tr>
+              <th><i class="fas fa-id-badge"></i> ID</th>
+              <th><i class="fas fa-user"></i> Owner</th>
+              <th><i class="fas fa-cow"></i> Type</th>
+              <th><i class="fas fa-sort-numeric-up"></i> Amount</th>
+              <th><i class="fas fa-map-marker-alt"></i> Field</th>
+              <th><i class="fas fa-calendar"></i> Created</th>
+            </tr>
+          </thead>
+          <tbody id="animalsTableBody">
+            <tr>
+              <td colspan="6" class="text-center loading-enhanced">
+                <span class="spinner-enhanced"></span>
+                Loading animals...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Shared Utilities -->
+    <script src="../js/kraken-utils.js"></script>
+
+    <script>
+      class ResourcesTab {
+        constructor() {
+          this.token = getCookie("krakenToken");
+          this.fields = [];
+          this.staff = [];
+          this.animals = [];
+          this.currentResource = "fields";
+          this.init();
+        }
+
+        init() {
+          // Listen for token from parent window
+          window.addEventListener("message", (event) => {
+            if (event.data.type === "SET_TOKEN") {
+              this.token = event.data.token;
+              this.loadAllResources();
+            }
+          });
+
+          this.bindEvents();
+
+          // If we already have a token, load data immediately
+          if (this.token) {
+            this.loadAllResources();
+          }
+        }
+
+        bindEvents() {
+          document
+            .getElementById("refreshResourcesBtn")
+            .addEventListener("click", () => this.loadAllResources());
+
+          // Resource tab events
+          document
+            .querySelectorAll(".resource-tab-button")
+            .forEach((button) => {
+              button.addEventListener("click", (e) => {
+                const resourceType = e.target.dataset.resource;
+                this.switchResourceTab(resourceType);
+              });
+            });
+        }
+
+        switchResourceTab(resourceType) {
+          // Update tab buttons
+          document.querySelectorAll(".resource-tab-button").forEach((btn) => {
+            btn.classList.remove("active");
+          });
+          document
+            .querySelector(`[data-resource="${resourceType}"]`)
+            .classList.add("active");
+
+          // Update table visibility
+          document.querySelectorAll(".resource-table").forEach((table) => {
+            table.style.display = "none";
+          });
+          document.getElementById(
+            `${resourceType}TableContainer`,
+          ).style.display = "block";
+
+          this.currentResource = resourceType;
+        }
+
+        async loadAllResources() {
+          const refreshBtn = document.getElementById("refreshResourcesBtn");
+          const spinner = refreshBtn?.querySelector(".spinner-enhanced");
+
+          if (refreshBtn) refreshBtn.disabled = true;
+          if (spinner) spinner.classList.remove("hidden");
+
+          try {
+            // Load all resources in parallel
+            const [fieldsResponse, staffResponse, animalsResponse] =
+              await Promise.all([
+                secureFetch("/api/v1/admin/fields", {
+                  headers: { Authorization: `Bearer ${this.token}` },
+                }),
+                secureFetch("/api/v1/admin/staff", {
+                  headers: { Authorization: `Bearer ${this.token}` },
+                }),
+                secureFetch("/api/v1/admin/animals", {
+                  headers: { Authorization: `Bearer ${this.token}` },
+                }),
+              ]);
+
+            const fieldsResult = await fieldsResponse.json();
+            const staffResult = await staffResponse.json();
+            const animalsResult = await animalsResponse.json();
+
+            if (fieldsResult.success) {
+              this.fields = fieldsResult.data.fields;
+              this.displayFields(this.fields);
+            }
+
+            if (staffResult.success) {
+              this.staff = staffResult.data.staff;
+              this.displayStaff(this.staff);
+            }
+
+            if (animalsResult.success) {
+              this.animals = animalsResult.data.animals;
+              this.displayAnimals(this.animals);
+            }
+
+            this.updateStats();
+          } catch (error) {
+            if (error.message.includes("Authentication failed")) {
+              console.log(
+                "Authentication error detected, secureFetch should handle redirect",
+              );
+              return;
+            }
+            console.error("Failed to load resources:", error);
+          } finally {
+            if (refreshBtn) refreshBtn.disabled = false;
+            if (spinner) spinner.classList.add("hidden");
+          }
+        }
+
+        displayFields(fields) {
+          const tableBody = document.getElementById("fieldsTableBody");
+
+          if (!Array.isArray(fields)) {
+            tableBody.innerHTML =
+              '<tr><td colspan="5" class="text-center">Error displaying fields - invalid data format</td></tr>';
+            return;
+          }
+
+          if (fields.length === 0) {
+            tableBody.innerHTML =
+              '<tr><td colspan="5" class="text-center">No fields found</td></tr>';
+            return;
+          }
+
+          tableBody.innerHTML = fields
+            .map(
+              (field) => `
+                    <tr>
+                        <td><strong>${field.id}</strong></td>
+                        <td>
+                            <div class="user-info">
+                                <i class="fas fa-user"></i> 
+                                <span>${field.user.displayedName}</span>
+                                <small>(${field.user.email})</small>
+                            </div>
+                        </td>
+                        <td><i class="fas fa-map-marker-alt"></i> ${field.name}</td>
+                        <td><i class="fas fa-ruler-combined"></i> ${field.area} ha</td>
+                        <td><i class="fas fa-calendar"></i> ${new Date().toLocaleDateString("pl-PL")}</td>
+                    </tr>
+                `,
+            )
+            .join("");
+        }
+
+        displayStaff(staff) {
+          const tableBody = document.getElementById("staffTableBody");
+
+          if (!Array.isArray(staff)) {
+            tableBody.innerHTML =
+              '<tr><td colspan="6" class="text-center">Error displaying staff - invalid data format</td></tr>';
+            return;
+          }
+
+          if (staff.length === 0) {
+            tableBody.innerHTML =
+              '<tr><td colspan="6" class="text-center">No staff found</td></tr>';
+            return;
+          }
+
+          tableBody.innerHTML = staff
+            .map(
+              (staffMember) => `
+                    <tr>
+                        <td><strong>${staffMember.id}</strong></td>
+                        <td>
+                            <div class="user-info">
+                                <i class="fas fa-user"></i> 
+                                <span>${staffMember.user.displayedName}</span>
+                                <small>(${staffMember.user.email})</small>
+                            </div>
+                        </td>
+                        <td><i class="fas fa-user-circle"></i> ${staffMember.name}</td>
+                        <td><i class="fas fa-user-circle"></i> ${staffMember.surname}</td>
+                        <td><i class="fas fa-birthday-cake"></i> ${staffMember.age}</td>
+                        <td><i class="fas fa-calendar"></i> ${new Date().toLocaleDateString("pl-PL")}</td>
+                    </tr>
+                `,
+            )
+            .join("");
+        }
+
+        displayAnimals(animals) {
+          const tableBody = document.getElementById("animalsTableBody");
+
+          if (!Array.isArray(animals)) {
+            tableBody.innerHTML =
+              '<tr><td colspan="6" class="text-center">Error displaying animals - invalid data format</td></tr>';
+            return;
+          }
+
+          if (animals.length === 0) {
+            tableBody.innerHTML =
+              '<tr><td colspan="6" class="text-center">No animals found</td></tr>';
+            return;
+          }
+
+          tableBody.innerHTML = animals
+            .map(
+              (animal) => `
+                    <tr>
+                        <td><strong>${animal.id}</strong></td>
+                        <td>
+                            <div class="user-info">
+                                <i class="fas fa-user"></i> 
+                                <span>${animal.user.displayedName}</span>
+                                <small>(${animal.user.email})</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-enhanced badge-info-enhanced">
+                                <i class="fas fa-cow"></i> ${animal.type}
+                            </span>
+                        </td>
+                        <td><i class="fas fa-sort-numeric-up"></i> ${animal.amount}</td>
+                        <td>
+                            ${
+                              animal.field
+                                ? `<i class="fas fa-map-marker-alt"></i> ${animal.field.name}`
+                                : '<span class="text-muted">No field assigned</span>'
+                            }
+                        </td>
+                        <td><i class="fas fa-calendar"></i> ${new Date(animal.createdAt).toLocaleDateString("pl-PL")}</td>
+                    </tr>
+                `,
+            )
+            .join("");
+        }
+
+        updateStats() {
+          const totalFields = this.fields.length;
+          const totalStaff = this.staff.length;
+          const totalAnimals = this.animals.reduce(
+            (sum, animal) => sum + (animal.amount || 0),
+            0,
+          );
+
+          // Count unique users
+          const uniqueUsers = new Set([
+            ...this.fields.map((f) => f.userId),
+            ...this.staff.map((s) => s.userId),
+            ...this.animals.map((a) => a.userId),
+          ]);
+          const activeUsers = uniqueUsers.size;
+
+          document.getElementById("totalFields").textContent = totalFields;
+          document.getElementById("totalStaff").textContent = totalStaff;
+          document.getElementById("totalAnimals").textContent =
+            totalAnimals.toLocaleString("pl-PL");
+          document.getElementById("activeUsers").textContent = activeUsers;
+        }
+      }
+
+      // Initialize resources tab when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        new ResourcesTab();
+      });
+    </script>
+  </body>
+</html>

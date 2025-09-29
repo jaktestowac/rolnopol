@@ -1,0 +1,91 @@
+[
+  {
+    "id": 1,
+    "username": "demo",
+    "displayedName": "Demo User",
+    "email": "demo@example.com",
+    "password": "demo123",
+    "isActive": true,
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-29T17:11:12.831Z",
+    "lastLogin": "2025-09-29T17:11:12.831Z"
+  },
+  {
+    "id": 2,
+    "username": "johnbrown",
+    "displayedName": "John Brown",
+    "email": "test@example.com",
+    "password": "brownPass123",
+    "isActive": true,
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-07-23T09:34:45.965Z",
+    "lastLogin": "2025-07-23T09:34:45.965Z"
+  },
+  {
+    "id": 3,
+    "username": "john_doe",
+    "displayedName": "John Doe",
+    "email": "john.doe@example.com",
+    "password": "johndoe123",
+    "isActive": true,
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-07-19T10:15:35.348Z",
+    "lastLogin": "2025-07-19T10:15:35.348Z"
+  },
+  {
+    "id": 4,
+    "username": "jane_smith",
+    "displayedName": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "password": "janesmith456",
+    "isActive": true,
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-07-19T10:15:35.348Z",
+    "lastLogin": "2025-07-19T10:15:35.348Z"
+  },
+  {
+    "id": 5,
+    "username": "developer",
+    "displayedName": "Developer Account",
+    "email": "developer@example.com",
+    "password": "dev123456",
+    "isActive": true,
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-07-19T10:15:35.348Z",
+    "lastLogin": "2025-07-19T10:15:35.348Z"
+  },
+  {
+    "id": 6,
+    "username": "government",
+    "displayedName": "Government Account",
+    "email": "government@example.com",
+    "password": "gov123456",
+    "isActive": true,
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-07-19T10:15:35.348Z",
+    "lastLogin": "2025-07-19T10:15:35.348Z"
+  },
+  {
+    "id": 7,
+    "username": "Rolai",
+    "displayedName": "Rolai",
+    "email": "Rolai-fh9au703jdDWw1dksah-3r1@rolai.rolai",
+    "password": "ai123456",
+    "isActive": true,
+    "createdAt": "2028-01-01T00:00:00.000Z",
+    "updatedAt": "2028-07-19T10:15:35.348Z",
+    "lastLogin": "2028-07-19T10:15:35.348Z",
+    "protected": true
+  },
+  {
+    "id": 8,
+    "username": "Empty User",
+    "displayedName": "Empty User",
+    "email": "emptyuser@rolnopol.demo.pl",
+    "password": "demoPass123",
+    "isActive": true,
+    "createdAt": "2028-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-17T10:43:35.335Z",
+    "lastLogin": "2025-09-17T10:43:35.334Z"
+  }
+]

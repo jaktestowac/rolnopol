@@ -1,0 +1,374 @@
+{
+  "accounts": [
+    {
+      "id": 1,
+      "userId": "1",
+      "balance": 1360,
+      "currency": "ROL",
+      "createdAt": "2025-07-19T16:22:28.120Z",
+      "updatedAt": "2025-07-28T09:41:15.461Z",
+      "transactions": [
+        {
+          "id": 1,
+          "type": "income",
+          "amount": 100,
+          "description": "Initial deposit",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-19T16:23:38.364Z",
+          "balanceBefore": 0,
+          "balanceAfter": 100
+        },
+        {
+          "id": 6,
+          "type": "expense",
+          "amount": 20,
+          "description": "Coffee shop purchase",
+          "category": "food",
+          "referenceId": null,
+          "timestamp": "2025-07-20T09:00:00.000Z",
+          "balanceBefore": 100,
+          "balanceAfter": 80
+        },
+        {
+          "id": 7,
+          "type": "income",
+          "amount": 100,
+          "description": "Salary payment",
+          "category": "salary",
+          "referenceId": null,
+          "timestamp": "2025-07-23T10:00:00.000Z",
+          "balanceBefore": 80,
+          "balanceAfter": 180
+        },
+        {
+          "id": 13,
+          "type": "expense",
+          "amount": 120,
+          "description": "Marketplace purchase: pigs (offer 5)",
+          "category": "marketplace",
+          "referenceId": 5,
+          "timestamp": "2025-07-24T10:00:00.000Z",
+          "balanceBefore": 180,
+          "balanceAfter": 60
+        },
+        {
+          "id": 21,
+          "type": "income",
+          "amount": 300,
+          "description": "Government subsidy",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-25T13:30:00.000Z",
+          "balanceBefore": 60,
+          "balanceAfter": 360
+        },
+        {
+          "id": 28,
+          "type": "income",
+          "amount": 1000,
+          "description": "Government subsidy",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-28T09:41:15.461Z",
+          "balanceBefore": 360,
+          "balanceAfter": 1360
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "userId": "2",
+      "balance": 420,
+      "currency": "ROL",
+      "createdAt": "2025-07-20T11:25:13.264Z",
+      "updatedAt": "2025-07-25T13:35:00.000Z",
+      "transactions": [
+        {
+          "id": 2,
+          "type": "income",
+          "amount": 100,
+          "description": "Initial deposit",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-20T11:25:28.139Z",
+          "balanceBefore": 0,
+          "balanceAfter": 100
+        },
+        {
+          "id": 8,
+          "type": "expense",
+          "amount": 30,
+          "description": "Book purchase",
+          "category": "education",
+          "referenceId": null,
+          "timestamp": "2025-07-22T14:00:00.000Z",
+          "balanceBefore": 100,
+          "balanceAfter": 70
+        },
+        {
+          "id": 9,
+          "type": "income",
+          "amount": 50,
+          "description": "Freelance work",
+          "category": "freelance",
+          "referenceId": null,
+          "timestamp": "2025-07-24T15:00:00.000Z",
+          "balanceBefore": 70,
+          "balanceAfter": 120
+        },
+        {
+          "id": 22,
+          "type": "income",
+          "amount": 300,
+          "description": "Crop sales income",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-25T13:35:00.000Z",
+          "balanceBefore": 120,
+          "balanceAfter": 420
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "userId": "3",
+      "balance": 890,
+      "currency": "ROL",
+      "createdAt": "2025-07-23T12:00:10.000Z",
+      "updatedAt": "2025-07-25T13:36:00.000Z",
+      "transactions": [
+        {
+          "id": 3,
+          "type": "income",
+          "amount": 150,
+          "description": "Initial deposit",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-23T12:00:10.000Z",
+          "balanceBefore": 0,
+          "balanceAfter": 150
+        },
+        {
+          "id": 10,
+          "type": "expense",
+          "amount": 30,
+          "description": "Restaurant dinner",
+          "category": "food",
+          "referenceId": null,
+          "timestamp": "2025-07-24T17:00:00.000Z",
+          "balanceBefore": 150,
+          "balanceAfter": 120
+        },
+        {
+          "id": 15,
+          "type": "income",
+          "amount": 350,
+          "description": "Marketplace sale: Doe's Field (offer 9)",
+          "category": "marketplace",
+          "referenceId": 9,
+          "timestamp": "2025-07-23T13:14:00.000Z",
+          "balanceBefore": 120,
+          "balanceAfter": 470
+        },
+        {
+          "id": 16,
+          "type": "income",
+          "amount": 120,
+          "description": "Marketplace sale: pigs (offer 5)",
+          "category": "marketplace",
+          "referenceId": 5,
+          "timestamp": "2025-07-24T10:00:00.000Z",
+          "balanceBefore": 470,
+          "balanceAfter": 590
+        },
+        {
+          "id": 17,
+          "type": "expense",
+          "amount": 500,
+          "description": "Marketplace purchase: Innovation Acres (offer 11)",
+          "category": "marketplace",
+          "referenceId": 11,
+          "timestamp": "2025-07-25T10:00:00.000Z",
+          "balanceBefore": 590,
+          "balanceAfter": 90
+        },
+        {
+          "id": 23,
+          "type": "income",
+          "amount": 300,
+          "description": "Livestock grant",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-25T13:36:00.000Z",
+          "balanceBefore": 590,
+          "balanceAfter": 890
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "userId": "4",
+      "balance": 510,
+      "currency": "ROL",
+      "createdAt": "2025-07-23T12:00:11.000Z",
+      "updatedAt": "2025-07-25T13:37:00.000Z",
+      "transactions": [
+        {
+          "id": 4,
+          "type": "income",
+          "amount": 200,
+          "description": "Initial deposit",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-23T12:00:11.000Z",
+          "balanceBefore": 0,
+          "balanceAfter": 200
+        },
+        {
+          "id": 11,
+          "type": "income",
+          "amount": 50,
+          "description": "Gift received",
+          "category": "gift",
+          "referenceId": null,
+          "timestamp": "2025-07-25T09:00:00.000Z",
+          "balanceBefore": 200,
+          "balanceAfter": 250
+        },
+        {
+          "id": 18,
+          "type": "expense",
+          "amount": 90,
+          "description": "Marketplace purchase: fish (offer 7)",
+          "category": "marketplace",
+          "referenceId": 7,
+          "timestamp": "2025-07-25T09:00:00.000Z",
+          "balanceBefore": 250,
+          "balanceAfter": 160
+        },
+        {
+          "id": 24,
+          "type": "income",
+          "amount": 300,
+          "description": "Field rental income",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-25T13:37:00.000Z",
+          "balanceBefore": 210,
+          "balanceAfter": 510
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "userId": "5",
+      "balance": 1015,
+      "currency": "ROL",
+      "createdAt": "2025-07-23T12:00:12.000Z",
+      "updatedAt": "2025-07-25T13:38:00.000Z",
+      "transactions": [
+        {
+          "id": 5,
+          "type": "income",
+          "amount": 175,
+          "description": "Initial deposit",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-23T12:00:12.000Z",
+          "balanceBefore": 0,
+          "balanceAfter": 175
+        },
+        {
+          "id": 12,
+          "type": "expense",
+          "amount": 50,
+          "description": "Clothing purchase",
+          "category": "shopping",
+          "referenceId": null,
+          "timestamp": "2025-07-24T20:00:00.000Z",
+          "balanceBefore": 175,
+          "balanceAfter": 125
+        },
+        {
+          "id": 19,
+          "type": "income",
+          "amount": 90,
+          "description": "Marketplace sale: fish (offer 7)",
+          "category": "marketplace",
+          "referenceId": 7,
+          "timestamp": "2025-07-25T09:00:00.000Z",
+          "balanceBefore": 125,
+          "balanceAfter": 215
+        },
+        {
+          "id": 20,
+          "type": "income",
+          "amount": 500,
+          "description": "Marketplace sale: Innovation Acres (offer 11)",
+          "category": "marketplace",
+          "referenceId": 11,
+          "timestamp": "2025-07-25T10:00:00.000Z",
+          "balanceBefore": 215,
+          "balanceAfter": 715
+        },
+        {
+          "id": 25,
+          "type": "income",
+          "amount": 300,
+          "description": "Machinery sale",
+          "category": "general",
+          "referenceId": null,
+          "timestamp": "2025-07-25T13:38:00.000Z",
+          "balanceBefore": 715,
+          "balanceAfter": 1015
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "userId": "6",
+      "balance": 1500,
+      "currency": "ROL",
+      "createdAt": "2025-07-27T10:00:00.000Z",
+      "updatedAt": "2025-07-28T10:00:00.000Z",
+      "transactions": [
+        {
+          "id": 26,
+          "type": "income",
+          "amount": 1500,
+          "description": "Research grant",
+          "category": "grant",
+          "referenceId": null,
+          "timestamp": "2025-07-27T10:00:00.000Z",
+          "balanceBefore": 0,
+          "balanceAfter": 1500
+        },
+        {
+          "id": 27,
+          "type": "expense",
+          "amount": 200,
+          "description": "Purchase of solar panels",
+          "category": "equipment",
+          "referenceId": null,
+          "timestamp": "2025-07-28T09:00:00.000Z",
+          "balanceBefore": 1500,
+          "balanceAfter": 1300
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "userId": 8,
+      "balance": 0,
+      "currency": "ROL",
+      "createdAt": "2025-09-17T10:37:32.265Z",
+      "updatedAt": "2025-09-17T10:37:32.265Z",
+      "transactions": []
+    }
+  ],
+  "counters": {
+    "lastAccountId": 7,
+    "lastTransactionId": 28
+  }
+}

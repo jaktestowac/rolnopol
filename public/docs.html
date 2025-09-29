@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <title>Documentation - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .docs-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .docs-sidebar {
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+      }
+
+      .docs-content {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+      }
+
+      .docs-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .docs-nav li {
+        margin-bottom: 0.5rem;
+      }
+
+      .docs-nav a {
+        display: block;
+        padding: 0.75rem 1rem;
+        color: #6a7b5e;
+        text-decoration: none;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+      }
+
+      .docs-nav a:hover,
+      .docs-nav a.active {
+        background: rgba(106, 123, 94, 0.1);
+        color: #2d3a2d;
+        border-left-color: #6a7b5e;
+      }
+
+      .docs-section {
+        margin-bottom: 3rem;
+        scroll-margin-top: 90px; /* Offset for navbar/header */
+      }
+
+      .docs-section h2 {
+        color: #2d3a2d;
+        border-bottom: 2px solid #6a7b5e;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .docs-section h3 {
+        color: #6a7b5e;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin: 1.5rem 0;
+      }
+
+      .feature-card {
+        background: rgba(106, 123, 94, 0.05);
+        border: 1px solid rgba(106, 123, 94, 0.1);
+        border-radius: 0.8rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(106, 123, 94, 0.15);
+      }
+
+      .feature-card h4 {
+        color: #2d3a2d;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .role-card {
+        background: linear-gradient(
+          135deg,
+          rgba(106, 123, 94, 0.1),
+          rgba(139, 168, 136, 0.1)
+        );
+        border: 1px solid rgba(106, 123, 94, 0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 1rem 0;
+      }
+
+      .role-card h4 {
+        color: #2d3a2d;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .code-block {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        font-family: "Courier New", monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+      }
+
+      .api-endpoint {
+        background: rgba(106, 123, 94, 0.05);
+        border-left: 4px solid #6a7b5e;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0 0.5rem 0.5rem 0;
+      }
+
+      .method {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-right: 0.5rem;
+      }
+
+      .method.get {
+        background: #28a745;
+        color: white;
+      }
+      .method.post {
+        background: #007bff;
+        color: white;
+      }
+      .method.put {
+        background: #ffc107;
+        color: black;
+      }
+      .method.delete {
+        background: #dc3545;
+        color: white;
+      }
+
+      .demo-accounts {
+        background: rgba(106, 123, 94, 0.05);
+        border: 1px solid rgba(106, 123, 94, 0.2);
+        border-radius: 0.8rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+      }
+
+      .demo-account {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 0.5rem 0;
+      }
+
+      .entity-card {
+        background: rgba(106, 123, 94, 0.05);
+        border: 1px solid rgba(106, 123, 94, 0.1);
+        border-radius: 0.8rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+      }
+
+      .entity-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(106, 123, 94, 0.15);
+      }
+
+      .entity-card h4 {
+        color: #2d3a2d;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .permissions-list {
+        margin: 0.5rem 0 0 1.2rem;
+        text-align: left;
+        padding-left: 1.2rem;
+      }
+
+      @media (max-width: 768px) {
+        .docs-sidebar {
+          position: static;
+          margin-bottom: 1rem;
+        }
+
+        .feature-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      /* New classes extracted from inline styles */
+      .docs-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.2rem 0 1.2rem 0;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+        border-radius: 1.2rem 1.2rem 0 0;
+      }
+      .docs-header-row {
+        display: flex;
+        align-items: center;
+        gap: 1.1rem;
+        width: 100%;
+        justify-content: center;
+      }
+      .docs-header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 2rem;
+      }
+      .docs-header-title-col {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .docs-header-subtitle {
+        font-size: 1.08rem;
+        color: #6a7b5e;
+        font-weight: 400;
+        margin-top: 0.1rem;
+      }
+      .docs-section-divider {
+        margin: 2.5rem 0 2rem 0;
+        border: none;
+        border-top: 1.5px solid #e0e0e0;
+      }
+      .entity-card-custom {
+        box-shadow: 0 2px 12px rgba(106, 123, 94, 0.08);
+        background: #f7f9f6;
+        border: 1.5px solid #e0e0e0;
+        padding: 1.2rem 1rem;
+        border-radius: 0.7rem;
+      }
+      .entity-card-title {
+        color: #2d3a2d;
+        margin-bottom: 0.7rem;
+      }
+      .demo-account-custom {
+        box-shadow: 0 2px 12px rgba(106, 123, 94, 0.08);
+        border: 1.5px solid #e0e0e0;
+        background: #f9fafb;
+        padding: 1.2rem 1rem;
+        border-radius: 0.7rem;
+        margin: 0.5rem 0;
+      }
+      .demo-account-title {
+        color: #2d3a2d;
+        margin-bottom: 0.7rem;
+      }
+      .role-card-custom {
+        box-shadow: 0 2px 12px rgba(106, 123, 94, 0.08);
+        background: #f7f9f6;
+        border: 1.5px solid #e0e0e0;
+        padding: 1.2rem 1rem;
+        border-radius: 0.7rem;
+      }
+      .role-card-title {
+        color: #2d3a2d;
+        margin-bottom: 0.7rem;
+      }
+      .feature-card-custom {
+        background: linear-gradient(135deg, #eaf6e7 0%, #f7f9f6 100%);
+        border: 1.5px solid #e0e0e0;
+        border-radius: 0.7rem;
+        padding: 1.2rem 1rem;
+      }
+      .feature-card-title {
+        color: #6a7b5e;
+        margin-bottom: 0.7rem;
+      }
+      .types-card-custom {
+        box-shadow: 0 2px 12px rgba(106, 123, 94, 0.08);
+        background: #f7f9f6;
+        border: 1.5px solid #e0e0e0;
+        padding: 1.2rem 1rem;
+        border-radius: 0.7rem;
+      }
+      .types-card-title {
+        color: #2d3a2d;
+        margin-bottom: 0.7rem;
+      }
+      .json-fallback {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+      }
+      .section-icons {
+        color: #6a7b5e;
+      }
+      .main-title {
+        /* keep as is, or move from inline if present */
+      }
+      /* --- Enhanced Documentation Data Styles --- */
+      .docs-content table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 1.5rem 0;
+        background: #f8faf7;
+        border-radius: 0.7rem;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(106, 123, 94, 0.06);
+      }
+      .docs-content th,
+      .docs-content td {
+        border: 1px solid #e0e0e0;
+        padding: 0.7rem 1rem;
+        text-align: left;
+      }
+      .docs-content th {
+        background: #eaf6e7;
+        color: #2d3a2d;
+        font-weight: 600;
+        font-size: 1.05rem;
+      }
+      .docs-content tr:nth-child(even) td {
+        background: #f3f6f2;
+      }
+      .docs-content tr:nth-child(odd) td {
+        background: #f8faf7;
+      }
+      .docs-content table {
+        margin-bottom: 2rem;
+      }
+      .docs-content ul,
+      .docs-content ol {
+        margin: 1rem 0 1.5rem 2rem;
+        font-size: 1.08rem;
+        color: #3d4a3d;
+      }
+      .docs-content li {
+        margin-bottom: 0.4rem;
+        line-height: 1.7;
+      }
+      .docs-content h3 {
+        color: #4a6a3d;
+        font-size: 1.25rem;
+        margin-top: 2.2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        border-left: 4px solid #b7d7b0;
+        padding-left: 0.7rem;
+        background: linear-gradient(90deg, #f7f9f6 80%, #eaf6e7 100%);
+        border-radius: 0.3rem;
+      }
+      .docs-content p {
+        font-size: 1.08rem;
+        color: #3d4a3d;
+        margin-bottom: 1.1rem;
+        margin-top: 0.2rem;
+        line-height: 1.7;
+      }
+    </style>
+  </head>
+
+  <body class="bg-agri-pattern">
+    <!-- Dynamic Header Component -->
+    <div id="header-component"></div>
+
+    <div class="container" style="margin-top: 1rem">
+      <header class="header glass docs-header">
+        <div class="docs-header-row">
+          <h1 class="docs-header-title">
+            <span class="bg-agri-gradient"><i class="fas fa-book"></i></span>
+          </h1>
+          <div class="docs-header-title-col">
+            <span class="main-title">Documentation</span>
+            <span class="docs-header-subtitle"
+              >Rolnopol System Guide & API Reference</span
+            >
+          </div>
+        </div>
+      </header>
+
+      <div class="docs-container">
+        <div style="display: grid; grid-template-columns: 250px 1fr; gap: 2rem">
+          <!-- Sidebar Navigation -->
+          <div class="docs-sidebar">
+            <h3
+              style="
+                color: #2d3a2d;
+                margin-bottom: 1rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+              "
+            >
+              <i class="fas fa-list"></i> Contents
+            </h3>
+            <ul class="docs-nav" id="dynamic-docs-nav">
+              <!-- Navigation will be built dynamically -->
+            </ul>
+          </div>
+
+          <!-- Main Content -->
+          <div class="docs-content">
+            <div id="dynamic-docs-content">
+              <p>Loading documentation...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Footer Component -->
+      <div id="footer-component"></div>
+    </div>
+
+    <!-- Core Dependencies -->
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <!-- Services -->
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+
+    <!-- Components -->
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+
+    <!-- API Functions -->
+    <script src="/js/api.js"></script>
+
+    <!-- Utilities -->
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <!-- Main Application -->
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("docs");
+
+      // Fetch and render documentation data
+      if (typeof fetchDocumentation === "function") {
+        fetchDocumentation()
+          .then((docs) => {
+            // Build sidebar navigation dynamically
+            const nav = document.getElementById("dynamic-docs-nav");
+            if (nav) {
+              nav.innerHTML = "";
+              const currentHash = window.location.hash.replace("#", "");
+              docs.forEach((section, idx) => {
+                const li = document.createElement("li");
+                const a = document.createElement("a");
+                a.href = `#${section.section}`;
+                a.textContent = section.title;
+                // Set active based on hash or default to first
+                if (
+                  (currentHash && section.section === currentHash) ||
+                  (!currentHash && idx === 0)
+                )
+                  a.classList.add("active");
+                li.appendChild(a);
+                nav.appendChild(li);
+              });
+            }
+
+            // Sidebar navigation: smooth scroll and active state (moved here)
+            const navLinks = document.querySelectorAll(".docs-nav a");
+            navLinks.forEach((link) => {
+              link.addEventListener("click", function (e) {
+                e.preventDefault();
+                navLinks.forEach((l) => l.classList.remove("active"));
+                this.classList.add("active");
+                const targetId = this.getAttribute("href").substring(1);
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                  // Offset scroll to account for navbar/header (80px)
+                  const yOffset = -80;
+                  const y =
+                    targetSection.getBoundingClientRect().top +
+                    window.pageYOffset +
+                    yOffset;
+                  window.scrollTo({ top: y, behavior: "smooth" });
+                }
+                // Update hash in URL
+                window.location.hash = this.getAttribute("href");
+              });
+            });
+
+            // On page load, scroll to hash section if present
+            if (window.location.hash) {
+              const targetId = window.location.hash.replace("#", "");
+              const targetSection = document.getElementById(targetId);
+              if (targetSection) {
+                const yOffset = -80;
+                const y =
+                  targetSection.getBoundingClientRect().top +
+                  window.pageYOffset +
+                  yOffset;
+                window.scrollTo({ top: y, behavior: "smooth" });
+              }
+            }
+
+            // Main content rendering (existing logic)
+            const container = document.getElementById("dynamic-docs-content");
+            if (!container) return;
+            container.innerHTML = "";
+            // Section icon mapping
+            const sectionIcons = {
+              overview: "fa-info-circle",
+              "user-roles": "fa-user-shield",
+              features: "fa-star",
+              "user-flows": "fa-route",
+              "api-basics": "fa-code",
+              "testing-tips": "fa-vial",
+              "demo-accounts": "fa-user-check",
+            };
+            docs.forEach((section) => {
+              const sectionDiv = document.createElement("div");
+              sectionDiv.className = "docs-section";
+              sectionDiv.id = section.section;
+              // Section header with icon
+              const title = document.createElement("h2");
+              title.style.display = "flex";
+              title.style.alignItems = "center";
+              title.style.gap = "0.5rem";
+              if (sectionIcons[section.section]) {
+                const icon = document.createElement("i");
+                icon.className = `fas ${sectionIcons[section.section]}`;
+                icon.style.color = "#6a7b5e";
+                title.appendChild(icon);
+              }
+              const span = document.createElement("span");
+              span.textContent = section.title;
+              title.appendChild(span);
+              sectionDiv.appendChild(title);
+              // Section content rendering
+              if (
+                Array.isArray(section.content) &&
+                section.content[0] &&
+                section.content[0].heading &&
+                section.content[0].markdown
+              ) {
+                // New: Render array of { heading, markdown }
+                section.content.forEach((block) => {
+                  const h = document.createElement("h3");
+                  h.textContent = block.heading;
+                  sectionDiv.appendChild(h);
+                  const md = document.createElement("div");
+                  if (window.marked) {
+                    md.innerHTML = window.marked.parse(block.markdown);
+                  } else {
+                    md.textContent = block.markdown;
+                  }
+                  sectionDiv.appendChild(md);
+                });
+              } else if (
+                Array.isArray(section.content) &&
+                section.content[0] &&
+                section.content[0].heading &&
+                Array.isArray(section.content[0].content)
+              ) {
+                // Render array of { heading, content: [ ... ] }
+                section.content.forEach((block) => {
+                  const h = document.createElement("h3");
+                  h.textContent = block.heading;
+                  sectionDiv.appendChild(h);
+
+                  block.content.forEach((item) => {
+                    if (typeof item === "string") {
+                      // Paragraph
+                      const p = document.createElement("p");
+                      p.textContent = item;
+                      sectionDiv.appendChild(p);
+                    } else if (
+                      item.type === "list" &&
+                      Array.isArray(item.items)
+                    ) {
+                      // List
+                      const ul = document.createElement("ul");
+                      item.items.forEach((str) => {
+                        const li = document.createElement("li");
+                        li.textContent = str;
+                        ul.appendChild(li);
+                      });
+                      sectionDiv.appendChild(ul);
+                    } else if (item.type === "paragraph" && item.text) {
+                      // Paragraph (explicit)
+                      const p = document.createElement("p");
+                      p.textContent = item.text;
+                      sectionDiv.appendChild(p);
+                    } else if (
+                      item.type === "table" &&
+                      item.columns &&
+                      item.rows
+                    ) {
+                      // Table
+                      const table = document.createElement("table");
+                      table.style.margin = "1rem 0";
+                      table.style.borderCollapse = "collapse";
+                      table.style.width = "100%";
+
+                      // Table header
+                      const thead = document.createElement("thead");
+                      const trHead = document.createElement("tr");
+                      item.columns.forEach((col) => {
+                        const th = document.createElement("th");
+                        th.textContent = col;
+                        th.style.border = "1px solid #e0e0e0";
+                        th.style.background = "#f7f9f6";
+                        th.style.padding = "0.5rem 0.7rem";
+                        th.style.fontWeight = "bold";
+                        trHead.appendChild(th);
+                      });
+                      thead.appendChild(trHead);
+                      table.appendChild(thead);
+
+                      // Table body
+                      const tbody = document.createElement("tbody");
+                      item.rows.forEach((row) => {
+                        const tr = document.createElement("tr");
+                        row.forEach((cell) => {
+                          const td = document.createElement("td");
+                          td.textContent = cell;
+                          td.style.border = "1px solid #e0e0e0";
+                          td.style.padding = "0.5rem 0.7rem";
+                          tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                      });
+                      table.appendChild(tbody);
+
+                      sectionDiv.appendChild(table);
+                    }
+                  });
+                });
+              } else if (typeof section.content === "string") {
+                const p = document.createElement("p");
+                p.textContent = section.content;
+                p.style.fontSize = "1.1rem";
+                p.style.marginBottom = "1.5rem";
+                sectionDiv.appendChild(p);
+              } else if (
+                Array.isArray(section.content) &&
+                section.content.every((item) => typeof item === "string")
+              ) {
+                const ul = document.createElement("ul");
+                ul.style.margin = "1rem 0 2rem 1.5rem";
+                ul.style.fontSize = "1.05rem";
+                section.content.forEach((str) => {
+                  const li = document.createElement("li");
+                  li.textContent = str;
+                  li.style.marginBottom = "0.5rem";
+                  ul.appendChild(li);
+                });
+                sectionDiv.appendChild(ul);
+              } else if (
+                section.section === "entities" &&
+                Array.isArray(section.content) &&
+                section.content[0] &&
+                section.content[0].entity
+              ) {
+                // Render entities as cards
+                const entitiesGrid = document.createElement("div");
+                entitiesGrid.style.display = "grid";
+                entitiesGrid.style.gridTemplateColumns =
+                  "repeat(auto-fit, minmax(260px, 1fr))";
+                entitiesGrid.style.gap = "1.2rem";
+                section.content.forEach((entity) => {
+                  const entityDiv = document.createElement("div");
+                  entityDiv.className = "entity-card entity-card-custom";
+                  const h4 = document.createElement("h4");
+                  h4.innerHTML = `<i class='fas fa-database'></i> ${entity.entity}`;
+                  h4.classList.add("entity-card-title");
+                  entityDiv.appendChild(h4);
+                  if (entity.description) {
+                    const desc = document.createElement("p");
+                    desc.textContent = entity.description;
+                    entityDiv.appendChild(desc);
+                  }
+                  entitiesGrid.appendChild(entityDiv);
+                });
+                sectionDiv.appendChild(entitiesGrid);
+              } else if (
+                Array.isArray(section.content) &&
+                section.content[0] &&
+                section.content[0].role
+              ) {
+                // Demo accounts get a special grid
+                if (section.section === "demo-accounts") {
+                  const demoGrid = document.createElement("div");
+                  demoGrid.className = "demo-accounts";
+                  demoGrid.style.display = "grid";
+                  demoGrid.style.gridTemplateColumns =
+                    "repeat(auto-fit, minmax(260px, 1fr))";
+                  demoGrid.style.gap = "1.2rem";
+                  section.content.forEach((role) => {
+                    const card = document.createElement("div");
+                    card.className = "demo-account demo-account-custom";
+                    const h4 = document.createElement("h4");
+                    h4.innerHTML = `<i class='fas fa-user'></i> ${role.role}`;
+                    h4.classList.add("demo-account-title");
+                    card.appendChild(h4);
+                    if (role.description) {
+                      const desc = document.createElement("p");
+                      desc.textContent = role.description;
+                      card.appendChild(desc);
+                    }
+                    if (role.username && role.password) {
+                      const creds = document.createElement("div");
+                      creds.innerHTML = `<strong>Username:</strong> <span style='color:#6a7b5e'>${role.username}</span><br><strong>Password:</strong> <span style='color:#6a7b5e'>${role.password}</span>`;
+                      card.appendChild(creds);
+                    }
+                    demoGrid.appendChild(card);
+                  });
+                  sectionDiv.appendChild(demoGrid);
+                } else {
+                  // User roles
+                  const rolesGrid = document.createElement("div");
+                  rolesGrid.style.display = "grid";
+                  rolesGrid.style.gridTemplateColumns =
+                    "repeat(auto-fit, minmax(260px, 1fr))";
+                  rolesGrid.style.gap = "1.2rem";
+                  section.content.forEach((role) => {
+                    const roleDiv = document.createElement("div");
+                    roleDiv.className = "role-card role-card-custom";
+                    const h4 = document.createElement("h4");
+                    h4.innerHTML = `<i class='fas fa-user'></i> ${role.role}`;
+                    h4.classList.add("role-card-title");
+                    roleDiv.appendChild(h4);
+                    if (role.description) {
+                      const desc = document.createElement("p");
+                      desc.textContent = role.description;
+                      roleDiv.appendChild(desc);
+                    }
+                    if (role.permissions) {
+                      const ul = document.createElement("ul");
+                      ul.className = "permissions-list";
+                      role.permissions.forEach((perm) => {
+                        const li = document.createElement("li");
+                        li.textContent = perm;
+                        ul.appendChild(li);
+                      });
+                      roleDiv.appendChild(ul);
+                    }
+                    rolesGrid.appendChild(roleDiv);
+                  });
+                  sectionDiv.appendChild(rolesGrid);
+                }
+              } else if (
+                Array.isArray(section.content) &&
+                section.content[0] &&
+                section.content[0].flow &&
+                section.content[0].steps
+              ) {
+                // User flows as stacked cards (not grid)
+                section.content.forEach((flowObj) => {
+                  const flowDiv = document.createElement("div");
+                  flowDiv.className = "feature-card feature-card-custom";
+                  flowDiv.style.marginBottom = "1.5rem";
+                  const h4 = document.createElement("h4");
+                  h4.innerHTML = `<i class='fas fa-route'></i> ${flowObj.flow}`;
+                  h4.classList.add("feature-card-title");
+                  flowDiv.appendChild(h4);
+                  if (flowObj.summary) {
+                    const summary = document.createElement("p");
+                    summary.textContent = flowObj.summary;
+                    summary.style.fontWeight = "500";
+                    summary.style.marginBottom = "0.7rem";
+                    summary.style.textAlign = "left";
+                    flowDiv.appendChild(summary);
+                  }
+                  if (Array.isArray(flowObj.steps)) {
+                    const ol = document.createElement("ol");
+                    ol.className = "permissions-list";
+                    flowObj.steps.forEach((step) => {
+                      const li = document.createElement("li");
+                      li.textContent = step;
+                      ol.appendChild(li);
+                    });
+                    flowDiv.appendChild(ol);
+                  }
+                  sectionDiv.appendChild(flowDiv);
+                });
+              } else if (
+                section.section === "user-roles" &&
+                Array.isArray(section.content) &&
+                section.content[0] &&
+                section.content[0].type
+              ) {
+                // Render user types as cards
+                const typesGrid = document.createElement("div");
+                typesGrid.style.display = "grid";
+                typesGrid.style.gridTemplateColumns =
+                  "repeat(auto-fit, minmax(260px, 1fr))";
+                typesGrid.style.gap = "1.2rem";
+                section.content.forEach((typeObj) => {
+                  const typeDiv = document.createElement("div");
+                  typeDiv.className = "role-card types-card-custom";
+                  const h4 = document.createElement("h4");
+                  h4.innerHTML = `<i class='fas fa-user'></i> ${typeObj.type}`;
+                  h4.classList.add("types-card-title");
+                  typeDiv.appendChild(h4);
+                  if (typeObj.description) {
+                    const desc = document.createElement("p");
+                    desc.textContent = typeObj.description;
+                    typeDiv.appendChild(desc);
+                  }
+                  if (typeObj.permissions) {
+                    const ul = document.createElement("ul");
+                    ul.className = "permissions-list";
+                    typeObj.permissions.forEach((perm) => {
+                      const li = document.createElement("li");
+                      li.textContent = perm;
+                      ul.appendChild(li);
+                    });
+                    typeDiv.appendChild(ul);
+                  }
+                  typesGrid.appendChild(typeDiv);
+                });
+                sectionDiv.appendChild(typesGrid);
+              } else if (
+                section.section === "e2e-scenarios" &&
+                Array.isArray(section.content)
+              ) {
+                // Render E2E scenarios as cards
+                section.content.forEach((scenario) => {
+                  const card = document.createElement("div");
+                  card.className = "feature-card feature-card-custom";
+                  card.style.marginBottom = "1.5rem";
+                  // Title
+                  const h4 = document.createElement("h4");
+                  h4.innerHTML = `<i class='fas fa-vials'></i> ${scenario.scenario}`;
+                  h4.classList.add("feature-card-title");
+                  card.appendChild(h4);
+                  // Description
+                  if (scenario.description) {
+                    const desc = document.createElement("p");
+                    desc.textContent = scenario.description;
+                    desc.style.fontWeight = "500";
+                    desc.style.marginBottom = "0.7rem";
+                    desc.style.textAlign = "left";
+                    card.appendChild(desc);
+                  }
+                  // Steps
+                  if (Array.isArray(scenario.steps)) {
+                    const ol = document.createElement("ol");
+                    ol.className = "permissions-list";
+                    scenario.steps.forEach((step, idx) => {
+                      const li = document.createElement("li");
+                      li.innerHTML = `<span style='color:#6a7b5e;font-weight:bold;margin-right:0.5em;'>Step ${idx + 1}:</span> ${step}`;
+                      ol.appendChild(li);
+                    });
+                    card.appendChild(ol);
+                  }
+                  sectionDiv.appendChild(card);
+                });
+              } else {
+                // Fallback: show JSON
+                const pre = document.createElement("pre");
+                pre.textContent = JSON.stringify(section.content, null, 2);
+                pre.classList.add("json-fallback");
+                sectionDiv.appendChild(pre);
+              }
+              // Section divider
+              const divider = document.createElement("hr");
+              divider.className = "docs-section-divider";
+              sectionDiv.appendChild(divider);
+              container.appendChild(sectionDiv);
+            });
+          })
+          .catch((err) => {
+            const container = document.getElementById("dynamic-docs-content");
+            if (container)
+              container.innerHTML =
+                '<p style="color:red">Failed to load documentation.</p>';
+          });
+      }
+    </script>
+  </body>
+</html>

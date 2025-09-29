@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kraken Dashboard - Rolnopol</title>
+    <link rel="stylesheet" href="./css/kraken.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+    />
+    <style></style>
+  </head>
+
+  <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+      <div class="loading-content">
+        <div class="spinner-enhanced"></div>
+        <p>Loading Kraken Dashboard...</p>
+      </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div id="dashboardContainer" class="kraken-dashboard" style="display: none">
+      <!-- Top Navigation Bar -->
+      <nav class="top-navbar">
+        <a href="/" class="navbar-brand">
+          <i class="fas fa-cube"></i>
+          Kraken Dashboard
+        </a>
+        <div class="navbar-actions">
+          <div class="navbar-user">
+            <i class="fas fa-user-circle"></i>
+            <span>Administrator</span>
+          </div>
+          <button id="topLogoutBtn" class="navbar-btn danger">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+          </button>
+        </div>
+      </nav>
+
+      <!-- Dashboard Layout -->
+      <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <div class="sidebar-header">
+            <h2 class="sidebar-title">
+              <i class="fas fa-cog"></i>
+              Kraken Dashboard
+            </h2>
+          </div>
+          <nav class="sidebar-nav">
+            <button class="tab-button active" data-tab="overview">
+              <i class="fas fa-chart-bar"></i>
+              Overview
+            </button>
+            <button class="tab-button" data-tab="users">
+              <i class="fas fa-users"></i>
+              Users
+            </button>
+            <button class="tab-button" data-tab="resources">
+              <i class="fas fa-database"></i>
+              Resources
+            </button>
+            <button class="tab-button" data-tab="marketplace-offers">
+              <i class="fas fa-store"></i>
+              Marketplace Offers
+            </button>
+            <button class="tab-button" data-tab="marketplace-transactions">
+              <i class="fas fa-exchange-alt"></i>
+              Marketplace Transactions
+            </button>
+            <button class="tab-button" data-tab="financial-transactions">
+              <i class="fas fa-money-check-alt"></i>
+              Financial Transactions
+            </button>
+            <button class="tab-button" data-tab="logs">
+              <i class="fas fa-file-alt"></i>
+              Logs
+            </button>
+            <button class="tab-button" data-tab="actions">
+              <i class="fas fa-cogs"></i>
+              Actions
+            </button>
+            <button class="tab-button" data-tab="system">
+              <i class="fas fa-server"></i>
+              System
+            </button>
+            <button class="tab-button" data-tab="notfound-stats">
+              <i class="fas fa-bug"></i>
+              404 Stats
+            </button>
+          </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+          <!-- Overview Tab Iframe -->
+          <iframe
+            id="overviewIframe"
+            class="tab-iframe active"
+            src="./tabs/overview.html"
+          ></iframe>
+
+          <!-- Users Tab Iframe -->
+          <iframe id="usersIframe" class="tab-iframe"></iframe>
+
+          <!-- Actions Tab Iframe -->
+          <iframe id="actionsIframe" class="tab-iframe"></iframe>
+
+          <!-- System Tab Iframe -->
+          <iframe id="systemIframe" class="tab-iframe"></iframe>
+
+          <!-- Logs Tab Iframe -->
+          <iframe id="logsIframe" class="tab-iframe"></iframe>
+
+          <!-- Secret Codes Tab Iframe -->
+          <iframe id="secret-codesIframe" class="tab-iframe"></iframe>
+
+          <!-- Resources Tab Iframe -->
+          <iframe id="resourcesIframe" class="tab-iframe"></iframe>
+          <iframe id="marketplace-offersIframe" class="tab-iframe"></iframe>
+          <iframe
+            id="marketplace-transactionsIframe"
+            class="tab-iframe"
+          ></iframe>
+          <iframe id="financial-transactionsIframe" class="tab-iframe"></iframe>
+          <iframe id="notfound-statsIframe" class="tab-iframe"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shared Utilities -->
+    <script src="./js/kraken-utils.js"></script>
+
+    <script>
+      class KrakenDashboard {
+        constructor() {
+          this.token = getCookie("krakenToken");
+          this.loadingScreen = document.getElementById("loadingScreen");
+          this.dashboardContainer =
+            document.getElementById("dashboardContainer");
+          this.currentTab = "overview";
+          this.init();
+        }
+
+        init() {
+          // Immediate check - if no token, redirect immediately
+          if (!this.token) {
+            this.redirectToLogin();
+            return;
+          }
+
+          // Token exists, validate it
+          this.validateToken();
+          this.bindEvents();
+
+          // Start periodic token validation (every 5 minutes)
+          this.startPeriodicValidation();
+        }
+
+        redirectToLogin() {
+          // Hide loading screen and redirect
+          this.loadingScreen.style.display = "none";
+          window.location.href = "./kraken.html";
+        }
+
+        showDashboard() {
+          this.loadingScreen.style.display = "none";
+          this.dashboardContainer.style.display = "block";
+        }
+
+        bindEvents() {
+          document
+            .getElementById("topLogoutBtn")
+            .addEventListener("click", () => this.handleLogout());
+
+          // Bind tab events
+          document.querySelectorAll(".tab-button").forEach((button) => {
+            button.addEventListener("click", async (e) => {
+              const tabName = e.target.dataset.tab;
+              await this.switchTab(tabName);
+            });
+          });
+
+          // Handle iframe load events
+          this.setupIframeEvents();
+
+          // Handle page visibility changes
+          document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+              // Page became visible, validate token
+              this.validateTokenOnVisibilityChange();
+            }
+          });
+        }
+
+        setupIframeEvents() {
+          const iframes = document.querySelectorAll(".tab-iframe");
+          iframes.forEach((iframe) => {
+            iframe.addEventListener("load", () => {
+              // Send authentication token to iframe
+              this.sendTokenToIframe(iframe);
+            });
+
+            iframe.addEventListener("error", (error) => {
+              console.error(`Iframe error: ${iframe.id}`, error);
+            });
+          });
+
+          // Listen for messages from iframes
+          window.addEventListener("message", (event) => {
+            if (event.data.type === "AUTH_ERROR") {
+              console.warn(
+                "Authentication error from iframe, redirecting to login",
+              );
+              console.warn("Error details:", event.data);
+              deleteCookie("krakenToken");
+              this.redirectToLogin();
+            }
+          });
+        }
+
+        sendTokenToIframe(iframe) {
+          try {
+            iframe.contentWindow.postMessage(
+              {
+                type: "SET_TOKEN",
+                token: this.token,
+              },
+              "*",
+            );
+          } catch (error) {
+            console.error("Failed to send token to iframe:", error);
+          }
+        }
+
+        async validateToken() {
+          try {
+            const response = await secureFetch("/api/v1/admin/auth/validate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token: this.token }),
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.data.isValid) {
+              // Token is valid, show dashboard
+              this.showDashboard();
+            } else {
+              // Token is invalid, remove and redirect
+              deleteCookie("krakenToken");
+              this.redirectToLogin();
+            }
+          } catch (error) {
+            console.error("Token validation failed:", error);
+            deleteCookie("krakenToken");
+            this.redirectToLogin();
+          }
+        }
+
+        async handleLogout() {
+          // Clear the validation interval
+          if (this.validationInterval) {
+            clearInterval(this.validationInterval);
+          }
+
+          try {
+            // Call logout endpoint to clear server-side cookie
+            await secureFetch("/api/v1/admin/auth/logout", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${this.token}` },
+            });
+          } catch (error) {
+            console.error("Logout request failed:", error);
+            // Continue with client-side cleanup anyway
+          }
+
+          // Clear client-side cookie
+          deleteCookie("krakenToken");
+          this.redirectToLogin();
+        }
+
+        // Tab Management
+        async switchTab(tabName) {
+          // Don't validate if switching to the same tab
+          if (this.currentTab === tabName) {
+            return;
+          }
+
+          // Validate token before switching tabs
+          const isValid = await this.validateTokenForTab();
+          if (!isValid) {
+            // Token is invalid, redirect to login
+            deleteCookie("krakenToken");
+            this.redirectToLogin();
+            return;
+          }
+
+          // Update tab buttons
+          document.querySelectorAll(".tab-button").forEach((btn) => {
+            btn.classList.remove("active");
+          });
+          document
+            .querySelector(`[data-tab="${tabName}"]`)
+            .classList.add("active");
+
+          // Update iframe visibility
+          document.querySelectorAll(".tab-iframe").forEach((iframe) => {
+            iframe.classList.remove("active");
+          });
+          const tabIframe = document.getElementById(`${tabName}Iframe`);
+          tabIframe.classList.add("active");
+
+          // Lazy load: set src if not already set
+          if (!tabIframe.src || tabIframe.src.endsWith("/")) {
+            tabIframe.src = `./tabs/${tabName.replace("secret-codes", "secret-codes")}.html`;
+          }
+
+          this.currentTab = tabName;
+        }
+
+        // Validate token for tab switching
+        async validateTokenForTab() {
+          try {
+            const response = await secureFetch("/api/v1/admin/auth/validate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token: this.token }),
+            });
+
+            const result = await response.json();
+            return result.success && result.data.isValid;
+          } catch (error) {
+            console.error("Token validation failed for tab switch:", error);
+            return false;
+          }
+        }
+
+        startPeriodicValidation() {
+          // Validate token every 5 minutes
+          this.validationInterval = setInterval(
+            async () => {
+              const isValid = await this.validateTokenForTab();
+              if (!isValid) {
+                console.warn(
+                  "Periodic validation failed, redirecting to login",
+                );
+                clearInterval(this.validationInterval);
+                deleteCookie("krakenToken");
+                this.redirectToLogin();
+              }
+            },
+            5 * 60 * 1000,
+          ); // 5 minutes
+        }
+
+        async validateTokenOnVisibilityChange() {
+          // Only validate if we have a token and the dashboard is visible
+          if (this.token && this.dashboardContainer.style.display !== "none") {
+            const isValid = await this.validateTokenForTab();
+            if (!isValid) {
+              console.warn(
+                "Token validation failed on page visibility change, redirecting to login",
+              );
+              deleteCookie("krakenToken");
+              this.redirectToLogin();
+            }
+          }
+        }
+      }
+
+      // Initialize Kraken dashboard when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        new KrakenDashboard();
+      });
+
+      // Additional security: check authentication state on page focus
+      window.addEventListener("focus", async () => {
+        const token = getCookie("krakenToken");
+        if (!token) {
+          window.location.href = "./kraken.html";
+        } else {
+          // Validate the token when the window gains focus
+          try {
+            const response = await secureFetch("/api/v1/admin/auth/validate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token: token }),
+            });
+
+            const result = await response.json();
+            if (!result.success || !result.data.isValid) {
+              console.warn(
+                "Token validation failed on window focus, redirecting to login",
+              );
+              deleteCookie("krakenToken");
+              window.location.href = "./kraken.html";
+            }
+          } catch (error) {
+            console.error("Token validation failed on window focus:", error);
+            deleteCookie("krakenToken");
+            window.location.href = "./kraken.html";
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

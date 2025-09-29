@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Logs - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+    />
+  </head>
+
+  <body>
+    <div class="logs-section">
+      <div class="logs-header">
+        <h2 class="logs-title">
+          <i class="fas fa-file-alt"></i> Activity Logs
+        </h2>
+        <button id="refreshLogsBtn" class="btn-enhanced btn-primary-enhanced">
+          <span class="spinner-enhanced hidden"></span>
+          <i class="fas fa-sync-alt btn-icon"></i>
+          Refresh
+        </button>
+      </div>
+      <div class="logs-container">
+        <div class="logs-filters">
+          <select id="logLevelFilter" class="form-control">
+            <option value="all">All Levels</option>
+            <option value="info">Info</option>
+            <option value="warning">Warning</option>
+            <option value="error">Error</option>
+          </select>
+        </div>
+        <div class="logs-list" id="logsList">
+          <div class="text-center loading-enhanced">
+            <span class="spinner-enhanced"></span>
+            Loading logs...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Cookie utility functions
+      function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(";");
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) === " ") c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) === 0)
+            return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+      }
+
+      class LogsTab {
+        constructor() {
+          this.token = getCookie("krakenToken");
+          this.init();
+        }
+
+        init() {
+          this.bindEvents();
+          this.loadLogs();
+        }
+
+        bindEvents() {
+          document
+            .getElementById("refreshLogsBtn")
+            .addEventListener("click", () => this.loadLogs());
+          document
+            .getElementById("logLevelFilter")
+            .addEventListener("change", () => this.filterLogs());
+        }
+
+        async loadLogs() {
+          const logsList = document.getElementById("logsList");
+          const refreshBtn = document.getElementById("refreshLogsBtn");
+          const spinner = refreshBtn?.querySelector(".spinner-enhanced");
+
+          if (refreshBtn) refreshBtn.disabled = true;
+          if (spinner) spinner.classList.remove("hidden");
+
+          try {
+            // Fetch logs from API
+            const response = await fetch("/api/logs");
+            if (!response.ok) throw new Error("Failed to fetch logs");
+            const data = await response.json();
+            const logs = Array.isArray(data.logs) ? data.logs : [];
+
+            if (logs.length === 0) {
+              logsList.innerHTML =
+                '<div class="text-center">No logs available</div>';
+              return;
+            }
+
+            logsList.innerHTML = logs
+              .map((log, idx) => {
+                // Normalize log level for CSS
+                let level = (log.level || "").toLowerCase();
+                if (level === "warn") level = "warning";
+                if (level === "error") level = "error";
+                if (level === "info") level = "info";
+                if (level === "debug") level = "info";
+                if (level === "request" || level === "response") level = "info";
+
+                // Format time
+                let time = log.timestamp || log.time || "";
+                if (time) {
+                  try {
+                    time = new Date(time).toLocaleTimeString();
+                  } catch {}
+                }
+
+                // Message
+                let message = log.message || log.body || log.data || "";
+                if (typeof message === "object")
+                  message = JSON.stringify(message);
+
+                // Source
+                let source = log.method
+                  ? `${log.method} ${log.url || ""}`
+                  : log.source || "";
+                if (log.status) source += ` (${log.status})`;
+
+                // Copy button
+                const copyData = JSON.stringify(
+                  { time, level, message, source },
+                  null,
+                  2,
+                );
+                return `
+                            <div class="log-entry log-${level}" data-log-idx="${idx}">
+                                <div class="log-time">${time}</div>
+                                <div class="log-level badge-enhanced badge-${level === "error" ? "danger" : level === "warning" ? "warning" : "info"}-enhanced">
+                                    ${level.toUpperCase()}
+                                </div>
+                                <div class="log-message">${message}
+                                    <button class="copy-message-btn" title="Copy message" data-message="${encodeURIComponent(message)}">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                <div class="log-source">${source ? "[" + source + "]" : ""}</div>
+                                <button class="copy-log-btn" title="Copy log entry" data-copy="${encodeURIComponent(copyData)}">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        `;
+              })
+              .join("");
+            // Add copy event listeners
+            logsList.querySelectorAll(".copy-log-btn").forEach((btn) => {
+              btn.addEventListener("click", function (e) {
+                e.stopPropagation();
+                const text = decodeURIComponent(this.getAttribute("data-copy"));
+                if (navigator.clipboard) {
+                  navigator.clipboard.writeText(text).then(() => {
+                    this.classList.add("copied");
+                    setTimeout(() => this.classList.remove("copied"), 1200);
+                  });
+                } else {
+                  // fallback
+                  const textarea = document.createElement("textarea");
+                  textarea.value = text;
+                  document.body.appendChild(textarea);
+                  textarea.select();
+                  document.execCommand("copy");
+                  document.body.removeChild(textarea);
+                  this.classList.add("copied");
+                  setTimeout(() => this.classList.remove("copied"), 1200);
+                }
+              });
+            });
+            logsList.querySelectorAll(".copy-message-btn").forEach((btn) => {
+              btn.addEventListener("click", function (e) {
+                e.stopPropagation();
+                const text = decodeURIComponent(
+                  this.getAttribute("data-message"),
+                );
+                if (navigator.clipboard) {
+                  navigator.clipboard.writeText(text).then(() => {
+                    this.classList.add("copied");
+                    setTimeout(() => this.classList.remove("copied"), 1200);
+                  });
+                } else {
+                  // fallback
+                  const textarea = document.createElement("textarea");
+                  textarea.value = text;
+                  document.body.appendChild(textarea);
+                  textarea.select();
+                  document.execCommand("copy");
+                  document.body.removeChild(textarea);
+                  this.classList.add("copied");
+                  setTimeout(() => this.classList.remove("copied"), 1200);
+                }
+              });
+            });
+          } catch (error) {
+            console.error("Failed to load logs:", error);
+            logsList.innerHTML =
+              '<div class="text-center">Failed to load logs</div>';
+          } finally {
+            if (refreshBtn) refreshBtn.disabled = false;
+            if (spinner) spinner.classList.add("hidden");
+          }
+        }
+
+        filterLogs() {
+          const filter = document.getElementById("logLevelFilter").value;
+          const logs = document.querySelectorAll(".log-entry");
+          logs.forEach((log) => {
+            if (filter === "all" || log.classList.contains(`log-${filter}`)) {
+              log.style.display = "";
+            } else {
+              log.style.display = "none";
+            }
+          });
+        }
+      }
+
+      // Initialize logs tab when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        new LogsTab();
+      });
+    </script>
+  </body>
+</html>

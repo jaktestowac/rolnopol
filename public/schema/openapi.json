@@ -1,0 +1,3041 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Rolnopol",
+    "version": "1.0.45",
+    "description": "API documentation for the Rolnopol service with versioning support",
+    "contact": {
+      "name": "API Support",
+      "url": "https://github.com/your-repo/api-rolnopol"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "API v1 (Stable) - Production endpoints"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication operations"
+    },
+    {
+      "name": "Users",
+      "description": "User management operations"
+    },
+    {
+      "name": "Fields",
+      "description": "Field management operations"
+    },
+    {
+      "name": "Staff",
+      "description": "Staff management operations"
+    },
+    {
+      "name": "Assignments",
+      "description": "Field-Staff assignment operations"
+    },
+    {
+      "name": "Animals",
+      "description": "Farm animal management operations"
+    },
+    {
+      "name": "Financial",
+      "description": "Financial account and transaction management operations"
+    },
+    {
+      "name": "Marketplace",
+      "description": "Marketplace trading and offer management operations"
+    },
+    {
+      "name": "Contact",
+      "description": "Contact management operations"
+    },
+    {
+      "name": "Alerts",
+      "description": "Alerts aggregation and history"
+    },
+    {
+      "name": "Map",
+      "description": "Map and geospatial data endpoints"
+    },
+    {
+      "name": "System",
+      "description": "System health and information endpoints"
+    },
+    {
+      "name": "Version",
+      "description": "API version information"
+    },
+    {
+      "name": "Debug",
+      "description": "Debugging and troubleshooting operations"
+    },
+    {
+      "name": "Logs",
+      "description": "Logging and monitoring operations"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "TokenAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "token",
+        "description": "Authentication token for user endpoints"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Response timestamp"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details"
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Response timestamp"
+          },
+          "data": {
+            "type": "object",
+            "description": "Response data"
+          },
+          "message": {
+            "type": "string",
+            "description": "Response message"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Numeric user ID (primary key)"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Auto-generated unique user identifier (internal ID)"
+          },
+          "displayedName": {
+            "type": "string",
+            "description": "User display name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User email address"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp"
+          },
+          "lastLogin": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last login timestamp"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Account active status"
+          }
+        },
+        "required": ["id", "userId", "email", "createdAt", "isActive"]
+      },
+      "UserRegistration": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email for login"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password",
+            "minLength": 3,
+            "maxLength": 50
+          },
+          "displayedName": {
+            "type": "string",
+            "description": "Display name (optional)",
+            "minLength": 3,
+            "maxLength": 20
+          }
+        }
+      },
+      "UserLogin": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email for login"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password"
+          }
+        }
+      },
+      "UserProfileUpdate": {
+        "type": "object",
+        "properties": {
+          "displayedName": {
+            "type": "string",
+            "description": "New display name",
+            "minLength": 3,
+            "maxLength": 20
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "New email address"
+          },
+          "password": {
+            "type": "string",
+            "description": "New password",
+            "minLength": 3,
+            "maxLength": 50
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "Authentication token"
+              },
+              "id": {
+                "type": "integer",
+                "description": "Numeric user ID (primary key)"
+              },
+              "displayedName": {
+                "type": "string",
+                "description": "User display name"
+              },
+              "userId": {
+                "type": "string",
+                "description": "Auto-generated user ID (internal identifier)"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Email for login"
+              },
+              "expiration": {
+                "type": "object",
+                "description": "Token expiration information"
+              }
+            }
+          }
+        }
+      },
+      "HealthCheck": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "unhealthy"],
+            "description": "Service health status"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Health check timestamp"
+          },
+          "uptime": {
+            "type": "number",
+            "description": "Service uptime in seconds"
+          },
+          "database": {
+            "type": "object",
+            "properties": {
+              "connected": {
+                "type": "boolean",
+                "description": "Database connection status"
+              },
+              "userCount": {
+                "type": "number",
+                "description": "Number of users in database"
+              }
+            }
+          },
+          "memory": {
+            "type": "object",
+            "description": "Memory usage information"
+          },
+          "version": {
+            "type": "string",
+            "description": "API version"
+          }
+        }
+      },
+      "VersionInfo": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "Version number (e.g., 1.0.0)"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["stable", "development", "deprecated"],
+            "description": "Version status"
+          },
+          "deprecated": {
+            "type": "boolean",
+            "description": "Whether version is deprecated"
+          },
+          "sunsetDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Deprecation sunset date"
+          },
+          "description": {
+            "type": "string",
+            "description": "Version description"
+          }
+        }
+      },
+      "ApiVersions": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "API information message"
+          },
+          "currentVersion": {
+            "type": "string",
+            "description": "Current stable version"
+          },
+          "versions": {
+            "type": "object",
+            "description": "Available versions information"
+          },
+          "endpoints": {
+            "type": "object",
+            "description": "Available endpoints by version"
+          }
+        }
+      },
+      "Field": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "Field ID" },
+          "userId": { "type": "string", "description": "Owner userId" },
+          "name": { "type": "string" },
+          "district": { "type": "string" },
+          "area": { "type": "number" }
+        }
+      },
+      "Staff": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "Staff ID" },
+          "userId": { "type": "string", "description": "Owner userId" },
+          "name": { "type": "string" },
+          "surname": { "type": "string" },
+          "age": { "type": "integer" }
+        }
+      },
+      "Assignment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "Assignment ID" },
+          "userId": { "type": "string", "description": "Owner userId" },
+          "fieldId": { "type": "integer" },
+          "staffId": { "type": "integer" },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          }
+        }
+      },
+      "AdminUser": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string" },
+          "userName": { "type": "string" },
+          "email": { "type": "string" },
+          "isActive": { "type": "boolean" }
+        }
+      },
+      "Animal": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "Animal ID" },
+          "userId": { "type": "string", "description": "Owner userId" },
+          "fieldId": {
+            "type": "integer",
+            "description": "Field ID where animal is located (optional)"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Number of animals",
+            "minimum": 1
+          },
+          "type": { "type": "string", "description": "Animal type key" },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          }
+        },
+        "required": ["id", "userId", "amount", "type", "createdAt"]
+      },
+      "AnimalCreate": {
+        "type": "object",
+        "properties": {
+          "fieldId": {
+            "type": "integer",
+            "description": "Field ID where animal is located (optional)"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Number of animals",
+            "minimum": 1
+          },
+          "type": { "type": "string", "description": "Animal type key" }
+        },
+        "required": ["amount", "type"]
+      },
+      "FinancialAccount": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "Account ID" },
+          "userId": { "type": "string", "description": "User ID" },
+          "balance": {
+            "type": "number",
+            "description": "Current account balance"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code",
+            "example": "ROL"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          },
+          "transactions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Transaction" },
+            "description": "List of transactions"
+          }
+        },
+        "required": ["id", "userId", "balance", "currency", "createdAt", "updatedAt"]
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "Transaction ID" },
+          "type": {
+            "type": "string",
+            "enum": ["income", "expense"],
+            "description": "Transaction type"
+          },
+          "amount": { "type": "number", "description": "Transaction amount" },
+          "description": {
+            "type": "string",
+            "description": "Transaction description"
+          },
+          "category": {
+            "type": "string",
+            "description": "Transaction category",
+            "example": "general"
+          },
+          "referenceId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Reference ID for related operations"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Transaction timestamp"
+          },
+          "balanceBefore": {
+            "type": "number",
+            "description": "Account balance before transaction"
+          },
+          "balanceAfter": {
+            "type": "number",
+            "description": "Account balance after transaction"
+          }
+        },
+        "required": ["id", "type", "amount", "description", "timestamp", "balanceBefore", "balanceAfter"]
+      },
+      "TransactionCreate": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["income", "expense"],
+            "description": "Transaction type"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "Transaction amount (max 2 decimal places)"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100,
+            "description": "Transaction description (3-100 characters, alphanumeric and basic punctuation only)"
+          },
+          "category": {
+            "type": "string",
+            "description": "Transaction category",
+            "example": "general"
+          },
+          "cardNumber": {
+            "type": "string",
+            "minLength": 13,
+            "maxLength": 20,
+            "pattern": "^[0-9]{13,20}$",
+            "writeOnly": true,
+            "description": "Required when type=income. Card number (digits only). Not persisted and never returned in responses.",
+            "example": "4242424242424242"
+          },
+          "cvv": {
+            "type": "string",
+            "pattern": "^\\d{3,4}$",
+            "writeOnly": true,
+            "description": "Required when type=income. CVV/CVC code (3-4 digits). Not persisted and never returned in responses.",
+            "example": "123"
+          }
+        },
+        "required": ["type", "amount", "description"]
+      },
+      "TransferRequest": {
+        "type": "object",
+        "properties": {
+          "toUserId": { "type": "string", "description": "Recipient user ID" },
+          "amount": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 999.99,
+            "description": "Transfer amount (max 999.99 ROL, max 2 decimal places)"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100,
+            "description": "Transfer description (3-100 characters, alphanumeric and basic punctuation only)"
+          }
+        },
+        "required": ["toUserId", "amount", "description"]
+      },
+      "FinancialStats": {
+        "type": "object",
+        "properties": {
+          "totalIncome": {
+            "type": "number",
+            "description": "Total income amount"
+          },
+          "totalExpenses": {
+            "type": "number",
+            "description": "Total expenses amount"
+          },
+          "netBalance": {
+            "type": "number",
+            "description": "Net balance (income - expenses)"
+          },
+          "transactionCount": {
+            "type": "integer",
+            "description": "Total number of transactions"
+          },
+          "incomeCount": {
+            "type": "integer",
+            "description": "Number of income transactions"
+          },
+          "expenseCount": {
+            "type": "integer",
+            "description": "Number of expense transactions"
+          },
+          "averageTransaction": {
+            "type": "number",
+            "description": "Average transaction amount"
+          },
+          "largestIncome": {
+            "type": "number",
+            "description": "Largest income transaction"
+          },
+          "largestExpense": {
+            "type": "number",
+            "description": "Largest expense transaction"
+          }
+        }
+      },
+      "MarketplaceStats": {
+        "type": "object",
+        "properties": {
+          "totalVolume": {
+            "type": "number",
+            "description": "Total marketplace volume across all users"
+          },
+          "totalTransactions": {
+            "type": "integer",
+            "description": "Total number of marketplace transactions"
+          },
+          "activeUsers": {
+            "type": "integer",
+            "description": "Number of users with financial activity"
+          },
+          "averageTransactionValue": {
+            "type": "number",
+            "description": "Average transaction value across marketplace"
+          }
+        }
+      },
+      "MarketplaceOffer": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "Offer ID" },
+          "sellerId": { "type": "integer", "description": "Seller user ID" },
+          "itemType": {
+            "type": "string",
+            "enum": ["field", "animal"],
+            "description": "Type of item being sold"
+          },
+          "itemId": {
+            "type": "integer",
+            "description": "ID of the item being sold"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "Price of the item"
+          },
+          "description": {
+            "type": "string",
+            "description": "Offer description"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "cancelled", "sold"],
+            "description": "Offer status"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Offer creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          },
+          "sellerLabel": {
+            "type": "string",
+            "description": "Seller display label (display name or masked email)"
+          }
+        },
+        "required": ["id", "sellerId", "itemType", "itemId", "price", "status", "createdAt", "updatedAt"]
+      },
+      "MarketplaceOfferCreate": {
+        "type": "object",
+        "properties": {
+          "itemType": {
+            "type": "string",
+            "enum": ["field", "animal"],
+            "description": "Type of item to sell"
+          },
+          "itemId": {
+            "type": "integer",
+            "description": "ID of the item to sell"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "Price of the item"
+          },
+          "description": {
+            "type": "string",
+            "description": "Offer description"
+          }
+        },
+        "required": ["itemType", "itemId", "price"]
+      },
+      "MarketplaceTransaction": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "Transaction ID" },
+          "offerId": { "type": "integer", "description": "Related offer ID" },
+          "buyerId": { "type": "integer", "description": "Buyer user ID" },
+          "sellerId": { "type": "integer", "description": "Seller user ID" },
+          "itemType": {
+            "type": "string",
+            "enum": ["field", "animal"],
+            "description": "Type of item sold"
+          },
+          "itemId": { "type": "integer", "description": "ID of the item sold" },
+          "price": { "type": "number", "description": "Transaction price" },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Transaction timestamp"
+          }
+        },
+        "required": ["id", "offerId", "buyerId", "sellerId", "itemType", "itemId", "price", "timestamp"]
+      },
+      "BuyRequest": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "integer",
+            "description": "ID of the offer to buy"
+          }
+        },
+        "required": ["offerId"]
+      },
+      "SystemStatistics": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "integer",
+            "description": "Number of active users"
+          },
+          "farms": {
+            "type": "integer",
+            "description": "Total number of farms"
+          },
+          "area": {
+            "type": "number",
+            "description": "Total area of all fields"
+          },
+          "staff": {
+            "type": "integer",
+            "description": "Total number of staff members"
+          },
+          "animals": {
+            "type": "integer",
+            "description": "Total number of animals"
+          },
+          "avgStaffAge": {
+            "type": "integer",
+            "description": "Average age of staff members"
+          },
+          "offers": {
+            "type": "integer",
+            "description": "Number of active marketplace offers"
+          }
+        }
+      },
+      "DatabaseHealth": {
+        "type": "object",
+        "properties": {
+          "instances": {
+            "type": "integer",
+            "description": "Number of database instances"
+          },
+          "status": {
+            "type": "string",
+            "description": "Overall database status"
+          },
+          "health": {
+            "type": "object",
+            "description": "Health statistics for each database"
+          },
+          "validation": {
+            "type": "object",
+            "description": "Validation results for each database"
+          }
+        }
+      },
+      "MemoryStats": {
+        "type": "object",
+        "properties": {
+          "rss": {
+            "type": "number",
+            "description": "Resident Set Size in bytes"
+          },
+          "heapTotal": {
+            "type": "number",
+            "description": "Total heap size in bytes"
+          },
+          "heapUsed": {
+            "type": "number",
+            "description": "Used heap size in bytes"
+          },
+          "external": {
+            "type": "number",
+            "description": "External memory in bytes"
+          },
+          "arrayBuffers": {
+            "type": "number",
+            "description": "Array buffer memory in bytes"
+          }
+        }
+      },
+      "TokenValidation": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Authentication token to validate"
+          }
+        },
+        "required": ["token"]
+      },
+      "MigrationResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status"
+          },
+          "message": {
+            "type": "string",
+            "description": "Operation message"
+          },
+          "clearedCount": {
+            "type": "integer",
+            "description": "Number of tokens cleared"
+          }
+        },
+        "required": ["success", "message", "clearedCount"]
+      }
+    }
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["Version"],
+        "summary": "Get API version information",
+        "description": "Returns information about all available API versions",
+        "responses": {
+          "200": {
+            "description": "API version information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiVersions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1": {
+      "get": {
+        "tags": ["Version"],
+        "summary": "Get v1 API information",
+        "description": "Returns information about v1 API endpoints",
+        "responses": {
+          "200": {
+            "description": "v1 API information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2": {
+      "get": {
+        "tags": ["Version"],
+        "summary": "Get v2 API information",
+        "description": "Returns information about v2 API endpoints",
+        "responses": {
+          "200": {
+            "description": "v2 API information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/healthcheck": {
+      "get": {
+        "tags": ["Version"],
+        "summary": "Get v2 health check",
+        "description": "Returns v2 API health status",
+        "responses": {
+          "200": {
+            "description": "v2 API health check",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "version": { "type": "string" },
+                    "status": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register new user",
+        "description": "Create a new user account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRegistration"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User login",
+        "description": "Authenticate user and get access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserLogin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User logout",
+        "description": "Logout user and invalidate session",
+        "responses": {
+          "200": {
+            "description": "Logout successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authorization": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Get current user information",
+        "description": "Validate token and return current user data",
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User information retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Validate and refresh token",
+        "description": "Validate provided token and return user data",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TokenValidation" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token validated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthcheck": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Get service health information",
+        "description": "Check service health and database connectivity",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is unhealthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contact": {
+      "post": {
+        "summary": "Submit contact form",
+        "description": "Submit a contact form with name, email, subject, and message.",
+        "tags": ["Contact"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "subject": { "type": "string" },
+                  "message": { "type": "string" }
+                },
+                "required": ["name", "email", "subject", "message"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message received",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "id": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "error": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logs": {
+      "get": {
+        "servers": [
+          {
+            "url": "/api"
+          }
+        ],
+        "summary": "Get log list",
+        "description": "Returns a list of logs.",
+        "tags": ["Logs"],
+        "responses": {
+          "200": {
+            "description": "Log list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "logs": {
+                      "type": "array",
+                      "items": { "type": "object" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/debug": {
+      "get": {
+        "servers": [
+          {
+            "url": "/api"
+          }
+        ],
+        "summary": "Get or update debug settings",
+        "description": "Get current debug settings or update them via query parameters.",
+        "tags": ["Debug"],
+        "parameters": [
+          {
+            "name": "all",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["true", "false"] },
+            "description": "Enable/disable all debug settings"
+          },
+          {
+            "name": "debug",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["true", "false"] },
+            "description": "Enable/disable debug mode"
+          },
+          {
+            "name": "log",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["true", "false"] },
+            "description": "Enable/disable log stack trace"
+          },
+          {
+            "name": "request",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["true", "false"] },
+            "description": "Enable/disable log request"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current debug settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "DEBUG_MODE": { "type": "boolean" },
+                    "LOG_STACK_TRACE": { "type": "boolean" },
+                    "LOG_REQUEST": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ping": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Simple ping check",
+        "description": "Basic connectivity test",
+        "responses": {
+          "200": {
+            "description": "Pong response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "pong" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/databases": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Get database status",
+        "description": "Returns detailed database status information",
+        "responses": {
+          "200": {
+            "description": "Database status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatabaseHealth"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database status check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/memory": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Get memory usage statistics",
+        "description": "Returns memory usage information",
+        "responses": {
+          "200": {
+            "description": "Memory stats retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryStats"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Memory stats check failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/about": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Get application information",
+        "description": "Returns application metadata and information",
+        "responses": {
+          "200": {
+            "description": "Application information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documentation": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Get documentation data",
+        "description": "Serve documentation data as JSON",
+        "responses": {
+          "200": {
+            "description": "Documentation data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/statistics": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Get system statistics",
+        "description": "Returns comprehensive system statistics including users, farms, fields, staff, animals, and marketplace data",
+        "responses": {
+          "200": {
+            "description": "System statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SystemStatistics" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/profile": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get user profile",
+        "description": "Get current user's profile information",
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update user profile",
+        "description": "Update current user's profile information",
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Delete user account",
+        "description": "Delete current user's account",
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{userId}": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update user by ID",
+        "description": "Update user information by user ID (own profile only)",
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - can only update own profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/statistics": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get user statistics",
+        "description": "Get statistics for the current user (display name, fields, staff, stocks)",
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/statistics/all": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get all users statistics",
+        "description": "Get statistics for all users (admin access required)",
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All users statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fields": {
+      "get": {
+        "tags": ["Fields"],
+        "summary": "List all fields for current user",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Field" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Fields"],
+        "summary": "Create a new field",
+        "security": [{ "TokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Field" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Field created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Field" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fields/{id}": {
+      "put": {
+        "tags": ["Fields"],
+        "summary": "Update a field",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Field" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Field updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Field" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Fields"],
+        "summary": "Delete a field",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Field deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/staff": {
+      "get": {
+        "tags": ["Staff"],
+        "summary": "List all staff for current user",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of staff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Staff" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Staff"],
+        "summary": "Create a new staff member",
+        "security": [{ "TokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Staff" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Staff created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Staff" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/staff/{id}": {
+      "put": {
+        "tags": ["Staff"],
+        "summary": "Update a staff member",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Staff" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Staff updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Staff" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Staff"],
+        "summary": "Delete a staff member",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Staff deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fields/assign": {
+      "post": {
+        "tags": ["Assignments"],
+        "summary": "Assign a staff member to a field",
+        "security": [{ "TokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fieldId": { "type": "integer" },
+                  "staffId": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Assignment created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Assignment" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Assignments"],
+        "summary": "List assignments",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of assignments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Assignment" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assignments": {
+      "get": {
+        "tags": ["Assignments"],
+        "summary": "List all assignments for current user",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of assignments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Assignment" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assignments/{id}": {
+      "delete": {
+        "tags": ["Assignments"],
+        "summary": "Delete an assignment",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignment deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/animals": {
+      "get": {
+        "tags": ["Animals"],
+        "summary": "List all animals for current user",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of animals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Animal" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Animals"],
+        "summary": "Create a new animal",
+        "security": [{ "TokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AnimalCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Animal created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Animal" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/animals/{id}": {
+      "delete": {
+        "tags": ["Animals"],
+        "summary": "Delete an animal",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Animal deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Animals"],
+        "summary": "Update an animal",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AnimalCreate" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Animal updated",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Animal" } } }
+          },
+          "404": {
+            "description": "Animal not found",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/animals/types": {
+      "get": {
+        "tags": ["Animals"],
+        "summary": "Get allowed animal types",
+        "responses": {
+          "200": {
+            "description": "List of allowed animal types",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string",
+                            "description": "Animal type key"
+                          },
+                          "fullName": {
+                            "type": "string",
+                            "description": "Full name of the animal type"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Description of the animal type"
+                          },
+                          "icon": {
+                            "type": "string",
+                            "description": "Emoji icon for the animal type"
+                          }
+                        },
+                        "required": ["key", "fullName", "description", "icon"]
+                      }
+                    },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/financial/account": {
+      "get": {
+        "tags": ["Financial"],
+        "summary": "Get user's financial account",
+        "description": "Retrieve the current user's financial account information including balance and transaction history",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Financial account retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "account": {
+                          "$ref": "#/components/schemas/FinancialAccount"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Account not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/financial/transactions": {
+      "get": {
+        "tags": ["Financial"],
+        "summary": "Get transaction history",
+        "description": "Retrieve transaction history with optional filtering and pagination",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of transactions to return",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of transactions to skip",
+            "schema": { "type": "integer", "default": 0, "minimum": 0 }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by transaction type",
+            "schema": { "type": "string", "enum": ["income", "expense"] }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by transaction category",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Filter transactions from this date (ISO format)",
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "Filter transactions until this date (ISO format)",
+            "schema": { "type": "string", "format": "date-time" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction history retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactions": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Transaction"
+                          }
+                        },
+                        "total": {
+                          "type": "integer",
+                          "description": "Total number of transactions"
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "description": "Number of transactions returned"
+                        },
+                        "offset": {
+                          "type": "integer",
+                          "description": "Number of transactions skipped"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Financial"],
+        "summary": "Add a new transaction",
+        "description": "Create a new income or expense transaction. For income transactions, cardNumber and cvv are required for validation; these fields are write-only, are not stored, and are never returned.",
+        "security": [{ "TokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TransactionCreate" },
+              "examples": {
+                "expense": {
+                  "summary": "Expense transaction",
+                  "value": {
+                    "type": "expense",
+                    "amount": 12.5,
+                    "description": "Seeds purchase",
+                    "category": "general"
+                  }
+                },
+                "income": {
+                  "summary": "Income transaction (requires card)",
+                  "value": {
+                    "type": "income",
+                    "amount": 99.99,
+                    "description": "Top up",
+                    "category": "general",
+                    "cardNumber": "4242424242424242",
+                    "cvv": "123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transaction": {
+                          "$ref": "#/components/schemas/Transaction"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/financial/transactions/{transactionId}": {
+      "get": {
+        "tags": ["Financial"],
+        "summary": "Get transaction by ID",
+        "description": "Retrieve a specific transaction by its ID",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [
+          {
+            "name": "transactionId",
+            "in": "path",
+            "required": true,
+            "description": "Transaction ID",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Transaction" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Transaction not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/financial/stats": {
+      "get": {
+        "tags": ["Financial"],
+        "summary": "Get financial statistics",
+        "description": "Retrieve comprehensive financial statistics for the current user",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Financial statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "statistics": {
+                          "$ref": "#/components/schemas/FinancialStats"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/financial/transfer": {
+      "post": {
+        "tags": ["Financial"],
+        "summary": "Transfer funds to another user",
+        "description": "Transfer funds from current user's account to another user's account",
+        "security": [{ "TokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TransferRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfer completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "fromUserId": { "type": "string" },
+                        "toUserId": { "type": "string" },
+                        "amount": { "type": "number" },
+                        "description": { "type": "string" },
+                        "timestamp": { "type": "string", "format": "date-time" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data or insufficient funds",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/financial/marketplace-stats": {
+      "get": {
+        "tags": ["Financial"],
+        "summary": "Get comprehensive marketplace statistics",
+        "description": "Retrieve marketplace statistics across all users",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Marketplace statistics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/MarketplaceStats" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/financial/accounts/all": {
+      "get": {
+        "tags": ["Financial"],
+        "summary": "Get all financial accounts",
+        "description": "Retrieve all financial accounts (admin access required)",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "All financial accounts retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/financial/accounts/balance": {
+      "put": {
+        "tags": ["Financial"],
+        "summary": "Update account balance",
+        "description": "Update account balance for a specific user (admin access required)",
+        "security": [{ "TokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "description": "User ID whose balance to update"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "description": "New balance amount"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Reason for balance update"
+                  }
+                },
+                "required": ["userId", "amount", "description"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account balance updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketplace/offers": {
+      "get": {
+        "tags": ["Marketplace"],
+        "summary": "Get all marketplace offers",
+        "description": "Retrieve all active marketplace offers excluding user's own offers",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Marketplace offers retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "offers": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/MarketplaceOffer"
+                          }
+                        },
+                        "total": {
+                          "type": "integer",
+                          "description": "Total number of offers"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Marketplace"],
+        "summary": "Create a new marketplace offer",
+        "description": "Create a new offer to sell a field or animal",
+        "security": [{ "TokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketplaceOfferCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Offer created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "offer": {
+                          "$ref": "#/components/schemas/MarketplaceOffer"
+                        },
+                        "message": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data or item already offered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found or not owned by user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketplace/my-offers": {
+      "get": {
+        "tags": ["Marketplace"],
+        "summary": "Get user's own offers",
+        "description": "Retrieve all marketplace offers created by the current user",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "User offers retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "offers": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/MarketplaceOffer"
+                          }
+                        },
+                        "total": {
+                          "type": "integer",
+                          "description": "Total number of offers"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketplace/buy": {
+      "post": {
+        "tags": ["Marketplace"],
+        "summary": "Buy an item from marketplace",
+        "description": "Purchase an item from a marketplace offer",
+        "security": [{ "TokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BuyRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Purchase completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transaction": {
+                          "$ref": "#/components/schemas/MarketplaceTransaction"
+                        },
+                        "message": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data, insufficient funds, or cannot buy own offer",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Offer not found or item no longer available",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketplace/offers/{offerId}": {
+      "delete": {
+        "tags": ["Marketplace"],
+        "summary": "Cancel an offer",
+        "description": "Cancel a marketplace offer created by the current user",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [
+          {
+            "name": "offerId",
+            "in": "path",
+            "required": true,
+            "description": "Offer ID to cancel",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Offer cancelled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - not the offer owner",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Offer not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/marketplace/transactions": {
+      "get": {
+        "tags": ["Marketplace"],
+        "summary": "Get marketplace transaction history",
+        "description": "Retrieve marketplace transaction history for the current user",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Transaction history retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MarketplaceTransaction"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alerts": {
+      "get": {
+        "tags": ["Alerts"],
+        "summary": "Get combined alerts",
+        "description": "Get combined alerts (history and upcoming) for an optional date",
+        "security": [],
+        "parameters": [
+          { "name": "date", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Date in YYYY-MM-DD" },
+          { "name": "region", "in": "query", "schema": { "type": "string" }, "description": "Region in ISO 3166-2:PL format - PL-XX" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alerts retrieved",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      }
+    },
+    "/alerts/history": {
+      "get": {
+        "tags": ["Alerts"],
+        "summary": "Get alerts history",
+        "description": "Get past alerts for an optional date",
+        "security": [],
+        "parameters": [
+          { "name": "date", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Date in YYYY-MM-DD" },
+          { "name": "region", "in": "query", "schema": { "type": "string" }, "description": "Region in ISO 3166-2:PL format - PL-XX" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alerts history retrieved",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      }
+    },
+    "/alerts/upcoming": {
+      "get": {
+        "tags": ["Alerts"],
+        "summary": "Get upcoming alerts",
+        "description": "Get upcoming alerts for an optional date",
+        "security": [],
+        "parameters": [
+          { "name": "date", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Date in YYYY-MM-DD" },
+          { "name": "region", "in": "query", "schema": { "type": "string" }, "description": "Region in ISO 3166-2:PL format - PL-XX" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upcoming alerts retrieved",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      }
+    },
+    "/fields/assign/{id}": {
+      "delete": {
+        "tags": ["Assignments"],
+        "summary": "Delete assignment",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": {
+            "description": "Assignment deleted",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      }
+    },
+    "/fields/districts": {
+      "post": {
+        "tags": ["Fields"],
+        "summary": "List field districts",
+        "description": "Return list of districts derived from fields",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Districts list",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      }
+    },
+    "/fields/districts/{id}": {
+      "post": {
+        "tags": ["Fields"],
+        "summary": "List field districts by id",
+        "description": "Return list of districts for given id",
+        "security": [{ "TokenAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": {
+            "description": "Districts list",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      }
+    },
+    "/map": {
+      "get": {
+        "tags": ["Map"],
+        "summary": "Map API info",
+        "description": "Basic info about map endpoints",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Info",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      }
+    },
+
+    "/map/fieldsmap": {
+      "get": {
+        "tags": ["Map"],
+        "summary": "Get fields geojson",
+        "description": "Return fields map JSON (GeoJSON-like)",
+        "security": [{ "TokenAuth": [] }],
+        "responses": { "200": { "description": "Fields map", "content": { "application/json": { "schema": { "type": "object" } } } } }
+      }
+    },
+
+    "/map/districts": {
+      "get": {
+        "tags": ["Map"],
+        "summary": "List districts (map)",
+        "description": "Return district names available in map data",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "District names",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "type": "string" } } } }
+          }
+        }
+      }
+    },
+
+    "/shutdown": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Shutdown endpoint",
+        "description": "Shutdown the API server (for testing)",
+        "responses": {
+          "200": {
+            "description": "Shutdown initiated",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+          }
+        }
+      }
+    }
+  }
+}

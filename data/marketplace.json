@@ -1,0 +1,370 @@
+{
+  "offers": [
+    {
+      "id": 1,
+      "sellerId": 1,
+      "itemType": "animal",
+      "itemId": 6,
+      "price": 130.99,
+      "description": "Healthy animals for sale.",
+      "status": "active",
+      "createdAt": "2025-07-20T11:07:54.926Z",
+      "updatedAt": "2025-07-20T11:07:54.926Z"
+    },
+    {
+      "id": 2,
+      "sellerId": 1,
+      "itemType": "field",
+      "itemId": 4,
+      "price": 200,
+      "description": "Prime land for crops.",
+      "status": "cancelled",
+      "createdAt": "2025-07-20T11:08:36.679Z",
+      "updatedAt": "2025-07-20T11:18:14.168Z"
+    },
+    {
+      "id": 3,
+      "sellerId": 1,
+      "itemType": "field",
+      "itemId": 13,
+      "price": 1200,
+      "description": "Prime agricultural land. Great for crops or livestock especially for pigs.",
+      "status": "active",
+      "createdAt": "2025-07-20T11:12:13.771Z",
+      "updatedAt": "2025-07-20T11:18:58.692Z"
+    },
+    {
+      "id": 4,
+      "sellerId": 2,
+      "itemType": "field",
+      "itemId": 14,
+      "price": 300,
+      "description": "Prime land for crops.",
+      "status": "active",
+      "createdAt": "2025-07-23T12:00:20.000Z",
+      "updatedAt": "2025-07-23T12:00:20.000Z"
+    },
+    {
+      "id": 5,
+      "sellerId": 3,
+      "itemType": "animal",
+      "itemId": 10,
+      "price": 120,
+      "description": "Healthy pigs for sale.",
+      "status": "sold",
+      "createdAt": "2025-07-23T12:00:21.000Z",
+      "updatedAt": "2025-07-24T10:00:00.000Z",
+      "buyerId": 1,
+      "soldAt": "2025-07-24T10:00:00.000Z"
+    },
+    {
+      "id": 6,
+      "sellerId": 4,
+      "itemType": "field",
+      "itemId": 18,
+      "price": 400,
+      "description": "Large field, great for expansion.",
+      "status": "active",
+      "createdAt": "2025-07-23T12:00:22.000Z",
+      "updatedAt": "2025-07-23T12:00:22.000Z"
+    },
+    {
+      "id": 7,
+      "sellerId": 5,
+      "itemType": "animal",
+      "itemId": 14,
+      "price": 90,
+      "description": "Fresh fish stock.",
+      "status": "sold",
+      "createdAt": "2025-07-23T12:00:23.000Z",
+      "updatedAt": "2025-07-25T09:00:00.000Z",
+      "buyerId": 4,
+      "soldAt": "2025-07-25T09:00:00.000Z"
+    },
+    {
+      "id": 8,
+      "sellerId": 2,
+      "itemType": "animal",
+      "itemId": 9,
+      "price": 80,
+      "description": "Sheep for sale.",
+      "status": "cancelled",
+      "createdAt": "2025-07-23T13:00:00.000Z",
+      "updatedAt": "2025-07-23T13:05:00.000Z"
+    },
+    {
+      "id": 9,
+      "sellerId": 3,
+      "itemType": "field",
+      "itemId": 16,
+      "price": 350,
+      "description": "Doe's Field, ready for crops.",
+      "status": "sold",
+      "createdAt": "2025-07-23T13:10:00.000Z",
+      "updatedAt": "2025-07-23T13:15:00.000Z",
+      "buyerId": 2,
+      "soldAt": "2025-07-23T13:14:00.000Z"
+    },
+    {
+      "id": 10,
+      "sellerId": 4,
+      "itemType": "animal",
+      "itemId": 12,
+      "price": 60,
+      "description": "Goat, healthy and strong.",
+      "status": "unavailable",
+      "createdAt": "2025-07-23T13:20:00.000Z",
+      "updatedAt": "2025-07-23T13:25:00.000Z"
+    },
+    {
+      "id": 11,
+      "sellerId": 5,
+      "itemType": "field",
+      "itemId": 21,
+      "price": 500,
+      "description": "Innovation Acres, premium land.",
+      "status": "sold",
+      "createdAt": "2025-07-23T13:30:00.000Z",
+      "updatedAt": "2025-07-25T10:00:00.000Z",
+      "buyerId": 3,
+      "soldAt": "2025-07-25T10:00:00.000Z"
+    },
+    {
+      "id": 12,
+      "sellerId": 2,
+      "itemType": "field",
+      "itemId": 22,
+      "price": 250,
+      "description": "Willow Grove, fertile and well-irrigated.",
+      "status": "active",
+      "createdAt": "2025-07-25T12:30:00.000Z",
+      "updatedAt": "2025-07-25T12:30:00.000Z"
+    },
+    {
+      "id": 13,
+      "sellerId": 3,
+      "itemType": "animal",
+      "itemId": 17,
+      "price": 300,
+      "description": "Strong horses, perfect for farm work.",
+      "status": "active",
+      "createdAt": "2025-07-25T12:35:00.000Z",
+      "updatedAt": "2025-07-25T12:35:00.000Z"
+    },
+    {
+      "id": 14,
+      "sellerId": 5,
+      "itemType": "animal",
+      "itemId": 18,
+      "price": 110,
+      "description": "Healthy sheep, ready for a new home.",
+      "status": "active",
+      "createdAt": "2025-07-25T12:40:00.000Z",
+      "updatedAt": "2025-07-25T12:40:00.000Z"
+    },
+    {
+      "id": 15,
+      "sellerId": 4,
+      "itemType": "field",
+      "itemId": 25,
+      "price": 350,
+      "description": "Birch Pasture, currently in use.",
+      "status": "unavailable",
+      "createdAt": "2025-07-25T13:15:00.000Z",
+      "updatedAt": "2025-07-25T13:15:00.000Z"
+    },
+    {
+      "id": 16,
+      "sellerId": 2,
+      "itemType": "animal",
+      "itemId": 20,
+      "price": 95,
+      "description": "Goats, healthy and ready for sale.",
+      "status": "active",
+      "createdAt": "2025-07-25T13:20:00.000Z",
+      "updatedAt": "2025-07-25T13:20:00.000Z"
+    },
+    {
+      "id": 17,
+      "sellerId": 6,
+      "itemType": "field",
+      "itemId": 27,
+      "price": 999.99,
+      "description": "Government field for sale.",
+      "status": "active",
+      "createdAt": "2025-07-26T11:00:00.000Z",
+      "updatedAt": "2025-07-26T11:00:00.000Z"
+    },
+    {
+      "id": 18,
+      "sellerId": 6,
+      "itemType": "animal",
+      "itemId": 21,
+      "price": 499.99,
+      "description": "Government cows for sale.",
+      "status": "active",
+      "createdAt": "2025-07-26T11:05:00.000Z",
+      "updatedAt": "2025-07-26T11:05:00.000Z"
+    },
+    {
+      "id": 19,
+      "sellerId": 6,
+      "itemType": "field",
+      "itemId": 29,
+      "price": 1500.0,
+      "description": "Lush government orchard with mature fruit trees and irrigation system.",
+      "status": "active",
+      "createdAt": "2025-07-26T12:00:00.000Z",
+      "updatedAt": "2025-07-26T12:00:00.000Z"
+    },
+    {
+      "id": 20,
+      "sellerId": 6,
+      "itemType": "animal",
+      "itemId": 22,
+      "price": 799.99,
+      "description": "Healthy sheep, ideal for wool production and eco-farming.",
+      "status": "active",
+      "createdAt": "2025-07-26T12:05:00.000Z",
+      "updatedAt": "2025-07-26T12:05:00.000Z"
+    },
+    {
+      "id": 21,
+      "sellerId": 6,
+      "itemType": "animal",
+      "itemId": 23,
+      "price": 299.99,
+      "description": "Bee colonies for pollination and honey production, government-certified.",
+      "status": "active",
+      "createdAt": "2025-07-26T12:10:00.000Z",
+      "updatedAt": "2025-07-26T12:10:00.000Z"
+    },
+    {
+      "id": 22,
+      "sellerId": 6,
+      "itemType": "field",
+      "itemId": 28,
+      "price": 1200.0,
+      "description": "Spacious research field, ideal for crop rotation experiments and soil studies.",
+      "status": "active",
+      "createdAt": "2025-07-27T09:00:00.000Z",
+      "updatedAt": "2025-07-27T09:00:00.000Z"
+    },
+    {
+      "id": 23,
+      "sellerId": 6,
+      "itemType": "field",
+      "itemId": 30,
+      "price": 950.0,
+      "description": "Experimental wheat plot with advanced irrigation and monitoring systems.",
+      "status": "active",
+      "createdAt": "2025-07-27T09:10:00.000Z",
+      "updatedAt": "2025-07-27T09:10:00.000Z"
+    },
+    {
+      "id": 24,
+      "sellerId": 6,
+      "itemType": "field",
+      "itemId": 31,
+      "price": 2200.0,
+      "description": "Large solar research meadow, perfect for renewable energy projects and biodiversity studies.",
+      "status": "active",
+      "createdAt": "2025-07-27T09:20:00.000Z",
+      "updatedAt": "2025-07-27T09:20:00.000Z"
+    },
+    {
+      "id": 25,
+      "sellerId": 6,
+      "itemType": "animal",
+      "itemId": 26,
+      "price": 199.99,
+      "description": "Government ducks for sale.",
+      "status": "active",
+      "createdAt": "2025-07-28T10:00:00.000Z",
+      "updatedAt": "2025-07-28T10:00:00.000Z"
+    },
+    {
+      "id": 26,
+      "sellerId": 6,
+      "itemType": "field",
+      "itemId": 32,
+      "price": 1800.0,
+      "description": "Experimental Plot Delta, ideal for research.",
+      "status": "active",
+      "createdAt": "2025-07-28T10:05:00.000Z",
+      "updatedAt": "2025-07-28T10:05:00.000Z"
+    },
+    {
+      "id": 27,
+      "sellerId": 6,
+      "itemType": "animal",
+      "itemId": 27,
+      "price": 299.99,
+      "description": "Goats from government research farm.",
+      "status": "active",
+      "createdAt": "2025-07-28T10:10:00.000Z",
+      "updatedAt": "2025-07-28T10:10:00.000Z"
+    },
+    {
+      "id": 28,
+      "sellerId": 6,
+      "itemType": "animal",
+      "itemId": 28,
+      "price": 149.99,
+      "description": "Turkeys for sale, government certified.",
+      "status": "active",
+      "createdAt": "2025-07-28T10:15:00.000Z",
+      "updatedAt": "2025-07-28T10:15:00.000Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": 1,
+      "offerId": 9,
+      "sellerId": 3,
+      "buyerId": 2,
+      "itemType": "field",
+      "itemId": 16,
+      "price": 350,
+      "status": "completed",
+      "createdAt": "2025-07-23T13:14:00.000Z"
+    },
+    {
+      "id": 2,
+      "offerId": 5,
+      "sellerId": 3,
+      "buyerId": 1,
+      "itemType": "animal",
+      "itemId": 10,
+      "price": 120,
+      "status": "completed",
+      "createdAt": "2025-07-24T10:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "offerId": 7,
+      "sellerId": 5,
+      "buyerId": 4,
+      "itemType": "animal",
+      "itemId": 14,
+      "price": 90,
+      "status": "completed",
+      "createdAt": "2025-07-25T09:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "offerId": 11,
+      "sellerId": 5,
+      "buyerId": 3,
+      "itemType": "field",
+      "itemId": 21,
+      "price": 500,
+      "status": "completed",
+      "createdAt": "2025-07-25T10:00:00.000Z"
+    }
+  ],
+  "counters": {
+    "lastOfferId": 28,
+    "lastTransactionId": 4
+  }
+}

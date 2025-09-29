@@ -1,0 +1,409 @@
+[
+  {
+    "section": "overview",
+    "title": "System Overview",
+    "content": "Rolnopol is a comprehensive agricultural management system for farmers, administrators, and superadmins. It enables management of farms, resources, users, and transactions in a secure, modern environment. The system supports collaboration, an internal marketplace, and financial tracking."
+  },
+  {
+    "section": "entities",
+    "title": "Main Data Entities",
+    "content": [
+      {
+        "entity": "User",
+        "description": "Represents a system user (farmer, admin, or superadmin) with authentication, profile, and role information."
+      },
+      {
+        "entity": "Field",
+        "description": "A plot of land owned by a user. Fields have a name, area, and are managed by farmers."
+      },
+      {
+        "entity": "Animal",
+        "description": "Livestock or other animals owned by a user. Includes type, amount, and optional field assignment."
+      },
+      {
+        "entity": "Staff",
+        "description": "Human resources (workers) associated with a user's farm. Includes name, age, and assignment info."
+      },
+      {
+        "entity": "Assignment",
+        "description": "Links staff to fields, representing work assignments on the farm."
+      },
+      {
+        "entity": "FinancialAccount",
+        "description": "Tracks a user's virtual currency balance and transaction history."
+      },
+      {
+        "entity": "MarketplaceOffer",
+        "description": "Represents an offer to buy or sell a resource (field or animal) in the internal marketplace."
+      }
+    ]
+  },
+  {
+    "section": "user-roles",
+    "title": "User Types & Permissions",
+    "content": [
+      {
+        "type": "User",
+        "description": "Any registered user. Can manage their own farm, resources (fields, animals, staff, assignments), assignments, and transactions. Can buy and sell on the marketplace.",
+        "permissions": [
+          "Register and log in",
+          "Manage own profile and farm data",
+          "Add/edit fields, animals, staff, and assignments",
+          "View and create marketplace offers",
+          "Buy resources from the marketplace",
+          "View and manage own financial account"
+        ]
+      }
+    ]
+  },
+  {
+    "section": "features",
+    "title": "Main Features",
+    "content": [
+      "User registration, login, and role-based access control (RBAC)",
+      "Farm and resource management (fields, animals, staff, assignments)",
+      "Internal marketplace for trading resources (fields, animals)",
+      "Financial tracking: virtual currency, transaction history, account balance",
+      "Administrative dashboards and audit logs",
+      "Profile management and updates"
+    ]
+  },
+  {
+    "section": "user-flows",
+    "title": "Key User Flows",
+    "content": [
+      {
+        "flow": "Registration & Login",
+        "summary": "Allows new users to join the system and existing users to securely access their accounts. This is the entry point for all personalized features.",
+        "steps": [
+          "User navigates to the registration or login page.",
+          "To register, user provides a unique email, displayed name, and password.",
+          "System validates the input and creates a new user account.",
+          "After successful registration, the user is automatically logged in and redirected to their dashboard.",
+          "For login, user enters email and password and receives an authentication token upon success.",
+          "Authentication token is returned in the response and set as a cookie ('rolnopolToken'). Login time is also set as a cookie ('rolnopolLoginTime').",
+          "Authentication token is required for subsequent API requests to access protected resources. It can be sent as a cookie or in the Authorization header (Bearer token).",
+          "Session expiration: 24 hours for users, 1 hour for admin.",
+          "If login fails (invalid credentials, deactivated account, or validation error), user receives an error message and can retry.",
+          "Passwords are stored in plain text (for demo purposes only; not recommended for production).",
+          "Cookies are accessible to client-side JavaScript (not httpOnly).",
+          "Rate limiting is applied to login attempts.",
+          "Logout endpoint clears authentication cookies and invalidates the session.",
+          "After login, user is redirected to /profile.html."
+        ],
+        "api_endpoints": [
+          {
+            "method": "POST",
+            "path": "/api/v1/register",
+            "description": "Register a new user."
+          },
+          {
+            "method": "POST",
+            "path": "/api/v1/login",
+            "description": "Login as a user."
+          },
+          {
+            "method": "POST",
+            "path": "/api/logout",
+            "description": "Logout and clear session."
+          }
+        ],
+        "error_cases": [
+          {
+            "case": "Invalid credentials",
+            "status": 401,
+            "message": "Invalid credentials"
+          },
+          {
+            "case": "Deactivated account",
+            "status": 401,
+            "message": "Account is deactivated"
+          },
+          {
+            "case": "Validation failed",
+            "status": 400,
+            "message": "Validation failed: ..."
+          },
+          {
+            "case": "User already exists",
+            "status": 409,
+            "message": "User with this email already exists"
+          }
+        ]
+      },
+      {
+        "flow": "Marketplace Trading",
+        "summary": "Enables users (farmers) to buy and sell resources (fields, animals) within the internal marketplace, supporting core economic activity.",
+        "steps": [
+          "User navigates to the marketplace section to view available offers.",
+          "User can filter, search, and browse offers for fields and animals.",
+          "To sell, user creates a new offer specifying resource details and price.",
+          "Offer is listed in the marketplace and visible to other users.",
+          "Other users can initiate a purchase of listed resources.",
+          "System checks for sufficient funds and resource availability.",
+          "Upon approval, ownership and balances are updated accordingly."
+        ]
+      },
+      {
+        "flow": "Resource & Farm Management",
+        "summary": "Allows users to manage their farm’s resources and staff, keeping farm data up to date and optimizing operations.",
+        "steps": [
+          "User accesses the farm management dashboard.",
+          "User can add, edit, or remove resources such as fields, animals, and staff.",
+          "Staff can be assigned to specific fields (creating assignments).",
+          "User can transfer or sell resources via the marketplace.",
+          "All changes are saved and reflected in the user's farm data.",
+          "Admins and superadmins can view and manage all users' resources for oversight and support."
+        ]
+      },
+      {
+        "flow": "Financial Operations",
+        "summary": "Tracks and manages virtual currency and transactions, ensuring transparency and supporting marketplace and resource management flows.",
+        "steps": [
+          "Each user has a virtual financial account with a balance.",
+          "Transactions such as purchases and sales automatically update the account balance.",
+          "Users can view transaction history and current balance.",
+          "Users can transfer funds to other users within the system.",
+          "System validates transactions for sufficient funds and permissions.",
+          "Admins and superadmins can view and manage financial statistics for all users."
+        ]
+      },
+      {
+        "flow": "System Health Check",
+        "steps": [
+          "Users and admins can check system health and database status via dedicated endpoints."
+        ]
+      }
+    ]
+  },
+  {
+    "section": "api-basics",
+    "title": "API Basics",
+    "content": [
+      "All main features are accessible via RESTful API endpoints (see API Documentation section).",
+      "Authentication is required for most endpoints (token in Authorization header).",
+      "API versioning is supported (e.g., /api/v1/).",
+      "Swagger UI and OpenAPI schema are available at /swagger.html and /public/schema/openapi.json for interactive API exploration."
+    ]
+  },
+  {
+    "section": "testing-tips",
+    "title": "Testing Tips",
+    "content": [
+      "Use demo accounts to quickly access different roles and test permissions.",
+      "Test registration, login, and logout flows for all user types.",
+      "Verify role-based access: farmers should not access admin/superadmin features.",
+      "Test marketplace: create, buy, and approve offers as different roles.",
+      "Check financial operations: ensure balances update after transactions and transfers.",
+      "Try edge cases: invalid logins, insufficient funds, etc.",
+      "Use Swagger UI to test API endpoints directly."
+    ]
+  },
+  {
+    "section": "demo-accounts",
+    "title": "Demo Accounts",
+    "content": [
+      {
+        "role": "Demo Farmer",
+        "email": "demo@example.com",
+        "password": "demo123",
+        "description": "Basic farmer with access to personal farm management."
+      },
+      {
+        "role": "Demo Farmer",
+        "email": "test@example.com",
+        "password": "brownPass123",
+        "description": "Basic farmer with access to personal farm management."
+      },
+      {
+        "role": "Demo Farmer",
+        "email": "john.doe@example.com",
+        "password": "johndoe123",
+        "description": "Basic farmer with access to personal farm management."
+      }
+    ]
+  },
+  {
+    "section": "asset-finance-marketplace-flow",
+    "title": "Asset–Finance–Marketplace Flow",
+    "content": [
+      {
+        "heading": "Overview",
+        "content": [
+          "This section describes how assets (fields, animals), finances, and the marketplace interact in the system, including all rules, checks, and real-world scenarios."
+        ]
+      },
+      {
+        "heading": "Entities",
+        "content": [
+          {
+            "type": "list",
+            "items": [
+              "User: Owns assets and a financial account.",
+              "Field: Land plot, can be assigned to staff or animals.",
+              "Animal: Livestock, can be assigned to a field.",
+              "Assignment: Links staff or animals to fields.",
+              "FinancialAccount: Tracks user balance and transactions.",
+              "MarketplaceOffer: Represents an offer to sell a field or animal."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Asset Assignment and Ownership",
+        "content": [
+          {
+            "type": "list",
+            "items": [
+              "Assets (fields/animals) are owned by users.",
+              "Fields can have staff or animals assigned (see assignments.json and fieldId in animals).",
+              "Animals can be assigned to fields (fieldId > 0).",
+              "Rule: Assigned/in-use assets cannot be sold or bought; their offers are marked 'unavailable'.",
+              "Ownership is transferred on sale."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Financial Transactions",
+        "content": [
+          {
+            "type": "list",
+            "items": [
+              "Each user has a financial account with a balance and transaction history.",
+              "Transaction types: 'income' (money in), 'expense' (money out).",
+              "No overdraft: users cannot spend more than their balance."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Marketplace Flow",
+        "content": [
+          { "type": "paragraph", "text": "Creating an Offer:" },
+          {
+            "type": "list",
+            "items": [
+              "User selects an asset they own.",
+              "System checks: asset is not assigned/in use and not already offered.",
+              "If valid, offer is created as 'active'."
+            ]
+          },
+          { "type": "paragraph", "text": "Buying an Offer:" },
+          {
+            "type": "list",
+            "items": [
+              "Buyer selects an active offer.",
+              "System checks: not seller, enough funds, asset still available.",
+              "If valid: money is transferred, financial transactions are created, asset ownership is transferred, offer is marked 'sold', and a marketplace transaction is recorded."
+            ]
+          },
+          { "type": "paragraph", "text": "Offer Statuses:" },
+          {
+            "type": "list",
+            "items": [
+              "active: available for purchase",
+              "sold: already bought",
+              "cancelled: withdrawn by seller",
+              "unavailable: asset is in use/assigned"
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Example Cases",
+        "content": [
+          {
+            "type": "list",
+            "items": [
+              "Selling an Unassigned Field: User 2 owns 'Willow Grove' (field 22), not assigned. User 2 creates an offer (active). User 3 buys it: funds and assignment checked, balances updated, ownership transferred, offer marked 'sold'.",
+              "Attempting to Sell an Assigned Field: User 4 owns 'Birch Pasture' (field 25), assigned to staff. Offer is created as 'unavailable'.",
+              "Selling an Unassigned Animal: User 2 owns goats (animal 63), not assigned. Offer is 'active'. User 1 buys: funds and assignment checked, balances updated, ownership transferred, offer marked 'sold'.",
+              "Attempting to Buy with Insufficient Funds: User 2 tries to buy a field for 1000 ROL with only 420 ROL. System blocks purchase: 'Insufficient funds: overdraft is not allowed.'",
+              "Attempting to Sell an Assigned Animal: User 4 owns cows (animal 62), assigned to Birch Pasture. Offer is 'unavailable'."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Data Consistency Rules",
+        "content": [
+          {
+            "type": "list",
+            "items": [
+              "Every sale results in: asset ownership transfer, financial transactions for buyer and seller, marketplace offer and transaction records.",
+              "No asset can be sold or bought if assigned/in use.",
+              "No user can spend more than their balance.",
+              "All references (userId, fieldId, animalId) are consistent across all databases."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Summary Table",
+        "content": [
+          {
+            "type": "table",
+            "columns": [
+              "Step",
+              "Check for Assignment",
+              "Check Funds",
+              "Ownership Transfer",
+              "Offer Status",
+              "Financial Txn"
+            ],
+            "rows": [
+              ["Create Offer", "Yes", "N/A", "No", "active/unavailable", "No"],
+              ["Buy Offer", "Yes", "Yes", "Yes", "sold", "Yes"],
+              ["Cancel Offer", "N/A", "N/A", "No", "cancelled", "No"]
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "section": "e2e-scenarios",
+    "title": "End-to-End Scenarios",
+    "content": [
+      {
+        "scenario": "Register and Set Up Farm",
+        "description": "A new user registers, logs in, and sets up their farm with fields, animals, and staff.",
+        "steps": [
+          "Navigate to the registration page and create a new account with a unique username and password.",
+          "Log in with the new credentials.",
+          "Access the farm management dashboard.",
+          "Add a new field with a name and area.",
+          "Add animals (e.g., cows, goats) assign them to field.",
+          "Add staff members and assign them to field.",
+          "Review the farm overview to confirm all resources are listed."
+        ]
+      },
+      {
+        "scenario": "Sell a Field on the Marketplace",
+        "description": "A user creates a marketplace offer to sell a field, and another user purchases it.",
+        "steps": [
+          "User A logs in and navigates to their farm dashboard.",
+          "User A selects an unassigned field and creates a marketplace offer to sell it.",
+          "User B logs in",
+          "User B browses the marketplace offers.",
+          "User B finds User A's field offer",
+          "User B initiates a purchase.",
+          "System checks User B's balance and field availability.",
+          "Ownership of the field is transferred to User B, and balances are updated."
+        ]
+      },
+      {
+        "scenario": "Attempt to Buy with Insufficient Funds",
+        "description": "A user tries to buy a resource but does not have enough virtual currency.",
+        "steps": [
+          "User logs in and browses the marketplace.",
+          "User selects an offer that costs more than their current balance.",
+          "User attempts to purchase the offer.",
+          "System blocks the transaction and displays an 'Insufficient funds' error message.",
+          "User can view their balance and transaction history to understand the issue."
+        ]
+      }
+    ]
+  }
+]

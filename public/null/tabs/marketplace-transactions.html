@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marketplace Transactions - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="section">
+      <div class="section-header">
+        <h2><i class="fas fa-exchange-alt"></i> Marketplace Transactions</h2>
+        <button
+          id="refreshTransactionsBtn"
+          class="btn-enhanced btn-primary-enhanced"
+        >
+          <span class="spinner-enhanced hidden"></span>
+          <i class="fas fa-sync-alt btn-icon"></i>
+          Refresh
+        </button>
+      </div>
+      <div class="filters-bar">
+        <input
+          type="text"
+          id="filterSellerId"
+          placeholder="Seller ID"
+          class="filter-input"
+          style="width: 100px"
+        />
+        <input
+          type="text"
+          id="filterBuyerId"
+          placeholder="Buyer ID"
+          class="filter-input"
+          style="width: 100px"
+        />
+        <select id="filterItemType" class="filter-input">
+          <option value="">All Types</option>
+          <option value="animal">Animal</option>
+          <option value="field">Field</option>
+        </select>
+        <select id="filterStatus" class="filter-input">
+          <option value="">All Statuses</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <input type="date" id="filterStartDate" class="filter-input" />
+        <input type="date" id="filterEndDate" class="filter-input" />
+        <input
+          type="text"
+          id="filterGeneral"
+          placeholder="Search all fields"
+          class="filter-input"
+          style="width: 180px"
+        />
+        <button id="clearFiltersBtn" class="btn-enhanced btn-tertiary-enhanced">
+          <i class="fas fa-times"></i> Clear
+        </button>
+      </div>
+      <div class="table-container">
+        <table class="table-enhanced" id="transactionsTable">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Offer ID</th>
+              <th>Seller ID</th>
+              <th>Buyer ID</th>
+              <th>Item Type</th>
+              <th>Item ID</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody id="transactionsTableBody">
+            <tr>
+              <td colspan="9" class="text-center loading-enhanced">
+                <span class="spinner-enhanced"></span> Loading...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <script src="../js/kraken-utils.js"></script>
+    <script>
+      let allTransactions = [];
+      function applyFilters() {
+        const sellerId = document.getElementById("filterSellerId").value.trim();
+        const buyerId = document.getElementById("filterBuyerId").value.trim();
+        const itemType = document.getElementById("filterItemType").value;
+        const status = document.getElementById("filterStatus").value;
+        const startDate = document.getElementById("filterStartDate").value;
+        const endDate = document.getElementById("filterEndDate").value;
+        const general = document
+          .getElementById("filterGeneral")
+          .value.trim()
+          .toLowerCase();
+        let filtered = allTransactions;
+        if (sellerId)
+          filtered = filtered.filter((t) => String(t.sellerId) === sellerId);
+        if (buyerId)
+          filtered = filtered.filter((t) => String(t.buyerId) === buyerId);
+        if (itemType)
+          filtered = filtered.filter((t) => t.itemType === itemType);
+        if (status) filtered = filtered.filter((t) => t.status === status);
+        if (startDate)
+          filtered = filtered.filter(
+            (t) => t.createdAt && new Date(t.createdAt) >= new Date(startDate),
+          );
+        if (endDate)
+          filtered = filtered.filter(
+            (t) => t.createdAt && new Date(t.createdAt) <= new Date(endDate),
+          );
+        if (general) {
+          filtered = filtered.filter((t) => {
+            return Object.values(t).some(
+              (val) => val && val.toString().toLowerCase().includes(general),
+            );
+          });
+        }
+        renderTransactions(filtered);
+      }
+      function renderTransactions(transactions) {
+        const tableBody = document.getElementById("transactionsTableBody");
+        if (!transactions.length) {
+          tableBody.innerHTML = `<tr><td colspan='9' class='text-center'>No transactions found.</td></tr>`;
+          return;
+        }
+        tableBody.innerHTML = transactions
+          .map(
+            (tx) => `
+            <tr>
+                <td>${tx.id}</td>
+                <td>${tx.offerId}</td>
+                <td>${tx.sellerId}</td>
+                <td>${tx.buyerId}</td>
+                <td>${tx.itemType}</td>
+                <td>${tx.itemId}</td>
+                <td>${tx.price}</td>
+                <td>${tx.status}</td>
+                <td>${tx.createdAt ? new Date(tx.createdAt).toLocaleString() : "-"}</td>
+            </tr>
+        `,
+          )
+          .join("");
+      }
+      async function loadTransactions() {
+        const tableBody = document.getElementById("transactionsTableBody");
+        tableBody.innerHTML = `<tr><td colspan='9' class='text-center loading-enhanced'><span class='spinner-enhanced'></span> Loading...</td></tr>`;
+        try {
+          const res = await secureFetch(
+            "/api/v1/admin/marketplace/transactions",
+          );
+          const data = await res.json();
+          allTransactions =
+            data.data && Array.isArray(data.data.transactions)
+              ? data.data.transactions
+              : [];
+          applyFilters();
+        } catch (err) {
+          tableBody.innerHTML = `<tr><td colspan='9' class='text-center error'>Failed to load transactions: ${err.message}</td></tr>`;
+        }
+      }
+      document.getElementById("refreshTransactionsBtn").onclick =
+        loadTransactions;
+      document.getElementById("clearFiltersBtn").onclick = () => {
+        document.getElementById("filterSellerId").value = "";
+        document.getElementById("filterBuyerId").value = "";
+        document.getElementById("filterItemType").value = "";
+        document.getElementById("filterStatus").value = "";
+        document.getElementById("filterStartDate").value = "";
+        document.getElementById("filterEndDate").value = "";
+        document.getElementById("filterGeneral").value = "";
+        applyFilters();
+      };
+      // Make filtering instant
+      [
+        "filterSellerId",
+        "filterBuyerId",
+        "filterItemType",
+        "filterStatus",
+        "filterStartDate",
+        "filterEndDate",
+        "filterGeneral",
+      ].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener("input", applyFilters);
+          el.addEventListener("change", applyFilters);
+          el.addEventListener("keyup", applyFilters);
+        }
+      });
+      window.addEventListener("DOMContentLoaded", loadTransactions);
+    </script>
+  </body>
+</html>

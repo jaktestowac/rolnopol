@@ -1,0 +1,381 @@
+Powiat 	Siedziba władz powiatu 	Samochodowe tablice rejestracyjne[a] 	Województwo 	Powierzchnia [km²] 	Liczba ludności [osoby] 	Gęstość zaludnienia [osoby/km²] 	Przyrost rzeczywisty
+powiat aleksandrowski 	Aleksandrów Kujawski 	CAL 	kujawsko-pomorskie 	474,63 	55 007 	115,89 	-2,59
+powiat augustowski 	Augustów 	BAU 	podlaskie 	1 659,39 	57 908 	34,90 	-5,10
+powiat bartoszycki 	Bartoszyce 	NBA 	warmińsko-mazurskie 	1 307,49 	56 891 	43,51 	-13,03
+powiat bełchatowski 	Bełchatów 	EBE 	łódzkie 	967,60 	112 702 	116,48 	-2,05
+powiat będziński 	Będzin 	SBE, SE[b], SBN[c], IBE[c], IE[c], IBN[c] 	śląskie 	364,13 	147 816 	405,94 	-4,71
+powiat bialski 	Biała Podlaska 	LBI 	lubelskie 	2 754,26 	110 454 	40,10 	-5,62
+Biała Podlaska 	miasto na prawach powiatu 	LB 	lubelskie 	49,40 	57 194 	1 157,77 	-1,22
+powiat białobrzeski 	Białobrzegi 	WBR, ABR[c] 	mazowieckie 	639,10 	33 332 	52,15 	-5,73
+powiat białogardzki 	Białogard 	ZBI 	zachodniopomorskie 	845,46 	47 434 	56,10 	-5,51
+powiat białostocki 	Białystok 	BIA, BIB[c] 	podlaskie 	2 976,44 	150 333 	50,51 	10,68
+Białystok 	miasto na prawach powiatu 	BI 	podlaskie 	102,13 	297 585 	2 913,79 	0,77
+powiat bielski 	Bielsko-Biała 	SBI, IBI[b] 	śląskie 	458,64 	166 215 	362,41 	5,09
+powiat bielski 	Bielsk Podlaski 	BBI 	podlaskie 	1 385,09 	54 058 	39,03 	-9,75
+Bielsko-Biała 	miasto na prawach powiatu 	SB, IB[c] 	śląskie 	124,51 	170 303 	1 367,79 	-3,80
+powiat bieruńsko-lędziński 	Bieruń 	SBL, IBL[c] 	śląskie 	158,15 	59 864 	378,53 	2,50
+powiat bieszczadzki 	Ustrzyki Dolne 	RBI, YBI[c] 	podkarpackie 	1 139,07 	21 576 	18,94 	-10,23
+powiat biłgorajski 	Biłgoraj 	LBL 	lubelskie 	1681,10 	100 617 	59,85 	-5,29
+powiat bocheński 	Bochnia 	KBC, KBA[c], JBC[c], JBA[c] 	małopolskie 	648,56 	107 023 	165,02 	3,72
+powiat bolesławiecki 	Bolesławiec 	DBL, VBL[c] 	dolnośląskie 	1 303,51 	90 032 	69,07 	-0,84
+powiat braniewski 	Braniewo 	NBR 	warmińsko-mazurskie 	1 201,65 	40 927 	34,06 	-7,18
+powiat brodnicki 	Brodnica 	CBR 	kujawsko-pomorskie 	1 039,97 	79 129 	76,09 	2,46
+powiat brzeski 	Brzesko 	KBR, JBR[c] 	małopolskie 	590,52 	93 125 	157,70 	-0,15
+powiat brzeski 	Brzeg 	OB 	opolskie 	875,96 	89 632 	102,32 	-4,69
+powiat brzeziński 	Brzeziny 	EBR 	łódzkie 	358,56 	30 793 	85,88 	-0,81
+powiat brzozowski 	Brzozów 	RBR, YBR[c] 	podkarpackie 	539,34 	65 523 	121,49 	-1,96
+powiat buski 	Busko-Zdrój 	TBU 	świętokrzyskie 	968,00 	71 451 	73,81 	-4,96
+powiat bydgoski 	Bydgoszcz 	CBY, CBC[d] 	kujawsko-pomorskie 	1 394,12 	119 448 	85,68 	11,92
+Bydgoszcz 	miasto na prawach powiatu 	CB 	kujawsko-pomorskie 	175,98 	346 739 	1 970,33 	-6,54
+Bytom 	miasto na prawach powiatu 	SY, IY[c] 	śląskie 	69,44 	164 447 	2 368,19 	-9,21
+powiat bytowski 	Bytów 	GBY, XBY[c] 	pomorskie 	2 192,07 	79 136 	36,10 	-1,56
+Chełm 	miasto na prawach powiatu 	LC 	lubelskie 	35,28 	61 588 	1 745,69 	-11,92
+powiat chełmiński 	Chełmno 	CCH 	kujawsko-pomorskie 	526,94 	51 817 	98,34 	-3,86
+powiat chełmski 	Chełm 	LCH 	lubelskie 	1 885,60 	77 752 	41,23 	-4,12
+powiat chodzieski 	Chodzież 	PCH, MCH[c] 	wielkopolskie 	685,06 	46 955 	68,54 	-4,52
+powiat chojnicki 	Chojnice 	GCH, XCH[c] 	pomorskie 	1 364,21 	97 677 	71,60 	0,62
+Chorzów 	miasto na prawach powiatu 	SH, IH[c] 	śląskie 	33,24 	107 443 	3 232,34 	-4,82
+powiat choszczeński 	Choszczno 	ZCH 	zachodniopomorskie 	1 327,63 	48 035 	36,18 	-7,93
+powiat chrzanowski 	Chrzanów 	KCH, JCH[c] 	małopolskie 	370,12 	124 190 	335,54 	-5,98
+powiat ciechanowski 	Ciechanów 	WCI, ACI[c] 	mazowieckie 	1 059,80 	89 213 	84,18 	-2,76
+powiat cieszyński 	Cieszyn 	SCI, SCN[b], ICI[b], ICN[c] 	śląskie 	730,29 	178 005 	243,75 	-0,79
+powiat czarnkowsko-trzcianecki 	Czarnków 	PCT, MCT[c] 	wielkopolskie 	1 806,05 	86 868 	48,10 	-4,16
+Częstochowa 	miasto na prawach powiatu 	SC, IC[c] 	śląskie 	159,71 	219 278 	1 372,98 	-8,92
+powiat częstochowski 	Częstochowa 	SCZ, ICZ[c] 	śląskie 	1 522,05 	134 341 	88,26 	-2,20
+powiat człuchowski 	Człuchów 	GCZ, XCZ[c] 	pomorskie 	1 575,27 	55 933 	35,51 	-5,19
+Dąbrowa Górnicza 	miasto na prawach powiatu 	SD, ID[c] 	śląskie 	188,73 	118 899 	630,00 	-7,52
+powiat dąbrowski 	Dąbrowa Tarnowska 	KDA, JDA[c] 	małopolskie 	530,25 	59 147 	111,55 	-1,35
+powiat dębicki 	Dębica 	RDE, YDE[c] 	podkarpackie 	777,48 	135 282 	174,00 	-0,49
+powiat drawski 	Drawsko Pomorskie 	ZDR 	zachodniopomorskie 	1 764,24 	56 842 	32,22 	-5,75
+powiat działdowski 	Działdowo 	NDZ 	warmińsko-mazurskie 	953,93 	64 966 	68,10 	-4,93
+powiat dzierżoniowski 	Dzierżoniów 	DDZ, VDZ[c] 	dolnośląskie 	478,51 	100 519 	210,07 	-5,92
+Elbląg 	miasto na prawach powiatu 	NE 	warmińsko-mazurskie 	79,82 	119 097 	1 492,07 	-5,54
+powiat elbląski 	Elbląg 	NEB 	warmińsko-mazurskie 	1 415,58 	57 056 	40,31 	-5,91
+powiat ełcki 	Ełk 	NEL 	warmińsko-mazurskie 	1 112,79 	91 613 	82,33 	1,83
+powiat garwoliński 	Garwolin 	WG, AG[c] 	mazowieckie 	1 284,83 	108 940 	84,79 	0,28
+Gdańsk 	miasto na prawach powiatu 	GD, XD[c] 	pomorskie 	261,96 	471 525 	1 799,99 	7,19
+powiat gdański 	Pruszcz Gdański 	GDA, XDA[c] 	pomorskie 	793,75 	119 362 	150,38 	16,26
+Gdynia 	miasto na prawach powiatu 	GA, XA[c] 	pomorskie 	135,14 	245 867 	1 819,35 	-1,53
+powiat giżycki 	Giżycko 	NGI 	warmińsko-mazurskie 	1 119,51 	56 465 	50,44 	-3,46
+Gliwice 	miasto na prawach powiatu 	SG, IG[c] 	śląskie 	133,88 	178 186 	1 330,94 	-5,40
+powiat gliwicki 	Gliwice 	SGL, IGL[c] 	śląskie 	664,37 	115 540 	173,91 	-0,27
+powiat głogowski 	Głogów 	DGL, VGL[c] 	dolnośląskie 	443,27 	88 852 	200,45 	-5,23
+powiat głubczycki 	Głubczyce 	OGL 	opolskie 	672,63 	45 291 	67,33 	-8,49
+powiat gnieźnieński 	Gniezno 	PGN, MGN[c] 	wielkopolskie 	1 255,03 	145 393 	115,85 	1,34
+powiat goleniowski 	Goleniów 	ZGL 	zachodniopomorskie 	1 615,48 	82 396 	51,00 	-0,27
+powiat golubsko-dobrzyński 	Golub-Dobrzyń 	CGD 	kujawsko-pomorskie 	612,85 	44 952 	73,35 	-2,37
+powiat gołdapski 	Gołdap 	NGO 	warmińsko-mazurskie 	772,29 	26 625 	34,48 	-7,46
+powiat gorlicki 	Gorlice 	KGR, JGR[c] 	małopolskie 	966,46 	108 778 	112,55 	-1,47
+powiat gorzowski 	Gorzów Wielkopolski 	FGW 	lubuskie 	1 214,23 	72 054 	59,34 	5,37
+Gorzów Wielkopolski 	miasto na prawach powiatu 	FG 	lubuskie 	85,72 	123 341 	1 438,88 	-2,83
+powiat gostyniński 	Gostynin 	WGS, AGS[c] 	mazowieckie 	614,81 	44 761 	72,80 	-6,64
+powiat gostyński 	Gostyń 	PGS, MGS[c] 	wielkopolskie 	810,25 	75 907 	93,68 	-0,13
+powiat górowski 	Góra 	DGR, VGR[c] 	dolnośląskie 	738,27 	34 698 	47,00 	-9,96
+powiat grajewski 	Grajewo 	BGR 	podlaskie 	967,62 	47 039 	48,61 	-6,63
+powiat grodziski 	Grodzisk Mazowiecki 	WGM, AGM[c] 	mazowieckie 	367,04 	96 698 	263,45 	18,28
+powiat grodziski 	Grodzisk Wielkopolski 	PGO, MGO[c] 	wielkopolskie 	641,87 	51 940 	80,92 	-0,92
+powiat grójecki 	Grójec 	WGR, AGR[b] 	mazowieckie 	1 267,73 	98 173 	77,44 	-1,64
+Grudziądz 	miasto na prawach powiatu 	CG 	kujawsko-pomorskie 	57,76 	94 076 	1 628,74 	-6,92
+powiat grudziądzki 	Grudziądz 	CGR 	kujawsko-pomorskie 	727,76 	40 202 	55,24 	0,52
+powiat gryficki 	Gryfice 	ZGY 	zachodniopomorskie 	1 021,05 	60 025 	58,79 	-7,42
+powiat gryfiński 	Gryfino 	ZGR 	zachodniopomorskie 	1 869,11 	81 598 	43,66 	-8,02
+powiat hajnowski 	Hajnówka 	BHA 	podlaskie 	1 623,53 	42 293 	26,05 	-13,02
+powiat hrubieszowski 	Hrubieszów 	LHR 	lubelskie 	1 268,02 	62 473 	49,27 	-13,38
+powiat iławski 	Iława 	NIL 	warmińsko-mazurskie 	1 385,22 	92 826 	67,01 	-1,15
+powiat inowrocławski 	Inowrocław 	CIN 	kujawsko-pomorskie 	1 225,18 	159 311 	130,03 	-5,65
+powiat janowski 	Janów Lubelski 	LJA 	lubelskie 	875,28 	45 503 	51,99 	-7,46
+powiat jarociński 	Jarocin 	PJA, MJA[c] 	wielkopolskie 	587,29 	71 507 	121,76 	-1,23
+powiat jarosławski 	Jarosław 	RJA, YJA[c] 	podkarpackie 	1 028,66 	120 097 	116,75 	-3,03
+powiat jasielski 	Jasło 	RJS, YJS[b] 	podkarpackie 	830,87 	113 226 	136,27 	-4,43
+Jastrzębie-Zdrój 	miasto na prawach powiatu 	SJZ, IJZ[c] 	śląskie 	85,33 	88 425 	1 036,27 	-4,31
+powiat jaworski 	Jawor 	DJA, VJA[c] 	dolnośląskie 	581,55 	49 937 	85,87 	-7,51
+Jaworzno 	miasto na prawach powiatu 	SJ, IJ[c] 	śląskie 	152,59 	90 759 	594,79 	-5,52
+Jelenia Góra 	miasto na prawach powiatu 	DJ, VJ[c] 	dolnośląskie 	109,22 	78 778 	721,28 	-5,33
+powiat jędrzejowski 	Jędrzejów 	TJE 	świętokrzyskie 	1 256,96 	85 179 	67,77 	-6,74
+powiat kaliski 	Kalisz 	PKA, MKA[c] 	wielkopolskie 	1 159,99 	83 035 	71,58 	0,33
+Kalisz 	miasto na prawach powiatu 	PK, PA[c], MK[c], MA[c] 	wielkopolskie 	69,42 	99 761 	1 437,06 	-7,18
+powiat kamiennogórski 	Kamienna Góra 	DKA, VKA[c] 	dolnośląskie 	395,69 	43 055 	108,81 	-8,61
+powiat kamieński 	Kamień Pomorski 	ZKA 	zachodniopomorskie 	1 007,16 	46 861 	46,53 	-5,39
+powiat karkonoski[e] 	Jelenia Góra 	DJE, VJE[c] 	dolnośląskie 	627,14 	63 388 	101,07 	-3,94
+powiat kartuski 	Kartuzy 	GKA, GKY[b], GKZ[b], XKA[c], XKY[c], XKZ[c] 	pomorskie 	1 120,54 	140 770 	125,63 	20,5
+Katowice 	miasto na prawach powiatu 	SK, IK[c] 	śląskie 	164,64 	291 774 	1 772,19 	-6,34
+powiat kazimierski 	Kazimierza Wielka 	TKA 	świętokrzyskie 	422,18 	33 489 	79,32 	-7,44
+powiat kędzierzyńsko-kozielski 	Kędzierzyn-Koźle 	OK 	opolskie 	625,13 	93 544 	149,64 	-6,28
+powiat kępiński 	Kępno 	PKE, MKE[c] 	wielkopolskie 	608,26 	56 428 	92,77 	-1,17
+powiat kętrzyński 	Kętrzyn 	NKE 	warmińsko-mazurskie 	1 212,99 	62 054 	51,16 	-7,71
+Kielce 	miasto na prawach powiatu 	TK 	świętokrzyskie 	109,65 	194 218 	1 771,25 	-5,37
+powiat kielecki 	Kielce 	TKI, TKC[d], TKM[d], TKP[d] 	świętokrzyskie 	2 246,07 	211 259 	94,06 	1,51
+powiat kluczborski 	Kluczbork 	OKL 	opolskie 	851,91 	65 266 	76,61 	-5,76
+powiat kłobucki 	Kłobuck 	SKL, IKL[c] 	śląskie 	888,59 	84 501 	95,10 	-3,08
+powiat kłodzki 	Kłodzko 	DKL, VKL[c] 	dolnośląskie 	1 643,30 	157 191 	95,66 	-8,88
+powiat kolbuszowski 	Kolbuszowa 	RKL, YKL[c] 	podkarpackie 	773,17 	62 196 	80,44 	-3,09
+powiat kolneński 	Kolno 	BKL 	podlaskie 	940,10 	37 983 	40,40 	-6,95
+powiat kolski 	Koło 	PKL, MKL[c] 	wielkopolskie 	1 010,71 	86 473 	85,56 	-5,20
+powiat kołobrzeski 	Kołobrzeg 	ZKL 	zachodniopomorskie 	724,66 	79 399 	109,57 	-0,89
+powiat konecki 	Końskie 	TKN 	świętokrzyskie 	1 139,72 	79 525 	69,78 	-7,85
+Konin 	miasto na prawach powiatu 	PKO, PN, MKO[c], MN[c] 	wielkopolskie 	82,31 	73 176 	889,03 	-7,68
+powiat koniński 	Konin 	PKN, MKN[c] 	wielkopolskie 	1 578,24 	130 005 	82,37 	-0,16
+Koszalin 	miasto na prawach powiatu 	ZK 	zachodniopomorskie 	98,34 	106 880 	1 086,84 	-3,22
+powiat koszaliński 	Koszalin 	ZKO 	zachodniopomorskie 	1 653,46 	66 465 	40,20 	1,39
+powiat kościański 	Kościan 	PKS, MKS[c] 	wielkopolskie 	722,42 	79 114 	109,51 	-0,72
+powiat kościerski 	Kościerzyna 	GKS, XKS[c] 	pomorskie 	1 165,67 	72 808 	62,46 	3,02
+powiat kozienicki 	Kozienice 	WKZ, AKZ[c] 	mazowieckie 	916,10 	59 793 	65,27 	-7,63
+powiat krakowski 	Kraków 	KRA, KRK[b], JRA[c], JRK[c] 	małopolskie 	1 230,52 	280 403 	227,87 	7,85
+Kraków 	miasto na prawach powiatu 	KR, KK, JR[c], JK[c] 	małopolskie 	326,85 	780 981 	2 389,42 	7,93
+powiat krapkowicki 	Krapkowice 	OKR 	opolskie 	441,80 	63 580 	143,91 	-4,34
+powiat krasnostawski 	Krasnystaw 	LKS 	lubelskie 	1 031,44 	62 940 	61,02 	-9,66
+powiat kraśnicki 	Kraśnik 	LKR 	lubelskie 	1 005,30 	95 064 	94,56 	-5,79
+Krosno 	miasto na prawach powiatu 	RK, YK[c] 	podkarpackie 	43,50 	46 139 	1 060,67 	-4,96
+powiat krośnieński 	Krosno 	RKR, YKR[b] 	podkarpackie 	993,11 	112 195 	112,97 	-0,94
+powiat krośnieński 	Krosno Odrzańskie 	FKR 	lubuskie 	1 391,25 	54 706 	39,32 	-5,67
+powiat krotoszyński 	Krotoszyn 	PKR, MKR[c] 	wielkopolskie 	713,68 	77 182 	108,15 	-1,58
+powiat kutnowski 	Kutno 	EKU 	łódzkie 	886,86 	96 126 	108,39 	-8,08
+powiat kwidzyński 	Kwidzyn 	GKW, XKW[c] 	pomorskie 	834,70 	83 028 	99,47 	-2,44
+powiat legionowski 	Legionowo 	WL, AL[c] 	mazowieckie 	390,76 	119 306 	305,32 	13,21
+Legnica 	miasto na prawach powiatu 	DL, VL[c] 	dolnośląskie 	56,29 	99 072 	1 760,03 	-4,16
+powiat legnicki 	Legnica 	DLE, VLE[c] 	dolnośląskie 	744,08 	55 210 	74,20 	-1,95
+powiat leski 	Lesko 	RLS, YLS[c] 	podkarpackie 	834,94 	26 413 	31,63 	-4,49
+powiat leszczyński 	Leszno 	PLE, MLE[c] 	wielkopolskie 	805,81 	57 544 	71,41 	13,12
+Leszno 	miasto na prawach powiatu 	PL, ML[c] 	wielkopolskie 	31,86 	63 323 	1 987,54 	-7,07
+powiat leżajski 	Leżajsk 	RLE, YLE[c] 	podkarpackie 	583,71 	69 233 	118,61 	-3,54
+powiat lęborski 	Lębork 	GLE, XLE[c] 	pomorskie 	707,77 	66 069 	93,35 	-1,92
+powiat lidzbarski 	Lidzbark Warmiński 	NLI 	warmińsko-mazurskie 	925,00 	41 039 	44,37 	-6,58
+powiat limanowski 	Limanowa 	KLI, JLI[c] 	małopolskie 	951,23 	131 997 	138,76 	2,03
+powiat lipnowski 	Lipno 	CLI 	kujawsko-pomorskie 	1 015,74 	65 574 	64,56 	-4,48
+powiat lipski 	Lipsko 	WLI, ALI[c] 	mazowieckie 	740,22 	33 738 	45,58 	-8,52
+powiat lubaczowski 	Lubaczów 	RLU, YLU[c] 	podkarpackie 	1 308,37 	54 979 	42,02 	-8,28
+powiat lubański 	Lubań 	DLB, VLB[c] 	dolnośląskie 	428,30 	54 070 	126,24 	-7,76
+powiat lubartowski 	Lubartów 	LLB 	lubelskie 	1 288,74 	88 152 	68,40 	-4,96
+powiat lubelski 	Lublin 	LUB 	lubelskie 	1 679,53 	156 002 	92,88 	8,03
+powiat lubiński 	Lubin 	DLU, VLU[c] 	dolnośląskie 	711,62 	106 106 	149,1 	-0,99
+Lublin 	miasto na prawach powiatu 	LU 	lubelskie 	147,47 	339 547 	2 302,48 	-0,66
+powiat lubliniecki 	Lubliniec 	SLU, ILU[c] 	śląskie 	822,25 	76 326 	92,83 	-1,88
+powiat lwówecki 	Lwówek Śląski 	DLW, VLW[c] 	dolnośląskie 	709,69 	45 770 	64,49 	-4,46
+powiat łańcucki 	Łańcut 	RLA, YLA[c] 	podkarpackie 	451,84 	81 144 	179,59 	3,04
+powiat łaski 	Łask 	ELA 	łódzkie 	618,23 	49 794 	80,54 	-4,86
+powiat łęczycki 	Łęczyca 	ELE 	łódzkie 	772,75 	49 562 	64,14 	-7,63
+powiat łęczyński 	Łęczna 	LLE 	lubelskie 	636,64 	57 298 	90,00 	-1,29
+powiat łobeski 	Łobez 	ZLO 	zachodniopomorskie 	1 065,13 	36 514 	34,28 	-11,91
+Łomża 	miasto na prawach powiatu 	BL 	podlaskie 	32,67 	62 795 	1 922,10 	-2,7
+powiat łomżyński 	Łomża 	BLM 	podlaskie 	1 354,59 	50 894 	37,57 	-0,39
+powiat łosicki 	Łosice 	WLS, ALS[c] 	mazowieckie 	772,45 	30 658 	39,69 	-7,67
+powiat łowicki 	Łowicz 	ELC 	łódzkie 	988,17 	77 842 	78,77 	-5,86
+powiat łódzki wschodni 	Łódź 	ELW 	łódzkie 	499,76 	72 408 	144,89 	6,97
+Łódź 	miasto na prawach powiatu 	EL, ED[f] 	łódzkie 	293,25 	677 286 	2 309,59 	-7,9
+powiat łukowski 	Łuków 	LLU 	lubelskie 	1 394,21 	106 591 	76,45 	-5,16
+powiat makowski 	Maków Mazowiecki 	WMA, AMA[c] 	mazowieckie 	1 064,63 	44 667 	41,96 	-9,07
+powiat malborski 	Malbork 	GMB, XMB 	pomorskie 	494,23 	63 401 	128,28 	-2,74
+powiat miechowski 	Miechów 	KMI, JMI[c] 	małopolskie 	676,29 	48 689 	71,99 	-5,29
+powiat mielecki 	Mielec 	RMI, YMI[c] 	podkarpackie 	880,50 	136 672 	155,22 	0,59
+powiat międzychodzki 	Międzychód 	PMI, MMI[c] 	wielkopolskie 	736,44 	36 686 	49,82 	-5,34
+powiat międzyrzecki 	Międzyrzecz 	FMI 	lubuskie 	1 387,61 	57 374 	41,35 	-8,25
+powiat mikołowski 	Mikołów 	SMI, IMI[c] 	śląskie 	233,10 	99 211 	425,62 	5,29
+powiat milicki 	Milicz 	DMI, VMI[c] 	dolnośląskie 	714,93 	36 913 	51,63 	-2,43
+powiat miński 	Mińsk Mazowiecki 	WM[g], AM[c] 	mazowieckie 	1 163,72 	154 942 	133,14 	5,76
+powiat mławski 	Mława 	WML, AML[c] 	mazowieckie 	1 181,82 	72 448 	61,3 	-6,28
+powiat mogileński 	Mogilno 	CMG 	kujawsko-pomorskie 	675,12 	45 514 	67,42 	-5,29
+powiat moniecki 	Mońki 	BMN 	podlaskie 	1 381,79 	40 251 	29,13 	-6,59
+powiat mrągowski 	Mrągowo 	NMR 	warmińsko-mazurskie 	1 065,38 	49 660 	46,61 	-6,2
+Mysłowice 	miasto na prawach powiatu 	SM, IM[c] 	śląskie 	65,62 	74 601 	1 136,86 	1,15
+powiat myszkowski 	Myszków 	SMY, IMY[c] 	śląskie 	479,25 	70 709 	147,54 	-3,52
+powiat myślenicki 	Myślenice 	KMY, JMY[c] 	małopolskie 	673,08 	127 872 	189,98 	4,79
+powiat myśliborski 	Myślibórz 	ZMY 	zachodniopomorskie 	1 182,40 	65 426 	55,33 	-8,68
+powiat nakielski 	Nakło nad Notecią 	CNA 	kujawsko-pomorskie 	1 120,08 	86 226 	76,98 	-2,58
+powiat namysłowski 	Namysłów 	ONA 	opolskie 	748,18 	42 680 	57,05 	-0,28
+powiat nidzicki 	Nidzica 	NNI 	warmińsko-mazurskie 	960,64 	32 753 	34,09 	-5,68
+powiat niżański 	Nisko 	RNI, YNI[c] 	podkarpackie 	785,64 	66 430 	84,56 	-4,03
+powiat nowodworski 	Nowy Dwór Gdański 	GND, XND[c] 	pomorskie 	674,08 	35 483 	52,64 	-4,85
+powiat nowodworski 	Nowy Dwór Mazowiecki 	WND, AND[c] 	mazowieckie 	694,79 	79 427 	114,32 	2,16
+powiat nowomiejski 	Nowe Miasto Lubawskie 	NNM 	warmińsko-mazurskie 	693,93 	43 769 	63,07 	-2,98
+powiat nowosądecki 	Nowy Sącz 	KNS, JNS[c] 	małopolskie 	1549,80 	216 994 	140,01 	2,61
+powiat nowosolski 	Nowa Sól 	FNW 	lubuskie 	770,73 	86 014 	111,60 	-4,28
+powiat nowotarski 	Nowy Targ 	KNT, JNT[c] 	małopolskie 	1 474,99 	191 882 	130,09 	1,11
+powiat nowotomyski 	Nowy Tomyśl 	PNT, MNT[c] 	wielkopolskie 	1 013,62 	75 675 	74,66 	2,89
+Nowy Sącz 	miasto na prawach powiatu 	KN, JN[c] 	małopolskie 	57,58 	83 762 	1 454,71 	-0,61
+powiat nyski 	Nysa 	ONY 	opolskie 	1 223,88 	135 524 	110,73 	-6,37
+powiat obornicki 	Oborniki 	POB, MOB[c] 	wielkopolskie 	711,04 	59 826 	84,14 	0,12
+powiat olecki 	Olecko 	NOE 	warmińsko-mazurskie 	873,60 	34 050 	38,98 	-6,74
+powiat oleski 	Olesno 	OOL 	opolskie 	973,38 	64 167 	65,92 	-3,79
+powiat oleśnicki 	Oleśnica 	DOL, VOL[c] 	dolnośląskie 	1 049,31 	107 328 	102,28 	2,22
+powiat olkuski 	Olkusz 	KOL, JOL[c] 	małopolskie 	618,11 	110 900 	179,42 	-6,76
+Olsztyn 	miasto na prawach powiatu 	NO 	warmińsko-mazurskie 	88,33 	171 853 	1 945,58 	-1,98
+powiat olsztyński 	Olsztyn 	NOL 	warmińsko-mazurskie 	2 838,02 	127 205 	44,82 	6,89
+powiat oławski 	Oława 	DOA, VOA[c] 	dolnośląskie 	524,10 	76 831 	146,60 	1,41
+powiat opatowski 	Opatów 	TOP 	świętokrzyskie 	910,90 	51 834 	56,90 	-9,59
+powiat opoczyński 	Opoczno 	EOP 	łódzkie 	1 040,19 	75 847 	72,92 	-6,25
+Opole 	miasto na prawach powiatu 	OP 	opolskie 	148,88 	128 012 	859,83 	-1,53
+powiat opolski 	Opole Lubelskie 	LOP 	lubelskie 	810,02 	58 952 	72,78 	-9,39
+powiat opolski 	Opole 	OPO 	opolskie 	1 534,30 	123 813 	80,70 	2,64
+powiat ostrołęcki 	Ostrołęka 	WOS, AOS[c] 	mazowieckie 	2 093,55 	88 624 	42,33 	-1,05
+Ostrołęka 	miasto na prawach powiatu 	WO, AO 	mazowieckie 	33,46 	51 893 	1 550,9 	-3,42
+powiat ostrowiecki 	Ostrowiec Świętokrzyski 	TOS 	świętokrzyskie 	616,78 	108 436 	175,81 	-9,83
+powiat ostrowski 	Ostrów Wielkopolski 	POS, MOS[c] 	wielkopolskie 	1 160,12 	161 581 	139,28 	0,34
+powiat ostrowski 	Ostrów Mazowiecka 	WOR, AOR[c] 	mazowieckie 	1 217,79 	72 091 	59,20 	-6,44
+powiat ostródzki 	Ostróda 	NOS, NOT[d], NOX[d] 	warmińsko-mazurskie 	1 766,29 	103 895 	58,82 	-6,04
+powiat ostrzeszowski 	Ostrzeszów 	POT, MOT[c] 	wielkopolskie 	772,63 	55 436 	71,75 	0,58
+powiat oświęcimski 	Oświęcim 	KOS, JOS[c] 	małopolskie 	405,58 	153 125 	377,55 	-3,30
+powiat otwocki 	Otwock 	WOT, AOT[c] 	mazowieckie 	615,92 	124 460 	202,07 	1,76
+powiat pabianicki 	Pabianice 	EPA 	łódzkie 	492,18 	119 225 	242,24 	-0,29
+powiat pajęczański 	Pajęczno 	EPJ 	łódzkie 	803,82 	51 071 	63,54 	-5,57
+powiat parczewski 	Parczew 	LPA 	lubelskie 	952,20 	34 590 	36,33 	-6,29
+powiat piaseczyński 	Piaseczno 	WPI, WPA[b], WPW[b], WPX[c] 	mazowieckie 	621,00 	189 516 	305,18 	16,39
+Piekary Śląskie 	miasto na prawach powiatu 	SPI, IPI[c] 	śląskie 	39,98 	54 860 	1 372,19 	-4,14
+powiat pilski 	Piła 	PP, MP[c] 	wielkopolskie 	1 268,21 	135 928 	107,18 	-2,44
+powiat pińczowski 	Pińczów 	TPI 	świętokrzyskie 	612,85 	38 691 	63,13 	-10,46
+powiat piotrkowski 	Piotrków Trybunalski 	EPI 	łódzkie 	1 428,74 	91 360 	63,94 	0,90
+Piotrków Trybunalski 	miasto na prawach powiatu 	EP 	łódzkie 	67,24 	72 785 	1 082,47 	-7,97
+powiat piski 	Pisz 	NPI 	warmińsko-mazurskie 	1 774,58 	55 952 	31,53 	-6,68
+powiat pleszewski 	Pleszew 	PPL 	wielkopolskie 	713,07 	62 962 	88,30 	-2,52
+Płock 	miasto na prawach powiatu 	WP, AP[c] 	mazowieckie 	88,04 	118 989 	1 351,53 	-6,01
+powiat płocki 	Płock 	WPL, APL[c] 	mazowieckie 	1 796,63 	110 927 	61,74 	-0,54
+powiat płoński 	Płońsk 	WPN, APN[c] 	mazowieckie 	1 379,79 	86 868 	62,96 	-3,61
+powiat poddębicki 	Poddębice 	EPD 	łódzkie 	881,21 	41 037 	46,57 	-3,52
+powiat policki 	Police 	ZPL 	zachodniopomorskie 	665,33 	81 229 	122,09 	15,78
+powiat polkowicki 	Polkowice 	DPL, VPL[c] 	dolnośląskie 	779,46 	63 082 	80,93 	2,13
+Poznań 	miasto na prawach powiatu 	PO, PY, MO[c], MY[c], PX[d], MX[d] 	wielkopolskie 	261,91 	533 830 	2 038,22 	-3,68
+powiat poznański 	Poznań 	PZ, POZ[h], MZ[c], MOZ[c] 	wielkopolskie 	1 899,88 	403 417 	212,34 	22,50
+powiat proszowicki 	Proszowice 	KPR, JPR[c] 	małopolskie 	414,87 	43 160 	104,03 	-4,77
+powiat prudnicki 	Prudnik 	OPR 	opolskie 	571,55 	55 091 	96,39 	-4,23
+powiat pruszkowski 	Pruszków 	WPR, WPP[b], WPS[b], APR[c], APP[c], APS[c] 	mazowieckie 	246,30 	166 436 	675,75 	8,46
+powiat przasnyski 	Przasnysz 	WPZ, APZ[c] 	mazowieckie 	1 218,62 	52 355 	42,96 	-6,09
+powiat przemyski 	Przemyśl 	RPR, YPR[c] 	podkarpackie 	1 211,22 	73 968 	61,07 	-3,58
+Przemyśl 	miasto na prawach powiatu 	RP, YP[c] 	podkarpackie 	46,17 	60 442 	1 309,12 	-9,13
+powiat przeworski 	Przeworsk 	RPZ, YPZ[c] 	podkarpackie 	698,02 	78 227 	112,07 	-1,62
+powiat przysuski 	Przysucha 	WPY, APY[c] 	mazowieckie 	801,19 	41 360 	51,62 	-8,65
+powiat pszczyński 	Pszczyna 	SPS, IPS[c] 	śląskie 	471,16 	111 682 	237,04 	3,22
+powiat pucki 	Puck 	GPU, XPU[c] 	pomorskie 	581,18 	87 183 	150,01 	11,37
+powiat puławski 	Puławy 	LPU 	lubelskie 	934,09 	112 835 	120,80 	-5,34
+powiat pułtuski 	Pułtusk 	WPU, APU[c] 	mazowieckie 	827,42 	51 817 	62,62 	-0,87
+powiat pyrzycki 	Pyrzyce 	ZPY 	zachodniopomorskie 	726,00 	39 251 	54,06 	-5,85
+powiat raciborski 	Racibórz 	SRC, IRC[c] 	śląskie 	543,76 	107 926 	198,48 	-4,26
+Radom 	miasto na prawach powiatu 	WR, AR[c] 	mazowieckie 	111,80 	210 532 	1 883,11 	-8,00
+powiat radomski 	Radom 	WRA, ARA[c] 	mazowieckie 	1 529,78 	152 237 	99,52 	0,31
+powiat radomszczański 	Radomsko 	ERA 	łódzkie 	1 442,57 	112 255 	77,82 	-6,29
+powiat radziejowski 	Radziejów 	CRA 	kujawsko-pomorskie 	607,20 	40 211 	66,22 	-8,26
+powiat radzyński 	Radzyń Podlaski 	LRA 	lubelskie 	965,06 	58 604 	60,73 	-7,67
+powiat rawicki 	Rawicz 	PRA, MRA[c] 	wielkopolskie 	553,52 	60 233 	108,82 	-1,84
+powiat rawski 	Rawa Mazowiecka 	ERW 	łódzkie 	646,20 	48 504 	75,06 	-2,88
+powiat ropczycko-sędziszowski 	Ropczyce 	RRS, YRS[c] 	podkarpackie 	548,31 	74 582 	136,02 	2,23
+Ruda Śląska 	miasto na prawach powiatu 	SRS[i], SL[j], IRS[c], IL[c] 	śląskie 	77,73 	137 030 	1 762,90 	-4,32
+powiat rybnicki 	Rybnik 	SRB, IRB[c] 	śląskie 	223,64 	78 216 	349,74 	0,87
+Rybnik 	miasto na prawach powiatu 	SR, IR[c] 	śląskie 	148,36 	137 782 	928,70 	-3,88
+powiat rycki 	Ryki 	LRY 	lubelskie 	614,53 	55 841 	90,87 	-1,39
+powiat rypiński 	Rypin 	CRY 	kujawsko-pomorskie 	586,47 	43 408 	74,02 	-4,81
+powiat rzeszowski 	Rzeszów 	RZE, RZZ[b], RZR[c], YZE[c], YZZ[c], YZR[c] 	podkarpackie 	1 147,13 	169 986 	148,18 	8,14
+Rzeszów 	miasto na prawach powiatu 	RZ, YZ[c] 	podkarpackie 	126,61 	196 821 	1 554,55 	9,93
+powiat sandomierski 	Sandomierz 	TSA 	świętokrzyskie 	675,89 	76 736 	113,53 	-7,96
+powiat sanocki 	Sanok 	RSA, YSA[c] 	podkarpackie 	1 156,43 	94 166 	81,43 	-3,25
+powiat sejneński 	Sejny 	BSE 	podlaskie 	855,17 	19 807 	23,16 	-9,75
+powiat sępoleński 	Sępólno Krajeńskie 	CSE 	kujawsko-pomorskie 	791,09 	40 922 	51,73 	-3,24
+Siedlce 	miasto na prawach powiatu 	WS, AS[c] 	mazowieckie 	31,86 	78 258 	2 456,31 	3,44
+powiat siedlecki 	Siedlce 	WSI, ASI[c] 	mazowieckie 	1 603,48 	81 402 	50,77 	1,69
+Siemianowice Śląskie 	miasto na prawach powiatu 	SI, II[c] 	śląskie 	25,50 	66 587 	2 611,25 	-5,62
+powiat siemiatycki 	Siemiatycze 	BSI 	podlaskie 	1 459,46 	43 910 	30,09 	-10,28
+powiat sieradzki 	Sieradz 	ESI 	łódzkie 	1 490,83 	117 370 	78,73 	-4,85
+powiat sierpecki 	Sierpc 	WSE, ASE[c] 	mazowieckie 	852,04 	51 744 	60,73 	-6,39
+powiat skarżyski 	Skarżysko-Kamienna 	TSK 	świętokrzyskie 	395,43 	73 567 	186,04 	-10,44
+Skierniewice 	miasto na prawach powiatu 	ES 	łódzkie 	34,60 	47 932 	1 385,32 	-3,62
+powiat skierniewicki 	Skierniewice 	ESK 	łódzkie 	753,38 	38 156 	50,65 	-1,23
+powiat sławieński 	Sławno 	ZSL 	zachodniopomorskie 	1 043,20 	56 010 	53,69 	-3,93
+powiat słubicki 	Słubice 	FSL 	lubuskie 	999,29 	46 897 	46,93 	-2,57
+powiat słupecki 	Słupca 	PSL, MSL[c] 	wielkopolskie 	838,01 	59 029 	70,44 	-3,66
+Słupsk 	miasto na prawach powiatu 	GS, XS[c] 	pomorskie 	43,15 	90 320 	2 093,16 	-4,95
+powiat słupski 	Słupsk 	GSL, XSL[c] 	pomorskie 	2 304,24 	98 781 	42,87 	-0,12
+powiat sochaczewski 	Sochaczew 	WSC, ASC[c] 	mazowieckie 	734,80 	85 001 	115,68 	-0,27
+powiat sokołowski 	Sokołów Podlaski 	WSK, ASK[c] 	mazowieckie 	1 131,17 	53 617 	47,40 	-6,95
+powiat sokólski 	Sokółka 	BSK 	podlaskie 	2 054,50 	66 286 	32,26 	-11,47
+Sopot 	miasto na prawach powiatu 	GSP, XSP[c] 	pomorskie 	17,28 	35 562 	2 057,99 	-7,40
+Sosnowiec 	miasto na prawach powiatu 	SO, IO[c] 	śląskie 	91,06 	198 996 	2 185,33 	-10,57
+powiat stalowowolski 	Stalowa Wola 	RST, YST[c] 	podkarpackie 	831,74 	105 850 	127,26 	-3,97
+powiat starachowicki 	Starachowice 	TST 	świętokrzyskie 	523,41 	89 152 	170,33 	-8,60
+powiat stargardzki 	Stargard 	ZST 	zachodniopomorskie 	1 519,94 	120 151 	79,05 	0,52
+powiat starogardzki 	Starogard Gdański 	GST, XST[b] 	pomorskie 	1 345,34 	128 264 	95,34 	1,63
+powiat staszowski 	Staszów 	TSZ 	świętokrzyskie 	924,80 	71 574 	77,33 	-5,92
+powiat strzelecki 	Strzelce Opolskie 	OST 	opolskie 	744,27 	74 171 	99,66 	-3,88
+powiat strzelecko-drezdenecki 	Strzelce Krajeńskie 	FSD 	lubuskie 	1 247,86 	48 855 	39,15 	-6,12
+powiat strzeliński 	Strzelin 	DST, VST[c] 	dolnośląskie 	622,06 	43 456 	69,86 	-5,88
+powiat strzyżowski 	Strzyżów 	RSR, YSR[c] 	podkarpackie 	503,47 	61 295 	121,75 	-3,41
+powiat sulęciński 	Sulęcin 	FSU 	lubuskie 	1 177,80 	35 110 	29,81 	-3,63
+powiat suski 	Sucha Beskidzka 	KSU, JSU[c] 	małopolskie 	685,71 	84 197 	122,79 	0,44
+powiat suwalski 	Suwałki 	BSU 	podlaskie 	1307,00 	35 606 	27,24 	-2,33
+Suwałki 	miasto na prawach powiatu 	BS 	podlaskie 	65,51 	69 786 	1 065,27 	-1,03
+powiat szamotulski 	Szamotuły 	PSZ, MSZ[c] 	wielkopolskie 	1 119,29 	91 720 	81,94 	4,57
+Szczecin 	miasto na prawach powiatu 	ZS, ZZ[c] 	zachodniopomorskie 	300,60 	400 990 	1 333,97 	-2,68
+powiat szczecinecki 	Szczecinek 	ZSZ 	zachodniopomorskie 	1 765,42 	77 394 	43,84 	-4,34
+powiat szczycieński 	Szczytno 	NSZ 	warmińsko-mazurskie 	1 933,21 	69 263 	35,83 	-5,96
+powiat sztumski 	Sztum 	GSZ, XSZ[c] 	pomorskie 	730,74 	41 141 	56,30 	-8,08
+powiat szydłowiecki 	Szydłowiec 	WSZ, ASZ[c] 	mazowieckie 	451,81 	39 547 	87,53 	-5,51
+powiat średzki 	Środa Wielkopolska 	PSR, MSR[c] 	wielkopolskie 	623,86 	59 033 	94,63 	6,29
+powiat średzki 	Środa Śląska 	DSR, VSR[c] 	dolnośląskie 	704,14 	55 356 	78,62 	12,99
+powiat śremski 	Śrem 	PSE, MSE[c] 	wielkopolskie 	574,10 	61 455 	107,05 	2,48
+powiat świdnicki 	Świdnik 	LSW 	lubelskie 	468,35 	71 739 	153,17 	-2,20
+powiat świdnicki 	Świdnica 	DSW, VSW[c] 	dolnośląskie 	741,14 	156 550 	211,23 	-4,00
+powiat świdwiński 	Świdwin 	ZSD 	zachodniopomorskie 	1 093,06 	46 526 	42,56 	-10,02
+powiat świebodziński 	Świebodzin 	FSW 	lubuskie 	936,57 	55 678 	59,45 	-1,35
+powiat świecki 	Świecie 	CSW 	kujawsko-pomorskie 	1 474,18 	98 930 	67,11 	-2,26
+Świętochłowice 	miasto na prawach powiatu 	SW, IW[c] 	śląskie 	13,31 	49 363 	3 708,72 	-8,02
+Świnoujście 	miasto na prawach powiatu 	ZSW 	zachodniopomorskie 	202,07 	40 864 	202,23 	-0,46
+Tarnobrzeg 	miasto na prawach powiatu 	RT, YT[c] 	podkarpackie 	85,40 	46 588 	545,53 	-6,80
+powiat tarnobrzeski 	Tarnobrzeg 	RTA, YTA[c] 	podkarpackie 	521,06 	52 871 	101,47 	-4,59
+powiat tarnogórski 	Tarnowskie Góry 	STA, ITA[b] 	śląskie 	644,19 	140 799 	218,57 	5,55
+powiat tarnowski 	Tarnów 	KTA, JTA[c] 	małopolskie 	1 411,58 	201 454 	142,72 	-0,27
+Tarnów 	miasto na prawach powiatu 	KT, JT[c] 	małopolskie 	72,38 	108 177 	1 494,57 	-3,71
+powiat tatrzański 	Zakopane 	KTT, JTT[c] 	małopolskie 	471,65 	68 120 	144,43 	-0,22
+powiat tczewski 	Tczew 	GTC, XTC[c] 	pomorskie 	697,11 	115 641 	165,89 	-0,84
+powiat tomaszowski 	Tomaszów Mazowiecki 	ETM 	łódzkie 	1 024,79 	116 141 	113,33 	-9,75
+powiat tomaszowski 	Tomaszów Lubelski 	LTM 	lubelskie 	1 488,89 	82 337 	55,30 	-5,99
+Toruń 	miasto na prawach powiatu 	CT 	kujawsko-pomorskie 	115,72 	201 106 	1 737,87 	-3,43
+powiat toruński 	Toruń 	CTR 	kujawsko-pomorskie 	1 230,42 	108 938 	88,54 	12,05
+powiat trzebnicki 	Trzebnica 	DTR, VTR[c] 	dolnośląskie 	1 024,78 	85 401 	83,34 	3,63
+powiat tucholski 	Tuchola 	CTU 	kujawsko-pomorskie 	1 075,46 	48 338 	44,95 	0,19
+powiat turecki 	Turek 	PTU, MTU[k] 	wielkopolskie 	929,43 	83 818 	90,18 	-2,14
+Tychy 	miasto na prawach powiatu 	ST, IT[c] 	śląskie 	81,81 	127 307 	1 556,13 	-2,80
+powiat wadowicki 	Wadowice 	KWA, JWA[b] 	małopolskie 	645,88 	159 971 	247,68 	-0,68
+Wałbrzych 	miasto na prawach powiatu 	DB, VB[c] 	dolnośląskie 	84,7 	110 603 	1 305,82 	-11,56
+powiat wałbrzyski 	Wałbrzych 	DBA, VBA[c] 	dolnośląskie 	430,22 	55 414 	128,80 	-7,27
+powiat wałecki 	Wałcz 	ZWA 	zachodniopomorskie 	1 414,98 	52 929 	37,41 	-7,43
+Warszawa 	miasto na prawach powiatu 	WA, WB, WD, WE, WF, WH, WI, WJ, WK, WN, WT, WU, WW, WX, WY, AA[c], AB[c], AD[c], AE[c], AF[c], AH[c], AI[c], AJ[c], AK[c], AN[c], AT[c], AU[c], AW[c], AX[c], AY[c][g] 	mazowieckie 	517,24 	1 793 579 	3 467,60 	5,75
+powiat warszawski zachodni 	Ożarów Mazowiecki 	WZ, AZ[c] 	mazowieckie 	533,79 	119 503 	223,88 	14,60
+powiat wąbrzeski 	Wąbrzeźno 	CWA 	kujawsko-pomorskie 	501,95 	34 115 	67,96 	-5,31
+powiat wągrowiecki 	Wągrowiec 	PWA, MWA[c] 	wielkopolskie 	1 039,65 	70 216 	67,54 	-1,21
+powiat wejherowski 	Wejherowo 	GWE, GWO[b], XWE[c], XWO[c] 	pomorskie 	1 285,25 	218 766 	170,21 	9,24
+powiat węgorzewski 	Węgorzewo 	NWE 	warmińsko-mazurskie 	693,22 	22 555 	32,54 	-10,57
+powiat węgrowski 	Węgrów 	WWE, AWE[c] 	mazowieckie 	1 220,76 	65 641 	53,77 	-6,00
+powiat wielicki 	Wieliczka 	KWI, JWI[c] 	małopolskie 	410,78 	129 984 	316,43 	15,74
+powiat wieluński 	Wieluń 	EWI 	łódzkie 	926,48 	76 081 	82,12 	-5,17
+powiat wieruszowski 	Wieruszów 	EWE 	łódzkie 	577,13 	42 050 	72,86 	-2,70
+Włocławek 	miasto na prawach powiatu 	CW 	kujawsko-pomorskie 	84,32 	109 347 	1 296,81 	-8,52
+powiat włocławski 	Włocławek 	CWL 	kujawsko-pomorskie 	1 473,63 	85 893 	58,29 	-2,76
+powiat włodawski 	Włodawa 	LWL 	lubelskie 	1 256,42 	38 207 	30,41 	-8,23
+powiat włoszczowski 	Włoszczowa 	TLW 	świętokrzyskie 	907,86 	44 933 	49,49 	-4,52
+powiat wodzisławski 	Wodzisław Śląski 	SWD, SWZ[c], IWD[c], IWZ[c] 	śląskie 	286,75 	156 939 	547,30 	-2,59
+powiat wolsztyński 	Wolsztyn 	PWL, MWL[c] 	wielkopolskie 	679,73 	57 534 	84,64 	3,21
+powiat wołomiński 	Wołomin 	WWL, WV[b], AWL[c], AV[c] 	mazowieckie 	953,56 	251 276 	263,51 	16,13
+powiat wołowski 	Wołów 	DWL, VWL[c] 	dolnośląskie 	674,96 	46 725 	69,23 	-4,03
+Wrocław 	miasto na prawach powiatu 	DW, DX, VW[c], VX[c] 	dolnośląskie 	292,82 	643 782 	2 198,56 	3,39
+powiat wrocławski 	Wrocław 	DWR, VWR[b] 	dolnośląskie 	1 117,70 	153 876 	137,67 	35,07
+powiat wrzesiński 	Września 	PWR, MWR[c] 	wielkopolskie 	703,57 	78 089 	110,99 	3,46
+powiat wschowski 	Wschowa 	FWS 	lubuskie 	624,20 	38 787 	62,14 	-4,44
+powiat wysokomazowiecki 	Wysokie Mazowieckie 	BWM 	podlaskie 	1 288,91 	56 652 	43,95 	-6,99
+powiat wyszkowski 	Wyszków 	WWY, AWY[c] 	mazowieckie 	876,43 	74 283 	84,76 	2,55
+Zabrze 	miasto na prawach powiatu 	SZ, IZ[c] 	śląskie 	80,40 	171 691 	2 135,46 	-6,45
+powiat zambrowski 	Zambrów 	BZA 	podlaskie 	733,12 	43 390 	59,19 	-6,25
+powiat zamojski 	Zamość 	LZA 	lubelskie 	1 870,29 	105 839 	56,59 	-6,45
+Zamość 	miasto na prawach powiatu 	LZ 	lubelskie 	30,34 	63 223 	2 083,82 	-4,53
+powiat zawierciański 	Zawiercie 	SZA, IZA[c] 	śląskie 	1 002,23 	117 137 	116,88 	-7,48
+powiat ząbkowicki 	Ząbkowice Śląskie 	DZA, VZA[c] 	dolnośląskie 	801,53 	64 486 	80,45 	-9,49
+powiat zduńskowolski 	Zduńska Wola 	EZD 	łódzkie 	369,23 	66 232 	179,38 	-4,76
+powiat zgierski 	Zgierz 	EZG 	łódzkie 	855,18 	166 154 	194,29 	1,04
+powiat zgorzelecki 	Zgorzelec 	DZG, VZG[c] 	dolnośląskie 	838,60 	88 770 	105,85 	-9,40
+Zielona Góra 	miasto na prawach powiatu 	FZ 	lubuskie 	278,32 	141 280 	507,62 	2,88
+powiat zielonogórski 	Zielona Góra 	FZI 	lubuskie 	1 349,75 	75 646 	56,04 	0,26
+powiat złotoryjski 	Złotoryja 	DZL, VZL[c] 	dolnośląskie 	575,81 	43 274 	75,15 	-10,18
+powiat złotowski 	Złotów 	PZL, MZL[c] 	wielkopolskie 	1 660,17 	69 282 	41,73 	-3,21
+powiat zwoleński 	Zwoleń 	WZW, AZW[c] 	mazowieckie 	573,30 	36 026 	62,84 	-5,41
+powiat żagański 	Żagań 	FZG 	lubuskie 	1 131,82 	78 634 	69,48 	-8,36
+powiat żarski 	Żary 	FZA 	lubuskie 	1 392,78 	95 801 	68,78 	-7,20
+powiat żniński 	Żnin 	CZN 	kujawsko-pomorskie 	984,77 	70 070 	71,15 	-2,34
+Żory 	miasto na prawach powiatu 	SZO, IZO[c] 	śląskie 	64,64 	62 670 	969,52 	3,33
+powiat żuromiński 	Żuromin 	WZU, AZU[c] 	mazowieckie 	806,60 	38 337 	47,53 	-9,07
+powiat żyrardowski 	Żyrardów 	WZY, AZY[c] 	mazowieckie 	532,54 	75 616 	141,99 	-2,26
+powiat żywiecki 	Żywiec 	SZY, IZY[c] 	śląskie 	1 040,06 	152 450 	146,58 	-2,79

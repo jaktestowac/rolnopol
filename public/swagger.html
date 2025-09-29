@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Rolnopol - Swagger</title>
+    <link rel="icon" href="/images/logo/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .iframe-container {
+        flex: 1;
+        width: 100%;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+      }
+    </style>
+  </head>
+
+  <body class="bg-agri-pattern">
+    <!-- Dynamic Header Component -->
+    <div id="header-component"></div>
+    <div class="iframe-container" role="main">
+      <iframe
+        src="./swagger/index.html"
+        allowfullscreen
+        id="swagger-frame"
+        title="Swagger API Documentation"
+        aria-label="API Documentation"
+      ></iframe>
+    </div>
+    <!-- Dynamic Footer Component -->
+    <div id="footer-component"></div>
+    <script src="/js/init.js"></script>
+
+    <!-- Core Dependencies -->
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <!-- Services -->
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+
+    <!-- Components -->
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+
+    <!-- API Functions -->
+    <script src="/js/api.js"></script>
+
+    <!-- Utilities -->
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <!-- Main Application -->
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("swagger");
+    </script>
+    <script>
+      // Initialize navigation after DOM is loaded
+      document.addEventListener("DOMContentLoaded", async function () {
+        // Load the header component
+        const headerElement = document.getElementById("header-component");
+        if (headerElement) {
+          try {
+            const response = await fetch("/components/header.html");
+            const html = await response.text();
+            headerElement.innerHTML = html;
+
+            // Initialize navigation after header is loaded
+            if (typeof updateHeaderNav === "function") {
+              // Check authentication status using standardized cookie names
+              const token = getCookie("rolnopolToken");
+              const isLogged = getCookie("rolnopolIsLogged");
+              const username = getCookie("rolnopolUserLabel") || getCookie("rolnopolUsername");
+              if (token && (isLogged === "true" || isLogged === true)) {
+                try {
+                  const userData = await getUserInfo();
+                  updateHeaderNav(
+                    userData.displayedName ||
+                      userData.email ||
+                      username ||
+                      "User",
+                  );
+                } catch (error) {
+                  errorLogger.log("User Info Loading", error, {
+                    showToUser: false,
+                  });
+                  updateHeaderNav(username || "User");
+                }
+              } else {
+                updateHeaderNav();
+              }
+
+              // Set active navigation link for login page
+              setActiveNavLink("swagger");
+            }
+          } catch (error) {
+            errorLogger.log("Header Component Loading", error, {
+              showToUser: false,
+            });
+          }
+        }
+
+        // Load the footer component
+        if (typeof initFooter === "function") {
+          await initFooter();
+        }
+
+        // Setup iframe authentication handling
+        setupSwaggerIframeAuth();
+      });
+
+      // Setup iframe authentication for Swagger
+      function setupSwaggerIframeAuth() {
+        const swaggerFrame = document.getElementById("swagger-frame");
+
+        if (swaggerFrame) {
+          console.log("Setting up Swagger iframe authentication...");
+
+          // Send authentication token to iframe when it loads
+          swaggerFrame.addEventListener("load", () => {
+            console.log("Swagger iframe loaded, sending auth token...");
+            sendTokenToSwaggerIframe(swaggerFrame);
+          });
+
+          // Listen for messages from iframe
+          window.addEventListener("message", (event) => {
+            if (event.source === swaggerFrame.contentWindow) {
+              console.log("Received message from Swagger iframe:", event.data);
+              if (event.data.type === "AUTH_ERROR") {
+                console.warn("Authentication error from Swagger iframe");
+                // Don't redirect to login, just log the error
+                errorLogger.log(
+                  "Swagger Auth Error",
+                  new Error(event.data.message),
+                  { showToUser: false },
+                );
+              }
+            }
+          });
+        } else {
+          console.error("Swagger iframe not found");
+        }
+      }
+
+      // Send authentication token to Swagger iframe
+      function sendTokenToSwaggerIframe(iframe) {
+        try {
+          const token = getCookie("rolnopolToken");
+          const isLogged = getCookie("rolnopolIsLogged");
+
+          console.log("Sending auth token to Swagger iframe:", {
+            hasToken: !!token,
+            isLogged: isLogged,
+            tokenLength: token ? token.length : 0,
+          });
+
+          if (token && isLogged === "true") {
+            iframe.contentWindow.postMessage(
+              {
+                type: "AUTH_TOKEN",
+                token: token,
+                isLogged: true,
+              },
+              "*",
+            );
+          } else {
+            console.log("No valid auth token available for Swagger iframe");
+          }
+        } catch (error) {
+          console.error("Failed to send token to Swagger iframe:", error);
+        }
+      }
+
+      // Global logout function
+      function logout() {
+        if (window.App && window.App.getModule("authService")) {
+          const authService = window.App.getModule("authService");
+          authService
+            .logout()
+            .then(() => {
+              window.location.href = "/";
+            })
+            .catch((error) => {
+              errorLogger.log("Logout", error, { showToUser: false });
+              window.location.href = "/";
+            });
+        } else {
+          // Fallback logout
+          localStorage.removeItem("authToken");
+          sessionStorage.removeItem("authToken");
+          window.location.href = "/";
+        }
+      }
+    </script>
+  </body>
+</html>

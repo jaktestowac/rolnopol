@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Assign Staff to Fields - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .staff-fields-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .staff-fields-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding: 20px 24px;
+        background: linear-gradient(
+          135deg,
+          #6a7b5e 0%,
+          #8ba888 50%,
+          #4a5d3a 100%
+        );
+        border-radius: 16px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+          0 12px 24px rgba(106, 123, 94, 0.25),
+          0 0 0 1px rgba(255, 255, 255, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(20px);
+      }
+
+      .staff-fields-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            circle at 20% 80%,
+            rgba(255, 255, 255, 0.15) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 50%
+          ),
+          linear-gradient(
+            45deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.05) 50%,
+            transparent 70%
+          );
+      }
+
+      .staff-fields-header .header-content {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .staff-fields-header .header-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow:
+          0 6px 12px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .staff-fields-header .header-icon::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .staff-fields-header .header-icon:hover::before {
+        left: 100%;
+      }
+
+      .staff-fields-header .header-icon:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow:
+          0 12px 24px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .staff-fields-header .header-icon i {
+        font-size: 1.5rem;
+        color: #ffd700;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        transition: all 0.3s ease;
+      }
+
+      .staff-fields-header .header-icon:hover i {
+        transform: scale(1.1);
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+      }
+
+      .staff-fields-header .header-text h1 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin: 0 0 4px 0;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.5px;
+        position: relative;
+      }
+
+      .staff-fields-header .header-text h1::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 40px;
+        height: 3px;
+        background: linear-gradient(90deg, #ffd700, #ffed4e);
+        border-radius: 2px;
+      }
+
+      .staff-fields-header .header-text p {
+        font-size: 0.85rem;
+        margin: 0;
+        opacity: 0.9;
+        font-weight: 400;
+        letter-spacing: 0.3px;
+        line-height: 1.3;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .staff-fields-header .header-stats {
+        display: flex;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .staff-fields-header .stat-item {
+        text-align: center;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        min-width: 70px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+          0 3px 8px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .staff-fields-header .stat-item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 50%
+        );
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .staff-fields-header .stat-item:hover {
+        transform: translateY(-3px) scale(1.02);
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow:
+          0 8px 20px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .staff-fields-header .stat-item:hover::before {
+        opacity: 1;
+      }
+
+      .staff-fields-header .stat-number {
+        font-size: 1.1rem;
+        font-weight: 800;
+        display: block;
+        color: #ffd700;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        z-index: 1;
+        order: 1;
+      }
+
+      .staff-fields-header .stat-label {
+        font-size: 0.7rem;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+        display: block;
+      }
+
+      .staff-fields-header .bright-stat-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-top: 2px;
+        display: block;
+        color: #ffd700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        transition: all 0.3s ease;
+        order: 2;
+      }
+
+      .staff-fields-header .bright-stat-label::before {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #ffd700, #ffed4e);
+        border-radius: 1px;
+        transition: width 0.3s ease;
+      }
+
+      .staff-fields-header .stat-item:hover .bright-stat-label::before {
+        width: 80%;
+      }
+
+      .staff-fields-header .stat-item:hover .bright-stat-label {
+        transform: scale(1.05);
+        filter: brightness(1.1);
+      }
+
+      .navigation-tabs {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .nav-tab-button {
+        padding: 8px 16px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .nav-tab-button.active {
+        color: #6a7b5e;
+        border-bottom-color: #6a7b5e;
+      }
+
+      .nav-tab-button:hover {
+        color: #6a7b5e;
+      }
+
+      .profile-card-modern {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(106, 123, 94, 0.1);
+        margin-top: 20px;
+      }
+
+      .profile-card-modern:hover {
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .card-header-modern {
+        background: linear-gradient(135deg, #6a7b5e 0%, #8ba888 100%);
+        color: white;
+        padding: 12px 16px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card-header-modern::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            circle at 20% 80%,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 255, 255, 0.05) 0%,
+            transparent 50%
+          );
+      }
+
+      .card-header-modern h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .card-content-modern {
+        padding: 20px 24px;
+      }
+
+      .assignment-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 16px;
+        background: rgba(106, 123, 94, 0.05);
+        border-radius: 12px;
+      }
+
+      .staff-summary-compact {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        color: #6a7b5e;
+        font-weight: 500;
+      }
+
+      .unassigned-count {
+        font-weight: 700;
+        color: #dc3545;
+      }
+
+      .total-count {
+        font-weight: 700;
+        color: #6a7b5e;
+      }
+
+      .warning-summary-compact {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba(255, 193, 7, 0.1);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        color: #856404;
+        font-weight: 500;
+      }
+
+      .warning-count {
+        font-weight: 700;
+        color: #dc3545;
+      }
+
+      .visualization-controls {
+        margin-bottom: 20px;
+      }
+
+      .tabs-container {
+        background: white;
+        border-radius: 12px;
+        padding: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .tabs-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .tab-btn {
+        padding: 8px 16px;
+        background: none;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #666;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .tab-btn.active {
+        background: linear-gradient(135deg, #6a7b5e 0%, #8ba888 100%);
+        color: white;
+      }
+
+      .tab-btn:hover:not(.active) {
+        background: rgba(106, 123, 94, 0.1);
+        color: #6a7b5e;
+      }
+
+      .assignments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+      }
+
+      .assignments-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      .assignments-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .assignments-timeline {
+        position: relative;
+        padding-left: 20px;
+      }
+
+      .assignments-tree {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .assignments-chart {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .chart-container {
+        position: relative;
+        height: 300px;
+      }
+
+      .info-list-modern {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 400px;
+        min-height: 300px;
+        overflow-y: auto;
+        border: 1px solid rgba(106, 123, 94, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      .info-list-modern li {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s ease;
+        min-height: 60px;
+      }
+
+      .info-list-modern li:hover {
+        background-color: rgba(106, 123, 94, 0.05);
+      }
+
+      .info-list-modern li:last-child {
+        border-bottom: none;
+      }
+
+      @media (max-width: 768px) {
+        .staff-fields-header {
+          flex-direction: column;
+          gap: 20px;
+          padding: 20px;
+          text-align: center;
+        }
+
+        .staff-fields-header .header-content {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .staff-fields-header .header-text h1 {
+          font-size: 1.5rem;
+        }
+
+        .staff-fields-header .header-stats {
+          gap: 15px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .staff-fields-header .stat-item {
+          min-width: 70px;
+          padding: 10px 12px;
+        }
+
+        .assignment-controls {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .tabs-header {
+          justify-content: center;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .staff-fields-header {
+          padding: 16px;
+          gap: 16px;
+        }
+
+        .staff-fields-header .header-icon {
+          width: 50px;
+          height: 50px;
+        }
+
+        .staff-fields-header .header-icon i {
+          font-size: 1.5rem;
+        }
+
+        .staff-fields-header .header-text h1 {
+          font-size: 1.3rem;
+        }
+
+        .staff-fields-header .header-text p {
+          font-size: 0.8rem;
+        }
+
+        .staff-fields-header .header-stats {
+          gap: 10px;
+        }
+
+        .staff-fields-header .stat-item {
+          min-width: 60px;
+          padding: 8px 10px;
+        }
+
+        .staff-fields-header .stat-number {
+          font-size: 1rem;
+        }
+
+        .staff-fields-header .stat-label {
+          font-size: 0.65rem;
+        }
+
+        .staff-fields-header .bright-stat-label {
+          font-size: 0.7rem;
+          letter-spacing: 0.6px;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="staff-fields-container">
+      <!-- Modern Header with Stats -->
+      <div class="staff-fields-header">
+        <div class="header-content">
+          <div class="header-icon">
+            <i class="fas fa-link"></i>
+          </div>
+          <div class="header-text">
+            <h1>Staff Assignment Management</h1>
+            <p>
+              Efficiently assign staff to fields and manage agricultural
+              operations
+            </p>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <span class="stat-number" id="assignedStaff">0</span>
+            <span class="bright-stat-label">Assigned</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="unassignedStaff">0</span>
+            <span class="bright-stat-label">Available</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="totalFields">0</span>
+            <span class="bright-stat-label">Fields</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="coverageRate">0%</span>
+            <span class="bright-stat-label">Coverage</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="navigation-tabs">
+        <a href="/staff-fields-main.html" class="nav-tab-button">Main</a>
+        <a href="/staff-fields-assign.html" class="nav-tab-button active"
+          >Assign</a
+        >
+        <a href="/staff-fields-charts.html" class="nav-tab-button">Charts</a>
+      </div>
+
+      <main class="main">
+        <div class="profile-card-modern">
+          <div class="card-header-modern">
+            <h3><i class="fas fa-link"></i> Assign Staff to Fields</h3>
+          </div>
+          <div class="card-content-modern">
+            <div class="assignment-controls">
+              <button
+                id="openAssignModal"
+                class="btn btn-primary btn-compact"
+                style="
+                  background: var(--agri-gradient);
+                  border: none;
+                  color: white;
+                  font-weight: 600;
+                  padding: 0.5rem 1rem;
+                  border-radius: var(--border-radius);
+                  box-shadow: var(--futuristic-glow);
+                  font-size: 0.875rem;
+                "
+              >
+                <i class="fas fa-plus"></i> New Assignment
+              </button>
+
+              <!-- Staff Assignment Summary -->
+              <div id="staffAssignmentSummary" class="staff-summary-compact">
+                <i class="fas fa-users"></i>
+                <span id="unassignedStaffCount" class="unassigned-count"
+                  >Loading...</span
+                >
+                <span class="total-staff">available</span>
+                <span class="staff-separator">/</span>
+                <span id="totalStaffCount" class="total-count">0</span>
+                <span class="total-staff">total</span>
+              </div>
+
+              <!-- Animals without fields warning -->
+              <div
+                id="animalsWarningSummary"
+                class="warning-summary-compact"
+                style="display: none"
+              >
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="unassignedAnimalsCount" class="warning-count">0</span>
+                <span class="warning-label">animals without fields</span>
+              </div>
+
+              <!-- Fields with animals but no staff warning -->
+              <div
+                id="fieldsWarningSummary"
+                class="warning-summary-compact"
+                style="display: none; cursor: pointer"
+                title="Click to view fields with animals but no staff"
+              >
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="fieldsWithoutStaffCount" class="warning-count"
+                  >0</span
+                >
+                <span class="warning-label"
+                  >fields with animals but no staff</span
+                >
+              </div>
+            </div>
+
+            <!-- Sorting and Filtering Controls -->
+            <div class="visualization-controls">
+              <div class="tabs-container">
+                <div class="tabs-header">
+                  <button class="tab-btn active" data-viz="grid">
+                    <i class="fas fa-th"></i> Grid
+                  </button>
+                  <button class="tab-btn" data-viz="list">
+                    <i class="fas fa-list"></i> List
+                  </button>
+                  <button class="tab-btn" data-viz="cards">
+                    <i class="fas fa-th-large"></i> Cards
+                  </button>
+                  <button class="tab-btn" data-viz="table">
+                    <i class="fas fa-table"></i> Table
+                  </button>
+                  <button class="tab-btn" data-viz="timeline">
+                    <i class="fas fa-clock"></i> Timeline
+                  </button>
+                  <button class="tab-btn" data-viz="tree">
+                    <i class="fas fa-sitemap"></i> Tree
+                  </button>
+                  <button class="tab-btn" data-viz="chart">
+                    <i class="fas fa-chart-bar"></i> Chart
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="assignments">
+              <!-- Grid View (Default) -->
+              <div
+                id="assignmentsGrid"
+                class="assignments-grid"
+                style="display: none"
+              ></div>
+
+              <!-- List View -->
+              <div id="assignmentsList" class="info-list-modern"></div>
+
+              <!-- Cards View -->
+              <div
+                id="assignmentsCards"
+                class="assignments-cards"
+                style="display: none"
+              ></div>
+
+              <!-- Table View -->
+              <div
+                id="assignmentsTable"
+                class="assignments-table"
+                style="display: none"
+              ></div>
+
+              <!-- Timeline View -->
+              <div
+                id="assignmentsTimeline"
+                class="assignments-timeline"
+                style="display: none"
+              ></div>
+
+              <!-- Tree View -->
+              <div
+                id="assignmentsTree"
+                class="assignments-tree"
+                style="display: none"
+              ></div>
+
+              <!-- Chart View -->
+              <div
+                id="assignmentsChart"
+                class="assignments-chart"
+                style="display: none"
+              >
+                <div class="chart-container">
+                  <canvas
+                    id="fieldsSizeChart"
+                    width="400"
+                    height="200"
+                  ></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <!-- Assign Staff Modal -->
+    <div id="assignModal" class="modal modal-centered" style="display: none">
+      <div class="modal-content glass compact">
+        <div class="modal-header">
+          <h3><i class="fas fa-link"></i> Assign Staff to Field</h3>
+          <button
+            id="closeAssignModal"
+            class="btn btn-icon btn-close"
+            aria-label="Close modal"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form
+            id="assignStaffForm"
+            class="update-form-modern modal-form"
+            novalidate
+          >
+            <div class="form-group-modern">
+              <label for="assignField" class="form-label-modern"
+                ><i class="fas fa-seedling"></i> Field</label
+              >
+              <select
+                id="assignField"
+                name="assignField"
+                class="form-input-modern"
+                required
+                aria-required="true"
+              >
+                <option value="">Select a field...</option>
+              </select>
+              <div class="form-error" id="assignFieldError"></div>
+            </div>
+
+            <div class="form-group-modern">
+              <label for="assignStaff" class="form-label-modern"
+                ><i class="fas fa-user"></i> Staff</label
+              >
+              <select
+                id="assignStaff"
+                name="assignStaff"
+                class="form-input-modern"
+                required
+                aria-required="true"
+              >
+                <option value="">Select a staff member...</option>
+              </select>
+              <div class="form-error" id="assignStaffError"></div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-futuristic">
+                <i class="fas fa-link"></i> Assign Staff
+              </button>
+              <button
+                type="button"
+                id="cancelAssignModal"
+                class="btn btn-secondary"
+              >
+                <i class="fas fa-times"></i> Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal modal-centered" style="display: none">
+      <!-- ...modal content... -->
+    </div>
+
+    <!-- Fields Warning Modal -->
+    <div
+      id="fieldsWarningModal"
+      class="modal modal-centered"
+      style="display: none"
+    >
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3>
+            <i class="fas fa-exclamation-circle"></i> Fields with Animals but No
+            Staff
+          </h3>
+          <button
+            id="closeFieldsWarningModal"
+            class="btn btn-icon btn-close"
+            aria-label="Close modal"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="warning-description">
+            <p>
+              The following fields have animals assigned but no staff to manage
+              them:
+            </p>
+          </div>
+          <div id="fieldsWarningList" class="fields-warning-list">
+            <!-- Fields will be populated here -->
+          </div>
+          <div class="form-actions">
+            <button
+              type="button"
+              id="closeFieldsWarningModalBtn"
+              class="btn btn-secondary"
+            >
+              <i class="fas fa-times"></i> Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Core Dependencies and Scripts -->
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/staff-fields-assign.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("staff-fields");
+    </script>
+    <script>
+      // Update header stats with real data
+      document.addEventListener("DOMContentLoaded", async function () {
+        // Wait for the assign page logic to load data
+        setTimeout(async function () {
+          try {
+            // First try to get data from the global page instance
+            const assignPage = window.staffFieldsAssignPage;
+            if (assignPage && assignPage.fields && assignPage.staff) {
+              // Calculate totals from page instance
+              const totalFields = assignPage.fields.length;
+              const totalStaff = assignPage.staff.length;
+              const assignedStaff = assignPage.assignments
+                ? Object.values(assignPage.assignments).flat().length
+                : 0;
+              const unassignedStaff = totalStaff - assignedStaff;
+              const coverageRate =
+                totalStaff > 0
+                  ? Math.round((assignedStaff / totalStaff) * 100)
+                  : 0;
+
+              // Update header stats
+              const assignedStaffEl = document.getElementById("assignedStaff");
+              const unassignedStaffEl =
+                document.getElementById("unassignedStaff");
+              const totalFieldsEl = document.getElementById("totalFields");
+              const coverageRateEl = document.getElementById("coverageRate");
+
+              if (assignedStaffEl) assignedStaffEl.textContent = assignedStaff;
+              if (unassignedStaffEl)
+                unassignedStaffEl.textContent = unassignedStaff;
+              if (totalFieldsEl) totalFieldsEl.textContent = totalFields;
+              if (coverageRateEl)
+                coverageRateEl.textContent = coverageRate + "%";
+            } else {
+              // Fallback: Try to get data from API directly
+              const apiService = window.ApiService
+                ? new window.ApiService()
+                : null;
+              if (apiService) {
+                // Load data directly from API
+                const [fieldsResponse, staffResponse, assignmentsResponse] =
+                  await Promise.all([
+                    apiService.get("fields", { requiresAuth: true }),
+                    apiService.get("staff", { requiresAuth: true }),
+                    apiService.get("fields/assign", { requiresAuth: true }),
+                  ]);
+
+                // Calculate totals
+                const fields =
+                  fieldsResponse.success &&
+                  fieldsResponse.data &&
+                  Array.isArray(fieldsResponse.data.data)
+                    ? fieldsResponse.data.data
+                    : [];
+                const staff =
+                  staffResponse.success &&
+                  staffResponse.data &&
+                  Array.isArray(staffResponse.data.data)
+                    ? staffResponse.data.data
+                    : [];
+                const assignments =
+                  assignmentsResponse.success &&
+                  assignmentsResponse.data &&
+                  Array.isArray(assignmentsResponse.data.data)
+                    ? assignmentsResponse.data.data
+                    : [];
+
+                const totalFields = fields.length;
+                const totalStaff = staff.length;
+                const assignedStaff = assignments.length;
+                const unassignedStaff = totalStaff - assignedStaff;
+                const coverageRate =
+                  totalStaff > 0
+                    ? Math.round((assignedStaff / totalStaff) * 100)
+                    : 0;
+
+                // Update header stats
+                const assignedStaffEl =
+                  document.getElementById("assignedStaff");
+                const unassignedStaffEl =
+                  document.getElementById("unassignedStaff");
+                const totalFieldsEl = document.getElementById("totalFields");
+                const coverageRateEl = document.getElementById("coverageRate");
+
+                if (assignedStaffEl)
+                  assignedStaffEl.textContent = assignedStaff;
+                if (unassignedStaffEl)
+                  unassignedStaffEl.textContent = unassignedStaff;
+                if (totalFieldsEl) totalFieldsEl.textContent = totalFields;
+                if (coverageRateEl)
+                  coverageRateEl.textContent = coverageRate + "%";
+              }
+            }
+          } catch (error) {
+            console.error("Error updating header stats:", error);
+          }
+        }, 2000); // Wait 2 seconds for data to load
+      });
+    </script>
+  </body>
+</html>

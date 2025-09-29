@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System - Kraken Dashboard</title>
+  <link rel="stylesheet" href="../css/kraken.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
+  <style>
+    .system-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .refresh-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .refresh-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .refresh-button:active {
+      transform: translateY(0);
+    }
+
+    .refresh-button.loading {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .refresh-button.loading i {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .last-updated {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .database-details-section {
+      margin-top: 30px;
+    }
+
+    .section-header {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #333;
+    }
+
+    .section-header h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e6e6e6;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .database-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .database-card {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .database-card:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+    }
+
+    .database-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .database-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #e6e6e6;
+      margin: 0;
+    }
+
+    .database-file {
+      font-size: 0.8rem;
+      color: #888;
+      background: #2a2a2a;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .database-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .stat-item:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+
+    .stat-value {
+      font-size: 0.85rem;
+      color: #e6e6e6;
+      font-weight: 500;
+    }
+
+    .additional-stats {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #2a2a2a;
+    }
+
+    .additional-stats h4 {
+      font-size: 0.9rem;
+      color: #ccc;
+      margin: 0 0 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .additional-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .additional-stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .additional-stat-label {
+      color: #999;
+    }
+
+    .additional-stat-value {
+      color: #e6e6e6;
+      font-weight: 500;
+    }
+
+    .last-modified {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 10px;
+      text-align: right;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="system-section">
+    <div class="system-header">
+      <div>
+        <h2 class="system-title">
+          <i class="fas fa-server"></i> System Information
+        </h2>
+        <div class="last-updated">
+          Last updated: <span id="lastUpdated">Never</span>
+        </div>
+      </div>
+      <button id="refreshSystemBtn" class="refresh-button" title="Refresh system information (Ctrl+R)">
+        <i class="fas fa-sync-alt"></i>
+        Refresh
+      </button>
+    </div>
+    <div class="system-info-grid">
+      <div class="system-card">
+        <h3><i class="fas fa-microchip"></i> Server Status</h3>
+        <p>
+          Status:
+          <span class="badge-enhanced badge-success-enhanced">Online</span>
+        </p>
+        <p>Uptime: <span id="serverUptime">Loading...</span></p>
+        <p>Version: <span id="serverVersion">Loading...</span></p>
+      </div>
+      <div class="system-card">
+        <h3><i class="fas fa-database"></i> Database Overview</h3>
+        <p>
+          Status:
+          <span class="badge-enhanced badge-success-enhanced">Connected</span>
+        </p>
+        <p>Total Records: <span id="dbTotalRecords">Loading...</span></p>
+        <p>Total Size: <span id="dbTotalSize">Loading...</span></p>
+        <p>Database Files: <span id="dbFileCount">Loading...</span></p>
+      </div>
+      <div class="system-card">
+        <h3><i class="fas fa-chart-line"></i> Performance</h3>
+        <p>Response Time: <span id="responseTime">Loading...</span></p>
+        <p>Memory Usage: <span id="memoryUsage">Loading...</span></p>
+        <p>CPU Usage: <span id="cpuUsage">Loading...</span></p>
+      </div>
+    </div>
+
+    <!-- Database Details Section -->
+    <div class="database-details-section" style="display: none" id="databaseDetailsSection">
+      <div class="section-header">
+        <h3><i class="fas fa-table"></i> Database Details</h3>
+      </div>
+      <div class="database-grid" id="databaseGrid">
+        <!-- Database cards will be dynamically generated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared Utilities -->
+  <script src="../js/kraken-utils.js"></script>
+
+  <script>
+    class SystemTab {
+      constructor() {
+        this.token = getCookie("krakenToken");
+        this.refreshBtn = document.getElementById("refreshSystemBtn");
+        this.lastUpdatedElement = document.getElementById("lastUpdated");
+        this.init();
+      }
+
+      init() {
+        // Listen for token from parent window
+        window.addEventListener("message", (event) => {
+          if (event.data.type === "SET_TOKEN") {
+            this.token = event.data.token;
+            this.loadSystemData();
+          }
+        });
+
+        this.bindEvents();
+
+        // If we already have a token, load data immediately
+        if (this.token) {
+          this.loadSystemData();
+        }
+      }
+
+      bindEvents() {
+        this.refreshBtn.addEventListener("click", () => this.handleRefresh());
+
+        // Add keyboard shortcut support (Ctrl+R or Cmd+R)
+        document.addEventListener("keydown", (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === "r") {
+            e.preventDefault(); // Prevent browser refresh
+            this.handleRefresh();
+          }
+        });
+      }
+
+      async handleRefresh() {
+        // Prevent multiple simultaneous refreshes
+        if (this.refreshBtn.classList.contains("loading")) {
+          return;
+        }
+
+        // Add loading state
+        this.refreshBtn.classList.add("loading");
+        this.refreshBtn.innerHTML =
+          '<i class="fas fa-spinner"></i> Refreshing...';
+
+        try {
+          await this.loadSystemData();
+          this.updateLastUpdated();
+        } catch (error) {
+          console.error("Refresh failed:", error);
+          // Show error feedback (could add a toast notification here)
+        } finally {
+          // Remove loading state
+          this.refreshBtn.classList.remove("loading");
+          this.refreshBtn.innerHTML =
+            '<i class="fas fa-sync-alt"></i> Refresh';
+        }
+      }
+
+      updateLastUpdated() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString("pl-PL");
+        const dateString = now.toLocaleDateString("pl-PL");
+        this.lastUpdatedElement.textContent = `${dateString} at ${timeString}`;
+      }
+
+      async loadSystemData() {
+        try {
+          const response = await secureFetch("/api/v1/admin/dashboard", {
+            headers: { Authorization: `Bearer ${this.token}` },
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            const data = result.data;
+
+            // Update system info from API
+            if (document.getElementById("serverUptime")) {
+              document.getElementById("serverUptime").textContent =
+                data.systemHealth?.uptimeFormatted || "N/A";
+            }
+            if (document.getElementById("memoryUsage")) {
+              document.getElementById("memoryUsage").textContent =
+                data.systemHealth?.memoryUsage?.formatted?.heapUsed || "N/A";
+            }
+            if (document.getElementById("nodeVersion")) {
+              document.getElementById("nodeVersion").textContent =
+                data.systemHealth?.nodeVersion || "N/A";
+            }
+            if (document.getElementById("environment")) {
+              document.getElementById("environment").textContent =
+                data.systemHealth?.environment || "N/A";
+            }
+
+            // Update database info
+            if (document.getElementById("dbTotalRecords")) {
+              document.getElementById("dbTotalRecords").textContent =
+                data.database?.totalRecords || "N/A";
+            }
+            if (document.getElementById("dbTotalSize")) {
+              document.getElementById("dbTotalSize").textContent =
+                data.database?.formattedTotalSize || "N/A";
+            }
+            if (document.getElementById("dbFileCount")) {
+              document.getElementById("dbFileCount").textContent =
+                data.database?.totalFiles || "N/A";
+            }
+
+            // Update database details section
+            this.updateDatabaseDetails(data.database);
+
+            // Update performance metrics
+            if (document.getElementById("responseTime")) {
+              document.getElementById("responseTime").textContent =
+                data.performance?.responseTime || "N/A";
+            }
+            if (document.getElementById("cpuUsage")) {
+              document.getElementById("cpuUsage").textContent =
+                data.systemHealth?.cpuUsage?.formatted || "N/A";
+            }
+
+            // Update last updated timestamp
+            this.updateLastUpdated();
+          }
+        } catch (error) {
+          if (error.message.includes("Authentication failed")) {
+            // Authentication error already handled by secureFetch
+            return;
+          }
+          // Fallback to mock data
+          setTimeout(() => {
+            if (document.getElementById("serverUptime")) {
+              document.getElementById("serverUptime").textContent =
+                "7 days, 3 hours, 45 minutes, 23 seconds";
+            }
+            if (document.getElementById("memoryUsage")) {
+              document.getElementById("memoryUsage").textContent = "67%";
+            }
+            if (document.getElementById("dbTotalRecords")) {
+              document.getElementById("dbTotalRecords").textContent = "1,234";
+            }
+            if (document.getElementById("dbTotalSize")) {
+              document.getElementById("dbTotalSize").textContent = "2.5 MB";
+            }
+            if (document.getElementById("dbFileCount")) {
+              document.getElementById("dbFileCount").textContent = "1";
+            }
+            if (document.getElementById("responseTime")) {
+              document.getElementById("responseTime").textContent = "45ms";
+            }
+            if (document.getElementById("cpuUsage")) {
+              document.getElementById("cpuUsage").textContent = "23%";
+            }
+
+            // Update last updated timestamp even for fallback data
+            this.updateLastUpdated();
+          }, 500);
+        }
+      }
+
+      updateDatabaseDetails(databaseInfo) {
+        if (!databaseInfo || !databaseInfo.databases) {
+          return;
+        }
+
+        const databaseGrid = document.getElementById("databaseGrid");
+        const databaseDetailsSection = document.getElementById(
+          "databaseDetailsSection",
+        );
+
+        if (!databaseGrid || !databaseDetailsSection) {
+          return;
+        }
+
+        // Show the database details section
+        databaseDetailsSection.style.display = "block";
+
+        // Clear existing content
+        databaseGrid.innerHTML = "";
+
+        // Generate database cards
+        databaseInfo.databases.forEach((db) => {
+          const card = this.createDatabaseCard(db);
+          databaseGrid.appendChild(card);
+        });
+      }
+
+      createDatabaseCard(db) {
+        const card = document.createElement("div");
+        card.className = "database-card";
+
+        const header = document.createElement("div");
+        header.className = "database-card-header";
+        header.innerHTML = `
+                    <h4 class="database-name">${db.displayName}</h4>
+                    <span class="database-file">${db.name}</span>
+                `;
+
+        const stats = document.createElement("div");
+        stats.className = "database-stats";
+        stats.innerHTML = `
+                    <div class="stat-item">
+                        <span class="stat-label">Records:</span>
+                        <span class="stat-value">${db.recordCount.toLocaleString("pl-PL")}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Size:</span>
+                        <span class="stat-value">${db.formattedSize}</span>
+                    </div>
+                `;
+
+        card.appendChild(header);
+        card.appendChild(stats);
+
+        // Add additional stats if available
+        if (
+          db.additionalStats &&
+          Object.keys(db.additionalStats).length > 0
+        ) {
+          const additionalStats = document.createElement("div");
+          additionalStats.className = "additional-stats";
+
+          const additionalStatsTitle = document.createElement("h4");
+          additionalStatsTitle.innerHTML =
+            '<i class="fas fa-chart-bar"></i> Additional Statistics';
+          additionalStats.appendChild(additionalStatsTitle);
+
+          const additionalStatsGrid = document.createElement("div");
+          additionalStatsGrid.className = "additional-stats-grid";
+
+          // Dynamically add additional stats
+          Object.entries(db.additionalStats).forEach(([key, value]) => {
+            const statItem = document.createElement("div");
+            statItem.className = "additional-stat-item";
+
+            const label = this.formatStatLabel(key);
+            const displayValue = this.formatStatValue(key, value);
+
+            statItem.innerHTML = `
+                            <span class="additional-stat-label">${label}:</span>
+                            <span class="additional-stat-value">${displayValue}</span>
+                        `;
+
+            additionalStatsGrid.appendChild(statItem);
+          });
+
+          additionalStats.appendChild(additionalStatsGrid);
+          card.appendChild(additionalStats);
+        }
+
+        // Add last modified timestamp
+        if (db.lastModified) {
+          const lastModified = document.createElement("div");
+          lastModified.className = "last-modified";
+          lastModified.textContent = `Last modified: ${new Date(db.lastModified).toLocaleString("pl-PL")}`;
+          card.appendChild(lastModified);
+        }
+
+        return card;
+      }
+
+      formatStatLabel(key) {
+        const labelMap = {
+          activeUsers: "Active Users",
+          inactiveUsers: "Inactive Users",
+          usersWithProfile: "Users with Profile",
+          profileCompletionRate: "Profile Completion Rate",
+          totalTokens: "Total Tokens",
+          activeUserTokens: "User Tokens",
+          activeAdminTokens: "Admin Tokens",
+        };
+
+        return (
+          labelMap[key] ||
+          key
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (str) => str.toUpperCase())
+        );
+      }
+
+      formatStatValue(key, value) {
+        if (key === "profileCompletionRate") {
+          return `${value}%`;
+        }
+        return value.toLocaleString("pl-PL");
+      }
+    }
+
+    // Initialize system tab when the page loads
+    document.addEventListener("DOMContentLoaded", () => {
+      new SystemTab();
+    });
+
+    // Fetch version from API and update #serverVersion
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const res = await fetch("/api/version");
+        const data = await res.json();
+        if (data.version) {
+          document.getElementById("serverVersion").textContent =
+            "v" + data.version;
+        }
+      } catch (e) {
+        document.getElementById("serverVersion").textContent = "N/A";
+      }
+    });
+  </script>
+</body>
+
+</html>

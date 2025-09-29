@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial Tracking - Rolnopol</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    .financial-dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .financial-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(106, 123, 94, 0.1);
+    }
+
+    .balance-card {
+      background: linear-gradient(135deg, #6a7b5e, #8ba888);
+      color: white;
+      text-align: center;
+    }
+
+    .balance-amount {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0.5rem 0;
+    }
+
+    .balance-label {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 0.5rem;
+      background: rgba(106, 123, 94, 0.05);
+      border-radius: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #6a7b5e;
+      margin-bottom: 0.1rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.1rem;
+    }
+
+    /* Modern Transaction Form Styles */
+    .transaction-form-modern {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1.2rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(106, 123, 94, 0.1);
+    }
+
+    .form-header-modern {
+      margin-bottom: 2rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .form-header-modern:hover {
+      background: rgba(106, 123, 94, 0.02);
+      border-radius: 0.8rem;
+    }
+
+    .form-header-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    .collapse-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: rgba(106, 123, 94, 0.1);
+      color: #6a7b5e;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .collapse-toggle:hover {
+      background: rgba(106, 123, 94, 0.2);
+      transform: scale(1.1);
+    }
+
+    .collapse-toggle i {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem;
+      border-radius: 0.8rem;
+      margin: -1.5rem -1.5rem 0 -1.5rem;
+    }
+
+    .form-content {
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .form-content.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .form-content.expanded {
+      max-height: 1000px;
+      opacity: 1;
+      margin-top: 1rem;
+    }
+
+    .form-header-icon {
+      width: 3rem;
+      height: 3rem;
+      background: linear-gradient(135deg, #6a7b5e, #5a6b4e);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    .form-header-text h3 {
+      margin: 0 0 0.3rem 0;
+      color: #333;
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    .form-header-text p {
+      margin: 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .form-grid-modern {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .description-group {
+      grid-column: 1 / -1;
+    }
+
+    .type-selector {
+      grid-column: 1 / -1;
+    }
+
+    .type-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .type-option {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: white;
+      position: relative;
+    }
+
+    .type-option:hover {
+      border-color: #6a7b5e;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(106, 123, 94, 0.15);
+      background: rgba(106, 123, 94, 0.02);
+    }
+
+    .type-option:hover .type-option-icon {
+      transform: scale(1.05);
+    }
+
+    .type-option:hover .type-option-title {
+      color: #2d3748;
+    }
+
+    .type-option.selected {
+      border-color: #6a7b5e;
+      background: linear-gradient(135deg,
+          rgba(106, 123, 94, 0.08),
+          rgba(106, 123, 94, 0.12));
+      box-shadow:
+        0 6px 20px rgba(106, 123, 94, 0.2),
+        0 2px 8px rgba(106, 123, 94, 0.1);
+      transform: translateY(-3px);
+      position: relative;
+    }
+
+    .type-option.selected::before {
+      content: "";
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(135deg, #6a7b5e, #5a6b4e);
+      border-radius: 0.8rem;
+      z-index: -1;
+      opacity: 0.3;
+    }
+
+    .type-option.selected .type-option-icon {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .type-option.selected .type-option-title {
+      color: #2d3748;
+      font-weight: 700;
+    }
+
+    .type-option.selected .type-option-description {
+      color: #4a5568;
+      font-weight: 500;
+    }
+
+    /* Add checkmark for selected state */
+    .type-option.selected::after {
+      content: "✓";
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: linear-gradient(135deg, #6a7b5e, #5a6b4e);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(106, 123, 94, 0.3);
+    }
+
+    .type-option-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: white;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .type-option-icon.income {
+      background: linear-gradient(135deg, #4caf50, #45a049);
+    }
+
+    .type-option-icon.expense {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+    }
+
+    .type-option-content {
+      flex: 1;
+    }
+
+    .type-option-title {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.2rem;
+      transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .type-option-description {
+      font-size: 0.8rem;
+      color: #666;
+      transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .amount-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .amount-currency {
+      position: absolute;
+      left: 1rem;
+      color: #666;
+      font-weight: 500;
+      z-index: 1;
+    }
+
+    .amount-input {
+      padding-left: 3rem !important;
+    }
+
+    .description-input {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-actions-modern {
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(106, 123, 94, 0.1);
+    }
+
+    /* Loading state for submit button */
+    .btn.loading {
+      position: relative;
+      pointer-events: none;
+    }
+
+    .btn.loading .btn-text {
+      opacity: 0.7;
+    }
+
+    .btn.loading::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 1rem;
+      height: 1rem;
+      margin: -0.5rem 0 0 -0.5rem;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    /* Error styling for modern form */
+    .form-input-modern.error {
+      border-color: #f44336;
+      background-color: rgba(244, 67, 54, 0.05);
+    }
+
+    .form-input-modern.error:focus {
+      border-color: #f44336;
+      box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+    }
+
+    /* Type selector error state */
+    .type-selector.error .type-options {
+      border: 2px solid #f44336;
+      border-radius: 0.8rem;
+      background-color: rgba(244, 67, 54, 0.05);
+    }
+
+    /* Character counter styling */
+    .char-counter-modern .current.near-limit {
+      color: #ff9800;
+    }
+
+    .char-counter-modern .current.at-limit {
+      color: #f44336;
+    }
+
+    /* Disabled state for additional fields until type is selected */
+    .fields-disabled {
+      opacity: 0.6;
+      pointer-events: none;
+      filter: grayscale(10%);
+      transition: opacity 0.2s ease;
+    }
+
+    /* Animations */
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .transaction-form-modern {
+        padding: 1.5rem;
+      }
+
+      .form-grid-modern {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .type-options {
+        grid-template-columns: 1fr;
+      }
+
+      .form-header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.8rem;
+      }
+
+      .form-header-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+      }
+
+      .collapsible-header {
+        padding: 1rem;
+        margin: -1rem -1rem 0 -1rem;
+      }
+
+      .collapse-toggle {
+        width: 1.8rem;
+        height: 1.8rem;
+      }
+    }
+
+    .transactions-section {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .transactions-header {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .filters {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .filter-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .filter-group select,
+    .filter-group input {
+      padding: 0.5rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 0.3rem;
+      font-size: 0.85rem;
+    }
+
+    .transactions-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .transactions-table th,
+    .transactions-table td {
+      padding: 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .transactions-table th {
+      background: rgba(106, 123, 94, 0.1);
+      font-weight: 600;
+      color: #333;
+    }
+
+    .transaction-type {
+      padding: 0.3rem 0.8rem;
+      border-radius: 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .transaction-type.income {
+      background: rgba(76, 175, 80, 0.1);
+      color: #4caf50;
+    }
+
+    .transaction-type.expense {
+      background: rgba(244, 67, 54, 0.1);
+      color: #f44336;
+    }
+
+    .transaction-type.transfer {
+      background: rgba(33, 150, 243, 0.1);
+      color: #2196f3;
+    }
+
+    .amount {
+      font-weight: 600;
+    }
+
+    .amount.positive {
+      color: #4caf50;
+    }
+
+    .amount.negative {
+      color: #f44336;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .pagination button {
+      padding: 0.5rem 1rem;
+      border: 1px solid #e0e0e0;
+      background: white;
+      border-radius: 0.3rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .pagination button:hover {
+      background: #f5f5f5;
+    }
+
+    .pagination button.active {
+      background: #6a7b5e;
+      color: white;
+      border-color: #6a7b5e;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #666;
+    }
+
+    .error {
+      background: rgba(244, 67, 54, 0.1);
+      color: #f44336;
+      border-radius: 0.5rem;
+    }
+
+    .success {
+      background: rgba(76, 175, 80, 0.1);
+      color: #4caf50;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    /* Toast notification animations */
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .financial-dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .filters {
+        flex-direction: column;
+      }
+
+      .transactions-table {
+        font-size: 0.85rem;
+      }
+
+      .transactions-table th,
+      .transactions-table td {
+        padding: 0.5rem 0.3rem;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-agri-pattern">
+  <!-- Dynamic Header Component -->
+  <div id="header-component"></div>
+
+  <div class="container" style="margin-top: 0rem; max-width: 1200px">
+    <header class="header glass" style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 1.2rem 0 1.2rem 0;
+          margin-bottom: 1.2rem;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+          border-radius: 1.2rem 1.2rem 0 0;
+        ">
+      <div style="
+            display: flex;
+            align-items: center;
+            gap: 1.1rem;
+            width: 100%;
+            justify-content: center;
+          ">
+        <h1 style="
+              display: flex;
+              align-items: center;
+              gap: 0.6rem;
+              font-size: 2rem;
+            ">
+          <span class="bg-agri-gradient"><i class="fas fa-coins"></i></span>
+        </h1>
+        <div style="
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+            ">
+          <span class="main-title">Financial Tracking</span>
+          <span style="
+                font-size: 1.08rem;
+                color: #6a7b5e;
+                font-weight: 400;
+                margin-top: 0.1rem;
+              ">Manage your virtual currency and transactions</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main" style="padding-top: 0">
+      <!-- Financial Dashboard -->
+      <div class="financial-dashboard">
+        <!-- Balance Card -->
+        <div class="financial-card balance-card">
+          <div class="balance-label">Current Balance</div>
+          <div class="balance-amount" id="current-balance">0.00 ROL</div>
+          <div class="balance-label">Rolnopol Currency</div>
+        </div>
+
+        <!-- Statistics Card -->
+        <div class="financial-card">
+          <h3 style="margin: 0 0 0.5rem 0; color: #333; font-size: 1.1rem">
+            Financial Overview
+          </h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="total-income">0.00</div>
+              <div class="stat-label">Income</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="total-expenses">0.00</div>
+              <div class="stat-label">Expenses</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="transaction-count">0</div>
+              <div class="stat-label">Transactions</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="net-income">0.00</div>
+              <div class="stat-label">Net</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transfer Funds Form -->
+      <div class="transaction-form-modern" style="margin-bottom: 2rem">
+        <div class="form-header-modern collapsible-header" id="transfer-form-header">
+          <div class="form-header-content">
+            <div class="form-header-icon">
+              <i class="fas fa-exchange-alt"></i>
+            </div>
+            <div class="form-header-text">
+              <h3>Transfer Funds</h3>
+              <p>
+                Send money to another user (max 999.99 ROL, not more than your
+                balance)
+              </p>
+            </div>
+          </div>
+          <div class="collapse-toggle">
+            <i class="fas fa-chevron-down" id="transfer-collapse-icon"></i>
+          </div>
+        </div>
+        <div class="form-content collapsed" id="transfer-form-content">
+          <form id="transfer-form" class="update-form-modern">
+            <div class="form-grid-modern">
+              <!-- Recipient User ID -->
+              <div class="form-group-modern">
+                <label class="form-label-modern">
+                  <i class="fas fa-user"></i> Recipient User ID *
+                </label>
+                <input type="number" id="transfer-toUserId" name="transfer-toUserId" class="form-input-modern" min="1" required placeholder="Enter recipient user ID" />
+                <div class="form-error" id="transfer-toUserId-error"></div>
+              </div>
+              <!-- Amount -->
+              <div class="form-group-modern amount-group">
+                <label class="form-label-modern">
+                  <i class="fas fa-coins"></i> Amount (ROL) *
+                </label>
+                <div class="amount-input-wrapper">
+                  <span class="amount-currency">ROL</span>
+                  <input type="number" id="transfer-amount" name="transfer-amount" class="form-input-modern amount-input" step="0.01" min="0.01" max="999.99" required placeholder="0.00" />
+                </div>
+                <div class="form-help-modern">
+                  <i class="fas fa-info-circle"></i>
+                  <span>Enter amount between 0.01 and 999.99 ROL</span>
+                </div>
+                <div class="form-error" id="transfer-amount-error"></div>
+              </div>
+              <!-- Description -->
+              <div class="form-group-modern description-group">
+                <label class="form-label-modern">
+                  <i class="fas fa-align-left"></i> Description *
+                </label>
+                <textarea id="transfer-description" name="transfer-description" class="form-input-modern description-input" required placeholder="Describe this transfer..." maxlength="100" rows="2"></textarea>
+                <div class="form-meta-modern">
+                  <div class="form-help-modern">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Be specific for better tracking</span>
+                  </div>
+                </div>
+                <div class="form-error" id="transfer-description-error"></div>
+              </div>
+            </div>
+            <div class="form-actions-modern">
+              <button type="submit" class="btn btn-futuristic btn-full-modern" id="submit-transfer">
+                <i class="fas fa-exchange-alt"></i>
+                <span class="btn-text"> Send Transfer</span>
+              </button>
+              <div class="form-errors" id="transfer-form-errors"></div>
+              <div class="form-success" id="transfer-form-success" style="display: none"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Add Transaction Form -->
+      <div class="transaction-form-modern">
+        <div class="form-header-modern collapsible-header" id="transaction-form-header">
+          <div class="form-header-content">
+            <div class="form-header-icon">
+              <i class="fas fa-plus-circle"></i>
+            </div>
+            <div class="form-header-text">
+              <h3>Add New Transaction</h3>
+              <p>
+                Record your income or expense to track your financial
+                activities
+              </p>
+            </div>
+          </div>
+          <div class="collapse-toggle">
+            <i class="fas fa-chevron-down" id="collapse-icon"></i>
+          </div>
+        </div>
+
+        <div class="form-content" id="transaction-form-content">
+          <form id="transaction-form" class="update-form-modern">
+            <div>
+              <!-- Transaction Type -->
+              <div class="form-group-modern type-selector">
+                <label class="form-label-modern">
+                  <i class="fas fa-exchange-alt"></i> Transaction Type *
+                </label>
+                <div class="type-options">
+                  <div class="type-option" data-type="income">
+                    <div class="type-option-icon income">
+                      <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="type-option-content">
+                      <div class="type-option-title">Income</div>
+                      <div class="type-option-description">
+                        Money received
+                      </div>
+                    </div>
+                  </div>
+                  <div class="type-option" data-type="expense">
+                    <div class="type-option-icon expense">
+                      <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="type-option-content">
+                      <div class="type-option-title">Expense</div>
+                      <div class="type-option-description">Money spent</div>
+                    </div>
+                  </div>
+                </div>
+                <input type="hidden" id="transaction-type" name="transaction-type" required />
+                <div class="form-error" id="type-error"></div>
+              </div>
+              <br />
+              <span id="additional-fields" class="form-grid-modern fields-disabled">
+                <!-- Amount -->
+                <div class="form-group-modern amount-group">
+                  <label class="form-label-modern">
+                    <i class="fas fa-coins"></i> Amount (ROL) *
+                  </label>
+                  <div class="amount-input-wrapper">
+                    <span class="amount-currency">ROL</span>
+                    <input type="text" id="transaction-amount" name="transaction-amount" class="form-input-modern amount-input" inputmode="decimal" autocomplete="off" spellcheck="false" required placeholder="0.00" />
+                  </div>
+                  <div class="form-help-modern">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Enter amount between 0,01 and 9 999 ROL (formatted when
+                      you finish typing)</span>
+                  </div>
+                  <div class="form-error" id="amount-error"></div>
+                </div>
+
+                <!-- Category -->
+                <div class="form-group-modern">
+                  <label class="form-label-modern">
+                    <i class="fas fa-tags"></i> Category *
+                  </label>
+                  <select id="transaction-category" name="transaction-category" class="form-input-modern" required>
+                    <option value="">Select a category</option>
+                    <option value="general">📋 General</option>
+                    <option value="equipment">🔧 Equipment</option>
+                    <option value="livestock">🐄 Livestock</option>
+                    <option value="crops">🌾 Crops</option>
+                    <option value="maintenance">🔨 Maintenance</option>
+                    <option value="transfer">💸 Transfer</option>
+                    <option value="system">⚙️ System</option>
+                  </select>
+                  <div class="form-error" id="category-error"></div>
+                </div>
+
+                <!-- Payment (only for Income) -->
+                <div class="form-group-modern" id="card-fields" style="display: none">
+                  <label class="form-label-modern">
+                    <i class="fas fa-credit-card"></i> Card number (digits only) *
+                  </label>
+                  <input type="text" id="transaction-card-number" name="transaction-card-number" class="form-input-modern" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="24" />
+                  <div class="form-error" id="card-number-error"></div>
+                </div>
+                <div class="form-group-modern" id="cvv-field" style="display: none">
+                  <label class="form-label-modern">
+                    <i class="fas fa-lock"></i> CVV *
+                  </label>
+                  <input type="password" id="transaction-cvv" name="transaction-cvv" class="form-input-modern" inputmode="numeric" autocomplete="cc-csc" placeholder="3-4 digits" maxlength="4" />
+                  <div class="form-error" id="cvv-error"></div>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group-modern description-group">
+                  <label class="form-label-modern">
+                    <i class="fas fa-align-left"></i> Description *
+                  </label>
+                  <textarea id="transaction-description" name="transaction-description" class="form-input-modern description-input" required placeholder="Describe this transaction..." maxlength="100" rows="3"></textarea>
+                  <div class="form-meta-modern">
+                    <div class="form-help-modern">
+                      <i class="fas fa-lightbulb"></i>
+                      <span>Be specific for better tracking</span>
+                    </div>
+                    <div class="char-counter-modern">
+                      <span class="current" id="description-counter">0</span>
+                      <span class="limit">/100</span>
+                    </div>
+                  </div>
+                  <div class="form-error" id="description-error"></div>
+                </div>
+              </span>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions-modern">
+              <button type="submit" class="btn btn-futuristic btn-full-modern" id="submit-transaction">
+                <i class="fas fa-plus"></i>
+                <span class="btn-text">Add Transaction</span>
+              </button>
+              <div class="form-errors" id="form-errors"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Transactions Section -->
+      <div class="transactions-section">
+        <div class="transactions-header">
+          <h3 style="margin: 0; color: #333">Transaction History</h3>
+          <div class="filters">
+            <div class="filter-group">
+              <label for="filter-type">Type</label>
+              <select id="filter-type">
+                <option value="">All Types</option>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+                <option value="transfer">Transfer</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-category">Category</label>
+              <select id="filter-category">
+                <option value="">All Categories</option>
+                <option value="general">General</option>
+                <option value="equipment">Equipment</option>
+                <option value="livestock">Livestock</option>
+                <option value="crops">Crops</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="transfer">Transfer</option>
+                <option value="system">System</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-start-date">Start Date</label>
+              <input type="date" id="filter-start-date" />
+            </div>
+            <div class="filter-group">
+              <label for="filter-end-date">End Date</label>
+              <input type="date" id="filter-end-date" />
+            </div>
+          </div>
+        </div>
+
+        <div id="transactions-container">
+          <div class="loading">Loading transactions...</div>
+        </div>
+
+        <div class="pagination" id="pagination" style="display: none">
+          <button id="prev-page" disabled>Previous</button>
+          <span id="page-info">Page 1</span>
+          <button id="next-page">Next</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Dynamic Footer Component -->
+    <div id="footer-component"></div>
+  </div>
+
+  <!-- Core Dependencies -->
+  <script src="/js/core/event-bus.js"></script>
+  <script src="/js/core/storage.js"></script>
+  <script src="/js/core/app.js"></script>
+
+  <!-- Services -->
+  <script src="/js/services/api-service.js"></script>
+  <script src="/js/services/auth-service.js"></script>
+
+  <!-- Components -->
+  <script src="/js/components/notification.js"></script>
+  <script src="/js/components/navigation.js"></script>
+  <script src="/js/components/form.js"></script>
+  <script src="/js/components.js"></script>
+
+  <!-- API Functions -->
+  <script src="/js/api.js"></script>
+
+  <!-- Utilities -->
+  <script src="/js/utils/error-logger.js"></script>
+  <script src="/js/utils/utils.js"></script>
+  <script src="/js/utils/router.js"></script>
+  <script src="/js/utils/global-compat.js"></script>
+
+  <!-- Main Application -->
+  <script src="/js/app.js"></script>
+  <script src="/js/utils/init-navigation.js"></script>
+  <script src="/js/pages/financial.js"></script>
+  <script>
+    initNavigation("financial");
+  </script>
+</body>
+
+</html>

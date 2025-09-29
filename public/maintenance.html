@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <title>Site Under Maintenance</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+
+  <body class="bg-agri-pattern">
+    <div class="container glass" style="margin-top: 2rem">
+      <div
+        class="card text-center glass fade-in"
+        style="
+          max-width: 32rem;
+          margin: 3rem auto;
+          box-shadow: 0 8px 32px 0 rgba(34, 197, 94, 0.1);
+        "
+      >
+        <div class="header">
+          <div class="maintenance-icon">
+            <i class="fas fa-tractor"></i>
+          </div>
+          <h1>🔧 Site Under Maintenance</h1>
+          <p>
+            We're currently performing scheduled maintenance on the farm
+            management system. Please check back later.
+          </p>
+        </div>
+
+        <div
+          class="alert alert-warning"
+          style="
+            background: rgba(245, 158, 11, 0.08);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1.5rem 0;
+          "
+        >
+          <strong>Maintenance Mode:</strong> The service is temporarily
+          unavailable.
+        </div>
+
+        <p>
+          We apologize for any inconvenience. Our team is working to restore
+          full functionality as soon as possible.
+        </p>
+
+        <div class="mt-4">
+          <button onclick="location.reload()" class="btn btn-agri">
+            <i class="fas fa-sync-alt"></i>
+            Try Again
+          </button>
+        </div>
+      </div>
+    </div>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("maintenance");
+    </script>
+  </body>
+</html>

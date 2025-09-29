@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kraken Admin - Rolnopol</title>
+    <link rel="stylesheet" href="./css/kraken.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+    />
+    <style>
+      /* Dark Theme Variables */
+      :root {
+        --bg-primary: #0d1117;
+        --bg-secondary: #161b22;
+        --bg-tertiary: #21262d;
+        --border-color: #30363d;
+        --text-primary: #e6edf3;
+        --text-secondary: #8b949e;
+        --accent-blue: #58a6ff;
+        --accent-blue-hover: #1f6feb;
+        --success-color: #238636;
+        --warning-color: #d29922;
+        --danger-color: #da3633;
+        --topbar-height: 3.5rem;
+      }
+
+      /* Override base styles for dark theme */
+      .kraken-dashboard {
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+      }
+
+      /* Top Navigation Bar */
+      .top-navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--topbar-height);
+        background: var(--bg-secondary);
+        border-bottom: 0.0625rem solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 1rem;
+        z-index: 1000;
+      }
+
+      .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-decoration: none;
+      }
+
+      .navbar-brand i {
+        color: var(--accent-blue);
+      }
+
+      .navbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .navbar-btn {
+        background: transparent;
+        border: 0.0625rem solid var(--border-color);
+        color: var(--text-secondary);
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+      }
+
+      .navbar-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--accent-blue);
+        background: rgba(88, 166, 255, 0.1);
+      }
+
+      /* Container with top padding */
+      .kraken-container {
+        padding-top: var(--topbar-height);
+        max-width: 64rem;
+        margin: 0 auto;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      /* Dark theme login section */
+      .login-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - var(--topbar-height));
+        padding: 1.5rem;
+      }
+
+      .login-card {
+        background: var(--bg-secondary);
+        border: 0.0625rem solid var(--border-color);
+        border-radius: 0.75rem;
+        padding: 2rem;
+        width: 100%;
+        max-width: 24rem;
+        box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.3);
+      }
+
+      .login-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .login-header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+      }
+
+      .login-header h1 i {
+        color: var(--accent-blue);
+      }
+
+      .login-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+
+      /* Dark theme form styles */
+      .form-group-enhanced {
+        margin-bottom: 1.25rem;
+      }
+
+      .form-label-enhanced {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+      }
+
+      .form-label-enhanced i {
+        color: var(--accent-blue);
+      }
+
+      .form-input-enhanced {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 0.0625rem solid var(--border-color);
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        box-sizing: border-box;
+      }
+
+      .form-input-enhanced:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 0.1875rem rgba(88, 166, 255, 0.2);
+        background: var(--bg-primary);
+      }
+
+      .form-input-enhanced::placeholder {
+        color: var(--text-secondary);
+      }
+
+      /* Dark theme button styles */
+      .btn-enhanced {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1.25rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-height: 2.75rem;
+        width: 100%;
+      }
+
+      .btn-primary-enhanced {
+        background: var(--accent-blue);
+        color: white;
+      }
+
+      .btn-primary-enhanced:hover:not(:disabled) {
+        background: var(--accent-blue-hover);
+        transform: translateY(-0.0625rem);
+      }
+
+      .btn-enhanced:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-enhanced:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.1875rem rgba(88, 166, 255, 0.4);
+      }
+
+      /* Dark theme alert styles */
+      .alert-enhanced {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        border: 0.0625rem solid;
+      }
+
+      .alert-success-enhanced {
+        background: rgba(35, 134, 54, 0.15);
+        color: var(--success-color);
+        border-color: rgba(35, 134, 54, 0.3);
+      }
+
+      .alert-error-enhanced {
+        background: rgba(218, 54, 51, 0.15);
+        color: var(--danger-color);
+        border-color: rgba(218, 54, 51, 0.3);
+      }
+
+      .alert-info-enhanced {
+        background: rgba(88, 166, 255, 0.15);
+        color: var(--accent-blue);
+        border-color: rgba(88, 166, 255, 0.3);
+      }
+
+      .alert-icon {
+        font-size: 1rem;
+      }
+
+      /* Dark theme spinner */
+      .spinner-enhanced {
+        width: 1rem;
+        height: 1rem;
+        border: 0.125rem solid rgba(255, 255, 255, 0.3);
+        border-top: 0.125rem solid white;
+        border-radius: 50%;
+        animation: kraken-spin 1s linear infinite;
+      }
+
+      @keyframes kraken-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* Responsive design */
+      @media (max-width: 768px) {
+        .top-navbar {
+          padding: 0 0.75rem;
+        }
+
+        .navbar-brand {
+          font-size: 1rem;
+        }
+
+        .login-section {
+          padding: 1rem;
+        }
+
+        .login-card {
+          padding: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="kraken-dashboard">
+    <!-- Top Navigation Bar -->
+    <div class="top-navbar">
+      <a href="../index.html" class="navbar-brand">
+        <i class="fas fa-kraken"></i>
+        <span>Kraken Admin</span>
+      </a>
+      <div class="navbar-actions">
+        <a href="../index.html" class="navbar-btn">
+          <i class="fas fa-home"></i>
+          <span>Main Site</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="kraken-container">
+      <!-- Login Section -->
+      <div class="login-section">
+        <div class="login-card">
+          <div class="login-header">
+            <h1><i class="fas fa-shield-alt"></i> Admin Access</h1>
+            <p>Secure login to Kraken administration panel</p>
+          </div>
+
+          <div
+            id="loginAlert"
+            class="alert-enhanced alert-error-enhanced hidden"
+          >
+            <i class="fas fa-exclamation-triangle alert-icon"></i>
+            <span></span>
+          </div>
+
+          <form id="loginForm">
+            <div class="form-group-enhanced">
+              <label for="username" class="form-label-enhanced">
+                <i class="fas fa-user"></i> Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                class="form-input-enhanced"
+                required
+              />
+            </div>
+
+            <div class="form-group-enhanced">
+              <label for="password" class="form-label-enhanced">
+                <i class="fas fa-lock"></i> Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-input-enhanced"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              class="btn-enhanced btn-primary-enhanced"
+              id="loginBtn"
+            >
+              <span class="spinner-enhanced hidden"></span>
+              <i class="fas fa-sign-in-alt btn-icon"></i>
+              Sign In to Dashboard
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Cookie utility functions
+      function setCookie(name, value, hours = 2) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + hours * 60 * 60 * 1000);
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict${window.location.protocol === "https:" ? ";Secure" : ""}`;
+      }
+
+      function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(";");
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) === " ") c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) === 0)
+            return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+      }
+
+      function deleteCookie(name) {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;SameSite=Strict`;
+      }
+
+      class KrakenLogin {
+        constructor() {
+          this.init();
+        }
+
+        init() {
+          this.bindEvents();
+          this.checkExistingToken();
+          document.getElementById("username").focus();
+        }
+
+        bindEvents() {
+          document
+            .getElementById("loginForm")
+            .addEventListener("submit", (e) => this.handleLogin(e));
+        }
+        checkExistingToken() {
+          const token = getCookie("krakenToken");
+          if (token) {
+            this.validateToken(token);
+          }
+        }
+        async validateToken(token) {
+          try {
+            const response = await fetch("/api/v1/admin/auth/validate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token }),
+            });
+
+            const result = await response.json();
+            if (result.success && result.data.isValid) {
+              // Token is valid, redirect to dashboard
+              window.location.href = "./kraken-dashboard.html";
+            } else {
+              // Token is invalid, remove it
+              deleteCookie("krakenToken");
+            }
+          } catch (error) {
+            console.error("Token validation failed:", error);
+            deleteCookie("krakenToken");
+          }
+        }
+
+        async handleLogin(e) {
+          e.preventDefault();
+
+          const loginBtn = document.getElementById("loginBtn");
+          const spinner = loginBtn.querySelector(".spinner-enhanced");
+          const alertDiv = document.getElementById("loginAlert");
+
+          loginBtn.disabled = true;
+          spinner.classList.remove("hidden");
+          alertDiv.classList.add("hidden");
+
+          const formData = new FormData(e.target);
+          const credentials = {
+            username: formData.get("username"),
+            password: formData.get("password"),
+          };
+
+          try {
+            const response = await fetch("/api/v1/admin/auth/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(credentials),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+              // Store token in cookie (server already sets it, but we also set it client-side for consistency)
+              setCookie("krakenToken", result.data.token, 2); // 2 hours expiry
+              // Redirect to dashboard
+              window.location.href = "./kraken-dashboard.html";
+            } else {
+              this.showAlert(result.error, "error");
+            }
+          } catch (error) {
+            this.showAlert(
+              "Kraken connection failed. Please try again.",
+              "error",
+            );
+          } finally {
+            loginBtn.disabled = false;
+            spinner.classList.add("hidden");
+          }
+        }
+
+        showAlert(message, type) {
+          const alertDiv = document.getElementById("loginAlert");
+          const iconMap = {
+            success: "fas fa-check-circle",
+            error: "fas fa-exclamation-triangle",
+            info: "fas fa-info-circle",
+            warning: "fas fa-exclamation-triangle",
+          };
+
+          alertDiv.className = `alert-enhanced alert-${type}-enhanced`;
+          alertDiv.innerHTML = `
+                    <i class="${iconMap[type]} alert-icon"></i>
+                    <span>${message}</span>
+                `;
+          alertDiv.classList.remove("hidden");
+
+          setTimeout(() => {
+            alertDiv.classList.add("hidden");
+          }, 5000);
+        }
+      }
+
+      // Initialize Kraken login when the page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        new KrakenLogin();
+      });
+    </script>
+  </body>
+</html>

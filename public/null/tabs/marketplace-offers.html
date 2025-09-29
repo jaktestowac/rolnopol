@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marketplace Offers - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="section">
+      <div class="section-header">
+        <h2><i class="fas fa-store"></i> Marketplace Offers</h2>
+        <button id="refreshOffersBtn" class="btn-enhanced btn-primary-enhanced">
+          <span class="spinner-enhanced hidden"></span>
+          <i class="fas fa-sync-alt btn-icon"></i>
+          Refresh
+        </button>
+      </div>
+      <div class="filters-bar">
+        <input
+          type="text"
+          id="filterSellerId"
+          placeholder="Seller ID"
+          class="filter-input"
+          style="width: 100px"
+        />
+        <select id="filterItemType" class="filter-input">
+          <option value="">All Types</option>
+          <option value="animal">Animal</option>
+          <option value="field">Field</option>
+        </select>
+        <select id="filterStatus" class="filter-input">
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="sold">Sold</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <input type="date" id="filterStartDate" class="filter-input" />
+        <input type="date" id="filterEndDate" class="filter-input" />
+        <input
+          type="text"
+          id="filterGeneral"
+          placeholder="Search all fields"
+          class="filter-input"
+          style="width: 180px"
+        />
+        <button id="clearFiltersBtn" class="btn-enhanced btn-tertiary-enhanced">
+          <i class="fas fa-times"></i> Clear
+        </button>
+      </div>
+      <div class="table-container">
+        <table class="table-enhanced" id="offersTable">
+          <thead>
+            <tr>
+              <th>Offer ID</th>
+              <th>Item Type</th>
+              <th>Item ID</th>
+              <th>Seller ID</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Created At</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="offersTableBody">
+            <tr>
+              <td colspan="8" class="text-center loading-enhanced">
+                <span class="spinner-enhanced"></span> Loading...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <script src="../js/kraken-utils.js"></script>
+    <script>
+      let allOffers = [];
+      function applyFilters() {
+        const sellerId = document.getElementById("filterSellerId").value.trim();
+        const itemType = document.getElementById("filterItemType").value;
+        const status = document.getElementById("filterStatus").value;
+        const startDate = document.getElementById("filterStartDate").value;
+        const endDate = document.getElementById("filterEndDate").value;
+        const general = document
+          .getElementById("filterGeneral")
+          .value.trim()
+          .toLowerCase();
+        let filtered = allOffers;
+        if (sellerId)
+          filtered = filtered.filter((o) => String(o.sellerId) === sellerId);
+        if (itemType)
+          filtered = filtered.filter((o) => o.itemType === itemType);
+        if (status) filtered = filtered.filter((o) => o.status === status);
+        if (startDate)
+          filtered = filtered.filter(
+            (o) => o.createdAt && new Date(o.createdAt) >= new Date(startDate),
+          );
+        if (endDate)
+          filtered = filtered.filter(
+            (o) => o.createdAt && new Date(o.createdAt) <= new Date(endDate),
+          );
+        if (general) {
+          filtered = filtered.filter((o) => {
+            return (
+              Object.values(o).some(
+                (val) => val && val.toString().toLowerCase().includes(general),
+              ) ||
+              (o.details &&
+                Object.values(o.details).some(
+                  (val) =>
+                    val && val.toString().toLowerCase().includes(general),
+                ))
+            );
+          });
+        }
+        renderOffers(filtered);
+      }
+      function renderOffers(offers) {
+        const tableBody = document.getElementById("offersTableBody");
+        if (!offers.length) {
+          tableBody.innerHTML = `<tr><td colspan='8' class='text-center'>No offers found.</td></tr>`;
+          return;
+        }
+        tableBody.innerHTML = offers
+          .map(
+            (offer) => `
+            <tr>
+                <td>${offer.id}</td>
+                <td>${offer.itemType}</td>
+                <td>${offer.itemId}</td>
+                <td>${offer.sellerId}</td>
+                <td>${offer.price}</td>
+                <td>${offer.status}</td>
+                <td>${offer.createdAt ? new Date(offer.createdAt).toLocaleString() : "-"}</td>
+                <td>${
+                  offer.details
+                    ? Object.entries(offer.details)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join(", ")
+                    : "-"
+                }</td>
+            </tr>
+        `,
+          )
+          .join("");
+      }
+      async function loadOffers() {
+        const tableBody = document.getElementById("offersTableBody");
+        tableBody.innerHTML = `<tr><td colspan='8' class='text-center loading-enhanced'><span class='spinner-enhanced'></span> Loading...</td></tr>`;
+        try {
+          const res = await secureFetch("/api/v1/admin/marketplace/offers");
+          const data = await res.json();
+          allOffers =
+            data.data && Array.isArray(data.data.offers)
+              ? data.data.offers
+              : [];
+          applyFilters();
+        } catch (err) {
+          tableBody.innerHTML = `<tr><td colspan='8' class='text-center error'>Failed to load offers: ${err.message}</td></tr>`;
+        }
+      }
+      document.getElementById("refreshOffersBtn").onclick = loadOffers;
+      document.getElementById("clearFiltersBtn").onclick = () => {
+        document.getElementById("filterSellerId").value = "";
+        document.getElementById("filterItemType").value = "";
+        document.getElementById("filterStatus").value = "";
+        document.getElementById("filterStartDate").value = "";
+        document.getElementById("filterEndDate").value = "";
+        document.getElementById("filterGeneral").value = "";
+        applyFilters();
+      };
+      // Make filtering instant
+      [
+        "filterSellerId",
+        "filterItemType",
+        "filterStatus",
+        "filterStartDate",
+        "filterEndDate",
+        "filterGeneral",
+      ].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener("input", applyFilters);
+          el.addEventListener("change", applyFilters);
+          el.addEventListener("keyup", applyFilters);
+        }
+      });
+      window.addEventListener("DOMContentLoaded", loadOffers);
+    </script>
+  </body>
+</html>

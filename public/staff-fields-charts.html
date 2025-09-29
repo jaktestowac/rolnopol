@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <title>Staff & Fields Charts - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .staff-fields-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .staff-fields-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding: 20px 24px;
+        background: linear-gradient(
+          135deg,
+          #6a7b5e 0%,
+          #8ba888 50%,
+          #4a5d3a 100%
+        );
+        border-radius: 16px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+          0 12px 24px rgba(106, 123, 94, 0.25),
+          0 0 0 1px rgba(255, 255, 255, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(20px);
+      }
+
+      .staff-fields-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            circle at 20% 80%,
+            rgba(255, 255, 255, 0.15) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 50%
+          ),
+          linear-gradient(
+            45deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.05) 50%,
+            transparent 70%
+          );
+      }
+
+      .staff-fields-header .header-content {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .staff-fields-header .header-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow:
+          0 6px 12px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .staff-fields-header .header-icon::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .staff-fields-header .header-icon:hover::before {
+        left: 100%;
+      }
+
+      .staff-fields-header .header-icon:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow:
+          0 12px 24px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .staff-fields-header .header-icon i {
+        font-size: 1.5rem;
+        color: #ffd700;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        transition: all 0.3s ease;
+      }
+
+      .staff-fields-header .header-icon:hover i {
+        transform: scale(1.1);
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+      }
+
+      .staff-fields-header .header-text h1 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin: 0 0 4px 0;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.5px;
+        position: relative;
+      }
+
+      .staff-fields-header .header-text h1::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 40px;
+        height: 3px;
+        background: linear-gradient(90deg, #ffd700, #ffed4e);
+        border-radius: 2px;
+      }
+
+      .staff-fields-header .header-text p {
+        font-size: 0.85rem;
+        margin: 0;
+        opacity: 0.9;
+        font-weight: 400;
+        letter-spacing: 0.3px;
+        line-height: 1.3;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .staff-fields-header .header-stats {
+        display: flex;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .staff-fields-header .stat-item {
+        text-align: center;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        min-width: 70px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+          0 3px 8px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .staff-fields-header .stat-item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 50%
+        );
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .staff-fields-header .stat-item:hover {
+        transform: translateY(-3px) scale(1.02);
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow:
+          0 8px 20px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .staff-fields-header .stat-item:hover::before {
+        opacity: 1;
+      }
+
+      .staff-fields-header .stat-number {
+        font-size: 1.1rem;
+        font-weight: 800;
+        display: block;
+        color: #ffd700;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        z-index: 1;
+        order: 1;
+      }
+
+      .staff-fields-header .stat-label {
+        font-size: 0.7rem;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+        display: block;
+      }
+
+      .staff-fields-header .bright-stat-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-top: 2px;
+        display: block;
+        color: #ffd700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        transition: all 0.3s ease;
+        order: 2;
+      }
+
+      .staff-fields-header .bright-stat-label::before {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #ffd700, #ffed4e);
+        border-radius: 1px;
+        transition: width 0.3s ease;
+      }
+
+      .staff-fields-header .stat-item:hover .bright-stat-label::before {
+        width: 80%;
+      }
+
+      .staff-fields-header .stat-item:hover .bright-stat-label {
+        transform: scale(1.05);
+        filter: brightness(1.1);
+      }
+
+      .navigation-tabs {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .nav-tab-button {
+        padding: 8px 16px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .nav-tab-button.active {
+        color: #6a7b5e;
+        border-bottom-color: #6a7b5e;
+      }
+
+      .nav-tab-button:hover {
+        color: #6a7b5e;
+      }
+
+      .charts-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(106, 123, 94, 0.1);
+        margin-top: 20px;
+      }
+
+      .charts-container:hover {
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .charts-header {
+        background: linear-gradient(135deg, #6a7b5e 0%, #8ba888 100%);
+        color: white;
+        padding: 12px 16px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .charts-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            circle at 20% 80%,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 255, 255, 0.05) 0%,
+            transparent 50%
+          );
+      }
+
+      .charts-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .charts-content {
+        padding: 20px 24px;
+      }
+
+      .chart-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 24px;
+        margin-top: 20px;
+      }
+
+      .chart-container {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(106, 123, 94, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .chart-container:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      .chart-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #6a7b5e;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .chart-canvas {
+        width: 100%;
+        height: 300px;
+        position: relative;
+      }
+
+      .chart-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .chart-loading i {
+        margin-right: 8px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .staff-fields-header {
+          flex-direction: column;
+          gap: 20px;
+          padding: 20px;
+          text-align: center;
+        }
+
+        .staff-fields-header .header-content {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .staff-fields-header .header-text h1 {
+          font-size: 1.5rem;
+        }
+
+        .staff-fields-header .header-stats {
+          gap: 15px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .staff-fields-header .stat-item {
+          min-width: 70px;
+          padding: 10px 12px;
+        }
+
+        .chart-grid {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .staff-fields-header {
+          padding: 16px;
+          gap: 16px;
+        }
+
+        .staff-fields-header .header-icon {
+          width: 50px;
+          height: 50px;
+        }
+
+        .staff-fields-header .header-icon i {
+          font-size: 1.5rem;
+        }
+
+        .staff-fields-header .header-text h1 {
+          font-size: 1.3rem;
+        }
+
+        .staff-fields-header .header-text p {
+          font-size: 0.8rem;
+        }
+
+        .staff-fields-header .header-stats {
+          gap: 10px;
+        }
+
+        .staff-fields-header .stat-item {
+          min-width: 60px;
+          padding: 8px 10px;
+        }
+
+        .staff-fields-header .stat-number {
+          font-size: 1rem;
+        }
+
+        .staff-fields-header .stat-label {
+          font-size: 0.65rem;
+        }
+
+        .staff-fields-header .bright-stat-label {
+          font-size: 0.7rem;
+          letter-spacing: 0.6px;
+        }
+      }
+
+      .info-list-modern {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 400px;
+        min-height: 300px;
+        overflow-y: auto;
+        border: 1px solid rgba(106, 123, 94, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      .info-list-modern li {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s ease;
+        min-height: 60px;
+      }
+
+      .info-list-modern li:hover {
+        background-color: rgba(106, 123, 94, 0.05);
+      }
+
+      .info-list-modern li:last-child {
+        border-bottom: none;
+      }
+    </style>
+  </head>
+  <body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="staff-fields-container">
+      <!-- Modern Header with Stats -->
+      <div class="staff-fields-header">
+        <div class="header-content">
+          <div class="header-icon">
+            <i class="fas fa-chart-bar"></i>
+          </div>
+          <div class="header-text">
+            <h1>Analytics & Insights</h1>
+            <p>
+              Comprehensive charts and analytics for staff and field management
+            </p>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <span class="stat-number" id="totalCharts">4</span>
+            <span class="bright-stat-label">Charts</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="dataPoints">0</span>
+            <span class="bright-stat-label">Data Points</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="lastUpdated">-</span>
+            <span class="bright-stat-label">Updated</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="chartStatus">Ready</span>
+            <span class="bright-stat-label">Status</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="navigation-tabs">
+        <a href="/staff-fields-main.html" class="nav-tab-button">Main</a>
+        <a href="/staff-fields-assign.html" class="nav-tab-button">Assign</a>
+        <a href="/staff-fields-charts.html" class="nav-tab-button active"
+          >Charts</a
+        >
+      </div>
+
+      <main class="main">
+        <div class="charts-container">
+          <div class="charts-header">
+            <h3><i class="fas fa-chart-bar"></i> Staff & Fields Analytics</h3>
+          </div>
+          <div class="charts-content">
+            <div class="chart-grid">
+              <div class="chart-container">
+                <div class="chart-title">
+                  <i class="fas fa-seedling"></i>
+                  Fields Distribution
+                </div>
+                <div id="fieldsChartContainer" class="chart-canvas">
+                  <div class="chart-loading">
+                    <i class="fas fa-spinner"></i>
+                    Loading fields chart...
+                  </div>
+                </div>
+              </div>
+
+              <div class="chart-container">
+                <div class="chart-title">
+                  <i class="fas fa-users"></i>
+                  Staff Overview
+                </div>
+                <div id="staffChartContainer" class="chart-canvas">
+                  <div class="chart-loading">
+                    <i class="fas fa-spinner"></i>
+                    Loading staff chart...
+                  </div>
+                </div>
+              </div>
+
+              <div class="chart-container">
+                <div class="chart-title">
+                  <i class="fas fa-cow"></i>
+                  Animals by Type
+                </div>
+                <div id="animalsChartContainer" class="chart-canvas">
+                  <div class="chart-loading">
+                    <i class="fas fa-spinner"></i>
+                    Loading animals chart...
+                  </div>
+                </div>
+              </div>
+
+              <div class="chart-container">
+                <div class="chart-title">
+                  <i class="fas fa-chart-pie"></i>
+                  Animal Types Distribution
+                </div>
+                <div id="animalTypesChartContainer" class="chart-canvas">
+                  <div class="chart-loading">
+                    <i class="fas fa-spinner"></i>
+                    Loading animal types chart...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal modal-centered" style="display: none">
+      <!-- ...modal content... -->
+    </div>
+
+    <!-- Core Dependencies and Scripts -->
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/staff-fields-charts.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("staff-fields");
+    </script>
+    <script>
+      // Update header stats with real data
+      document.addEventListener("DOMContentLoaded", async function () {
+        // Wait for the charts page logic to load data
+        setTimeout(async function () {
+          try {
+            // First try to get data from the global page instance
+            const chartsPage = window.staffFieldsChartsPage;
+            if (
+              chartsPage &&
+              chartsPage.fields &&
+              chartsPage.staff &&
+              chartsPage.animals
+            ) {
+              // Calculate totals from page instance
+              const totalFields = chartsPage.fields.length;
+              const totalStaff = chartsPage.staff.length;
+              const totalAnimals = chartsPage.animals.reduce(
+                (sum, a) => sum + (parseInt(a.amount) || 0),
+                0,
+              );
+              const totalArea = chartsPage.fields.reduce(
+                (sum, f) => sum + (parseFloat(f.area) || 0),
+                0,
+              );
+
+              // Update header stats
+              const totalChartsEl = document.getElementById("totalCharts");
+              const dataPointsEl = document.getElementById("dataPoints");
+              const lastUpdatedEl = document.getElementById("lastUpdated");
+              const chartStatusEl = document.getElementById("chartStatus");
+
+              if (totalChartsEl) totalChartsEl.textContent = "4";
+              if (dataPointsEl)
+                dataPointsEl.textContent =
+                  totalFields + totalStaff + totalAnimals;
+              if (lastUpdatedEl)
+                lastUpdatedEl.textContent = new Date().toLocaleTimeString();
+              if (chartStatusEl) chartStatusEl.textContent = "Ready";
+            } else {
+              // Fallback: Try to get data from API directly
+              const apiService = window.ApiService
+                ? new window.ApiService()
+                : null;
+              if (apiService) {
+                // Load data directly from API
+                const [fieldsResponse, staffResponse, animalsResponse] =
+                  await Promise.all([
+                    apiService.get("fields", { requiresAuth: true }),
+                    apiService.get("staff", { requiresAuth: true }),
+                    apiService.get("animals", { requiresAuth: true }),
+                  ]);
+
+                // Calculate totals
+                const fields =
+                  fieldsResponse.success &&
+                  fieldsResponse.data &&
+                  Array.isArray(fieldsResponse.data.data)
+                    ? fieldsResponse.data.data
+                    : [];
+                const staff =
+                  staffResponse.success &&
+                  staffResponse.data &&
+                  Array.isArray(staffResponse.data.data)
+                    ? staffResponse.data.data
+                    : [];
+                const animals =
+                  animalsResponse.success &&
+                  animalsResponse.data &&
+                  Array.isArray(animalsResponse.data.data)
+                    ? animalsResponse.data.data
+                    : [];
+
+                const totalFields = fields.length;
+                const totalStaff = staff.length;
+                const totalAnimals = animals.reduce(
+                  (sum, a) => sum + (parseInt(a.amount) || 0),
+                  0,
+                );
+                const totalArea = fields.reduce(
+                  (sum, f) => sum + (parseFloat(f.area) || 0),
+                  0,
+                );
+
+                // Update header stats
+                const totalChartsEl = document.getElementById("totalCharts");
+                const dataPointsEl = document.getElementById("dataPoints");
+                const lastUpdatedEl = document.getElementById("lastUpdated");
+                const chartStatusEl = document.getElementById("chartStatus");
+
+                if (totalChartsEl) totalChartsEl.textContent = "4";
+                if (dataPointsEl)
+                  dataPointsEl.textContent =
+                    totalFields + totalStaff + totalAnimals;
+                if (lastUpdatedEl)
+                  lastUpdatedEl.textContent = new Date().toLocaleTimeString();
+                if (chartStatusEl) chartStatusEl.textContent = "Ready";
+              }
+            }
+          } catch (error) {
+            console.error("Error updating header stats:", error);
+          }
+        }, 2000); // Wait 2 seconds for data to load
+      });
+    </script>
+  </body>
+</html>

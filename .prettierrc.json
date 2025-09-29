@@ -1,0 +1,9 @@
+{
+  "tabWidth": 2,
+  "useTabs": false,
+  "printWidth": 140,
+  "endOfLine": "auto",
+  "semi": true,
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true
+}

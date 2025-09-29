@@ -1,0 +1,5 @@
+{
+  "hooks": {
+    "pre-commit": "bash bump-version.sh patch"
+  }
+}

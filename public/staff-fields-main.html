@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <title>Staff & Fields - Main</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .staff-fields-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .staff-fields-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding: 20px 24px;
+        background: linear-gradient(
+          135deg,
+          #6a7b5e 0%,
+          #8ba888 50%,
+          #4a5d3a 100%
+        );
+        border-radius: 16px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+          0 12px 24px rgba(106, 123, 94, 0.25),
+          0 0 0 1px rgba(255, 255, 255, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(20px);
+      }
+
+      .staff-fields-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            circle at 20% 80%,
+            rgba(255, 255, 255, 0.15) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 50%
+          ),
+          linear-gradient(
+            45deg,
+            transparent 30%,
+            rgba(255, 255, 255, 0.05) 50%,
+            transparent 70%
+          );
+      }
+
+      .staff-fields-header .header-content {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .staff-fields-header .header-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow:
+          0 6px 12px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .staff-fields-header .header-icon::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .staff-fields-header .header-icon:hover::before {
+        left: 100%;
+      }
+
+      .staff-fields-header .header-icon:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow:
+          0 12px 24px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+
+      .staff-fields-header .header-icon i {
+        font-size: 1.5rem;
+        color: #ffd700;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        transition: all 0.3s ease;
+      }
+
+      .staff-fields-header .header-icon:hover i {
+        transform: scale(1.1);
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+      }
+
+      .staff-fields-header .header-text h1 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin: 0 0 4px 0;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.5px;
+        position: relative;
+      }
+
+      .staff-fields-header .header-text h1::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 40px;
+        height: 3px;
+        background: linear-gradient(90deg, #ffd700, #ffed4e);
+        border-radius: 2px;
+      }
+
+      .staff-fields-header .header-text p {
+        font-size: 0.85rem;
+        margin: 0;
+        opacity: 0.9;
+        font-weight: 400;
+        letter-spacing: 0.3px;
+        line-height: 1.3;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .staff-fields-header .header-stats {
+        display: flex;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .staff-fields-header .stat-item {
+        text-align: center;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        min-width: 70px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+          0 3px 8px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .staff-fields-header .stat-item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 50%
+        );
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .staff-fields-header .stat-item:hover {
+        transform: translateY(-3px) scale(1.02);
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow:
+          0 8px 20px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .staff-fields-header .stat-item:hover::before {
+        opacity: 1;
+      }
+
+      .staff-fields-header .stat-number {
+        font-size: 1.1rem;
+        font-weight: 800;
+        display: block;
+        color: #ffd700;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        z-index: 1;
+        order: 1;
+      }
+
+      .staff-fields-header .stat-label {
+        font-size: 0.7rem;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+        display: block;
+      }
+
+      .staff-fields-header .bright-stat-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-top: 2px;
+        display: block;
+        color: #ffd700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+        transition: all 0.3s ease;
+        order: 2;
+      }
+
+      .staff-fields-header .bright-stat-label::before {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #ffd700, #ffed4e);
+        border-radius: 1px;
+        transition: width 0.3s ease;
+      }
+
+      .staff-fields-header .stat-item:hover .bright-stat-label::before {
+        width: 80%;
+      }
+
+      .staff-fields-header .stat-item:hover .bright-stat-label {
+        transform: scale(1.05);
+        filter: brightness(1.1);
+      }
+
+      .navigation-tabs {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .nav-tab-button {
+        padding: 8px 16px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .nav-tab-button.active {
+        color: #6a7b5e;
+        border-bottom-color: #6a7b5e;
+      }
+
+      .nav-tab-button:hover {
+        color: #6a7b5e;
+      }
+
+      .profile-grid-modern {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .profile-card-modern {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(106, 123, 94, 0.1);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .profile-card-modern:hover {
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .card-header-modern {
+        background: linear-gradient(135deg, #6a7b5e 0%, #8ba888 100%);
+        color: white;
+        padding: 12px 16px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card-header-modern::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            circle at 20% 80%,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 255, 255, 0.05) 0%,
+            transparent 50%
+          );
+      }
+
+      .card-header-modern h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .card-content-modern {
+        padding: 20px 24px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-content-modern > *:not(.info-list-modern) {
+        flex-shrink: 0;
+      }
+
+      .info-list-modern {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        height: 350px;
+        overflow-y: auto;
+        border: 1px solid rgba(106, 123, 94, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.8);
+        flex: 1;
+        min-height: 350px;
+      }
+
+      .info-list-modern li {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s ease;
+        min-height: 60px;
+      }
+
+      .info-list-modern li:hover {
+        background-color: rgba(106, 123, 94, 0.05);
+      }
+
+      .info-list-modern li:last-child {
+        border-bottom: none;
+      }
+
+      .section-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: rgba(106, 123, 94, 0.05);
+        border-radius: 12px;
+      }
+
+      .stat-block {
+        text-align: center;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 8px;
+        border: 1px solid rgba(106, 123, 94, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      .stat-block:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(106, 123, 94, 0.15);
+      }
+
+      .stat-number {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #6a7b5e;
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+        color: #666;
+        margin-top: 2px;
+        display: block;
+      }
+
+      .btn-compact {
+        padding: 8px 16px;
+        font-size: 0.875rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-compact:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(106, 123, 94, 0.2);
+      }
+
+      .form-input-modern {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        transition:
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+        margin-bottom: 12px;
+      }
+
+      .form-input-modern:focus {
+        outline: none;
+        border-color: #6a7b5e;
+        box-shadow: 0 0 0 3px rgba(106, 123, 94, 0.1);
+      }
+
+      @media (max-width: 768px) {
+        .staff-fields-header {
+          flex-direction: column;
+          gap: 20px;
+          padding: 20px;
+          text-align: center;
+        }
+
+        .staff-fields-header .header-content {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .staff-fields-header .header-text h1 {
+          font-size: 1.5rem;
+        }
+
+        .staff-fields-header .header-stats {
+          gap: 15px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .staff-fields-header .stat-item {
+          min-width: 70px;
+          padding: 10px 12px;
+        }
+
+        .profile-grid-modern {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .staff-fields-header {
+          padding: 16px;
+          gap: 16px;
+        }
+
+        .staff-fields-header .header-icon {
+          width: 50px;
+          height: 50px;
+        }
+
+        .staff-fields-header .header-icon i {
+          font-size: 1.5rem;
+        }
+
+        .staff-fields-header .header-text h1 {
+          font-size: 1.3rem;
+        }
+
+        .staff-fields-header .header-text p {
+          font-size: 0.8rem;
+        }
+
+        .staff-fields-header .header-stats {
+          gap: 10px;
+        }
+
+        .staff-fields-header .stat-item {
+          min-width: 60px;
+          padding: 8px 10px;
+        }
+
+        .staff-fields-header .stat-number {
+          font-size: 1rem;
+        }
+
+        .staff-fields-header .stat-label {
+          font-size: 0.65rem;
+        }
+
+        .staff-fields-header .bright-stat-label {
+          font-size: 0.7rem;
+          letter-spacing: 0.6px;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="staff-fields-container">
+      <!-- Modern Header with Stats -->
+      <div class="staff-fields-header">
+        <div class="header-content">
+          <div class="header-icon">
+            <i class="fas fa-users-cog"></i>
+          </div>
+          <div class="header-text">
+            <h1>Staff & Fields Management</h1>
+            <p>
+              Comprehensive management of agricultural staff, fields, and
+              livestock
+            </p>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <span class="stat-number" id="totalFields">0</span>
+            <span class="bright-stat-label">Fields</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="totalStaff">0</span>
+            <span class="bright-stat-label">Staff</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="totalAnimals">0</span>
+            <span class="bright-stat-label">Animals</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="totalArea">0</span>
+            <span class="bright-stat-label">Area (ha)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="navigation-tabs">
+        <a href="/staff-fields-main.html" class="nav-tab-button active">Main</a>
+        <a href="/staff-fields-assign.html" class="nav-tab-button">Assign</a>
+        <a href="/staff-fields-charts.html" class="nav-tab-button">Charts</a>
+      </div>
+
+      <main class="main">
+        <div class="profile-grid-modern">
+          <!-- Fields Section -->
+          <div class="profile-card-modern">
+            <div class="card-header-modern">
+              <h3><i class="fas fa-seedling"></i> Fields</h3>
+            </div>
+            <div class="card-content-modern">
+              <div id="fieldsPagination"></div>
+              <ul id="fieldsList" class="info-list-modern"></ul>
+              <button
+                id="openAddFieldModal"
+                class="btn btn-futuristic btn-compact"
+                style="margin-top: 1rem"
+              >
+                <i class="fas fa-plus"></i> Add Field
+              </button>
+              <div id="fieldMessage" class="message-modern"></div>
+            </div>
+          </div>
+
+          <!-- Staff Section -->
+          <div class="profile-card-modern">
+            <div class="card-header-modern">
+              <h3><i class="fa-solid fa-person"></i> Staff</h3>
+            </div>
+            <div class="card-content-modern">
+              <div id="staffPagination"></div>
+              <ul id="staffList" class="info-list-modern"></ul>
+              <button
+                id="openAddStaffModal"
+                class="btn btn-futuristic btn-compact"
+                style="margin-top: 1rem"
+              >
+                <i class="fas fa-plus"></i> Add Staff
+              </button>
+              <div id="staffMessage" class="message-modern"></div>
+            </div>
+          </div>
+
+          <!-- Animals Section -->
+          <div class="profile-card-modern">
+            <div class="card-header-modern">
+              <h3><i class="fa-solid fa-cow"></i> Animals (groups)</h3>
+            </div>
+            <div class="card-content-modern">
+              <div id="animalsPagination"></div>
+              <input
+                id="animalsSearch"
+                class="form-input-modern"
+                type="text"
+                placeholder="Search animals..."
+              />
+              <ul id="animalsList" class="info-list-modern"></ul>
+              <button
+                id="openAddAnimalModal"
+                class="btn btn-futuristic btn-compact"
+                style="margin-top: 1rem"
+              >
+                <i class="fas fa-plus"></i> Add Animal
+              </button>
+              <div id="animalMessage" class="message-modern"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <!-- Modals (copied as in original) -->
+    <!-- Add Field Modal -->
+    <div id="addFieldModal" class="modal" style="display: none">
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3><i class="fas fa-seedling"></i> Add Field</h3>
+          <button class="modal-close" id="closeAddFieldModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form
+          id="addFieldForm"
+          class="update-form-modern modal-form"
+          novalidate
+        >
+          <div class="form-group-modern">
+            <label for="fieldName" class="form-label-modern"
+              ><i class="fas fa-tag"></i> Field Name</label
+            >
+            <input
+              type="text"
+              id="fieldName"
+              name="fieldName"
+              class="form-input-modern"
+              placeholder="Enter field name"
+              minlength="2"
+              maxlength="32"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="fieldNameError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="fieldArea" class="form-label-modern"
+              ><i class="fas fa-ruler-combined"></i> Area (ha)</label
+            >
+            <input
+              type="number"
+              id="fieldArea"
+              name="fieldArea"
+              class="form-input-modern"
+              placeholder="e.g. 10"
+              min="0.01"
+              max="10000"
+              step="0.01"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="fieldAreaError"></div>
+          </div>
+          <button type="submit" class="btn btn-futuristic btn-compact">
+            <i class="fas fa-plus"></i> Add Field
+          </button>
+          <div class="form-error" id="fieldMessage"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Add Staff Modal -->
+    <div id="addStaffModal" class="modal" style="display: none">
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3><i class="fas fa-user-staff"></i> Add Staff</h3>
+          <button class="modal-close" id="closeAddStaffModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form
+          id="addStaffForm"
+          class="update-form-modern modal-form"
+          novalidate
+        >
+          <div class="form-group-modern">
+            <label for="staffName" class="form-label-modern"
+              ><i class="fas fa-user"></i> Name</label
+            >
+            <input
+              type="text"
+              id="staffName"
+              name="staffName"
+              class="form-input-modern"
+              placeholder="Enter name"
+              minlength="2"
+              maxlength="32"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="staffNameError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="staffSurname" class="form-label-modern"
+              ><i class="fas fa-user-tag"></i> Surname</label
+            >
+            <input
+              type="text"
+              id="staffSurname"
+              name="staffSurname"
+              class="form-input-modern"
+              placeholder="Enter surname"
+              minlength="2"
+              maxlength="32"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="staffSurnameError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="staffAge" class="form-label-modern"
+              ><i class="fas fa-birthday-cake"></i> Age</label
+            >
+            <input
+              type="number"
+              id="staffAge"
+              name="staffAge"
+              class="form-input-modern"
+              placeholder="e.g. 30"
+              min="1"
+              max="120"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="staffAgeError"></div>
+          </div>
+          <button type="submit" class="btn btn-futuristic btn-compact">
+            <i class="fas fa-plus"></i> Add Staff
+          </button>
+          <div class="form-error" id="staffMessage"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Add Animal Modal -->
+    <div id="addAnimalModal" class="modal modal-centered" style="display: none">
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-cow"></i> Add Animal</h3>
+          <button class="modal-close" id="closeAddAnimalModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form
+          id="addAnimalForm"
+          class="update-form-modern modal-form"
+          novalidate
+        >
+          <div class="form-group-modern">
+            <label for="animalType" class="form-label-modern"
+              ><i class="fa-solid fa-cow"></i> Type</label
+            >
+            <select
+              id="animalType"
+              name="animalType"
+              class="form-input-modern"
+              required
+              aria-required="true"
+            ></select>
+            <div class="form-error" id="animalTypeError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="animalAmount" class="form-label-modern"
+              ><i class="fas fa-hashtag"></i> Amount</label
+            >
+            <input
+              type="number"
+              id="animalAmount"
+              name="animalAmount"
+              class="form-input-modern"
+              placeholder="e.g. 10"
+              min="1"
+              max="10000"
+              step="1"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="animalAmountError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="animalField" class="form-label-modern"
+              ><i class="fas fa-seedling"></i> Field (optional)</label
+            >
+            <select
+              id="animalField"
+              name="animalField"
+              class="form-input-modern"
+            ></select>
+            <div class="form-error" id="animalFieldError"></div>
+          </div>
+          <button type="submit" class="btn btn-futuristic btn-compact">
+            <i class="fas fa-plus"></i> Add Animal
+          </button>
+          <div class="form-error" id="animalMessage"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Edit Animal Modal -->
+    <div
+      id="editAnimalModal"
+      class="modal modal-centered"
+      style="display: none"
+    >
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-cow"></i> Edit Animal</h3>
+          <button class="modal-close" id="closeEditAnimalModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form
+          id="editAnimalForm"
+          class="update-form-modern modal-form"
+          novalidate
+        >
+          <input type="hidden" id="editAnimalId" name="editAnimalId" />
+          <div class="form-group-modern">
+            <label for="editAnimalType" class="form-label-modern"
+              ><i class="fa-solid fa-cow"></i> Type</label
+            >
+            <select
+              id="editAnimalType"
+              name="editAnimalType"
+              class="form-input-modern"
+              required
+              aria-required="true"
+            ></select>
+            <div class="form-error" id="editAnimalTypeError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="editAnimalAmount" class="form-label-modern"
+              ><i class="fas fa-hashtag"></i> Amount</label
+            >
+            <input
+              type="number"
+              id="editAnimalAmount"
+              name="editAnimalAmount"
+              class="form-input-modern"
+              placeholder="e.g. 10"
+              min="1"
+              max="10000"
+              step="1"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="editAnimalAmountError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="editAnimalField" class="form-label-modern"
+              ><i class="fas fa-seedling"></i> Field (optional)</label
+            >
+            <select
+              id="editAnimalField"
+              name="editAnimalField"
+              class="form-input-modern"
+            ></select>
+            <div class="form-error" id="editAnimalFieldError"></div>
+          </div>
+          <button type="submit" class="btn btn-futuristic btn-compact">
+            <i class="fas fa-save"></i> Save Changes
+          </button>
+          <div class="form-error" id="editAnimalMessage"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal modal-centered" style="display: none">
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3 id="confirmModalTitle">
+            <i class="fas fa-exclamation-triangle"></i> Confirm Action
+          </h3>
+          <button class="modal-close" id="closeConfirmModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="confirmModalMessage">Are you sure you want to proceed?</p>
+        </div>
+        <div
+          class="modal-footer"
+          style="display: flex; justify-content: flex-end; gap: 1rem"
+        >
+          <button class="btn btn-secondary" id="cancelConfirmModal">
+            Cancel
+          </button>
+          <button class="btn btn-danger" id="confirmConfirmModal">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Core Dependencies and Scripts -->
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/staff-fields-main.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("staff-fields");
+    </script>
+    <script>
+      // Update header stats with real data
+      document.addEventListener("DOMContentLoaded", async function () {
+        // Wait for the main page logic to load data
+        setTimeout(async function () {
+          try {
+            // First try to get data from the global page instance
+            const mainPage = window.staffFieldsMainPage;
+            if (
+              mainPage &&
+              mainPage.fields &&
+              mainPage.staff &&
+              mainPage.animals
+            ) {
+              // Calculate totals from page instance
+              const totalFields = mainPage.fields.length;
+              const totalStaff = mainPage.staff.length;
+              const totalAnimals = mainPage.animals.reduce(
+                (sum, a) => sum + (parseInt(a.amount) || 0),
+                0,
+              );
+              const totalArea = mainPage.fields.reduce(
+                (sum, f) => sum + (parseFloat(f.area) || 0),
+                0,
+              );
+
+              // Update header stats
+              const totalFieldsEl = document.getElementById("totalFields");
+              const totalStaffEl = document.getElementById("totalStaff");
+              const totalAnimalsEl = document.getElementById("totalAnimals");
+              const totalAreaEl = document.getElementById("totalArea");
+
+              if (totalFieldsEl) totalFieldsEl.textContent = totalFields;
+              if (totalStaffEl) totalStaffEl.textContent = totalStaff;
+              if (totalAnimalsEl) totalAnimalsEl.textContent = totalAnimals;
+              if (totalAreaEl) totalAreaEl.textContent = totalArea.toFixed(1);
+            } else {
+              // Fallback: Try to get data from API directly
+              const apiService = window.ApiService
+                ? new window.ApiService()
+                : null;
+              if (apiService) {
+                // Load data directly from API
+                const [fieldsResponse, staffResponse, animalsResponse] =
+                  await Promise.all([
+                    apiService.get("fields", { requiresAuth: true }),
+                    apiService.get("staff", { requiresAuth: true }),
+                    apiService.get("animals", { requiresAuth: true }),
+                  ]);
+
+                // Calculate totals
+                const fields =
+                  fieldsResponse.success &&
+                  fieldsResponse.data &&
+                  Array.isArray(fieldsResponse.data.data)
+                    ? fieldsResponse.data.data
+                    : [];
+                const staff =
+                  staffResponse.success &&
+                  staffResponse.data &&
+                  Array.isArray(staffResponse.data.data)
+                    ? staffResponse.data.data
+                    : [];
+                const animals =
+                  animalsResponse.success &&
+                  animalsResponse.data &&
+                  Array.isArray(animalsResponse.data.data)
+                    ? animalsResponse.data.data
+                    : [];
+
+                const totalFields = fields.length;
+                const totalStaff = staff.length;
+                const totalAnimals = animals.reduce(
+                  (sum, a) => sum + (parseInt(a.amount) || 0),
+                  0,
+                );
+                const totalArea = fields.reduce(
+                  (sum, f) => sum + (parseFloat(f.area) || 0),
+                  0,
+                );
+
+                // Update header stats
+                const totalFieldsEl = document.getElementById("totalFields");
+                const totalStaffEl = document.getElementById("totalStaff");
+                const totalAnimalsEl = document.getElementById("totalAnimals");
+                const totalAreaEl = document.getElementById("totalArea");
+
+                if (totalFieldsEl) totalFieldsEl.textContent = totalFields;
+                if (totalStaffEl) totalStaffEl.textContent = totalStaff;
+                if (totalAnimalsEl) totalAnimalsEl.textContent = totalAnimals;
+                if (totalAreaEl) totalAreaEl.textContent = totalArea.toFixed(1);
+              }
+            }
+          } catch (error) {
+            console.error("Error updating header stats:", error);
+          }
+        }, 2000); // Wait 2 seconds for data to load
+      });
+    </script>
+  </body>
+</html>

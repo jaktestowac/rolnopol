@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Financial Transactions - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="section">
+      <div class="section-header">
+        <h2><i class="fas fa-money-check-alt"></i> Financial Transactions</h2>
+        <button
+          id="refreshFinancialBtn"
+          class="btn-enhanced btn-primary-enhanced"
+        >
+          <span class="spinner-enhanced hidden"></span>
+          <i class="fas fa-sync-alt btn-icon"></i>
+          Refresh
+        </button>
+      </div>
+      <div class="filters-bar">
+        <input
+          type="text"
+          id="filterUserId"
+          placeholder="User ID"
+          class="filter-input"
+          style="width: 100px"
+        />
+        <select id="filterType" class="filter-input">
+          <option value="">All Types</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+        <input
+          type="text"
+          id="filterCategory"
+          placeholder="Category"
+          class="filter-input"
+          style="width: 120px"
+        />
+        <input
+          type="text"
+          id="filterGeneral"
+          placeholder="Search all fields"
+          class="filter-input"
+          style="width: 180px"
+        />
+        <input type="date" id="filterStartDate" class="filter-input" />
+        <input type="date" id="filterEndDate" class="filter-input" />
+        <button id="clearFiltersBtn" class="btn-enhanced btn-tertiary-enhanced">
+          <i class="fas fa-times"></i> Clear
+        </button>
+      </div>
+      <div class="table-container">
+        <table class="table-enhanced" id="financialTable">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>User ID</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Reference ID</th>
+              <th>Timestamp</th>
+              <th>Balance Before</th>
+              <th>Balance After</th>
+            </tr>
+          </thead>
+          <tbody id="financialTableBody">
+            <tr>
+              <td colspan="10" class="text-center loading-enhanced">
+                <span class="spinner-enhanced"></span> Loading...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <script src="../js/kraken-utils.js"></script>
+    <script>
+      let allFinancial = [];
+      function applyFilters() {
+        const userId = document.getElementById("filterUserId").value.trim();
+        const type = document.getElementById("filterType").value;
+        const category = document.getElementById("filterCategory").value.trim();
+        const startDate = document.getElementById("filterStartDate").value;
+        const endDate = document.getElementById("filterEndDate").value;
+        const general = document
+          .getElementById("filterGeneral")
+          .value.trim()
+          .toLowerCase();
+        let filtered = allFinancial;
+        if (userId)
+          filtered = filtered.filter((tx) => String(tx.userId) === userId);
+        if (type) filtered = filtered.filter((tx) => tx.type === type);
+        if (category)
+          filtered = filtered.filter((tx) => tx.category === category);
+        if (startDate)
+          filtered = filtered.filter(
+            (tx) =>
+              tx.timestamp && new Date(tx.timestamp) >= new Date(startDate),
+          );
+        if (endDate)
+          filtered = filtered.filter(
+            (tx) => tx.timestamp && new Date(tx.timestamp) <= new Date(endDate),
+          );
+        if (general) {
+          filtered = filtered.filter((tx) => {
+            return Object.values(tx).some(
+              (val) => val && val.toString().toLowerCase().includes(general),
+            );
+          });
+        }
+        renderFinancial(filtered);
+      }
+      function renderFinancial(transactions) {
+        const tableBody = document.getElementById("financialTableBody");
+        if (!transactions.length) {
+          tableBody.innerHTML = `<tr><td colspan='10' class='text-center'>No transactions found.</td></tr>`;
+          return;
+        }
+        tableBody.innerHTML = transactions
+          .map(
+            (tx) => `
+            <tr>
+                <td>${tx.id}</td>
+                <td>${tx.userId}</td>
+                <td>${tx.type}</td>
+                <td>${tx.amount}</td>
+                <td>${tx.description}</td>
+                <td>${tx.category}</td>
+                <td>${tx.referenceId ?? "-"}</td>
+                <td>${tx.timestamp ? new Date(tx.timestamp).toLocaleString() : "-"}</td>
+                <td>${tx.balanceBefore ?? "-"}</td>
+                <td>${tx.balanceAfter ?? "-"}</td>
+            </tr>
+        `,
+          )
+          .join("");
+      }
+      async function loadFinancialTransactions() {
+        const tableBody = document.getElementById("financialTableBody");
+        tableBody.innerHTML = `<tr><td colspan='10' class='text-center loading-enhanced'><span class='spinner-enhanced'></span> Loading...</td></tr>`;
+        try {
+          const res = await secureFetch("/api/v1/admin/financial/transactions");
+          const data = await res.json();
+          allFinancial = data.data && Array.isArray(data.data) ? data.data : [];
+          applyFilters();
+        } catch (err) {
+          tableBody.innerHTML = `<tr><td colspan='10' class='text-center error'>Failed to load transactions: ${err.message}</td></tr>`;
+        }
+      }
+      document.getElementById("refreshFinancialBtn").onclick =
+        loadFinancialTransactions;
+      document.getElementById("clearFiltersBtn").onclick = () => {
+        document.getElementById("filterUserId").value = "";
+        document.getElementById("filterType").value = "";
+        document.getElementById("filterCategory").value = "";
+        document.getElementById("filterStartDate").value = "";
+        document.getElementById("filterEndDate").value = "";
+        document.getElementById("filterGeneral").value = "";
+        applyFilters();
+      };
+      // Make filtering instant
+      [
+        "filterUserId",
+        "filterType",
+        "filterCategory",
+        "filterStartDate",
+        "filterEndDate",
+        "filterGeneral",
+      ].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener("input", applyFilters);
+          el.addEventListener("change", applyFilters);
+          el.addEventListener("keyup", applyFilters);
+        }
+      });
+      window.addEventListener("DOMContentLoaded", loadFinancialTransactions);
+    </script>
+  </body>
+</html>

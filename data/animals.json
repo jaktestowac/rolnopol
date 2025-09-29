@@ -1,0 +1,213 @@
+[
+  {
+    "userId": 1,
+    "type": "chicken",
+    "amount": 101,
+    "createdAt": "2025-07-17T21:43:46.098Z",
+    "id": 1,
+    "fieldId": 2
+  },
+  {
+    "userId": 1,
+    "type": "squid",
+    "amount": 1,
+    "createdAt": "2025-07-17T21:46:27.664Z",
+    "id": 2
+  },
+  {
+    "userId": 1,
+    "type": "cow",
+    "amount": 100,
+    "createdAt": "2025-07-17T23:02:01.598Z",
+    "id": 3,
+    "fieldId": 1
+  },
+  {
+    "userId": 1,
+    "type": "pig",
+    "amount": 150,
+    "createdAt": "2025-07-17T23:02:52.272Z",
+    "id": 4,
+    "fieldId": 6
+  },
+  {
+    "userId": 1,
+    "type": "chicken",
+    "amount": 1112,
+    "createdAt": "2025-07-17T23:05:44.887Z",
+    "id": 5
+  },
+  {
+    "userId": 1,
+    "type": "goat",
+    "amount": 500,
+    "fieldId": 0,
+    "createdAt": "2025-07-19T13:31:08.661Z",
+    "id": 6
+  },
+  {
+    "userId": 1,
+    "type": "chicken",
+    "amount": 120,
+    "fieldId": 0,
+    "createdAt": "2025-07-19T13:38:32.465Z",
+    "id": 7
+  },
+  {
+    "userId": 2,
+    "type": "cow",
+    "amount": 10,
+    "createdAt": "2025-07-23T12:00:00.000Z",
+    "id": 8
+  },
+  {
+    "userId": 2,
+    "type": "sheep",
+    "amount": 15,
+    "createdAt": "2025-07-23T12:00:01.000Z",
+    "id": 9
+  },
+  {
+    "userId": 1,
+    "type": "pig",
+    "amount": 8,
+    "createdAt": "2025-07-23T12:00:02.000Z",
+    "id": 10
+  },
+  {
+    "userId": 3,
+    "type": "duck",
+    "amount": 20,
+    "createdAt": "2025-07-23T12:00:03.000Z",
+    "id": 11
+  },
+  {
+    "userId": 4,
+    "type": "goat",
+    "amount": 12,
+    "createdAt": "2025-07-23T12:00:04.000Z",
+    "id": 12
+  },
+  {
+    "userId": 4,
+    "type": "rabbit",
+    "amount": 7,
+    "createdAt": "2025-07-23T12:00:05.000Z",
+    "id": 13
+  },
+  {
+    "userId": 4,
+    "type": "fish",
+    "amount": 30,
+    "createdAt": "2025-07-23T12:00:06.000Z",
+    "id": 14
+  },
+  {
+    "userId": 5,
+    "type": "turkey",
+    "amount": 5,
+    "createdAt": "2025-07-23T12:00:07.000Z",
+    "id": 15
+  },
+  {
+    "userId": 2,
+    "type": "duck",
+    "amount": 25,
+    "createdAt": "2025-07-25T12:00:00.000Z",
+    "id": 16
+  },
+  {
+    "userId": 3,
+    "type": "horse",
+    "amount": 3,
+    "createdAt": "2025-07-25T12:05:00.000Z",
+    "id": 17
+  },
+  {
+    "userId": 5,
+    "type": "sheep",
+    "amount": 12,
+    "createdAt": "2025-07-25T12:10:00.000Z",
+    "id": 18
+  },
+  {
+    "userId": 4,
+    "type": "cow",
+    "amount": 8,
+    "createdAt": "2025-07-25T13:00:00.000Z",
+    "id": 19,
+    "fieldId": 25
+  },
+  {
+    "userId": 2,
+    "type": "goat",
+    "amount": 15,
+    "createdAt": "2025-07-25T13:05:00.000Z",
+    "id": 20
+  },
+  {
+    "userId": 6,
+    "type": "cow",
+    "amount": 20,
+    "createdAt": "2025-07-26T10:00:00.000Z",
+    "id": 21
+  },
+  {
+    "userId": 6,
+    "type": "sheep",
+    "amount": 35,
+    "createdAt": "2025-07-26T10:05:00.000Z",
+    "id": 22
+  },
+  {
+    "userId": 6,
+    "type": "sheep",
+    "amount": 12,
+    "createdAt": "2025-07-26T10:10:00.000Z",
+    "id": 23
+  },
+  {
+    "userId": 6,
+    "type": "pig",
+    "amount": 70,
+    "createdAt": "2025-07-26T10:15:00.000Z",
+    "id": 24
+  },
+  {
+    "userId": 6,
+    "type": "chicken",
+    "amount": 50,
+    "createdAt": "2025-07-26T10:20:00.000Z",
+    "id": 25
+  },
+  {
+    "userId": 6,
+    "type": "duck",
+    "amount": 15,
+    "createdAt": "2025-07-27T09:00:00.000Z",
+    "id": 26
+  },
+  {
+    "userId": 6,
+    "type": "goat",
+    "amount": 40,
+    "createdAt": "2025-07-27T09:05:00.000Z",
+    "id": 27
+  },
+  {
+    "userId": 6,
+    "type": "turkey",
+    "amount": 10,
+    "createdAt": "2025-07-27T09:10:00.000Z",
+    "id": 28
+  },
+  {
+    "userId": 7,
+    "fieldId": 34,
+    "type": "aiHarvester",
+    "amount": 100,
+    "createdAt": "2025-07-27T09:15:00.000Z",
+    "id": 29,
+    "protected": true
+  }
+]

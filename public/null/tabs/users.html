@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Users - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="users-section">
+      <div class="users-header">
+        <h2 class="users-title">
+          <i class="fas fa-users-cog"></i> User Management
+        </h2>
+        <div class="users-actions">
+          <button
+            id="refreshUsersBtn"
+            class="btn-enhanced btn-primary-enhanced"
+          >
+            <span class="spinner-enhanced hidden"></span>
+            <i class="fas fa-sync-alt btn-icon"></i>
+            Refresh
+          </button>
+          <button id="testModalBtn" class="btn-enhanced btn-secondary-enhanced">
+            <i class="fas fa-test-tube"></i>
+            Test Modal
+          </button>
+        </div>
+      </div>
+
+      <!-- User Statistics -->
+      <div class="stats-grid" id="userStats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="totalUsers">-</div>
+            <div class="stat-label">Total Users</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon active">
+            <i class="fas fa-user-check"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="activeUsers">-</div>
+            <div class="stat-label">Active Users</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon inactive">
+            <i class="fas fa-user-times"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="inactiveUsers">-</div>
+            <div class="stat-label">Inactive Users</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-percentage"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value" id="avgProfileCompleteness">-</div>
+            <div class="stat-label">Avg Profile Complete</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container" id="usersTableContainer">
+        <table class="table-enhanced" id="usersTable">
+          <thead>
+            <tr>
+              <th><i class="fas fa-id-badge"></i> User ID</th>
+              <th><i class="fas fa-user"></i> Display Name</th>
+              <th><i class="fas fa-envelope"></i> Email</th>
+              <th><i class="fas fa-toggle-on"></i> Status</th>
+              <th><i class="fas fa-percentage"></i> Profile</th>
+              <th><i class="fas fa-calendar-plus"></i> Created</th>
+              <th><i class="fas fa-clock"></i> Last Login</th>
+              <th><i class="fas fa-cogs"></i> Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr>
+              <td colspan="8" class="text-center loading-enhanced">
+                <span class="spinner-enhanced"></span>
+                Loading...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div
+      id="userDetailsModal"
+      class="modal-enhanced"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+      "
+    >
+      <div class="modal-content-enhanced">
+        <div class="modal-header-enhanced">
+          <h3>
+            <i class="fas fa-user-circle"></i>
+            User Details
+          </h3>
+          <button class="modal-close-enhanced" id="closeUserModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body-enhanced">
+          <div id="userDetailsContent">
+            <!-- User details will be populated here -->
+          </div>
+        </div>
+        <div class="modal-footer-enhanced">
+          <button
+            class="btn-enhanced btn-secondary-enhanced"
+            id="closeModalBtn"
+          >
+            <i class="fas fa-times"></i>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete User Confirmation Modal -->
+    <div
+      id="deleteUserModal"
+      class="modal-enhanced"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+      "
+    >
+      <div class="modal-content-enhanced">
+        <div class="modal-header-enhanced danger">
+          <h3>
+            <i class="fas fa-exclamation-triangle"></i>
+            Confirm User Deletion
+          </h3>
+          <button class="modal-close-enhanced" id="closeDeleteModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body-enhanced">
+          <div class="delete-warning">
+            <p>
+              <strong>Warning:</strong> This action will permanently delete the
+              user account.
+            </p>
+            <ul>
+              <li>All user data will be permanently removed</li>
+              <li>This action cannot be undone</li>
+              <li>The user will lose access to all services</li>
+            </ul>
+            <div class="user-to-delete">
+              <strong>User to delete:</strong>
+              <div id="deleteUserInfo">-</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="deleteConfirmation" class="form-label">
+              <i class="fas fa-keyboard"></i>
+              Type "DELETE" to confirm
+            </label>
+            <input
+              type="text"
+              id="deleteConfirmation"
+              class="form-input-enhanced"
+              placeholder="Type DELETE to confirm"
+              maxlength="6"
+            />
+          </div>
+        </div>
+        <div class="modal-footer-enhanced">
+          <button class="btn-enhanced btn-secondary-enhanced" id="cancelDelete">
+            <i class="fas fa-times"></i>
+            Cancel
+          </button>
+          <button
+            class="btn-enhanced btn-danger-enhanced"
+            id="confirmDelete"
+            disabled
+          >
+            <i class="fas fa-trash"></i>
+            Delete User
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shared Utilities -->
+    <script src="../js/kraken-utils.js"></script>
+
+    <script>
+      class UsersTab {
+        constructor() {
+          this.token = getCookie("krakenToken");
+          this.users = [];
+          this.selectedUser = null;
+          this.init();
+        }
+
+        init() {
+          // Listen for token from parent window
+          window.addEventListener("message", (event) => {
+            if (event.data.type === "SET_TOKEN") {
+              this.token = event.data.token;
+              this.loadUsers();
+            }
+          });
+
+          this.bindEvents();
+
+          // If we already have a token, load data immediately
+          if (this.token) {
+            this.loadUsers();
+          }
+        }
+
+        bindEvents() {
+          document
+            .getElementById("refreshUsersBtn")
+            .addEventListener("click", () => this.loadUsers());
+          document
+            .getElementById("testModalBtn")
+            .addEventListener("click", () => this.testModal());
+
+          // Modal events
+          document
+            .getElementById("closeUserModal")
+            .addEventListener("click", () => this.closeUserModal());
+          document
+            .getElementById("closeModalBtn")
+            .addEventListener("click", () => this.closeUserModal());
+          document
+            .getElementById("closeDeleteModal")
+            .addEventListener("click", () => this.closeDeleteModal());
+          document
+            .getElementById("cancelDelete")
+            .addEventListener("click", () => this.closeDeleteModal());
+
+          // Delete confirmation
+          document
+            .getElementById("deleteConfirmation")
+            .addEventListener("input", (e) => this.handleDeleteConfirmation(e));
+          document
+            .getElementById("confirmDelete")
+            .addEventListener("click", () => this.deleteUser());
+
+          // Close modals on outside click
+          window.addEventListener("click", (e) => {
+            if (e.target.classList.contains("modal-enhanced")) {
+              this.closeUserModal();
+              this.closeDeleteModal();
+            }
+          });
+        }
+
+        async loadUsers() {
+          const refreshBtn = document.getElementById("refreshUsersBtn");
+          const spinner = refreshBtn?.querySelector(".spinner-enhanced");
+          const tableBody = document.getElementById("usersTableBody");
+
+          if (refreshBtn) refreshBtn.disabled = true;
+          if (spinner) spinner.classList.remove("hidden");
+
+          if (tableBody) {
+            tableBody.innerHTML =
+              '<tr><td colspan="8" class="text-center loading-enhanced"><span class="spinner-enhanced"></span>Loading...</td></tr>';
+          }
+
+          try {
+            const response = await secureFetch("/api/v1/admin/users", {
+              headers: { Authorization: `Bearer ${this.token}` },
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              this.users = result.data.users;
+              this.displayUsers(this.users);
+              this.updateStats(this.users);
+            } else {
+              console.error("Failed to load users:", result.error);
+              if (tableBody) {
+                tableBody.innerHTML =
+                  '<tr><td colspan="8" class="text-center">Failed to load users</td></tr>';
+              }
+            }
+          } catch (error) {
+            if (error.message.includes("Authentication failed")) {
+              console.log(
+                "Authentication error detected, secureFetch should handle redirect",
+              );
+              // Authentication error already handled by secureFetch
+              return;
+            }
+            if (tableBody) {
+              tableBody.innerHTML =
+                '<tr><td colspan="8" class="text-center">Error loading users</td></tr>';
+            }
+          } finally {
+            if (refreshBtn) refreshBtn.disabled = false;
+            if (spinner) spinner.classList.add("hidden");
+          }
+        }
+
+        displayUsers(users) {
+          const tableBody = document.getElementById("usersTableBody");
+
+          if (!Array.isArray(users)) {
+            console.warn("displayUsers: users is not an array:", users);
+            tableBody.innerHTML =
+              '<tr><td colspan="8" class="text-center">Error displaying users - invalid data format</td></tr>';
+            return;
+          }
+
+          if (users.length === 0) {
+            tableBody.innerHTML =
+              '<tr><td colspan="8" class="text-center">No users found</td></tr>';
+            return;
+          }
+
+          tableBody.innerHTML = users
+            .map(
+              (user) => `
+                    <tr class="user-row" data-user-id="${user.id}">
+                        <td><strong>${user.id}</strong></td>
+                        <td>
+                            <div class="user-info">
+                                <i class="fas fa-user"></i> 
+                                <span class="user-name">${user.displayedName}</span>
+                            </div>
+                        </td>
+                        <td><i class="fas fa-envelope"></i> ${user.email}</td>
+                        <td>
+                            <span class="badge-enhanced ${user.isActive ? "badge-success-enhanced" : "badge-danger-enhanced"}">
+                                <span class="badge-icon ${user.isActive ? "success" : "danger"}"></span>
+                                ${user.isActive ? "Active" : "Inactive"}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="profile-completeness">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${(user.profileCompleteness || 0) * 100}%"></div>
+                                </div>
+                                <span class="completeness-text">${Math.round((user.profileCompleteness || 0) * 100)}%</span>
+                            </div>
+                        </td>
+                                        <td><i class="fas fa-calendar"></i> ${new Date(user.createdAt).toLocaleDateString("pl-PL")}</td>
+                <td><i class="fas fa-clock"></i> ${user.lastLogin ? new Date(user.lastLogin).toLocaleDateString("pl-PL") : "Never"}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view" onclick="usersTab.showUserDetails('${user.id}')" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-action btn-toggle" onclick="usersTab.toggleUserStatus('${user.id}', ${user.isActive})" title="${user.isActive ? "Deactivate" : "Activate"} User">
+                                    <i class="fas fa-${user.isActive ? "pause" : "play"}"></i>
+                                </button>
+                                <button class="btn-action btn-delete" onclick="usersTab.showDeleteConfirmation('${user.id}')" title="Delete User">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `,
+            )
+            .join("");
+        }
+
+        updateStats(users) {
+          if (!Array.isArray(users)) return;
+
+          const totalUsers = users.length;
+          const activeUsers = users.filter((user) => user.isActive).length;
+          const inactiveUsers = totalUsers - activeUsers;
+          const avgProfileCompleteness =
+            users.length > 0
+              ? Math.round(
+                  (users.reduce(
+                    (sum, user) => sum + (user.profileCompleteness || 0),
+                    0,
+                  ) /
+                    users.length) *
+                    100,
+                )
+              : 0;
+
+          document.getElementById("totalUsers").textContent = totalUsers;
+          document.getElementById("activeUsers").textContent = activeUsers;
+          document.getElementById("inactiveUsers").textContent = inactiveUsers;
+          document.getElementById("avgProfileCompleteness").textContent =
+            avgProfileCompleteness + "%";
+        }
+
+        showUserDetails(userId) {
+          console.log("showUserDetails called with userId:", userId);
+          console.log("Available users:", this.users);
+          const user = this.users.find((u) => u.id === Number(userId));
+          console.log("Found user:", user);
+          if (!user) {
+            console.error("User not found for ID:", userId);
+            return;
+          }
+
+          this.selectedUser = user;
+          const modal = document.getElementById("userDetailsModal");
+          const content = document.getElementById("userDetailsContent");
+          console.log("Modal element:", modal);
+          console.log("Content element:", content);
+
+          content.innerHTML = `
+                    <div class="user-details-grid">
+                        <div class="detail-section">
+                            <h4><i class="fas fa-info-circle"></i> Basic Information</h4>
+                            <div class="detail-item">
+                                <span class="detail-label">User ID:</span>
+                                <span class="detail-value">${user.id}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Internal ID:</span>
+                                <span class="detail-value">${user.internalId || "N/A"}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Display Name:</span>
+<span class="detail-value">${user.displayedName}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Email:</span>
+                                <span class="detail-value">${user.email}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Status:</span>
+                                <span class="detail-value">
+                                    <span class="badge-enhanced ${user.isActive ? "badge-success-enhanced" : "badge-danger-enhanced"}">
+                                        ${user.isActive ? "Active" : "Inactive"}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4><i class="fas fa-chart-pie"></i> Profile Information</h4>
+                            <div class="detail-item">
+                                <span class="detail-label">Profile Completeness:</span>
+                                <span class="detail-value">
+                                    <div class="profile-completeness-detailed">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: ${(user.profileCompleteness || 0) * 100}%"></div>
+                                        </div>
+                                        <span class="completeness-text">${Math.round((user.profileCompleteness || 0) * 100)}%</span>
+                                    </div>
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">First Name:</span>
+                                <span class="detail-value">${user.firstName || "Not set"}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Last Name:</span>
+                                <span class="detail-value">${user.lastName || "Not set"}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Phone:</span>
+                                <span class="detail-value">${user.phone || "Not set"}</span>
+                            </div>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4><i class="fas fa-calendar-alt"></i> Timestamps</h4>
+                            <div class="detail-item">
+                                <span class="detail-label">Created:</span>
+                                <span class="detail-value">${new Date(user.createdAt).toLocaleString("pl-PL")}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Last Updated:</span>
+                                <span class="detail-value">${new Date(user.updatedAt).toLocaleString("pl-PL")}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Last Login:</span>
+                                <span class="detail-value">${user.lastLogin ? new Date(user.lastLogin).toLocaleString("pl-PL") : "Never"}</span>
+                            </div>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4><i class="fas fa-cogs"></i> Actions</h4>
+                            <div class="action-buttons-detailed">
+                                <button class="btn-enhanced ${user.isActive ? "btn-warning-enhanced" : "btn-success-enhanced"}" onclick="usersTab.toggleUserStatus('${user.id}', ${user.isActive})">
+                                    <i class="fas fa-${user.isActive ? "pause" : "play"}"></i>
+                                    ${user.isActive ? "Deactivate" : "Activate"} User
+                                </button>
+                                <button class="btn-enhanced btn-danger-enhanced" onclick="usersTab.showDeleteConfirmation('${user.id}')">
+                                    <i class="fas fa-trash"></i>
+                                    Delete User
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+          console.log("Showing user details modal");
+          modal.style.display = "block";
+          modal.style.position = "fixed";
+          modal.style.top = "0";
+          modal.style.left = "0";
+          modal.style.width = "100%";
+          modal.style.height = "100%";
+          modal.style.zIndex = "9999";
+        }
+
+        closeUserModal() {
+          document.getElementById("userDetailsModal").style.display = "none";
+          this.selectedUser = null;
+        }
+
+        async toggleUserStatus(userId, currentStatus) {
+          try {
+            const response = await secureFetch(
+              `/api/v1/admin/users/${Number(userId)}/status`,
+              {
+                method: "PUT",
+                headers: {
+                  Authorization: `Bearer ${this.token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ isActive: !currentStatus }),
+              },
+            );
+
+            const result = await response.json();
+
+            if (result.success) {
+              // Update local data
+              const userIndex = this.users.findIndex(
+                (u) => u.id === Number(userId),
+              );
+              if (userIndex !== -1) {
+                this.users[userIndex].isActive = !currentStatus;
+                this.displayUsers(this.users);
+                this.updateStats(this.users);
+              }
+
+              // Show success message
+              this.showNotification(
+                `User ${!currentStatus ? "activated" : "deactivated"} successfully`,
+                "success",
+              );
+            } else {
+              this.showNotification(
+                `Failed to update user status: ${result.error}`,
+                "error",
+              );
+            }
+          } catch (error) {
+            console.error("Failed to toggle user status:", error);
+            if (error.message.includes("Authentication failed")) {
+              // Authentication error already handled by secureFetch
+              return;
+            }
+            this.showNotification("Failed to update user status", "error");
+          }
+        }
+
+        showDeleteConfirmation(userId) {
+          const user = this.users.find((u) => u.id === Number(userId));
+          if (!user) {
+            console.error("User not found for ID:", userId);
+            return;
+          }
+
+          this.selectedUser = user;
+          const modal = document.getElementById("deleteUserModal");
+          const deleteUserInfo = document.getElementById("deleteUserInfo");
+          const deleteConfirmation =
+            document.getElementById("deleteConfirmation");
+
+          deleteUserInfo.innerHTML = `
+                    <div class="user-delete-info">
+                        <strong>${user.displayedName}</strong> (${user.email})
+                        <br>
+                        <small>User ID: ${user.id}</small>
+                    </div>
+                `;
+
+          deleteConfirmation.value = "";
+          document.getElementById("confirmDelete").disabled = true;
+          modal.style.display = "block";
+          modal.style.position = "fixed";
+          modal.style.top = "0";
+          modal.style.left = "0";
+          modal.style.width = "100%";
+          modal.style.height = "100%";
+          modal.style.zIndex = "9999";
+        }
+
+        closeDeleteModal() {
+          document.getElementById("deleteUserModal").style.display = "none";
+          this.selectedUser = null;
+        }
+
+        handleDeleteConfirmation(event) {
+          const confirmBtn = document.getElementById("confirmDelete");
+          confirmBtn.disabled = event.target.value !== "DELETE";
+        }
+
+        async deleteUser() {
+          if (!this.selectedUser) return;
+
+          try {
+            const response = await secureFetch(
+              `/api/v1/admin/users/${this.selectedUser.id}`,
+              {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${this.token}` },
+              },
+            );
+
+            const result = await response.json();
+
+            if (result.success) {
+              // Remove user from local data
+              this.users = this.users.filter(
+                (u) => u.id !== this.selectedUser.id,
+              );
+              this.displayUsers(this.users);
+              this.updateStats(this.users);
+
+              this.closeDeleteModal();
+              this.showNotification("User deleted successfully", "success");
+            } else {
+              this.showNotification(
+                `Failed to delete user: ${result.error}`,
+                "error",
+              );
+            }
+          } catch (error) {
+            console.error("Failed to delete user:", error);
+            if (error.message.includes("Authentication failed")) {
+              // Authentication error already handled by secureFetch
+              return;
+            }
+            this.showNotification("Failed to delete user", "error");
+          }
+        }
+
+        testModal() {
+          const modal = document.getElementById("userDetailsModal");
+          const content = document.getElementById("userDetailsContent");
+
+          if (modal && content) {
+            content.innerHTML =
+              "<h3>Test Modal</h3><p>This is a test modal to verify functionality.</p>";
+            modal.style.display = "block";
+            modal.style.position = "fixed";
+            modal.style.top = "0";
+            modal.style.left = "0";
+            modal.style.width = "100%";
+            modal.style.height = "100%";
+            modal.style.zIndex = "9999";
+          } else {
+            console.error("Modal elements not found");
+          }
+        }
+
+        showNotification(message, type = "info") {
+          // Create a simple notification
+          const notification = document.createElement("div");
+          notification.className = `notification-enhanced notification-${type}`;
+          notification.innerHTML = `
+                    <i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : "info-circle"}"></i>
+                    <span>${message}</span>
+                `;
+
+          document.body.appendChild(notification);
+
+          // Remove after 3 seconds
+          setTimeout(() => {
+            if (notification.parentNode) {
+              notification.parentNode.removeChild(notification);
+            }
+          }, 3000);
+        }
+      }
+
+      // Initialize users tab when the page loads
+      let usersTab;
+      document.addEventListener("DOMContentLoaded", () => {
+        usersTab = new UsersTab();
+      });
+    </script>
+  </body>
+</html>

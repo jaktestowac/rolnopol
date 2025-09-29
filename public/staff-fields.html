@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <title>Staff & Fields - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="bg-agri-pattern">
+    <div id="header-component"></div>
+    <div class="container glass" style="margin-top: 0rem; padding: 1rem">
+      <header
+        class="header glass"
+        style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 0.75rem 0 1rem 0;
+          margin-bottom: 1.5rem;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+          border-radius: 1rem 1rem 0 0;
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            justify-content: center;
+          "
+        >
+          <h1
+            style="
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              font-size: 1.75rem;
+            "
+          >
+            <span class="bg-agri-gradient"><i class="fas fa-tractor"></i></span>
+          </h1>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+            "
+          >
+            <span class="main-title" style="font-size: 1.75rem">Rolnopol</span>
+            <span
+              style="
+                font-size: 0.9rem;
+                color: #6a7b5e;
+                font-weight: 400;
+                margin-top: 0.1rem;
+              "
+              >Staff & Fields Management</span
+            >
+          </div>
+        </div>
+      </header>
+      <main class="main">
+        <div class="staff-fields-container">
+          <div class="profile-grid-modern">
+            <!-- Fields Section -->
+            <div class="profile-card-modern futuristic-card">
+              <div class="card-header-modern futuristic">
+                <h3><i class="fas fa-seedling"></i> Fields</h3>
+              </div>
+              <div class="card-content-modern">
+                <div
+                  id="fieldsStats"
+                  class="section-stats"
+                  style="margin-bottom: 0.5rem"
+                ></div>
+                <div id="fieldsPagination"></div>
+                <ul id="fieldsList" class="info-list-modern"></ul>
+                <button
+                  id="openAddFieldModal"
+                  class="btn btn-futuristic btn-compact"
+                  style="margin-top: 1rem"
+                >
+                  <i class="fas fa-plus"></i> Add Field
+                </button>
+                <div id="fieldMessage" class="message-modern"></div>
+              </div>
+            </div>
+            <!-- Staff Section -->
+            <div class="profile-card-modern futuristic-card">
+              <div class="card-header-modern futuristic">
+                <h3><i class="fa-solid fa-person"></i> Staff</h3>
+              </div>
+              <div class="card-content-modern">
+                <div
+                  id="staffStats"
+                  class="section-stats"
+                  style="margin-bottom: 0.5rem"
+                ></div>
+                <div id="staffPagination"></div>
+                <ul id="staffList" class="info-list-modern"></ul>
+                <button
+                  id="openAddStaffModal"
+                  class="btn btn-futuristic btn-compact"
+                  style="margin-top: 1rem"
+                >
+                  <i class="fas fa-plus"></i> Add Staff
+                </button>
+                <div id="staffMessage" class="message-modern"></div>
+              </div>
+            </div>
+            <!-- Animals Section -->
+            <div class="profile-card-modern futuristic-card">
+              <div class="card-header-modern futuristic">
+                <h3><i class="fa-solid fa-cow"></i> Animals</h3>
+              </div>
+              <div class="card-content-modern">
+                <div
+                  id="animalsStats"
+                  class="section-stats"
+                  style="margin-bottom: 0.5rem"
+                ></div>
+                <div id="animalsPagination"></div>
+                <input
+                  id="animalsSearch"
+                  class="form-input-modern"
+                  type="text"
+                  placeholder="Search animals..."
+                />
+                <ul id="animalsList" class="info-list-modern"></ul>
+                <button
+                  id="openAddAnimalModal"
+                  class="btn btn-futuristic btn-compact"
+                  style="margin-top: 1rem"
+                >
+                  <i class="fas fa-plus"></i> Add Animal
+                </button>
+                <div id="animalMessage" class="message-modern"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Assignment Section -->
+          <div
+            class="profile-card-modern futuristic-card"
+            style="margin-top: 2rem"
+          >
+            <div class="card-header-modern futuristic">
+              <h3><i class="fas fa-link"></i> Assign Staff to Fields</h3>
+            </div>
+            <div class="card-content-modern">
+              <button
+                id="openAssignModal"
+                class="btn btn-futuristic btn-compact"
+                style="margin-bottom: 1rem"
+              >
+                <i class="fas fa-link"></i> Assign
+              </button>
+              <div id="assignMessage" class="message-modern"></div>
+              <div
+                id="assignmentsList"
+                class="info-list-modern"
+                style="margin-top: 1rem"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div id="chartsContainer" class="charts-container">
+            <div id="fieldsChartContainer" class="chart-container"></div>
+            <div id="staffChartContainer" class="chart-container"></div>
+            <div id="animalsChartContainer" class="chart-container"></div>
+            <div id="animalTypesChartContainer" class="chart-container"></div>
+          </div>
+        </div>
+      </main>
+      <div id="footer-component"></div>
+    </div>
+    <!-- Add Field Modal -->
+    <div id="addFieldModal" class="modal" style="display: none">
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3><i class="fas fa-seedling"></i> Add Field</h3>
+          <button class="modal-close" id="closeAddFieldModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form
+          id="addFieldForm"
+          class="update-form-modern modal-form"
+          novalidate
+        >
+          <div class="form-group-modern">
+            <label for="fieldName" class="form-label-modern"
+              ><i class="fas fa-tag"></i> Field Name</label
+            >
+            <input
+              type="text"
+              id="fieldName"
+              name="fieldName"
+              class="form-input-modern"
+              placeholder="Enter field name"
+              minlength="2"
+              maxlength="32"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="fieldNameError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="fieldArea" class="form-label-modern"
+              ><i class="fas fa-ruler-combined"></i> Area (ha)</label
+            >
+            <input
+              type="number"
+              id="fieldArea"
+              name="fieldArea"
+              class="form-input-modern"
+              placeholder="e.g. 10"
+              min="0.01"
+              max="10000"
+              step="0.01"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="fieldAreaError"></div>
+          </div>
+          <button type="submit" class="btn btn-futuristic btn-compact">
+            <i class="fas fa-plus"></i> Add Field
+          </button>
+          <div class="form-error" id="fieldMessage"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Add Staff Modal -->
+    <div id="addStaffModal" class="modal" style="display: none">
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3><i class="fas fa-user-staff"></i> Add Staff</h3>
+          <button class="modal-close" id="closeAddStaffModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form
+          id="addStaffForm"
+          class="update-form-modern modal-form"
+          novalidate
+        >
+          <div class="form-group-modern">
+            <label for="staffName" class="form-label-modern"
+              ><i class="fas fa-user"></i> Name</label
+            >
+            <input
+              type="text"
+              id="staffName"
+              name="staffName"
+              class="form-input-modern"
+              placeholder="Enter name"
+              minlength="2"
+              maxlength="32"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="staffNameError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="staffSurname" class="form-label-modern"
+              ><i class="fas fa-user-tag"></i> Surname</label
+            >
+            <input
+              type="text"
+              id="staffSurname"
+              name="staffSurname"
+              class="form-input-modern"
+              placeholder="Enter surname"
+              minlength="2"
+              maxlength="32"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="staffSurnameError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="staffAge" class="form-label-modern"
+              ><i class="fas fa-birthday-cake"></i> Age</label
+            >
+            <input
+              type="number"
+              id="staffAge"
+              name="staffAge"
+              class="form-input-modern"
+              placeholder="e.g. 30"
+              min="1"
+              max="120"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="staffAgeError"></div>
+          </div>
+          <button type="submit" class="btn btn-futuristic btn-compact">
+            <i class="fas fa-plus"></i> Add Staff
+          </button>
+          <div class="form-error" id="staffMessage"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Assign Staff Modal -->
+    <div id="assignModal" class="modal modal-centered" style="display: none">
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3><i class="fas fa-link"></i> Assign Staff to Field</h3>
+          <button class="modal-close" id="closeAssignModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form
+          id="assignStaffForm"
+          class="update-form-modern modal-form"
+          novalidate
+        >
+          <div class="form-group-modern">
+            <label for="assignField" class="form-label-modern"
+              ><i class="fas fa-seedling"></i> Field</label
+            >
+            <select
+              id="assignField"
+              name="assignField"
+              class="form-input-modern"
+              required
+              aria-required="true"
+            ></select>
+            <div class="form-error" id="assignFieldError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="assignStaff" class="form-label-modern"
+              ><i class="fas fa-user-staff"></i> Staff</label
+            >
+            <select
+              id="assignStaff"
+              name="assignStaff"
+              class="form-input-modern"
+              required
+              aria-required="true"
+            ></select>
+            <div class="form-error" id="assignStaffError"></div>
+          </div>
+          <button type="submit" class="btn btn-futuristic btn-compact">
+            <i class="fas fa-link"></i> Assign
+          </button>
+          <div class="form-error" id="assignMessage"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Add Animal Modal -->
+    <div id="addAnimalModal" class="modal modal-centered" style="display: none">
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-cow"></i> Add Animal</h3>
+          <button class="modal-close" id="closeAddAnimalModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form
+          id="addAnimalForm"
+          class="update-form-modern modal-form"
+          novalidate
+        >
+          <div class="form-group-modern">
+            <label for="animalType" class="form-label-modern"
+              ><i class="fa-solid fa-cow"></i> Type</label
+            >
+            <select
+              id="animalType"
+              name="animalType"
+              class="form-input-modern"
+              required
+              aria-required="true"
+            ></select>
+            <div class="form-error" id="animalTypeError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="animalAmount" class="form-label-modern"
+              ><i class="fas fa-hashtag"></i> Amount</label
+            >
+            <input
+              type="number"
+              id="animalAmount"
+              name="animalAmount"
+              class="form-input-modern"
+              placeholder="e.g. 10"
+              min="1"
+              max="10000"
+              step="1"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="animalAmountError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="animalField" class="form-label-modern"
+              ><i class="fas fa-seedling"></i> Field (optional)</label
+            >
+            <select
+              id="animalField"
+              name="animalField"
+              class="form-input-modern"
+            ></select>
+            <div class="form-error" id="animalFieldError"></div>
+          </div>
+          <button type="submit" class="btn btn-futuristic btn-compact">
+            <i class="fas fa-plus"></i> Add Animal
+          </button>
+          <div class="form-error" id="animalMessage"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Edit Animal Modal -->
+    <div
+      id="editAnimalModal"
+      class="modal modal-centered"
+      style="display: none"
+    >
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-cow"></i> Edit Animal</h3>
+          <button class="modal-close" id="closeEditAnimalModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form
+          id="editAnimalForm"
+          class="update-form-modern modal-form"
+          novalidate
+        >
+          <input type="hidden" id="editAnimalId" name="editAnimalId" />
+          <div class="form-group-modern">
+            <label for="editAnimalType" class="form-label-modern"
+              ><i class="fa-solid fa-cow"></i> Type</label
+            >
+            <select
+              id="editAnimalType"
+              name="editAnimalType"
+              class="form-input-modern"
+              required
+              aria-required="true"
+            ></select>
+            <div class="form-error" id="editAnimalTypeError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="editAnimalAmount" class="form-label-modern"
+              ><i class="fas fa-hashtag"></i> Amount</label
+            >
+            <input
+              type="number"
+              id="editAnimalAmount"
+              name="editAnimalAmount"
+              class="form-input-modern"
+              placeholder="e.g. 10"
+              min="1"
+              max="10000"
+              step="1"
+              required
+              aria-required="true"
+            />
+            <div class="form-error" id="editAnimalAmountError"></div>
+          </div>
+          <div class="form-group-modern">
+            <label for="editAnimalField" class="form-label-modern"
+              ><i class="fas fa-seedling"></i> Field (optional)</label
+            >
+            <select
+              id="editAnimalField"
+              name="editAnimalField"
+              class="form-input-modern"
+            ></select>
+            <div class="form-error" id="editAnimalFieldError"></div>
+          </div>
+          <button type="submit" class="btn btn-futuristic btn-compact">
+            <i class="fas fa-save"></i> Save Changes
+          </button>
+          <div class="form-error" id="editAnimalMessage"></div>
+        </form>
+      </div>
+    </div>
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal modal-centered" style="display: none">
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h3 id="confirmModalTitle">
+            <i class="fas fa-exclamation-triangle"></i> Confirm Action
+          </h3>
+          <button class="modal-close" id="closeConfirmModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="confirmModalMessage">Are you sure you want to proceed?</p>
+        </div>
+        <div
+          class="modal-footer"
+          style="display: flex; justify-content: flex-end; gap: 1rem"
+        >
+          <button class="btn btn-secondary" id="cancelConfirmModal">
+            Cancel
+          </button>
+          <button class="btn btn-danger" id="confirmConfirmModal">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Core Dependencies -->
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <!-- Services -->
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <!-- Components -->
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+    <!-- API Functions -->
+    <script src="/js/api.js"></script>
+    <!-- Utilities -->
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <!-- staff & Fields Page Logic -->
+    <script src="/js/pages/staff-fields.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("staff-fields");
+    </script>
+  </body>
+</html>
