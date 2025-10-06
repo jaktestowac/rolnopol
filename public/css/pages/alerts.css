@@ -540,3 +540,190 @@
   white-space: nowrap;
   clip-path: inset(50%);
 }
+
+/* -------------------------------------------------------------------------
+   Compact layout overrides
+   These overrides intentionally come last to reduce vertical whitespace and
+   make the alerts view denser on desktop & mobile without changing markup.
+   All values use rem units and existing design tokens where possible.
+--------------------------------------------------------------------------- */
+.alerts-page {
+  padding: 1.25rem 0.75rem;
+  max-width: 58rem; /* Slightly narrower for denser reading */
+}
+# Additional targeted compaction for upcoming,
+today & history sections #upcomingSection,
+#todaySection,
+#historySection {
+  margin-top: 0.75rem;
+}
+#upcomingSection .history-day,
+#todaySection .history-day {
+  margin-bottom: 0.5rem;
+}
+#upcomingSection .history-day-title,
+#todaySection .history-day-title {
+  padding: 0.5rem 0.65rem;
+  font-size: 0.8rem;
+}
+#upcomingSection .history-day-grid,
+#todaySection .history-day-grid {
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem 0.6rem;
+}
+
+#historySection .section-title {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 1.05rem;
+}
+#historySection .history-day {
+  margin-bottom: 0.6rem;
+}
+#historySection .history-day-title {
+  padding: 0.55rem 0.7rem;
+  font-size: 0.8rem;
+}
+#historySection .history-day-grid {
+  gap: 0.5rem;
+  padding: 0.55rem 0.55rem 0.65rem;
+}
+
+# Slightly smaller cards within the compact sections only #upcomingSection .alert-card,
+#todaySection .alert-card,
+#historySection .alert-card {
+  padding: 0.7rem 0.75rem;
+}
+#upcomingSection .alert-title,
+#todaySection .alert-title,
+#historySection .alert-title {
+  font-size: 0.95rem;
+}
+#upcomingSection .alert-message,
+#todaySection .alert-message,
+#historySection .alert-message {
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+#upcomingSection .badge,
+#todaySection .badge,
+#historySection .badge {
+  font-size: 0.6rem;
+  padding: 0.25rem 0.5rem;
+}
+
+# Minimize animation vertical displacement for denser feel #upcomingSection .alert-card,
+#todaySection .alert-card,
+#historySection .alert-card {
+  animation-duration: 0.12s;
+}
+
+# Smaller skeletons inside compact sections #upcomingSection .skeleton,
+#todaySection .skeleton,
+#historySection .skeleton {
+  height: 4.2rem;
+}
+
+.page-toolbar {
+  margin: 0.5rem 0 1.25rem 0;
+  padding: 0.75rem 1rem;
+  gap: 1rem;
+}
+
+.page-title h1 {
+  font-size: 1.25rem;
+}
+.page-title p {
+  font-size: 0.8rem;
+}
+
+.controls {
+  gap: 0.5rem;
+}
+.controls .input,
+.controls .select {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+}
+.controls .btn {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+.count-pill {
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  font-size: 0.7rem;
+}
+
+.alerts-grid {
+  gap: 0.6rem;
+}
+
+.alert-card {
+  padding: 0.85rem 1rem;
+  animation-duration: 0.15s;
+}
+
+.alert-head {
+  margin-bottom: 0.6rem;
+}
+.alert-title {
+  font-size: 1rem;
+  margin: 0 0 0.35rem 0;
+}
+.alert-category {
+  font-size: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+.alert-message {
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+.badge {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.65rem;
+}
+
+.history-day {
+  margin-bottom: 0.75rem;
+}
+.history-day-title {
+  padding: 0.65rem 0.9rem;
+  font-size: 0.9rem;
+}
+.history-day-grid {
+  gap: 0.6rem;
+  padding: 0.6rem 0.6rem 0.75rem;
+}
+
+.skeleton {
+  height: 5rem;
+}
+
+/* Tighter layout on larger screens: introduce 3-column history/alerts earlier */
+@media (min-width: 56rem) {
+  /* ~896px */
+  .alerts-grid,
+  .history-day-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Ultra-compact option if body gains a .compact-ui class (future-proof) */
+body.compact-ui .alert-card {
+  padding: 0.7rem 0.75rem;
+}
+body.compact-ui .controls .input,
+body.compact-ui .controls .select {
+  padding: 0.4rem 0.6rem;
+}
+body.compact-ui .controls .btn {
+  padding: 0.45rem 0.7rem;
+}
+body.compact-ui .alert-title {
+  font-size: 0.95rem;
+}
+body.compact-ui .alert-message {
+  font-size: 0.8rem;
+}
