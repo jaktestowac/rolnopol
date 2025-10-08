@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+bash bump-version.sh patch
+git add package.json app-data.json public/schema/openapi.json
