@@ -40,7 +40,7 @@ The application includes features such as logic, resource management, authorizat
 
 ## 🧪 Testing Scenarios & Challenges
 
-- **Authentication & Authorization**: JWT tokens, role-based access, session management
+- **Authentication & Authorization**: tokens, role-based access, session management
 - **API Testing**: CRUD operations, data validation, error handling, rate limiting
 - **Business Logic**: Financial transactions, marketplace workflows, resource management
 - **UI & Integration**: Web interfaces, real-time updates, end-to-end workflows
