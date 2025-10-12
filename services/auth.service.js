@@ -1,10 +1,10 @@
+const bcrypt = require("bcrypt");
 const UserDataSingleton = require("../data/user-data-singleton");
 const { generateToken } = require("../helpers/token.helpers");
 const {
   validateRegistrationData,
   validateLoginData,
 } = require("../helpers/validators");
-const { validatePassword } = require("../middleware/auth.middleware");
 const { loginExpiration } = require("../data/settings");
 const { logDebug, logError } = require("../helpers/logger-api");
 const financialService = require("./financial.service");
@@ -45,12 +45,16 @@ class AuthService {
       throw new Error("User with this email already exists");
     }
 
-    // Create user (password stored as plain text )
+    // Hash password using bcrypt
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create user with hashed password
     const newUser = await this.userDataInstance.createUser({
       // username is no longer used
       displayedName: trimmedDisplayedName,
       email,
-      password: password, // Plain text password
+      password: hashedPassword, // Hashed password
     });
 
     // Initialize financial account for the new user
@@ -115,8 +119,9 @@ class AuthService {
       throw new Error("Account is deactivated");
     }
 
-    // Verify password (plain text comparison )
-    if (!validatePassword(password, user.password)) {
+    // Verify password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       throw new Error("Invalid credentials");
     }
 

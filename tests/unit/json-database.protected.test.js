@@ -2,14 +2,8 @@ import { describe, it, expect } from "vitest";
 import path from "path";
 import fs from "fs/promises";
 
-// Use CommonJS require via dynamic import workaround for Vitest ESM
-const JSONDatabase =
-  (await import("../../../rolnopol-app-poc/data/json-database.js")).default ||
-  (await import("../../../rolnopol-app-poc/data/json-database.js"));
-
-// But our project uses CommonJS exports; provide a helper to require
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const JSONDatabaseCJS = require("../../data/json-database");
+// Import the JSONDatabase class using CommonJS require since the module exports using CommonJS
+const JSONDatabase = require("../../data/json-database");
 
 const tmpFile = path.join(__dirname, "../../_tmp/protected-db.json");
 
@@ -25,7 +19,7 @@ describe("JSONDatabase protected flag", () => {
       { id: 2, name: "locked", protected: true },
     ]);
 
-    const db = new JSONDatabaseCJS(tmpFile, []);
+    const db = new JSONDatabase(tmpFile, []);
     await db.initialize();
 
     await expect(
