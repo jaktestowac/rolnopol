@@ -132,19 +132,19 @@ function updateHeaderNav(username = "") {
   if (token && (isLogged === "true" || isLogged === true)) {
     // Logged in navigation
     nav.innerHTML = `
-      <li><a href="/" class="nav-link" title="Home" aria-label="Home"><i class="fas fa-home"></i><span class="nav-text">Home</span></a></li>
-      <li><a href="/staff-fields-main.html" class="nav-link" title="Staff & Fields Management" aria-label="Staff & Fields Management"><i class="fas fa-seedling"></i><span class="nav-text">Staff & Fields</span></a></li>
-      <li><a href="/financial.html" class="nav-link" title="Financial Tracking" aria-label="Financial Tracking"><i class="fas fa-coins"></i><span class="nav-text">Financial</span></a></li>
-      <li><a href="/marketplace.html" class="nav-link" title="Marketplace" aria-label="Marketplace"><i class="fas fa-store"></i><span class="nav-text">Marketplace</span></a></li>
-      <li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>
-      <li><a href="/alerts.html" class="nav-link" title="Alerts" aria-label="Alerts"><i class="fas fa-bell"></i><span class="nav-text">Alerts</span></a></li>
-      <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
-      <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
+      <li><a href="/" class="nav-link" title="Home" aria-label="Home" data-testid="nav-home"><i class="fas fa-home"></i><span class="nav-text">Home</span></a></li>
+      <li><a href="/staff-fields-main.html" class="nav-link" title="Staff & Fields Management" aria-label="Staff & Fields Management" data-testid="nav-staff-fields"><i class="fas fa-seedling"></i><span class="nav-text">Staff & Fields</span></a></li>
+      <li><a href="/financial.html" class="nav-link" title="Financial Tracking" aria-label="Financial Tracking" data-testid="nav-financial"><i class="fas fa-coins"></i><span class="nav-text">Financial</span></a></li>
+      <li><a href="/marketplace.html" class="nav-link" title="Marketplace" aria-label="Marketplace" data-testid="nav-marketplace"><i class="fas fa-store"></i><span class="nav-text">Marketplace</span></a></li>
+      <li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>
+      <li><a href="/alerts.html" class="nav-link" title="Alerts" aria-label="Alerts" data-testid="nav-alerts"><i class="fas fa-bell"></i><span class="nav-text">Alerts</span></a></li>
+      <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
+      <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li class="nav-user" >
-        <a href="/profile.html" class="nav-link" title="Profile" aria-label="Profile"><i class="fas fa-user"></i><span class="nav-text-user-name">Welcome, ${
+        <a href="/profile.html" class="nav-link" title="Profile" aria-label="Profile" data-testid="nav-profile"><i class="fas fa-user"></i><span class="nav-text-user-name">Welcome, ${
           username || "User"
         }</span></a>
-        <button id="logout-btn" class="btn btn-secondary btn-sm" title="Logout" aria-label="Logout"><i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span></button>
+        <button id="logout-btn" class="btn btn-secondary btn-sm" title="Logout" aria-label="Logout" data-testid="logout-btn"><i class="fas fa-sign-out-alt"></i><span class="nav-text">Logout</span></button>
       </li>
     `;
 
@@ -156,12 +156,12 @@ function updateHeaderNav(username = "") {
   } else {
     // Not logged in navigation
     nav.innerHTML = `
-      <li><a href="/" class="nav-link" title="Home" aria-label="Home"><i class="fas fa-home"></i><span class="nav-text">Home</span></a></li>
-      <li><a href="/alerts.html" class="nav-link" title="Alerts" aria-label="Alerts"><i class="fas fa-bell"></i><span class="nav-text">Alerts</span></a></li>
-      <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation"><i class="fas fa-book"></i><span class="nav-text">Documentation</span></a></li>
-      <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
-      <li><a href="/register.html" class="nav-link" title="Register" aria-label="Register"><i class="fas fa-user-plus"></i><span class="nav-text">Register</span></a></li>
-      <li><a href="/login.html" class="nav-link" title="Login" aria-label="Login"><i class="fas fa-sign-in-alt"></i><span class="nav-text">Login</span></a></li>
+      <li><a href="/" class="nav-link" title="Home" aria-label="Home" data-testid="nav-home"><i class="fas fa-home"></i><span class="nav-text">Home</span></a></li>
+      <li><a href="/alerts.html" class="nav-link" title="Alerts" aria-label="Alerts" data-testid="nav-alerts"><i class="fas fa-bell"></i><span class="nav-text">Alerts</span></a></li>
+      <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Documentation</span></a></li>
+      <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
+      <li><a href="/register.html" class="nav-link" title="Register" aria-label="Register" data-testid="nav-register"><i class="fas fa-user-plus"></i><span class="nav-text">Register</span></a></li>
+      <li><a href="/login.html" class="nav-link" title="Login" aria-label="Login" data-testid="nav-login"><i class="fas fa-sign-in-alt"></i><span class="nav-text">Login</span></a></li>
     `;
   }
 
