@@ -1,3 +1,7 @@
+# Ignore all files in the _tmp directory
+_tmp/
+
+
 # Dependencies
 node_modules/
 npm-debug.log*

@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt");
 const { formatResponseBody } = require("../helpers/response-helper");
 const { isUserLogged, getUserId } = require("../helpers/token.helpers");
 const { logDebug } = require("../helpers/logger-api");
@@ -97,10 +98,15 @@ const authenticateAdmin = (req, res, next) => {
 };
 
 /**
- * Simple password validation (no crypto, plain text )
+ * Password validation using bcrypt
  */
-const validatePassword = (inputPassword, storedPassword) => {
-  return inputPassword === storedPassword;
+const validatePassword = async (inputPassword, storedPassword) => {
+  try {
+    return await bcrypt.compare(inputPassword, storedPassword);
+  } catch (error) {
+    logDebug("Password validation error:", error);
+    return false;
+  }
 };
 
 module.exports = {
