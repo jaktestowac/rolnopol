@@ -14,7 +14,7 @@
   <!-- Dynamic Header Component -->
   <div id="header-component"></div>
 
-  <div class="container" style="margin-top: 0rem">
+  <div class="container" style="margin-top: 0rem" data-testid="register-container">
     <header class="header glass" style="
           display: flex;
           flex-direction: column;
@@ -57,38 +57,38 @@
     </header>
 
     <main class="main">
-      <div class="auth-form-container">
-        <div class="auth-form glass fade-in" style="box-shadow: 0 8px 32px 0 rgba(34, 197, 94, 0.1)">
+      <div class="auth-form-container" data-testid="auth-form-container">
+        <div class="auth-form glass fade-in" style="box-shadow: 0 8px 32px 0 rgba(34, 197, 94, 0.1)" data-testid="register-form-container">
           <h2 style="display: flex; align-items: center; gap: 0.5rem">
             <span class="bg-agri-gradient"><i class="fas fa-seedling"></i></span>
             Create Your User Account
           </h2>
-          <form id="registerForm">
+          <form id="registerForm" data-testid="register-form">
             <div class="form-group">
               <label for="email" class="form-label">Email</label>
-              <input type="email" id="email" name="email" class="form-input" required placeholder="Enter your email (e.g., john@example.com)" />
+              <input type="email" id="email" name="email" class="form-input" required placeholder="Enter your email (e.g., john@example.com)" data-testid="email-input" />
             </div>
             <div class="form-group">
               <label for="displayedName" class="form-label">Display Name <span style="color:#6a7b5e;font-weight:400">(optional)</span></label>
-              <input type="text" id="displayedName" name="displayedName" class="form-input" placeholder="Enter your display name (e.g., John Doe)" minlength="3" maxlength="20" />
+              <input type="text" id="displayedName" name="displayedName" class="form-input" placeholder="Enter your display name (e.g., John Doe)" minlength="3" maxlength="20" data-testid="display-name-input" />
             </div>
             <div class="form-group">
               <label for="password" class="form-label">Password</label>
-              <input type="password" id="password" name="password" class="form-input" required placeholder="Enter your password" minlength="3" />
+              <input type="password" id="password" name="password" class="form-input" required placeholder="Enter your password" minlength="3" data-testid="password-input" />
             </div>
 
-            <button type="submit" class="btn btn-agri btn-full">
+            <button type="submit" class="btn btn-agri btn-full" data-testid="register-submit-btn">
               Create Account
             </button>
           </form>
 
-          <div id="message" class="message"></div>
+          <div id="message" class="message" data-testid="register-message"></div>
 
-          <div class="auth-links">
+          <div class="auth-links" data-testid="auth-links">
             <p>
-              Already have an account? <a href="/login.html">Login here</a>
+              Already have an account? <a href="/login.html" data-testid="login-link">Login here</a>
             </p>
-            <p><a href="/">Back to Home</a></p>
+            <p><a href="/" data-testid="home-link">Back to Home</a></p>
           </div>
         </div>
 
