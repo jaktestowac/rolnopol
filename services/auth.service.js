@@ -45,7 +45,7 @@ class AuthService {
       throw new Error("User with this email already exists");
     }
 
-    // Create user (password stored as plain text )
+    // Create user (password stored as plain text)
     const newUser = await this.userDataInstance.createUser({
       // username is no longer used
       displayedName: trimmedDisplayedName,
@@ -115,7 +115,7 @@ class AuthService {
       throw new Error("Account is deactivated");
     }
 
-    // Verify password (plain text comparison )
+    // Verify password (plain text comparison)
     if (!validatePassword(password, user.password)) {
       throw new Error("Invalid credentials");
     }

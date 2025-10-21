@@ -1,44 +1,23 @@
+const jwt = require("jsonwebtoken");
 const { logDebug, logError } = require("./logger-api");
 const {
   ADMIN_USERNAME,
   loginExpiration,
   loginExpirationAdmin,
+  JWT_SECRET,
 } = require("../data/settings");
 
 /**
- * Token generation and validation utilities using base64 encoding ()
- * Enhanced with backend token storage for security verification
+ * Token generation and validation utilities using JWT
+ * Enhanced with backend token storage for security verification and revocation
  */
 
-// In-memory token storage for security verification
+// In-memory token storage for security verification and revocation
 const tokenStorage = new Map();
 
-// Base64 encoding function
-function base64Encode(text) {
-  return Buffer.from(text).toString("base64");
-}
-
-// Base64 decoding function
-function base64Decode(encodedText) {
-  try {
-    return Buffer.from(encodedText, "base64").toString("utf8");
-  } catch (e) {
-    logDebug("base64Decode: error:", { encodedText });
-  }
-  return null;
-}
-
-function addToCurrentDateTime(expiration) {
-  let currentDate = new Date();
-
-  if (expiration.minutes) {
-    currentDate.setMinutes(currentDate.getMinutes() + expiration.minutes);
-  }
-  if (expiration.hours) {
-    currentDate.setHours(currentDate.getHours() + expiration.hours);
-  }
-
-  return currentDate;
+// Ensure JWT_SECRET is available
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET must be defined in settings.js");
 }
 
 function isDateInFuture(isoStringDate) {
@@ -53,9 +32,23 @@ function isDateInFuture(isoStringDate) {
 function cleanupExpiredStoredTokens() {
   let removedCount = 0;
   for (const [userId, tokenData] of tokenStorage.entries()) {
+    // Check if stored expiration date has passed
     if (!isDateInFuture(tokenData.expirationDate)) {
       tokenStorage.delete(userId);
       removedCount++;
+    } else {
+      // Also check if JWT token itself is expired
+      if (!JWT_SECRET) {
+        logDebug("JWT_SECRET is not available, skipping JWT verification");
+        continue;
+      }
+      try {
+        jwt.verify(tokenData.token, JWT_SECRET);
+      } catch (error) {
+        // JWT is expired, remove from storage
+        tokenStorage.delete(userId);
+        removedCount++;
+      }
     }
   }
   if (removedCount > 0) {
@@ -161,43 +154,83 @@ function getUserTokenFromStorage(userId) {
 }
 
 /**
- * Generate user token
+ * Generate user JWT token
  */
 function generateToken(userId, expiration = { hours: 24 }) {
-  let date = addToCurrentDateTime(expiration);
+  const expiresIn = expiration.hours
+    ? `${expiration.hours}h`
+    : expiration.minutes
+    ? `${expiration.minutes}m`
+    : "24h";
 
-  // Create a string with userId, expiration date, and current timestamp
-  // Format: "userId ISODateString currentTimestamp additionalInfo"
-  const string = `${userId} ${date.toISOString()} ${Math.floor(Date.now() / 1000)} Nice_try_to_decode!`;
-  const token = base64Encode(string);
+  const tokenPayload = {
+    userId,
+    type: "user",
+    iat: Math.floor(Date.now() / 1000),
+  };
 
-  // Store token in backend storage for security verification
-  storeToken(token, userId, date.toISOString(), false);
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not available");
+  }
+  const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn });
 
-  logDebug("generateToken:", { string, userId, expiration });
+  // Store token in backend storage for security verification and revocation
+  const expirationDate = new Date();
+  if (expiration.hours) {
+    expirationDate.setHours(expirationDate.getHours() + expiration.hours);
+  } else if (expiration.minutes) {
+    expirationDate.setMinutes(expirationDate.getMinutes() + expiration.minutes);
+  } else {
+    expirationDate.setHours(expirationDate.getHours() + 24); // Default to 24 hours
+  }
+
+  storeToken(token, userId, expirationDate.toISOString(), false);
+
+  logDebug("generateToken:", { userId, expiration: expiresIn });
 
   return token;
 }
 
 /**
- * Generate admin-specific token with 1-hour expiration
+ * Generate admin-specific JWT token with 1-hour expiration
  */
 function generateAdminToken() {
-  let date = addToCurrentDateTime(loginExpirationAdmin);
+  const expiresIn = loginExpirationAdmin.hours
+    ? `${loginExpirationAdmin.hours}h`
+    : loginExpirationAdmin.minutes
+    ? `${loginExpirationAdmin.minutes}m`
+    : "1h";
 
-  const string = `${ADMIN_USERNAME} ${date.toISOString()} ${Math.floor(Date.now() / 1000)} admin`;
-  const token = base64Encode(string);
+  const tokenPayload = {
+    userId: ADMIN_USERNAME,
+    type: "admin",
+    iat: Math.floor(Date.now() / 1000),
+  };
 
-  // Store admin token in backend storage for security verification
-  storeToken(token, ADMIN_USERNAME, date.toISOString(), true);
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not available");
+  }
+  const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn });
 
-  logDebug("generateAdminToken:", { string, date });
+  // Store admin token in backend storage for security verification and revocation
+  const expirationDate = new Date();
+  if (loginExpirationAdmin.hours) {
+    expirationDate.setHours(expirationDate.getHours() + loginExpirationAdmin.hours);
+  } else if (loginExpirationAdmin.minutes) {
+    expirationDate.setMinutes(expirationDate.getMinutes() + loginExpirationAdmin.minutes);
+  } else {
+    expirationDate.setHours(expirationDate.getHours() + 1); // Default to 1 hour
+  }
+
+  storeToken(token, ADMIN_USERNAME, expirationDate.toISOString(), true);
+
+  logDebug("generateAdminToken:", { adminUsername: ADMIN_USERNAME, expiration: expiresIn });
 
   return token;
 }
 
 /**
- * Get user ID from token
+ * Get user ID from JWT token
  */
 function getUserId(token) {
   if (!token) {
@@ -205,16 +238,16 @@ function getUserId(token) {
     return undefined;
   }
 
-  const string = base64Decode(token);
-  if (!string) {
-    logDebug("getUserId: error: token invalid", { token });
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not available");
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded.userId;
+  } catch (error) {
+    logDebug("getUserId: error: token invalid", { token, error: error.message });
     return undefined;
   }
-
-  const parts = string.split(" ");
-  const userId = parts[0]?.trim();
-
-  return userId;
 }
 
 /**
@@ -232,33 +265,26 @@ function isUserLogged(token) {
     return false;
   }
 
-  const string = base64Decode(token);
-  if (!string) {
-    logDebug("isUserLogged: error: token invalid", { token });
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not available");
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Check if it's a user token (not admin)
+    if (decoded.type !== "user") {
+      logDebug("isUserLogged: not a user token", { token });
+      removeTokenFromStorage(token);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    logDebug("isUserLogged: error: token invalid", { token, error: error.message });
     // Remove invalid token from storage
     removeTokenFromStorage(token);
     return false;
   }
-
-  const parts = string.split(" ");
-  const userId = parts[0];
-  const dateStr = parts[1];
-
-  if (!userId || userId.length < 1) {
-    logDebug("isUserLogged: invalid userId", { userId });
-    // Remove invalid token from storage
-    removeTokenFromStorage(token);
-    return false;
-  }
-
-  if (!isDateInFuture(dateStr)) {
-    logDebug("isUserLogged:isDateInFuture: not.", { dateStr });
-    // Remove expired token from storage
-    removeTokenFromStorage(token);
-    return false;
-  }
-
-  return true;
 }
 
 /**
@@ -285,44 +311,26 @@ function isAdminToken(token) {
     return false;
   }
 
-  const string = base64Decode(token);
-  if (!string) {
-    logDebug("isAdminToken: error: token invalid", { token });
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not available");
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Check if it's an admin token
+    if (decoded.type !== "admin" || decoded.userId !== ADMIN_USERNAME) {
+      logDebug("isAdminToken: not a valid admin token", { token });
+      removeTokenFromStorage(token);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    logDebug("isAdminToken: error: token invalid", { token, error: error.message });
     // Remove invalid token from storage
     removeTokenFromStorage(token);
     return false;
   }
-
-  const parts = string.split(" ");
-
-  // Check if it has at least 4 parts and the last part is "admin"
-  if (parts.length < 4 || parts[3] !== "admin") {
-    logDebug("isAdminToken: not an admin token", { parts });
-    // Remove invalid token from storage
-    removeTokenFromStorage(token);
-    return false;
-  }
-
-  const userId = parts[0];
-  const dateStr = parts[1];
-
-  // Verify it's the admin username (admin tokens still use username format)
-  if (userId !== ADMIN_USERNAME) {
-    logDebug("isAdminToken: incorrect admin username", { userId });
-    // Remove invalid token from storage
-    removeTokenFromStorage(token);
-    return false;
-  }
-
-  // Verify token is not expired
-  if (!isDateInFuture(dateStr)) {
-    logDebug("isAdminToken: token expired", { dateStr });
-    // Remove expired token from storage
-    removeTokenFromStorage(token);
-    return false;
-  }
-
-  return true;
 }
 
 /**
@@ -348,17 +356,16 @@ function verifyToken(token) {
  * Get token expiration date as ISO string
  */
 function getTokenExpiration(token) {
-  const string = base64Decode(token);
-  if (!string) {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not available");
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return new Date(decoded.exp * 1000).toISOString();
+  } catch (error) {
+    logDebug("getTokenExpiration: error: token invalid", { token, error: error.message });
     return null;
   }
-
-  const parts = string.split(" ");
-  if (parts.length < 2) {
-    return null;
-  }
-
-  return parts[1]; // The ISO date string
 }
 
 /**
@@ -498,6 +505,4 @@ module.exports = {
   hasActiveToken,
   getUserCurrentToken,
   clearAllTokens,
-  base64Encode,
-  base64Decode,
 };

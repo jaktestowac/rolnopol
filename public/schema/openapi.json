@@ -175,19 +175,22 @@
           "email": {
             "type": "string",
             "format": "email",
-            "description": "Email for login"
+            "description": "Email for login",
+            "example": "newuser@example.com"
           },
           "password": {
             "type": "string",
             "description": "User password",
             "minLength": 3,
-            "maxLength": 50
+            "maxLength": 50,
+            "example": "newPassword123"
           },
           "displayedName": {
             "type": "string",
             "description": "Display name (optional)",
             "minLength": 3,
-            "maxLength": 20
+            "maxLength": 20,
+            "example": "New User"
           }
         }
       },
@@ -198,11 +201,13 @@
           "email": {
             "type": "string",
             "format": "email",
-            "description": "Email for login"
+            "description": "Email for login",
+            "example": "demo@example.com"
           },
           "password": {
             "type": "string",
-            "description": "User password"
+            "description": "User password",
+            "example": "demo123"
           }
         }
       },

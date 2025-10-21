@@ -46,7 +46,26 @@ describe("Marketplace API", () => {
 
     // Create a field for the test user
     const fieldRes = await request(app).post("/api/v1/fields").set("token", authToken).send({ name: "Test Field", area: 10 });
+
+    if (!fieldRes.body.data || !fieldRes.body.data.id) {
+      console.error("Field creation failed:", fieldRes.status, fieldRes.body);
+      throw new Error("Failed to create test field - no field ID returned");
+    }
+
     const fieldId = fieldRes.body.data.id;
+
+    // Unassign any animals from the field before creating the offer
+    // (since we can't sell fields with assigned animals)
+    const animalsRes = await request(app).get("/api/v1/animals").set("token", authToken);
+    if (animalsRes.status === 200 && animalsRes.body.data && Array.isArray(animalsRes.body.data.animals)) {
+      const fieldAnimals = animalsRes.body.data.animals.filter(animal => animal.fieldId === fieldId);
+      for (const animal of fieldAnimals) {
+        await request(app)
+          .put(`/api/v1/animals/${animal.id}`)
+          .set("token", authToken)
+          .send({ ...animal, fieldId: 0 });
+      }
+    }
 
     // Create a valid test offer for a field
     testOffer = {

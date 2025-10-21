@@ -97,7 +97,7 @@ const authenticateAdmin = (req, res, next) => {
 };
 
 /**
- * Simple password validation (no crypto, plain text )
+ * Simple password validation (no crypto, plain text)
  */
 const validatePassword = (inputPassword, storedPassword) => {
   return inputPassword === storedPassword;
