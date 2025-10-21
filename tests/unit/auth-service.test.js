@@ -67,14 +67,10 @@ describe("auth.service", () => {
   });
 
   it("should login user successfully", async () => {
-    // Hash the password for the mock user
-    const bcrypt = require("bcrypt");
-    const hashedPassword = await bcrypt.hash("pass", 12);
-
     vi.spyOn(authService.userDataInstance, "findUserByEmail").mockResolvedValue({
       id: 1,
       email: "user@example.com",
-      password: hashedPassword,
+      password: "pass",
       isActive: true,
     });
     vi.spyOn(authService.userDataInstance, "updateUserLastLogin").mockResolvedValue();
@@ -87,14 +83,10 @@ describe("auth.service", () => {
   });
 
   it("should throw error for password mismatch", async () => {
-    // Hash a different password for the mock user
-    const bcrypt = require("bcrypt");
-    const hashedPassword = await bcrypt.hash("other", 12);
-
     vi.spyOn(authService.userDataInstance, "findUserByEmail").mockResolvedValue({
       id: 1,
       email: "user@example.com",
-      password: hashedPassword,
+      password: "other",
       isActive: true,
     });
     await expect(
