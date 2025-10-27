@@ -16,6 +16,7 @@ const settings = {
   RATE_LIMIT_MAX_REQUESTS: 100, // requests per window
   ADMIN_LOGIN_MAX_ATTEMPTS: 3,
   ADMIN_LOGIN_BLOCK_DURATION_MS: 60 * 1000, // 1 minute
+  JWT_SECRET: process.env.JWT_SECRET || "your-super-secret-jwt-key-change-this-in-production",
   FORBIDDEN_USERNAMES: [
     "admin",
     "superadmin",
