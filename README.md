@@ -89,6 +89,23 @@ Steps:
 
 The application will be available at `http://localhost:3000`
 
+### Demo Users & Login Credentials
+
+For testing and demonstration purposes, the application includes several pre-configured demo users. You can use these credentials to explore different features:
+
+| Email | Password |
+|-------|----------|
+| `demo@example.com` | `demo123` |
+| `test@example.com` | `brownPass123` |
+| `john.doe@example.com` | `johndoe123` |
+| `jane.smith@example.com` | `janesmith456` |
+| `developer@example.com` | `dev123456` |
+| `government@example.com` | `gov123456` |
+| `Rolai-fh9au703jdDWw1dksah-3r1@rolai.rolai` | `ai123456` |
+| `emptyuser@rolnopol.demo.pl` | `demoPass123` |
+
+**Note:** These are demo credentials for local development and testing only. Passwords are stored in plain text for easier testing and account management.
+
 ### Update version
 
 #### If You are using zip package
