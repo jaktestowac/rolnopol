@@ -93,16 +93,14 @@ The application will be available at `http://localhost:3000`
 
 For testing and demonstration purposes, the application includes several pre-configured demo users. You can use these credentials to explore different features:
 
-| Email | Password |
-|-------|----------|
-| `demo@example.com` | `demo123` |
-| `test@example.com` | `brownPass123` |
-| `john.doe@example.com` | `johndoe123` |
-| `jane.smith@example.com` | `janesmith456` |
-| `developer@example.com` | `dev123456` |
-| `government@example.com` | `gov123456` |
-| `Rolai-fh9au703jdDWw1dksah-3r1@rolai.rolai` | `ai123456` |
-| `emptyuser@rolnopol.demo.pl` | `demoPass123` |
+| Email                                       | Password       |
+| ------------------------------------------- | -------------- |
+| `demo@example.com`                          | `demo123`      |
+| `test@example.com`                          | `brownPass123` |
+| `john.doe@example.com`                      | `johndoe123`   |
+| `jane.smith@example.com`                    | `janesmith456` |
+| `developer@example.com`                     | `dev123456`    |
+| `emptyuser@rolnopol.demo.pl`                | `demoPass123`  |
 
 **Note:** These are demo credentials for local development and testing only. Passwords are stored in plain text for easier testing and account management.
 
@@ -240,6 +238,20 @@ We have gathered a collection of resources to help you learn and master Playwrig
 ## 🇬🇧 English Resources
 
 - [VS Code Extensions](https://marketplace.visualstudio.com/publishers/jaktestowac-pl) - Our free Playwright plugins
+
+### AI_Testers
+
+<div align="center">
+<a href="https://aitesters.pl">
+<img src="./assets/aitesters-header-photo.jpg" alt="AI Testers Logo" height="400"/>
+</a>
+</div>
+
+Gain an edge by combining AI knowledge with the most popular tools in the IT market.  
+We'll show you how to accelerate with AI and build a professional test automation framework. 😉
+
+- [AI_Testers](https://aitesters.pl) - Main page about AI_Testers Program
+- [AI_Testers LinkedIn](https://www.linkedin.com/company/aitesters) - Follow us on LinkedIn
 
 ---
 
