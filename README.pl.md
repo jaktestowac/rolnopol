@@ -88,7 +88,30 @@ Kroki:
 
 Aplikacja będzie dostępna pod adresem `http://localhost:3000`
 
-### Aktualizacja wersji
+### Skrypty startowe
+
+Dla wygody projekt zawiera kilka skryptów do uruchamiania aplikacji w różnych środowiskach. Skrypty te automatycznie przechodzą do katalogu głównego projektu i utrzymują okno terminala otwarte w przypadku zatrzymania lub awarii aplikacji.
+
+- **Windows (CMD)**: Uruchom `start.bat`
+- **PowerShell**: Uruchom `.\start.ps1`
+- **Linux/macOS (Bash)**: Uruchom `./start.sh`
+- **Linux/macOS (Zsh)**: Uruchom `./start.zsh`
+
+Więcej szczegółów znajdziesz w pliku [START_SCRIPTS.md](./START_SCRIPTS.md).
+
+### Konta demonstracyjne i dane logowania
+
+Do celów testowych i demonstracyjnych aplikacja zawiera kilka wstępnie skonfigurowanych kont użytkowników:
+
+| Email                    | Hasło          | Rola            |
+| ------------------------ | -------------- | --------------- |
+| `demo@example.com`       | `demo123`      | Użytkownik Demo |
+| `test@example.com`       | `brownPass123` | John Brown      |
+| `john.doe@example.com`   | `johndoe123`   | John Doe        |
+| `jane.smith@example.com` | `janesmith456` | Jane Smith      |
+| `developer@example.com`  | `dev123456`    | Deweloper       |
+
+**Uwaga:** Są to dane demonstracyjne wyłącznie do lokalnego rozwoju i testowania. Hasła są przechowywane w formacie tekstowym (plain text) dla ułatwienia testów.
 
 #### Jeśli używasz pakietu zip
 

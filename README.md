@@ -89,18 +89,29 @@ Steps:
 
 The application will be available at `http://localhost:3000`
 
+### Startup Scripts
+
+For convenience, the project includes several scripts to start the application in different environments. These scripts automatically navigate to the project root and keep the terminal window open if the application stops or crashes.
+
+- **Windows (CMD)**: Run `start.bat`
+- **PowerShell**: Run `.\start.ps1`
+- **Linux/macOS (Bash)**: Run `./start.sh`
+- **Linux/macOS (Zsh)**: Run `./start.zsh`
+
+For more details, see [START_SCRIPTS.md](./START_SCRIPTS.md).
+
 ### Demo Users & Login Credentials
 
 For testing and demonstration purposes, the application includes several pre-configured demo users. You can use these credentials to explore different features:
 
-| Email                                       | Password       |
-| ------------------------------------------- | -------------- |
-| `demo@example.com`                          | `demo123`      |
-| `test@example.com`                          | `brownPass123` |
-| `john.doe@example.com`                      | `johndoe123`   |
-| `jane.smith@example.com`                    | `janesmith456` |
-| `developer@example.com`                     | `dev123456`    |
-| `emptyuser@rolnopol.demo.pl`                | `demoPass123`  |
+| Email                        | Password       |
+| ---------------------------- | -------------- |
+| `demo@example.com`           | `demo123`      |
+| `test@example.com`           | `brownPass123` |
+| `john.doe@example.com`       | `johndoe123`   |
+| `jane.smith@example.com`     | `janesmith456` |
+| `developer@example.com`      | `dev123456`    |
+| `emptyuser@rolnopol.demo.pl` | `demoPass123`  |
 
 **Note:** These are demo credentials for local development and testing only. Passwords are stored in plain text for easier testing and account management.
 
