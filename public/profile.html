@@ -12,7 +12,6 @@
 
 <body class="bg-agri-pattern">
   <!-- Dynamic Header Component -->
-  <div id="header-component"></div>
   <div id="header-component" data-testid="header-component"></div>
 
   <div class="container" style="margin-top: 0rem; padding: 1rem" data-testid="profile-container">
@@ -108,238 +107,234 @@
         </div>
 
         <!-- Profile Content -->
-        <div id="profileContent" style="display: none">
-          <div id="profileContent" style="display: none" data-testid="profile-content">
-            <div class="profile-grid-modern">
-              <!-- Profile Information Card -->
-              <div class="profile-card-modern futuristic-card">
-                <div class="card-header-modern futuristic" style="
+        <div id="profileContent" style="display: none" data-testid="profile-content">
+          <div class="profile-grid-modern">
+            <!-- Profile Information Card -->
+            <div class="profile-card-modern futuristic-card">
+              <div class="card-header-modern futuristic" style="
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
                     gap: 1rem;
                   ">
-                  <h3 style="
+                <h3 style="
                       margin: 0;
                       display: flex;
                       align-items: center;
                       gap: 0.5rem;
                     ">
-                    <i class="fas fa-info-circle"></i>
-                    Profile Information
-                  </h3>
-                  <button id="editProfileInfoBtn" class="btn btn-compact btn-outline btn-futuristic" aria-label="Edit profile information" title="Edit profile information">
-                    <i class="fas fa-pencil-alt"></i>
-                    Edit
-                  </button>
-                </div>
-                <div class="card-content-modern">
-                  <div class="info-grid-modern">
-                    <div class="info-item-modern">
-                      <div class="info-label-modern">
-                        <i class="fas fa-id-card"></i>
-                        User ID
-                      </div>
-                      <div class="info-value-modern" id="userId" data-testid="user-id">-</div>
+                  <i class="fas fa-info-circle"></i>
+                  Profile Information
+                </h3>
+                <button id="editProfileInfoBtn" class="btn btn-compact btn-outline btn-futuristic" aria-label="Edit profile information" title="Edit profile information">
+                  <i class="fas fa-pencil-alt"></i>
+                  Edit
+                </button>
+              </div>
+              <div class="card-content-modern">
+                <div class="info-grid-modern">
+                  <div class="info-item-modern">
+                    <div class="info-label-modern">
+                      <i class="fas fa-id-card"></i>
+                      User ID
                     </div>
-                    <div class="info-item-modern">
-                      <div class="info-label-modern">
-                        <i class="fas fa-user"></i>
-                        Display Name
-                      </div>
-                      <div class="info-value-modern" id="displayedName" data-testid="displayed-name">-</div>
-                      <div class="edit-field-modern" id="editDisplayedNameGroup" style="display: none; margin-top: 0.5rem">
-                        <input type="text" id="inlineDisplayedName" class="form-input-modern" placeholder="Enter display name" minlength="3" maxlength="20" aria-label="Display name" />
-                        <div class="form-help-modern">
-                          <i class="fas fa-info-circle"></i> 3-20 characters;
-                          letters, numbers, spaces, -, _
-                        </div>
-                        <div class="form-error hide" id="inlineDisplayedNameError" role="alert"></div>
-                      </div>
+                    <div class="info-value-modern" id="userId" data-testid="user-id">-</div>
+                  </div>
+                  <div class="info-item-modern">
+                    <div class="info-label-modern">
+                      <i class="fas fa-user"></i>
+                      Display Name
                     </div>
-                    <div class="info-item-modern">
-                      <div class="info-label-modern">
-                        <i class="fas fa-envelope"></i>
-                        Email Address
+                    <div class="info-value-modern" id="displayedName" data-testid="displayed-name">-</div>
+                    <div class="edit-field-modern" id="editDisplayedNameGroup" style="display: none; margin-top: 0.5rem">
+                      <input type="text" id="inlineDisplayedName" class="form-input-modern" placeholder="Enter display name" minlength="3" maxlength="20" aria-label="Display name" />
+                      <div class="form-help-modern">
+                        <i class="fas fa-info-circle"></i> 3-20 characters;
+                        letters, numbers, spaces, -, _
                       </div>
-                      <div class="info-value-modern" id="email" data-testid="email-value">-</div>
-                      <div class="edit-field-modern" id="editEmailGroup" style="display: none; margin-top: 0.5rem">
-                        <input type="email" id="inlineEmail" class="form-input-modern" placeholder="Enter email address" aria-label="Email address" />
-                        <div class="form-help-modern">
-                          <i class="fas fa-info-circle"></i> Leave empty to keep
-                          current email
-                        </div>
-                        <div class="form-error hide" id="inlineEmailError" role="alert"></div>
-                      </div>
-                    </div>
-                    <div class="info-item-modern">
-                      <div class="info-label-modern">
-                        <i class="fas fa-calendar-plus"></i>
-                        Account Created
-                      </div>
-                      <div class="info-value-modern" id="createdAt" data-testid="created-at">-</div>
-                    </div>
-                    <div class="info-item-modern">
-                      <div class="info-label-modern">
-                        <i class="fas fa-clock"></i>
-                        Last Login
-                      </div>
-                      <div class="info-value-modern" id="lastLogin" data-testid="last-login">-</div>
+                      <div class="form-error hide" id="inlineDisplayedNameError" role="alert"></div>
                     </div>
                   </div>
-                  <div id="inlineEditActions" style="
+                  <div class="info-item-modern">
+                    <div class="info-label-modern">
+                      <i class="fas fa-envelope"></i>
+                      Email Address
+                    </div>
+                    <div class="info-value-modern" id="email" data-testid="email-value">-</div>
+                    <div class="edit-field-modern" id="editEmailGroup" style="display: none; margin-top: 0.5rem">
+                      <input type="email" id="inlineEmail" class="form-input-modern" placeholder="Enter email address" aria-label="Email address" />
+                      <div class="form-help-modern">
+                        <i class="fas fa-info-circle"></i> Leave empty to keep
+                        current email
+                      </div>
+                      <div class="form-error hide" id="inlineEmailError" role="alert"></div>
+                    </div>
+                  </div>
+                  <div class="info-item-modern">
+                    <div class="info-label-modern">
+                      <i class="fas fa-calendar-plus"></i>
+                      Account Created
+                    </div>
+                    <div class="info-value-modern" id="createdAt" data-testid="created-at">-</div>
+                  </div>
+                  <div class="info-item-modern">
+                    <div class="info-label-modern">
+                      <i class="fas fa-clock"></i>
+                      Last Login
+                    </div>
+                    <div class="info-value-modern" id="lastLogin" data-testid="last-login">-</div>
+                  </div>
+                </div>
+                <div id="inlineEditActions" style="
                       display: none;
                       margin-top: 1rem;
                       gap: 0.75rem;
                       justify-content: flex-end;
                     ">
-                    <div id="inlineEditMessage" class="message-modern" style="display: none; margin-right: auto"></div>
-                    <button id="editProfileCancel" class="btn btn-compact btn-outline btn-earth" type="button" data-testid="edit-profile-cancel">
-                      <i class="fas fa-times"></i>
-                      Cancel
-                    </button>
-                    <button id="editProfileSave" class="btn btn-compact btn-futuristic" type="button" data-testid="edit-profile-save">
-                      <i class="fas fa-save"></i>
-                      Save
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Update Profile Card -->
-              <div class="profile-card-modern futuristic-card">
-                <div class="card-header-modern futuristic">
-                  <h3>
-                    <i class="fas fa-edit"></i>
-                    Update Profile
-                  </h3>
-                </div>
-                <div class="card-content-modern">
-                  <form id="updateProfileForm" class="update-form-modern">
-                    <div class="form-group-modern">
-                      <label for="newDisplayedName" class="form-label-modern">
-                        <i class="fas fa-user"></i>
-                        Display Name
-                      </label>
-                      <input type="text" id="newDisplayedName" name="newDisplayedName" class="form-input-modern" placeholder="Enter your display name" minlength="3" maxlength="20" required data-testid="new-displayed-name-input" />
-                      <div class="form-meta-modern">
-                        <div class="form-help-modern">
-                          <i class="fas fa-info-circle"></i>
-                          3-20 characters
-                        </div>
-                        <div class="char-counter-modern">
-                          <span class="current" id="displayedNameCharCount">0</span>/20
-                        </div>
-                      </div>
-                      <div class="form-error hide" id="displayedNameError" data-testid="new-displayed-name-error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <span id="displayedNameErrorText"></span>
-                      </div>
-                      <div class="form-success hide" id="displayedNameSuccess" data-testid="new-displayed-name-success">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Display name is valid</span>
-                      </div>
-                    </div>
-
-                    <div class="form-group-modern">
-                      <label for="newPassword" class="form-label-modern">
-                        <i class="fas fa-lock"></i>
-                        New Password
-                      </label>
-                      <input type="password" id="newPassword" name="newPassword" class="form-input-modern" placeholder="Leave blank to keep current" minlength="3" maxlength="50" data-testid="new-password-input" />
-                      <div class="form-meta-modern">
-                        <div class="form-help-modern">
-                          <i class="fas fa-shield-alt"></i>
-                          Min 3 characters
-                        </div>
-                        <div class="char-counter-modern">
-                          <span class="current" id="passwordCharCount">0</span>/50
-                        </div>
-                      </div>
-                      <div class="form-error hide" id="passwordError" data-testid="new-password-error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <span id="passwordErrorText"></span>
-                      </div>
-                      <div class="form-success hide" id="passwordSuccess" data-testid="new-password-success">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Password is valid</span>
-                      </div>
-                    </div>
-
-                    <div class="form-group-modern">
-                      <label for="confirmPassword" class="form-label-modern">
-                        <i class="fas fa-lock"></i>
-                        Confirm Password
-                      </label>
-                      <input type="password" id="confirmPassword" name="confirmPassword" class="form-input-modern" placeholder="Confirm your new password" minlength="3" maxlength="50" data-testid="confirm-password-input" />
-                      <div class="form-meta-modern">
-                        <div class="form-help-modern">
-                          <i class="fas fa-shield-alt"></i>
-                          Re-enter password
-                        </div>
-                        <div class="char-counter-modern">
-                          <span class="current" id="confirmPasswordCharCount">0</span>/50
-                        </div>
-                      </div>
-                      <div class="form-error hide" id="confirmPasswordError" data-testid="confirm-password-error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <span id="confirmPasswordErrorText"></span>
-                      </div>
-                      <div class="form-success hide" id="confirmPasswordSuccess" data-testid="confirm-password-success">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Passwords match</span>
-                      </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-futuristic btn-full-modern" data-testid="update-profile-submit-btn">
-                      <i class="fas fa-save"></i>&nbsp;Save Changes
-                    </button>
-                  </form>
-
-                  <div id="updateMessage" class="message-modern"></div>
-                </div>
-              </div>
-
-              <!-- Danger Zone -->
-              <div class="danger-zone-modern glass">
-                <div class="card-header-modern danger-header">
-                  <h3>
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Danger Zone
-                  </h3>
-                </div>
-                <div class="card-content-modern">
-                  <div class="danger-warning-modern">
-                    <div class="danger-content-modern">
-                      <h4>Delete Account</h4>
-                      <p>
-                        Permanently delete your account and all data. This
-                        action cannot be undone.
-                      </p>
-                      <button id="deleteAccountBtn" class="btn btn-danger btn-compact" data-testid="delete-account-btn">
-                        <i class="fas fa-trash"></i>
-                        Delete Account
-                      </button>
-                    </div>
-                  </div>
+                  <div id="inlineEditMessage" class="message-modern" style="display: none; margin-right: auto"></div>
+                  <button id="editProfileCancel" class="btn btn-compact btn-outline btn-earth" type="button" data-testid="edit-profile-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                  </button>
+                  <button id="editProfileSave" class="btn btn-compact btn-futuristic" type="button" data-testid="edit-profile-save">
+                    <i class="fas fa-save"></i>
+                    Save
+                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="quick-actions-modern">
-              <a href="/staff-fields-main.html" class="btn btn-compact btn-futuristic"><i class="fas fa-link"></i> Staff & Fields Management</a>
-              <a href="/" class="btn btn-compact btn-earth" data-testid="home-link">
-                <i class="fas fa-home"></i>
-                Home
-              </a>
-              <button class="btn btn-compact btn-outline btn-futuristic" onclick="location.reload()" data-testid="refresh-profile-btn">
-                <i class="fas fa-sync-alt"></i>
-                Refresh
-              </button>
+            <!-- Update Profile Card -->
+            <div class="profile-card-modern futuristic-card">
+              <div class="card-header-modern futuristic">
+                <h3>
+                  <i class="fas fa-edit"></i>
+                  Update Profile
+                </h3>
+              </div>
+              <div class="card-content-modern">
+                <form id="updateProfileForm" class="update-form-modern">
+                  <div class="form-group-modern">
+                    <label for="newDisplayedName" class="form-label-modern">
+                      <i class="fas fa-user"></i>
+                      Display Name
+                    </label>
+                    <input type="text" id="newDisplayedName" name="newDisplayedName" class="form-input-modern" placeholder="Enter your display name" minlength="3" maxlength="20" required data-testid="new-displayed-name-input" />
+                    <div class="form-meta-modern">
+                      <div class="form-help-modern">
+                        <i class="fas fa-info-circle"></i>
+                        3-20 characters
+                      </div>
+                      <div class="char-counter-modern">
+                        <span class="current" id="displayedNameCharCount">0</span>/20
+                      </div>
+                    </div>
+                    <div class="form-error hide" id="displayedNameError" data-testid="new-displayed-name-error">
+                      <i class="fas fa-exclamation-circle"></i>
+                      <span id="displayedNameErrorText"></span>
+                    </div>
+                    <div class="form-success hide" id="displayedNameSuccess" data-testid="new-displayed-name-success">
+                      <i class="fas fa-check-circle"></i>
+                      <span>Display name is valid</span>
+                    </div>
+                  </div>
+
+                  <div class="form-group-modern">
+                    <label for="newPassword" class="form-label-modern">
+                      <i class="fas fa-lock"></i>
+                      New Password
+                    </label>
+                    <input type="password" id="newPassword" name="newPassword" class="form-input-modern" placeholder="Leave blank to keep current" minlength="3" maxlength="50" data-testid="new-password-input" />
+                    <div class="form-meta-modern">
+                      <div class="form-help-modern">
+                        <i class="fas fa-shield-alt"></i>
+                        Min 3 characters
+                      </div>
+                      <div class="char-counter-modern">
+                        <span class="current" id="passwordCharCount">0</span>/50
+                      </div>
+                    </div>
+                    <div class="form-error hide" id="passwordError" data-testid="new-password-error">
+                      <i class="fas fa-exclamation-circle"></i>
+                      <span id="passwordErrorText"></span>
+                    </div>
+                    <div class="form-success hide" id="passwordSuccess" data-testid="new-password-success">
+                      <i class="fas fa-check-circle"></i>
+                      <span>Password is valid</span>
+                    </div>
+                  </div>
+
+                  <div class="form-group-modern">
+                    <label for="confirmPassword" class="form-label-modern">
+                      <i class="fas fa-lock"></i>
+                      Confirm Password
+                    </label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-input-modern" placeholder="Confirm your new password" minlength="3" maxlength="50" data-testid="confirm-password-input" />
+                    <div class="form-meta-modern">
+                      <div class="form-help-modern">
+                        <i class="fas fa-shield-alt"></i>
+                        Re-enter password
+                      </div>
+                      <div class="char-counter-modern">
+                        <span class="current" id="confirmPasswordCharCount">0</span>/50
+                      </div>
+                    </div>
+                    <div class="form-error hide" id="confirmPasswordError" data-testid="confirm-password-error">
+                      <i class="fas fa-exclamation-circle"></i>
+                      <span id="confirmPasswordErrorText"></span>
+                    </div>
+                    <div class="form-success hide" id="confirmPasswordSuccess" data-testid="confirm-password-success">
+                      <i class="fas fa-check-circle"></i>
+                      <span>Passwords match</span>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn-futuristic btn-full-modern" data-testid="update-profile-submit-btn">
+                    <i class="fas fa-save"></i>&nbsp;Save Changes
+                  </button>
+                </form>
+
+                <div id="updateMessage" class="message-modern"></div>
+              </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="danger-zone-modern glass">
+              <div class="card-header-modern danger-header">
+                <h3>
+                  <i class="fas fa-exclamation-triangle"></i>
+                  Danger Zone
+                </h3>
+              </div>
+              <div class="card-content-modern">
+                <div class="danger-warning-modern">
+                  <div class="danger-content-modern">
+                    <h4>Delete Account</h4>
+                    <p>
+                      Permanently delete your account and all data. This
+                      action cannot be undone.
+                    </p>
+                    <button id="deleteAccountBtn" class="btn btn-danger btn-compact" data-testid="delete-account-btn">
+                      <i class="fas fa-trash"></i>
+                      Delete Account
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+
+          <!-- Quick Actions -->
+          <div class="quick-actions-modern">
+            <a href="/staff-fields-main.html" class="btn btn-compact btn-futuristic"><i class="fas fa-link"></i> Staff & Fields Management</a>
+            <a href="/" class="btn btn-compact btn-earth" data-testid="home-link">
+              <i class="fas fa-home"></i>
+              Home
+            </a>
+            </button>
+          </div>
         </div>
+      </div>
     </main>
     <!-- Dynamic Footer Component -->
     <div id="footer-component"></div>
