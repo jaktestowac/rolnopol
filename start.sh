@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 echo "Starting Rolnopol App..."
 echo
 
-npm run start || true
+node api/index.js
 
 echo
 echo "Application stopped."

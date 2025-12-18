@@ -1,6 +1,6 @@
 # Start Scripts for Rolnopol App
 
-This project includes several convenience scripts to start the app from different shells/environments. They all navigate to the repository root directory before running the standard `npm run start` script and keep the console open after the app stops or crashes.
+This project includes several convenience scripts to start the app from different shells/environments. They all navigate to the repository root directory before running the app directly and keep the console open after the app stops or crashes.
 
 Files:
 

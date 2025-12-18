@@ -9,8 +9,8 @@ Write-Host "Starting Rolnopol App..."
 Write-Host ""
 
 try {
-    # Run npm start and exit with the same code; if you want to keep PS open, we always prompt below.
-    & npm run start
+    # Run node directly and exit with the same code; if you want to keep PS open, we always prompt below.
+    node api/index.js
 }
 catch {
     Write-Host "Error while running application: $($_.Exception.Message)" -ForegroundColor Red

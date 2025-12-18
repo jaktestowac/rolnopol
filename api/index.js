@@ -62,6 +62,12 @@ process.on("SIGTERM", async () => {
   process.exit(0);
 });
 
+process.on("SIGHUP", async () => {
+  logDebug("Received SIGHUP. Graceful shutdown...");
+  await cleanupDatabases();
+  process.exit(0);
+});
+
 // Middleware for parsing request bodies
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
