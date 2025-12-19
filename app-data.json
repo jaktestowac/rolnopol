@@ -1,14 +1,7 @@
 {
   "name": "rolnopol-app",
-  "version": "1.0.58",
+  "version": "1.0.61",
   "description": "Simple application prepared and developed only for testing purposes",
-  "keywords": [
-    "json-server",
-    "node",
-    "REST API",
-    "UI",
-    "JavaScript",
-    "testing"
-  ],
+  "keywords": ["json-server", "node", "REST API", "UI", "JavaScript", "testing"],
   "author": "jaktestowac.pl"
 }
