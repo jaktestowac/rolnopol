@@ -26,6 +26,44 @@ function pad(str, len, align = "left") {
   return str + " ".repeat(padLen);
 }
 
+// Render a boxed message using box-drawing characters and return as string
+function createBox(lines, padding = 1) {
+  const content = lines.map((l) => String(l));
+  const width = Math.max(...content.map((l) => l.length)) + padding * 2;
+  const hr = "═".repeat(width);
+  const top = "╔" + hr + "╗";
+  const bottom = "╚" + hr + "╝";
+  const padded = content.map((l) => {
+    const extra = width - padding - l.length;
+    return "║" + " ".repeat(padding) + l + " ".repeat(extra) + "║";
+  });
+  return [top, ...padded, bottom].join("\n");
+}
+
+// Print a highlighted, bordered error about missing dependencies and exit the process
+function printMissingDepsBox(missingModules, installCmd) {
+  const lines = [];
+  lines.push("!! MISSING DEPENDENCIES DETECTED !!");
+  lines.push("");
+  lines.push(`Missing (${missingModules.length}): ${missingModules.join(", ")}`);
+  lines.push("");
+  lines.push("");
+  lines.push("To install all dependencies, run:");
+  lines.push(`  ${installCmd}`);
+  lines.push("");
+  lines.push("Startup aborted.");
+  lines.push("");
+  lines.push("");
+  lines.push("<3 jaktestowac.pl Team");
+
+  const box = createBox(lines);
+  const red = "\x1b[31m";
+  const bold = "\x1b[1m";
+  const reset = "\x1b[0m";
+  console.error("\n" + red + bold + box + reset + "\n");
+  process.exit(1);
+}
+
 async function performStartupHealthCheck() {
   try {
     const packageJson = require("../package.json");
@@ -35,6 +73,59 @@ async function performStartupHealthCheck() {
       memory: dbManager.getMemoryStats(),
       version: packageJson.version,
     };
+
+    // --- Check for missing node_modules / dependencies ---
+    const projectRoot = path.resolve(__dirname, "..");
+    const nodeModulesPath = path.join(projectRoot, "node_modules");
+    const missingModules = [];
+
+    // detect preferred package manager for suggestion
+    function getInstallCommand() {
+      try {
+        if (packageJson.packageManager) {
+          // e.g. "pnpm@8.5.0" or "npm@9.0.0"
+          const pm = String(packageJson.packageManager).split("@")[0];
+          return `${pm} install`;
+        }
+      } catch (_) {}
+      if (fs.existsSync(path.join(projectRoot, "pnpm-lock.yaml"))) return "pnpm install";
+      if (fs.existsSync(path.join(projectRoot, "yarn.lock"))) return "yarn install";
+      if (fs.existsSync(path.join(projectRoot, "package-lock.json"))) return "npm install";
+      return "npm install";
+    }
+
+    const installCmd = getInstallCommand();
+
+    // collect declared dependency types we care about
+    const declaredDeps = new Set();
+    ["dependencies", "optionalDependencies", "peerDependencies"].forEach((k) => {
+      const map = packageJson[k] || {};
+      Object.keys(map).forEach((name) => declaredDeps.add(name));
+    });
+    const deps = Array.from(declaredDeps);
+
+    if (!fs.existsSync(nodeModulesPath)) {
+      // Mark all declared dependencies as missing
+      missingModules.push(...deps);
+    } else {
+      // Check each dependency can be resolved from project root
+      for (const dep of deps) {
+        try {
+          // try to resolve the package from project root
+          require.resolve(dep, { paths: [projectRoot] });
+        } catch (e) {
+          missingModules.push(dep);
+        }
+      }
+    }
+
+    if (missingModules.length > 0) {
+      health.status = "degraded";
+    }
+
+    // expose modules information in health object for programmatic access
+    health.modules = { missing: missingModules, installCommand: installCmd };
+
     // Check for presence of project marker file `rolno.d` in repository root
     const rolno = checkRolnoFileExists();
     health.rolno = rolno;
@@ -56,6 +147,18 @@ async function performStartupHealthCheck() {
     lines.push(
       `Memory   : Heap Used ${formatBytes(mem.heapUsed)} / Heap Total ${formatBytes(mem.heapTotal)} | RSS ${formatBytes(mem.rss)}`
     );
+
+    // Module status
+    lines.push("\nModules:");
+    if (missingModules.length === 0) {
+      lines.push("All declared dependencies are installed (node_modules present)");
+    } else {
+      lines.push(`Missing dependencies (${missingModules.length}): ${missingModules.join(", ")}`);
+      lines.push("\nTo install missing packages, run the following in the project root:");
+      lines.push(`  ${installCmd}`);
+      lines.push(`Or to install only missing packages explicitly: ${installCmd} ${missingModules.join(" ")}`);
+    }
+
     lines.push("\nDatabases:");
     // Table header
     lines.push(pad("DB Name", 24) + " | " + pad("Status", 8) + " | " + pad("Size", 10, "right") + " | " + pad("Entities", 8, "right"));
@@ -91,7 +194,12 @@ async function performStartupHealthCheck() {
     }
     lines.push("========================================================\n");
     if (health.status === "degraded") {
-      logError(lines.join("\n"));
+      // If missing modules, print a bordered message and abort startup
+      if (missingModules.length > 0) {
+        printMissingDepsBox(missingModules, installCmd);
+      } else {
+        logError(lines.join("\n"));
+      }
     } else {
       logInfo(lines.join("\n"));
     }
