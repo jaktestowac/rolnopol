@@ -54,6 +54,23 @@
         .form-button:disabled {
             background-color: #ccc;
         }
+
+        /* Small muted note under the send button */
+        .contact-note {
+            margin-left: 0;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .contact-note .note-text {
+            color: #6a7b5e;
+            font-size: 0.7rem;
+            opacity: 0.9;
+            font-style: italic;
+            line-height: 1;
+            width: 250px;
+            text-align: left !important;
+        }
     </style>
 </head>
 
@@ -140,7 +157,10 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: .6rem; justify-content: flex-end; margin-top: 1rem">
+                    <div class="contact-note" aria-hidden="true">
+                        <small class="note-text">Note: This contact form is for testing purposes only and does not send messages to a real inbox!</small>
+                    </div>
+                    <div style="display: flex; gap: .6rem; justify-content: flex-end; ">
                         <button type="reset" class="btn btn-outline btn-compact">
                             <i class="fas fa-eraser"></i> Clear
                         </button>
