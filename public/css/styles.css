@@ -1148,6 +1148,76 @@ body {
   border-top: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: 0.875rem;
+  background: transparent;
+}
+
+/* Footer link styles: improved visibility + hover and focus states */
+.footer a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.15s ease, opacity 0.15s ease, transform 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.footer a:hover,
+.footer a:focus {
+  color: var(--primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 1;
+  outline: none;
+}
+
+.footer nav {
+  margin-top: 0.5rem;
+}
+
+.footer nav a {
+  margin: 0 0.5rem;
+  color: var(--primary-color);
+}
+
+/* Social icon links spacing and sizing */
+.footer .footer-github-link,
+.footer .footer-youtube-link,
+.footer .footer-linkedin-link {
+  margin-left: 0.5rem;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.15s ease, transform 0.12s ease;
+}
+
+.footer .footer-github-link:hover {
+  text-decoration: none;
+  color: #181717; /* GitHub dark */
+}
+
+.footer .footer-youtube-link:hover {
+  text-decoration: none;
+  color: #ff0000; /* YouTube red */
+}
+    
+.footer .footer-linkedin-link:hover {
+  text-decoration: none;
+  color: #0077b5; /* LinkedIn blue */
+}
+
+.footer .footer-github-link i,
+.footer .footer-youtube-link i,
+.footer .footer-linkedin-link i {
+  font-size: 1rem;
+}
+
+/* Provide a visible focus outline for accessibility */
+.footer a:focus {
+  outline: 3px solid rgba(37, 99, 235, 0.15);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 /* Notification System */

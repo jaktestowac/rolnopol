@@ -294,7 +294,17 @@ async function initFooter() {
       footerContainer.innerHTML = `
         <footer class="footer">
           <p>&copy; 2025 Rolnopol. build by <a href="https://jaktestowac.pl" target="_blank" rel="noopener">jaktestowac.pl</a></p>
-        </footer>
+        <span aria-hidden="true">|</span>
+        <a href="https://github.com/jaktestowac" target="_blank" rel="noopener" aria-label="GitHub" data-testid="footer-github" class="footer-github-link">
+          <i class="fab fa-github" aria-hidden="true"></i><span class="sr-only">GitHub</span>
+        </a>
+        <span aria-hidden="true">|</span>
+        <a href="https://www.youtube.com/c/jaktestowac" target="_blank" rel="noopener" aria-label="YouTube" data-testid="footer-youtube" class="footer-youtube-link">
+          <i class="fab fa-youtube" aria-hidden="true"></i><span class="sr-only">YouTube</span>
+        </a>        <span aria-hidden="true">|</span>
+        <a href="https://www.linkedin.com/company/jaktestowac" target="_blank" rel="noopener" aria-label="LinkedIn" data-testid="footer-linkedin" class="footer-linkedin-link">
+          <i class="fab fa-linkedin" aria-hidden="true"></i><span class="sr-only">LinkedIn</span>
+        </a>        </footer>
       `;
     }
   }
