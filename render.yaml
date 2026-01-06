@@ -1,0 +1,8 @@
+services:
+  - type: web
+    plan: free
+    name: rolnopol-app
+    runtime: node
+    repo: https://github.com/jaktestowac/rolnopol.git
+    buildCommand: "npm install"
+    startCommand: "npm run start"
