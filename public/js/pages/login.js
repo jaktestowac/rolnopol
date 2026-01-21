@@ -87,17 +87,16 @@ function attachDemoHandlers(root) {
       var text = this.getAttribute("data-copy");
       if (!text) return;
 
-      var button = this;
-
       copyTextToClipboard(text)
         .then(function () {
-          button.disabled = true;
-          setTimeout(function () {
-            button.disabled = false;
-          }, 1200);
+          if (window.showNotification) {
+            window.showNotification("Copied to clipboard!", "success");
+          }
         })
         .catch(function () {
-          setTimeout(function () {}, 1400);
+          if (window.showNotification) {
+            window.showNotification("Copy failed", "error");
+          }
         });
     });
   });
