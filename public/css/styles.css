@@ -1393,7 +1393,7 @@ body {
 @media (min-width: 768px) {
   .auth-form-container {
     grid-template-columns: 1fr 1fr;
-    max-width: 56rem;
+    max-width: 58rem;
     gap: 3rem;
   }
 }

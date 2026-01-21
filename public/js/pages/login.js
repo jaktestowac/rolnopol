@@ -14,22 +14,28 @@ function buildDemoInfo() {
       </h3>
       <p>You can use these demo accounts for testing:</p>
       <div class="demo-accounts">
-        <div class="demo-account" id="demoAccount1" tabindex="0" style="cursor: pointer; outline: none; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 0.5rem;">
+        <div class="demo-account" id="demoAccount1" style="outline: none; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 0.5rem;">
           <strong>Empty Demo User:</strong><br />
-          Email: <span class="demo-email">emptyuser@rolnopol.demo.pl</span><br />
-          Password: <span class="demo-pass">demoPass123</span><br />
+          Email: <span class="demo-email">emptyuser@rolnopol.demo.pl</span>
+          <button type="button" class="btn btn-xs btn-outline copyDemoBtn" data-copy="emptyuser@rolnopol.demo.pl" aria-label="Copy demo email"><i class="fa-regular fa-copy"></i></button><br />
+          Password: <span class="demo-pass">demoPass123</span>
+          <button type="button" class="btn btn-xs btn-outline copyDemoBtn" data-copy="demoPass123" aria-label="Copy demo password"><i class="fa-regular fa-copy"></i></button><br />
           <button type="button" class="fillDemoBtn" data-email="emptyuser@rolnopol.demo.pl" data-password="demoPass123" style="margin-top: 0.5rem">Fill Login Fields</button>
         </div>
-        <div class="demo-account" id="demoAccount2" tabindex="0" style="cursor: pointer; outline: none; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 0.5rem;">
+        <div class="demo-account" id="demoAccount2" style="outline: none; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 0.5rem;">
           <strong>Demo User:</strong><br />
-          Email: <span class="demo-email">demo@example.com</span><br />
-          Password: <span class="demo-pass">demo123</span><br />
+          Email: <span class="demo-email">demo@example.com</span>
+          <button type="button" class="btn btn-xs btn-outline copyDemoBtn" data-copy="demo@example.com" aria-label="Copy demo email"><i class="fa-regular fa-copy"></i></button><br />
+          Password: <span class="demo-pass">demo123</span>
+          <button type="button" class="btn btn-xs btn-outline copyDemoBtn" data-copy="demo123" aria-label="Copy demo password"><i class="fa-regular fa-copy"></i></button><br />
           <button type="button" class="fillDemoBtn" data-email="demo@example.com" data-password="demo123" style="margin-top: 0.5rem">Fill Login Fields</button>
         </div>
-        <div class="demo-account" id="demoAccount3" tabindex="0" style="cursor: pointer; outline: none; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 0.5rem;">
+        <div class="demo-account" id="demoAccount3" style="outline: none; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 0.5rem;">
           <strong>Demo User 2:</strong><br />
-          Email: <span class="demo-email">test@example.com</span><br />
-          Password: <span class="demo-pass">brownPass123</span><br />
+          Email: <span class="demo-email">test@example.com</span>
+          <button type="button" class="btn btn-xs btn-outline copyDemoBtn" data-copy="test@example.com" aria-label="Copy demo email"><i class="fa-regular fa-copy"></i></button><br />
+          Password: <span class="demo-pass">brownPass123</span>
+          <button type="button" class="btn btn-xs btn-outline copyDemoBtn" data-copy="brownPass123" aria-label="Copy demo password"><i class="fa-regular fa-copy"></i></button><br />
           <button type="button" class="fillDemoBtn" data-email="test@example.com" data-password="brownPass123" style="margin-top: 0.5rem">Fill Login Fields</button>
         </div>
       </div>`;
@@ -48,27 +54,51 @@ function attachDemoHandlers(root) {
     });
   });
 
-  var demoDivs = root.querySelectorAll(".demo-account");
-  demoDivs.forEach(function (div) {
-    div.addEventListener("click", function (e) {
-      if (!e.target.classList.contains("fillDemoBtn")) {
-        var btn = this.querySelector(".fillDemoBtn");
-        var email = btn.getAttribute("data-email");
-        var password = btn.getAttribute("data-password");
-        document.getElementById("email").value = email;
-        document.getElementById("password").value = password;
-        document.getElementById("email").focus();
+  function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var tempInput = document.createElement("input");
+      tempInput.value = text;
+      tempInput.setAttribute("readonly", "readonly");
+      tempInput.style.position = "absolute";
+      tempInput.style.left = "-9999px";
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      var copied = false;
+      try {
+        copied = document.execCommand("copy");
+      } catch (err) {
+        copied = false;
+      }
+      document.body.removeChild(tempInput);
+      if (copied) {
+        resolve();
+      } else {
+        reject(new Error("Copy failed"));
       }
     });
-    div.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") {
-        var btn = this.querySelector(".fillDemoBtn");
-        var email = btn.getAttribute("data-email");
-        var password = btn.getAttribute("data-password");
-        document.getElementById("email").value = email;
-        document.getElementById("password").value = password;
-        document.getElementById("email").focus();
-      }
+  }
+
+  var copyBtns = root.querySelectorAll(".copyDemoBtn");
+  copyBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var text = this.getAttribute("data-copy");
+      if (!text) return;
+
+      var button = this;
+
+      copyTextToClipboard(text)
+        .then(function () {
+          button.disabled = true;
+          setTimeout(function () {
+            button.disabled = false;
+          }, 1200);
+        })
+        .catch(function () {
+          setTimeout(function () {}, 1400);
+        });
     });
   });
 }
