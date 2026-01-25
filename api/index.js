@@ -249,6 +249,8 @@ if (require.main === module) {
         logInfo(`Links:`);
         logInfo(`🐛 Debug and settings: http://localhost:${port}/api/debug`);
         logInfo(`📜 Logs: http://localhost:${port}/api/logs`);
+        logInfo(`📜 About: http://localhost:${port}/api/v1/about`);
+        logInfo(`💗 Healthcheck: http://localhost:${port}/api/v1/healthcheck`);
         logInfo(`👤 Admin: http://localhost:${port}/null/kraken.html`);
         logInfo(`Start here:`);
         logInfo(`🌐 Access: http://localhost:${port}`);

@@ -35,7 +35,7 @@ const logger = require("../../helpers/logger-api");
  *                   type: object
  *                   description: Memory usage statistics
  */
-// Main healthcheck endpoint (now at /healthcheck)
+// Main healthcheck endpoint (now at /api/v1/healthcheck)
 router.get("/healthcheck", async (req, res) => {
   try {
     const healthData = {
@@ -51,9 +51,7 @@ router.get("/healthcheck", async (req, res) => {
     healthData.databaseValidation = dbValidation;
 
     // Check if any databases have errors
-    const hasErrors = Object.values(dbValidation).some(
-      (result) => result.status === "error",
-    );
+    const hasErrors = Object.values(dbValidation).some((result) => result.status === "error");
     if (hasErrors) {
       healthData.status = "degraded";
     }
@@ -66,7 +64,7 @@ router.get("/healthcheck", async (req, res) => {
 });
 
 // Keep the old root endpoint for backward compatibility
-router.get("/", async (req, res) => {
+router.get("/health", async (req, res) => {
   try {
     const healthData = {
       status: "healthy",
@@ -81,9 +79,7 @@ router.get("/", async (req, res) => {
     healthData.databaseValidation = dbValidation;
 
     // Check if any databases have errors
-    const hasErrors = Object.values(dbValidation).some(
-      (result) => result.status === "error",
-    );
+    const hasErrors = Object.values(dbValidation).some((result) => result.status === "error");
     if (hasErrors) {
       healthData.status = "degraded";
     }
@@ -106,7 +102,7 @@ router.get("/", async (req, res) => {
  *       200:
  *         description: Database status retrieved successfully
  */
-router.get("/databases", async (req, res) => {
+router.get("/health/databases", async (req, res) => {
   try {
     const dbStatus = {
       instances: dbManager.getInstanceCount(),
@@ -133,7 +129,7 @@ router.get("/databases", async (req, res) => {
  *       200:
  *         description: Memory stats retrieved successfully
  */
-router.get("/memory", (req, res) => {
+router.get("/health/memory", (req, res) => {
   try {
     const memoryStats = dbManager.getMemoryStats();
     return sendSuccess(req, res, memoryStats);
