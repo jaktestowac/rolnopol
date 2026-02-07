@@ -1,5 +1,10 @@
 const dbManager = require("../data/database-manager");
 
+const FEATURE_FLAG_DESCRIPTIONS = {
+  alertsEnabled: "Enable or disable the alerts system for animals and operations",
+  rolnopolMapEnabled: "Enable or disable the interactive map feature",
+};
+
 const PREDEFINED_FEATURE_FLAGS = {
   alertsEnabled: true,
   rolnopolMapEnabled: true,
@@ -92,9 +97,31 @@ class FeatureFlagsService {
     };
   }
 
+  _buildFlagsWithDescriptions(data) {
+    const normalized = this._normalize(data);
+    const flagsWithDescriptions = {};
+
+    for (const [key, value] of Object.entries(normalized.flags)) {
+      flagsWithDescriptions[key] = {
+        value,
+        description: FEATURE_FLAG_DESCRIPTIONS[key] || "",
+      };
+    }
+
+    return {
+      flags: flagsWithDescriptions,
+      updatedAt: normalized.updatedAt,
+    };
+  }
+
   async getFeatureFlags() {
     const data = await this.db.getAll();
     return this._normalize(data);
+  }
+
+  async getFeaturesWithDescriptions() {
+    const data = await this.db.getAll();
+    return this._buildFlagsWithDescriptions(data);
   }
 
   async updateFlags(flags) {
@@ -108,8 +135,17 @@ class FeatureFlagsService {
     const updated = await this.db.update((current) => {
       const normalized = this._normalize(current);
       const persistedFlags = this._sanitizeFlagsInternal(normalized.flags, true);
+
+      // Prevent adding new flags - only allow updating existing ones
+      const filteredFlags = {};
+      for (const [key, value] of Object.entries(sanitizedFlags)) {
+        if (key in persistedFlags) {
+          filteredFlags[key] = value;
+        }
+      }
+
       return {
-        flags: { ...persistedFlags, ...sanitizedFlags },
+        flags: { ...persistedFlags, ...filteredFlags },
         updatedAt: new Date().toISOString(),
       };
     });

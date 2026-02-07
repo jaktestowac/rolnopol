@@ -5,7 +5,10 @@ const featureFlagsService = require("../services/feature-flags.service");
 class FeatureFlagsController {
   async getFeatureFlags(req, res) {
     try {
-      const data = await featureFlagsService.getFeatureFlags();
+      const includeDescriptions = req.query.descriptions === "true";
+      const data = includeDescriptions
+        ? await featureFlagsService.getFeaturesWithDescriptions()
+        : await featureFlagsService.getFeatureFlags();
       return res.status(200).json(formatResponseBody({ data }));
     } catch (error) {
       logError("Error getting feature flags:", error);

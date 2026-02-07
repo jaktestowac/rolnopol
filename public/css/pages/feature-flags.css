@@ -253,6 +253,14 @@
   word-break: break-word;
 }
 
+.flags-card__description {
+  font-size: 0.75rem;
+  color: var(--flag-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
 .flags-toggle {
   display: inline-flex;
   align-items: center;

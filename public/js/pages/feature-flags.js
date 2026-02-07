@@ -7,9 +7,6 @@ class FeatureFlagsPage {
     this.statusEl = null;
     this.updatedAtEl = null;
     this.flagsCountEl = null;
-    this.addForm = null;
-    this.keyInput = null;
-    this.valueInput = null;
     this.reloadBtn = null;
     this.resetBtn = null;
   }
@@ -31,15 +28,11 @@ class FeatureFlagsPage {
     this.statusEl = document.getElementById("flagsStatus");
     this.updatedAtEl = document.getElementById("flagsUpdatedAt");
     this.flagsCountEl = document.getElementById("flagsCount");
-    this.addForm = document.getElementById("addFlagForm");
-    this.keyInput = document.getElementById("newFlagKey");
-    this.valueInput = document.getElementById("newFlagValue");
     this.reloadBtn = document.getElementById("reloadFlagsBtn");
     this.resetBtn = document.getElementById("resetFlagsBtn");
     this.resetModal = document.getElementById("resetModal");
     this.resetModalConfirm = this.resetModal?.querySelector(".modal-confirm");
     this.resetModalCancel = this.resetModal?.querySelector(".modal-cancel");
-    this.resetModalClose = this.resetModal?.querySelector(".modal-close");
     this.resetModalOverlay = this.resetModal?.querySelector(".modal-overlay");
   }
 
@@ -60,19 +53,8 @@ class FeatureFlagsPage {
       this.resetModalCancel.addEventListener("click", () => this._closeResetModal());
     }
 
-    if (this.resetModalClose) {
-      this.resetModalClose.addEventListener("click", () => this._closeResetModal());
-    }
-
     if (this.resetModalOverlay) {
       this.resetModalOverlay.addEventListener("click", () => this._closeResetModal());
-    }
-
-    if (this.addForm) {
-      this.addForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        this._handleAddFlag();
-      });
     }
 
     if (this.listEl) {
@@ -116,7 +98,7 @@ class FeatureFlagsPage {
   async _loadFlags() {
     this._setStatus("Loading flags...");
     try {
-      const response = await this.featureFlagsService.getFlags();
+      const response = await this.featureFlagsService.getFlags({ descriptions: true });
       const payload = response?.data?.data;
 
       if (!response?.success || !payload || typeof payload.flags !== "object") {
@@ -149,17 +131,20 @@ class FeatureFlagsPage {
     }
 
     this.listEl.innerHTML = entries
-      .map(([key, value]) => {
+      .map(([key, flag]) => {
         const safeKey = String(key);
+        // Handle both old format (boolean) and new format (object with value/description)
+        const isEnabled = typeof flag === "object" ? flag.value : flag;
+        const description = typeof flag === "object" ? flag.description : "";
         return `
           <div class="flags-card">
             <div class="flags-card__info">
               <div class="flags-card__name">${safeKey}</div>
-              <span>${value ? "Enabled" : "Disabled"}</span>
+              ${description ? `<p class="flags-card__description">${description}</p>` : ""}
             </div>
             <label class="flags-toggle">
-              <input class="flag-toggle-input" type="checkbox" data-flag="${safeKey}" ${value ? "checked" : ""} />
-              <span>${value ? "On" : "Off"}</span>
+              <input class="flag-toggle-input" type="checkbox" data-flag="${safeKey}" ${isEnabled ? "checked" : ""} />
+              <span>${isEnabled ? "On" : "Off"}</span>
             </label>
           </div>
         `;
@@ -180,51 +165,12 @@ class FeatureFlagsPage {
         await this._loadFlags();
         return;
       }
-      this.flags = payload.flags || {};
-      this.updatedAt = payload.updatedAt || null;
-      this._renderFlags();
+      // Reload flags with descriptions to maintain them after update
+      await this._loadFlags();
       this._setStatus("Flag updated.");
     } catch (error) {
       this._setStatus("Failed to update feature flags", true);
       await this._loadFlags();
-    }
-  }
-
-  async _handleAddFlag() {
-    const key = this.keyInput?.value?.trim();
-    const value = this.valueInput?.value === "true";
-
-    if (!key) {
-      this._setStatus("Flag key is required.", true);
-      return;
-    }
-
-    if (this._isUnsafeKey(key)) {
-      this._setStatus("That flag key is not allowed.", true);
-      return;
-    }
-
-    this._setStatus("Adding flag...");
-    try {
-      const response = await this.featureFlagsService.updateFlags({
-        [key]: value,
-      });
-      const payload = response?.data?.data;
-      if (!response?.success || !payload || typeof payload.flags !== "object") {
-        const message = response?.data?.error || "Failed to add flag";
-        this._setStatus(message, true);
-        return;
-      }
-
-      this.flags = payload.flags || {};
-      this.updatedAt = payload.updatedAt || null;
-      this._renderFlags();
-      if (this.addForm) {
-        this.addForm.reset();
-      }
-      this._setStatus("Flag added.");
-    } catch (error) {
-      this._setStatus("Failed to add flag", true);
     }
   }
 
@@ -249,15 +195,16 @@ class FeatureFlagsPage {
       if (!response?.success || !payload || typeof payload.flags !== "object") {
         const message = response?.data?.error || "Failed to reset feature flags";
         this._setStatus(message, true);
+        await this._loadFlags();
         return;
       }
 
-      this.flags = payload.flags || {};
-      this.updatedAt = payload.updatedAt || null;
-      this._renderFlags();
+      // Reload flags with descriptions to maintain them after reset
+      await this._loadFlags();
       this._setStatus("Feature flags reset to defaults.");
     } catch (error) {
       this._setStatus("Failed to reset feature flags", true);
+      await this._loadFlags();
     }
   }
 }

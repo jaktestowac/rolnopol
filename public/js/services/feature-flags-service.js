@@ -47,10 +47,18 @@ class FeatureFlagsService {
 
   /**
    * Fetch all feature flags (no caching).
+   * @param {Object} options - Optional options
+   * @param {boolean} options.descriptions - Include descriptions for each flag
    */
-  async getFlags() {
+  async getFlags(options = {}) {
     this._ensureApiService();
-    return this.apiService.get("feature-flags");
+    const params = new URLSearchParams();
+    if (options.descriptions) {
+      params.append("descriptions", "true");
+    }
+    const query = params.toString();
+    const endpoint = query ? `feature-flags?${query}` : "feature-flags";
+    return this.apiService.get(endpoint);
   }
 
   /**

@@ -56,28 +56,6 @@
 
         <div id="flagsList" class="flags-list" aria-live="polite"></div>
       </section>
-
-      <section class="glass flags-panel">
-        <h2>Add a new flag</h2>
-        <form id="addFlagForm" class="flags-form">
-          <label class="flags-form__field">
-            <span>Flag key</span>
-            <input id="newFlagKey" class="input" type="text" placeholder="e.g. marketplace.newCheckout" required />
-          </label>
-          <label class="flags-form__field">
-            <span>Default value</span>
-            <select id="newFlagValue" class="select">
-              <option value="true">true</option>
-              <option value="false">false</option>
-            </select>
-          </label>
-          <button class="btn" type="submit">
-            <i class="fas fa-plus"></i>
-            Add flag
-          </button>
-        </form>
-        <p class="flags-hint">Flags are public. Do not use them for sensitive access control.</p>
-      </section>
     </div>
 
     <div id="footer-component"></div>
@@ -86,19 +64,10 @@
     <div id="resetModal" class="modal" style="display: none">
       <div class="modal-overlay"></div>
       <div class="modal-content glass">
-        <div class="modal-header">
-          <h2>Reset Feature Flags</h2>
-          <button type="button" class="modal-close" aria-label="Close modal">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <p>Are you sure you want to reset all feature flags to predefined defaults?</p>
-          <p><strong>This will overwrite all current flags.</strong></p>
-        </div>
+        <p>Reset all flags to defaults?</p>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
-          <button type="button" class="btn modal-confirm">Reset to Defaults</button>
+          <button type="button" class="btn modal-confirm">Reset</button>
         </div>
       </div>
     </div>
