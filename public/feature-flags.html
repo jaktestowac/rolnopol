@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feature Flags - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/feature-flags.css" />
+  </head>
+
+  <body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="container flags-page">
+      <div class="flags-ambient" aria-hidden="true">
+        <span class="flags-orb flags-orb--one"></span>
+        <span class="flags-orb flags-orb--two"></span>
+      </div>
+      <header class="header glass flags-header">
+        <div class="flags-header__title">
+          <span class="bg-agri-gradient"><i class="fas fa-toggle-on"></i></span>
+          <div>
+            <h1>Feature Flags</h1>
+            <p>Toggle features instantly, no restart required.</p>
+          </div>
+        </div>
+        <div class="flags-header__actions">
+          <span class="flags-pill"><i class="fas fa-bolt"></i> Live</span>
+          <span class="flags-pill flags-pill--muted">Public endpoint</span>
+          <button id="resetFlagsBtn" class="btn btn-outline" type="button" title="Reset to predefined feature flags">
+            <i class="fas fa-redo"></i>
+            Reset
+          </button>
+          <button id="reloadFlagsBtn" class="btn btn-outline" type="button">
+            <i class="fas fa-rotate"></i>
+            Reload
+          </button>
+        </div>
+      </header>
+
+      <section class="flags-status" id="flagsStatus" aria-live="polite"></section>
+
+      <section class="glass flags-panel">
+        <div class="flags-panel__meta">
+          <div>
+            <span class="meta-label">Last update</span>
+            <span id="flagsUpdatedAt" class="meta-value">-</span>
+          </div>
+          <div>
+            <span class="meta-label">Total flags</span>
+            <span id="flagsCount" class="meta-value">0</span>
+          </div>
+        </div>
+
+        <div id="flagsList" class="flags-list" aria-live="polite"></div>
+      </section>
+
+      <section class="glass flags-panel">
+        <h2>Add a new flag</h2>
+        <form id="addFlagForm" class="flags-form">
+          <label class="flags-form__field">
+            <span>Flag key</span>
+            <input id="newFlagKey" class="input" type="text" placeholder="e.g. marketplace.newCheckout" required />
+          </label>
+          <label class="flags-form__field">
+            <span>Default value</span>
+            <select id="newFlagValue" class="select">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </label>
+          <button class="btn" type="submit">
+            <i class="fas fa-plus"></i>
+            Add flag
+          </button>
+        </form>
+        <p class="flags-hint">Flags are public. Do not use them for sensitive access control.</p>
+      </section>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="resetModal" class="modal" style="display: none">
+      <div class="modal-overlay"></div>
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h2>Reset Feature Flags</h2>
+          <button type="button" class="modal-close" aria-label="Close modal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to reset all feature flags to predefined defaults?</p>
+          <p><strong>This will overwrite all current flags.</strong></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
+          <button type="button" class="btn modal-confirm">Reset to Defaults</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core Dependencies -->
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <!-- Services -->
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <!-- Components -->
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+    <!-- API Functions -->
+    <script src="/js/api.js"></script>
+    <!-- Utilities -->
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <!-- Page -->
+    <script src="/js/pages/feature-flags.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+      initNavigation("feature-flags");
+    </script>
+  </body>
+</html>

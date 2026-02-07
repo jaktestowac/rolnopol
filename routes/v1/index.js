@@ -15,6 +15,7 @@ const animalsRoute = require("./animals.route");
 const financialRoute = require("./financial.route");
 const marketplaceRoute = require("./marketplace.route");
 const alertsRoute = require("./alerts.route");
+const featureFlagsRoute = require("./feature-flags.route");
 const contactRoute = require("../contact.route");
 const { logInfo, logError } = require("../../helpers/logger-api");
 
@@ -127,6 +128,7 @@ router.use("/", animalsRoute);
 router.use("/", financialRoute);
 router.use("/", marketplaceRoute);
 router.use("/", alertsRoute);
+router.use("/", featureFlagsRoute);
 router.use("/contact", contactRoute);
 
 // Apply rate limiting to specific endpoints

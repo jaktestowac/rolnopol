@@ -96,9 +96,11 @@ function setActiveNavLink(explicitPage = null) {
         (explicitPage === "register" && linkPath === "/register.html") ||
         (explicitPage === "docs" && linkPath === "/docs.html") ||
         (explicitPage === "admin" && linkPath === "/admin.html") ||
+        (explicitPage === "backend" && linkPath === "/backend.html") ||
         (explicitPage === "financial" && linkPath === "/financial.html") ||
         (explicitPage === "fieldmap" && linkPath === "/fieldmap.html") ||
-        (explicitPage === "rolnopolmap" && linkPath === "/rolnopolmap.html")
+        (explicitPage === "rolnopolmap" && linkPath === "/rolnopolmap.html") ||
+        (explicitPage === "feature-flags" && linkPath === "/feature-flags.html")
       ) {
         link.classList.add("active");
         return;
@@ -117,13 +119,169 @@ function setActiveNavLink(explicitPage = null) {
   });
 }
 
-function updateHeaderNav(username = "") {
+async function getNavFeatureFlagState() {
+  const featureFlagsService = window.App?.getModule?.("featureFlagsService");
+  if (!featureFlagsService || typeof featureFlagsService.isEnabled !== "function") {
+    return { alertsEnabled: true, rolnopolMapEnabled: true };
+  }
+
+  if (window.App && window.App.isInitialized === false) {
+    return { alertsEnabled: false, rolnopolMapEnabled: false };
+  }
+
+  if (!featureFlagsService.apiService) {
+    return { alertsEnabled: false, rolnopolMapEnabled: false };
+  }
+
+  try {
+    const [alertsEnabled, rolnopolMapEnabled] = await Promise.all([
+      featureFlagsService.isEnabled("alertsEnabled", true),
+      featureFlagsService.isEnabled("rolnopolMapEnabled", true),
+    ]);
+    return { alertsEnabled, rolnopolMapEnabled };
+  } catch (error) {
+    return { alertsEnabled: true, rolnopolMapEnabled: true };
+  }
+}
+
+const FEATURE_GATE_STORAGE_KEY = "rolnopolFeatureGateModal";
+
+function createAppModal() {
+  if (document.getElementById("app-modal")) {
+    return;
+  }
+
+  const modal = document.createElement("div");
+  modal.className = "app-modal";
+  modal.id = "app-modal";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-hidden", "true");
+  modal.style.display = "none";
+
+  modal.innerHTML = `
+    <div class="app-modal__overlay" data-modal-close></div>
+    <div class="app-modal__content" role="document">
+      <div class="app-modal__header">
+        <h2 class="app-modal__title"></h2>
+        <button type="button" class="app-modal__close" aria-label="Close" data-modal-close>&times;</button>
+      </div>
+      <div class="app-modal__body"></div>
+      <div class="app-modal__footer">
+        <button type="button" class="btn app-modal__confirm" data-modal-close>OK</button>
+      </div>
+    </div>
+  `;
+
+  modal.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target && target.hasAttribute("data-modal-close")) {
+      hideAppModal();
+    }
+  });
+
+  document.body.appendChild(modal);
+}
+
+function showAppModal(options = {}) {
+  createAppModal();
+  const modal = document.getElementById("app-modal");
+  if (!modal) {
+    return;
+  }
+
+  const titleEl = modal.querySelector(".app-modal__title");
+  const bodyEl = modal.querySelector(".app-modal__body");
+  const confirmBtn = modal.querySelector(".app-modal__confirm");
+  const title = options.title || "Notice";
+  const message = options.message || "";
+  const confirmText = options.confirmText || "OK";
+
+  if (titleEl) {
+    titleEl.textContent = title;
+  }
+  if (bodyEl) {
+    bodyEl.textContent = message;
+  }
+  if (confirmBtn) {
+    confirmBtn.textContent = confirmText;
+  }
+
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+
+  if (confirmBtn && typeof confirmBtn.focus === "function") {
+    confirmBtn.focus();
+  }
+}
+
+function hideAppModal() {
+  const modal = document.getElementById("app-modal");
+  if (!modal) {
+    return;
+  }
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function queueFeatureGateModal(payload) {
+  if (!payload || typeof sessionStorage === "undefined") {
+    return;
+  }
+  try {
+    sessionStorage.setItem(FEATURE_GATE_STORAGE_KEY, JSON.stringify(payload));
+  } catch (error) {
+    console.warn("Unable to store feature gate modal payload", error);
+  }
+}
+
+function showQueuedFeatureGateModal() {
+  if (typeof sessionStorage === "undefined") {
+    return;
+  }
+
+  const stored = sessionStorage.getItem(FEATURE_GATE_STORAGE_KEY);
+  if (!stored) {
+    return;
+  }
+
+  sessionStorage.removeItem(FEATURE_GATE_STORAGE_KEY);
+
+  try {
+    const payload = JSON.parse(stored);
+    showAppModal({
+      title: payload?.title || "Feature Unavailable",
+      message: payload?.message || "This feature is currently disabled.",
+      confirmText: payload?.confirmText || "OK",
+    });
+  } catch (error) {
+    showAppModal({
+      title: "Feature Unavailable",
+      message: "This feature is currently disabled.",
+      confirmText: "OK",
+    });
+  }
+}
+
+window.showAppModal = showAppModal;
+window.queueFeatureGateModal = queueFeatureGateModal;
+window.showQueuedFeatureGateModal = showQueuedFeatureGateModal;
+
+async function updateHeaderNav(username = "") {
   const nav = document.querySelector(".navbar-nav");
 
   if (!nav) {
     console.log("Navigation element not found");
     return;
   }
+
+  const { alertsEnabled, rolnopolMapEnabled } = await getNavFeatureFlagState();
+  const mapLink = rolnopolMapEnabled
+    ? '<li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>'
+    : "";
+  const alertsLink = alertsEnabled
+    ? '<li><a href="/alerts.html" class="nav-link" title="Alerts" aria-label="Alerts" data-testid="nav-alerts"><i class="fas fa-bell"></i><span class="nav-text">Alerts</span></a></li>'
+    : "";
 
   // Check authentication using standardized cookie names
   const token = getCookie("rolnopolToken");
@@ -136,8 +294,8 @@ function updateHeaderNav(username = "") {
       <li><a href="/staff-fields-main.html" class="nav-link" title="Staff & Fields Management" aria-label="Staff & Fields Management" data-testid="nav-staff-fields"><i class="fas fa-seedling"></i><span class="nav-text">Staff & Fields</span></a></li>
       <li><a href="/financial.html" class="nav-link" title="Financial Tracking" aria-label="Financial Tracking" data-testid="nav-financial"><i class="fas fa-coins"></i><span class="nav-text">Financial</span></a></li>
       <li><a href="/marketplace.html" class="nav-link" title="Marketplace" aria-label="Marketplace" data-testid="nav-marketplace"><i class="fas fa-store"></i><span class="nav-text">Marketplace</span></a></li>
-      <li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>
-      <li><a href="/alerts.html" class="nav-link" title="Alerts" aria-label="Alerts" data-testid="nav-alerts"><i class="fas fa-bell"></i><span class="nav-text">Alerts</span></a></li>
+      ${mapLink}
+      ${alertsLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li class="nav-user" >
@@ -157,7 +315,7 @@ function updateHeaderNav(username = "") {
     // Not logged in navigation
     nav.innerHTML = `
       <li><a href="/" class="nav-link" title="Home" aria-label="Home" data-testid="nav-home"><i class="fas fa-home"></i><span class="nav-text">Home</span></a></li>
-      <li><a href="/alerts.html" class="nav-link" title="Alerts" aria-label="Alerts" data-testid="nav-alerts"><i class="fas fa-bell"></i><span class="nav-text">Alerts</span></a></li>
+      ${alertsLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Documentation</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li><a href="/register.html" class="nav-link" title="Register" aria-label="Register" data-testid="nav-register"><i class="fas fa-user-plus"></i><span class="nav-text">Register</span></a></li>

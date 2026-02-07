@@ -21,7 +21,7 @@
   async function initializeApp() {
     try {
       // Initialize core modules with error checking
-      let storage, apiService, authService, notification, navigation, router;
+      let storage, apiService, authService, featureFlagsService, notification, navigation, router;
 
       try {
         if (typeof Storage !== "undefined") {
@@ -57,6 +57,17 @@
       } catch (error) {
         console.error("Failed to initialize AuthService:", error);
         authService = null;
+      }
+
+      try {
+        if (typeof FeatureFlagsService !== "undefined") {
+          featureFlagsService = new FeatureFlagsService();
+        } else {
+          featureFlagsService = null;
+        }
+      } catch (error) {
+        console.error("Failed to initialize FeatureFlagsService:", error);
+        featureFlagsService = null;
       }
 
       try {
@@ -106,6 +117,7 @@
       if (storage) window.App.registerModule("storage", storage);
       if (apiService) window.App.registerModule("apiService", apiService);
       if (authService) window.App.registerModule("authService", authService);
+      if (featureFlagsService) window.App.registerModule("featureFlagsService", featureFlagsService);
       if (notification) window.App.registerModule("notification", notification);
       if (navigation) window.App.registerModule("navigation", navigation);
       if (router) window.App.registerModule("router", router);
@@ -254,6 +266,9 @@
         break;
       case "rolnopolmap":
         setupRolnopolMapPage();
+        break;
+      case "feature-flags":
+        setupFeatureFlagsPage();
         break;
       default:
         setupDefaultPage();
@@ -443,6 +458,15 @@
       window.App.registerModule("rolnopolMapPage", rolnopolMapPage);
     } else {
       console.error("RolnopolMap class not found");
+    }
+  }
+
+  function setupFeatureFlagsPage() {
+    if (window.FeatureFlagsPage) {
+      const featureFlagsPage = new FeatureFlagsPage();
+      window.App.registerModule("featureFlagsPage", featureFlagsPage);
+    } else {
+      console.error("FeatureFlagsPage class not found");
     }
   }
 

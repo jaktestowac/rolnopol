@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alerts - Rolnopol</title>
@@ -9,12 +8,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="stylesheet" href="/css/pages/alerts.css" />
-</head>
+  </head>
 
-<body class="bg-agri-pattern">
+  <body class="bg-agri-pattern">
     <div id="header-component"></div>
     <div class="container alerts-page">
-        <header class="header glass" style="
+      <header
+        class="header glass"
+        style="
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -23,281 +24,353 @@
           margin-bottom: 1.5rem;
           box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
           border-radius: 1rem 1rem 0 0;
-        ">
-            <div style="
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            width: 100%;
-            justify-content: center;
-          ">
-                <h1 style="
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-              font-size: 1.75rem;
-            ">
-                    <span class="bg-agri-gradient"><i class="fas fa-tractor"></i></span>
-                </h1>
-                <div style="
-              display: flex;
-              flex-direction: column;
-              align-items: flex-start;
-            ">
-                    <span class="main-title" style="font-size: 1.75rem">Rolnopol</span>
-                    <span style="
-                font-size: 0.9rem;
-                color: #6a7b5e;
-                font-weight: 400;
-                margin-top: 0.1rem;
-              ">Alerts and Notifications</span>
-                </div>
-            </div>
-        </header>
-
-        <div class="page-toolbar">
-            <div class="page-title">
-                <h1>Alerts</h1>
-                <p class="subtitle">Upcoming and recent events</p>
-            </div>
-            <div class="controls">
-                <input id="searchInput" class="input" type="search" placeholder="Search alerts..." aria-label="Search alerts" />
-                <select id="severityFilter" class="select" aria-label="Filter severity">
-                    <option value="">All severities</option>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
-                </select>
-                <select id="regionSelect" class="select" aria-label="Select region">
-                    <option value="PL-02">dolnośląskie</option>
-                    <option value="PL-04">kujawsko-pomorskie</option>
-                    <option value="PL-08">lubuskie</option>
-                    <option value="PL-10">łódzkie</option>
-                    <option value="PL-06">lubelskie</option>
-                    <option value="PL-12">małopolskie</option>
-                    <option value="PL-14">mazowieckie</option>
-                    <option value="PL-16">opolskie</option>
-                    <option value="PL-20">podlaskie</option>
-                    <option value="PL-18">podkarpackie</option>
-                    <option value="PL-22">pomorskie</option>
-                    <option value="PL-26">świętokrzyskie</option>
-                    <option value="PL-24">śląskie</option>
-                    <option value="PL-28">warmińsko-mazurskie</option>
-                    <option value="PL-30">wielkopolskie</option>
-                    <option value="PL-32">zachodniopomorskie</option>
-                </select>
-                <button id="refreshBtn" class="btn" title="Refresh alerts"><i class="fa-solid fa-rotate"></i><span></span></button>
-            </div>
+        "
+      >
+        <div style="display: flex; align-items: center; gap: 1rem; width: 100%; justify-content: center">
+          <h1 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.75rem">
+            <span class="bg-agri-gradient"><i class="fas fa-tractor"></i></span>
+          </h1>
+          <div style="display: flex; flex-direction: column; align-items: flex-start">
+            <span class="main-title" style="font-size: 1.75rem">Rolnopol</span>
+            <span style="font-size: 0.9rem; color: #6a7b5e; font-weight: 400; margin-top: 0.1rem">Alerts and Notifications</span>
+          </div>
         </div>
+      </header>
 
-        <section id="upcomingSection" class="alerts-section">
-            <span class="section-title">Tomorrow <span class="count-pill" id="upcomingCount">0</span></span>
-            <div class="history-day">
-                <div class="history-day-title">
-                    <span id="tomorrowDate"></span>
-                </div>
-                <div id="upcomingList" class="history-day-grid" aria-live="polite"></div>
-            </div>
-        </section>
+      <div class="page-toolbar">
+        <div class="page-title">
+          <h1>Alerts</h1>
+          <p class="subtitle">Upcoming and recent events</p>
+        </div>
+        <div class="controls">
+          <input id="searchInput" class="input" type="search" placeholder="Search alerts..." aria-label="Search alerts" />
+          <select id="severityFilter" class="select" aria-label="Filter severity">
+            <option value="">All severities</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+          <select id="regionSelect" class="select" aria-label="Select region">
+            <option value="PL-02">dolnośląskie</option>
+            <option value="PL-04">kujawsko-pomorskie</option>
+            <option value="PL-08">lubuskie</option>
+            <option value="PL-10">łódzkie</option>
+            <option value="PL-06">lubelskie</option>
+            <option value="PL-12">małopolskie</option>
+            <option value="PL-14">mazowieckie</option>
+            <option value="PL-16">opolskie</option>
+            <option value="PL-20">podlaskie</option>
+            <option value="PL-18">podkarpackie</option>
+            <option value="PL-22">pomorskie</option>
+            <option value="PL-26">świętokrzyskie</option>
+            <option value="PL-24">śląskie</option>
+            <option value="PL-28">warmińsko-mazurskie</option>
+            <option value="PL-30">wielkopolskie</option>
+            <option value="PL-32">zachodniopomorskie</option>
+          </select>
+          <button id="refreshBtn" class="btn" title="Refresh alerts"><i class="fa-solid fa-rotate"></i><span></span></button>
+        </div>
+      </div>
 
-        <section id="todaySection" class="alerts-section">
-            <span class="section-title">Today <span class="count-pill" id="todayCount">0</span></span>
-            <div class="history-day">
-                <div class="history-day-title">
-                    <span id="todayDate"></span>
+      <section id="upcomingSection" class="alerts-section">
+        <span class="section-title">Tomorrow <span class="count-pill" id="upcomingCount">0</span></span>
+        <div class="history-day">
+          <div class="history-day-title">
+            <span id="tomorrowDate"></span>
+          </div>
+          <div id="upcomingList" class="history-day-grid" aria-live="polite"></div>
+        </div>
+      </section>
 
-                </div>
-                <div id="todayList" class="history-day-grid" aria-live="polite"></div>
-            </div>
-        </section>
+      <section id="todaySection" class="alerts-section">
+        <span class="section-title">Today <span class="count-pill" id="todayCount">0</span></span>
+        <div class="history-day">
+          <div class="history-day-title">
+            <span id="todayDate"></span>
+          </div>
+          <div id="todayList" class="history-day-grid" aria-live="polite"></div>
+        </div>
+      </section>
 
-
-        <section id="historySection" class="alerts-section">
-            <div class="section-title">
-                <span>Last 7 days</span>
-                <span class="count-pill" id="historyCount">0</span>
-            </div>
-            <div id="historyList" class="history-list" aria-live="polite"></div>
-        </section>
+      <section id="historySection" class="alerts-section">
+        <div class="section-title">
+          <span>Last 7 days</span>
+          <span class="count-pill" id="historyCount">0</span>
+        </div>
+        <div id="historyList" class="history-list" aria-live="polite"></div>
+      </section>
     </div>
     <div id="footer-component"></div>
 
     <script>
-        // Alerts page script with unified auth handling (AuthService when available)
-        (function () {
-            const refreshBtn = document.getElementById('refreshBtn');
-            const searchInput = document.getElementById('searchInput');
-            const severityFilter = document.getElementById('severityFilter');
-            const regionSelect = document.getElementById('regionSelect');
-            const upcomingEl = document.getElementById('upcomingList');
-            const todayListEl = () => document.getElementById('todayList');
-            const historyEl = document.getElementById('historyList');
-            const todayCountEl = document.getElementById('todayCount');
-            const upcomingCountEl = document.getElementById('upcomingCount');
-            const historyCountEl = document.getElementById('historyCount');
+      // Alerts page script with unified auth handling (AuthService when available)
+      (function () {
+        const refreshBtn = document.getElementById("refreshBtn");
+        const searchInput = document.getElementById("searchInput");
+        const severityFilter = document.getElementById("severityFilter");
+        const regionSelect = document.getElementById("regionSelect");
+        const upcomingEl = document.getElementById("upcomingList");
+        const todayListEl = () => document.getElementById("todayList");
+        const historyEl = document.getElementById("historyList");
+        const todayCountEl = document.getElementById("todayCount");
+        const upcomingCountEl = document.getElementById("upcomingCount");
+        const historyCountEl = document.getElementById("historyCount");
 
-            let lastData = null; // cache for client-side filtering
+        let lastData = null; // cache for client-side filtering
 
-            function getCookie(name) { const value = `; ${document.cookie}`; const parts = value.split(`; ${name}=`); if (parts.length === 2) return parts.pop().split(';').shift(); return null; }
-            // function clearAuthCookies() { ['rolnopolToken', 'rolnopolIsLogged', 'rolnopolLoginTime', 'rolnopolUserLabel', 'rolnopolUsername', 'rolnopolUserId'].forEach(n => { document.cookie = `${n}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT` }) }
-            // function isAuthenticated() { try { if (window.App && window.App.getModule) { const s = window.App.getModule('authService'); if (s) return s.isAuthenticated(); } } catch (_) { } return !!(getCookie('rolnopolToken') && (getCookie('rolnopolIsLogged') === 'true')); }
-            // function ensureAuth() { try { if (window.App && window.App.getModule) { const s = window.App.getModule('authService'); if (s) return s.requireAuth('/login.html'); } } catch (_) { } if (!isAuthenticated()) { window.location.href = '/login.html'; return false; } return true; }
+        function getCookie(name) {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop().split(";").shift();
+          return null;
+        }
+        // function clearAuthCookies() { ['rolnopolToken', 'rolnopolIsLogged', 'rolnopolLoginTime', 'rolnopolUserLabel', 'rolnopolUsername', 'rolnopolUserId'].forEach(n => { document.cookie = `${n}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT` }) }
+        // function isAuthenticated() { try { if (window.App && window.App.getModule) { const s = window.App.getModule('authService'); if (s) return s.isAuthenticated(); } } catch (_) { } return !!(getCookie('rolnopolToken') && (getCookie('rolnopolIsLogged') === 'true')); }
+        // function ensureAuth() { try { if (window.App && window.App.getModule) { const s = window.App.getModule('authService'); if (s) return s.requireAuth('/login.html'); } } catch (_) { } if (!isAuthenticated()) { window.location.href = '/login.html'; return false; } return true; }
 
-            function sevClass(sev) {
-                switch (sev) {
-                    case 'low':
-                        return 'sev-low';
-                    case 'medium':
-                        return 'sev-medium';
-                    case 'high':
-                        return 'sev-high';
-                    case 'critical':
-                        return 'sev-critical';
-                    case 'apocalyptic':
-                        return 'sev-apocalyptic';
-                    default:
-                        return 'sev-unknown';
-                }
-            }
-            function alertCard(a) {
-                return `<div class="alert-card" data-sev="${a.severity}">
+        function sevClass(sev) {
+          switch (sev) {
+            case "low":
+              return "sev-low";
+            case "medium":
+              return "sev-medium";
+            case "high":
+              return "sev-high";
+            case "critical":
+              return "sev-critical";
+            case "apocalyptic":
+              return "sev-apocalyptic";
+            default:
+              return "sev-unknown";
+          }
+        }
+        function alertCard(a) {
+          return `<div class="alert-card" data-sev="${a.severity}">
                     <div class="alert-head">
                       <div class="date">${a.date}</div>
                       <span class="badge ${sevClass(a.severity)}">${a.severity}</span>
                     </div>
                     <div class="alert-title">${a.title}</div>
-                    <div class="alert-category">${a.category || ''}</div>
-                    <div class="alert-message">${a.message || ''}</div>
+                    <div class="alert-category">${a.category || ""}</div>
+                    <div class="alert-message">${a.message || ""}</div>
                 </div>`;
+        }
+
+        function showSkeletons(container, n = 3) {
+          container.innerHTML = "";
+          for (let i = 0; i < n; i++) container.insertAdjacentHTML("beforeend", '<div class="skeleton" aria-hidden="true"></div>');
+        }
+
+        function applyFilters(data) {
+          if (!data) return data;
+          const q = (searchInput?.value || "").trim().toLowerCase();
+          const sev = (severityFilter?.value || "").toLowerCase();
+          const match = (a) => {
+            const okSev = !sev || (a.severity || "").toLowerCase() === sev;
+            if (!q) return okSev;
+            const hay = `${a.title || ""} ${a.message || ""} ${a.category || ""}`.toLowerCase();
+            return okSev && hay.includes(q);
+          };
+          const filt = (arr = []) => arr.filter(match);
+          return {
+            today: { alerts: filt(data?.today?.alerts || []) },
+            upcoming: { alerts: filt(data?.upcoming?.alerts || []) },
+            history: (data?.history || []).map((day) => ({
+              date: day.date,
+              alerts: filt(day.alerts || []),
+            })),
+          };
+        }
+
+        async function waitForAppInit() {
+          if (window.App && window.App.isInitialized) {
+            return true;
+          }
+
+          return new Promise((resolve) => {
+            let subscribed = false;
+            let attempts = 0;
+            const maxAttempts = 1200;
+            const check = () => {
+              attempts += 1;
+              if (window.App && window.App.isInitialized) {
+                resolve(true);
+                return;
+              }
+
+              const eventBus = window.App?.getEventBus?.();
+              if (eventBus && !subscribed) {
+                subscribed = true;
+                eventBus.on("app:initialized", () => resolve(true));
+              }
+
+              if (attempts < maxAttempts) {
+                setTimeout(check, 50);
+              } else {
+                resolve(false);
+              }
+            };
+
+            check();
+          });
+        }
+
+        async function gateAlertsFeature() {
+          const appReady = await waitForAppInit();
+          if (!appReady) {
+            if (typeof window.queueFeatureGateModal === "function") {
+              window.queueFeatureGateModal({
+                title: "Alerts Unavailable",
+                message: "Alerts are temporarily unavailable. Please try again later.",
+              });
             }
+            window.location.href = "/";
+            return false;
+          }
+          const featureFlagsService = window.App?.getModule?.("featureFlagsService");
+          if (!featureFlagsService || typeof featureFlagsService.isEnabled !== "function") {
+            return true;
+          }
 
-            function showSkeletons(container, n = 3) {
-                container.innerHTML = '';
-                for (let i = 0; i < n; i++) container.insertAdjacentHTML('beforeend', '<div class="skeleton" aria-hidden="true"></div>');
+          try {
+            const enabled = await featureFlagsService.isEnabled("alertsEnabled", true);
+            if (!enabled) {
+              if (typeof window.queueFeatureGateModal === "function") {
+                window.queueFeatureGateModal({
+                  title: "Alerts Unavailable",
+                  message: "Alerts are currently disabled. You can continue on the home page.",
+                });
+              }
+              window.location.href = "/";
+              return false;
             }
+          } catch (error) {
+            return true;
+          }
 
-            function applyFilters(data) {
-                if (!data) return data;
-                const q = (searchInput?.value || '').trim().toLowerCase();
-                const sev = (severityFilter?.value || '').toLowerCase();
-                const match = (a) => {
-                    const okSev = !sev || (a.severity || '').toLowerCase() === sev;
-                    if (!q) return okSev;
-                    const hay = `${a.title || ''} ${a.message || ''} ${a.category || ''}`.toLowerCase();
-                    return okSev && hay.includes(q);
-                };
-                const filt = (arr = []) => arr.filter(match);
-                return {
-                    today: { alerts: filt(data?.today?.alerts || []) },
-                    upcoming: { alerts: filt(data?.upcoming?.alerts || []) },
-                    history: (data?.history || []).map(day => ({
-                        date: day.date,
-                        alerts: filt(day.alerts || [])
-                    }))
-                };
-            }
+          return true;
+        }
 
-            async function loadAlerts() {
-                // if (!ensureAuth()) return;
-                const todayDate = new Date().toLocaleDateString('en-CA'); // Format as YYYY-MM-DD based on system locale
-                const tomorrowDate = new Date(Date.now() + 864e5).toLocaleDateString('en-CA');
+        async function loadAlerts() {
+          // if (!ensureAuth()) return;
+          const todayDate = new Date().toLocaleDateString("en-CA"); // Format as YYYY-MM-DD based on system locale
+          const tomorrowDate = new Date(Date.now() + 864e5).toLocaleDateString("en-CA");
 
-                document.getElementById('todayDate').textContent = todayDate;
-                document.getElementById('tomorrowDate').textContent = tomorrowDate;
+          document.getElementById("todayDate").textContent = todayDate;
+          document.getElementById("tomorrowDate").textContent = tomorrowDate;
 
-                try {
-                    const token = getCookie('rolnopolToken');
-                    const region = regionSelect.value;
-                    // skeletons while loading
-                    showSkeletons(todayListEl());
-                    showSkeletons(upcomingEl);
-                    showSkeletons(historyEl, 2);
-                    const res = await fetch(`/api/v1/alerts?date=${encodeURIComponent(todayDate)}&region=${encodeURIComponent(region)}`, {
-                        headers: { 'Content-Type': 'application/json', ...(token ? { 'token': token } : {}) },
-                        credentials: 'include'
-                    });
-                    const json = await res.json();
-                    // If unauthorized/forbidden -> clear session and redirect
-                    // if (res.status === 401 || res.status === 403) {
-                    //     try { if (window.App && window.App.getModule) { const s = window.App.getModule('authService'); if (s) await s.logout(); } } catch (_) { }
-                    //     clearAuthCookies();
-                    //     window.location.href = '/login.html';
-                    //     return;
-                    // }
-                    if (!res.ok || !json.success) throw new Error(json.error || 'Failed to load alerts');
-                    lastData = json.data;
-                    render();
-                } catch (e) {
-                    // if (String(e.message || e).toLowerCase().includes('unauthorized') || String(e.message || e).toLowerCase().includes('forbidden')) {
-                    //     clearAuthCookies();
-                    //     window.location.href = '/login.html';
-                    //     return;
-                    // }
-                    alert('Error: ' + e.message);
-                }
-            }
-
-            function render() {
-                const data = applyFilters(lastData) || { today: { alerts: [] }, upcoming: { alerts: [] }, history: [] };
-
-                // Today
-                const tEl = todayListEl();
-                if (tEl) {
-                    tEl.innerHTML = '';
-                    const list = data.today?.alerts || [];
-                    if (todayCountEl) todayCountEl.textContent = list.length;
-                    if (list.length) list.forEach(a => { tEl.insertAdjacentHTML('beforeend', alertCard(a)); });
-                    else tEl.innerHTML = '<div class="empty-state"><i class="fa-regular fa-bell-slash"></i> No alerts for today.</div>';
-                }
-
-                // Upcoming
-                upcomingEl.innerHTML = '';
-                const upList = data.upcoming?.alerts || [];
-                if (upcomingCountEl) upcomingCountEl.textContent = upList.length;
-                if (upList.length) upList.forEach(a => { upcomingEl.insertAdjacentHTML('beforeend', alertCard(a)); });
-                else upcomingEl.innerHTML = '<div class="empty-state"><i class="fa-regular fa-calendar"></i> No upcoming alerts.</div>';
-
-                // History - group by day with cards (ensure cards are inside the day's grid)
-                historyEl.innerHTML = '';
-                const hist = data.history || [];
-                if (historyCountEl) historyCountEl.textContent = hist.reduce((acc, d) => acc + (d.alerts?.length || 0), 0);
-                if (hist.length) {
-                    hist.forEach(day => {
-                        let dayHtml = `<div class="history-day">`;
-                        dayHtml += `<div class="history-day-title">${day.date}<span class="count-pill">${(day.alerts?.length || 0)}</span></div>`;
-                        dayHtml += `<div class="history-day-grid">`;
-                        if (day.alerts?.length) {
-                            (day.alerts || []).forEach(a => { dayHtml += alertCard(a); });
-                        } else {
-                            dayHtml += '<div class="history-day-empty empty-state"><i class="fa-regular fa-bell-slash"></i> No alerts for this day.</div>';
-                        }
-                        dayHtml += `</div></div>`; // close grid & day
-                        historyEl.insertAdjacentHTML('beforeend', dayHtml);
-                    });
-                } else {
-                    historyEl.innerHTML = '<div class="empty-state"><i class="fa-regular fa-clock"></i> No alerts in the last 7 days.</div>';
-                }
-            }
-
-            // Initialize
-            document.addEventListener('DOMContentLoaded', async () => {
-                // if (!ensureAuth()) return;
-                // Set region from localStorage or default
-                const savedRegion = localStorage.getItem('selectedRegion') || 'PL-14'; // Default to mazowieckie
-                if (regionSelect) regionSelect.value = savedRegion;
-                refreshBtn.addEventListener('click', loadAlerts);
-                if (searchInput) searchInput.addEventListener('input', render);
-                if (severityFilter) severityFilter.addEventListener('change', render);
-                if (regionSelect) {
-                    regionSelect.addEventListener('change', () => {
-                        localStorage.setItem('selectedRegion', regionSelect.value);
-                        loadAlerts();
-                    });
-                }
-                await loadAlerts();
+          try {
+            const token = getCookie("rolnopolToken");
+            const region = regionSelect.value;
+            // skeletons while loading
+            showSkeletons(todayListEl());
+            showSkeletons(upcomingEl);
+            showSkeletons(historyEl, 2);
+            const res = await fetch(`/api/v1/alerts?date=${encodeURIComponent(todayDate)}&region=${encodeURIComponent(region)}`, {
+              headers: { "Content-Type": "application/json", ...(token ? { token: token } : {}) },
+              credentials: "include",
             });
-        })();
+            const json = await res.json();
+            // If unauthorized/forbidden -> clear session and redirect
+            // if (res.status === 401 || res.status === 403) {
+            //     try { if (window.App && window.App.getModule) { const s = window.App.getModule('authService'); if (s) await s.logout(); } } catch (_) { }
+            //     clearAuthCookies();
+            //     window.location.href = '/login.html';
+            //     return;
+            // }
+            if (!res.ok || !json.success) throw new Error(json.error || "Failed to load alerts");
+            lastData = json.data;
+            render();
+          } catch (e) {
+            // if (String(e.message || e).toLowerCase().includes('unauthorized') || String(e.message || e).toLowerCase().includes('forbidden')) {
+            //     clearAuthCookies();
+            //     window.location.href = '/login.html';
+            //     return;
+            // }
+            if (typeof showNotification === "function") {
+              showNotification(`Error: ${e.message}`, "error");
+            } else if (typeof showAppModal === "function") {
+              showAppModal({
+                title: "Alerts Error",
+                message: `Error: ${e.message}`,
+                confirmText: "OK",
+              });
+            }
+          }
+        }
+
+        function render() {
+          const data = applyFilters(lastData) || { today: { alerts: [] }, upcoming: { alerts: [] }, history: [] };
+
+          // Today
+          const tEl = todayListEl();
+          if (tEl) {
+            tEl.innerHTML = "";
+            const list = data.today?.alerts || [];
+            if (todayCountEl) todayCountEl.textContent = list.length;
+            if (list.length)
+              list.forEach((a) => {
+                tEl.insertAdjacentHTML("beforeend", alertCard(a));
+              });
+            else tEl.innerHTML = '<div class="empty-state"><i class="fa-regular fa-bell-slash"></i> No alerts for today.</div>';
+          }
+
+          // Upcoming
+          upcomingEl.innerHTML = "";
+          const upList = data.upcoming?.alerts || [];
+          if (upcomingCountEl) upcomingCountEl.textContent = upList.length;
+          if (upList.length)
+            upList.forEach((a) => {
+              upcomingEl.insertAdjacentHTML("beforeend", alertCard(a));
+            });
+          else upcomingEl.innerHTML = '<div class="empty-state"><i class="fa-regular fa-calendar"></i> No upcoming alerts.</div>';
+
+          // History - group by day with cards (ensure cards are inside the day's grid)
+          historyEl.innerHTML = "";
+          const hist = data.history || [];
+          if (historyCountEl) historyCountEl.textContent = hist.reduce((acc, d) => acc + (d.alerts?.length || 0), 0);
+          if (hist.length) {
+            hist.forEach((day) => {
+              let dayHtml = `<div class="history-day">`;
+              dayHtml += `<div class="history-day-title">${day.date}<span class="count-pill">${day.alerts?.length || 0}</span></div>`;
+              dayHtml += `<div class="history-day-grid">`;
+              if (day.alerts?.length) {
+                (day.alerts || []).forEach((a) => {
+                  dayHtml += alertCard(a);
+                });
+              } else {
+                dayHtml +=
+                  '<div class="history-day-empty empty-state"><i class="fa-regular fa-bell-slash"></i> No alerts for this day.</div>';
+              }
+              dayHtml += `</div></div>`; // close grid & day
+              historyEl.insertAdjacentHTML("beforeend", dayHtml);
+            });
+          } else {
+            historyEl.innerHTML = '<div class="empty-state"><i class="fa-regular fa-clock"></i> No alerts in the last 7 days.</div>';
+          }
+        }
+
+        // Initialize
+        document.addEventListener("DOMContentLoaded", async () => {
+          // if (!ensureAuth()) return;
+          const canLoad = await gateAlertsFeature();
+          if (!canLoad) return;
+          // Set region from localStorage or default
+          const savedRegion = localStorage.getItem("selectedRegion") || "PL-14"; // Default to mazowieckie
+          if (regionSelect) regionSelect.value = savedRegion;
+          refreshBtn.addEventListener("click", loadAlerts);
+          if (searchInput) searchInput.addEventListener("input", render);
+          if (severityFilter) severityFilter.addEventListener("change", render);
+          if (regionSelect) {
+            regionSelect.addEventListener("change", () => {
+              localStorage.setItem("selectedRegion", regionSelect.value);
+              loadAlerts();
+            });
+          }
+          await loadAlerts();
+        });
+      })();
     </script>
 
     <!-- Core Dependencies -->
@@ -308,6 +381,7 @@
     <!-- Services -->
     <script src="/js/services/api-service.js"></script>
     <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
 
     <!-- Components -->
     <script src="/js/components/notification.js"></script>
@@ -328,8 +402,7 @@
     <script src="/js/app.js"></script>
     <script src="/js/utils/init-navigation.js"></script>
     <script>
-        initNavigation("alerts");
+      initNavigation("alerts");
     </script>
-</body>
-
+  </body>
 </html>

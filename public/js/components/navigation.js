@@ -7,6 +7,7 @@ class NavigationComponent {
     this.navElement = null;
     this.authService = null;
     this.currentUser = null;
+    this.featureFlagsService = null;
   }
 
   /**
@@ -16,6 +17,7 @@ class NavigationComponent {
   init(app) {
     this.eventBus = app.getEventBus();
     this.authService = app.getModule("authService");
+    this.featureFlagsService = app.getModule("featureFlagsService");
 
     // Find the navigation container
     this.navElement = document.getElementById("app");
@@ -34,15 +36,30 @@ class NavigationComponent {
     if (!this.navElement) return;
 
     try {
+      const flagState = await this._getFeatureFlagState();
       if (this.authService.isAuthenticated()) {
         const userData = await this.authService.getCurrentUser();
-        this._renderAuthenticatedNav(userData);
+        this._renderAuthenticatedNav(userData, flagState);
       } else {
-        this._renderUnauthenticatedNav();
+        this._renderUnauthenticatedNav(flagState);
       }
     } catch (error) {
       errorLogger.log("Navigation Update", error, { showToUser: false });
-      this._renderUnauthenticatedNav();
+      this._renderUnauthenticatedNav({ alertsEnabled: true, rolnopolMapEnabled: true });
+    }
+  }
+
+  async _getFeatureFlagState() {
+    if (!this.featureFlagsService || typeof this.featureFlagsService.isEnabled !== "function") {
+      return { alertsEnabled: true, rolnopolMapEnabled: true };
+    }
+
+    try {
+      const alertsEnabled = await this.featureFlagsService.isEnabled("alertsEnabled", true);
+      const rolnopolMapEnabled = await this.featureFlagsService.isEnabled("rolnopolMapEnabled", true);
+      return { alertsEnabled, rolnopolMapEnabled };
+    } catch (error) {
+      return { alertsEnabled: true, rolnopolMapEnabled: true };
     }
   }
   /**
@@ -170,8 +187,15 @@ class NavigationComponent {
    * Render navigation for authenticated users
    * @private
    */
-  _renderAuthenticatedNav(userData) {
+  _renderAuthenticatedNav(userData, flagState) {
     const username = userData.displayedName || userData.email || "User";
+    const alertsLink = flagState?.alertsEnabled
+      ? `
+        <a href="/alerts.html" class="nav__item">
+          <i class="fa-solid fa-bell"></i> Alerts
+        </a>
+      `
+      : "";
 
     this.navElement.innerHTML = `
       <span class="nav__welcome">
@@ -201,9 +225,7 @@ class NavigationComponent {
         <a href="/marketplace.html" class="nav__item">
           <i class="fa-solid fa-store"></i> Marketplace
         </a>
-        <a href="/alerts.html" class="nav__item">
-          <i class="fa-solid fa-bell"></i> Alerts
-        </a>
+        ${alertsLink}
         <a href="/docs.html" class="nav__item">
           <i class="fa-solid fa-book"></i> Documentation
         </a>

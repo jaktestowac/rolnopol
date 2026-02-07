@@ -41,7 +41,13 @@
 }
 
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    sans-serif;
   background-color: var(--background-color);
   color: var(--text-primary);
   line-height: 1.6;
@@ -466,7 +472,9 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   box-shadow: none;
   min-width: 0;
 }
@@ -691,7 +699,9 @@ body {
 .welcome-section {
   position: relative;
   background: linear-gradient(135deg, #b7e7c2 0%, #a3c9e2 100%);
-  box-shadow: 0 8px 32px 0 rgba(163, 201, 226, 0.12), 0 1.5px 8px 0 rgba(183, 231, 194, 0.1);
+  box-shadow:
+    0 8px 32px 0 rgba(163, 201, 226, 0.12),
+    0 1.5px 8px 0 rgba(183, 231, 194, 0.1);
   border-radius: var(--border-radius);
   padding: 3rem 2rem;
   margin-bottom: 3rem;
@@ -1156,7 +1166,10 @@ body {
   color: var(--primary-color);
   text-decoration: none;
   font-weight: 600;
-  transition: color 0.15s ease, opacity 0.15s ease, transform 0.12s ease;
+  transition:
+    color 0.15s ease,
+    opacity 0.15s ease,
+    transform 0.12s ease;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -1189,7 +1202,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  transition: color 0.15s ease, transform 0.12s ease;
+  transition:
+    color 0.15s ease,
+    transform 0.12s ease;
 }
 
 .footer .footer-github-link:hover {
@@ -1201,7 +1216,7 @@ body {
   text-decoration: none;
   color: #ff0000; /* YouTube red */
 }
-    
+
 .footer .footer-linkedin-link:hover {
   text-decoration: none;
   color: #0077b5; /* LinkedIn blue */
@@ -1341,6 +1356,75 @@ body {
   font-size: 0.875rem;
   line-height: 1.4;
   margin-left: 2rem;
+}
+
+/* App Modal */
+.app-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.app-modal__content {
+  position: relative;
+  z-index: 1101;
+  width: min(90vw, 480px);
+  border-radius: 0.9rem;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  box-shadow: var(--shadow-xl);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.app-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.app-modal__title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.app-modal__close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  padding: 0.25rem 0.5rem;
+}
+
+.app-modal__close:hover {
+  color: var(--text-primary);
+  background: var(--background-color);
+}
+
+.app-modal__body {
+  padding: 1rem 1.5rem 0.5rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.app-modal__footer {
+  padding: 0.75rem 1.5rem 1.25rem;
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Responsive Design */
@@ -2443,7 +2527,9 @@ body {
 .modal-content {
   background: var(--surface-color);
   border-radius: 1.25rem;
-  box-shadow: 0 8px 40px 0 rgba(34, 41, 47, 0.18), 0 1.5px 8px 0 rgba(37, 99, 235, 0.08);
+  box-shadow:
+    0 8px 40px 0 rgba(34, 41, 47, 0.18),
+    0 1.5px 8px 0 rgba(37, 99, 235, 0.08);
   border: 1.5px solid var(--border-color);
   max-width: 32rem;
   width: 95%;
@@ -2487,7 +2573,9 @@ body {
   padding: 0.5rem 0.7rem;
   border-radius: 50%;
   font-size: 1.25rem;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   box-shadow: none;
 }
 
@@ -2639,7 +2727,9 @@ body {
 
 /* Futuristic Card Shadow */
 .futuristic-card {
-  box-shadow: 0 4px 32px 0 rgba(34, 197, 94, 0.08), 0 1.5px 8px 0 rgba(37, 99, 235, 0.08);
+  box-shadow:
+    0 4px 32px 0 rgba(34, 197, 94, 0.08),
+    0 1.5px 8px 0 rgba(37, 99, 235, 0.08);
   border-radius: var(--border-radius);
   border: 1.5px solid var(--glass-border);
   background: var(--glass-bg);
@@ -2650,13 +2740,19 @@ body {
 .btn-futuristic {
   background: var(--futuristic-gradient);
   color: #fff;
-  box-shadow: 0 0 8px 0 rgba(34, 197, 94, 0.15), 0 0 16px 0 rgba(37, 99, 235, 0.08);
+  box-shadow:
+    0 0 8px 0 rgba(34, 197, 94, 0.15),
+    0 0 16px 0 rgba(37, 99, 235, 0.08);
   border: none;
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
 }
 .btn-futuristic:hover,
 .btn-futuristic:focus {
-  box-shadow: 0 0 16px 2px rgba(34, 197, 94, 0.25), 0 0 32px 4px rgba(37, 99, 235, 0.15);
+  box-shadow:
+    0 0 16px 2px rgba(34, 197, 94, 0.25),
+    0 0 32px 4px rgba(37, 99, 235, 0.15);
 }
 
 /* Agriculture Accent Button */
@@ -2665,7 +2761,10 @@ body {
   color: #fff;
   box-shadow: 0 2px 8px 0 rgba(34, 197, 94, 0.12);
   border: none;
-  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
 }
 .btn-agri:hover,
 .btn-agri:focus {
@@ -2679,7 +2778,10 @@ body {
   color: #fff;
   box-shadow: 0 2px 8px 0 rgba(182, 161, 107, 0.12);
   border: none;
-  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
 }
 .btn-earth:hover,
 .btn-earth:focus {
@@ -2813,7 +2915,10 @@ body {
   font-size: 0.97em;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border 0.15s;
   outline: none;
 }
 .pagination-btn.active,
@@ -2843,7 +2948,9 @@ body {
   padding: 1.1rem 1.5rem 1rem 1.5rem;
   display: flex;
   flex-direction: column;
-  transition: box-shadow 0.18s, transform 0.18s;
+  transition:
+    box-shadow 0.18s,
+    transform 0.18s;
   position: relative;
 }
 .list-card:hover {
@@ -2970,7 +3077,9 @@ body {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   border-radius: 1.5rem;
-  box-shadow: 0 8px 40px 0 rgba(239, 68, 68, 0.18), 0 1.5px 8px 0 rgba(37, 99, 235, 0.08);
+  box-shadow:
+    0 8px 40px 0 rgba(239, 68, 68, 0.18),
+    0 1.5px 8px 0 rgba(37, 99, 235, 0.08);
   border: 2.5px solid var(--error-color);
   max-width: 28rem;
   width: 97%;
@@ -3002,7 +3111,9 @@ body {
   background: none;
   border: none;
   font-size: 1.3rem;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 #deleteAccountModal .modal-close:hover,
 #deleteAccountModal .modal-close:focus {
@@ -3048,7 +3159,9 @@ body {
   margin-bottom: 0.2rem;
   background: rgba(255, 255, 255, 0.7);
   color: var(--text-primary);
-  transition: border 0.2s, box-shadow 0.2s;
+  transition:
+    border 0.2s,
+    box-shadow 0.2s;
 }
 #deleteAccountModal .form-input.valid {
   border-color: var(--agri-green);
@@ -3128,7 +3241,9 @@ body {
   min-width: 10rem;
   box-shadow: 0 2px 8px 0 rgba(34, 197, 94, 0.1);
   cursor: pointer;
-  transition: background 0.18s, box-shadow 0.18s;
+  transition:
+    background 0.18s,
+    box-shadow 0.18s;
 }
 .fillDemoBtn:hover,
 .fillDemoBtn:focus {
@@ -3148,7 +3263,10 @@ body {
   background: var(--agri-green-light, #e6f9e6);
   color: #1a3d1a;
   box-shadow: 0 2px 8px 0 rgba(34, 197, 94, 0.08);
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    box-shadow 0.18s;
   margin-right: 0.5em;
   cursor: pointer;
   outline: none;

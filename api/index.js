@@ -13,6 +13,8 @@ const { clearAllTokens } = require("../helpers/token.helpers");
 const packageJson = require("../package.json");
 const notFoundStatsModule = require("../helpers/notfound-stats");
 
+app.set("etag", false);
+
 // Initialize databases on startup
 initializeDatabases().catch((error) => {
   logError("Failed to initialize databases:", { error });
@@ -27,6 +29,7 @@ const initializeAllDatabases = async () => {
       dbManager.getUsersDatabase(),
       dbManager.getFinancialDatabase(),
       dbManager.getMarketplaceDatabase(),
+      dbManager.getFeatureFlagsDatabase(),
       dbManager.getFieldsDatabase(),
       dbManager.getStaffDatabase(),
       dbManager.getAnimalsDatabase(),
@@ -107,7 +110,7 @@ app.get("/api", (req, res) => {
         "GET /api/v1/financial/stats - Get financial statistics (requires auth)",
         "POST /api/v1/financial/transfer - Transfer funds (requires auth)",
       ],
-    })
+    }),
   );
 });
 
@@ -160,7 +163,7 @@ app.get("/api", (req, res) => {
         v2: ["GET /api/v2/ - Version information", "GET /api/v2/healthcheck - Health check"],
       },
       note: "Use specific version endpoints (e.g., /api/v1/, /api/v2/) for API calls",
-    })
+    }),
   );
 });
 
@@ -192,7 +195,7 @@ app.use("/api", (req, res) => {
     formatResponseBody({
       error: "API endpoint not found",
       suggestion: "Try /api/v1/ or /api/v2/ for versioned endpoints",
-    })
+    }),
   );
 });
 
@@ -201,7 +204,7 @@ app.use("/admin", (req, res) => {
   res.status(404).json(
     formatResponseBody({
       error: "Admin endpoint not found",
-    })
+    }),
   );
 });
 
@@ -211,7 +214,7 @@ app.use((error, req, res, next) => {
   res.status(500).json(
     formatResponseBody({
       error: "Internal server error",
-    })
+    }),
   );
 });
 

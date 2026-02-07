@@ -131,3 +131,4 @@ window.showDemo = function () {
 };
 
 window.demo = window.showDemo; // Alias for easier access
+window.users = window.showDemo; // Alias for easier access

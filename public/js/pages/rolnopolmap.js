@@ -7,6 +7,7 @@
     constructor() {
       this.apiService = null;
       this.authService = null;
+      this.featureFlagsService = null;
       this.eventBus = null;
       this.root = null;
       this.state = {
@@ -45,10 +46,16 @@
     async init(app) {
       this.apiService = app.getModule("apiService");
       this.authService = app.getModule("authService");
+      this.featureFlagsService = app.getModule("featureFlagsService");
       this.eventBus = app.getEventBus();
 
       // Require authentication
       if (!this.authService || !this.authService.requireAuth("/login.html")) return;
+
+      const isEnabled = await this._ensureFeatureEnabled();
+      if (!isEnabled) {
+        return;
+      }
 
       // Prefer the abstract-map container used by the page; fallback to legacy id
       this.root = document.getElementById("abstract-map") || document.getElementById("rolnopol-map");
@@ -61,6 +68,30 @@
       this._setupControls();
       this._ensureControlsUI();
       await this._maybeLoadAreasFromApi();
+    }
+
+    async _ensureFeatureEnabled() {
+      if (!this.featureFlagsService || typeof this.featureFlagsService.isEnabled !== "function") {
+        return true;
+      }
+
+      try {
+        const enabled = await this.featureFlagsService.isEnabled("rolnopolMapEnabled", true);
+        if (!enabled) {
+          if (typeof window.queueFeatureGateModal === "function") {
+            window.queueFeatureGateModal({
+              title: "Map Unavailable",
+              message: "The Rolnopol map is currently disabled. You can return to the home page.",
+            });
+          }
+          window.location.href = "/";
+          return false;
+        }
+      } catch (error) {
+        return true;
+      }
+
+      return true;
     }
 
     _renderSvg(areas) {
@@ -133,7 +164,7 @@
             // Ensure visible even for small areas: fixed px size and explicit display
             icon.setAttribute(
               "style",
-              "line-height:1; display:block; pointer-events:none; user-select:none; paint-order:stroke; stroke:rgba(0,0,0,0.45); stroke-width:2px;"
+              "line-height:1; display:block; pointer-events:none; user-select:none; paint-order:stroke; stroke:rgba(0,0,0,0.45); stroke-width:2px;",
             );
             icon.textContent = String(a.details.icon);
             g.appendChild(icon);
@@ -211,7 +242,7 @@
           svg.setAttribute("viewBox", `${this._vb.x} ${this._vb.y} ${this._vb.w} ${this._vb.h}`);
           this._applyLabelVisibility();
         },
-        { passive: false }
+        { passive: false },
       );
 
       // Mouse drag pan
@@ -250,7 +281,7 @@
           this._drag.vbStartX = this._vb.x;
           this._drag.vbStartY = this._vb.y;
         },
-        { passive: false }
+        { passive: false },
       );
       svg.addEventListener(
         "touchmove",
@@ -268,7 +299,7 @@
           svg.setAttribute("viewBox", `${this._vb.x} ${this._vb.y} ${this._vb.w} ${this._vb.h}`);
           this._applyLabelVisibility();
         },
-        { passive: false }
+        { passive: false },
       );
       svg.addEventListener("touchend", () => {
         this._drag.active = false;

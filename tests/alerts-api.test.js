@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import request from "supertest";
 
 const app = require("../api/index.js");
@@ -13,12 +13,29 @@ async function createAndLoginUser() {
   return token;
 }
 
+async function setAlertsEnabled(enabled) {
+  await request(app)
+    .patch("/api/v1/feature-flags")
+    .send({ flags: { alertsEnabled: enabled } })
+    .expect(200);
+}
+
 describe("Alerts API", () => {
   let token;
+  let originalFlags;
   const seed = "2025-09-09";
 
   beforeAll(async () => {
     token = await createAndLoginUser();
+    const flagsRes = await request(app).get("/api/v1/feature-flags").expect(200);
+    originalFlags = flagsRes.body?.data?.flags || {};
+    await setAlertsEnabled(true);
+  });
+
+  afterAll(async () => {
+    if (originalFlags) {
+      await request(app).put("/api/v1/feature-flags").send({ flags: originalFlags }).expect(200);
+    }
   });
 
   it("GET /api/v1/alerts returns combined data", async () => {
@@ -72,5 +89,38 @@ describe("Alerts API", () => {
     expect(resUp.body.data.upcoming.date).toBe(futureNextSeed);
     expect(resUp.body.data.upcoming.alerts).toEqual([]);
     expect(resUp.body.message).toBe("We don't have predictions for dates beyond tomorrow.");
+  });
+
+  describe("when alerts feature flag is disabled", () => {
+    afterEach(async () => {
+      await setAlertsEnabled(true);
+    });
+
+    it("GET /api/v1/alerts returns 404", async () => {
+      await setAlertsEnabled(false);
+
+      const res = await request(app).get(`/api/v1/alerts?date=${seed}`).set("token", token).expect(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBe("Alerts not found");
+      expect(typeof res.body.timestamp).toBe("string");
+    });
+
+    it("GET /api/v1/alerts/history returns 404", async () => {
+      await setAlertsEnabled(false);
+
+      const res = await request(app).get(`/api/v1/alerts/history?date=${seed}`).set("token", token).expect(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBe("Alerts not found");
+      expect(typeof res.body.timestamp).toBe("string");
+    });
+
+    it("GET /api/v1/alerts/upcoming returns 404", async () => {
+      await setAlertsEnabled(false);
+
+      const res = await request(app).get(`/api/v1/alerts/upcoming?date=${seed}`).set("token", token).expect(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBe("Alerts not found");
+      expect(typeof res.body.timestamp).toBe("string");
+    });
   });
 });

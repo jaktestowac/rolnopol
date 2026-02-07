@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Backend - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/backend.css" />
+  </head>
+
+  <body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="container backend-page">
+      <div class="backend-ambient" aria-hidden="true">
+        <span class="backend-orb backend-orb--one"></span>
+        <span class="backend-orb backend-orb--two"></span>
+      </div>
+      <header class="header glass backend-header">
+        <div class="backend-header__title">
+          <span class="bg-agri-gradient"><i class="fas fa-sitemap"></i></span>
+          <div>
+            <h1>Backend</h1>
+            <p>Internal tools and operational pages.</p>
+          </div>
+        </div>
+        <div class="backend-header__meta">
+          <span class="backend-pill"><i class="fas fa-bolt"></i> Live</span>
+          <span class="backend-pill backend-pill--muted">No auth required</span>
+        </div>
+      </header>
+
+      <section class="glass backend-panel">
+        <h2>Available tools</h2>
+        <div class="backend-links">
+          <a class="backend-card" href="/feature-flags.html">
+            <div class="backend-card__icon"><i class="fas fa-toggle-on"></i></div>
+            <div>
+              <div class="backend-card__title">Feature Flags</div>
+              <div class="backend-card__desc">Toggle features instantly without restart.</div>
+            </div>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <!-- Core Dependencies -->
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <!-- Services -->
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <!-- Components -->
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+    <!-- API Functions -->
+    <script src="/js/api.js"></script>
+    <!-- Utilities -->
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("backend");
+    </script>
+  </body>
+</html>

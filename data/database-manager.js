@@ -90,6 +90,14 @@ class DatabaseManager {
   }
 
   /**
+   * Get feature flags database singleton
+   */
+  getFeatureFlagsDatabase() {
+    const defaultFlags = require("./feature-flags.json");
+    return this.getDatabase("feature-flags", "feature-flags.json", defaultFlags);
+  }
+
+  /**
    * Get users database singleton
    */
   getUsersDatabase() {
