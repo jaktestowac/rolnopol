@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Rolnopol",
-    "version": "1.0.71",
+    "version": "1.0.72",
     "description": "API documentation for the Rolnopol service with versioning support",
     "contact": {
       "name": "API Support",
