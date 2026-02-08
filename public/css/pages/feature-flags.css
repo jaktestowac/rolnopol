@@ -74,6 +74,29 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: center;
+}
+
+/* Compact header action buttons */
+.flags-header__actions .btn {
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  height: 34px;
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-width: auto;
+  line-height: 1;
+}
+
+.flags-header__actions .btn i {
+  font-size: 0.95rem;
+  display: inline-block;
+}
+
+.flags-header__actions .btn.btn-outline {
+  padding: 6px 10px;
 }
 
 .flags-pill {

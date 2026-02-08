@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <title>Staff & Fields - Export</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .staff-fields-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .staff-fields-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding: 20px 24px;
+        background: linear-gradient(135deg, #6a7b5e 0%, #8ba888 50%, #4a5d3a 100%);
+        border-radius: 16px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+          0 12px 24px rgba(106, 123, 94, 0.25),
+          0 0 0 1px rgba(255, 255, 255, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(20px);
+      }
+
+      .staff-fields-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+          linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
+      }
+
+      .staff-fields-header .header-content {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .staff-fields-header .header-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow:
+          0 6px 12px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .staff-fields-header .header-icon::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+      }
+
+      .staff-fields-header .header-icon:hover::before {
+        left: 100%;
+      }
+
+      .staff-fields-header .header-icon i {
+        font-size: 1.5rem;
+        color: #ffd700;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+      }
+
+      .staff-fields-header .header-text h1 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin: 0 0 4px 0;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.5px;
+        position: relative;
+      }
+
+      .staff-fields-header .header-text h1::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 40px;
+        height: 3px;
+        background: linear-gradient(90deg, #ffd700, #ffed4e);
+        border-radius: 2px;
+      }
+
+      .staff-fields-header .header-text p {
+        font-size: 0.85rem;
+        margin: 0;
+        opacity: 0.9;
+        font-weight: 400;
+        letter-spacing: 0.3px;
+        line-height: 1.3;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .staff-fields-header .header-stats {
+        display: flex;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .staff-fields-header .stat-item {
+        text-align: center;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        min-width: 70px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow:
+          0 3px 8px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .staff-fields-header .stat-number {
+        font-size: 1.1rem;
+        font-weight: 800;
+        display: block;
+        color: #ffd700;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .staff-fields-header .bright-stat-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-top: 2px;
+        display: block;
+        color: #ffd700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .navigation-tabs {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .nav-tab-button {
+        padding: 8px 16px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .nav-tab-button.active {
+        color: #6a7b5e;
+        border-bottom-color: #6a7b5e;
+      }
+
+      .nav-tab-button:hover {
+        color: #6a7b5e;
+      }
+
+      .export-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+      }
+
+      .export-description {
+        color: #5c6a5f;
+        margin: 0;
+      }
+
+      .export-note {
+        margin-top: 0.75rem;
+        font-size: 0.85rem;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      @media (max-width: 900px) {
+        .staff-fields-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 16px;
+        }
+
+        .staff-fields-header .header-stats {
+          width: 100%;
+          justify-content: flex-start;
+          flex-wrap: wrap;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .staff-fields-header {
+          padding: 16px;
+        }
+
+        .staff-fields-header .header-text h1 {
+          font-size: 1.3rem;
+        }
+
+        .staff-fields-header .header-text p {
+          font-size: 0.8rem;
+        }
+
+        .staff-fields-header .stat-item {
+          min-width: 60px;
+          padding: 8px 10px;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="staff-fields-container">
+      <div class="staff-fields-header">
+        <div class="header-content">
+          <div class="header-icon">
+            <i class="fas fa-file-export"></i>
+          </div>
+          <div class="header-text">
+            <h1>Data Export Center</h1>
+            <p>Download staff, fields, and livestock data in JSON format.</p>
+          </div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-item">
+            <span class="stat-number">3</span>
+            <span class="bright-stat-label">Exports</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">JSON</span>
+            <span class="bright-stat-label">Format</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">Ready</span>
+            <span class="bright-stat-label">Status</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="navigation-tabs">
+        <a href="/staff-fields-main.html" class="nav-tab-button">Main</a>
+        <a href="/staff-fields-assign.html" class="nav-tab-button">Assign</a>
+        <a href="/staff-fields-charts.html" class="nav-tab-button">Charts</a>
+        <a
+          href="/staff-fields-export.html"
+          class="nav-tab-button active"
+          data-feature-flag="staffFieldsExportEnabled"
+          data-feature-flag-default="false"
+          >Export</a
+        >
+      </div>
+
+      <main class="main" data-feature-flag="staffFieldsExportEnabled" data-feature-flag-default="false">
+        <div class="profile-card-modern">
+          <div class="card-header-modern">
+            <h3><i class="fas fa-file-export"></i> Export Data</h3>
+          </div>
+          <div class="card-content-modern">
+            <p class="export-description">Choose a dataset to download. Each export contains your latest saved records.</p>
+            <div class="export-actions">
+              <button id="exportFieldsBtn" class="btn btn-futuristic btn-compact"><i class="fas fa-seedling"></i> Fields JSON</button>
+              <button id="exportStaffBtn" class="btn btn-futuristic btn-compact"><i class="fas fa-user"></i> Staff JSON</button>
+              <button id="exportAnimalsBtn" class="btn btn-futuristic btn-compact"><i class="fas fa-cow"></i> Animals JSON</button>
+            </div>
+            <p class="export-note"><i class="fas fa-info-circle"></i> Export files are downloaded to your device.</p>
+            <div id="exportStatus" class="message-modern" aria-live="polite"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/staff-fields-export.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("staff-fields");
+    </script>
+  </body>
+</html>

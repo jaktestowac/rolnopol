@@ -4,10 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
     <title>Staff & Fields Charts - Rolnopol</title>
     <link rel="stylesheet" href="/css/styles.css" />
     <style>
@@ -23,12 +20,7 @@
         justify-content: space-between;
         margin-bottom: 20px;
         padding: 20px 24px;
-        background: linear-gradient(
-          135deg,
-          #6a7b5e 0%,
-          #8ba888 50%,
-          #4a5d3a 100%
-        );
+        background: linear-gradient(135deg, #6a7b5e 0%, #8ba888 50%, #4a5d3a 100%);
         border-radius: 16px;
         color: white;
         position: relative;
@@ -48,22 +40,9 @@
         right: 0;
         bottom: 0;
         background:
-          radial-gradient(
-            circle at 20% 80%,
-            rgba(255, 255, 255, 0.15) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 80% 20%,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 50%
-          ),
-          linear-gradient(
-            45deg,
-            transparent 30%,
-            rgba(255, 255, 255, 0.05) 50%,
-            transparent 70%
-          );
+          radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+          linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
       }
 
       .staff-fields-header .header-content {
@@ -99,12 +78,7 @@
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.2),
-          transparent
-        );
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
         transition: left 0.5s ease;
       }
 
@@ -199,11 +173,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.1) 0%,
-          transparent 50%
-        );
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
         opacity: 0;
         transition: opacity 0.3s ease;
       }
@@ -346,16 +316,8 @@
         right: 0;
         bottom: 0;
         background:
-          radial-gradient(
-            circle at 20% 80%,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 80% 20%,
-            rgba(255, 255, 255, 0.05) 0%,
-            transparent 50%
-          );
+          radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
       }
 
       .charts-header h3 {
@@ -556,9 +518,7 @@
           </div>
           <div class="header-text">
             <h1>Analytics & Insights</h1>
-            <p>
-              Comprehensive charts and analytics for staff and field management
-            </p>
+            <p>Comprehensive charts and analytics for staff and field management</p>
           </div>
         </div>
         <div class="header-stats">
@@ -585,8 +545,13 @@
       <div class="navigation-tabs">
         <a href="/staff-fields-main.html" class="nav-tab-button">Main</a>
         <a href="/staff-fields-assign.html" class="nav-tab-button">Assign</a>
-        <a href="/staff-fields-charts.html" class="nav-tab-button active"
-          >Charts</a
+        <a href="/staff-fields-charts.html" class="nav-tab-button active">Charts</a>
+        <a
+          href="/staff-fields-export.html"
+          class="nav-tab-button"
+          data-feature-flag="staffFieldsExportEnabled"
+          data-feature-flag-default="false"
+          >Export</a
         >
       </div>
 
@@ -690,23 +655,12 @@
           try {
             // First try to get data from the global page instance
             const chartsPage = window.staffFieldsChartsPage;
-            if (
-              chartsPage &&
-              chartsPage.fields &&
-              chartsPage.staff &&
-              chartsPage.animals
-            ) {
+            if (chartsPage && chartsPage.fields && chartsPage.staff && chartsPage.animals) {
               // Calculate totals from page instance
               const totalFields = chartsPage.fields.length;
               const totalStaff = chartsPage.staff.length;
-              const totalAnimals = chartsPage.animals.reduce(
-                (sum, a) => sum + (parseInt(a.amount) || 0),
-                0,
-              );
-              const totalArea = chartsPage.fields.reduce(
-                (sum, f) => sum + (parseFloat(f.area) || 0),
-                0,
-              );
+              const totalAnimals = chartsPage.animals.reduce((sum, a) => sum + (parseInt(a.amount) || 0), 0);
+              const totalArea = chartsPage.fields.reduce((sum, f) => sum + (parseFloat(f.area) || 0), 0);
 
               // Update header stats
               const totalChartsEl = document.getElementById("totalCharts");
@@ -715,56 +669,34 @@
               const chartStatusEl = document.getElementById("chartStatus");
 
               if (totalChartsEl) totalChartsEl.textContent = "4";
-              if (dataPointsEl)
-                dataPointsEl.textContent =
-                  totalFields + totalStaff + totalAnimals;
-              if (lastUpdatedEl)
-                lastUpdatedEl.textContent = new Date().toLocaleTimeString();
+              if (dataPointsEl) dataPointsEl.textContent = totalFields + totalStaff + totalAnimals;
+              if (lastUpdatedEl) lastUpdatedEl.textContent = new Date().toLocaleTimeString();
               if (chartStatusEl) chartStatusEl.textContent = "Ready";
             } else {
               // Fallback: Try to get data from API directly
-              const apiService = window.ApiService
-                ? new window.ApiService()
-                : null;
+              const apiService = window.ApiService ? new window.ApiService() : null;
               if (apiService) {
                 // Load data directly from API
-                const [fieldsResponse, staffResponse, animalsResponse] =
-                  await Promise.all([
-                    apiService.get("fields", { requiresAuth: true }),
-                    apiService.get("staff", { requiresAuth: true }),
-                    apiService.get("animals", { requiresAuth: true }),
-                  ]);
+                const [fieldsResponse, staffResponse, animalsResponse] = await Promise.all([
+                  apiService.get("fields", { requiresAuth: true }),
+                  apiService.get("staff", { requiresAuth: true }),
+                  apiService.get("animals", { requiresAuth: true }),
+                ]);
 
                 // Calculate totals
                 const fields =
-                  fieldsResponse.success &&
-                  fieldsResponse.data &&
-                  Array.isArray(fieldsResponse.data.data)
-                    ? fieldsResponse.data.data
-                    : [];
+                  fieldsResponse.success && fieldsResponse.data && Array.isArray(fieldsResponse.data.data) ? fieldsResponse.data.data : [];
                 const staff =
-                  staffResponse.success &&
-                  staffResponse.data &&
-                  Array.isArray(staffResponse.data.data)
-                    ? staffResponse.data.data
-                    : [];
+                  staffResponse.success && staffResponse.data && Array.isArray(staffResponse.data.data) ? staffResponse.data.data : [];
                 const animals =
-                  animalsResponse.success &&
-                  animalsResponse.data &&
-                  Array.isArray(animalsResponse.data.data)
+                  animalsResponse.success && animalsResponse.data && Array.isArray(animalsResponse.data.data)
                     ? animalsResponse.data.data
                     : [];
 
                 const totalFields = fields.length;
                 const totalStaff = staff.length;
-                const totalAnimals = animals.reduce(
-                  (sum, a) => sum + (parseInt(a.amount) || 0),
-                  0,
-                );
-                const totalArea = fields.reduce(
-                  (sum, f) => sum + (parseFloat(f.area) || 0),
-                  0,
-                );
+                const totalAnimals = animals.reduce((sum, a) => sum + (parseInt(a.amount) || 0), 0);
+                const totalArea = fields.reduce((sum, f) => sum + (parseFloat(f.area) || 0), 0);
 
                 // Update header stats
                 const totalChartsEl = document.getElementById("totalCharts");
@@ -773,11 +705,8 @@
                 const chartStatusEl = document.getElementById("chartStatus");
 
                 if (totalChartsEl) totalChartsEl.textContent = "4";
-                if (dataPointsEl)
-                  dataPointsEl.textContent =
-                    totalFields + totalStaff + totalAnimals;
-                if (lastUpdatedEl)
-                  lastUpdatedEl.textContent = new Date().toLocaleTimeString();
+                if (dataPointsEl) dataPointsEl.textContent = totalFields + totalStaff + totalAnimals;
+                if (lastUpdatedEl) lastUpdatedEl.textContent = new Date().toLocaleTimeString();
                 if (chartStatusEl) chartStatusEl.textContent = "Ready";
               }
             }

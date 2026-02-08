@@ -3,11 +3,17 @@ const dbManager = require("../data/database-manager");
 const FEATURE_FLAG_DESCRIPTIONS = {
   alertsEnabled: "Enable or disable the alerts system for animals and operations",
   rolnopolMapEnabled: "Enable or disable the interactive map feature",
+  docsSearchEnabled: "Enable or disable documentation search",
+  contactFormEnabled: "Enable or disable the contact form",
+  staffFieldsExportEnabled: "Enable or disable staff/fields/animals JSON exports",
 };
 
 const PREDEFINED_FEATURE_FLAGS = {
   alertsEnabled: true,
   rolnopolMapEnabled: true,
+  docsSearchEnabled: false,
+  contactFormEnabled: true,
+  staffFieldsExportEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

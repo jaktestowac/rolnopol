@@ -4,10 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Assign Staff to Fields - Rolnopol</title>
     <link rel="stylesheet" href="/css/styles.css" />
@@ -24,12 +21,7 @@
         justify-content: space-between;
         margin-bottom: 20px;
         padding: 20px 24px;
-        background: linear-gradient(
-          135deg,
-          #6a7b5e 0%,
-          #8ba888 50%,
-          #4a5d3a 100%
-        );
+        background: linear-gradient(135deg, #6a7b5e 0%, #8ba888 50%, #4a5d3a 100%);
         border-radius: 16px;
         color: white;
         position: relative;
@@ -49,22 +41,9 @@
         right: 0;
         bottom: 0;
         background:
-          radial-gradient(
-            circle at 20% 80%,
-            rgba(255, 255, 255, 0.15) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 80% 20%,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 50%
-          ),
-          linear-gradient(
-            45deg,
-            transparent 30%,
-            rgba(255, 255, 255, 0.05) 50%,
-            transparent 70%
-          );
+          radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+          linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
       }
 
       .staff-fields-header .header-content {
@@ -100,12 +79,7 @@
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.2),
-          transparent
-        );
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
         transition: left 0.5s ease;
       }
 
@@ -200,11 +174,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.1) 0%,
-          transparent 50%
-        );
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
         opacity: 0;
         transition: opacity 0.3s ease;
       }
@@ -347,16 +317,8 @@
         right: 0;
         bottom: 0;
         background:
-          radial-gradient(
-            circle at 20% 80%,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 80% 20%,
-            rgba(255, 255, 255, 0.05) 0%,
-            transparent 50%
-          );
+          radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
       }
 
       .card-header-modern h3 {
@@ -636,10 +598,7 @@
           </div>
           <div class="header-text">
             <h1>Staff Assignment Management</h1>
-            <p>
-              Efficiently assign staff to fields and manage agricultural
-              operations
-            </p>
+            <p>Efficiently assign staff to fields and manage agricultural operations</p>
           </div>
         </div>
         <div class="header-stats">
@@ -665,10 +624,15 @@
       <!-- Navigation Tabs -->
       <div class="navigation-tabs">
         <a href="/staff-fields-main.html" class="nav-tab-button">Main</a>
-        <a href="/staff-fields-assign.html" class="nav-tab-button active"
-          >Assign</a
-        >
+        <a href="/staff-fields-assign.html" class="nav-tab-button active">Assign</a>
         <a href="/staff-fields-charts.html" class="nav-tab-button">Charts</a>
+        <a
+          href="/staff-fields-export.html"
+          class="nav-tab-button"
+          data-feature-flag="staffFieldsExportEnabled"
+          data-feature-flag-default="false"
+          >Export</a
+        >
       </div>
 
       <main class="main">
@@ -698,9 +662,7 @@
               <!-- Staff Assignment Summary -->
               <div id="staffAssignmentSummary" class="staff-summary-compact">
                 <i class="fas fa-users"></i>
-                <span id="unassignedStaffCount" class="unassigned-count"
-                  >Loading...</span
-                >
+                <span id="unassignedStaffCount" class="unassigned-count">Loading...</span>
                 <span class="total-staff">available</span>
                 <span class="staff-separator">/</span>
                 <span id="totalStaffCount" class="total-count">0</span>
@@ -708,11 +670,7 @@
               </div>
 
               <!-- Animals without fields warning -->
-              <div
-                id="animalsWarningSummary"
-                class="warning-summary-compact"
-                style="display: none"
-              >
+              <div id="animalsWarningSummary" class="warning-summary-compact" style="display: none">
                 <i class="fas fa-exclamation-triangle"></i>
                 <span id="unassignedAnimalsCount" class="warning-count">0</span>
                 <span class="warning-label">animals without fields</span>
@@ -726,12 +684,8 @@
                 title="Click to view fields with animals but no staff"
               >
                 <i class="fas fa-exclamation-circle"></i>
-                <span id="fieldsWithoutStaffCount" class="warning-count"
-                  >0</span
-                >
-                <span class="warning-label"
-                  >fields with animals but no staff</span
-                >
+                <span id="fieldsWithoutStaffCount" class="warning-count">0</span>
+                <span class="warning-label">fields with animals but no staff</span>
               </div>
             </div>
 
@@ -739,82 +693,40 @@
             <div class="visualization-controls">
               <div class="tabs-container">
                 <div class="tabs-header">
-                  <button class="tab-btn active" data-viz="grid">
-                    <i class="fas fa-th"></i> Grid
-                  </button>
-                  <button class="tab-btn" data-viz="list">
-                    <i class="fas fa-list"></i> List
-                  </button>
-                  <button class="tab-btn" data-viz="cards">
-                    <i class="fas fa-th-large"></i> Cards
-                  </button>
-                  <button class="tab-btn" data-viz="table">
-                    <i class="fas fa-table"></i> Table
-                  </button>
-                  <button class="tab-btn" data-viz="timeline">
-                    <i class="fas fa-clock"></i> Timeline
-                  </button>
-                  <button class="tab-btn" data-viz="tree">
-                    <i class="fas fa-sitemap"></i> Tree
-                  </button>
-                  <button class="tab-btn" data-viz="chart">
-                    <i class="fas fa-chart-bar"></i> Chart
-                  </button>
+                  <button class="tab-btn active" data-viz="grid"><i class="fas fa-th"></i> Grid</button>
+                  <button class="tab-btn" data-viz="list"><i class="fas fa-list"></i> List</button>
+                  <button class="tab-btn" data-viz="cards"><i class="fas fa-th-large"></i> Cards</button>
+                  <button class="tab-btn" data-viz="table"><i class="fas fa-table"></i> Table</button>
+                  <button class="tab-btn" data-viz="timeline"><i class="fas fa-clock"></i> Timeline</button>
+                  <button class="tab-btn" data-viz="tree"><i class="fas fa-sitemap"></i> Tree</button>
+                  <button class="tab-btn" data-viz="chart"><i class="fas fa-chart-bar"></i> Chart</button>
                 </div>
               </div>
             </div>
 
             <div id="assignments">
               <!-- Grid View (Default) -->
-              <div
-                id="assignmentsGrid"
-                class="assignments-grid"
-                style="display: none"
-              ></div>
+              <div id="assignmentsGrid" class="assignments-grid" style="display: none"></div>
 
               <!-- List View -->
               <div id="assignmentsList" class="info-list-modern"></div>
 
               <!-- Cards View -->
-              <div
-                id="assignmentsCards"
-                class="assignments-cards"
-                style="display: none"
-              ></div>
+              <div id="assignmentsCards" class="assignments-cards" style="display: none"></div>
 
               <!-- Table View -->
-              <div
-                id="assignmentsTable"
-                class="assignments-table"
-                style="display: none"
-              ></div>
+              <div id="assignmentsTable" class="assignments-table" style="display: none"></div>
 
               <!-- Timeline View -->
-              <div
-                id="assignmentsTimeline"
-                class="assignments-timeline"
-                style="display: none"
-              ></div>
+              <div id="assignmentsTimeline" class="assignments-timeline" style="display: none"></div>
 
               <!-- Tree View -->
-              <div
-                id="assignmentsTree"
-                class="assignments-tree"
-                style="display: none"
-              ></div>
+              <div id="assignmentsTree" class="assignments-tree" style="display: none"></div>
 
               <!-- Chart View -->
-              <div
-                id="assignmentsChart"
-                class="assignments-chart"
-                style="display: none"
-              >
+              <div id="assignmentsChart" class="assignments-chart" style="display: none">
                 <div class="chart-container">
-                  <canvas
-                    id="fieldsSizeChart"
-                    width="400"
-                    height="200"
-                  ></canvas>
+                  <canvas id="fieldsSizeChart" width="400" height="200"></canvas>
                 </div>
               </div>
             </div>
@@ -830,63 +742,31 @@
       <div class="modal-content glass compact">
         <div class="modal-header">
           <h3><i class="fas fa-link"></i> Assign Staff to Field</h3>
-          <button
-            id="closeAssignModal"
-            class="btn btn-icon btn-close"
-            aria-label="Close modal"
-          >
+          <button id="closeAssignModal" class="btn btn-icon btn-close" aria-label="Close modal">
             <i class="fas fa-times"></i>
           </button>
         </div>
         <div class="modal-body">
-          <form
-            id="assignStaffForm"
-            class="update-form-modern modal-form"
-            novalidate
-          >
+          <form id="assignStaffForm" class="update-form-modern modal-form" novalidate>
             <div class="form-group-modern">
-              <label for="assignField" class="form-label-modern"
-                ><i class="fas fa-seedling"></i> Field</label
-              >
-              <select
-                id="assignField"
-                name="assignField"
-                class="form-input-modern"
-                required
-                aria-required="true"
-              >
+              <label for="assignField" class="form-label-modern"><i class="fas fa-seedling"></i> Field</label>
+              <select id="assignField" name="assignField" class="form-input-modern" required aria-required="true">
                 <option value="">Select a field...</option>
               </select>
               <div class="form-error" id="assignFieldError"></div>
             </div>
 
             <div class="form-group-modern">
-              <label for="assignStaff" class="form-label-modern"
-                ><i class="fas fa-user"></i> Staff</label
-              >
-              <select
-                id="assignStaff"
-                name="assignStaff"
-                class="form-input-modern"
-                required
-                aria-required="true"
-              >
+              <label for="assignStaff" class="form-label-modern"><i class="fas fa-user"></i> Staff</label>
+              <select id="assignStaff" name="assignStaff" class="form-input-modern" required aria-required="true">
                 <option value="">Select a staff member...</option>
               </select>
               <div class="form-error" id="assignStaffError"></div>
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="btn btn-futuristic">
-                <i class="fas fa-link"></i> Assign Staff
-              </button>
-              <button
-                type="button"
-                id="cancelAssignModal"
-                class="btn btn-secondary"
-              >
-                <i class="fas fa-times"></i> Cancel
-              </button>
+              <button type="submit" class="btn btn-futuristic"><i class="fas fa-link"></i> Assign Staff</button>
+              <button type="button" id="cancelAssignModal" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</button>
             </div>
           </form>
         </div>
@@ -898,43 +778,23 @@
     </div>
 
     <!-- Fields Warning Modal -->
-    <div
-      id="fieldsWarningModal"
-      class="modal modal-centered"
-      style="display: none"
-    >
+    <div id="fieldsWarningModal" class="modal modal-centered" style="display: none">
       <div class="modal-content glass">
         <div class="modal-header">
-          <h3>
-            <i class="fas fa-exclamation-circle"></i> Fields with Animals but No
-            Staff
-          </h3>
-          <button
-            id="closeFieldsWarningModal"
-            class="btn btn-icon btn-close"
-            aria-label="Close modal"
-          >
+          <h3><i class="fas fa-exclamation-circle"></i> Fields with Animals but No Staff</h3>
+          <button id="closeFieldsWarningModal" class="btn btn-icon btn-close" aria-label="Close modal">
             <i class="fas fa-times"></i>
           </button>
         </div>
         <div class="modal-body">
           <div class="warning-description">
-            <p>
-              The following fields have animals assigned but no staff to manage
-              them:
-            </p>
+            <p>The following fields have animals assigned but no staff to manage them:</p>
           </div>
           <div id="fieldsWarningList" class="fields-warning-list">
             <!-- Fields will be populated here -->
           </div>
           <div class="form-actions">
-            <button
-              type="button"
-              id="closeFieldsWarningModalBtn"
-              class="btn btn-secondary"
-            >
-              <i class="fas fa-times"></i> Close
-            </button>
+            <button type="button" id="closeFieldsWarningModalBtn" class="btn btn-secondary"><i class="fas fa-times"></i> Close</button>
           </div>
         </div>
       </div>
@@ -972,59 +832,38 @@
               // Calculate totals from page instance
               const totalFields = assignPage.fields.length;
               const totalStaff = assignPage.staff.length;
-              const assignedStaff = assignPage.assignments
-                ? Object.values(assignPage.assignments).flat().length
-                : 0;
+              const assignedStaff = assignPage.assignments ? Object.values(assignPage.assignments).flat().length : 0;
               const unassignedStaff = totalStaff - assignedStaff;
-              const coverageRate =
-                totalStaff > 0
-                  ? Math.round((assignedStaff / totalStaff) * 100)
-                  : 0;
+              const coverageRate = totalStaff > 0 ? Math.round((assignedStaff / totalStaff) * 100) : 0;
 
               // Update header stats
               const assignedStaffEl = document.getElementById("assignedStaff");
-              const unassignedStaffEl =
-                document.getElementById("unassignedStaff");
+              const unassignedStaffEl = document.getElementById("unassignedStaff");
               const totalFieldsEl = document.getElementById("totalFields");
               const coverageRateEl = document.getElementById("coverageRate");
 
               if (assignedStaffEl) assignedStaffEl.textContent = assignedStaff;
-              if (unassignedStaffEl)
-                unassignedStaffEl.textContent = unassignedStaff;
+              if (unassignedStaffEl) unassignedStaffEl.textContent = unassignedStaff;
               if (totalFieldsEl) totalFieldsEl.textContent = totalFields;
-              if (coverageRateEl)
-                coverageRateEl.textContent = coverageRate + "%";
+              if (coverageRateEl) coverageRateEl.textContent = coverageRate + "%";
             } else {
               // Fallback: Try to get data from API directly
-              const apiService = window.ApiService
-                ? new window.ApiService()
-                : null;
+              const apiService = window.ApiService ? new window.ApiService() : null;
               if (apiService) {
                 // Load data directly from API
-                const [fieldsResponse, staffResponse, assignmentsResponse] =
-                  await Promise.all([
-                    apiService.get("fields", { requiresAuth: true }),
-                    apiService.get("staff", { requiresAuth: true }),
-                    apiService.get("fields/assign", { requiresAuth: true }),
-                  ]);
+                const [fieldsResponse, staffResponse, assignmentsResponse] = await Promise.all([
+                  apiService.get("fields", { requiresAuth: true }),
+                  apiService.get("staff", { requiresAuth: true }),
+                  apiService.get("fields/assign", { requiresAuth: true }),
+                ]);
 
                 // Calculate totals
                 const fields =
-                  fieldsResponse.success &&
-                  fieldsResponse.data &&
-                  Array.isArray(fieldsResponse.data.data)
-                    ? fieldsResponse.data.data
-                    : [];
+                  fieldsResponse.success && fieldsResponse.data && Array.isArray(fieldsResponse.data.data) ? fieldsResponse.data.data : [];
                 const staff =
-                  staffResponse.success &&
-                  staffResponse.data &&
-                  Array.isArray(staffResponse.data.data)
-                    ? staffResponse.data.data
-                    : [];
+                  staffResponse.success && staffResponse.data && Array.isArray(staffResponse.data.data) ? staffResponse.data.data : [];
                 const assignments =
-                  assignmentsResponse.success &&
-                  assignmentsResponse.data &&
-                  Array.isArray(assignmentsResponse.data.data)
+                  assignmentsResponse.success && assignmentsResponse.data && Array.isArray(assignmentsResponse.data.data)
                     ? assignmentsResponse.data.data
                     : [];
 
@@ -1032,26 +871,18 @@
                 const totalStaff = staff.length;
                 const assignedStaff = assignments.length;
                 const unassignedStaff = totalStaff - assignedStaff;
-                const coverageRate =
-                  totalStaff > 0
-                    ? Math.round((assignedStaff / totalStaff) * 100)
-                    : 0;
+                const coverageRate = totalStaff > 0 ? Math.round((assignedStaff / totalStaff) * 100) : 0;
 
                 // Update header stats
-                const assignedStaffEl =
-                  document.getElementById("assignedStaff");
-                const unassignedStaffEl =
-                  document.getElementById("unassignedStaff");
+                const assignedStaffEl = document.getElementById("assignedStaff");
+                const unassignedStaffEl = document.getElementById("unassignedStaff");
                 const totalFieldsEl = document.getElementById("totalFields");
                 const coverageRateEl = document.getElementById("coverageRate");
 
-                if (assignedStaffEl)
-                  assignedStaffEl.textContent = assignedStaff;
-                if (unassignedStaffEl)
-                  unassignedStaffEl.textContent = unassignedStaff;
+                if (assignedStaffEl) assignedStaffEl.textContent = assignedStaff;
+                if (unassignedStaffEl) unassignedStaffEl.textContent = unassignedStaff;
                 if (totalFieldsEl) totalFieldsEl.textContent = totalFields;
-                if (coverageRateEl)
-                  coverageRateEl.textContent = coverageRate + "%";
+                if (coverageRateEl) coverageRateEl.textContent = coverageRate + "%";
               }
             }
           } catch (error) {

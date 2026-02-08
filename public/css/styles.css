@@ -2832,6 +2832,11 @@ body {
   animation: agriBgMove 24s linear infinite;
 }
 
+/* Feature flag default-hidden elements */
+[data-feature-flag][data-feature-flag-default="false"]:not([data-feature-flag-enabled="true"]) {
+  display: none;
+}
+
 /* Futuristic Loader */
 .futuristic-loader {
   border: 3px solid #e2e8f0;

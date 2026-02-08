@@ -27,8 +27,10 @@
           </div>
         </div>
         <div class="flags-header__actions">
-          <span class="flags-pill"><i class="fas fa-bolt"></i> Live</span>
-          <span class="flags-pill flags-pill--muted">Public endpoint</span>
+          <a href="/backend.html" class="btn btn-outline" title="Open backend tools">
+            <i class="fas fa-sitemap"></i>
+            Backend
+          </a>
           <button id="resetFlagsBtn" class="btn btn-outline" type="button" title="Reset to predefined feature flags">
             <i class="fas fa-redo"></i>
             Reset
@@ -39,8 +41,6 @@
           </button>
         </div>
       </header>
-
-      <section class="flags-status" id="flagsStatus" aria-live="polite"></section>
 
       <section class="glass flags-panel">
         <div class="flags-panel__meta">

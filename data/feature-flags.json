@@ -1,7 +1,10 @@
 {
   "flags": {
     "alertsEnabled": true,
-    "rolnopolMapEnabled": true
+    "rolnopolMapEnabled": true,
+    "docsSearchEnabled": false,
+    "contactFormEnabled": true,
+    "staffFieldsExportEnabled": false
   },
-  "updatedAt": "2026-02-07T12:52:45.697Z"
+  "updatedAt": "2026-02-08T00:50:35.545Z"
 }

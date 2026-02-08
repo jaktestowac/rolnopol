@@ -4,10 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
     <title>Staff & Fields - Main</title>
     <link rel="stylesheet" href="/css/styles.css" />
     <style>
@@ -23,12 +20,7 @@
         justify-content: space-between;
         margin-bottom: 20px;
         padding: 20px 24px;
-        background: linear-gradient(
-          135deg,
-          #6a7b5e 0%,
-          #8ba888 50%,
-          #4a5d3a 100%
-        );
+        background: linear-gradient(135deg, #6a7b5e 0%, #8ba888 50%, #4a5d3a 100%);
         border-radius: 16px;
         color: white;
         position: relative;
@@ -48,22 +40,9 @@
         right: 0;
         bottom: 0;
         background:
-          radial-gradient(
-            circle at 20% 80%,
-            rgba(255, 255, 255, 0.15) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 80% 20%,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 50%
-          ),
-          linear-gradient(
-            45deg,
-            transparent 30%,
-            rgba(255, 255, 255, 0.05) 50%,
-            transparent 70%
-          );
+          radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+          linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
       }
 
       .staff-fields-header .header-content {
@@ -99,12 +78,7 @@
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.2),
-          transparent
-        );
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
         transition: left 0.5s ease;
       }
 
@@ -199,11 +173,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.1) 0%,
-          transparent 50%
-        );
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
         opacity: 0;
         transition: opacity 0.3s ease;
       }
@@ -354,16 +324,8 @@
         right: 0;
         bottom: 0;
         background:
-          radial-gradient(
-            circle at 20% 80%,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 80% 20%,
-            rgba(255, 255, 255, 0.05) 0%,
-            transparent 50%
-          );
+          radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
       }
 
       .card-header-modern h3 {
@@ -579,10 +541,7 @@
           </div>
           <div class="header-text">
             <h1>Staff & Fields Management</h1>
-            <p>
-              Comprehensive management of agricultural staff, fields, and
-              livestock
-            </p>
+            <p>Comprehensive management of agricultural staff, fields, and livestock</p>
           </div>
         </div>
         <div class="header-stats">
@@ -610,6 +569,13 @@
         <a href="/staff-fields-main.html" class="nav-tab-button active">Main</a>
         <a href="/staff-fields-assign.html" class="nav-tab-button">Assign</a>
         <a href="/staff-fields-charts.html" class="nav-tab-button">Charts</a>
+        <a
+          href="/staff-fields-export.html"
+          class="nav-tab-button"
+          data-feature-flag="staffFieldsExportEnabled"
+          data-feature-flag-default="false"
+          >Export</a
+        >
       </div>
 
       <main class="main">
@@ -622,11 +588,7 @@
             <div class="card-content-modern">
               <div id="fieldsPagination"></div>
               <ul id="fieldsList" class="info-list-modern"></ul>
-              <button
-                id="openAddFieldModal"
-                class="btn btn-futuristic btn-compact"
-                style="margin-top: 1rem"
-              >
+              <button id="openAddFieldModal" class="btn btn-futuristic btn-compact" style="margin-top: 1rem">
                 <i class="fas fa-plus"></i> Add Field
               </button>
               <div id="fieldMessage" class="message-modern"></div>
@@ -641,11 +603,7 @@
             <div class="card-content-modern">
               <div id="staffPagination"></div>
               <ul id="staffList" class="info-list-modern"></ul>
-              <button
-                id="openAddStaffModal"
-                class="btn btn-futuristic btn-compact"
-                style="margin-top: 1rem"
-              >
+              <button id="openAddStaffModal" class="btn btn-futuristic btn-compact" style="margin-top: 1rem">
                 <i class="fas fa-plus"></i> Add Staff
               </button>
               <div id="staffMessage" class="message-modern"></div>
@@ -659,18 +617,9 @@
             </div>
             <div class="card-content-modern">
               <div id="animalsPagination"></div>
-              <input
-                id="animalsSearch"
-                class="form-input-modern"
-                type="text"
-                placeholder="Search animals..."
-              />
+              <input id="animalsSearch" class="form-input-modern" type="text" placeholder="Search animals..." />
               <ul id="animalsList" class="info-list-modern"></ul>
-              <button
-                id="openAddAnimalModal"
-                class="btn btn-futuristic btn-compact"
-                style="margin-top: 1rem"
-              >
+              <button id="openAddAnimalModal" class="btn btn-futuristic btn-compact" style="margin-top: 1rem">
                 <i class="fas fa-plus"></i> Add Animal
               </button>
               <div id="animalMessage" class="message-modern"></div>
@@ -692,15 +641,9 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <form
-          id="addFieldForm"
-          class="update-form-modern modal-form"
-          novalidate
-        >
+        <form id="addFieldForm" class="update-form-modern modal-form" novalidate>
           <div class="form-group-modern">
-            <label for="fieldName" class="form-label-modern"
-              ><i class="fas fa-tag"></i> Field Name</label
-            >
+            <label for="fieldName" class="form-label-modern"><i class="fas fa-tag"></i> Field Name</label>
             <input
               type="text"
               id="fieldName"
@@ -715,9 +658,7 @@
             <div class="form-error" id="fieldNameError"></div>
           </div>
           <div class="form-group-modern">
-            <label for="fieldArea" class="form-label-modern"
-              ><i class="fas fa-ruler-combined"></i> Area (ha)</label
-            >
+            <label for="fieldArea" class="form-label-modern"><i class="fas fa-ruler-combined"></i> Area (ha)</label>
             <input
               type="number"
               id="fieldArea"
@@ -732,9 +673,7 @@
             />
             <div class="form-error" id="fieldAreaError"></div>
           </div>
-          <button type="submit" class="btn btn-futuristic btn-compact">
-            <i class="fas fa-plus"></i> Add Field
-          </button>
+          <button type="submit" class="btn btn-futuristic btn-compact"><i class="fas fa-plus"></i> Add Field</button>
           <div class="form-error" id="fieldMessage"></div>
         </form>
       </div>
@@ -748,15 +687,9 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <form
-          id="addStaffForm"
-          class="update-form-modern modal-form"
-          novalidate
-        >
+        <form id="addStaffForm" class="update-form-modern modal-form" novalidate>
           <div class="form-group-modern">
-            <label for="staffName" class="form-label-modern"
-              ><i class="fas fa-user"></i> Name</label
-            >
+            <label for="staffName" class="form-label-modern"><i class="fas fa-user"></i> Name</label>
             <input
               type="text"
               id="staffName"
@@ -771,9 +704,7 @@
             <div class="form-error" id="staffNameError"></div>
           </div>
           <div class="form-group-modern">
-            <label for="staffSurname" class="form-label-modern"
-              ><i class="fas fa-user-tag"></i> Surname</label
-            >
+            <label for="staffSurname" class="form-label-modern"><i class="fas fa-user-tag"></i> Surname</label>
             <input
               type="text"
               id="staffSurname"
@@ -788,9 +719,7 @@
             <div class="form-error" id="staffSurnameError"></div>
           </div>
           <div class="form-group-modern">
-            <label for="staffAge" class="form-label-modern"
-              ><i class="fas fa-birthday-cake"></i> Age</label
-            >
+            <label for="staffAge" class="form-label-modern"><i class="fas fa-birthday-cake"></i> Age</label>
             <input
               type="number"
               id="staffAge"
@@ -804,9 +733,7 @@
             />
             <div class="form-error" id="staffAgeError"></div>
           </div>
-          <button type="submit" class="btn btn-futuristic btn-compact">
-            <i class="fas fa-plus"></i> Add Staff
-          </button>
+          <button type="submit" class="btn btn-futuristic btn-compact"><i class="fas fa-plus"></i> Add Staff</button>
           <div class="form-error" id="staffMessage"></div>
         </form>
       </div>
@@ -820,28 +747,14 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <form
-          id="addAnimalForm"
-          class="update-form-modern modal-form"
-          novalidate
-        >
+        <form id="addAnimalForm" class="update-form-modern modal-form" novalidate>
           <div class="form-group-modern">
-            <label for="animalType" class="form-label-modern"
-              ><i class="fa-solid fa-cow"></i> Type</label
-            >
-            <select
-              id="animalType"
-              name="animalType"
-              class="form-input-modern"
-              required
-              aria-required="true"
-            ></select>
+            <label for="animalType" class="form-label-modern"><i class="fa-solid fa-cow"></i> Type</label>
+            <select id="animalType" name="animalType" class="form-input-modern" required aria-required="true"></select>
             <div class="form-error" id="animalTypeError"></div>
           </div>
           <div class="form-group-modern">
-            <label for="animalAmount" class="form-label-modern"
-              ><i class="fas fa-hashtag"></i> Amount</label
-            >
+            <label for="animalAmount" class="form-label-modern"><i class="fas fa-hashtag"></i> Amount</label>
             <input
               type="number"
               id="animalAmount"
@@ -857,29 +770,17 @@
             <div class="form-error" id="animalAmountError"></div>
           </div>
           <div class="form-group-modern">
-            <label for="animalField" class="form-label-modern"
-              ><i class="fas fa-seedling"></i> Field (optional)</label
-            >
-            <select
-              id="animalField"
-              name="animalField"
-              class="form-input-modern"
-            ></select>
+            <label for="animalField" class="form-label-modern"><i class="fas fa-seedling"></i> Field (optional)</label>
+            <select id="animalField" name="animalField" class="form-input-modern"></select>
             <div class="form-error" id="animalFieldError"></div>
           </div>
-          <button type="submit" class="btn btn-futuristic btn-compact">
-            <i class="fas fa-plus"></i> Add Animal
-          </button>
+          <button type="submit" class="btn btn-futuristic btn-compact"><i class="fas fa-plus"></i> Add Animal</button>
           <div class="form-error" id="animalMessage"></div>
         </form>
       </div>
     </div>
     <!-- Edit Animal Modal -->
-    <div
-      id="editAnimalModal"
-      class="modal modal-centered"
-      style="display: none"
-    >
+    <div id="editAnimalModal" class="modal modal-centered" style="display: none">
       <div class="modal-content glass">
         <div class="modal-header">
           <h3><i class="fa-solid fa-cow"></i> Edit Animal</h3>
@@ -887,29 +788,15 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <form
-          id="editAnimalForm"
-          class="update-form-modern modal-form"
-          novalidate
-        >
+        <form id="editAnimalForm" class="update-form-modern modal-form" novalidate>
           <input type="hidden" id="editAnimalId" name="editAnimalId" />
           <div class="form-group-modern">
-            <label for="editAnimalType" class="form-label-modern"
-              ><i class="fa-solid fa-cow"></i> Type</label
-            >
-            <select
-              id="editAnimalType"
-              name="editAnimalType"
-              class="form-input-modern"
-              required
-              aria-required="true"
-            ></select>
+            <label for="editAnimalType" class="form-label-modern"><i class="fa-solid fa-cow"></i> Type</label>
+            <select id="editAnimalType" name="editAnimalType" class="form-input-modern" required aria-required="true"></select>
             <div class="form-error" id="editAnimalTypeError"></div>
           </div>
           <div class="form-group-modern">
-            <label for="editAnimalAmount" class="form-label-modern"
-              ><i class="fas fa-hashtag"></i> Amount</label
-            >
+            <label for="editAnimalAmount" class="form-label-modern"><i class="fas fa-hashtag"></i> Amount</label>
             <input
               type="number"
               id="editAnimalAmount"
@@ -925,19 +812,11 @@
             <div class="form-error" id="editAnimalAmountError"></div>
           </div>
           <div class="form-group-modern">
-            <label for="editAnimalField" class="form-label-modern"
-              ><i class="fas fa-seedling"></i> Field (optional)</label
-            >
-            <select
-              id="editAnimalField"
-              name="editAnimalField"
-              class="form-input-modern"
-            ></select>
+            <label for="editAnimalField" class="form-label-modern"><i class="fas fa-seedling"></i> Field (optional)</label>
+            <select id="editAnimalField" name="editAnimalField" class="form-input-modern"></select>
             <div class="form-error" id="editAnimalFieldError"></div>
           </div>
-          <button type="submit" class="btn btn-futuristic btn-compact">
-            <i class="fas fa-save"></i> Save Changes
-          </button>
+          <button type="submit" class="btn btn-futuristic btn-compact"><i class="fas fa-save"></i> Save Changes</button>
           <div class="form-error" id="editAnimalMessage"></div>
         </form>
       </div>
@@ -946,9 +825,7 @@
     <div id="confirmModal" class="modal modal-centered" style="display: none">
       <div class="modal-content glass">
         <div class="modal-header">
-          <h3 id="confirmModalTitle">
-            <i class="fas fa-exclamation-triangle"></i> Confirm Action
-          </h3>
+          <h3 id="confirmModalTitle"><i class="fas fa-exclamation-triangle"></i> Confirm Action</h3>
           <button class="modal-close" id="closeConfirmModal">
             <i class="fas fa-times"></i>
           </button>
@@ -956,16 +833,9 @@
         <div class="modal-body">
           <p id="confirmModalMessage">Are you sure you want to proceed?</p>
         </div>
-        <div
-          class="modal-footer"
-          style="display: flex; justify-content: flex-end; gap: 1rem"
-        >
-          <button class="btn btn-secondary" id="cancelConfirmModal">
-            Cancel
-          </button>
-          <button class="btn btn-danger" id="confirmConfirmModal">
-            Confirm
-          </button>
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 1rem">
+          <button class="btn btn-secondary" id="cancelConfirmModal">Cancel</button>
+          <button class="btn btn-danger" id="confirmConfirmModal">Confirm</button>
         </div>
       </div>
     </div>
@@ -998,23 +868,12 @@
           try {
             // First try to get data from the global page instance
             const mainPage = window.staffFieldsMainPage;
-            if (
-              mainPage &&
-              mainPage.fields &&
-              mainPage.staff &&
-              mainPage.animals
-            ) {
+            if (mainPage && mainPage.fields && mainPage.staff && mainPage.animals) {
               // Calculate totals from page instance
               const totalFields = mainPage.fields.length;
               const totalStaff = mainPage.staff.length;
-              const totalAnimals = mainPage.animals.reduce(
-                (sum, a) => sum + (parseInt(a.amount) || 0),
-                0,
-              );
-              const totalArea = mainPage.fields.reduce(
-                (sum, f) => sum + (parseFloat(f.area) || 0),
-                0,
-              );
+              const totalAnimals = mainPage.animals.reduce((sum, a) => sum + (parseInt(a.amount) || 0), 0);
+              const totalArea = mainPage.fields.reduce((sum, f) => sum + (parseFloat(f.area) || 0), 0);
 
               // Update header stats
               const totalFieldsEl = document.getElementById("totalFields");
@@ -1028,48 +887,29 @@
               if (totalAreaEl) totalAreaEl.textContent = totalArea.toFixed(1);
             } else {
               // Fallback: Try to get data from API directly
-              const apiService = window.ApiService
-                ? new window.ApiService()
-                : null;
+              const apiService = window.ApiService ? new window.ApiService() : null;
               if (apiService) {
                 // Load data directly from API
-                const [fieldsResponse, staffResponse, animalsResponse] =
-                  await Promise.all([
-                    apiService.get("fields", { requiresAuth: true }),
-                    apiService.get("staff", { requiresAuth: true }),
-                    apiService.get("animals", { requiresAuth: true }),
-                  ]);
+                const [fieldsResponse, staffResponse, animalsResponse] = await Promise.all([
+                  apiService.get("fields", { requiresAuth: true }),
+                  apiService.get("staff", { requiresAuth: true }),
+                  apiService.get("animals", { requiresAuth: true }),
+                ]);
 
                 // Calculate totals
                 const fields =
-                  fieldsResponse.success &&
-                  fieldsResponse.data &&
-                  Array.isArray(fieldsResponse.data.data)
-                    ? fieldsResponse.data.data
-                    : [];
+                  fieldsResponse.success && fieldsResponse.data && Array.isArray(fieldsResponse.data.data) ? fieldsResponse.data.data : [];
                 const staff =
-                  staffResponse.success &&
-                  staffResponse.data &&
-                  Array.isArray(staffResponse.data.data)
-                    ? staffResponse.data.data
-                    : [];
+                  staffResponse.success && staffResponse.data && Array.isArray(staffResponse.data.data) ? staffResponse.data.data : [];
                 const animals =
-                  animalsResponse.success &&
-                  animalsResponse.data &&
-                  Array.isArray(animalsResponse.data.data)
+                  animalsResponse.success && animalsResponse.data && Array.isArray(animalsResponse.data.data)
                     ? animalsResponse.data.data
                     : [];
 
                 const totalFields = fields.length;
                 const totalStaff = staff.length;
-                const totalAnimals = animals.reduce(
-                  (sum, a) => sum + (parseInt(a.amount) || 0),
-                  0,
-                );
-                const totalArea = fields.reduce(
-                  (sum, f) => sum + (parseFloat(f.area) || 0),
-                  0,
-                );
+                const totalAnimals = animals.reduce((sum, a) => sum + (parseInt(a.amount) || 0), 0);
+                const totalArea = fields.reduce((sum, f) => sum + (parseFloat(f.area) || 0), 0);
 
                 // Update header stats
                 const totalFieldsEl = document.getElementById("totalFields");

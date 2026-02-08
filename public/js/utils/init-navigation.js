@@ -69,6 +69,50 @@ function initNavigation(activeNavKey) {
       }
     };
 
+    const applyFeatureFlagVisibility = async () => {
+      const featureNodes = Array.from(document.querySelectorAll("[data-feature-flag]"));
+      if (featureNodes.length === 0) {
+        return;
+      }
+
+      await ensureFeatureFlagsService();
+      const featureFlagsService = window.App?.getModule?.("featureFlagsService");
+      if (!featureFlagsService || typeof featureFlagsService.isEnabled !== "function") {
+        return;
+      }
+
+      await Promise.all(
+        featureNodes.map(async (node) => {
+          const flagKey = node.getAttribute("data-feature-flag");
+          if (!flagKey) {
+            return;
+          }
+
+          const defaultAttr = node.getAttribute("data-feature-flag-default");
+          const defaultValue = defaultAttr === "true" ? true : defaultAttr === "false" ? false : false;
+
+          try {
+            const enabled = await featureFlagsService.isEnabled(flagKey, defaultValue);
+            if (!enabled) {
+              node.style.display = "none";
+              node.setAttribute("data-feature-flag-hidden", "true");
+              node.removeAttribute("data-feature-flag-enabled");
+            } else {
+              node.style.removeProperty("display");
+              node.removeAttribute("data-feature-flag-hidden");
+              node.setAttribute("data-feature-flag-enabled", "true");
+            }
+          } catch (error) {
+            if (!defaultValue) {
+              node.style.display = "none";
+              node.setAttribute("data-feature-flag-hidden", "true");
+              node.removeAttribute("data-feature-flag-enabled");
+            }
+          }
+        }),
+      );
+    };
+
     async function syncHeaderNav() {
       await ensureFeatureFlagsService();
       if (typeof updateHeaderNav !== "function") {
@@ -178,6 +222,8 @@ function initNavigation(activeNavKey) {
     if (typeof initFooter === "function") {
       await initFooter();
     }
+
+    await applyFeatureFlagVisibility();
   });
 }
 

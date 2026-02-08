@@ -3,9 +3,12 @@ const router = express.Router();
 const { getLogList } = require("../helpers/logger-api");
 const { logDebug, logError, logInfo } = require("../helpers/logger-api");
 const dbManager = require("../data/database-manager");
+const { requireFeatureFlag } = require("../middleware/feature-flag.middleware");
 
 // POST /api/contact - submit contact form
-router.post("/", async (req, res) => {
+const contactFeatureFlag = requireFeatureFlag("contactFormEnabled", { resourceName: "Contact" });
+
+router.post("/", contactFeatureFlag, async (req, res) => {
   const { name, email, subject, message } = req.body;
   // verify contact form fields
   if (!name || !email || !subject || !message) {
@@ -35,11 +38,7 @@ router.post("/", async (req, res) => {
   logInfo("Contact Form Submission", { name, email, subject, message });
 
   try {
-    const contactsDb = dbManager.getCustomDatabase(
-      "contacts",
-      "contacts.json",
-      [],
-    );
+    const contactsDb = dbManager.getCustomDatabase("contacts", "contacts.json", []);
 
     const contactRecord = {
       name,

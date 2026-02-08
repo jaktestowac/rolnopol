@@ -25,7 +25,6 @@ class FeatureFlagsPage {
 
   _cacheDom() {
     this.listEl = document.getElementById("flagsList");
-    this.statusEl = document.getElementById("flagsStatus");
     this.updatedAtEl = document.getElementById("flagsUpdatedAt");
     this.flagsCountEl = document.getElementById("flagsCount");
     this.reloadBtn = document.getElementById("reloadFlagsBtn");
@@ -73,11 +72,19 @@ class FeatureFlagsPage {
   }
 
   _setStatus(message, isError = false) {
-    if (!this.statusEl) {
+    if (!message) return;
+    const type = isError ? "error" : /(?:loaded|updated|reset)/i.test(message) ? "success" : "info";
+    const duration = isError ? 6000 : 3500;
+    if (typeof window !== "undefined" && typeof window.showNotification === "function") {
+      window.showNotification(message, type, duration);
       return;
     }
-    this.statusEl.textContent = message || "";
-    this.statusEl.classList.toggle("is-error", isError);
+    // Fallback logging
+    if (isError) {
+      console.error(message);
+    } else {
+      console.info(message);
+    }
   }
 
   _formatUpdatedAt(value) {
@@ -96,7 +103,6 @@ class FeatureFlagsPage {
   }
 
   async _loadFlags() {
-    this._setStatus("Loading flags...");
     try {
       const response = await this.featureFlagsService.getFlags({ descriptions: true });
       const payload = response?.data?.data;
@@ -110,7 +116,6 @@ class FeatureFlagsPage {
       this.flags = payload.flags || {};
       this.updatedAt = payload.updatedAt || null;
       this._renderFlags();
-      this._setStatus("Flags loaded.");
     } catch (error) {
       this._setStatus("Failed to load feature flags", true);
     }
@@ -153,7 +158,6 @@ class FeatureFlagsPage {
   }
 
   async _toggleFlag(flagKey, nextValue) {
-    this._setStatus(`Updating ${flagKey}...`);
     try {
       const response = await this.featureFlagsService.updateFlags({
         [flagKey]: !!nextValue,
@@ -188,7 +192,6 @@ class FeatureFlagsPage {
 
   async _confirmReset() {
     this._closeResetModal();
-    this._setStatus("Resetting feature flags...");
     try {
       const response = await this.featureFlagsService.resetFlags();
       const payload = response?.data?.data;
