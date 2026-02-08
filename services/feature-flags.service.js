@@ -4,6 +4,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   alertsEnabled: "Enable or disable the alerts system for animals and operations",
   rolnopolMapEnabled: "Enable or disable the interactive map feature",
   docsSearchEnabled: "Enable or disable documentation search",
+  docsAdvancedSearchEnabled: "Enable or disable advanced search filters on the documentation page",
   contactFormEnabled: "Enable or disable the contact form",
   staffFieldsExportEnabled: "Enable or disable staff/fields/animals JSON exports",
 };
@@ -12,6 +13,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   alertsEnabled: true,
   rolnopolMapEnabled: true,
   docsSearchEnabled: false,
+  docsAdvancedSearchEnabled: false,
   contactFormEnabled: true,
   staffFieldsExportEnabled: false,
 };

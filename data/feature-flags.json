@@ -3,8 +3,9 @@
     "alertsEnabled": true,
     "rolnopolMapEnabled": true,
     "docsSearchEnabled": false,
+    "docsAdvancedSearchEnabled": false,
     "contactFormEnabled": true,
     "staffFieldsExportEnabled": false
   },
-  "updatedAt": "2026-02-08T00:50:35.545Z"
+  "updatedAt": "2026-02-08T01:11:06.089Z"
 }

@@ -295,6 +295,90 @@
         display: none;
       }
 
+      .docs-search-advanced {
+        display: none;
+        margin-top: 0.8rem;
+        padding-top: 0.8rem;
+        border-top: 1px solid rgba(106, 123, 94, 0.1);
+      }
+
+      .docs-search-advanced.active {
+        display: block;
+      }
+
+      .docs-search-filters {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+
+      .docs-search-filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+      }
+
+      .docs-search-filter-label {
+        font-size: 0.8rem;
+        color: #6a7b5e;
+        font-weight: 500;
+      }
+
+      .docs-search-filter-options {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+
+      .docs-search-filter-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.6rem;
+        border: 1px solid rgba(106, 123, 94, 0.2);
+        border-radius: 0.4rem;
+        background: rgba(255, 255, 255, 0.9);
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+      }
+
+      .docs-search-filter-option:hover {
+        border-color: rgba(106, 123, 94, 0.4);
+        background: rgba(106, 123, 94, 0.05);
+      }
+
+      .docs-search-filter-option input[type="checkbox"] {
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .docs-search-mode-toggle {
+        display: flex;
+        gap: 0.3rem;
+        border: 1px solid rgba(106, 123, 94, 0.2);
+        border-radius: 0.4rem;
+        padding: 0.2rem;
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .docs-search-mode-btn {
+        padding: 0.3rem 0.6rem;
+        border: none;
+        background: transparent;
+        color: #6a7b5e;
+        cursor: pointer;
+        font-size: 0.8rem;
+        border-radius: 0.3rem;
+        transition: all 0.2s ease;
+      }
+
+      .docs-search-mode-btn.active {
+        background: rgba(106, 123, 94, 0.2);
+        color: #2d3a2d;
+        font-weight: 500;
+      }
+
       .docs-header-title-col {
         display: flex;
         flex-direction: column;
@@ -502,6 +586,44 @@
                 <input id="docs-search-input" type="search" placeholder="Search documentation" autocomplete="off" />
               </div>
               <div class="docs-search-empty" id="docs-search-empty">No matching sections.</div>
+
+              <!-- Advanced Search UI (hidden by default) -->
+              <div class="docs-search-advanced" id="docs-search-advanced">
+                <div class="docs-search-filters">
+                  <!-- Search Mode -->
+                  <div class="docs-search-filter-group">
+                    <span class="docs-search-filter-label">Match Mode</span>
+                    <div class="docs-search-mode-toggle" id="docs-search-mode">
+                      <button class="docs-search-mode-btn active" data-mode="contains">Contains</button>
+                      <button class="docs-search-mode-btn" data-mode="exact">Exact</button>
+                      <button class="docs-search-mode-btn" data-mode="regex">Regex</button>
+                    </div>
+                  </div>
+
+                  <!-- Search Scope -->
+                  <div class="docs-search-filter-group">
+                    <span class="docs-search-filter-label">Search In</span>
+                    <div class="docs-search-filter-options" id="docs-search-scope">
+                      <label class="docs-search-filter-option">
+                        <input type="checkbox" value="title" checked />
+                        Titles
+                      </label>
+                      <label class="docs-search-filter-option">
+                        <input type="checkbox" value="content" checked />
+                        Content
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Case Sensitivity -->
+                  <div class="docs-search-filter-group">
+                    <label class="docs-search-filter-option">
+                      <input type="checkbox" id="docs-search-case-sensitive" />
+                      Case Sensitive
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
             <ul class="docs-nav" id="dynamic-docs-nav" data-testid="docs-nav">
               <!-- Navigation will be built dynamically -->
@@ -625,6 +747,148 @@
 
         input.addEventListener("input", filterSections);
         filterSections();
+      };
+
+      const setupDocsAdvancedSearch = () => {
+        const wrapper = document.getElementById("docs-search");
+        const advancedSearchDiv = document.getElementById("docs-search-advanced");
+        const searchInput = document.getElementById("docs-search-input");
+        const modeButtons = document.querySelectorAll("#docs-search-mode .docs-search-mode-btn");
+        const scopeCheckboxes = document.querySelectorAll("#docs-search-scope input[type='checkbox']");
+        const caseSensitiveCheckbox = document.getElementById("docs-search-case-sensitive");
+        const empty = document.getElementById("docs-search-empty");
+
+        if (!wrapper || !advancedSearchDiv || !searchInput) {
+          return;
+        }
+
+        wrapper.style.display = "block";
+
+        let searchMode = "contains";
+        const searchScope = { title: true, content: true };
+        let caseSensitive = false;
+
+        // Set up mode buttons
+        modeButtons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            modeButtons.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            searchMode = btn.dataset.mode;
+            performAdvancedSearch();
+          });
+        });
+
+        // Set up scope checkboxes
+        scopeCheckboxes.forEach((checkbox) => {
+          checkbox.addEventListener("change", () => {
+            searchScope[checkbox.value] = checkbox.checked;
+            performAdvancedSearch();
+          });
+        });
+
+        // Set up case sensitivity
+        caseSensitiveCheckbox.addEventListener("change", () => {
+          caseSensitive = caseSensitiveCheckbox.checked;
+          performAdvancedSearch();
+        });
+
+        // Toggle advanced search panel on focus
+        searchInput.addEventListener("focus", () => {
+          if (searchInput.value.trim()) {
+            advancedSearchDiv.classList.add("active");
+          }
+        });
+
+        const performAdvancedSearch = () => {
+          if (!searchInput.value.trim()) {
+            document.querySelectorAll(".docs-section").forEach((section) => {
+              section.style.display = "";
+              const link = document.querySelector(`.docs-nav a[href="#${section.id}"]`);
+              if (link && link.parentElement) {
+                link.parentElement.style.display = "";
+              }
+            });
+            if (empty) {
+              empty.style.display = "none";
+            }
+            advancedSearchDiv.classList.remove("active");
+            return;
+          }
+
+          advancedSearchDiv.classList.add("active");
+          let query = searchInput.value.trim();
+          const sections = document.querySelectorAll(".docs-section");
+          let anyVisible = false;
+
+          sections.forEach((section) => {
+            const title = section.getAttribute("data-title") || section.querySelector("h2")?.textContent || "";
+            const content = section.textContent;
+
+            const searchText = caseSensitive ? query : query.toLowerCase();
+            const titleToSearch = caseSensitive ? title : title.toLowerCase();
+            const contentToSearch = caseSensitive ? content : content.toLowerCase();
+
+            let match = false;
+
+            try {
+              if (searchMode === "contains") {
+                if (searchScope.title && titleToSearch.includes(searchText)) {
+                  match = true;
+                } else if (searchScope.content && contentToSearch.includes(searchText)) {
+                  match = true;
+                }
+              } else if (searchMode === "exact") {
+                // Exact: match whole words using word boundaries
+                const wordBoundaryRegex = new RegExp(
+                  `\\b${searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+                  caseSensitive ? "g" : "gi",
+                );
+                if (searchScope.title && wordBoundaryRegex.test(titleToSearch)) {
+                  match = true;
+                  wordBoundaryRegex.lastIndex = 0;
+                } else if (searchScope.content && wordBoundaryRegex.test(contentToSearch)) {
+                  match = true;
+                }
+              } else if (searchMode === "regex") {
+                try {
+                  const flags = caseSensitive ? "g" : "gi";
+                  const regex = new RegExp(searchText, flags);
+                  if (searchScope.title && regex.test(titleToSearch)) {
+                    match = true;
+                    regex.lastIndex = 0;
+                  }
+                  if (!match && searchScope.content && regex.test(contentToSearch)) {
+                    match = true;
+                  }
+                } catch (regexError) {
+                  // Invalid regex pattern
+                  match = false;
+                }
+              }
+            } catch (e) {
+              // Error in search, show no results
+              match = false;
+            }
+
+            section.style.display = match ? "" : "none";
+
+            const link = document.querySelector(`.docs-nav a[href="#${section.id}"]`);
+            if (link && link.parentElement) {
+              link.parentElement.style.display = match ? "" : "none";
+            }
+
+            if (match) {
+              anyVisible = true;
+            }
+          });
+
+          if (empty) {
+            empty.style.display = anyVisible ? "none" : "block";
+          }
+        };
+
+        // Listen to input changes to trigger search
+        searchInput.addEventListener("input", performAdvancedSearch);
       };
 
       // Fetch and render documentation data
@@ -1019,7 +1283,11 @@
             });
 
             const docsSearchEnabled = await getFeatureFlagValue("docsSearchEnabled", false);
-            if (docsSearchEnabled) {
+            const docsAdvancedSearchEnabled = await getFeatureFlagValue("docsAdvancedSearchEnabled", false);
+
+            if (docsAdvancedSearchEnabled) {
+              setupDocsAdvancedSearch();
+            } else if (docsSearchEnabled) {
               setupDocsSearch();
             }
           })
