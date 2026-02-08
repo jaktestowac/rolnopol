@@ -1,6 +1,6 @@
 {
   "name": "rolnopol-app",
-  "version": "1.0.72",
+  "version": "1.0.73",
   "description": "A Rolnopol app with JSON database, authentication, and admin panel",
   "main": "api/index.js",
   "scripts": {
@@ -8,7 +8,8 @@
     "unit": "vitest run --dir tests/unit",
     "start": "node ./api/index.js",
     "dev": "node ./api/index.js",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "bump-version": "bump-version.sh patch"
   },
   "keywords": [
     "express",
