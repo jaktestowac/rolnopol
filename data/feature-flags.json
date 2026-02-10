@@ -5,7 +5,8 @@
     "docsSearchEnabled": false,
     "docsAdvancedSearchEnabled": false,
     "contactFormEnabled": true,
-    "staffFieldsExportEnabled": false
+    "staffFieldsExportEnabled": false,
+    "financialReportsEnabled": false
   },
-  "updatedAt": "2026-02-08T01:11:06.089Z"
+  "updatedAt": "2026-02-10T21:15:57.030Z"
 }

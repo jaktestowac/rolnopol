@@ -30,6 +30,7 @@ class FinancialPage {
       // Initialize page
       this.setupEventListeners();
       this.setupTransferForm();
+      await this.setupReportDownload();
       await this.loadFinancialData();
       await this.loadTransactions();
     } catch (error) {
@@ -116,6 +117,478 @@ class FinancialPage {
 
     if (prevPage) prevPage.addEventListener("click", () => this.changePage(-1));
     if (nextPage) nextPage.addEventListener("click", () => this.changePage(1));
+  }
+
+  async setupReportDownload() {
+    const reportButton = document.getElementById("download-financial-report");
+    if (!reportButton) return;
+
+    const featureFlagsService = window.App?.getModule("featureFlagsService");
+    if (!featureFlagsService) {
+      reportButton.style.display = "none";
+      return;
+    }
+
+    let enabled = false;
+    try {
+      enabled = await featureFlagsService.isEnabled("financialReportsEnabled", false);
+    } catch (error) {
+      enabled = false;
+    }
+
+    if (!enabled) {
+      reportButton.style.display = "none";
+      return;
+    }
+
+    reportButton.style.display = "inline-flex";
+    reportButton.addEventListener("click", () => this.downloadFinancialReport());
+  }
+
+  async downloadFinancialReport() {
+    const reportButton = document.getElementById("download-financial-report");
+    if (!reportButton) return;
+
+    const apiService = window.App?.getModule("apiService");
+    if (!apiService) {
+      this.showError("API service not available");
+      return;
+    }
+
+    const originalText = reportButton.querySelector(".btn-text")?.textContent || "Download PDF Report";
+    reportButton.disabled = true;
+    reportButton.classList.add("loading");
+    if (reportButton.querySelector(".btn-text")) {
+      reportButton.querySelector(".btn-text").textContent = "Preparing report...";
+    }
+
+    try {
+      const response = await apiService.request("GET", "financial/report", {
+        requiresAuth: true,
+      });
+
+      if (!response.success) {
+        this.showError(response.error || "Failed to download report");
+        return;
+      }
+
+      const payload = response.data?.data || response.data;
+      const encodedReport = payload?.encodedReport;
+      if (!encodedReport) {
+        this.showError("Report data is missing");
+        return;
+      }
+
+      let report;
+      try {
+        const reportJson = this.decodeBase64Utf8(encodedReport);
+        report = JSON.parse(reportJson);
+      } catch (error) {
+        this.showError("Invalid report data");
+        return;
+      }
+
+      const filename = payload?.filename || "financial-report.pdf";
+      const generated = this.generatePdfFromReport(report, filename);
+      if (generated) {
+        this.showSuccess("Financial report downloaded");
+      }
+    } catch (error) {
+      console.error("Error downloading financial report:", error);
+      this.showError("Failed to download financial report");
+    } finally {
+      reportButton.disabled = false;
+      reportButton.classList.remove("loading");
+      if (reportButton.querySelector(".btn-text")) {
+        reportButton.querySelector(".btn-text").textContent = originalText;
+      }
+    }
+  }
+
+  decodeBase64Utf8(base64) {
+    try {
+      const binary = atob(base64);
+      const bytes = Array.from(binary).map((char) => char.charCodeAt(0));
+      const encoded = bytes.map((byte) => `%${`00${byte.toString(16)}`.slice(-2)}`).join("");
+      return decodeURIComponent(encoded);
+    } catch (error) {
+      return atob(base64);
+    }
+  }
+
+  generatePdfFromReport(report, filename) {
+    const jsPDF = window.jspdf?.jsPDF;
+    if (!jsPDF) {
+      this.showError("PDF generator is not available");
+      return false;
+    }
+
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    let y = margin;
+
+    // Colors
+    const primaryColor = [106, 123, 94]; // Rolnopol green
+    const accentDark = [90, 107, 78]; // Dark green
+    const incomeColor = [76, 175, 80]; // Green
+    const expenseColor = [244, 67, 54]; // Red
+    const neutralColor = [108, 117, 125]; // Gray
+    const lightBg = [245, 245, 245]; // Light gray background
+
+    const drawHeader = () => {
+      // Header background
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, pageWidth, 45, "F");
+
+      // Title
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(28);
+      doc.setFont(undefined, "bold");
+      doc.text("Financial Report", margin, 20);
+
+      // Subtitle with date
+      doc.setFontSize(10);
+      doc.setFont(undefined, "normal");
+      doc.text(`Generated: ${report?.generatedAtLabel || "-"}`, margin, 32);
+
+      y = 50;
+    };
+
+    const addSectionTitle = (title) => {
+      if (y + 15 > pageHeight - 10) {
+        doc.addPage();
+        y = margin;
+      }
+
+      doc.setDrawColor(...primaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y + 3, pageWidth - margin, y + 3);
+
+      doc.setTextColor(...primaryColor);
+      doc.setFontSize(14);
+      doc.setFont(undefined, "bold");
+      doc.text(title, margin, y + 10);
+
+      y += 16;
+    };
+
+    const drawSummaryCards = () => {
+      const cardWidth = (pageWidth - margin * 2 - 6) / 4;
+      const cardHeight = 28;
+      const cardY = y;
+
+      const cards = [
+        {
+          label: "Current Balance",
+          value: `${Number(report?.balance || 0).toFixed(2)}`,
+          color: primaryColor,
+          unit: " ROL",
+        },
+        {
+          label: "Total Income",
+          value: `${Number(report?.summary?.totalIncome || 0).toFixed(2)}`,
+          color: incomeColor,
+          unit: " ROL",
+        },
+        {
+          label: "Total Expenses",
+          value: `${Number(report?.summary?.totalExpenses || 0).toFixed(2)}`,
+          color: expenseColor,
+          unit: " ROL",
+        },
+        {
+          label: "Net Result",
+          value: `${Number(report?.summary?.net || 0).toFixed(2)}`,
+          color: report?.summary?.net >= 0 ? incomeColor : expenseColor,
+          unit: " ROL",
+        },
+      ];
+
+      let xPos = margin;
+      cards.forEach((card) => {
+        // Card background
+        doc.setFillColor(...card.color);
+        doc.rect(xPos, cardY, cardWidth, cardHeight, "F");
+
+        // Label
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.setFont(undefined, "normal");
+        doc.text(card.label, xPos + 3, cardY + 7);
+
+        // Value
+        doc.setFontSize(14);
+        doc.setFont(undefined, "bold");
+        const valueText = card.value + card.unit;
+        doc.text(valueText, xPos + 3, cardY + 20);
+
+        xPos += cardWidth + 2;
+      });
+
+      y = cardY + cardHeight + 8;
+    };
+
+    const drawPieChart = () => {
+      if (y + 80 > pageHeight - 20) {
+        doc.addPage();
+        y = margin;
+      }
+
+      addSectionTitle("Overview");
+
+      const income = Number(report?.summary?.totalIncome || 0);
+      const expenses = Number(report?.summary?.totalExpenses || 0);
+      const total = income + expenses;
+
+      if (total === 0) {
+        doc.setTextColor(...neutralColor);
+        doc.setFontSize(10);
+        doc.text("No transactions to visualize", margin, y + 10);
+        y += 20;
+        return;
+      }
+
+      // Prepare canvas-based pie chart and embed as image to avoid using pdf API arc
+      const chartSizeMm = 30; // size in mm to render on PDF
+      const chartSizePx = 240; // canvas pixel size (high DPI)
+      const canvas = document.createElement("canvas");
+      canvas.width = chartSizePx;
+      canvas.height = chartSizePx;
+      const ctx = canvas.getContext("2d");
+      const center = chartSizePx / 2;
+      const radius = chartSizePx / 2 - 6;
+      ctx.clearRect(0, 0, chartSizePx, chartSizePx);
+
+      let start = -Math.PI / 2;
+      const incomeAngle = (income / total) * Math.PI * 2;
+
+      // Income slice
+      ctx.beginPath();
+      ctx.moveTo(center, center);
+      ctx.arc(center, center, radius, start, start + incomeAngle);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${incomeColor.join(",")})`;
+      ctx.fill();
+
+      // Expense slice
+      ctx.beginPath();
+      ctx.moveTo(center, center);
+      ctx.arc(center, center, radius, start + incomeAngle, start + Math.PI * 2);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${expenseColor.join(",")})`;
+      ctx.fill();
+
+      // Add subtle inner circle to make it a donut
+      ctx.beginPath();
+      ctx.arc(center, center, radius * 0.55, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      ctx.fill();
+
+      // Convert to data URL and embed
+      const dataUrl = canvas.toDataURL("image/png");
+      const chartX = margin + 10;
+      const chartY = y;
+      doc.addImage(dataUrl, "PNG", chartX, chartY, chartSizeMm, chartSizeMm);
+
+      // Legend (to the right of the chart)
+      const legendX = chartX + chartSizeMm + 6;
+      const legendY = chartY + 2;
+
+      doc.setFillColor(...incomeColor);
+      doc.rect(legendX, legendY, 3, 3, "F");
+      doc.setTextColor(...neutralColor);
+      doc.setFontSize(10);
+      doc.text(`Income: ${income.toFixed(2)} ROL (${((income / total) * 100).toFixed(1)}%)`, legendX + 6, legendY + 2.5);
+
+      doc.setFillColor(...expenseColor);
+      doc.rect(legendX, legendY + 8, 3, 3, "F");
+      doc.text(`Expenses: ${expenses.toFixed(2)} ROL (${((expenses / total) * 100).toFixed(1)}%)`, legendX + 6, legendY + 10.5);
+
+      // Statistics
+      const statsX = legendX;
+      const statsY = legendY + 22;
+
+      doc.setTextColor(...neutralColor);
+      doc.setFontSize(9);
+      doc.text(`Transactions: ${Number(report?.summary?.transactionCount || 0)}`, statsX, statsY);
+      doc.text(`User ID: ${report?.userId ?? "-"}`, statsX, statsY + 6);
+      doc.text(`Currency: ${report?.currency || "ROL"}`, statsX, statsY + 12);
+
+      y = chartY + chartSizeMm + 6;
+    };
+
+    const drawTransactionsTable = () => {
+      const transactions = Array.isArray(report?.transactions) ? report.transactions : [];
+
+      if (transactions.length === 0) {
+        if (y + 10 > pageHeight - 10) {
+          doc.addPage();
+          y = margin;
+        }
+        addSectionTitle("Transaction History");
+        doc.setTextColor(...neutralColor);
+        doc.setFontSize(10);
+        doc.text("No transactions recorded.", margin, y);
+        y += 10;
+        return;
+      }
+
+      if (y + 40 > pageHeight - 10) {
+        doc.addPage();
+        y = margin;
+      }
+
+      addSectionTitle("Transaction History");
+
+      const headers = ["Date", "Type", "Category", "Amount", "Balance"];
+      const colWidths = [35, 15, 20, 20, 25];
+      const headerHeight = 7;
+      const rowHeight = 6;
+      let tableX = margin;
+      let tableY = y;
+
+      // Draw header
+      doc.setFillColor(...accentDark);
+      doc.rect(tableX, tableY, pageWidth - margin * 2, headerHeight, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(undefined, "bold");
+      doc.setFontSize(9);
+
+      let headerX = tableX + 2;
+      headers.forEach((header, idx) => {
+        doc.text(header, headerX, tableY + 5);
+        headerX += colWidths[idx];
+      });
+
+      tableY += headerHeight;
+
+      // Draw rows
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(8);
+
+      transactions.forEach((tx, index) => {
+        // Check if we need a new page
+        if (tableY + rowHeight > pageHeight - 10) {
+          doc.addPage();
+          tableY = margin;
+
+          // Redraw header on new page
+          doc.setFillColor(...accentDark);
+          doc.rect(tableX, tableY, pageWidth - margin * 2, headerHeight, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFont(undefined, "bold");
+          doc.setFontSize(9);
+
+          let newHeaderX = tableX + 2;
+          headers.forEach((header) => {
+            doc.text(header, newHeaderX, tableY + 5);
+            newHeaderX += colWidths[0];
+          });
+
+          doc.setFont(undefined, "normal");
+          doc.setFontSize(8);
+          tableY += headerHeight;
+        }
+
+        // Alternate row background
+        if (index % 2 === 0) {
+          doc.setFillColor(...lightBg);
+          doc.rect(tableX, tableY, pageWidth - margin * 2, rowHeight, "F");
+        }
+
+        // Row text
+        doc.setTextColor(33, 33, 33);
+        const date = tx.timestamp ? new Date(tx.timestamp).toLocaleDateString("pl-PL") : "-";
+        const type = tx.type === "income" ? "+" : "-";
+        const category = (tx.category || "general").substring(0, 10);
+        const amount = `${type}${Number(tx.amount || 0).toFixed(2)}`;
+        const balance = Number(tx.balanceAfter || 0).toFixed(2);
+
+        let rowX = tableX + 2;
+        doc.text(date, rowX, tableY + 4.5);
+        rowX += colWidths[0];
+        doc.text(type, rowX, tableY + 4.5);
+        rowX += colWidths[1];
+        doc.text(category, rowX, tableY + 4.5);
+        rowX += colWidths[2];
+
+        // Color amount based on type
+        doc.setTextColor(
+          tx.type === "income" ? incomeColor[0] : incomeColor[0],
+          tx.type === "income" ? incomeColor[1] : expenseColor[1],
+          tx.type === "income" ? incomeColor[2] : expenseColor[2],
+        );
+        doc.setFont(undefined, "bold");
+        doc.text(amount, rowX, tableY + 4.5);
+        doc.setFont(undefined, "normal");
+        doc.setTextColor(33, 33, 33);
+
+        rowX += colWidths[3];
+        doc.text(balance, rowX, tableY + 4.5);
+
+        tableY += rowHeight;
+      });
+
+      const totalTransactions = Number(report?.totalTransactions || transactions.length);
+      const maxRows = Number(report?.maxRows || transactions.length);
+      if (totalTransactions > maxRows) {
+        doc.setTextColor(...neutralColor);
+        doc.setFontSize(8);
+        doc.setFont(undefined, "italic");
+        tableY += 3;
+        doc.text(`Showing ${maxRows} of ${totalTransactions} transactions`, margin, tableY);
+      }
+
+      y = tableY + 10;
+    };
+
+    const drawFooter = () => {
+      const footerY = pageHeight - 10;
+      doc.setDrawColor(...primaryColor);
+      doc.setLineWidth(0.3);
+      doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+
+      doc.setTextColor(...neutralColor);
+      doc.setFontSize(8);
+      const totalPages = doc.internal.pages.length - 1;
+      doc.text(`Page ${totalPages}`, pageWidth - margin - 10, footerY);
+      doc.text("© Rolnopol Financial Report", margin, footerY);
+    };
+
+    // Helper to draw pie slice
+    this.drawPieSlice = (doc, x, y, radius, startAngle, endAngle) => {
+      const startRad = (startAngle * Math.PI) / 180;
+      const endRad = (endAngle * Math.PI) / 180;
+      const x1 = x + radius * Math.cos(startRad);
+      const y1 = y + radius * Math.sin(startRad);
+      const x2 = x + radius * Math.cos(endRad);
+      const y2 = y + radius * Math.sin(endRad);
+
+      doc.moveTo(x, y);
+      doc.lineTo(x1, y1);
+      doc.arc(x, y, radius, startAngle, endAngle, "F");
+      doc.lineTo(x, y);
+      doc.fill();
+    };
+
+    // Generate report
+    drawHeader();
+    drawSummaryCards();
+    drawPieChart();
+    drawTransactionsTable();
+
+    // Add footer to all pages
+    const totalPages = doc.internal.pages.length - 1;
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      drawFooter();
+    }
+
+    doc.save(filename || "financial-report.pdf");
+    return true;
   }
 
   setupTypeSelector() {
@@ -1034,7 +1507,7 @@ class FinancialPage {
           `<div class="error-item">
                 <i class="fas fa-exclamation-circle"></i>
                 <span>${error}</span>
-            </div>`
+            </div>`,
       )
       .join("");
 

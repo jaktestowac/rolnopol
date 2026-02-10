@@ -15,7 +15,7 @@ class FinancialController {
           data: {
             account: account,
           },
-        })
+        }),
       );
     } catch (error) {
       logError("Error getting financial account:", error);
@@ -26,7 +26,7 @@ class FinancialController {
       res.status(statusCode).json(
         formatResponseBody({
           error: error.message,
-        })
+        }),
       );
     }
   }
@@ -42,7 +42,7 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Missing required fields: type, amount, description",
-          })
+          }),
         );
       }
 
@@ -51,21 +51,21 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Description must be at least 3 characters long",
-          })
+          }),
         );
       }
       if (description.length > 100) {
         return res.status(400).json(
           formatResponseBody({
             error: "Description cannot exceed 100 characters",
-          })
+          }),
         );
       }
       if (/[^\w\s.,;:!()\-ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/.test(description)) {
         return res.status(400).json(
           formatResponseBody({
             error: "Description contains invalid characters",
-          })
+          }),
         );
       }
 
@@ -74,7 +74,7 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Amount can have maximum 2 decimal places",
-          })
+          }),
         );
       }
 
@@ -82,7 +82,7 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Invalid transaction type. Must be 'income' or 'expense'",
-          })
+          }),
         );
       }
 
@@ -119,7 +119,7 @@ class FinancialController {
             // never return sensitive data
             transaction: transaction,
           },
-        })
+        }),
       );
     } catch (error) {
       logError("Error adding transaction:", error);
@@ -132,7 +132,7 @@ class FinancialController {
       res.status(statusCode).json(
         formatResponseBody({
           error: error.message,
-        })
+        }),
       );
     }
   }
@@ -158,7 +158,7 @@ class FinancialController {
       res.status(200).json(
         formatResponseBody({
           data: history,
-        })
+        }),
       );
     } catch (error) {
       logError("Error getting transaction history:", error);
@@ -166,7 +166,7 @@ class FinancialController {
       res.status(500).json(
         formatResponseBody({
           error: error.message,
-        })
+        }),
       );
     }
   }
@@ -183,7 +183,7 @@ class FinancialController {
           data: {
             statistics: stats,
           },
-        })
+        }),
       );
     } catch (error) {
       logError("Error getting financial statistics:", error);
@@ -191,7 +191,7 @@ class FinancialController {
       res.status(500).json(
         formatResponseBody({
           error: error.message,
-        })
+        }),
       );
     }
   }
@@ -208,7 +208,7 @@ class FinancialController {
           data: {
             totalVolume: totalVolume,
           },
-        })
+        }),
       );
     } catch (error) {
       logError("Error getting total marketplace volume:", error);
@@ -216,7 +216,7 @@ class FinancialController {
       res.status(500).json(
         formatResponseBody({
           error: error.message,
-        })
+        }),
       );
     }
   }
@@ -231,7 +231,7 @@ class FinancialController {
       res.status(200).json(
         formatResponseBody({
           data: stats,
-        })
+        }),
       );
     } catch (error) {
       logError("Error getting marketplace statistics:", error);
@@ -239,7 +239,7 @@ class FinancialController {
       res.status(500).json(
         formatResponseBody({
           error: error.message,
-        })
+        }),
       );
     }
   }
@@ -255,7 +255,7 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Missing required fields: toUserId, amount, description",
-          })
+          }),
         );
       }
 
@@ -264,21 +264,21 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Description must be at least 3 characters long",
-          })
+          }),
         );
       }
       if (description.length > 100) {
         return res.status(400).json(
           formatResponseBody({
             error: "Description cannot exceed 100 characters",
-          })
+          }),
         );
       }
       if (/[^\w\s.,;:!()\-ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/.test(description)) {
         return res.status(400).json(
           formatResponseBody({
             error: "Description contains invalid characters",
-          })
+          }),
         );
       }
 
@@ -287,7 +287,7 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Amount can have maximum 2 decimal places",
-          })
+          }),
         );
       }
 
@@ -295,7 +295,7 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Cannot transfer funds to yourself",
-          })
+          }),
         );
       }
 
@@ -304,14 +304,14 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Transfer amount must be positive",
-          })
+          }),
         );
       }
       if (parsedAmount > 999.99) {
         return res.status(400).json(
           formatResponseBody({
             error: "Cannot transfer more than 999.99 ROL at once",
-          })
+          }),
         );
       }
       // Check sender's balance
@@ -320,7 +320,7 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Insufficient funds for transfer",
-          })
+          }),
         );
       }
 
@@ -330,7 +330,7 @@ class FinancialController {
         formatResponseBody({
           message: "Transfer completed successfully",
           data: result,
-        })
+        }),
       );
     } catch (error) {
       logError("Error transferring funds:", error);
@@ -343,7 +343,75 @@ class FinancialController {
       res.status(statusCode).json(
         formatResponseBody({
           error: error.message,
-        })
+        }),
+      );
+    }
+  }
+
+  /**
+   * Download user's financial report (encoded JSON for client-side PDF generation)
+   */
+  async getFinancialReportPdf(req, res) {
+    try {
+      const account = await financialService.getAccount(req.user.userId);
+      const stats = await financialService.getFinancialStats(req.user.userId);
+
+      const transactions = Array.isArray(account.transactions) ? [...account.transactions] : [];
+
+      transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      const reportDate = new Date();
+      const reportDateString = reportDate.toISOString().slice(0, 10);
+      const filename = `financial-report-${account.userId}-${reportDateString}.pdf`;
+
+      const maxRows = 50;
+      const rows = transactions.slice(0, maxRows).map((tx) => ({
+        timestamp: tx.timestamp || null,
+        type: tx.type || "unknown",
+        category: tx.category || "general",
+        description: tx.description || "-",
+        amount: Number(tx.amount || 0),
+        balanceAfter: Number(tx.balanceAfter || 0),
+      }));
+
+      const report = {
+        title: "Financial Report",
+        generatedAt: reportDate.toISOString(),
+        generatedAtLabel: reportDate.toLocaleString("pl-PL"),
+        userId: account.userId,
+        currency: account.currency || "ROL",
+        balance: Number(account.balance || 0),
+        summary: {
+          totalIncome: Number(stats.totalIncome || 0),
+          totalExpenses: Number(stats.totalExpenses || 0),
+          net: Number((stats.totalIncome || 0) - (stats.totalExpenses || 0)),
+          transactionCount: Number(stats.transactionCount || transactions.length || 0),
+        },
+        transactions: rows,
+        totalTransactions: transactions.length,
+        maxRows,
+      };
+
+      const encodedReport = Buffer.from(JSON.stringify(report), "utf8").toString("base64");
+
+      res.status(200).json(
+        formatResponseBody({
+          data: {
+            encodedReport,
+            filename,
+            generatedAt: report.generatedAt,
+            totalTransactions: report.totalTransactions,
+            maxRows,
+          },
+        }),
+      );
+    } catch (error) {
+      logError("Error generating financial report payload:", error);
+
+      res.status(500).json(
+        formatResponseBody({
+          error: "Failed to generate financial report",
+        }),
       );
     }
   }
@@ -357,7 +425,7 @@ class FinancialController {
         return res.status(403).json(
           formatResponseBody({
             error: "Forbidden: Admin access required",
-          })
+          }),
         );
       }
 
@@ -366,7 +434,7 @@ class FinancialController {
       res.status(200).json(
         formatResponseBody({
           data: accounts,
-        })
+        }),
       );
     } catch (error) {
       logError("Error getting all accounts:", error);
@@ -374,7 +442,7 @@ class FinancialController {
       res.status(500).json(
         formatResponseBody({
           error: error.message,
-        })
+        }),
       );
     }
   }
@@ -388,7 +456,7 @@ class FinancialController {
         return res.status(403).json(
           formatResponseBody({
             error: "Forbidden: Admin access required",
-          })
+          }),
         );
       }
 
@@ -398,7 +466,7 @@ class FinancialController {
         return res.status(400).json(
           formatResponseBody({
             error: "Missing required fields: userId, amount, description",
-          })
+          }),
         );
       }
 
@@ -408,7 +476,7 @@ class FinancialController {
         formatResponseBody({
           message: "Account balance updated successfully",
           data: updatedAccount,
-        })
+        }),
       );
     } catch (error) {
       logError("Error updating account balance:", error);
@@ -419,7 +487,7 @@ class FinancialController {
       res.status(statusCode).json(
         formatResponseBody({
           error: error.message,
-        })
+        }),
       );
     }
   }
@@ -438,14 +506,14 @@ class FinancialController {
         return res.status(404).json(
           formatResponseBody({
             error: "Transaction not found",
-          })
+          }),
         );
       }
 
       res.status(200).json(
         formatResponseBody({
           data: transaction,
-        })
+        }),
       );
     } catch (error) {
       logError("Error getting transaction by ID:", error);
@@ -453,7 +521,7 @@ class FinancialController {
       res.status(500).json(
         formatResponseBody({
           error: error.message,
-        })
+        }),
       );
     }
   }
@@ -473,7 +541,7 @@ class FinancialController {
         formatResponseBody({
           data: transactions,
           total: transactions.length,
-        })
+        }),
       );
     } catch (error) {
       logError("Error getting all financial transactions (admin):", error);

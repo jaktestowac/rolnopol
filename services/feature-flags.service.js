@@ -7,6 +7,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   docsAdvancedSearchEnabled: "Enable or disable advanced search filters on the documentation page",
   contactFormEnabled: "Enable or disable the contact form",
   staffFieldsExportEnabled: "Enable or disable staff/fields/animals JSON exports",
+  financialReportsEnabled: "Enable or disable user financial PDF reports",
 };
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -16,6 +17,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   docsAdvancedSearchEnabled: false,
   contactFormEnabled: true,
   staffFieldsExportEnabled: false,
+  financialReportsEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {
@@ -124,11 +126,31 @@ class FeatureFlagsService {
 
   async getFeatureFlags() {
     const data = await this.db.getAll();
-    return this._normalize(data);
+    const normalized = this._normalize(data);
+
+    // If the feature flags store is empty or missing some predefined keys,
+    // populate it from PREDEFINED_FEATURE_FLAGS and persist the result.
+    const defaultFlags = { ...PREDEFINED_FEATURE_FLAGS };
+    const existingFlags = this._isPlainObject(normalized.flags) ? normalized.flags : {};
+
+    // Determine if any predefined key is missing or if there are no flags at all
+    const missingKeys = Object.keys(defaultFlags).filter((k) => !(k in existingFlags));
+
+    if (Object.keys(existingFlags).length === 0 || missingKeys.length > 0) {
+      // Merge defaults with existing values (existing values take precedence)
+      const merged = { ...defaultFlags, ...existingFlags };
+      const next = { flags: merged, updatedAt: new Date().toISOString() };
+
+      await this.db.replaceAll(next);
+      return this._normalize(next);
+    }
+
+    return normalized;
   }
 
   async getFeaturesWithDescriptions() {
-    const data = await this.db.getAll();
+    // Ensure the flags are populated before building descriptions
+    const data = await this.getFeatureFlags();
     return this._buildFlagsWithDescriptions(data);
   }
 
@@ -138,22 +160,18 @@ class FeatureFlagsService {
       throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
 
-    const sanitizedFlags = this._sanitizeFlags(flags);
+    // Only keep boolean values when merging flags
+    const sanitizedFlags = this._sanitizeFlagsInternal(flags, true);
 
     const updated = await this.db.update((current) => {
       const normalized = this._normalize(current);
       const persistedFlags = this._sanitizeFlagsInternal(normalized.flags, true);
 
-      // Prevent adding new flags - only allow updating existing ones
-      const filteredFlags = {};
-      for (const [key, value] of Object.entries(sanitizedFlags)) {
-        if (key in persistedFlags) {
-          filteredFlags[key] = value;
-        }
-      }
+      // Allow adding new flags as well as updating existing ones (merge)
+      const mergedFlags = { ...persistedFlags, ...sanitizedFlags };
 
       return {
-        flags: { ...persistedFlags, ...filteredFlags },
+        flags: mergedFlags,
         updatedAt: new Date().toISOString(),
       };
     });

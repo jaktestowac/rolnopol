@@ -3,6 +3,7 @@ const router = express.Router();
 const dbManager = require("../../data/database-manager");
 const { sendSuccess, sendError } = require("../../helpers/response-helper");
 const logger = require("../../helpers/logger-api");
+const { buildHealthData } = require("../../helpers/healthcheck");
 
 /**
  * @swagger
@@ -38,24 +39,7 @@ const logger = require("../../helpers/logger-api");
 // Main healthcheck endpoint (now at /api/v1/healthcheck)
 router.get("/healthcheck", async (req, res) => {
   try {
-    const healthData = {
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      // databases: dbManager.getHealthStats(),
-      memory: dbManager.getMemoryStats(),
-    };
-
-    // Validate all databases
-    const dbValidation = await dbManager.validateAll();
-    healthData.databaseValidation = dbValidation;
-
-    // Check if any databases have errors
-    const hasErrors = Object.values(dbValidation).some((result) => result.status === "error");
-    if (hasErrors) {
-      healthData.status = "degraded";
-    }
-
+    const healthData = await buildHealthData();
     return sendSuccess(req, res, healthData);
   } catch (error) {
     logger.logError("Health check failed:", error);
@@ -66,24 +50,7 @@ router.get("/healthcheck", async (req, res) => {
 // Keep the old root endpoint for backward compatibility
 router.get("/health", async (req, res) => {
   try {
-    const healthData = {
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      // databases: dbManager.getHealthStats(),
-      memory: dbManager.getMemoryStats(),
-    };
-
-    // Validate all databases
-    const dbValidation = await dbManager.validateAll();
-    healthData.databaseValidation = dbValidation;
-
-    // Check if any databases have errors
-    const hasErrors = Object.values(dbValidation).some((result) => result.status === "error");
-    if (hasErrors) {
-      healthData.status = "degraded";
-    }
-
+    const healthData = await buildHealthData();
     return sendSuccess(req, res, healthData);
   } catch (error) {
     logger.logError("Health check failed:", error);

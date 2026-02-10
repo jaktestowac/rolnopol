@@ -1,37 +1,27 @@
 const express = require("express");
 const { createRateLimiter } = require("../../middleware/rate-limit.middleware");
 const { authenticateUser } = require("../../middleware/auth.middleware");
-const {
-  validateIdParam,
-} = require("../../middleware/id-validation.middleware");
+const { requireFeatureFlag } = require("../../middleware/feature-flag.middleware");
+const { validateIdParam } = require("../../middleware/id-validation.middleware");
 const financialController = require("../../controllers/financial.controller");
 
 const financialRoute = express.Router();
 
 // Apply rate limiting
 const apiLimiter = createRateLimiter("api");
+const financialReportFeature = requireFeatureFlag("financialReportsEnabled", { resourceName: "Financial report" });
 
 /**
  * Get user's financial account
  * GET /api/financial/account
  */
-financialRoute.get(
-  "/financial/account",
-  apiLimiter,
-  authenticateUser,
-  financialController.getAccount.bind(financialController),
-);
+financialRoute.get("/financial/account", apiLimiter, authenticateUser, financialController.getAccount.bind(financialController));
 
 /**
  * Add a new transaction
  * POST /api/financial/transactions
  */
-financialRoute.post(
-  "/financial/transactions",
-  apiLimiter,
-  authenticateUser,
-  financialController.addTransaction.bind(financialController),
-);
+financialRoute.post("/financial/transactions", apiLimiter, authenticateUser, financialController.addTransaction.bind(financialController));
 
 /**
  * Get transaction history
@@ -60,23 +50,25 @@ financialRoute.get(
  * Get financial statistics
  * GET /api/financial/stats
  */
+financialRoute.get("/financial/stats", apiLimiter, authenticateUser, financialController.getFinancialStats.bind(financialController));
+
+/**
+ * Download user's financial report (PDF)
+ * GET /api/financial/report
+ */
 financialRoute.get(
-  "/financial/stats",
+  "/financial/report",
   apiLimiter,
   authenticateUser,
-  financialController.getFinancialStats.bind(financialController),
+  financialReportFeature,
+  financialController.getFinancialReportPdf.bind(financialController),
 );
 
 /**
  * Transfer funds to another user
  * POST /api/financial/transfer
  */
-financialRoute.post(
-  "/financial/transfer",
-  apiLimiter,
-  authenticateUser,
-  financialController.transferFunds.bind(financialController),
-);
+financialRoute.post("/financial/transfer", apiLimiter, authenticateUser, financialController.transferFunds.bind(financialController));
 
 /**
  * Get comprehensive marketplace statistics across all users
@@ -93,12 +85,7 @@ financialRoute.get(
  * Get all financial accounts (admin only)
  * GET /api/financial/accounts/all
  */
-financialRoute.get(
-  "/financial/accounts/all",
-  apiLimiter,
-  authenticateUser,
-  financialController.getAllAccounts.bind(financialController),
-);
+financialRoute.get("/financial/accounts/all", apiLimiter, authenticateUser, financialController.getAllAccounts.bind(financialController));
 
 /**
  * Update account balance (admin only)

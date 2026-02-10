@@ -23,6 +23,53 @@ class VersionMiddleware {
         description: "Enhanced API version with improved features",
       },
     };
+
+    // Bind middleware methods to the instance so they can be used directly
+    // as Express middleware without losing the `this` context.
+    this.versionRouter = (req, res, next) => {
+      // Prefer originalUrl to preserve the full path including mount points
+      const pathCandidate = (req.originalUrl || "").split("?")[0];
+      const versionMatch = pathCandidate.match(/\/(v\d+)/);
+
+      if (versionMatch) {
+        const version = versionMatch[1];
+
+        // Check if version exists
+        if (!this.versions[version]) {
+          return res.status(400).json(
+            formatResponseBody({
+              error: `Unsupported API version: ${version}`,
+              supportedVersions: Object.keys(this.versions),
+              currentVersion: "v1",
+            }),
+          );
+        }
+
+        // Check if version is deprecated
+        if (this.isDeprecated(version)) {
+          const versionInfo = this.getVersionInfo(version);
+          res.set("Warning", `299 - "This API version is deprecated and will be sunset on ${versionInfo.sunsetDate}"`);
+        }
+
+        // Add version info to request
+        req.apiVersion = version;
+        req.versionInfo = this.getVersionInfo(version);
+      }
+
+      next();
+    };
+
+    this.versionHeaders = (req, res, next) => {
+      if (req.apiVersion) {
+        const versionInfo = this.getVersionInfo(req.apiVersion);
+        res.set({
+          "X-API-Version": req.apiVersion,
+          "X-API-Version-Number": versionInfo.version,
+          "X-API-Status": versionInfo.status,
+        });
+      }
+      next();
+    };
   }
 
   /**
@@ -81,10 +128,7 @@ class VersionMiddleware {
       // Check if version is deprecated
       if (this.isDeprecated(version)) {
         const versionInfo = this.getVersionInfo(version);
-        res.set(
-          "Warning",
-          `299 - "This API version is deprecated and will be sunset on ${versionInfo.sunsetDate}"`,
-        );
+        res.set("Warning", `299 - "This API version is deprecated and will be sunset on ${versionInfo.sunsetDate}"`);
       }
 
       // Add version info to request

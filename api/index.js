@@ -167,6 +167,19 @@ app.get("/api", (req, res) => {
   );
 });
 
+// Provide a convenient root for v1 that returns healthcheck data (used by tests)
+app.get("/api/v1", async (req, res) => {
+  const { sendSuccess, sendError } = require("../helpers/response-helper");
+  const dbManager = require("../data/database-manager");
+  try {
+    const { buildHealthData } = require("../helpers/healthcheck");
+    const healthData = await buildHealthData();
+    return sendSuccess(req, res, healthData);
+  } catch (err) {
+    return sendError(req, res, 500, "Healthcheck failed");
+  }
+});
+
 // API endpoint to serve version for frontend
 app.get("/api/version", (req, res) => {
   res.json({ version: packageJson.version });

@@ -145,7 +145,7 @@ async function performStartupHealthCheck() {
     lines.push(`Marker   : ${health.rolno.exists ? `FOUND (${health.rolno.filePath})` : "NOT FOUND"}`);
     const mem = health.memory.memoryUsage;
     lines.push(
-      `Memory   : Heap Used ${formatBytes(mem.heapUsed)} / Heap Total ${formatBytes(mem.heapTotal)} | RSS ${formatBytes(mem.rss)}`
+      `Memory   : Heap Used ${formatBytes(mem.heapUsed)} / Heap Total ${formatBytes(mem.heapTotal)} | RSS ${formatBytes(mem.rss)}`,
     );
 
     // Module status
@@ -234,4 +234,160 @@ function checkRolnoFileExists() {
   return { exists, filePath, content };
 }
 
-module.exports = { performStartupHealthCheck, checkRolnoFileExists };
+// Build a health data object suitable for API responses and programmatic checks
+async function buildHealthData() {
+  const packageJson = require("../package.json");
+  const projectRoot = path.resolve(__dirname, "..");
+  const nodeModulesPath = path.join(projectRoot, "node_modules");
+
+  const health = {
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: dbManager.getMemoryStats(),
+    version: packageJson.version,
+  };
+
+  // helper to detect preferred install command
+  function getInstallCommand() {
+    try {
+      if (packageJson.packageManager) {
+        const pm = String(packageJson.packageManager).split("@")[0];
+        return `${pm} install`;
+      }
+    } catch (_) {}
+    if (fs.existsSync(path.join(projectRoot, "pnpm-lock.yaml"))) return "pnpm install";
+    if (fs.existsSync(path.join(projectRoot, "yarn.lock"))) return "yarn install";
+    if (fs.existsSync(path.join(projectRoot, "package-lock.json"))) return "npm install";
+    return "npm install";
+  }
+
+  // const installCmd = getInstallCommand();
+  const installCmd = "npm install"; // For API response, we can just suggest npm install as a generic command
+
+  // collect declared dependency names
+  // const declaredDeps = new Set();
+  // ["dependencies", "optionalDependencies", "peerDependencies"].forEach((k) => {
+  //   const map = packageJson[k] || {};
+  //   Object.keys(map).forEach((name) => declaredDeps.add(name));
+  // });
+  // const deps = Array.from(declaredDeps);
+
+  const missingModules = [];
+  // if (!fs.existsSync(nodeModulesPath)) {
+  //   missingModules.push(...deps);
+  // } else {
+  //   for (const dep of deps) {
+  //     try {
+  //       require.resolve(dep, { paths: [projectRoot] });
+  //     } catch (e) {
+  //       missingModules.push(dep);
+  //     }
+  //   }
+  // }
+
+  health.modules = { missing: missingModules, installCommand: installCmd };
+
+  // marker file
+  health.rolno = checkRolnoFileExists();
+
+  // database validation
+  const dbValidation = await dbManager.validateAll();
+  health.databaseValidation = dbValidation;
+  const failing = Object.entries(dbValidation).filter(([_, v]) => v.status === "error");
+  if (missingModules.length > 0 || failing.length > 0) {
+    health.status = "degraded";
+  }
+
+  return health;
+}
+
+async function performStartupHealthCheck() {
+  try {
+    const health = await buildHealthData();
+
+    const missingModules = health.modules.missing;
+    const installCmd = health.modules.installCommand;
+
+    if (!Array.isArray(missingModules)) {
+      // Ensure we have an array to work with in older environments
+      missingModules = Array.isArray(missingModules) ? missingModules : [];
+    }
+
+    if (missingModules.length > 0) {
+      // If modules are missing, abort startup with a boxed message
+      printMissingDepsBox(missingModules, installCmd);
+    }
+
+    // --- Render human readable output ---
+    const lines = [];
+    lines.push("\n================ Application Health Check ================");
+    lines.push(`Status   : ${health.status.toUpperCase()}`);
+    lines.push(`Version  : ${health.version}`);
+    lines.push(`Uptime   : ${formatUptime(health.uptime)}`);
+    lines.push(`Marker   : ${health.rolno.exists ? `FOUND (${health.rolno.filePath})` : "NOT FOUND"}`);
+    const mem = health.memory.memoryUsage;
+    lines.push(
+      `Memory   : Heap Used ${formatBytes(mem.heapUsed)} / Heap Total ${formatBytes(mem.heapTotal)} | RSS ${formatBytes(mem.rss)}`,
+    );
+
+    // Modules
+    lines.push("\nModules:");
+    if (missingModules.length === 0) {
+      lines.push("All declared dependencies are installed (node_modules present)");
+    } else {
+      lines.push(`Missing dependencies (${missingModules.length}): ${missingModules.join(", ")}`);
+      lines.push("\nTo install missing packages, run the following in the project root:");
+      lines.push(`  ${installCmd}`);
+      lines.push(`Or to install only missing packages explicitly: ${installCmd} ${missingModules.join(" ")}`);
+    }
+
+    lines.push("\nDatabases:");
+    lines.push(pad("DB Name", 24) + " | " + pad("Status", 8) + " | " + pad("Size", 10, "right") + " | " + pad("Entities", 8, "right"));
+    lines.push("-".repeat(24) + "-|-" + "-".repeat(8) + "-|-" + "-".repeat(10) + "-|-" + "-".repeat(8));
+
+    const dbStatus = dbManager.getStatus();
+    const dbInstances = dbManager.instances;
+    for (const [db, result] of Object.entries(health.databaseValidation)) {
+      let sizeStr = "N/A";
+      let entityCount = "?";
+      const filePath = dbStatus[db] && dbStatus[db].filePath;
+      if (filePath && fs.existsSync(filePath)) {
+        try {
+          const stats = fs.statSync(filePath);
+          sizeStr = formatBytes(stats.size);
+        } catch (e) {
+          sizeStr = "ERR";
+        }
+      }
+      const dbInstance = dbInstances.get(db);
+      if (dbInstance && dbInstance.data !== null && dbInstance.data !== undefined) {
+        if (Array.isArray(dbInstance.data)) {
+          entityCount = dbInstance.data.length;
+        } else if (typeof dbInstance.data === "object") {
+          entityCount = Object.keys(dbInstance.data).length;
+        } else {
+          entityCount = 0;
+        }
+      }
+      let statusStr = result.status === "ok" ? "OK" : "ERROR";
+      if (result.status !== "ok" && result.error) statusStr += ": " + result.error;
+      lines.push(pad(db, 24) + " | " + pad(statusStr, 8) + " | " + pad(sizeStr, 10, "right") + " | " + pad(entityCount, 8, "right"));
+    }
+    lines.push("========================================================\n");
+
+    if (health.status === "degraded") {
+      // Already handled missing modules above - if here, just log an error
+      logError(lines.join("\n"));
+    } else {
+      logInfo(lines.join("\n"));
+    }
+
+    return health;
+  } catch (err) {
+    logError("Health check failed on startup", err);
+    throw err;
+  }
+}
+
+module.exports = { performStartupHealthCheck, checkRolnoFileExists, buildHealthData };

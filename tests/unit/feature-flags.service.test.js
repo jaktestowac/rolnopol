@@ -2,34 +2,128 @@ import { describe, it, expect, vi } from "vitest";
 const featureFlagsService = require("../../services/feature-flags.service");
 
 describe("feature-flags.service", () => {
-  it("returns defaults when database is empty", async () => {
-    const spy = vi.spyOn(featureFlagsService.db, "getAll").mockResolvedValue(null);
-    const result = await featureFlagsService.getFeatureFlags();
-    expect(result).toEqual({ flags: {}, updatedAt: null });
-    expect(spy).toHaveBeenCalled();
-    spy.mockRestore();
-  });
+  it("populates defaults when database is empty", async () => {
+    const now = new Date("2026-02-07T00:00:00.000Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
 
-  it("returns defaults when database data is an array", async () => {
-    const spy = vi.spyOn(featureFlagsService.db, "getAll").mockResolvedValue([]);
+    const getSpy = vi.spyOn(featureFlagsService.db, "getAll").mockResolvedValue(null);
+    const replaceSpy = vi.spyOn(featureFlagsService.db, "replaceAll").mockResolvedValue();
+
     const result = await featureFlagsService.getFeatureFlags();
 
-    expect(result).toEqual({ flags: {}, updatedAt: null });
-    expect(spy).toHaveBeenCalled();
-    spy.mockRestore();
+    expect(result).toEqual({
+      flags: {
+        alertsEnabled: true,
+        rolnopolMapEnabled: true,
+        docsSearchEnabled: false,
+        docsAdvancedSearchEnabled: false,
+        contactFormEnabled: true,
+        staffFieldsExportEnabled: false,
+        financialReportsEnabled: false,
+      },
+      updatedAt: now.toISOString(),
+    });
+
+    expect(getSpy).toHaveBeenCalled();
+    expect(replaceSpy).toHaveBeenCalled();
+
+    getSpy.mockRestore();
+    replaceSpy.mockRestore();
+    vi.useRealTimers();
   });
 
-  it("returns data when database is populated", async () => {
+  it("populates defaults when database data is an array", async () => {
+    const now = new Date("2026-02-07T00:00:00.000Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+
+    const getSpy = vi.spyOn(featureFlagsService.db, "getAll").mockResolvedValue([]);
+    const replaceSpy = vi.spyOn(featureFlagsService.db, "replaceAll").mockResolvedValue();
+
+    const result = await featureFlagsService.getFeatureFlags();
+
+    expect(result).toEqual({
+      flags: {
+        alertsEnabled: true,
+        rolnopolMapEnabled: true,
+        docsSearchEnabled: false,
+        docsAdvancedSearchEnabled: false,
+        contactFormEnabled: true,
+        staffFieldsExportEnabled: false,
+        financialReportsEnabled: false,
+      },
+      updatedAt: now.toISOString(),
+    });
+
+    expect(getSpy).toHaveBeenCalled();
+    expect(replaceSpy).toHaveBeenCalled();
+
+    getSpy.mockRestore();
+    replaceSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it("populates missing keys when data is incomplete", async () => {
+    const now = new Date("2026-02-07T01:00:00.000Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+
+    const existing = {
+      flags: { alertsEnabled: false },
+      updatedAt: null,
+    };
+
+    const getSpy = vi.spyOn(featureFlagsService.db, "getAll").mockResolvedValue(existing);
+    const replaceSpy = vi.spyOn(featureFlagsService.db, "replaceAll").mockResolvedValue();
+
+    const result = await featureFlagsService.getFeatureFlags();
+
+    expect(result).toEqual({
+      flags: {
+        alertsEnabled: false,
+        rolnopolMapEnabled: true,
+        docsSearchEnabled: false,
+        docsAdvancedSearchEnabled: false,
+        contactFormEnabled: true,
+        staffFieldsExportEnabled: false,
+        financialReportsEnabled: false,
+      },
+      updatedAt: now.toISOString(),
+    });
+
+    expect(getSpy).toHaveBeenCalled();
+    expect(replaceSpy).toHaveBeenCalled();
+
+    getSpy.mockRestore();
+    replaceSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it("returns data when database is populated with all predefined keys", async () => {
     const payload = {
-      flags: { newUi: true },
+      flags: {
+        alertsEnabled: true,
+        rolnopolMapEnabled: true,
+        docsSearchEnabled: false,
+        docsAdvancedSearchEnabled: false,
+        contactFormEnabled: true,
+        staffFieldsExportEnabled: false,
+        financialReportsEnabled: true,
+      },
       updatedAt: "2026-02-07T00:00:00.000Z",
     };
-    const spy = vi.spyOn(featureFlagsService.db, "getAll").mockResolvedValue(payload);
+    const getSpy = vi.spyOn(featureFlagsService.db, "getAll").mockResolvedValue(payload);
+    const replaceSpy = vi.spyOn(featureFlagsService.db, "replaceAll").mockResolvedValue();
+
     const result = await featureFlagsService.getFeatureFlags();
 
     expect(result).toEqual(payload);
-    expect(spy).toHaveBeenCalled();
-    spy.mockRestore();
+    expect(getSpy).toHaveBeenCalled();
+    expect(replaceSpy).not.toHaveBeenCalled();
+
+    getSpy.mockRestore();
+    replaceSpy.mockRestore();
   });
 
   it("updates flags and sets updatedAt on patch", async () => {
