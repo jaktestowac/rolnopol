@@ -446,12 +446,18 @@ async function initFooter() {
       if (versionSpan) {
         versionSpan.textContent = version;
       }
+
+      // set current year
+      const yearSpan = footerContainer.querySelector("#footer-year");
+      if (yearSpan) {
+        yearSpan.textContent = new Date().getFullYear();
+      }
     } catch (error) {
       errorLogger.log("Footer Component Loading", error, { showToUser: false });
       // Fallback footer if component fails to load
       footerContainer.innerHTML = `
         <footer class="footer">
-          <p>&copy; 2025 Rolnopol. build by <a href="https://jaktestowac.pl" target="_blank" rel="noopener">jaktestowac.pl</a> | <a href="https://aitesters.pl" target="_blank" rel="noopener" style="margin-left: 4px; margin-right: 4px; ">AI_Testers</a></p> 
+          <p>&copy; ${new Date().getFullYear()} Rolnopol. build by <a href="https://jaktestowac.pl" target="_blank" rel="noopener">jaktestowac.pl</a> | <a href="https://aitesters.pl" target="_blank" rel="noopener" style="margin-left: 4px; margin-right: 4px; ">AI_Testers</a></p> 
         <span aria-hidden="true">|</span>
         <a href="https://github.com/jaktestowac" target="_blank" rel="noopener" aria-label="GitHub" data-testid="footer-github" class="footer-github-link" style="margin-left: 4px; margin-right: 4px; ">
           <i class="fab fa-github" aria-hidden="true"></i><span class="sr-only">GitHub</span>
