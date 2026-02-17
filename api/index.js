@@ -267,7 +267,8 @@ if (require.main === module) {
         logInfo(`📜 Logs: http://localhost:${port}/api/logs`);
         logInfo(`📄 About: http://localhost:${port}/api/v1/about`);
         logInfo(`💗 Healthcheck: http://localhost:${port}/api/v1/healthcheck`);
-        logInfo(`📄 Swagger: http://localhost:${port}/schema/openapi.json`);
+        logInfo(`📄 Swagger: http://localhost:${port}/swagger.html`);
+        logInfo(`📄 OpenAPI Schema: http://localhost:${port}/schema/openapi.json`);
         logInfo(`👤 Admin: http://localhost:${port}/null/kraken.html`);
         logInfo(`Start here:`);
         logInfo(`🌐 Access: http://localhost:${port}`);
