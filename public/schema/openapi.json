@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Rolnopol",
-    "version": "1.0.82",
+    "version": "1.0.83",
     "description": "API documentation for the Rolnopol service with versioning support",
     "contact": {
       "name": "API Support",
@@ -13,6 +13,10 @@
     {
       "url": "/api/v1",
       "description": "API v1 (Stable) - Production endpoints"
+    },
+    {
+      "url": "/api/v2",
+      "description": "API v2 (Development) - New features and testing (may be unstable)"
     }
   ],
   "tags": [
@@ -861,70 +865,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiVersions"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1": {
-      "get": {
-        "tags": ["Version"],
-        "summary": "Get v1 API information",
-        "description": "Returns information about v1 API endpoints",
-        "responses": {
-          "200": {
-            "description": "v1 API information",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v2": {
-      "get": {
-        "tags": ["Version"],
-        "summary": "Get v2 API information",
-        "description": "Returns information about v2 API endpoints",
-        "responses": {
-          "200": {
-            "description": "v2 API information",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v2/healthcheck": {
-      "get": {
-        "tags": ["Version"],
-        "summary": "Get v2 health check",
-        "description": "Returns v2 API health status",
-        "responses": {
-          "200": {
-            "description": "v2 API health check",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
-                    "timestamp": { "type": "string", "format": "date-time" },
-                    "version": { "type": "string" },
-                    "status": { "type": "string" }
-                  }
                 }
               }
             }
