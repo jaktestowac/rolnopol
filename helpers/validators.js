@@ -23,6 +23,22 @@ function isValidPassword(password) {
 }
 
 /**
+ * Validate strong password policy
+ * - at least 8 characters
+ * - at least one lowercase letter
+ * - at least one uppercase letter
+ * - at least one number
+ * - at least one special character
+ */
+function isStrongPassword(password) {
+  if (!password || typeof password !== "string") return false;
+  if (password.length < 8) return false;
+
+  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+  return strongPasswordRegex.test(password);
+}
+
+/**
  * Validate displayed name format
  */
 function isValidDisplayedName(displayedName) {
@@ -108,8 +124,9 @@ function sanitizeString(input) {
 /**
  * Validate registration data (email-based)
  */
-function validateRegistrationData(data) {
+function validateRegistrationData(data, options = {}) {
   const errors = [];
+  const requireStrongPassword = options.requireStrongPassword === true;
 
   // Email is required and must be valid
   if (!data.email || !isValidEmail(data.email)) {
@@ -125,6 +142,8 @@ function validateRegistrationData(data) {
 
   if (!data.password || !isValidPassword(data.password)) {
     errors.push("Password must be at least 3 characters long");
+  } else if (requireStrongPassword && !isStrongPassword(data.password)) {
+    errors.push("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character");
   }
 
   return {
@@ -221,4 +240,5 @@ module.exports = {
   isEmpty,
   isValidCardNumber,
   isValidCvv,
+  isStrongPassword,
 };

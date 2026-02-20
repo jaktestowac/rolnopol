@@ -4,11 +4,12 @@
     "rolnopolMapEnabled": true,
     "docsSearchEnabled": false,
     "docsAdvancedSearchEnabled": false,
+    "registrationStrongPasswordEnabled": false,
     "contactFormEnabled": true,
     "staffFieldsExportEnabled": false,
     "financialReportsEnabled": false,
     "prometheusMetricsEnabled": false,
     "homeWelcomeVideoEnabled": false
   },
-  "updatedAt": "2026-02-20T14:25:26.488Z"
+  "updatedAt": "2026-02-20T21:52:13.703Z"
 }

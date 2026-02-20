@@ -319,6 +319,7 @@
 
   function setupRegisterPage() {
     const authService = window.App.getModule("authService");
+    const featureFlagsService = window.App.getModule("featureFlagsService");
 
     // Redirect if already authenticated
     if (authService && authService.isAuthenticated()) {
@@ -329,10 +330,32 @@
     const registerForm = document.getElementById("registerForm");
     if (registerForm) {
       const form = new FormComponent(registerForm);
+      let strongPasswordEnabled = false;
+
       const eventBus = window.App.getEventBus();
       if (eventBus) {
         form.setEventBus(eventBus);
       }
+
+      const configurePasswordValidation = async () => {
+        const passwordField = document.getElementById("password");
+        const passwordGuideline = document.getElementById("password-guideline");
+
+        if (featureFlagsService) {
+          strongPasswordEnabled = await featureFlagsService.isEnabled("registrationStrongPasswordEnabled", false);
+        }
+
+        if (passwordField) {
+          passwordField.minLength = strongPasswordEnabled ? 8 : 3;
+        }
+
+        if (passwordGuideline) {
+          passwordGuideline.textContent = strongPasswordEnabled
+            ? "Password: Must be at least 8 characters and include uppercase, lowercase, number, and special character."
+            : "Password: Must be at least 3 characters long.";
+        }
+      };
+
       // Add validation
       // Display name is optional; keep format validator if provided
       // form.addValidator(
@@ -342,8 +365,35 @@
       form.addValidator("displayedName", FormValidators.displayName());
       form.addValidator("email", FormValidators.required("Email is required"));
       form.addValidator("email", FormValidators.email());
-      form.addValidator("password", FormValidators.required("Password is required"));
-      form.addValidator("password", FormValidators.minLength(3));
+      form.addValidator("password", (value) => {
+        if (!value) {
+          return "Password is required";
+        }
+
+        if (strongPasswordEnabled) {
+          if (value.length < 8) {
+            return "Password must be at least 8 characters long";
+          }
+
+          const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+          if (!strongRegex.test(value)) {
+            return "Password must include uppercase, lowercase, number, and special character";
+          }
+
+          return null;
+        }
+
+        if (value.length < 3) {
+          return "Password must be at least 3 characters";
+        }
+
+        return null;
+      });
+
+      configurePasswordValidation().catch(() => {
+        strongPasswordEnabled = false;
+      });
+
       // Handle submission
       form.onSubmit(async (data) => {
         try {

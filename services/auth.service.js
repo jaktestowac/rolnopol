@@ -1,17 +1,24 @@
 const UserDataSingleton = require("../data/user-data-singleton");
 const { generateToken } = require("../helpers/token.helpers");
-const {
-  validateRegistrationData,
-  validateLoginData,
-} = require("../helpers/validators");
+const { validateRegistrationData, validateLoginData } = require("../helpers/validators");
 const { validatePassword } = require("../middleware/auth.middleware");
 const { loginExpiration } = require("../data/settings");
 const { logDebug, logError } = require("../helpers/logger-api");
 const financialService = require("./financial.service");
+const featureFlagsService = require("./feature-flags.service");
 
 class AuthService {
   constructor() {
     this.userDataInstance = UserDataSingleton.getInstance();
+  }
+
+  async _isRegistrationStrongPasswordEnabled() {
+    try {
+      const data = await featureFlagsService.getFeatureFlags();
+      return data?.flags?.registrationStrongPasswordEnabled === true;
+    } catch (error) {
+      return false;
+    }
   }
 
   /**
@@ -21,16 +28,21 @@ class AuthService {
     const { email, displayedName, password } = userData;
 
     // Trim displayedName before validation
-    const trimmedDisplayedName = displayedName
-      ? displayedName.trim()
-      : displayedName;
+    const trimmedDisplayedName = displayedName ? displayedName.trim() : displayedName;
+
+    const requireStrongPassword = await this._isRegistrationStrongPasswordEnabled();
 
     // Validate input data (email-based)
-    const validation = validateRegistrationData({
-      email,
-      displayedName: trimmedDisplayedName,
-      password,
-    });
+    const validation = validateRegistrationData(
+      {
+        email,
+        displayedName: trimmedDisplayedName,
+        password,
+      },
+      {
+        requireStrongPassword,
+      },
+    );
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
     }
@@ -71,9 +83,7 @@ class AuthService {
     const token = generateToken(newUser.id.toString(), loginExpiration);
 
     // Calculate cookie expiration time in milliseconds
-    const cookieMaxAge = loginExpiration.hours
-      ? loginExpiration.hours * 60 * 60 * 1000
-      : loginExpiration.minutes * 60 * 1000;
+    const cookieMaxAge = loginExpiration.hours ? loginExpiration.hours * 60 * 60 * 1000 : loginExpiration.minutes * 60 * 1000;
 
     // Remove password from response
     const { password: _, ...userResponse } = newUser;
@@ -127,9 +137,7 @@ class AuthService {
     const token = generateToken(user.id.toString(), loginExpiration);
 
     // Calculate cookie expiration time in milliseconds
-    const cookieMaxAge = loginExpiration.hours
-      ? loginExpiration.hours * 60 * 60 * 1000
-      : loginExpiration.minutes * 60 * 1000;
+    const cookieMaxAge = loginExpiration.hours ? loginExpiration.hours * 60 * 60 * 1000 : loginExpiration.minutes * 60 * 1000;
 
     // Remove password from response
     const { password: _, ...userResponse } = user;
