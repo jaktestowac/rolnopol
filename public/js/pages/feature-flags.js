@@ -2,6 +2,7 @@ class FeatureFlagsPage {
   constructor() {
     this.featureFlagsService = null;
     this.flags = {};
+    this.groups = {};
     this.updatedAt = null;
     this.listEl = null;
     this.statusEl = null;
@@ -114,6 +115,7 @@ class FeatureFlagsPage {
       }
 
       this.flags = payload.flags || {};
+      this.groups = payload.groups || {};
       this.updatedAt = payload.updatedAt || null;
       this._renderFlags();
     } catch (error) {
@@ -126,22 +128,45 @@ class FeatureFlagsPage {
       return;
     }
 
-    const entries = Object.entries(this.flags).sort((a, b) => a[0].localeCompare(b[0]));
-    this.flagsCountEl.textContent = String(entries.length);
+    const totalFlags = Object.keys(this.flags).length;
+    this.flagsCountEl.textContent = String(totalFlags);
     this.updatedAtEl.textContent = this._formatUpdatedAt(this.updatedAt);
 
-    if (entries.length === 0) {
+    if (totalFlags === 0) {
       this.listEl.innerHTML = '<p class="flags-empty">No flags defined yet.</p>';
       return;
     }
 
-    this.listEl.innerHTML = entries
-      .map(([key, flag]) => {
-        const safeKey = String(key);
-        // Handle both old format (boolean) and new format (object with value/description)
+    // Build a set of all grouped flag keys
+    const groupedFlagKeys = new Set();
+    for (const flagKeys of Object.values(this.groups)) {
+      if (Array.isArray(flagKeys)) {
+        flagKeys.forEach((key) => groupedFlagKeys.add(key));
+      }
+    }
+
+    // Find ungrouped flags
+    const ungroupedFlags = Object.keys(this.flags).filter((key) => !groupedFlagKeys.has(key));
+
+    // Render grouped flags
+    let html = "";
+
+    // Render each group
+    for (const [groupName, flagKeys] of Object.entries(this.groups)) {
+      if (!Array.isArray(flagKeys) || flagKeys.length === 0) continue;
+
+      const groupTitle = groupName.charAt(0).toUpperCase() + groupName.slice(1);
+      html += `<div class="flags-group"><h3 class="flags-group__title">${groupTitle}</h3><div class="flags-group__items">`;
+
+      for (const flagKey of flagKeys) {
+        const flag = this.flags[flagKey];
+        if (!flag) continue;
+
+        const safeKey = String(flagKey);
         const isEnabled = typeof flag === "object" ? flag.value : flag;
         const description = typeof flag === "object" ? flag.description : "";
-        return `
+
+        html += `
           <div class="flags-card">
             <div class="flags-card__info">
               <div class="flags-card__name">${safeKey}</div>
@@ -153,8 +178,41 @@ class FeatureFlagsPage {
             </label>
           </div>
         `;
-      })
-      .join("");
+      }
+
+      html += "</div></div>";
+    }
+
+    // Render ungrouped flags
+    if (ungroupedFlags.length > 0) {
+      html += '<div class="flags-group"><h3 class="flags-group__title">Other</h3><div class="flags-group__items">';
+
+      for (const flagKey of ungroupedFlags) {
+        const flag = this.flags[flagKey];
+        if (!flag) continue;
+
+        const safeKey = String(flagKey);
+        const isEnabled = typeof flag === "object" ? flag.value : flag;
+        const description = typeof flag === "object" ? flag.description : "";
+
+        html += `
+          <div class="flags-card">
+            <div class="flags-card__info">
+              <div class="flags-card__name">${safeKey}</div>
+              ${description ? `<p class="flags-card__description">${description}</p>` : ""}
+            </div>
+            <label class="flags-toggle">
+              <input class="flag-toggle-input" type="checkbox" data-flag="${safeKey}" ${isEnabled ? "checked" : ""} />
+              <span>${isEnabled ? "On" : "Off"}</span>
+            </label>
+          </div>
+        `;
+      }
+
+      html += "</div></div>";
+    }
+
+    this.listEl.innerHTML = html;
   }
 
   async _toggleFlag(flagKey, nextValue) {

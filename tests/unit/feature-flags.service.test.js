@@ -15,6 +15,7 @@ describe("feature-flags.service", () => {
     expect(result).toEqual({
       flags: {
         alertsEnabled: true,
+        alertsSeverityFilterEnabled: true,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -22,6 +23,7 @@ describe("feature-flags.service", () => {
         contactFormEnabled: true,
         staffFieldsExportEnabled: false,
         financialReportsEnabled: false,
+        financialCsvExportEnabled: false,
         prometheusMetricsEnabled: false,
         homeWelcomeVideoEnabled: false,
       },
@@ -49,6 +51,7 @@ describe("feature-flags.service", () => {
     expect(result).toEqual({
       flags: {
         alertsEnabled: true,
+        alertsSeverityFilterEnabled: true,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -56,6 +59,7 @@ describe("feature-flags.service", () => {
         contactFormEnabled: true,
         staffFieldsExportEnabled: false,
         financialReportsEnabled: false,
+        financialCsvExportEnabled: false,
         prometheusMetricsEnabled: false,
         homeWelcomeVideoEnabled: false,
       },
@@ -88,6 +92,7 @@ describe("feature-flags.service", () => {
     expect(result).toEqual({
       flags: {
         alertsEnabled: false,
+        alertsSeverityFilterEnabled: true,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -95,6 +100,7 @@ describe("feature-flags.service", () => {
         contactFormEnabled: true,
         staffFieldsExportEnabled: false,
         financialReportsEnabled: false,
+        financialCsvExportEnabled: false,
         prometheusMetricsEnabled: false,
         homeWelcomeVideoEnabled: false,
       },
@@ -113,6 +119,7 @@ describe("feature-flags.service", () => {
     const payload = {
       flags: {
         alertsEnabled: true,
+        alertsSeverityFilterEnabled: true,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -120,6 +127,7 @@ describe("feature-flags.service", () => {
         contactFormEnabled: true,
         staffFieldsExportEnabled: false,
         financialReportsEnabled: true,
+        financialCsvExportEnabled: false,
         prometheusMetricsEnabled: false,
         homeWelcomeVideoEnabled: false,
       },

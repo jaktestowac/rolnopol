@@ -31,6 +31,7 @@ class FinancialPage {
       this.setupEventListeners();
       this.setupTransferForm();
       await this.setupReportDownload();
+      await this.setupCsvExportDownload();
       await this.loadFinancialData();
       await this.loadTransactions();
     } catch (error) {
@@ -143,6 +144,105 @@ class FinancialPage {
 
     reportButton.style.display = "inline-flex";
     reportButton.addEventListener("click", () => this.downloadFinancialReport());
+  }
+
+  async setupCsvExportDownload() {
+    const csvButton = document.getElementById("download-financial-csv");
+    if (!csvButton) return;
+
+    const featureFlagsService = window.App?.getModule("featureFlagsService");
+    if (!featureFlagsService) {
+      csvButton.style.display = "none";
+      return;
+    }
+
+    let enabled = false;
+    try {
+      enabled = await featureFlagsService.isEnabled("financialCsvExportEnabled", false);
+    } catch (error) {
+      enabled = false;
+    }
+
+    if (!enabled) {
+      csvButton.style.display = "none";
+      return;
+    }
+
+    csvButton.style.display = "inline-flex";
+    csvButton.addEventListener("click", () => this.downloadFinancialCsv());
+  }
+
+  _getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return null;
+  }
+
+  async downloadFinancialCsv() {
+    const csvButton = document.getElementById("download-financial-csv");
+    if (!csvButton) return;
+
+    const originalText = csvButton.querySelector(".btn-text")?.textContent || "CSV Export";
+    csvButton.disabled = true;
+    csvButton.classList.add("loading");
+    if (csvButton.querySelector(".btn-text")) {
+      csvButton.querySelector(".btn-text").textContent = "Preparing CSV...";
+    }
+
+    try {
+      const token = this._getCookie("rolnopolToken");
+      const params = new URLSearchParams();
+      if (this.currentFilters?.type) params.append("type", this.currentFilters.type);
+      if (this.currentFilters?.category) params.append("category", this.currentFilters.category);
+      if (this.currentFilters?.startDate) params.append("startDate", this.currentFilters.startDate);
+      if (this.currentFilters?.endDate) params.append("endDate", this.currentFilters.endDate);
+
+      const endpoint = `/api/v1/financial/export/csv${params.toString() ? `?${params}` : ""}`;
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          ...(token ? { token } : {}),
+        },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        let message = "Failed to export CSV";
+        try {
+          const payload = await response.json();
+          message = payload?.error || message;
+        } catch (error) {
+          // ignore parse error
+        }
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("content-disposition") || "";
+      const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+      const filename = match?.[1] || "financial-transactions.csv";
+
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+
+      this.showSuccess("Financial CSV exported");
+    } catch (error) {
+      console.error("Error exporting financial CSV:", error);
+      this.showError(error.message || "Failed to export CSV");
+    } finally {
+      csvButton.disabled = false;
+      csvButton.classList.remove("loading");
+      if (csvButton.querySelector(".btn-text")) {
+        csvButton.querySelector(".btn-text").textContent = originalText;
+      }
+    }
   }
 
   async downloadFinancialReport() {

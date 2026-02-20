@@ -1,6 +1,7 @@
 {
   "flags": {
     "alertsEnabled": true,
+    "alertsSeverityFilterEnabled": true,
     "rolnopolMapEnabled": true,
     "docsSearchEnabled": false,
     "docsAdvancedSearchEnabled": false,
@@ -8,8 +9,9 @@
     "contactFormEnabled": true,
     "staffFieldsExportEnabled": false,
     "financialReportsEnabled": false,
+    "financialCsvExportEnabled": false,
     "prometheusMetricsEnabled": false,
     "homeWelcomeVideoEnabled": false
   },
-  "updatedAt": "2026-02-20T21:52:13.703Z"
+  "updatedAt": "2026-02-20T23:24:28.185Z"
 }

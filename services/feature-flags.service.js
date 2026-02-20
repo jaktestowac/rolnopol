@@ -3,6 +3,7 @@ const prometheusMetrics = require("../helpers/prometheus-metrics");
 
 const FEATURE_FLAG_DESCRIPTIONS = {
   alertsEnabled: "Enable or disable the alerts system for animals and operations",
+  alertsSeverityFilterEnabled: "Enable or disable severity filter controls on the alerts page",
   rolnopolMapEnabled: "Enable or disable the interactive map feature",
   docsSearchEnabled: "Enable or disable documentation search",
   docsAdvancedSearchEnabled: "Enable or disable advanced search filters on the documentation page",
@@ -10,12 +11,25 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   contactFormEnabled: "Enable or disable the contact form",
   staffFieldsExportEnabled: "Enable or disable staff/fields/animals JSON exports",
   financialReportsEnabled: "Enable or disable user financial PDF reports",
+  financialCsvExportEnabled: "Enable or disable CSV export for financial transaction history",
   prometheusMetricsEnabled: "Enable or disable Prometheus metrics collection endpoint",
   homeWelcomeVideoEnabled: "Enable or disable the homepage welcome promotional video",
 };
 
+const FEATURE_FLAG_GROUPS = {
+  homepage: ["homeWelcomeVideoEnabled"],
+  alert: ["alertsEnabled", "alertsSeverityFilterEnabled"],
+  map: ["rolnopolMapEnabled"],
+  documentation: ["docsSearchEnabled", "docsAdvancedSearchEnabled"],
+  registration: ["registrationStrongPasswordEnabled"],
+  contact: ["contactFormEnabled"],
+  export: ["staffFieldsExportEnabled", "financialReportsEnabled", "financialCsvExportEnabled"],
+  monitoring: ["prometheusMetricsEnabled"],
+};
+
 const PREDEFINED_FEATURE_FLAGS = {
   alertsEnabled: true,
+  alertsSeverityFilterEnabled: true,
   rolnopolMapEnabled: true,
   docsSearchEnabled: false,
   docsAdvancedSearchEnabled: false,
@@ -23,6 +37,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   contactFormEnabled: true,
   staffFieldsExportEnabled: false,
   financialReportsEnabled: false,
+  financialCsvExportEnabled: false,
   prometheusMetricsEnabled: false,
   homeWelcomeVideoEnabled: false,
 };
@@ -132,6 +147,7 @@ class FeatureFlagsService {
 
     return {
       flags: flagsWithDescriptions,
+      groups: FEATURE_FLAG_GROUPS,
       updatedAt: normalized.updatedAt,
     };
   }

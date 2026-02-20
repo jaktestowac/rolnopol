@@ -10,6 +10,7 @@ const financialRoute = express.Router();
 // Apply rate limiting
 const apiLimiter = createRateLimiter("api");
 const financialReportFeature = requireFeatureFlag("financialReportsEnabled", { resourceName: "Financial report" });
+const financialCsvExportFeature = requireFeatureFlag("financialCsvExportEnabled", { resourceName: "Financial CSV export" });
 
 /**
  * Get user's financial account
@@ -62,6 +63,18 @@ financialRoute.get(
   authenticateUser,
   financialReportFeature,
   financialController.getFinancialReportPdf.bind(financialController),
+);
+
+/**
+ * Download user's financial transactions as CSV
+ * GET /api/financial/export/csv
+ */
+financialRoute.get(
+  "/financial/export/csv",
+  apiLimiter,
+  authenticateUser,
+  financialCsvExportFeature,
+  financialController.getFinancialTransactionsCsv.bind(financialController),
 );
 
 /**

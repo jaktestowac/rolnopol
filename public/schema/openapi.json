@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Rolnopol",
-    "version": "1.0.86",
+    "version": "1.0.87",
     "description": "API documentation for the Rolnopol service with versioning support",
     "contact": {
       "name": "API Support",
@@ -79,6 +79,10 @@
     {
       "name": "Logs",
       "description": "Logging and monitoring operations"
+    },
+    {
+      "name": "Feature Flags",
+      "description": "Feature flag management and control"
     }
   ],
   "components": {
@@ -849,6 +853,47 @@
           }
         },
         "required": ["success", "message", "clearedCount"]
+      },
+      "FeatureFlag": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "boolean",
+            "description": "Feature flag enabled status"
+          },
+          "description": {
+            "type": "string",
+            "description": "Feature flag description"
+          }
+        },
+        "required": ["value"]
+      },
+      "FeatureFlagsResponse": {
+        "type": "object",
+        "properties": {
+          "flags": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [{ "type": "boolean" }, { "$ref": "#/components/schemas/FeatureFlag" }]
+            },
+            "description": "Feature flags map"
+          },
+          "groups": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "description": "Feature flags grouped by category"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Last update timestamp"
+          }
+        },
+        "required": ["flags"]
       }
     }
   },
@@ -3068,6 +3113,179 @@
       }
     },
 
+    "/feature-flags": {
+      "get": {
+        "tags": ["Feature Flags"],
+        "summary": "Get feature flags",
+        "description": "Retrieve all feature flags. Optionally include descriptions and grouping by passing `descriptions=true` as query parameter.",
+        "parameters": [
+          {
+            "name": "descriptions",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["true", "false"] },
+            "description": "Include flag descriptions and grouping information"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Feature flags retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": { "$ref": "#/components/schemas/FeatureFlagsResponse" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Feature Flags"],
+        "summary": "Update feature flags",
+        "description": "Merge provided flags with existing flags (partial update)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "flags": {
+                    "type": "object",
+                    "additionalProperties": { "type": "boolean" },
+                    "description": "Flags to update (must be boolean values)"
+                  }
+                },
+                "required": ["flags"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feature flags updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": { "$ref": "#/components/schemas/FeatureFlagsResponse" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error - flags must contain only boolean values",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Feature Flags"],
+        "summary": "Replace all feature flags",
+        "description": "Replace all feature flags with provided flags (full replacement)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "flags": {
+                    "type": "object",
+                    "additionalProperties": { "type": "boolean" },
+                    "description": "Flags to replace with (must be boolean values, can be empty)"
+                  }
+                },
+                "required": ["flags"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feature flags replaced successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": { "$ref": "#/components/schemas/FeatureFlagsResponse" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error - flags must contain only boolean values",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/feature-flags/reset": {
+      "post": {
+        "tags": ["Feature Flags"],
+        "summary": "Reset feature flags to defaults",
+        "description": "Reset all feature flags to their predefined default values",
+        "responses": {
+          "200": {
+            "description": "Feature flags reset successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": { "$ref": "#/components/schemas/FeatureFlagsResponse" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
     "/shutdown": {
       "get": {
         "tags": ["System"],

@@ -3,6 +3,19 @@ const { logError } = require("../helpers/logger-api");
 const financialService = require("../services/financial.service");
 
 class FinancialController {
+  _escapeCsv(value) {
+    if (value === null || value === undefined) return "";
+    const str = String(value);
+    if (/[",\n\r]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
+  _toCsv(rows) {
+    return rows.map((row) => row.map((cell) => this._escapeCsv(cell)).join(",")).join("\n");
+  }
+
   /**
    * Get user's financial account
    */
@@ -411,6 +424,58 @@ class FinancialController {
       res.status(500).json(
         formatResponseBody({
           error: "Failed to generate financial report",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Download user's financial transactions as CSV
+   */
+  async getFinancialTransactionsCsv(req, res) {
+    try {
+      const { type, category, startDate, endDate } = req.query;
+
+      const history = await financialService.getTransactionHistory(req.user.userId, {
+        limit: 10000,
+        offset: 0,
+        type: type || null,
+        category: category || null,
+        startDate: startDate || null,
+        endDate: endDate || null,
+      });
+
+      const transactions = Array.isArray(history?.transactions) ? history.transactions : [];
+
+      const rows = [["id", "timestamp", "type", "category", "description", "amount", "balanceBefore", "balanceAfter", "referenceId"]];
+
+      for (const tx of transactions) {
+        rows.push([
+          tx?.id ?? "",
+          tx?.timestamp ?? "",
+          tx?.type ?? "",
+          tx?.category ?? "",
+          tx?.description ?? "",
+          Number(tx?.amount || 0).toFixed(2),
+          Number(tx?.balanceBefore || 0).toFixed(2),
+          Number(tx?.balanceAfter || 0).toFixed(2),
+          tx?.referenceId ?? "",
+        ]);
+      }
+
+      const csv = this._toCsv(rows);
+      const dateStamp = new Date().toISOString().slice(0, 10);
+      const filename = `financial-transactions-${req.user.userId}-${dateStamp}.csv`;
+
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.status(200).send(csv);
+    } catch (error) {
+      logError("Error generating financial CSV export:", error);
+
+      res.status(500).json(
+        formatResponseBody({
+          error: "Failed to generate financial CSV export",
         }),
       );
     }
