@@ -10,6 +10,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   staffFieldsExportEnabled: "Enable or disable staff/fields/animals JSON exports",
   financialReportsEnabled: "Enable or disable user financial PDF reports",
   prometheusMetricsEnabled: "Enable or disable Prometheus metrics collection endpoint",
+  homeWelcomeVideoEnabled: "Enable or disable the homepage welcome promotional video",
 };
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -21,6 +22,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   staffFieldsExportEnabled: false,
   financialReportsEnabled: false,
   prometheusMetricsEnabled: false,
+  homeWelcomeVideoEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

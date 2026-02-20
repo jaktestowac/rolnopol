@@ -21,6 +21,8 @@ describe("feature-flags.service", () => {
         contactFormEnabled: true,
         staffFieldsExportEnabled: false,
         financialReportsEnabled: false,
+        prometheusMetricsEnabled: false,
+        homeWelcomeVideoEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -52,6 +54,8 @@ describe("feature-flags.service", () => {
         contactFormEnabled: true,
         staffFieldsExportEnabled: false,
         financialReportsEnabled: false,
+        prometheusMetricsEnabled: false,
+        homeWelcomeVideoEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -88,6 +92,8 @@ describe("feature-flags.service", () => {
         contactFormEnabled: true,
         staffFieldsExportEnabled: false,
         financialReportsEnabled: false,
+        prometheusMetricsEnabled: false,
+        homeWelcomeVideoEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -110,6 +116,8 @@ describe("feature-flags.service", () => {
         contactFormEnabled: true,
         staffFieldsExportEnabled: false,
         financialReportsEnabled: true,
+        prometheusMetricsEnabled: false,
+        homeWelcomeVideoEnabled: false,
       },
       updatedAt: "2026-02-07T00:00:00.000Z",
     };
