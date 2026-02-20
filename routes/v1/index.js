@@ -41,6 +41,7 @@ router.get("/statistics", async (req, res) => {
     // Get basic statistics using database
     const users = await userDataInstance.getUsers();
     const activeUsers = users.filter((user) => user.isActive).length;
+    const farmsCount = users.length;
 
     // Get data from databases
     const fields = await fieldsDatabase.getAll();
@@ -82,15 +83,37 @@ router.get("/statistics", async (req, res) => {
     }
     const totalValue = totalCompletedValue + totalActiveValue;
 
+    const avgAreaPerFarm = farmsCount > 0 ? Number((totalArea / farmsCount).toFixed(2)) : 0;
+    const avgAnimalsPerFarm = farmsCount > 0 ? Number((animalsCount / farmsCount).toFixed(2)) : 0;
+    const avgStaffPerFarm = farmsCount > 0 ? Number((staffCount / farmsCount).toFixed(2)) : 0;
+    const avgAnimalsPerStaff = staffCount > 0 ? Number((animalsCount / staffCount).toFixed(2)) : 0;
+    const avgOfferValue = activeOffers > 0 ? Number((totalActiveValue / activeOffers).toFixed(2)) : 0;
+
+    const completedTransactions = Array.isArray(marketplace.transactions)
+      ? marketplace.transactions.filter((tx) => tx.status === "completed").length
+      : 0;
+
+    // return advanced statistics only if the feature flag is enabled
+
     res.status(200).json({
       users: activeUsers,
-      farms: users.length, // Each user represents a farm
+      farms: farmsCount, // Each user represents a farm
       area: totalArea,
       staff: staffCount,
       animals: animalsCount,
       avgStaffAge: avgStaffAge,
       offers: activeOffers,
       totalValue: totalValue,
+      advanced: {
+        avgAreaPerFarm,
+        avgAnimalsPerFarm,
+        avgStaffPerFarm,
+        avgAnimalsPerStaff,
+        avgOfferValue,
+        completedTransactions,
+        totalCompletedValue,
+        totalActiveValue,
+      },
     });
   } catch (error) {
     logError("Error getting statistics:", { error });

@@ -11,7 +11,8 @@
     "financialReportsEnabled": false,
     "financialCsvExportEnabled": false,
     "prometheusMetricsEnabled": false,
-    "homeWelcomeVideoEnabled": false
+    "homeWelcomeVideoEnabled": false,
+    "homeStatsSectionEnabled": false
   },
-  "updatedAt": "2026-02-20T23:24:28.185Z"
+  "updatedAt": "2026-02-20T23:47:41.035Z"
 }

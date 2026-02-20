@@ -268,6 +268,31 @@
           </div>
         </div>
 
+        <div data-feature-flag="homeStatsSectionEnabled" data-feature-flag-default="false" style="margin-top: 1rem; border-top: 1px dashed rgba(106, 123, 94, 0.2); padding-top: 1rem">
+          <h3 style="margin: 0 0 0.75rem 0; color: #2d3a2d; font-size: 1rem; text-align: center">
+            <i class="fas fa-chart-line" style="margin-right: 0.4rem; color: #6a7b5e"></i>
+            Advanced Farm Intelligence
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.7rem">
+            <div class="stat-block" style="text-align: center; padding: 0.65rem; border-radius: 0.6rem; background: rgba(106, 123, 94, 0.08)" title="Average land area managed by one farm account.">
+              <div style="font-size: 0.8rem; color: #6a7b5e">Avg area / farm</div>
+              <div id="advanced-stat-area-per-farm" style="font-size: 1.1rem; font-weight: 700; color: #2d3a2d">-</div>
+            </div>
+            <div class="stat-block" style="text-align: center; padding: 0.65rem; border-radius: 0.6rem; background: rgba(106, 123, 94, 0.08)" title="Average number of animals handled by one staff member.">
+              <div style="font-size: 0.8rem; color: #6a7b5e">Animals / staff</div>
+              <div id="advanced-stat-animals-per-staff" style="font-size: 1.1rem; font-weight: 700; color: #2d3a2d">-</div>
+            </div>
+            <div class="stat-block" style="text-align: center; padding: 0.65rem; border-radius: 0.6rem; background: rgba(106, 123, 94, 0.08)" title="Average value of currently active marketplace offers.">
+              <div style="font-size: 0.8rem; color: #6a7b5e">Avg offer value</div>
+              <div id="advanced-stat-offer-value" style="font-size: 1.1rem; font-weight: 700; color: #2d3a2d">-</div>
+            </div>
+            <div class="stat-block" style="text-align: center; padding: 0.65rem; border-radius: 0.6rem; background: rgba(106, 123, 94, 0.08)" title="Number of completed marketplace transactions.">
+              <div style="font-size: 0.8rem; color: #6a7b5e">Completed deals</div>
+              <div id="advanced-stat-completed-transactions" style="font-size: 1.1rem; font-weight: 700; color: #2d3a2d">-</div>
+            </div>
+          </div>
+        </div>
+
         <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(106, 123, 94, 0.1)">
           <p style="font-size: 0.95rem; color: #6a7b5e; margin: 0 0 1rem 0">
             <i class="fas fa-info-circle" style="margin-right: 0.5rem"></i>
@@ -719,6 +744,13 @@
         }
       };
 
+      const formatCurrency = (num) => {
+        return `${Number(num || 0).toLocaleString("pl-PL", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        })} ₡`;
+      };
+
       // Load statistics with animation
       try {
         const res = await fetch("/api/v1/statistics");
@@ -751,6 +783,43 @@
         if (animalsElement && stats.animals !== undefined) {
           const safeAnimals = safeValue(stats.animals);
           animateValue(animalsElement, 0, safeAnimals, 1500, false, "animals");
+        }
+
+        const advancedStats = stats.advanced || {};
+        const areaPerFarmValue =
+          typeof advancedStats.avgAreaPerFarm === "number" ? advancedStats.avgAreaPerFarm : stats.farms > 0 ? Number((stats.area / stats.farms).toFixed(2)) : 0;
+        const animalsPerStaffValue =
+          typeof advancedStats.avgAnimalsPerStaff === "number"
+            ? advancedStats.avgAnimalsPerStaff
+            : stats.staff > 0
+              ? Number((stats.animals / stats.staff).toFixed(2))
+              : 0;
+        const avgOfferValue = typeof advancedStats.avgOfferValue === "number" ? advancedStats.avgOfferValue : 0;
+        const completedTransactions =
+          typeof advancedStats.completedTransactions === "number" ? advancedStats.completedTransactions : 0;
+
+        const advancedAreaPerFarmElement = document.getElementById("advanced-stat-area-per-farm");
+        const advancedAnimalsPerStaffElement = document.getElementById("advanced-stat-animals-per-staff");
+        const advancedOfferValueElement = document.getElementById("advanced-stat-offer-value");
+        const advancedCompletedTransactionsElement = document.getElementById("advanced-stat-completed-transactions");
+
+        if (advancedAreaPerFarmElement) {
+          advancedAreaPerFarmElement.textContent = `${areaPerFarmValue.toLocaleString("pl-PL", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 2,
+          })} ha`;
+        }
+        if (advancedAnimalsPerStaffElement) {
+          advancedAnimalsPerStaffElement.textContent = animalsPerStaffValue.toLocaleString("pl-PL", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 2,
+          });
+        }
+        if (advancedOfferValueElement) {
+          advancedOfferValueElement.textContent = formatCurrency(avgOfferValue);
+        }
+        if (advancedCompletedTransactionsElement) {
+          advancedCompletedTransactionsElement.textContent = completedTransactions.toLocaleString("pl-PL");
         }
 
         // Show staff info if available with safe values
@@ -814,6 +883,19 @@
           if (element) {
             const fallbackValue = Math.floor(Math.random() * 50) + 10;
             animateValue(element, 0, fallbackValue, 1000, item.isArea, item.type);
+          }
+        });
+
+        const advancedFallbackIds = [
+          "advanced-stat-area-per-farm",
+          "advanced-stat-animals-per-staff",
+          "advanced-stat-offer-value",
+          "advanced-stat-completed-transactions",
+        ];
+        advancedFallbackIds.forEach((id) => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.textContent = "-";
           }
         });
       }

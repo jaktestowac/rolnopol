@@ -14,10 +14,11 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   financialCsvExportEnabled: "Enable or disable CSV export for financial transaction history",
   prometheusMetricsEnabled: "Enable or disable Prometheus metrics collection endpoint",
   homeWelcomeVideoEnabled: "Enable or disable the homepage welcome promotional video",
+  homeStatsSectionEnabled: "Enable or disable advanced statistics section on the homepage",
 };
 
 const FEATURE_FLAG_GROUPS = {
-  homepage: ["homeWelcomeVideoEnabled"],
+  homepage: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled"],
   alert: ["alertsEnabled", "alertsSeverityFilterEnabled"],
   map: ["rolnopolMapEnabled"],
   documentation: ["docsSearchEnabled", "docsAdvancedSearchEnabled"],
@@ -40,6 +41,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   financialCsvExportEnabled: false,
   prometheusMetricsEnabled: false,
   homeWelcomeVideoEnabled: false,
+  homeStatsSectionEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {
