@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Rolnopol",
-    "version": "1.0.83",
+    "version": "1.0.84",
     "description": "API documentation for the Rolnopol service with versioning support",
     "contact": {
       "name": "API Support",
@@ -1080,7 +1080,8 @@
     "/contact": {
       "post": {
         "summary": "Submit contact form",
-        "description": "Submit a contact form with name, email, subject, and message.",
+        "description": "Submit a contact form with name, email, subject, and message. This endpoint is controlled by feature flag `contactFormEnabled`.",
+        "x-feature-flag": "contactFormEnabled",
         "tags": ["Contact"],
         "requestBody": {
           "required": true,
@@ -1360,6 +1361,42 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/SystemStatistics" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Get Prometheus metrics",
+        "description": "Returns Prometheus-formatted application metrics. Endpoint availability is controlled by feature flag `prometheusMetricsEnabled` (disabled by default).",
+        "x-feature-flag": "prometheusMetricsEnabled",
+        "responses": {
+          "200": {
+            "description": "Prometheus metrics payload",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Metrics endpoint disabled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           },
@@ -2353,6 +2390,65 @@
         }
       }
     },
+    "/financial/report": {
+      "get": {
+        "tags": ["Financial"],
+        "summary": "Get financial report payload",
+        "description": "Returns encoded report data for client-side PDF generation. Endpoint availability is controlled by feature flag `financialReportsEnabled`.",
+        "x-feature-flag": "financialReportsEnabled",
+        "security": [{ "TokenAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Financial report payload retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "encodedReport": { "type": "string", "description": "Base64-encoded JSON report payload" },
+                        "filename": { "type": "string", "example": "financial-report-USER-2026-02-20.pdf" },
+                        "generatedAt": { "type": "string", "format": "date-time" },
+                        "totalTransactions": { "type": "integer" },
+                        "maxRows": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Financial report endpoint disabled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/financial/transfer": {
       "post": {
         "tags": ["Financial"],
@@ -2836,7 +2932,8 @@
       "get": {
         "tags": ["Alerts"],
         "summary": "Get combined alerts",
-        "description": "Get combined alerts (history and upcoming) for an optional date",
+        "description": "Get combined alerts (history and upcoming) for an optional date. Endpoint availability is controlled by feature flag `alertsEnabled`.",
+        "x-feature-flag": "alertsEnabled",
         "security": [],
         "parameters": [
           { "name": "date", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Date in YYYY-MM-DD" },
@@ -2854,7 +2951,8 @@
       "get": {
         "tags": ["Alerts"],
         "summary": "Get alerts history",
-        "description": "Get past alerts for an optional date",
+        "description": "Get past alerts for an optional date. Endpoint availability is controlled by feature flag `alertsEnabled`.",
+        "x-feature-flag": "alertsEnabled",
         "security": [],
         "parameters": [
           { "name": "date", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Date in YYYY-MM-DD" },
@@ -2872,7 +2970,8 @@
       "get": {
         "tags": ["Alerts"],
         "summary": "Get upcoming alerts",
-        "description": "Get upcoming alerts for an optional date",
+        "description": "Get upcoming alerts for an optional date. Endpoint availability is controlled by feature flag `alertsEnabled`.",
+        "x-feature-flag": "alertsEnabled",
         "security": [],
         "parameters": [
           { "name": "date", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Date in YYYY-MM-DD" },

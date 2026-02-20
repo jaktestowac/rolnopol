@@ -6,7 +6,8 @@
     "docsAdvancedSearchEnabled": false,
     "contactFormEnabled": true,
     "staffFieldsExportEnabled": false,
-    "financialReportsEnabled": false
+    "financialReportsEnabled": false,
+    "prometheusMetricsEnabled": false
   },
-  "updatedAt": "2026-02-10T21:15:57.030Z"
+  "updatedAt": "2026-02-19T23:32:18.363Z"
 }

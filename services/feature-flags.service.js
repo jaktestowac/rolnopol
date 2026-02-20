@@ -1,4 +1,5 @@
 const dbManager = require("../data/database-manager");
+const prometheusMetrics = require("../helpers/prometheus-metrics");
 
 const FEATURE_FLAG_DESCRIPTIONS = {
   alertsEnabled: "Enable or disable the alerts system for animals and operations",
@@ -8,6 +9,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   contactFormEnabled: "Enable or disable the contact form",
   staffFieldsExportEnabled: "Enable or disable staff/fields/animals JSON exports",
   financialReportsEnabled: "Enable or disable user financial PDF reports",
+  prometheusMetricsEnabled: "Enable or disable Prometheus metrics collection endpoint",
 };
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -18,6 +20,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   contactFormEnabled: true,
   staffFieldsExportEnabled: false,
   financialReportsEnabled: false,
+  prometheusMetricsEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {
@@ -28,6 +31,11 @@ const DEFAULT_FEATURE_FLAGS = {
 class FeatureFlagsService {
   constructor() {
     this.db = dbManager.getFeatureFlagsDatabase();
+  }
+
+  _syncPrometheusMetricsToggle(flags) {
+    const enabled = flags?.prometheusMetricsEnabled === true;
+    prometheusMetrics.setEnabled(enabled);
   }
 
   _isUnsafeKey(key) {
@@ -142,9 +150,12 @@ class FeatureFlagsService {
       const next = { flags: merged, updatedAt: new Date().toISOString() };
 
       await this.db.replaceAll(next);
-      return this._normalize(next);
+      const normalizedNext = this._normalize(next);
+      this._syncPrometheusMetricsToggle(normalizedNext.flags);
+      return normalizedNext;
     }
 
+    this._syncPrometheusMetricsToggle(normalized.flags);
     return normalized;
   }
 
@@ -176,7 +187,9 @@ class FeatureFlagsService {
       };
     });
 
-    return this._normalize(updated);
+    const normalizedUpdated = this._normalize(updated);
+    this._syncPrometheusMetricsToggle(normalizedUpdated.flags);
+    return normalizedUpdated;
   }
 
   async replaceAllFlags(flags) {
@@ -194,7 +207,9 @@ class FeatureFlagsService {
 
     await this.db.replaceAll(next);
     const data = await this.db.getAll();
-    return this._normalize(data);
+    const normalizedData = this._normalize(data);
+    this._syncPrometheusMetricsToggle(normalizedData.flags);
+    return normalizedData;
   }
 
   async resetFeatureFlags() {
@@ -205,7 +220,9 @@ class FeatureFlagsService {
 
     await this.db.replaceAll(next);
     const data = await this.db.getAll();
-    return this._normalize(data);
+    const normalizedData = this._normalize(data);
+    this._syncPrometheusMetricsToggle(normalizedData.flags);
+    return normalizedData;
   }
 }
 

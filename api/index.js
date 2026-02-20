@@ -12,6 +12,7 @@ const versionMiddleware = require("../middleware/version.middleware");
 const { clearAllTokens } = require("../helpers/token.helpers");
 const packageJson = require("../package.json");
 const notFoundStatsModule = require("../helpers/notfound-stats");
+const prometheusMetrics = require("../helpers/prometheus-metrics");
 
 app.set("etag", false);
 
@@ -84,6 +85,21 @@ app.use((req, res, next) => {
   logRequest(req);
   next();
 });
+
+// Native Prometheus metrics collection middleware (hot-toggle enabled)
+try {
+  // eslint-disable-next-line global-require
+  const startupFlags = require("../data/feature-flags.json");
+  const isMetricsEnabled = startupFlags?.flags?.prometheusMetricsEnabled === true;
+
+  prometheusMetrics.setEnabled(isMetricsEnabled);
+  logInfo(`Prometheus request observer hot-toggle initialized: ${isMetricsEnabled ? "enabled" : "disabled"}`);
+} catch (error) {
+  prometheusMetrics.setEnabled(false);
+  logError("Failed to load startup feature flags for Prometheus observer. Using disabled default.", { error });
+}
+
+app.use(prometheusMetrics.observeRequest);
 
 // Default route for root path - must come before static file serving
 app.get("/api", (req, res) => {
