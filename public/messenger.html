@@ -48,7 +48,13 @@
             <section class="messenger-chat glass" aria-label="Active chat panel">
                 <div class="messenger-chat__header">
                     <h2 id="activeChatTitle"><i class="fas fa-comment-dots"></i> Select a friend</h2>
-                    <span id="activeChatStatus" class="messenger-status" aria-live="polite">No active conversation</span>
+                    <div class="messenger-sidebar__actions">
+                        <span id="activeChatStatus" class="messenger-status" aria-live="polite">No active conversation</span>
+                        <button id="toggleBlockBtn" class="btn btn-compact btn-outline" type="button" aria-label="Block or unblock selected user" disabled>
+                            <i class="fas fa-ban"></i>
+                            Block
+                        </button>
+                    </div>
                 </div>
 
                 <div id="chatLoading" class="messenger-state" hidden>Loading conversation...</div>

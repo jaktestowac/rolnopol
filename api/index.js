@@ -29,6 +29,7 @@ const initializeAllDatabases = async () => {
   try {
     const databases = [
       dbManager.getUsersDatabase(),
+      dbManager.getMessagesDatabase(),
       dbManager.getFinancialDatabase(),
       dbManager.getMarketplaceDatabase(),
       dbManager.getFeatureFlagsDatabase(),

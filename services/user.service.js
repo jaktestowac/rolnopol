@@ -256,6 +256,7 @@ class UserService {
   async listFriends(userId) {
     const user = await this._getActiveUserOrThrow(userId);
     const friendIds = this._normalizeIdList(user.friends);
+    const blockedByCurrentUser = this._normalizeIdList(user.blockedUsers);
 
     const friends = [];
     for (const friendId of friendIds) {
@@ -263,7 +264,17 @@ class UserService {
       if (!friend || !friend.isActive) {
         continue;
       }
-      friends.push(this._toPublicUserSummary(friend));
+
+      const blockedByFriend = this._normalizeIdList(friend.blockedUsers);
+      const blockedByYou = blockedByCurrentUser.includes(friend.id);
+      const blockedByThem = blockedByFriend.includes(user.id);
+
+      friends.push({
+        ...this._toPublicUserSummary(friend),
+        blockedByYou,
+        blockedByThem,
+        isBlocked: blockedByYou || blockedByThem,
+      });
     }
 
     return friends;
@@ -284,6 +295,70 @@ class UserService {
     return {
       removedFriendId: friend.id,
       count: nextUserFriends.length,
+    };
+  }
+
+  async listBlockedUsers(userId) {
+    const user = await this._getActiveUserOrThrow(userId);
+    const blockedIds = this._normalizeIdList(user.blockedUsers);
+
+    const blockedUsers = [];
+    for (const blockedId of blockedIds) {
+      const blockedUser = await this.userDataInstance.findUser(blockedId);
+      if (!blockedUser || !blockedUser.isActive) {
+        continue;
+      }
+      blockedUsers.push(this._toPublicUserSummary(blockedUser));
+    }
+
+    return blockedUsers;
+  }
+
+  async blockUser(userId, payload = {}) {
+    const user = await this._getActiveUserOrThrow(userId);
+    const identifier = payload?.identifier;
+    const explicitTargetUserId = payload?.userId;
+
+    let targetUser;
+    if (explicitTargetUserId !== undefined && explicitTargetUserId !== null) {
+      targetUser = await this._getActiveUserOrThrow(explicitTargetUserId);
+    } else {
+      targetUser = await this._resolveUserByIdentifier(identifier);
+    }
+
+    if (user.id === targetUser.id) {
+      throw new Error("Validation failed: You cannot block yourself");
+    }
+
+    const blockedIds = this._normalizeIdList(user.blockedUsers);
+    if (blockedIds.includes(targetUser.id)) {
+      throw new Error("User already blocked");
+    }
+
+    const nextBlockedIds = [...blockedIds, targetUser.id];
+    await this.userDataInstance.updateUser(user.id, { blockedUsers: nextBlockedIds });
+
+    return {
+      blockedUser: this._toPublicUserSummary(targetUser),
+      count: nextBlockedIds.length,
+    };
+  }
+
+  async unblockUser(userId, blockedUserId) {
+    const user = await this._getActiveUserOrThrow(userId);
+    const blockedUser = await this._getActiveUserOrThrow(blockedUserId);
+
+    const blockedIds = this._normalizeIdList(user.blockedUsers);
+    if (!blockedIds.includes(blockedUser.id)) {
+      throw new Error("Blocked user not found");
+    }
+
+    const nextBlockedIds = blockedIds.filter((id) => id !== blockedUser.id);
+    await this.userDataInstance.updateUser(user.id, { blockedUsers: nextBlockedIds });
+
+    return {
+      unblockedUserId: blockedUser.id,
+      count: nextBlockedIds.length,
     };
   }
 }

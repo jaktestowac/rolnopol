@@ -105,6 +105,15 @@ class DatabaseManager {
   }
 
   /**
+   * Get messages database singleton
+   */
+  getMessagesDatabase() {
+    return this.getDatabase("messages", "messages.json", {
+      messages: [],
+    });
+  }
+
+  /**
    * Get a custom database singleton
    */
   getCustomDatabase(resourceName, fileName, defaultData = []) {

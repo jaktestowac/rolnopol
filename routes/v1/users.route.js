@@ -66,6 +66,43 @@ usersRoute.delete(
 );
 
 /**
+ * Block user by identifier or userId
+ * POST /api/users/blocked
+ */
+usersRoute.post(
+  "/users/blocked",
+  apiLimiter,
+  requireFeatureFlag("messengerEnabled", { resourceName: "Messenger" }),
+  authenticateUser,
+  userController.blockUser.bind(userController),
+);
+
+/**
+ * List blocked users
+ * GET /api/users/blocked
+ */
+usersRoute.get(
+  "/users/blocked",
+  apiLimiter,
+  requireFeatureFlag("messengerEnabled", { resourceName: "Messenger" }),
+  authenticateUser,
+  userController.getBlockedUsers.bind(userController),
+);
+
+/**
+ * Unblock user
+ * DELETE /api/users/blocked/:blockedUserId
+ */
+usersRoute.delete(
+  "/users/blocked/:blockedUserId",
+  apiLimiter,
+  requireFeatureFlag("messengerEnabled", { resourceName: "Messenger" }),
+  authenticateUser,
+  validateIdParam("blockedUserId"),
+  userController.unblockUser.bind(userController),
+);
+
+/**
  * Update user by ID
  * PUT /api/users/:userId
  */

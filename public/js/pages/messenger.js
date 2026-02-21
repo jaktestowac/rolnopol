@@ -6,6 +6,8 @@ class MessengerPage {
     this.currentUser = null;
     this.friends = [];
     this.activeConversation = null;
+    this.messages = [];
+    this.lastMessageCursor = null;
     this.polling = {
       intervalMs: 5000,
       timerId: null,
@@ -67,6 +69,7 @@ class MessengerPage {
     const addFriendModalOverlay = document.getElementById("addFriendModalOverlay");
     const addFriendForm = document.getElementById("addFriendForm");
     const messageForm = document.getElementById("messageForm");
+    const toggleBlockBtn = document.getElementById("toggleBlockBtn");
 
     if (refreshBtn) {
       refreshBtn.addEventListener("click", () => this._loadFriends());
@@ -90,6 +93,10 @@ class MessengerPage {
 
     if (messageForm) {
       messageForm.addEventListener("submit", (event) => this._handleSendMessage(event));
+    }
+
+    if (toggleBlockBtn) {
+      toggleBlockBtn.addEventListener("click", () => this._handleToggleBlock());
     }
 
     document.addEventListener("visibilitychange", () => {
@@ -121,6 +128,14 @@ class MessengerPage {
 
       const list = response?.data?.data;
       this.friends = Array.isArray(list) ? list : [];
+
+      if (this.activeConversation) {
+        const refreshed = this.friends.find((friend) => Number(friend.id) === Number(this.activeConversation.id));
+        if (refreshed) {
+          this.activeConversation = refreshed;
+        }
+      }
+
       this._renderFriends();
 
       this._setFriendsState({
@@ -165,11 +180,14 @@ class MessengerPage {
     });
   }
 
-  _selectConversation(friend) {
+  async _selectConversation(friend) {
     this.activeConversation = friend;
+    this.messages = [];
+    this.lastMessageCursor = null;
     this._renderFriends();
     this._renderActiveConversation();
-    this._startPolling();
+    await this._loadConversation(friend.id);
+    this._startPolling(true);
   }
 
   _renderActiveConversation() {
@@ -179,6 +197,7 @@ class MessengerPage {
     const messageList = document.getElementById("messageList");
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendMessageBtn");
+    const toggleBlockBtn = document.getElementById("toggleBlockBtn");
 
     if (!this.activeConversation) {
       if (titleEl) {
@@ -199,6 +218,10 @@ class MessengerPage {
       if (sendBtn) {
         sendBtn.disabled = true;
       }
+      if (toggleBlockBtn) {
+        toggleBlockBtn.disabled = true;
+        toggleBlockBtn.innerHTML = '<i class="fas fa-ban"></i> Block';
+      }
       return;
     }
 
@@ -207,7 +230,7 @@ class MessengerPage {
       this.activeConversation.username ||
       this.activeConversation.email ||
       `User #${this.activeConversation.id}`;
-    const isBlocked = !!(this.activeConversation?.isBlocked || this.activeConversation?.blocked === true);
+    const isBlocked = !!this._isConversationBlocked(this.activeConversation);
 
     if (titleEl) {
       titleEl.innerHTML = `<i class="fas fa-comment-dots"></i> ${this._escapeHtml(displayName)}`;
@@ -220,12 +243,16 @@ class MessengerPage {
     }
 
     if (messageList) {
-      messageList.innerHTML = `
-        <li class="messenger-message">
-          No messages yet. Start the conversation with ${this._escapeHtml(displayName)}.
-          <span class="messenger-message__meta">Just now</span>
-        </li>
-      `;
+      if (this.messages.length === 0) {
+        messageList.innerHTML = `
+          <li class="messenger-message">
+            No messages yet. Start the conversation with ${this._escapeHtml(displayName)}.
+            <span class="messenger-message__meta">Now</span>
+          </li>
+        `;
+      } else {
+        this._renderMessages();
+      }
     }
 
     if (messageInput) {
@@ -237,6 +264,15 @@ class MessengerPage {
     }
     if (sendBtn) {
       sendBtn.disabled = isBlocked;
+    }
+
+    if (toggleBlockBtn) {
+      toggleBlockBtn.disabled = false;
+      if (this.activeConversation?.blockedByYou === true) {
+        toggleBlockBtn.innerHTML = '<i class="fas fa-lock-open"></i> Unblock';
+      } else {
+        toggleBlockBtn.innerHTML = '<i class="fas fa-ban"></i> Block';
+      }
     }
   }
 
@@ -272,7 +308,7 @@ class MessengerPage {
     }
   }
 
-  _handleSendMessage(event) {
+  async _handleSendMessage(event) {
     event.preventDefault();
     const input = document.getElementById("messageInput");
 
@@ -285,8 +321,146 @@ class MessengerPage {
       return;
     }
 
-    this._showNotification("Messaging API is not available yet (planned in FR-5).", "info");
-    input.value = "";
+    try {
+      const response = await this.apiService.post(
+        "messages",
+        {
+          toUserId: Number(this.activeConversation.id),
+          content,
+        },
+        { requiresAuth: true },
+      );
+
+      if (!response.success || !response?.data?.success) {
+        this._showNotification(response?.data?.error || response.error || "Failed to send message.", "error");
+        return;
+      }
+
+      const createdMessage = response?.data?.data;
+      if (createdMessage && createdMessage.id) {
+        this.messages = [...this.messages.filter((message) => Number(message.id) !== Number(createdMessage.id)), createdMessage].sort(
+          (left, right) => this._compareMessages(left, right),
+        );
+        this.lastMessageCursor = createdMessage.id;
+        this._renderMessages(true);
+      }
+
+      input.value = "";
+    } catch (error) {
+      this._showNotification("Failed to send message.", "error");
+    }
+  }
+
+  async _loadConversation(withUserId) {
+    const chatLoading = document.getElementById("chatLoading");
+    const chatError = document.getElementById("chatError");
+
+    if (chatLoading) {
+      chatLoading.hidden = false;
+    }
+    if (chatError) {
+      chatError.hidden = true;
+    }
+
+    try {
+      const response = await this.apiService.get(`messages/conversations/${Number(withUserId)}?limit=100`, {
+        requiresAuth: true,
+      });
+
+      if (!response.success || !response?.data?.success) {
+        throw new Error(response?.data?.error || response.error || "Failed to load conversation");
+      }
+
+      const payload = response.data.data || {};
+      const blocked = payload.blocked || {};
+      this.messages = Array.isArray(payload.messages) ? payload.messages : [];
+      this.lastMessageCursor = this.messages.length > 0 ? this.messages[this.messages.length - 1].id : null;
+
+      if (this.activeConversation) {
+        this.activeConversation.blockedByYou = blocked.blockedByYou === true;
+        this.activeConversation.blockedByThem = blocked.blockedByUser === true;
+        this.activeConversation.isBlocked = this.activeConversation.blockedByYou || this.activeConversation.blockedByThem;
+      }
+
+      this._renderActiveConversation();
+      this._renderMessages(true);
+    } catch (error) {
+      if (chatError) {
+        chatError.hidden = false;
+        chatError.textContent = "Unable to load conversation.";
+      }
+      this.messages = [];
+      this._renderActiveConversation();
+    } finally {
+      if (chatLoading) {
+        chatLoading.hidden = true;
+      }
+    }
+  }
+
+  _renderMessages(scrollToEnd = false) {
+    const messageList = document.getElementById("messageList");
+    if (!messageList) {
+      return;
+    }
+
+    messageList.innerHTML = "";
+
+    for (const message of this.messages) {
+      const item = document.createElement("li");
+      const isOwn = Number(message.fromUserId) === Number(this.currentUser?.id);
+      item.className = `messenger-message${isOwn ? " messenger-message--own" : ""}`;
+
+      item.innerHTML = `
+        <span>${this._escapeHtml(message.content || "")}</span>
+        <span class="messenger-message__meta">${this._escapeHtml(this._formatTimestamp(message.createdAt))}</span>
+      `;
+
+      messageList.appendChild(item);
+    }
+
+    if (scrollToEnd) {
+      messageList.scrollTop = messageList.scrollHeight;
+    }
+  }
+
+  async _handleToggleBlock() {
+    if (!this.activeConversation) {
+      return;
+    }
+
+    const targetId = Number(this.activeConversation.id);
+    const blockedByYou = this.activeConversation.blockedByYou === true;
+
+    try {
+      if (blockedByYou) {
+        const response = await this.apiService.delete(`users/blocked/${targetId}`, { requiresAuth: true });
+        if (!response.success || !response?.data?.success) {
+          this._showNotification(response?.data?.error || response.error || "Unable to unblock user.", "error");
+          return;
+        }
+      } else {
+        const response = await this.apiService.post(
+          "users/blocked",
+          {
+            userId: targetId,
+          },
+          { requiresAuth: true },
+        );
+        if (!response.success || !response?.data?.success) {
+          this._showNotification(response?.data?.error || response.error || "Unable to block user.", "error");
+          return;
+        }
+      }
+
+      await this._loadFriends();
+      if (this.activeConversation) {
+        await this._loadConversation(this.activeConversation.id);
+      }
+      this._showNotification(blockedByYou ? "User unblocked." : "User blocked.", "success");
+    } catch (error) {
+      this._showNotification("Unable to update block status.", "error");
+    }
   }
 
   _setFriendsState({ loading, error, empty }) {
@@ -374,12 +548,17 @@ class MessengerPage {
     }
   }
 
-  _startPolling() {
+  _startPolling(runImmediately = false) {
     if (!this.activeConversation || document.hidden) {
       return;
     }
 
     this._stopPolling();
+
+    if (runImmediately) {
+      this._pollActiveConversation();
+    }
+
     this.polling.timerId = window.setInterval(() => {
       this._pollActiveConversation();
     }, this.polling.intervalMs);
@@ -399,12 +578,68 @@ class MessengerPage {
 
     this.polling.inFlight = true;
     try {
-      // FR-2.2 shell for future transport integration.
-      // Replace with GET /messages/poll in FR-5 without changing UI wiring.
-      return;
+      const withUserId = Number(this.activeConversation.id);
+      const sinceQuery = this.lastMessageCursor ? `&since=${encodeURIComponent(this.lastMessageCursor)}` : "";
+      const response = await this.apiService.get(`messages/poll?withUserId=${withUserId}${sinceQuery}`, {
+        requiresAuth: true,
+      });
+
+      if (!response.success || !response?.data?.success) {
+        return;
+      }
+
+      const payload = response.data.data || {};
+      const incoming = Array.isArray(payload.messages) ? payload.messages : [];
+      if (incoming.length === 0) {
+        return;
+      }
+
+      const byId = new Map(this.messages.map((message) => [Number(message.id), message]));
+      for (const message of incoming) {
+        byId.set(Number(message.id), message);
+      }
+
+      this.messages = Array.from(byId.values()).sort((left, right) => this._compareMessages(left, right));
+      const latest = this.messages[this.messages.length - 1];
+      this.lastMessageCursor = latest ? latest.id : this.lastMessageCursor;
+      this._renderMessages(true);
     } finally {
       this.polling.inFlight = false;
     }
+  }
+
+  _compareMessages(left, right) {
+    const leftTs = Date.parse(left?.createdAt || 0) || 0;
+    const rightTs = Date.parse(right?.createdAt || 0) || 0;
+
+    if (leftTs !== rightTs) {
+      return leftTs - rightTs;
+    }
+
+    return Number(left?.id || 0) - Number(right?.id || 0);
+  }
+
+  _isConversationBlocked(conversation) {
+    if (!conversation) {
+      return false;
+    }
+
+    const blockedByYou = conversation.blockedByYou === true;
+    const blockedByThem = conversation.blockedByThem === true;
+    return blockedByYou || blockedByThem || conversation.isBlocked === true || conversation.blocked === true;
+  }
+
+  _formatTimestamp(value) {
+    if (!value) {
+      return "";
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return String(value);
+    }
+
+    return date.toLocaleString();
   }
 
   _escapeHtml(value) {

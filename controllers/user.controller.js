@@ -5,6 +5,94 @@ const { isValidId } = require("../helpers/validators");
 
 class UserController {
   /**
+   * List blocked users
+   */
+  async getBlockedUsers(req, res) {
+    try {
+      const blockedUsers = await userService.listBlockedUsers(req.user.userId);
+
+      return res.status(200).json(
+        formatResponseBody({
+          data: blockedUsers,
+        }),
+      );
+    } catch (error) {
+      logError("Error getting blocked users:", error);
+
+      let statusCode = 500;
+      if (error.message.includes("Validation failed")) statusCode = 400;
+      else if (error.message.includes("not found")) statusCode = 404;
+      else if (error.message.includes("deactivated")) statusCode = 401;
+
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Block user by identifier or userId
+   */
+  async blockUser(req, res) {
+    try {
+      const result = await userService.blockUser(req.user.userId, req.body || {});
+
+      return res.status(201).json(
+        formatResponseBody({
+          message: "User blocked successfully",
+          data: result,
+        }),
+      );
+    } catch (error) {
+      logError("Error blocking user:", error);
+
+      let statusCode = 500;
+      if (error.message.includes("Validation failed")) statusCode = 400;
+      else if (error.message.includes("already")) statusCode = 409;
+      else if (error.message.includes("not found")) statusCode = 404;
+      else if (error.message.includes("deactivated")) statusCode = 401;
+
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Unblock user by user id
+   */
+  async unblockUser(req, res) {
+    try {
+      const { blockedUserId } = req.params;
+      const result = await userService.unblockUser(req.user.userId, blockedUserId);
+
+      return res.status(200).json(
+        formatResponseBody({
+          message: "User unblocked successfully",
+          data: result,
+        }),
+      );
+    } catch (error) {
+      logError("Error unblocking user:", error);
+
+      let statusCode = 500;
+      if (error.message.includes("Validation failed")) statusCode = 400;
+      else if (error.message.includes("not found")) statusCode = 404;
+      else if (error.message.includes("deactivated")) statusCode = 401;
+
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message,
+        }),
+      );
+    }
+  }
+
+  /**
    * List user friends
    */
   async getFriends(req, res) {
