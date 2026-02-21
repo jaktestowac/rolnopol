@@ -27,6 +27,7 @@ describe("feature-flags.service", () => {
         prometheusMetricsEnabled: false,
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
+        messengerEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -64,6 +65,7 @@ describe("feature-flags.service", () => {
         prometheusMetricsEnabled: false,
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
+        messengerEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -106,12 +108,49 @@ describe("feature-flags.service", () => {
         prometheusMetricsEnabled: false,
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
+        messengerEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
 
     expect(getSpy).toHaveBeenCalled();
     expect(replaceSpy).toHaveBeenCalled();
+
+    getSpy.mockRestore();
+    replaceSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it("preserves custom flags while backfilling predefined defaults, with existing values taking precedence", async () => {
+    const now = new Date("2026-02-07T02:00:00.000Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+
+    const existing = {
+      flags: {
+        alertsEnabled: false,
+        customPilotFlag: true,
+      },
+      updatedAt: null,
+    };
+
+    const getSpy = vi.spyOn(featureFlagsService.db, "getAll").mockResolvedValue(existing);
+    const replaceSpy = vi.spyOn(featureFlagsService.db, "replaceAll").mockResolvedValue();
+
+    const result = await featureFlagsService.getFeatureFlags();
+
+    expect(result.flags.alertsEnabled).toBe(false);
+    expect(result.flags.customPilotFlag).toBe(true);
+    expect(result.flags).toHaveProperty("messengerEnabled", false);
+    expect(result.updatedAt).toBe(now.toISOString());
+    expect(replaceSpy).toHaveBeenCalledWith({
+      flags: expect.objectContaining({
+        alertsEnabled: false,
+        customPilotFlag: true,
+        messengerEnabled: false,
+      }),
+      updatedAt: now.toISOString(),
+    });
 
     getSpy.mockRestore();
     replaceSpy.mockRestore();
@@ -134,6 +173,7 @@ describe("feature-flags.service", () => {
         prometheusMetricsEnabled: false,
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
+        messengerEnabled: false,
       },
       updatedAt: "2026-02-07T00:00:00.000Z",
     };

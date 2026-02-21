@@ -44,6 +44,7 @@
     0 0 30px rgba(34, 197, 94, 0.1),
     0 8px 32px rgba(0, 0, 0, 0.08),
     inset 1px 1px 0 rgba(255, 255, 255, 0.8);
+  margin-bottom: 1rem;
 }
 
 .flags-header__title {

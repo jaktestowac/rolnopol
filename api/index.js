@@ -13,6 +13,7 @@ const { clearAllTokens } = require("../helpers/token.helpers");
 const packageJson = require("../package.json");
 const notFoundStatsModule = require("../helpers/notfound-stats");
 const prometheusMetrics = require("../helpers/prometheus-metrics");
+const featureFlagsService = require("../services/feature-flags.service");
 
 app.set("etag", false);
 
@@ -128,6 +129,28 @@ app.get("/api", (req, res) => {
       ],
     }),
   );
+});
+
+// Feature-gate messenger UI entry page before static serving
+app.get(["/messenger", "/messenger.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.messengerEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/messenger") {
+      return res.redirect(302, "/messenger.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Messenger feature gate check failed", { error });
+    return next();
+  }
 });
 
 // Serve static files

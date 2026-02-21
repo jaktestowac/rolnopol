@@ -15,6 +15,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   prometheusMetricsEnabled: "Enable or disable Prometheus metrics collection endpoint",
   homeWelcomeVideoEnabled: "Enable or disable the homepage welcome promotional video",
   homeStatsSectionEnabled: "Enable or disable advanced statistics section on the homepage",
+  messengerEnabled: "Enable or disable internal messenger feature",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -26,6 +27,7 @@ const FEATURE_FLAG_GROUPS = {
   contact: ["contactFormEnabled"],
   export: ["staffFieldsExportEnabled", "financialReportsEnabled", "financialCsvExportEnabled"],
   monitoring: ["prometheusMetricsEnabled"],
+  communication: ["messengerEnabled"],
 };
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -42,6 +44,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   prometheusMetricsEnabled: false,
   homeWelcomeVideoEnabled: false,
   homeStatsSectionEnabled: false,
+  messengerEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

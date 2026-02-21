@@ -5,6 +5,95 @@ const { isValidId } = require("../helpers/validators");
 
 class UserController {
   /**
+   * List user friends
+   */
+  async getFriends(req, res) {
+    try {
+      const friends = await userService.listFriends(req.user.userId);
+
+      return res.status(200).json(
+        formatResponseBody({
+          data: friends,
+        }),
+      );
+    } catch (error) {
+      logError("Error getting user friends:", error);
+
+      let statusCode = 500;
+      if (error.message.includes("Validation failed")) statusCode = 400;
+      else if (error.message.includes("not found")) statusCode = 404;
+      else if (error.message.includes("deactivated")) statusCode = 401;
+
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Add friend by email or username
+   */
+  async addFriend(req, res) {
+    try {
+      const identifier = req.body?.identifier;
+      const result = await userService.addFriend(req.user.userId, identifier);
+
+      return res.status(201).json(
+        formatResponseBody({
+          message: "Friend added successfully",
+          data: result,
+        }),
+      );
+    } catch (error) {
+      logError("Error adding friend:", error);
+
+      let statusCode = 500;
+      if (error.message.includes("Validation failed")) statusCode = 400;
+      else if (error.message.includes("already")) statusCode = 409;
+      else if (error.message.includes("not found")) statusCode = 404;
+      else if (error.message.includes("deactivated")) statusCode = 401;
+
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Remove friend by user id
+   */
+  async removeFriend(req, res) {
+    try {
+      const { friendUserId } = req.params;
+      const result = await userService.removeFriend(req.user.userId, friendUserId);
+
+      return res.status(200).json(
+        formatResponseBody({
+          message: "Friend removed successfully",
+          data: result,
+        }),
+      );
+    } catch (error) {
+      logError("Error removing friend:", error);
+
+      let statusCode = 500;
+      if (error.message.includes("Validation failed")) statusCode = 400;
+      else if (error.message.includes("not found")) statusCode = 404;
+      else if (error.message.includes("deactivated")) statusCode = 401;
+
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message,
+        }),
+      );
+    }
+  }
+
+  /**
    * Get user profile
    */
   async getProfile(req, res) {
@@ -46,10 +135,7 @@ class UserController {
       if (email) updateData.email = email;
       if (password) updateData.password = password;
 
-      const updatedUser = await userService.updateUserProfile(
-        req.user.userId,
-        updateData,
-      );
+      const updatedUser = await userService.updateUserProfile(req.user.userId, updateData);
 
       res.status(200).json(
         formatResponseBody({
@@ -82,9 +168,7 @@ class UserController {
       const { userId } = req.params;
 
       if (!isValidId(userId)) {
-        return res
-          .status(400)
-          .json(formatResponseBody({ error: "Invalid user ID format" }));
+        return res.status(400).json(formatResponseBody({ error: "Invalid user ID format" }));
       }
 
       const { displayedName, email, password } = req.body;
@@ -106,10 +190,7 @@ class UserController {
       if (email) updateData.email = email;
       if (password) updateData.password = password;
 
-      const updatedUser = await userService.updateUserProfile(
-        userId,
-        updateData,
-      );
+      const updatedUser = await userService.updateUserProfile(userId, updateData);
 
       res.status(200).json(
         formatResponseBody({
@@ -200,10 +281,7 @@ class UserController {
         }),
       );
     } catch (error) {
-      require("../helpers/logger-api").logError(
-        "Error getting user statistics:",
-        error,
-      );
+      require("../helpers/logger-api").logError("Error getting user statistics:", error);
       res.status(500).json(
         require("../helpers/response-helper").formatResponseBody({
           error: error.message || "Internal server error",
@@ -218,13 +296,11 @@ class UserController {
   async getAllUsersStatistics(req, res) {
     try {
       if (!req.user.isAdmin) {
-        return res
-          .status(403)
-          .json(
-            require("../helpers/response-helper").formatResponseBody({
-              error: "Forbidden: Admins only",
-            }),
-          );
+        return res.status(403).json(
+          require("../helpers/response-helper").formatResponseBody({
+            error: "Forbidden: Admins only",
+          }),
+        );
       }
 
       // Use proper database instances instead of direct file reads
@@ -250,25 +326,18 @@ class UserController {
         };
       });
 
-      res
-        .status(200)
-        .json(
-          require("../helpers/response-helper").formatResponseBody({
-            data: stats,
-          }),
-        );
-    } catch (error) {
-      require("../helpers/logger-api").logError(
-        "Error getting all users statistics:",
-        error,
+      res.status(200).json(
+        require("../helpers/response-helper").formatResponseBody({
+          data: stats,
+        }),
       );
-      res
-        .status(500)
-        .json(
-          require("../helpers/response-helper").formatResponseBody({
-            error: error.message || "Internal server error",
-          }),
-        );
+    } catch (error) {
+      require("../helpers/logger-api").logError("Error getting all users statistics:", error);
+      res.status(500).json(
+        require("../helpers/response-helper").formatResponseBody({
+          error: error.message || "Internal server error",
+        }),
+      );
     }
   }
 }

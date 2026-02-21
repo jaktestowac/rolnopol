@@ -43,9 +43,7 @@ class UserService {
     const { displayedName, email, password } = updateData;
 
     // Trim displayedName before validation
-    const trimmedDisplayedName = displayedName
-      ? displayedName.trim()
-      : displayedName;
+    const trimmedDisplayedName = displayedName ? displayedName.trim() : displayedName;
 
     // Validate input data
     const validation = validateProfileUpdateData({
@@ -96,15 +94,11 @@ class UserService {
     }
 
     // Update other fields - only if they are not empty after trimming
-    if (trimmedDisplayedName && trimmedDisplayedName.length > 0)
-      dataToUpdate.displayedName = trimmedDisplayedName;
+    if (trimmedDisplayedName && trimmedDisplayedName.length > 0) dataToUpdate.displayedName = trimmedDisplayedName;
     if (password) dataToUpdate.password = password; // Plain text password
 
     // Update user
-    const updatedUser = await this.userDataInstance.updateUser(
-      userId,
-      dataToUpdate,
-    );
+    const updatedUser = await this.userDataInstance.updateUser(userId, dataToUpdate);
 
     // Remove password from response
     const { password: _, ...userResponse } = updatedUser;
@@ -162,6 +156,135 @@ class UserService {
     logDebug("User profile deleted successfully", { userId });
 
     return userResponse;
+  }
+
+  _normalizeIdList(values) {
+    if (!Array.isArray(values)) {
+      return [];
+    }
+
+    const normalized = values.map((value) => Number(value)).filter((value) => Number.isInteger(value) && value > 0);
+
+    return [...new Set(normalized)];
+  }
+
+  _toPublicUserSummary(user) {
+    if (!user) {
+      return null;
+    }
+
+    return {
+      id: user.id,
+      username: user.username || null,
+      displayedName: user.displayedName || null,
+      email: user.email || null,
+      isActive: user.isActive === true,
+    };
+  }
+
+  async _getActiveUserOrThrow(userId) {
+    const user = await this.userDataInstance.findUser(userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (!user.isActive) {
+      throw new Error("Account is deactivated");
+    }
+
+    return user;
+  }
+
+  async _resolveUserByIdentifier(identifier) {
+    const normalizedIdentifier = typeof identifier === "string" ? identifier.trim() : "";
+
+    if (!normalizedIdentifier) {
+      throw new Error("Validation failed: identifier is required");
+    }
+
+    let candidate = null;
+
+    if (normalizedIdentifier.includes("@")) {
+      candidate = await this.userDataInstance.findUserByEmail(normalizedIdentifier);
+    }
+
+    if (!candidate) {
+      candidate = await this.userDataInstance.findUserByUsername(normalizedIdentifier);
+    }
+
+    if (!candidate) {
+      throw new Error("Target user not found");
+    }
+
+    if (!candidate.isActive) {
+      throw new Error("Target user is deactivated");
+    }
+
+    return candidate;
+  }
+
+  async addFriend(userId, identifier) {
+    const user = await this._getActiveUserOrThrow(userId);
+    const targetUser = await this._resolveUserByIdentifier(identifier);
+
+    if (user.id === targetUser.id) {
+      throw new Error("Validation failed: You cannot add yourself as a friend");
+    }
+
+    const userFriends = this._normalizeIdList(user.friends);
+    if (userFriends.includes(targetUser.id)) {
+      throw new Error("Friend already added");
+    }
+
+    const nextUserFriends = [...userFriends, targetUser.id];
+    await this.userDataInstance.updateUser(user.id, { friends: nextUserFriends });
+
+    const targetFriends = this._normalizeIdList(targetUser.friends);
+    if (!targetFriends.includes(user.id)) {
+      await this.userDataInstance.updateUser(targetUser.id, {
+        friends: [...targetFriends, user.id],
+      });
+    }
+
+    return {
+      friend: this._toPublicUserSummary(targetUser),
+      count: nextUserFriends.length,
+    };
+  }
+
+  async listFriends(userId) {
+    const user = await this._getActiveUserOrThrow(userId);
+    const friendIds = this._normalizeIdList(user.friends);
+
+    const friends = [];
+    for (const friendId of friendIds) {
+      const friend = await this.userDataInstance.findUser(friendId);
+      if (!friend || !friend.isActive) {
+        continue;
+      }
+      friends.push(this._toPublicUserSummary(friend));
+    }
+
+    return friends;
+  }
+
+  async removeFriend(userId, friendUserId) {
+    const user = await this._getActiveUserOrThrow(userId);
+    const friend = await this._getActiveUserOrThrow(friendUserId);
+
+    const userFriends = this._normalizeIdList(user.friends);
+    if (!userFriends.includes(friend.id)) {
+      throw new Error("Friend not found");
+    }
+
+    const nextUserFriends = userFriends.filter((id) => id !== friend.id);
+    await this.userDataInstance.updateUser(user.id, { friends: nextUserFriends });
+
+    return {
+      removedFriendId: friend.id,
+      count: nextUserFriends.length,
+    };
   }
 }
 

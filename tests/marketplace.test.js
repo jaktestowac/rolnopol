@@ -58,7 +58,7 @@ describe("Marketplace API", () => {
     // (since we can't sell fields with assigned animals)
     const animalsRes = await request(app).get("/api/v1/animals").set("token", authToken);
     if (animalsRes.status === 200 && animalsRes.body.data && Array.isArray(animalsRes.body.data.animals)) {
-      const fieldAnimals = animalsRes.body.data.animals.filter(animal => animal.fieldId === fieldId);
+      const fieldAnimals = animalsRes.body.data.animals.filter((animal) => animal.fieldId === fieldId);
       for (const animal of fieldAnimals) {
         await request(app)
           .put(`/api/v1/animals/${animal.id}`)
@@ -82,7 +82,7 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Offers response should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        true
+        true,
       );
       expect(res.body.data, `Offers response should have offers array. Response: ${JSON.stringify(res.body)}`).toHaveProperty("offers");
       expect(Array.isArray(res.body.data.offers), `Offers should be an array. Response: ${JSON.stringify(res.body)}`).toBe(true);
@@ -93,7 +93,7 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Unauthenticated request should have success false. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        false
+        false,
       );
       expect(res.body, `Unauthenticated request should have error message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("error");
     });
@@ -105,7 +105,7 @@ describe("Marketplace API", () => {
 
       expect(res.body, `My offers response should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        true
+        true,
       );
       expect(res.body.data, `My offers response should have offers array. Response: ${JSON.stringify(res.body)}`).toHaveProperty("offers");
       expect(Array.isArray(res.body.data.offers), `My offers should be an array. Response: ${JSON.stringify(res.body)}`).toBe(true);
@@ -116,7 +116,7 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Unauthenticated request should have success false. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        false
+        false,
       );
       expect(res.body, `Unauthenticated request should have error message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("error");
     });
@@ -128,16 +128,16 @@ describe("Marketplace API", () => {
       expect(res.status, `Create offer request should return 200 status. Response: ${JSON.stringify(res.body)}`).toBe(200);
       expect(res.body, `Create offer response should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        true
+        true,
       );
       expect(res.body.data, `Create offer response should have offer data. Response: ${JSON.stringify(res.body)}`).toHaveProperty("offer");
       expect(res.body.data.offer, `Offer should have correct itemName. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "itemType",
-        testOffer.itemType
+        testOffer.itemType,
       );
       expect(res.body.data.offer, `Offer should have correct price. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "price",
-        testOffer.price
+        testOffer.price,
       );
       expect(res.body.data.offer, `Offer should have sellerId. Response: ${JSON.stringify(res.body)}`).toHaveProperty("sellerId");
     });
@@ -160,7 +160,7 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Unauthenticated request should have success false. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        false
+        false,
       );
       expect(res.body, `Unauthenticated request should have error message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("error");
     });
@@ -187,11 +187,11 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Buy response should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty("success", true);
       expect(res.body.data, `Buy response should have transaction data. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
-        "transaction"
+        "transaction",
       );
       expect(res.body.data.transaction, `Transaction should have correct offerId. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "offerId",
-        offerId
+        offerId,
       );
     });
 
@@ -205,7 +205,7 @@ describe("Marketplace API", () => {
       expect(res.status, `Invalid buy data should return 404 status. Response: ${JSON.stringify(res.body)}`).toBe(404);
       expect(res.body, `Invalid buy data should have success false. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        false
+        false,
       );
       expect(res.body, `Invalid buy data should have error message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("error");
     });
@@ -220,7 +220,7 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Unauthenticated request should have success false. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        false
+        false,
       );
       expect(res.body, `Unauthenticated request should have error message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("error");
     });
@@ -242,7 +242,7 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Cancel offer response should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        true
+        true,
       );
       expect(res.body.data, `Cancel offer response should have message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("message");
     });
@@ -252,7 +252,7 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Invalid offer ID should have success false. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        false
+        false,
       );
       expect(res.body, `Invalid offer ID should have error message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("error");
     });
@@ -262,7 +262,7 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Unauthenticated request should have success false. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        false
+        false,
       );
       expect(res.body, `Unauthenticated request should have error message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("error");
     });
@@ -274,13 +274,13 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Transaction history should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        true
+        true,
       );
       expect(res.body.data, `Transaction history should have transactions array. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
-        "transactions"
+        "transactions",
       );
       expect(Array.isArray(res.body.data.transactions), `Transactions should be an array. Response: ${JSON.stringify(res.body)}`).toBe(
-        true
+        true,
       );
     });
 
@@ -289,13 +289,59 @@ describe("Marketplace API", () => {
 
       expect(res.body, `Unauthenticated request should have success false. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        false
+        false,
       );
       expect(res.body, `Unauthenticated request should have error message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("error");
     });
   });
 
   describe("Marketplace Edge Cases", () => {
+    it("should not allow buying your own offer", async () => {
+      const offerRes = await request(app).post("/api/v1/marketplace/offers").set("token", authToken).send(testOffer).expect(200);
+
+      const offerId = offerRes.body.data.offer.id;
+
+      const buyRes = await request(app).post("/api/v1/marketplace/buy").set("token", authToken).send({ offerId }).expect(400);
+
+      expect(buyRes.body).toHaveProperty("success", false);
+      expect(buyRes.body.error).toContain("Cannot buy your own offer");
+    });
+
+    it("should reject offer cancellation by a different user", async () => {
+      const seller = {
+        email: `seller_cancel_${Date.now()}_${Math.random().toString(36).substr(2, 5)}@test.com`,
+        displayedName: "SellerCancel",
+        password: "testpass123",
+      };
+
+      const sellerReg = await request(app).post("/api/v1/register").send(seller).expect(201);
+      const sellerToken = sellerReg.body.data.token;
+
+      const fieldRes = await request(app)
+        .post("/api/v1/fields")
+        .set("token", sellerToken)
+        .send({ name: "Seller field", area: 12 })
+        .expect(201);
+
+      const offerRes = await request(app)
+        .post("/api/v1/marketplace/offers")
+        .set("token", sellerToken)
+        .send({
+          itemType: "field",
+          itemId: fieldRes.body.data.id,
+          price: 25,
+          description: "Seller-only offer",
+        })
+        .expect(200);
+
+      const offerId = offerRes.body.data.offer.id;
+
+      const cancelRes = await request(app).delete(`/api/v1/marketplace/offers/${offerId}`).set("token", authToken).expect(403);
+
+      expect(cancelRes.body).toHaveProperty("success", false);
+      expect(cancelRes.body.error).toContain("Not authorized");
+    });
+
     it("should not allow buying an offer if buyer has insufficient funds", async () => {
       // Create seller and register/login
       const seller = {

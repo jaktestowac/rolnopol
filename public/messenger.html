@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <title>Messenger - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/messenger.css" />
+</head>
+
+<body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="container messenger-page">
+        <header class="header glass messenger-header">
+            <div class="messenger-header__title">
+                <span class="bg-agri-gradient"><i class="fas fa-comments"></i></span>
+                <div>
+                    <h1>Messenger</h1>
+                    <p>Chat with your Rolnopol friends.</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="messenger-layout">
+            <aside class="messenger-sidebar glass" aria-label="Conversations and friends">
+                <div class="messenger-sidebar__header">
+                    <h2><i class="fas fa-users"></i> Friends</h2>
+                    <div class="messenger-sidebar__actions">
+                        <button id="openAddFriendModalBtn" class="btn btn-compact btn-futuristic" type="button" aria-label="Open add friend dialog">
+                            <i class="fas fa-user-plus"></i>
+                            Add
+                        </button>
+                        <button id="refreshFriendsBtn" class="btn btn-compact btn-outline" type="button" aria-label="Refresh friends list">
+                            <i class="fas fa-rotate"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="friendsLoading" class="messenger-state" aria-live="polite">Loading friends...</div>
+                <div id="friendsError" class="messenger-state messenger-state--error" role="alert" hidden>Failed to load friends.</div>
+                <div id="friendsEmpty" class="messenger-state" hidden>No friends yet. Add one to start chatting.</div>
+                <ul id="friendsList" class="messenger-list" aria-label="Friends list"></ul>
+            </aside>
+
+            <section class="messenger-chat glass" aria-label="Active chat panel">
+                <div class="messenger-chat__header">
+                    <h2 id="activeChatTitle"><i class="fas fa-comment-dots"></i> Select a friend</h2>
+                    <span id="activeChatStatus" class="messenger-status" aria-live="polite">No active conversation</span>
+                </div>
+
+                <div id="chatLoading" class="messenger-state" hidden>Loading conversation...</div>
+                <div id="chatError" class="messenger-state messenger-state--error" role="alert" hidden>Unable to load conversation.</div>
+                <div id="chatEmpty" class="messenger-state">Choose a friend from the left panel to start chatting.</div>
+
+                <ul id="messageList" class="messenger-messages" aria-label="Conversation messages"></ul>
+
+                <form id="messageForm" class="messenger-compose" aria-label="Send message">
+                    <label class="sr-only" for="messageInput">Message input</label>
+                    <textarea id="messageInput" class="form-input-modern" rows="2" maxlength="500" placeholder="Type your message..." disabled aria-label="Message"></textarea>
+                    <button id="sendMessageBtn" type="submit" class="btn btn-compact btn-futuristic" disabled aria-label="Send message">
+                        <i class="fas fa-paper-plane"></i>
+                        Send
+                    </button>
+                </form>
+            </section>
+        </main>
+
+        <div id="addFriendModal" class="messenger-modal" role="dialog" aria-modal="true" aria-labelledby="addFriendModalTitle" hidden>
+            <div id="addFriendModalOverlay" class="messenger-modal__overlay"></div>
+            <div class="messenger-modal__content glass" role="document">
+                <div class="messenger-modal__header">
+                    <h3 id="addFriendModalTitle"><i class="fas fa-user-plus"></i> Add friend</h3>
+                    <button id="closeAddFriendModalBtn" class="btn btn-compact btn-outline" type="button" aria-label="Close add friend dialog">
+                        <i class="fas fa-xmark"></i>
+                    </button>
+                </div>
+                <form id="addFriendForm" class="messenger-modal__form" aria-label="Add friend by email or username">
+                    <label class="sr-only" for="friendIdentifier">Friend email or username</label>
+                    <input id="friendIdentifier" type="text" class="form-input-modern" placeholder="email or username" aria-label="Friend email or username" maxlength="120" />
+                    <button id="addFriendBtn" type="submit" class="btn btn-futuristic" aria-label="Add friend">
+                        <i class="fas fa-user-plus"></i>
+                        Add friend
+                    </button>
+                </form>
+                <div id="addFriendFeedback" class="messenger-inline-feedback" aria-live="polite" hidden></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <script src="/js/pages/messenger.js"></script>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+        initNavigation("messenger");
+    </script>
+</body>
+
+</html>

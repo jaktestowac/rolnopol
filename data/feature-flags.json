@@ -12,7 +12,8 @@
     "financialCsvExportEnabled": false,
     "prometheusMetricsEnabled": false,
     "homeWelcomeVideoEnabled": false,
-    "homeStatsSectionEnabled": false
+    "homeStatsSectionEnabled": false,
+    "messengerEnabled": false
   },
   "updatedAt": "2026-02-20T23:47:41.035Z"
 }

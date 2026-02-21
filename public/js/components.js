@@ -100,7 +100,8 @@ function setActiveNavLink(explicitPage = null) {
         (explicitPage === "financial" && linkPath === "/financial.html") ||
         (explicitPage === "fieldmap" && linkPath === "/fieldmap.html") ||
         (explicitPage === "rolnopolmap" && linkPath === "/rolnopolmap.html") ||
-        (explicitPage === "feature-flags" && linkPath === "/feature-flags.html")
+        (explicitPage === "feature-flags" && linkPath === "/feature-flags.html") ||
+        (explicitPage === "messenger" && linkPath === "/messenger.html")
       ) {
         link.classList.add("active");
         return;
@@ -122,25 +123,26 @@ function setActiveNavLink(explicitPage = null) {
 async function getNavFeatureFlagState() {
   const featureFlagsService = window.App?.getModule?.("featureFlagsService");
   if (!featureFlagsService || typeof featureFlagsService.isEnabled !== "function") {
-    return { alertsEnabled: true, rolnopolMapEnabled: true };
+    return { alertsEnabled: true, rolnopolMapEnabled: true, messengerEnabled: false };
   }
 
   if (window.App && window.App.isInitialized === false) {
-    return { alertsEnabled: false, rolnopolMapEnabled: false };
+    return { alertsEnabled: false, rolnopolMapEnabled: false, messengerEnabled: false };
   }
 
   if (!featureFlagsService.apiService) {
-    return { alertsEnabled: false, rolnopolMapEnabled: false };
+    return { alertsEnabled: false, rolnopolMapEnabled: false, messengerEnabled: false };
   }
 
   try {
-    const [alertsEnabled, rolnopolMapEnabled] = await Promise.all([
+    const [alertsEnabled, rolnopolMapEnabled, messengerEnabled] = await Promise.all([
       featureFlagsService.isEnabled("alertsEnabled", true),
       featureFlagsService.isEnabled("rolnopolMapEnabled", true),
+      featureFlagsService.isEnabled("messengerEnabled", false),
     ]);
-    return { alertsEnabled, rolnopolMapEnabled };
+    return { alertsEnabled, rolnopolMapEnabled, messengerEnabled };
   } catch (error) {
-    return { alertsEnabled: true, rolnopolMapEnabled: true };
+    return { alertsEnabled: true, rolnopolMapEnabled: true, messengerEnabled: false };
   }
 }
 
@@ -275,12 +277,15 @@ async function updateHeaderNav(username = "") {
     return;
   }
 
-  const { alertsEnabled, rolnopolMapEnabled } = await getNavFeatureFlagState();
+  const { alertsEnabled, rolnopolMapEnabled, messengerEnabled } = await getNavFeatureFlagState();
   const mapLink = rolnopolMapEnabled
     ? '<li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>'
     : "";
   const alertsLink = alertsEnabled
     ? '<li><a href="/alerts.html" class="nav-link" title="Alerts" aria-label="Alerts" data-testid="nav-alerts"><i class="fas fa-bell"></i><span class="nav-text">Alerts</span></a></li>'
+    : "";
+  const messengerLink = messengerEnabled
+    ? '<li><a href="/messenger.html" class="nav-link" title="Messenger" aria-label="Messenger" data-testid="nav-messenger"><i class="fas fa-comments"></i><span class="nav-text">Messenger</span></a></li>'
     : "";
 
   // Check authentication using standardized cookie names
@@ -296,6 +301,7 @@ async function updateHeaderNav(username = "") {
       <li><a href="/marketplace.html" class="nav-link" title="Marketplace" aria-label="Marketplace" data-testid="nav-marketplace"><i class="fas fa-store"></i><span class="nav-text">Marketplace</span></a></li>
       ${mapLink}
       ${alertsLink}
+      ${messengerLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li class="nav-user" >

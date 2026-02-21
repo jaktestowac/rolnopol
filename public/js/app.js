@@ -270,6 +270,9 @@
       case "feature-flags":
         setupFeatureFlagsPage();
         break;
+      case "messenger":
+        setupMessengerPage();
+        break;
       default:
         setupDefaultPage();
     }
@@ -517,6 +520,21 @@
       window.App.registerModule("featureFlagsPage", featureFlagsPage);
     } else {
       console.error("FeatureFlagsPage class not found");
+    }
+  }
+
+  function setupMessengerPage() {
+    const authService = window.App.getModule("authService");
+
+    if (!authService || !authService.requireAuth("/login.html")) {
+      return;
+    }
+
+    if (window.MessengerPage) {
+      const messengerPage = new MessengerPage();
+      window.App.registerModule("messengerPage", messengerPage);
+    } else {
+      console.error("MessengerPage class not found");
     }
   }
 

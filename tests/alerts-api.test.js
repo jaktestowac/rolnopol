@@ -60,6 +60,14 @@ describe("Alerts API", () => {
     expect(res.body.data.upcoming).toHaveProperty("alerts");
   });
 
+  it("GET /api/v1/alerts works without auth token when feature is enabled", async () => {
+    const res = await request(app).get(`/api/v1/alerts?date=${seed}`).expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty("today");
+    expect(Array.isArray(res.body.data.today.alerts)).toBe(true);
+  });
+
   it("returns no alerts for future seed dates", async () => {
     // pick a date in the future (relative to now)
     const now = new Date();
@@ -121,6 +129,21 @@ describe("Alerts API", () => {
       expect(res.body.success).toBe(false);
       expect(res.body.error).toBe("Alerts not found");
       expect(typeof res.body.timestamp).toBe("string");
+    });
+
+    it("returns 404 when alertsEnabled key is absent after full flag replacement, and recovers after re-enable", async () => {
+      await request(app).put("/api/v1/feature-flags").send({ flags: { 
+        alertsEnabled: false,
+      } }).expect(200);
+
+      const disabledRes = await request(app).get(`/api/v1/alerts?date=${seed}`).set("token", token).expect(404);
+      expect(disabledRes.body.success).toBe(false);
+      expect(disabledRes.body.error).toBe("Alerts not found");
+
+      await setAlertsEnabled(true);
+      const enabledRes = await request(app).get(`/api/v1/alerts?date=${seed}`).set("token", token).expect(200);
+      expect(enabledRes.body.success).toBe(true);
+      expect(enabledRes.body.data).toHaveProperty("today");
     });
   });
 });

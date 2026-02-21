@@ -54,19 +54,19 @@ describe("Financial API", () => {
 
       expect(res.body, `Account response should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        true
+        true,
       );
       expect(res.body.data, `Account response should have account data. Response: ${JSON.stringify(res.body)}`).toHaveProperty("account");
       expect(res.body.data.account, `Account should have correct userId. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "userId",
-        userId
+        userId,
       );
       expect(res.body.data.account, `Account should have balance property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
-        "balance"
+        "balance",
       );
       expect(res.body.data.account, `Account should have ROL currency. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "currency",
-        "ROL"
+        "ROL",
       );
     });
 
@@ -75,7 +75,7 @@ describe("Financial API", () => {
 
       expect(res.body, `Unauthenticated request should have success false. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        false
+        false,
       );
       expect(res.body, `Unauthenticated request should have error message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("error");
     });
@@ -96,23 +96,38 @@ describe("Financial API", () => {
 
       expect(res.body, `Transaction response should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        true
+        true,
       );
       expect(res.body.data, `Transaction response should have transaction data. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
-        "transaction"
+        "transaction",
       );
       expect(res.body.data.transaction, `Transaction should have correct type. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "type",
-        "income"
+        "income",
       );
       expect(res.body.data.transaction, `Transaction should have correct amount. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "amount",
-        100
+        100,
       );
       expect(
         res.body.data.transaction,
-        `Transaction should have correct description. Response: ${JSON.stringify(res.body)}`
+        `Transaction should have correct description. Response: ${JSON.stringify(res.body)}`,
       ).toHaveProperty("description", "Test income transaction");
+      expect(res.body.data.transaction).not.toHaveProperty("cardNumber");
+      expect(res.body.data.transaction).not.toHaveProperty("cvv");
+    });
+
+    it("POST /api/v1/financial/transactions should reject income transaction without card details", async () => {
+      const transactionData = {
+        type: "income",
+        amount: 100,
+        description: "Income without card details",
+      };
+
+      const res = await request(app).post("/api/v1/financial/transactions").set("token", authToken).send(transactionData).expect(400);
+
+      expect(res.body).toHaveProperty("success", false);
+      expect(res.body.error).toContain("cardNumber");
     });
 
     it("POST /api/v1/financial/transactions should add expense transaction", async () => {
@@ -141,18 +156,18 @@ describe("Financial API", () => {
       expect(res.status, `POST /api/v1/financial/transactions should return 201 status. Response: ${JSON.stringify(res.body)}`).toBe(201);
       expect(res.body, `Transaction response should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        true
+        true,
       );
       expect(res.body.data, `Transaction response should have transaction data. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
-        "transaction"
+        "transaction",
       );
       expect(res.body.data.transaction, `Transaction should have correct type. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "type",
-        "expense"
+        "expense",
       );
       expect(res.body.data.transaction, `Transaction should have correct amount. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "amount",
-        50
+        50,
       );
     });
 
@@ -167,7 +182,7 @@ describe("Financial API", () => {
 
       expect(res.body, `Invalid transaction should have success false. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        false
+        false,
       );
       expect(res.body, `Invalid transaction should have error message. Response: ${JSON.stringify(res.body)}`).toHaveProperty("error");
     });
@@ -203,17 +218,17 @@ describe("Financial API", () => {
 
       expect(res.body, `Transaction history should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        true
+        true,
       );
       expect(res.body.data, `Transaction history should have transactions array. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
-        "transactions"
+        "transactions",
       );
       expect(Array.isArray(res.body.data.transactions), `Transactions should be an array. Response: ${JSON.stringify(res.body)}`).toBe(
-        true
+        true,
       );
       expect(
         res.body.data.transactions.length,
-        `Transaction history should contain at least one transaction. Response: ${JSON.stringify(res.body)}`
+        `Transaction history should contain at least one transaction. Response: ${JSON.stringify(res.body)}`,
       ).toBeGreaterThan(0);
     });
   });
@@ -224,22 +239,93 @@ describe("Financial API", () => {
 
       expect(res.body, `Financial stats should have success property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
         "success",
-        true
+        true,
       );
       expect(res.body.data, `Financial stats should have statistics data. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
-        "statistics"
+        "statistics",
       );
       expect(res.body.data.statistics, `Statistics should have totalIncome property. Response: ${JSON.stringify(res.body)}`).toHaveProperty(
-        "totalIncome"
+        "totalIncome",
       );
       expect(
         res.body.data.statistics,
-        `Statistics should have totalExpenses property. Response: ${JSON.stringify(res.body)}`
+        `Statistics should have totalExpenses property. Response: ${JSON.stringify(res.body)}`,
       ).toHaveProperty("totalExpenses");
       expect(
         res.body.data.statistics,
-        `Statistics should have currentBalance property. Response: ${JSON.stringify(res.body)}`
+        `Statistics should have currentBalance property. Response: ${JSON.stringify(res.body)}`,
       ).toHaveProperty("currentBalance");
+    });
+  });
+
+  describe("Transfers - Validation and Failure Handling", () => {
+    it("POST /api/v1/financial/transfer should reject transfer to self", async () => {
+      await request(app)
+        .post("/api/v1/financial/transactions")
+        .set("token", authToken)
+        .send({
+          type: "income",
+          amount: 100,
+          description: "Fund self-transfer check",
+          cardNumber: "4242424242424242",
+          cvv: "123",
+        })
+        .expect(201);
+
+      const res = await request(app)
+        .post("/api/v1/financial/transfer")
+        .set("token", authToken)
+        .send({
+          toUserId: String(userId),
+          amount: 10,
+          description: "Self transfer",
+        })
+        .expect(400);
+
+      expect(res.body).toHaveProperty("success", false);
+      expect(res.body.error).toContain("yourself");
+    });
+
+    it("POST /api/v1/financial/transfer should reject when recipient does not exist", async () => {
+      await request(app)
+        .post("/api/v1/financial/transactions")
+        .set("token", authToken)
+        .send({
+          type: "income",
+          amount: 50,
+          description: "Fund transfer source",
+          cardNumber: "4242424242424242",
+          cvv: "123",
+        })
+        .expect(201);
+
+      const res = await request(app)
+        .post("/api/v1/financial/transfer")
+        .set("token", authToken)
+        .send({
+          toUserId: 99999999,
+          amount: 10,
+          description: "Transfer to missing account",
+        })
+        .expect(400);
+
+      expect(res.body).toHaveProperty("success", false);
+      expect(res.body.error).toContain("Recipient user does not exist");
+    });
+
+    it("POST /api/v1/financial/transfer should reject amount with too many decimal places", async () => {
+      const res = await request(app)
+        .post("/api/v1/financial/transfer")
+        .set("token", authToken)
+        .send({
+          toUserId: 2,
+          amount: 12.345,
+          description: "Invalid decimal amount",
+        })
+        .expect(400);
+
+      expect(res.body).toHaveProperty("success", false);
+      expect(res.body.error).toContain("2 decimal places");
     });
   });
 });
