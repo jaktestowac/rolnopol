@@ -31,6 +31,7 @@ describe("feature-flags.service", () => {
         cookieConsentBannerEnabled: false,
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
+        promoAdvertsGeneralAdEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -72,6 +73,7 @@ describe("feature-flags.service", () => {
         cookieConsentBannerEnabled: false,
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
+        promoAdvertsGeneralAdEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -118,6 +120,7 @@ describe("feature-flags.service", () => {
         cookieConsentBannerEnabled: false,
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
+        promoAdvertsGeneralAdEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -158,6 +161,7 @@ describe("feature-flags.service", () => {
         customPilotFlag: true,
         cookieConsentBannerEnabled: false,
         messengerEnabled: false,
+        promoAdvertsGeneralAdEnabled: false,
       }),
       updatedAt: now.toISOString(),
     });
@@ -187,6 +191,7 @@ describe("feature-flags.service", () => {
         messengerEnabled: false,
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
+        promoAdvertsGeneralAdEnabled: false,
       },
       updatedAt: "2026-02-07T00:00:00.000Z",
     };

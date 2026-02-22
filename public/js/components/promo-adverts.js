@@ -11,10 +11,8 @@
     home: {
       flag: "promoAdvertsHomeEnabled",
       title: "Welcome to Rolnopol",
-      // show the popup after at least 2s and at most 5s (randomised)
       minDelaySeconds: 2,
       maxDelaySeconds: 5,
-      // legacy field, still supported for backwards compatibility
       delaySeconds: 3,
       cookieKey: "rolnopolPromoAdvertSeen_home",
       videoUrls: ["/images/rolnopol_ad2.mp4", "/images/rolnopol_ad3.mp4"],
@@ -23,13 +21,22 @@
     alerts: {
       flag: "promoAdvertsAlertsEnabled",
       title: "Discover Rolnopol",
-      // same min/max as above – you can adjust per page as needed
       minDelaySeconds: 2,
       maxDelaySeconds: 5,
       delaySeconds: 3,
       cookieKey: "rolnopolPromoAdvertSeen_alerts",
       videoUrl: "/images/rolnopol_ad2.mp4",
       videoAlt: "Rolnopol Alerts Feature Demo",
+    },
+    general: {
+      flag: "promoAdvertsGeneralAdEnabled",
+      title: "Discover Rolnopol",
+      minDelaySeconds: 3,
+      maxDelaySeconds: 6,
+      delaySeconds: 4,
+      cookieKey: "rolnopolPromoAdvertSeen_general",
+      videoUrls: ["/images/rolnopol_ad2.mp4", "/images/rolnopol_ad3.mp4", "/images/rolnopol_ad4.mp4", "/images/rolnopol_ad5.mp4"],
+      videoAlt: "Rolnopol General Feature Demo",
     },
   };
 
@@ -89,11 +96,42 @@
   }
 
   /**
+   * List of pages excluded from general advert display
+   * These pages should not show the general promotional popup
+   */
+  const EXCLUDED_PAGES = [
+    "swagger",
+    "privacy",
+    "admin",
+    "backend",
+    "feature-flags",
+    "404",
+    "4041",
+    "maintenance",
+    "login",
+    "register",
+    "debug",
+    "logs",
+  ];
+
+  /**
+   * Check if a page is excluded from general advert display
+   */
+  function isPageExcluded(page) {
+    return EXCLUDED_PAGES.some((excluded) => page.includes(excluded));
+  }
+
+  /**
    * Get the current page key based on window location
    */
   function getCurrentPageKey() {
     const path = window.location.pathname;
     const page = window.location.pathname.split("/").pop();
+
+    // Check if page is in excluded list; if so, no promo should show
+    if (isPageExcluded(page)) {
+      return null;
+    }
 
     // Match common page patterns
     if (path === "/" || page === "index.html" || page === "") {
@@ -112,7 +150,25 @@
       return "docs";
     }
 
-    return null;
+    // For any other page not specifically handled above and not excluded,
+    // return "general" to allow general promotional ads
+    return "general";
+  }
+
+  /**
+   * Check if any other promo has been shown (to prevent multiple popups)
+   * This ensures only one promotional popup shows at a time
+   */
+  function hasAnyOtherPromoShown(currentPageKey) {
+    // Check all configured promos except the current page
+    for (const pageKey in PROMO_CONFIG) {
+      if (pageKey !== currentPageKey) {
+        if (hasShownPromo(pageKey)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -288,6 +344,12 @@
 
       // Check if already shown
       if (hasShownPromo(pageKey)) {
+        return;
+      }
+
+      // For general adverts, also check if any other promo has been shown recently
+      // This prevents multiple popups from showing at the same time
+      if (pageKey === "general" && hasAnyOtherPromoShown(pageKey)) {
         return;
       }
 

@@ -16,7 +16,8 @@
     "cookieConsentBannerEnabled": false,
     "messengerEnabled": false,
     "promoAdvertsHomeEnabled": false,
-    "promoAdvertsAlertsEnabled": false
+    "promoAdvertsAlertsEnabled": false,
+    "promoAdvertsGeneralAdEnabled": false
   },
-  "updatedAt": "2026-02-22T18:35:38.030Z"
+  "updatedAt": "2026-02-22T20:49:04.749Z"
 }

@@ -26,6 +26,10 @@ describe("Feature Flags API", () => {
     expect(res.body.data.groups).toHaveProperty("privacy");
     expect(Array.isArray(res.body.data.groups.privacy)).toBe(true);
     expect(res.body.data.groups.privacy).toContain("cookieConsentBannerEnabled");
+    // marketing group should include advert-related flags
+    expect(res.body.data.flags).toHaveProperty("promoAdvertsGeneralAdEnabled");
+    expect(res.body.data.groups).toHaveProperty("marketing (Ads)");
+    expect(res.body.data.groups["marketing (Ads)"]).toContain("promoAdvertsGeneralAdEnabled");
   });
 
   it("PATCH /api/v1/feature-flags updates flags without auth", async () => {
