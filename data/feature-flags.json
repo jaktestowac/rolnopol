@@ -13,8 +13,10 @@
     "prometheusMetricsEnabled": false,
     "homeWelcomeVideoEnabled": false,
     "homeStatsSectionEnabled": false,
+    "cookieConsentBannerEnabled": false,
     "messengerEnabled": false,
-    "cookieConsentBannerEnabled": false
+    "promoAdvertsHomeEnabled": false,
+    "promoAdvertsAlertsEnabled": false
   },
-  "updatedAt": "2026-02-22T18:01:10.973Z"
+  "updatedAt": "2026-02-22T18:35:38.030Z"
 }

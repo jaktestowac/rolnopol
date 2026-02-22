@@ -237,6 +237,19 @@ function initNavigation(activeNavKey) {
         console.warn("Failed to load cookie consent banner", error);
       }
     }
+
+    // Initialize promo adverts
+    try {
+      await loadScriptOnce("/js/components/promo-adverts.js");
+      if (typeof window.initPromoAdverts === "function") {
+        await window.initPromoAdverts();
+      }
+    } catch (error) {
+      // Silently ignore promo adverts initialization errors
+      if (typeof console !== "undefined" && console.warn) {
+        console.warn("Failed to load promo adverts", error);
+      }
+    }
   });
 }
 

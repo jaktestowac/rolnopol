@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 const featureFlagsService = require("../../services/feature-flags.service");
 
 describe("feature-flags.service", () => {
+  it("populates defaults when database data is null", async () => {
     const now = new Date("2026-02-07T00:00:00.000Z");
     vi.useFakeTimers();
     vi.setSystemTime(now);
@@ -28,6 +29,8 @@ describe("feature-flags.service", () => {
         homeStatsSectionEnabled: false,
         messengerEnabled: false,
         cookieConsentBannerEnabled: false,
+        promoAdvertsHomeEnabled: false,
+        promoAdvertsAlertsEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -67,6 +70,8 @@ describe("feature-flags.service", () => {
         homeStatsSectionEnabled: false,
         messengerEnabled: false,
         cookieConsentBannerEnabled: false,
+        promoAdvertsHomeEnabled: false,
+        promoAdvertsAlertsEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -111,6 +116,8 @@ describe("feature-flags.service", () => {
         homeStatsSectionEnabled: false,
         messengerEnabled: false,
         cookieConsentBannerEnabled: false,
+        promoAdvertsHomeEnabled: false,
+        promoAdvertsAlertsEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -178,6 +185,8 @@ describe("feature-flags.service", () => {
         homeStatsSectionEnabled: false,
         cookieConsentBannerEnabled: false,
         messengerEnabled: false,
+        promoAdvertsHomeEnabled: false,
+        promoAdvertsAlertsEnabled: false,
       },
       updatedAt: "2026-02-07T00:00:00.000Z",
     };

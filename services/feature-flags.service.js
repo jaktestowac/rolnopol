@@ -17,6 +17,8 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   homeStatsSectionEnabled: "Enable or disable advanced statistics section on the homepage",
   messengerEnabled: "Enable or disable internal messenger feature",
   cookieConsentBannerEnabled: "Enable or disable cookie consent banner shown at the bottom of pages",
+  promoAdvertsHomeEnabled: "Enable or disable Rolnopol promotional popups on home/dashboard pages",
+  promoAdvertsAlertsEnabled: "Enable or disable Rolnopol promotional popups on alerts pages",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -30,6 +32,7 @@ const FEATURE_FLAG_GROUPS = {
   monitoring: ["prometheusMetricsEnabled"],
   communication: ["messengerEnabled"],
   privacy: ["cookieConsentBannerEnabled"],
+  marketing: ["promoAdvertsHomeEnabled", "promoAdvertsAlertsEnabled"],
 };
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -48,6 +51,8 @@ const PREDEFINED_FEATURE_FLAGS = {
   homeStatsSectionEnabled: false,
   cookieConsentBannerEnabled: false,
   messengerEnabled: false,
+  promoAdvertsHomeEnabled: false,
+  promoAdvertsAlertsEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {
