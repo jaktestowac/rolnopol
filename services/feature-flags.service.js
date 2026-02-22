@@ -32,7 +32,7 @@ const FEATURE_FLAG_GROUPS = {
   monitoring: ["prometheusMetricsEnabled"],
   communication: ["messengerEnabled"],
   privacy: ["cookieConsentBannerEnabled"],
-  marketing: ["promoAdvertsHomeEnabled", "promoAdvertsAlertsEnabled"],
+  "marketing (Ads)": ["promoAdvertsHomeEnabled", "promoAdvertsAlertsEnabled"],
 };
 
 const PREDEFINED_FEATURE_FLAGS = {

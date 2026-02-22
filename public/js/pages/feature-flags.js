@@ -2,6 +2,7 @@ class FeatureFlagsPage {
   constructor() {
     this.featureFlagsService = null;
     this.flags = {};
+    this.allFlags = {};
     this.groups = {};
     this.updatedAt = null;
     this.listEl = null;
@@ -10,6 +11,8 @@ class FeatureFlagsPage {
     this.flagsCountEl = null;
     this.reloadBtn = null;
     this.resetBtn = null;
+    this.searchInput = null;
+    this.searchResultsEl = null;
   }
 
   init(app) {
@@ -34,6 +37,8 @@ class FeatureFlagsPage {
     this.resetModalConfirm = this.resetModal?.querySelector(".modal-confirm");
     this.resetModalCancel = this.resetModal?.querySelector(".modal-cancel");
     this.resetModalOverlay = this.resetModal?.querySelector(".modal-overlay");
+    this.searchInput = document.getElementById("flagsSearchInput");
+    this.searchResultsEl = document.getElementById("flagsSearchResults");
   }
 
   _bindEvents() {
@@ -55,6 +60,10 @@ class FeatureFlagsPage {
 
     if (this.resetModalOverlay) {
       this.resetModalOverlay.addEventListener("click", () => this._closeResetModal());
+    }
+
+    if (this.searchInput) {
+      this.searchInput.addEventListener("input", (event) => this._handleSearch(event.target.value));
     }
 
     if (this.listEl) {
@@ -115,12 +124,59 @@ class FeatureFlagsPage {
       }
 
       this.flags = payload.flags || {};
+      this.allFlags = JSON.parse(JSON.stringify(this.flags));
       this.groups = payload.groups || {};
       this.updatedAt = payload.updatedAt || null;
+      if (this.searchInput) {
+        this.searchInput.value = "";
+      }
       this._renderFlags();
     } catch (error) {
       this._setStatus("Failed to load feature flags", true);
     }
+  }
+
+  _handleSearch(query) {
+    const searchTerm = query.toLowerCase().trim();
+
+    if (!searchTerm) {
+      this.flags = JSON.parse(JSON.stringify(this.allFlags));
+      this._renderFlags();
+      if (this.searchResultsEl) {
+        this.searchResultsEl.textContent = "";
+      }
+      return;
+    }
+
+    const filtered = {};
+    const matchingGroupFlags = new Set();
+
+    // Find groups that match the search term
+    for (const [groupName, flagKeys] of Object.entries(this.groups)) {
+      if (groupName.toLowerCase().includes(searchTerm)) {
+        if (Array.isArray(flagKeys)) {
+          flagKeys.forEach((key) => matchingGroupFlags.add(key));
+        }
+      }
+    }
+
+    // Filter flags by name, description, or group membership
+    for (const [key, flagData] of Object.entries(this.allFlags)) {
+      const flagKey = String(key).toLowerCase();
+      const description = (typeof flagData === "object" ? flagData.description : "") || "";
+      const descriptionLower = description.toLowerCase();
+
+      if (flagKey.includes(searchTerm) || descriptionLower.includes(searchTerm) || matchingGroupFlags.has(key)) {
+        filtered[key] = flagData;
+      }
+    }
+
+    this.flags = filtered;
+    const resultCount = Object.keys(filtered).length;
+    if (this.searchResultsEl) {
+      this.searchResultsEl.textContent = `Found ${resultCount} match${resultCount !== 1 ? "es" : ""}`;
+    }
+    this._renderFlags();
   }
 
   _renderFlags() {
@@ -155,6 +211,10 @@ class FeatureFlagsPage {
     for (const [groupName, flagKeys] of Object.entries(this.groups)) {
       if (!Array.isArray(flagKeys) || flagKeys.length === 0) continue;
 
+      // Check if group has any matching flags
+      const groupHasFlagsInFilter = flagKeys.some((flagKey) => this.flags[flagKey]);
+      if (!groupHasFlagsInFilter) continue;
+
       const groupTitle = groupName.charAt(0).toUpperCase() + groupName.slice(1);
       html += `<div class="flags-group"><h3 class="flags-group__title">${groupTitle}</h3><div class="flags-group__items">`;
 
@@ -184,10 +244,11 @@ class FeatureFlagsPage {
     }
 
     // Render ungrouped flags
-    if (ungroupedFlags.length > 0) {
+    const filteredUngroupedFlags = ungroupedFlags.filter((key) => this.flags[key]);
+    if (filteredUngroupedFlags.length > 0) {
       html += '<div class="flags-group"><h3 class="flags-group__title">Other</h3><div class="flags-group__items">';
 
-      for (const flagKey of ungroupedFlags) {
+      for (const flagKey of filteredUngroupedFlags) {
         const flag = this.flags[flagKey];
         if (!flag) continue;
 
