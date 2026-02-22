@@ -1,3 +1,83 @@
+const { readFileSync } = require("fs");
+const { resolve } = require("path");
+
+const getVisualWidth = (str) => {
+  let width = 0;
+  for (const char of str) {
+    const code = char.charCodeAt(0);
+    // Wide characters and emoji: include common symbol ranges
+    if (
+      (code >= 0x2300 && code <= 0x23ff) || // Miscellaneous Technical
+      (code >= 0x2600 && code <= 0x27bf) || // Miscellaneous Symbols & Dingbats (includes ❌)
+      (code >= 0x1f300 && code <= 0x1f9ff) // Emoticons & other emoji
+    ) {
+      width += 2;
+    } else {
+      width += 1;
+    }
+  }
+  return width;
+};
+
+const checkAllDependencies = () => {
+  try {
+    const pkg = JSON.parse(readFileSync(resolve(__dirname, "../package.json"), "utf-8"));
+    const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
+
+    const missing = [];
+    Object.keys(allDeps).forEach((dep) => {
+      try {
+        require.resolve(dep);
+      } catch (e) {
+        if (e.code === "MODULE_NOT_FOUND") {
+          missing.push(dep);
+        }
+      }
+    });
+
+    if (missing.length > 0) {
+      const lines = [];
+      lines.push("❌ Application failed to start due to missing dependencies");
+      lines.push("");
+
+      if (missing.length === 1) {
+        lines.push(`Module: ${missing[0]}`);
+      } else {
+        lines.push(`${missing.length} modules not found:`);
+        lines.push("");
+        missing.forEach((mod) => lines.push(`  - ${mod}`));
+      }
+
+      lines.push("");
+      lines.push("How to fix");
+      lines.push("1. Run 'npm i' to install missing dependencies");
+      lines.push("2. Run 'npm start' to start the application after installation");
+      lines.push("");
+      lines.push("");
+      lines.push("From jaktestowac.pl / AI_Testers team with <3");
+      lines.push("");
+
+      const maxLen = Math.max(...lines.map((l) => getVisualWidth(l)), 40);
+      const width = maxLen + 4;
+
+      console.error("");
+      console.error("╔" + "═".repeat(width - 2) + "╗");
+      lines.forEach((line) => {
+        const padding = width - getVisualWidth(line) - 4;
+        console.error("║ " + line + " ".repeat(padding) + " ║");
+      });
+      console.error("╚" + "═".repeat(width - 2) + "╝");
+      console.error("");
+
+      process.exit(1);
+    }
+  } catch (error) {
+    // Silently ignore errors in dependency check, let normal error handler catch startup issues
+  }
+};
+
+checkAllDependencies();
+
 require("dotenv").config();
 
 const express = require("express");
