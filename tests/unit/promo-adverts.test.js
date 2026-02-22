@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // require the module under test; our helper functions are exported when running in Node
-const { getDelayMs } = require("../../public/js/components/promo-adverts.js");
+const { getDelayMs, isPromoFlagEnabled } = require("../../public/js/components/promo-adverts.js");
 
 describe("promo-adverts delay logic", () => {
   beforeEach(() => {
@@ -41,5 +41,27 @@ describe("promo-adverts delay logic", () => {
     // when both delaySeconds and range exist, the range should take priority
     vi.spyOn(Math, "random").mockReturnValue(0);
     expect(getDelayMs({ delaySeconds: 1, minDelaySeconds: 2, maxDelaySeconds: 3 })).toBe(2000);
+  });
+});
+
+describe("promo-adverts feature flag gating", () => {
+  it("returns false when async isEnabled resolves to false", async () => {
+    const featureFlagsService = {
+      isEnabled: vi.fn().mockResolvedValue(false),
+    };
+
+    await expect(isPromoFlagEnabled(featureFlagsService, "promoAdvertsGeneralAdEnabled", false)).resolves.toBe(false);
+  });
+
+  it("returns true when async isEnabled resolves to true", async () => {
+    const featureFlagsService = {
+      isEnabled: vi.fn().mockResolvedValue(true),
+    };
+
+    await expect(isPromoFlagEnabled(featureFlagsService, "promoAdvertsGeneralAdEnabled", false)).resolves.toBe(true);
+  });
+
+  it("uses default value when service is missing", async () => {
+    await expect(isPromoFlagEnabled(null, "promoAdvertsGeneralAdEnabled", false)).resolves.toBe(false);
   });
 });

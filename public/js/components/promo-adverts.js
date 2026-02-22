@@ -325,6 +325,23 @@
   }
 
   /**
+   * Resolve whether a promo flag is enabled.
+   * Supports both sync and async implementations of `isEnabled`.
+   */
+  async function isPromoFlagEnabled(featureFlagsService, flagKey, defaultValue = false) {
+    if (!featureFlagsService || typeof featureFlagsService.isEnabled !== "function") {
+      return defaultValue;
+    }
+
+    try {
+      const result = featureFlagsService.isEnabled(flagKey, defaultValue);
+      return (await Promise.resolve(result)) === true;
+    } catch (e) {
+      return defaultValue;
+    }
+  }
+
+  /**
    * Initialize promo adverts
    * Should be called after feature flags service is ready
    */
@@ -365,7 +382,7 @@
             if (typeof service.init === "function") {
               await service.init();
             }
-            const isEnabled = service.isEnabled ? service.isEnabled(config.flag, false) : false;
+            const isEnabled = await isPromoFlagEnabled(service, config.flag, false);
             if (!isEnabled) {
               return;
             }
@@ -378,7 +395,8 @@
         }
       } else {
         // Check if feature flag is enabled
-        if (!featureFlagsService.isEnabled || !featureFlagsService.isEnabled(config.flag, false)) {
+        const isEnabled = await isPromoFlagEnabled(featureFlagsService, config.flag, false);
+        if (!isEnabled) {
           return;
         }
       }
@@ -438,6 +456,7 @@
       getRandomItem,
       getVideoUrl,
       getDelayMs,
+      isPromoFlagEnabled,
     };
   }
 })();
