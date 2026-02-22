@@ -1,5 +1,6 @@
 class MessengerPage {
   constructor() {
+    this.maxMessageLength = 1024;
     this.authService = null;
     this.apiService = null;
     this.featureFlagsService = null;
@@ -8,8 +9,24 @@ class MessengerPage {
     this.activeConversation = null;
     this.messages = [];
     this.lastMessageCursor = null;
+    this.pendingOutgoing = new Map();
+    this.unreadSyncTimerId = null;
+    this.currentConversationRequestId = 0;
+    this.unreadState = {
+      total: 0,
+      byUserId: new Map(),
+    };
+    this.socket = {
+      instance: null,
+      connected: false,
+      reconnectAttempts: 0,
+      reconnectTimerId: null,
+      heartbeatTimerId: null,
+      manualClose: false,
+      lastWarningAt: 0,
+    };
     this.polling = {
-      intervalMs: 5000,
+      intervalMs: 7000,
       timerId: null,
       inFlight: false,
     };
@@ -38,6 +55,7 @@ class MessengerPage {
     await this._resolveCurrentUser();
     this._bindEvents();
     await this._loadFriends();
+    this._ensureSocketConnected();
   }
 
   async _ensureFeatureEnabled() {
@@ -95,16 +113,31 @@ class MessengerPage {
       messageForm.addEventListener("submit", (event) => this._handleSendMessage(event));
     }
 
+    const messageInput = document.getElementById("messageInput");
+    if (messageInput) {
+      messageInput.addEventListener("keydown", (event) => this._handleMessageInputKeydown(event));
+    }
+
     if (toggleBlockBtn) {
       toggleBlockBtn.addEventListener("click", () => this._handleToggleBlock());
     }
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
+        this._closeSocket(true);
         this._stopPolling();
-      } else if (this.activeConversation) {
-        this._startPolling();
+      } else {
+        this._ensureSocketConnected();
+        if (this.activeConversation) {
+          this._startPolling();
+        }
       }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      this._closeAddFriendModal();
+      this._closeSocket(true);
+      this._stopPolling();
     });
 
     document.addEventListener("keydown", (event) => {
@@ -137,6 +170,7 @@ class MessengerPage {
       }
 
       this._renderFriends();
+      await this._loadConversationSummaries();
 
       this._setFriendsState({
         loading: false,
@@ -164,6 +198,7 @@ class MessengerPage {
       const isActive = this.activeConversation && Number(this.activeConversation.id) === Number(friend.id);
       const displayName = friend.displayedName || friend.username || friend.email || `User #${friend.id}`;
       const subtitle = friend.username || friend.email || `ID: ${friend.id}`;
+      const unreadCount = this._getUnreadCountForUser(friend.id);
 
       button.type = "button";
       button.className = `messenger-list__item${isActive ? " messenger-list__item--active" : ""}`;
@@ -171,6 +206,7 @@ class MessengerPage {
       button.innerHTML = `
         <strong>${this._escapeHtml(displayName)}</strong>
         <span class="messenger-list__meta">${this._escapeHtml(subtitle)}</span>
+        ${unreadCount > 0 ? `<span class="messenger-list__badge">${unreadCount} unread</span>` : ""}
         ${isBlocked ? '<span class="messenger-list__badge">Blocked</span>' : ""}
       `;
       button.addEventListener("click", () => this._selectConversation(friend));
@@ -184,9 +220,11 @@ class MessengerPage {
     this.activeConversation = friend;
     this.messages = [];
     this.lastMessageCursor = null;
+    this._setUnreadCount(friend.id, 0);
     this._renderFriends();
     this._renderActiveConversation();
     await this._loadConversation(friend.id);
+    this._ensureSocketConnected();
     this._startPolling(true);
   }
 
@@ -231,12 +269,17 @@ class MessengerPage {
       this.activeConversation.email ||
       `User #${this.activeConversation.id}`;
     const isBlocked = !!this._isConversationBlocked(this.activeConversation);
+    const conversationUnread = this._getUnreadCountForUser(this.activeConversation.id);
 
     if (titleEl) {
       titleEl.innerHTML = `<i class="fas fa-comment-dots"></i> ${this._escapeHtml(displayName)}`;
     }
     if (statusEl) {
-      statusEl.textContent = isBlocked ? "Blocked conversation" : "Ready to chat";
+      statusEl.textContent = isBlocked
+        ? "Blocked conversation"
+        : conversationUnread > 0
+          ? `Ready to chat · ${conversationUnread} unread`
+          : "Ready to chat";
     }
     if (emptyEl) {
       emptyEl.hidden = true;
@@ -316,12 +359,47 @@ class MessengerPage {
       return;
     }
 
+    if (!this._isActiveConversationValid()) {
+      this._showNotification("Conversation is no longer available.", "error");
+      return;
+    }
+
     const content = input.value.trim();
     if (!content) {
       return;
     }
 
+    if (content.length > this.maxMessageLength) {
+      this._showNotification(`Message too long (max ${this.maxMessageLength} chars).`, "error");
+      return;
+    }
+
+    const clientMessageId = `client-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
     try {
+      const sentViaSocket = this._sendSocketMessage("send_message", {
+        toUserId: Number(this.activeConversation.id),
+        content,
+        clientMessageId,
+      });
+
+      if (sentViaSocket) {
+        const timeoutId = window.setTimeout(() => {
+          if (this.pendingOutgoing.has(clientMessageId)) {
+            this.pendingOutgoing.delete(clientMessageId);
+            this._showNotification("Message delivery timed out.", "error");
+          }
+        }, 60000);
+
+        this.pendingOutgoing.set(clientMessageId, {
+          content,
+          createdAt: Date.now(),
+          timeoutId,
+        });
+        input.value = "";
+        return;
+      }
+
       const response = await this.apiService.post(
         "messages",
         {
@@ -351,7 +429,26 @@ class MessengerPage {
     }
   }
 
+  _handleMessageInputKeydown(event) {
+    // Enter alone sends the message
+    if (event.key === "Enter" && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+      this._handleSendMessage(new Event("submit", { bubbles: true }));
+      return;
+    }
+
+    // Shift+Enter or Ctrl+Enter (or Cmd+Enter on Mac) inserts newline
+    if (event.key === "Enter" && (event.shiftKey || event.ctrlKey || event.metaKey)) {
+      // Allow browser default behavior to insert newline
+      return;
+    }
+  }
+
   async _loadConversation(withUserId) {
+    const requestedUserId = Number(withUserId);
+    this.currentConversationRequestId += 1;
+    const requestId = this.currentConversationRequestId;
+
     const chatLoading = document.getElementById("chatLoading");
     const chatError = document.getElementById("chatError");
 
@@ -363,9 +460,17 @@ class MessengerPage {
     }
 
     try {
-      const response = await this.apiService.get(`messages/conversations/${Number(withUserId)}?limit=100`, {
+      const response = await this.apiService.get(`messages/conversations/${requestedUserId}?limit=100`, {
         requiresAuth: true,
       });
+
+      const isStaleRequest =
+        requestId !== this.currentConversationRequestId ||
+        !this.activeConversation ||
+        Number(this.activeConversation.id) !== requestedUserId;
+      if (isStaleRequest) {
+        return;
+      }
 
       if (!response.success || !response?.data?.success) {
         throw new Error(response?.data?.error || response.error || "Failed to load conversation");
@@ -375,6 +480,7 @@ class MessengerPage {
       const blocked = payload.blocked || {};
       this.messages = Array.isArray(payload.messages) ? payload.messages : [];
       this.lastMessageCursor = this.messages.length > 0 ? this.messages[this.messages.length - 1].id : null;
+      this._applyUnreadPayload(payload.unread, requestedUserId);
 
       if (this.activeConversation) {
         this.activeConversation.blockedByYou = blocked.blockedByYou === true;
@@ -384,7 +490,16 @@ class MessengerPage {
 
       this._renderActiveConversation();
       this._renderMessages(true);
+      this._subscribeActiveConversation();
     } catch (error) {
+      const isStaleRequest =
+        requestId !== this.currentConversationRequestId ||
+        !this.activeConversation ||
+        Number(this.activeConversation.id) !== requestedUserId;
+      if (isStaleRequest) {
+        return;
+      }
+
       if (chatError) {
         chatError.hidden = false;
         chatError.textContent = "Unable to load conversation.";
@@ -392,7 +507,7 @@ class MessengerPage {
       this.messages = [];
       this._renderActiveConversation();
     } finally {
-      if (chatLoading) {
+      if (chatLoading && requestId === this.currentConversationRequestId) {
         chatLoading.hidden = true;
       }
     }
@@ -409,11 +524,15 @@ class MessengerPage {
     for (const message of this.messages) {
       const item = document.createElement("li");
       const isOwn = Number(message.fromUserId) === Number(this.currentUser?.id);
+      item.dataset.messageId = String(Number(message.id));
       item.className = `messenger-message${isOwn ? " messenger-message--own" : ""}`;
+      const statusHtml = this._formatMessageStatus(message, isOwn);
+      const timestampText = this._formatTimestamp(message.createdAt);
+      const metaText = statusHtml ? `${timestampText} · ${statusHtml}` : timestampText;
 
       item.innerHTML = `
         <span>${this._escapeHtml(message.content || "")}</span>
-        <span class="messenger-message__meta">${this._escapeHtml(this._formatTimestamp(message.createdAt))}</span>
+        <span class="messenger-message__meta">${metaText}</span>
       `;
 
       messageList.appendChild(item);
@@ -421,6 +540,96 @@ class MessengerPage {
 
     if (scrollToEnd) {
       messageList.scrollTop = messageList.scrollHeight;
+    }
+  }
+
+  _updateMessageStatusesInPlace(updatedMessages) {
+    const messageList = document.getElementById("messageList");
+    if (!messageList || !Array.isArray(updatedMessages) || updatedMessages.length === 0) {
+      return;
+    }
+
+    // Create a map of old messages by ID for quick comparison
+    const oldStatusByMessageId = new Map();
+    for (const msg of this.messages) {
+      oldStatusByMessageId.set(Number(msg.id), msg.status);
+    }
+
+    // Find which messages had status changes
+    const changedMessageIds = new Set();
+    for (const updatedMsg of updatedMessages) {
+      const msgId = Number(updatedMsg.id);
+      const oldStatus = oldStatusByMessageId.get(msgId);
+      const newStatus = updatedMsg.status;
+      if (oldStatus !== newStatus) {
+        changedMessageIds.add(msgId);
+      }
+    }
+
+    if (changedMessageIds.size === 0) {
+      return;
+    }
+
+    // Update local messages array with new statuses
+    for (const updatedMsg of updatedMessages) {
+      const msgId = Number(updatedMsg.id);
+      const localMsg = this.messages.find((m) => Number(m.id) === msgId);
+      if (localMsg && changedMessageIds.has(msgId)) {
+        localMsg.status = updatedMsg.status;
+      }
+    }
+
+    // Update only the status display in changed message DOM elements (lookup by message ID)
+    for (const msg of this.messages) {
+      const msgId = Number(msg?.id);
+      if (!msg || !changedMessageIds.has(msgId)) {
+        continue;
+      }
+
+      const messageElement = messageList.querySelector(`li[data-message-id="${msgId}"]`);
+      if (!messageElement) {
+        continue;
+      }
+
+      const metaElement = messageElement.querySelector(".messenger-message__meta");
+      if (!metaElement) {
+        continue;
+      }
+
+      const isOwn = Number(msg.fromUserId) === Number(this.currentUser?.id);
+      const statusHtml = this._formatMessageStatus(msg, isOwn);
+      const timestampText = this._formatTimestamp(msg.createdAt);
+      const metaText = statusHtml ? `${timestampText} · ${statusHtml}` : timestampText;
+
+      metaElement.innerHTML = metaText;
+    }
+  }
+
+  async _refreshMessageStatusesSeamlessly(withUserId) {
+    if (!this.activeConversation || Number(this.activeConversation.id) !== Number(withUserId)) {
+      return;
+    }
+
+    try {
+      const response = await this.apiService.get(`messages/conversations/${Number(withUserId)}?limit=100`, {
+        requiresAuth: true,
+      });
+
+      if (!response.success || !response?.data?.success) {
+        return;
+      }
+
+      const payload = response.data.data || {};
+      const newMessages = Array.isArray(payload.messages) ? payload.messages : [];
+
+      if (newMessages.length === 0) {
+        return;
+      }
+
+      // Update statuses without full re-render
+      this._updateMessageStatusesInPlace(newMessages);
+    } catch (error) {
+      // Silently ignore fetch errors for read status updates
     }
   }
 
@@ -554,6 +763,14 @@ class MessengerPage {
     }
 
     this._stopPolling();
+    this._ensureSocketConnected();
+
+    if (this.socket.connected) {
+      if (runImmediately) {
+        this._subscribeActiveConversation();
+      }
+      return;
+    }
 
     if (runImmediately) {
       this._pollActiveConversation();
@@ -589,23 +806,347 @@ class MessengerPage {
       }
 
       const payload = response.data.data || {};
+      this._applyUnreadPayload(payload.unread, withUserId);
       const incoming = Array.isArray(payload.messages) ? payload.messages : [];
       if (incoming.length === 0) {
         return;
       }
 
-      const byId = new Map(this.messages.map((message) => [Number(message.id), message]));
-      for (const message of incoming) {
-        byId.set(Number(message.id), message);
-      }
-
-      this.messages = Array.from(byId.values()).sort((left, right) => this._compareMessages(left, right));
-      const latest = this.messages[this.messages.length - 1];
-      this.lastMessageCursor = latest ? latest.id : this.lastMessageCursor;
-      this._renderMessages(true);
+      this._mergeIncomingMessages(incoming, true);
     } finally {
       this.polling.inFlight = false;
     }
+  }
+
+  _getWebSocketUrl() {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const token = this.authService?.getToken?.() || "";
+    const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : "";
+    return `${protocol}//${window.location.host}/api/v1/messages/ws${tokenQuery}`;
+  }
+
+  _ensureSocketConnected() {
+    if (document.hidden) {
+      return;
+    }
+
+    if (this.socket.connected && this.socket.instance && this.socket.instance.readyState === WebSocket.OPEN) {
+      this._subscribeActiveConversation();
+      return;
+    }
+
+    if (this.socket.instance && this.socket.instance.readyState === WebSocket.CONNECTING) {
+      return;
+    }
+
+    if (this.socket.reconnectTimerId) {
+      window.clearTimeout(this.socket.reconnectTimerId);
+      this.socket.reconnectTimerId = null;
+    }
+
+    this.socket.manualClose = false;
+
+    try {
+      const ws = new WebSocket(this._getWebSocketUrl());
+      this.socket.instance = ws;
+
+      ws.addEventListener("open", () => {
+        this.socket.connected = true;
+        this.socket.reconnectAttempts = 0;
+        this._stopPolling();
+        this._startSocketHeartbeat();
+        this._subscribeActiveConversation();
+      });
+
+      ws.addEventListener("message", (event) => {
+        this._handleSocketPacket(event?.data);
+      });
+
+      ws.addEventListener("close", () => {
+        this.socket.connected = false;
+        this._stopSocketHeartbeat();
+
+        const shouldReconnect = !this.socket.manualClose && !document.hidden;
+        if (shouldReconnect) {
+          this._scheduleSocketReconnect();
+          if (this.activeConversation) {
+            this._startPolling(false);
+          }
+        }
+      });
+
+      ws.addEventListener("error", () => {
+        this.socket.connected = false;
+        this._notifySocketInstability();
+      });
+    } catch (error) {
+      this.socket.connected = false;
+      this._notifySocketInstability(error);
+      this._scheduleSocketReconnect();
+      this._startPolling(false);
+    }
+  }
+
+  _notifySocketInstability(error = null) {
+    const now = Date.now();
+    if (now - Number(this.socket.lastWarningAt || 0) < 15000) {
+      return;
+    }
+
+    this.socket.lastWarningAt = now;
+    if (error && typeof console !== "undefined" && typeof console.warn === "function") {
+      console.warn("Messenger websocket connection issue:", error);
+    }
+
+    if (this.socket.reconnectAttempts >= 3) {
+      this._showNotification("Connection issues detected. Retrying…", "error");
+    }
+  }
+
+  _scheduleSocketReconnect() {
+    if (this.socket.reconnectTimerId || this.socket.manualClose) {
+      return;
+    }
+
+    const attempt = this.socket.reconnectAttempts + 1;
+    this.socket.reconnectAttempts = attempt;
+    const delay = Math.min(30000, 1000 * Math.pow(2, Math.min(attempt, 5)));
+
+    this.socket.reconnectTimerId = window.setTimeout(() => {
+      this.socket.reconnectTimerId = null;
+      this._ensureSocketConnected();
+    }, delay);
+  }
+
+  _closeSocket(manual = false) {
+    this.socket.manualClose = manual;
+
+    if (this.socket.reconnectTimerId) {
+      window.clearTimeout(this.socket.reconnectTimerId);
+      this.socket.reconnectTimerId = null;
+    }
+
+    this._stopSocketHeartbeat();
+
+    if (this.socket.instance) {
+      try {
+        this.socket.instance.close();
+      } catch (error) {
+        // ignore close errors
+      }
+    }
+
+    this.socket.instance = null;
+    this.socket.connected = false;
+  }
+
+  _startSocketHeartbeat() {
+    this._stopSocketHeartbeat();
+
+    this.socket.heartbeatTimerId = window.setInterval(() => {
+      this._sendSocketMessage("ping", {});
+    }, 25000);
+  }
+
+  _stopSocketHeartbeat() {
+    if (this.socket.heartbeatTimerId) {
+      window.clearInterval(this.socket.heartbeatTimerId);
+      this.socket.heartbeatTimerId = null;
+    }
+  }
+
+  _sendSocketMessage(type, payload) {
+    const ws = this.socket.instance;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      return false;
+    }
+
+    try {
+      ws.send(
+        JSON.stringify({
+          type,
+          payload,
+        }),
+      );
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  _subscribeActiveConversation() {
+    if (!this.activeConversation || !this.socket.connected || !this._isActiveConversationValid()) {
+      return;
+    }
+
+    this._sendSocketMessage("subscribe", {
+      withUserId: Number(this.activeConversation.id),
+      since: undefined,
+    });
+  }
+
+  _handleSocketPacket(rawPayload) {
+    let packet;
+    try {
+      packet = JSON.parse(rawPayload);
+    } catch (error) {
+      return;
+    }
+
+    const type = packet?.type;
+    if (type === "connected") {
+      this._subscribeActiveConversation();
+      return;
+    }
+
+    if (type === "conversation_delta") {
+      const blocked = packet?.data?.blocked || {};
+      if (this.activeConversation) {
+        this.activeConversation.blockedByYou = blocked.blockedByYou === true;
+        this.activeConversation.blockedByThem = blocked.blockedByUser === true;
+        this.activeConversation.isBlocked = this.activeConversation.blockedByYou || this.activeConversation.blockedByThem;
+      }
+
+      this._applyUnreadPayload(packet?.data?.unread, Number(this.activeConversation?.id));
+
+      const incoming = Array.isArray(packet?.data?.messages) ? packet.data.messages : [];
+      this._mergeIncomingMessages(incoming, incoming.length > 0);
+      this._renderActiveConversation();
+      return;
+    }
+
+    if (type === "friends_updated") {
+      this._loadFriends();
+
+      if (this.activeConversation) {
+        this._loadConversation(this.activeConversation.id);
+      }
+
+      return;
+    }
+
+    if (type === "read_status_updated") {
+      const readByUserId = Number(packet?.data?.readByUserId);
+      if (this.activeConversation && readByUserId === Number(this.activeConversation.id)) {
+        this._refreshMessageStatusesSeamlessly(readByUserId);
+      }
+
+      return;
+    }
+
+    if (type === "message_new" || type === "message_sent") {
+      const message = packet?.data;
+      if (!message) {
+        return;
+      }
+
+      if (!this.currentUser || !Number.isInteger(Number(this.currentUser.id))) {
+        return;
+      }
+
+      if (type === "message_sent" && packet?.clientMessageId) {
+        this._clearPendingOutgoing(packet.clientMessageId);
+      }
+
+      const currentUserId = Number(this.currentUser?.id);
+      const messageFrom = Number(message.fromUserId);
+      const messageTo = Number(message.toUserId);
+      const incomingForCurrentUser = type === "message_new" && messageTo === currentUserId;
+
+      if (incomingForCurrentUser && !this.activeConversation) {
+        this._scheduleUnreadSync();
+        this._renderFriends();
+        this._showNotification("New incoming message.", "info");
+      }
+
+      if (!this.activeConversation) {
+        return;
+      }
+
+      const withUserId = Number(this.activeConversation.id);
+      const isRelevant =
+        (messageFrom === currentUserId && messageTo === withUserId) || (messageFrom === withUserId && messageTo === currentUserId);
+
+      if (isRelevant) {
+        this._mergeIncomingMessages([message], true);
+
+        const incomingForCurrentUser = messageFrom === withUserId && messageTo === Number(this.currentUser?.id);
+        if (incomingForCurrentUser) {
+          this._subscribeActiveConversation();
+        }
+      } else if (incomingForCurrentUser) {
+        this._scheduleUnreadSync();
+        this._renderFriends();
+        this._showNotification("New incoming message.", "info");
+      }
+      return;
+    }
+
+    if (type === "error") {
+      if (packet?.clientMessageId && this.pendingOutgoing.has(packet.clientMessageId)) {
+        this._clearPendingOutgoing(packet.clientMessageId);
+      }
+
+      const errorCode = Number(packet?.code);
+      const errorMessage = packet?.error || "Messenger error";
+      if (errorCode === 401 || errorCode === 403) {
+        this._showNotification("Session expired. Please log in again.", "error");
+      } else {
+        this._showNotification(errorMessage, "error");
+      }
+    }
+  }
+
+  _mergeIncomingMessages(incoming, scrollToEnd = false) {
+    const byId = new Map(this.messages.map((message) => [Number(message.id), message]));
+    for (const message of incoming) {
+      if (!message || !Number.isInteger(Number(message.id))) {
+        continue;
+      }
+      byId.set(Number(message.id), message);
+    }
+
+    this.messages = Array.from(byId.values()).sort((left, right) => this._compareMessages(left, right));
+    const latest = this.messages[this.messages.length - 1];
+    this.lastMessageCursor = latest ? latest.id : this.lastMessageCursor;
+    this._renderMessages(scrollToEnd);
+  }
+
+  _clearPendingOutgoing(clientMessageId) {
+    if (!clientMessageId || !this.pendingOutgoing.has(clientMessageId)) {
+      return;
+    }
+
+    const pending = this.pendingOutgoing.get(clientMessageId);
+    if (pending?.timeoutId) {
+      window.clearTimeout(pending.timeoutId);
+    }
+
+    this.pendingOutgoing.delete(clientMessageId);
+  }
+
+  _scheduleUnreadSync() {
+    if (this.unreadSyncTimerId) {
+      window.clearTimeout(this.unreadSyncTimerId);
+    }
+
+    this.unreadSyncTimerId = window.setTimeout(() => {
+      this.unreadSyncTimerId = null;
+      this._loadConversationSummaries();
+    }, 300);
+  }
+
+  _isActiveConversationValid() {
+    if (!this.activeConversation) {
+      return false;
+    }
+
+    const activeUserId = Number(this.activeConversation.id);
+    if (!Number.isInteger(activeUserId) || activeUserId <= 0) {
+      return false;
+    }
+
+    return this.friends.some((friend) => Number(friend?.id) === activeUserId);
   }
 
   _compareMessages(left, right) {
@@ -627,6 +1168,111 @@ class MessengerPage {
     const blockedByYou = conversation.blockedByYou === true;
     const blockedByThem = conversation.blockedByThem === true;
     return blockedByYou || blockedByThem || conversation.isBlocked === true || conversation.blocked === true;
+  }
+
+  async _loadConversationSummaries() {
+    try {
+      const response = await this.apiService.get("messages/conversations", {
+        requiresAuth: true,
+      });
+
+      if (!response.success || !response?.data?.success) {
+        return;
+      }
+
+      const conversations = Array.isArray(response?.data?.data) ? response.data.data : [];
+      const unreadMap = new Map();
+      let unreadTotal = 0;
+
+      for (const conversation of conversations) {
+        const userId = Number(conversation?.withUser?.id);
+        const unreadCount = Number(conversation?.unreadCount) || 0;
+        if (!Number.isInteger(userId) || userId <= 0) {
+          continue;
+        }
+
+        if (unreadCount > 0) {
+          unreadMap.set(userId, unreadCount);
+          unreadTotal += unreadCount;
+        }
+      }
+
+      this.unreadState.byUserId = unreadMap;
+      this.unreadState.total = unreadTotal;
+      this._renderFriends();
+      this._renderActiveConversation();
+    } catch (error) {
+      // ignore unread summary sync failures
+    }
+  }
+
+  _applyUnreadPayload(unread, withUserId) {
+    if (!unread || typeof unread !== "object") {
+      return;
+    }
+
+    const conversationUserId = Number(withUserId);
+    if (Number.isInteger(conversationUserId) && conversationUserId > 0 && unread.withUser !== undefined) {
+      this._setUnreadCount(conversationUserId, Number(unread.withUser) || 0);
+    }
+
+    if (unread.total !== undefined) {
+      this.unreadState.total = Math.max(0, Number(unread.total) || 0);
+    }
+
+    this._renderFriends();
+    this._renderActiveConversation();
+  }
+
+  _setUnreadCount(userId, count) {
+    const numericUserId = Number(userId);
+    if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+      return;
+    }
+
+    const normalizedCount = Math.max(0, Number(count) || 0);
+    const previousCount = this.unreadState.byUserId.get(numericUserId) || 0;
+
+    if (normalizedCount <= 0) {
+      this.unreadState.byUserId.delete(numericUserId);
+    } else {
+      this.unreadState.byUserId.set(numericUserId, normalizedCount);
+    }
+
+    this.unreadState.total = Math.max(0, this.unreadState.total - previousCount + normalizedCount);
+  }
+
+  _getUnreadCountForUser(userId) {
+    const numericUserId = Number(userId);
+    if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+      return 0;
+    }
+
+    return this.unreadState.byUserId.get(numericUserId) || 0;
+  }
+
+  _formatMessageStatus(message, isOwnMessage) {
+    const status = typeof message?.status === "string" ? message.status.trim().toLowerCase() : "";
+
+    if (!status) {
+      return "";
+    }
+
+    const statusIcons = {
+      read: `<span class="msg-status msg-status--read" title="Read">✓✓</span>`,
+      delivered: `<span class="msg-status msg-status--delivered" title="Delivered">✓</span>`,
+      unread: `<span class="msg-status msg-status--unread" title="Unread">○</span>`,
+    };
+
+    if (isOwnMessage && (status === "read" || status === "delivered" || status === "unread")) {
+      return statusIcons[status] || "";
+    }
+
+    if (!isOwnMessage && (status === "read" || status === "unread")) {
+      return statusIcons[status] || "";
+    }
+
+    return "";
   }
 
   _formatTimestamp(value) {

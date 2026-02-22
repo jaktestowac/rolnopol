@@ -113,12 +113,13 @@ function validateIds(ids) {
 }
 
 /**
- * Sanitize string input
+ * Sanitize string input - removes dangerous characters but preserves whitespace
  */
 function sanitizeString(input) {
   if (typeof input !== "string") return "";
 
-  return input.trim().replace(/[<>]/g, "");
+  // Remove dangerous characters but preserve all whitespace (spaces, tabs, newlines)
+  return input.replace(/[<>]/g, "");
 }
 
 /**

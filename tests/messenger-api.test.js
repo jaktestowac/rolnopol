@@ -114,6 +114,7 @@ describe("Messenger API FR-4/FR-5", () => {
 
     expect(sentOne.body.success).toBe(true);
     expect(sentOne.body.data.fromUserId).toBe(alice.user.id);
+    expect(sentOne.body.data.status).toBe("delivered");
 
     await request(app).post("/api/v1/messages").set("token", bob.token).send({ toUserId: alice.user.id, content: "Hi Alice" }).expect(201);
 
@@ -125,6 +126,11 @@ describe("Messenger API FR-4/FR-5", () => {
     expect(historyRes.body.success).toBe(true);
     expect(Array.isArray(historyRes.body.data.messages)).toBe(true);
     expect(historyRes.body.data.messages.length).toBeGreaterThanOrEqual(2);
+    expect(historyRes.body.data.unread.withUser).toBe(0);
+    expect(historyRes.body.data.unread.total).toBeGreaterThanOrEqual(0);
+
+    const ownMessageInHistory = historyRes.body.data.messages.find((message) => message.fromUserId === alice.user.id);
+    expect(["delivered", "read"]).toContain(ownMessageInHistory.status);
 
     const latestKnownId = historyRes.body.data.messages[historyRes.body.data.messages.length - 1].id;
 
@@ -143,6 +149,8 @@ describe("Messenger API FR-4/FR-5", () => {
     expect(Array.isArray(pollRes.body.data.messages)).toBe(true);
     expect(pollRes.body.data.messages.length).toBe(1);
     expect(pollRes.body.data.messages[0].content).toBe("New update");
+    expect(pollRes.body.data.messages[0].status).toBe("read");
+    expect(pollRes.body.data.unread.withUser).toBe(0);
   });
 
   it("prevents sending message when either user is blocked", async () => {
@@ -170,6 +178,52 @@ describe("Messenger API FR-4/FR-5", () => {
 
     await request(app).post("/api/v1/messages").set("token", user.token).send({ toUserId: user.user.id, content: "self" }).expect(400);
 
+    await request(app).get(`/api/v1/messages/poll?withUserId=${user.user.id}`).set("token", user.token).expect(400);
+
     await request(app).post("/api/v1/messages").set("token", user.token).send({ toUserId: 999999, content: "nobody" }).expect(404);
+  });
+
+  it("handles concurrent message sends without id collisions or lost messages", async () => {
+    await setMessengerEnabled(true);
+
+    const alice = await createAndLoginUser("Concurrent Sender");
+    const bob = await createAndLoginUser("Concurrent Receiver");
+
+    const burstSize = 20;
+    const marker = `burst-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    await Promise.all(
+      Array.from({ length: burstSize }, (_, index) =>
+        request(app)
+          .post("/api/v1/messages")
+          .set("token", alice.token)
+          .send({
+            toUserId: bob.user.id,
+            content: `${marker}-${index}`,
+          })
+          .expect(201),
+      ),
+    );
+
+    const historyRes = await request(app)
+      .get(`/api/v1/messages/conversations/${bob.user.id}?limit=200`)
+      .set("token", alice.token)
+      .expect(200);
+
+    expect(historyRes.body.success).toBe(true);
+    expect(Array.isArray(historyRes.body.data.messages)).toBe(true);
+
+    const burstMessages = historyRes.body.data.messages.filter(
+      (message) => typeof message?.content === "string" && message.content.startsWith(`${marker}-`),
+    );
+
+    expect(burstMessages).toHaveLength(burstSize);
+
+    const messageIds = burstMessages.map((message) => Number(message.id));
+    expect(new Set(messageIds).size).toBe(burstSize);
+
+    for (let index = 1; index < messageIds.length; index += 1) {
+      expect(messageIds[index]).toBeGreaterThan(messageIds[index - 1]);
+    }
   });
 });

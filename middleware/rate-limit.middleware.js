@@ -3,6 +3,7 @@ const {
   adminDashboardLimiter,
   authLimiter,
   apiLimiter,
+  apiHighLimiter,
 } = require("../api/limiters");
 
 /**
@@ -17,6 +18,8 @@ const createRateLimiter = (type = "api") => {
       return verifyLimiter;
     case "admin":
       return adminDashboardLimiter;
+    case "high":
+      return apiHighLimiter;
     case "api":
     default:
       return apiLimiter;

@@ -6,7 +6,7 @@ const { validateIdParam } = require("../../middleware/id-validation.middleware")
 const messengerController = require("../../controllers/messenger.controller");
 
 const messengerRoute = express.Router();
-const apiLimiter = createRateLimiter("api");
+const apiLimiter = createRateLimiter("high");
 
 messengerRoute.get(
   "/messages/conversations",

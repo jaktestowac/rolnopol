@@ -193,6 +193,28 @@
   color: #6a7b5e;
 }
 
+.msg-status {
+  display: inline-block;
+  margin-left: 0.25rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  min-width: 1.2em;
+  text-align: center;
+}
+
+.msg-status--read {
+  color: #2f6f37;
+}
+
+.msg-status--delivered {
+  color: #5f8f5e;
+}
+
+.msg-status--unread {
+  color: #a0957e;
+}
+
 .messenger-compose {
   display: grid;
   grid-template-columns: 1fr auto;

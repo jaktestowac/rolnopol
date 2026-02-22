@@ -1,6 +1,7 @@
 const UserDataSingleton = require("../data/user-data-singleton");
 const { validateProfileUpdateData } = require("../helpers/validators");
 const { logDebug, logError } = require("../helpers/logger-api");
+const messengerEventsService = require("./messenger-events.service");
 
 class UserService {
   constructor() {
@@ -247,6 +248,13 @@ class UserService {
       });
     }
 
+    messengerEventsService.emitRelationshipChanged({
+      reason: "friend_added",
+      userIds: [user.id, targetUser.id],
+      actorUserId: user.id,
+      targetUserId: targetUser.id,
+    });
+
     return {
       friend: this._toPublicUserSummary(targetUser),
       count: nextUserFriends.length,
@@ -291,6 +299,13 @@ class UserService {
 
     const nextUserFriends = userFriends.filter((id) => id !== friend.id);
     await this.userDataInstance.updateUser(user.id, { friends: nextUserFriends });
+
+    messengerEventsService.emitRelationshipChanged({
+      reason: "friend_removed",
+      userIds: [user.id],
+      actorUserId: user.id,
+      targetUserId: friend.id,
+    });
 
     return {
       removedFriendId: friend.id,
@@ -338,6 +353,13 @@ class UserService {
     const nextBlockedIds = [...blockedIds, targetUser.id];
     await this.userDataInstance.updateUser(user.id, { blockedUsers: nextBlockedIds });
 
+    messengerEventsService.emitRelationshipChanged({
+      reason: "user_blocked",
+      userIds: [user.id, targetUser.id],
+      actorUserId: user.id,
+      targetUserId: targetUser.id,
+    });
+
     return {
       blockedUser: this._toPublicUserSummary(targetUser),
       count: nextBlockedIds.length,
@@ -355,6 +377,13 @@ class UserService {
 
     const nextBlockedIds = blockedIds.filter((id) => id !== blockedUser.id);
     await this.userDataInstance.updateUser(user.id, { blockedUsers: nextBlockedIds });
+
+    messengerEventsService.emitRelationshipChanged({
+      reason: "user_unblocked",
+      userIds: [user.id, blockedUser.id],
+      actorUserId: user.id,
+      targetUserId: blockedUser.id,
+    });
 
     return {
       unblockedUserId: blockedUser.id,

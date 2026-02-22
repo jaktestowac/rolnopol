@@ -14,6 +14,8 @@ const settings = {
   loginExpirationAdmin: { hours: 1 }, // 1 hour for admin tokens
   RATE_LIMIT_WINDOW_MS: 30 * 1000, // 30 seconds
   RATE_LIMIT_MAX_REQUESTS: 100, // requests per window
+  HIGH_RATE_LIMIT_WINDOW_MS: 30 * 1000, // 30 seconds
+  HIGH_RATE_LIMIT_MAX_REQUESTS: 2000, // requests per window
   ADMIN_LOGIN_MAX_ATTEMPTS: 3,
   ADMIN_LOGIN_BLOCK_DURATION_MS: 60 * 1000, // 1 minute
   JWT_SECRET: process.env.JWT_SECRET || "your-super-secret-jwt-key-change-this-in-production",

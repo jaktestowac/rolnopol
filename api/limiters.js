@@ -2,6 +2,8 @@ const rateLimit = require("express-rate-limit");
 const {
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX_REQUESTS,
+  HIGH_RATE_LIMIT_WINDOW_MS,
+  HIGH_RATE_LIMIT_MAX_REQUESTS,
 } = require("../data/settings");
 
 /**
@@ -14,6 +16,18 @@ const {
 const apiLimiter = rateLimit({
   windowMs: RATE_LIMIT_WINDOW_MS,
   max: RATE_LIMIT_MAX_REQUESTS,
+  message: {
+    success: false,
+    error: "Too many requests from this IP, please try again later.",
+    timestamp: new Date().toISOString(),
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiHighLimiter = rateLimit({
+  windowMs: HIGH_RATE_LIMIT_WINDOW_MS,
+  max: HIGH_RATE_LIMIT_MAX_REQUESTS,
   message: {
     success: false,
     error: "Too many requests from this IP, please try again later.",
@@ -85,6 +99,7 @@ const adminDashboardLimiter = rateLimit({
 
 module.exports = {
   apiLimiter,
+  apiHighLimiter,
   strictLimiter,
   authLimiter,
   verifyLimiter,

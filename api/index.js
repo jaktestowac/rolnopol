@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const http = require("http");
 const cookieParser = require("cookie-parser");
 const app = express();
 const path = require("path");
@@ -14,6 +15,7 @@ const packageJson = require("../package.json");
 const notFoundStatsModule = require("../helpers/notfound-stats");
 const prometheusMetrics = require("../helpers/prometheus-metrics");
 const featureFlagsService = require("../services/feature-flags.service");
+const messengerWebSocketService = require("../services/messenger-ws.service");
 
 app.set("etag", false);
 
@@ -298,7 +300,10 @@ if (require.main === module) {
       const { performStartupHealthCheck } = require("../helpers/healthcheck");
       await performStartupHealthCheck();
       const port = PORT;
-      app.listen(port, () => {
+      const server = http.createServer(app);
+      messengerWebSocketService.attach(server);
+
+      server.listen(port, () => {
         logInfo(`🚀 Server running on port ${port}`);
         logInfo(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
         logInfo(`📚 API Versions: ${Object.keys(versionMiddleware.getAllVersions()).join(", ")}`);
@@ -326,5 +331,9 @@ if (require.main === module) {
     }
   })();
 }
+
+app.attachWebSockets = function attachWebSockets(server) {
+  return messengerWebSocketService.attach(server);
+};
 
 module.exports = app;
