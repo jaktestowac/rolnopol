@@ -16,6 +16,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   homeWelcomeVideoEnabled: "Enable or disable the homepage welcome promotional video",
   homeStatsSectionEnabled: "Enable or disable advanced statistics section on the homepage",
   messengerEnabled: "Enable or disable internal messenger feature",
+  cookieConsentBannerEnabled: "Enable or disable cookie consent banner shown at the bottom of pages",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -28,6 +29,7 @@ const FEATURE_FLAG_GROUPS = {
   export: ["staffFieldsExportEnabled", "financialReportsEnabled", "financialCsvExportEnabled"],
   monitoring: ["prometheusMetricsEnabled"],
   communication: ["messengerEnabled"],
+  privacy: ["cookieConsentBannerEnabled"],
 };
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -44,6 +46,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   prometheusMetricsEnabled: false,
   homeWelcomeVideoEnabled: false,
   homeStatsSectionEnabled: false,
+  cookieConsentBannerEnabled: false,
   messengerEnabled: false,
 };
 

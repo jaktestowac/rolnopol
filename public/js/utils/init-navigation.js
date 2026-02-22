@@ -224,6 +224,19 @@ function initNavigation(activeNavKey) {
     }
 
     await applyFeatureFlagVisibility();
+
+    // Initialize cookie consent banner
+    try {
+      await loadScriptOnce("/js/components/cookie-consent.js");
+      if (typeof window.initCookieConsent === "function") {
+        await window.initCookieConsent();
+      }
+    } catch (error) {
+      // Silently ignore cookie consent initialization errors
+      if (typeof console !== "undefined" && console.warn) {
+        console.warn("Failed to load cookie consent banner", error);
+      }
+    }
   });
 }
 

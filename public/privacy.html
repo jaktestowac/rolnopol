@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <title>Privacy & Cookie Policy - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+        .privacy-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .privacy-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            line-height: 1.8;
+        }
+
+        .privacy-content h1 {
+            color: #2d3a2d;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .privacy-content h2 {
+            color: #2d3a2d;
+            border-bottom: 2px solid #6a7b5e;
+            padding-bottom: 0.75rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1.25rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .privacy-content h3 {
+            color: #6a7b5e;
+            margin-top: 1.75rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .privacy-content p {
+            color: #555;
+            margin-bottom: 1rem;
+        }
+
+        .privacy-content ul {
+            color: #555;
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .privacy-content li {
+            margin-bottom: 0.75rem;
+        }
+
+        .cookie-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: rgba(106, 123, 94, 0.02);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .cookie-table th,
+        .cookie-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(106, 123, 94, 0.1);
+        }
+
+        .cookie-table th {
+            background: rgba(106, 123, 94, 0.1);
+            color: #2d3a2d;
+            font-weight: 600;
+        }
+
+        .cookie-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .info-box {
+            background: rgba(106, 123, 94, 0.08);
+            border-left: 4px solid #6a7b5e;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 0.4rem;
+        }
+
+        .info-box strong {
+            color: #2d3a2d;
+        }
+
+        .last-updated {
+            color: #888;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .privacy-container {
+                padding: 1rem;
+            }
+
+            .privacy-content {
+                padding: 1.5rem;
+            }
+
+            .privacy-content h1 {
+                font-size: 1.5rem;
+            }
+
+            .privacy-content h2 {
+                font-size: 1.25rem;
+            }
+
+            .cookie-table th,
+            .cookie-table td {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-component"></div>
+
+    <main class="privacy-container">
+        <div class="privacy-content">
+            <h1><i class="fas fa-shield-alt"></i> Privacy & Cookie Policy</h1>
+            <p class="last-updated">Last updated: February 2026</p>
+
+            <!-- Cookie Consent Banner Notice -->
+            <div class="info-box">
+                <strong><i class="fas fa-info-circle"></i> About Our Cookie Banner</strong>
+                <p>
+                    Rolnopol uses a cookie consent banner to inform you about our cookie usage. When you see this banner and click "Accept," we store your preference in
+                    a cookie. This allows us to remember your choice and not show the banner again for 7 days.
+                </p>
+            </div>
+
+            <!-- Cookies Section -->
+            <h2><i class="fas fa-cookie"></i> Cookies</h2>
+
+            <h3>What are Cookies?</h3>
+            <p>
+                Cookies are small text files placed on your device by websites you visit. They help websites remember information about your visit, such as your
+                preferences and login details. Cookies can be either "persistent" (stored for a set period) or "session" (deleted when you close your browser).
+            </p>
+
+            <h3>What Cookies Do We Use?</h3>
+            <p>Rolnopol uses the following types of cookies:</p>
+
+            <table class="cookie-table">
+                <thead>
+                    <tr>
+                        <th>Cookie Name</th>
+                        <th>Purpose</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>rolnopolToken</strong></td>
+                        <td>Authentication token for user login sessions</td>
+                        <td>Session or as configured</td>
+                    </tr>
+                    <tr>
+                        <td><strong>rolnopolIsLogged</strong></td>
+                        <td>Indicates whether the user is logged in</td>
+                        <td>Session or as configured</td>
+                    </tr>
+                    <tr>
+                        <td><strong>rolnopolUsername</strong></td>
+                        <td>Stores the username for personalization</td>
+                        <td>Session or as configured</td>
+                    </tr>
+                    <tr>
+                        <td><strong>rolnopolCookieConsent</strong></td>
+                        <td>Records your cookie consent preference</td>
+                        <td>7 days</td>
+                    </tr>
+                    <tr>
+                        <td><strong>rolnopolPromoAdvertSeen</strong></td>
+                        <td>Tracks promotional popup display frequency</td>
+                        <td>Session</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Your Cookie Choices</h3>
+            <p>
+                Most web browsers allow you to control cookies through browser settings. You can typically:
+            </p>
+            <ul>
+                <li>Accept all cookies</li>
+                <li>Decline cookies</li>
+                <li>Delete existing cookies</li>
+                <li>Receive a notification when a website tries to place a cookie</li>
+            </ul>
+            <p>
+                Please note that declining cookies may affect your ability to use certain features of Rolnopol, such as staying logged in or personalizing your
+                experience.
+            </p>
+
+            <!-- Privacy Section -->
+            <h2><i class="fas fa-lock"></i> Privacy</h2>
+
+            <h3>Data We Collect</h3>
+            <p>To provide our services, Rolnopol collects:</p>
+            <ul>
+                <li><strong>Account Information:</strong> Username, email address, and password</li>
+                <li><strong>Usage Data:</strong> Pages visited, features used, and interaction data</li>
+                <li><strong>Device Information:</strong> Browser type, IP address, and device type</li>
+                <li><strong>Agricultural Data:</strong> Information you voluntarily provide about your fields, animals, and operations</li>
+            </ul>
+
+            <h3>How We Use Your Data</h3>
+            <p>We use your information to:</p>
+            <ul>
+                <li>Provide and maintain our services</li>
+                <li>Authenticate your account and keep it secure</li>
+                <li>Personalize your experience</li>
+                <li>Improve our platform based on usage patterns</li>
+                <li>Communicate with you about updates and changes</li>
+                <li>Comply with legal obligations</li>
+            </ul>
+
+            <h3>Data Security</h3>
+            <p>
+                We implement industry-standard security measures to protect your data, including:
+            </p>
+            <ul>
+                <li>Encrypted data transmission (HTTPS)</li>
+                <li>Secure password storage</li>
+                <li>Access controls and authentication mechanisms</li>
+                <li>Regular security audits</li>
+            </ul>
+
+            <h3>Data Retention</h3>
+            <p>
+                We retain your data as long as your account is active. When you delete your account, we remove your personal data within a reasonable timeframe,
+                except where required by law.
+            </p>
+
+            <!-- Third-Party Services -->
+            <h2><i class="fas fa-users"></i> Third-Party Services</h2>
+            <p>
+                Rolnopol may use third-party services for functionality such as analytics, hosting, and monitoring. These services may collect information as
+                outlined in their privacy policies.
+            </p>
+
+            <!-- GDPR & Legal Compliance -->
+            <h2><i class="fas fa-gavel"></i> Legal Compliance</h2>
+
+            <h3>GDPR (General Data Protection Regulation)</h3>
+            <p>
+                If you are located in the European Union, your data is protected under GDPR. You have the right to:
+            </p>
+            <ul>
+                <li>Access your personal data</li>
+                <li>Correct inaccurate data</li>
+                <li>Request deletion of your data (right to be forgotten)</li>
+                <li>Restrict data processing</li>
+                <li>Withdraw consent at any time</li>
+            </ul>
+
+            <div class="info-box">
+                <strong>Exercise Your Rights:</strong>
+                <p>To exercise any of these rights, please contact us through the Contact page of this website.</p>
+            </div>
+
+            <!-- Contact -->
+            <h2><i class="fas fa-envelope"></i> Contact</h2>
+            <p>
+                If you have questions about this Privacy & Cookie Policy, or if you wish to exercise your data rights, please visit our
+                <a href="/contact.html" style="color: #6a7b5e; text-decoration: underline">Contact page</a>
+                to get in touch with us.
+            </p>
+
+            <!-- Policy Changes -->
+            <h2><i class="fas fa-history"></i> Changes to This Policy</h2>
+            <p>
+                We may update this Privacy & Cookie Policy from time to time. We will notify you of significant changes by updating the "Last updated" date at
+                the top of this page and, where required, by obtaining your consent.
+            </p>
+
+            <div class="info-box">
+                <strong>Your Consent:</strong>
+                <p>By using Rolnopol, you consent to our Privacy & Cookie Policy. If you do not agree with our practices, please do not use our platform.</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-component"></div>
+
+    <!-- Scripts -->
+    <script src="/js/init.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+        initNavigation("privacy");
+    </script>
+</body>
+
+</html>

@@ -22,6 +22,10 @@ describe("Feature Flags API", () => {
     expect(res.body.data.flags.messengerEnabled).toHaveProperty("description");
     expect(res.body.data.groups).toHaveProperty("communication");
     expect(Array.isArray(res.body.data.groups.communication)).toBe(true);
+    expect(res.body.data.flags).toHaveProperty("cookieConsentBannerEnabled");
+    expect(res.body.data.groups).toHaveProperty("privacy");
+    expect(Array.isArray(res.body.data.groups.privacy)).toBe(true);
+    expect(res.body.data.groups.privacy).toContain("cookieConsentBannerEnabled");
   });
 
   it("PATCH /api/v1/feature-flags updates flags without auth", async () => {
@@ -118,5 +122,6 @@ describe("Feature Flags API", () => {
     expect(resetRes.body.data.flags.messengerEnabled).toBe(false);
     expect(resetRes.body.data.flags.docsSearchEnabled).toBe(false);
     expect(resetRes.body.data.flags.alertsEnabled).toBe(true);
+    expect(resetRes.body.data.flags.cookieConsentBannerEnabled).toBe(false);
   });
 });

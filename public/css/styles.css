@@ -1427,6 +1427,113 @@ body {
   justify-content: flex-end;
 }
 
+/* Cookie Consent Banner */
+.cookie-consent-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: var(--surface-color);
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.1);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.cookie-consent-banner__content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cookie-consent-banner__message {
+  flex: 1;
+  min-width: 200px;
+}
+
+.cookie-consent-banner__message p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.cookie-consent-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cookie-consent-banner__link {
+  font-size: 0.9rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.cookie-consent-banner__link:hover {
+  border-bottom-color: var(--primary-color);
+}
+
+.cookie-consent-banner__accept {
+  padding: 0.5rem 1.25rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.cookie-consent-banner__accept:hover {
+  background: var(--primary-color-dark, #176b4d);
+  transform: translateY(-1px);
+}
+
+.cookie-consent-banner__accept:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .cookie-consent-banner__content {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .cookie-consent-banner__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .cookie-consent-banner__accept {
+    flex-shrink: 0;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .container,

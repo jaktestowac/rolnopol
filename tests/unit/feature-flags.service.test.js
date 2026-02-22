@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from "vitest";
 const featureFlagsService = require("../../services/feature-flags.service");
 
 describe("feature-flags.service", () => {
-  it("populates defaults when database is empty", async () => {
     const now = new Date("2026-02-07T00:00:00.000Z");
     vi.useFakeTimers();
     vi.setSystemTime(now);
@@ -28,6 +27,7 @@ describe("feature-flags.service", () => {
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
         messengerEnabled: false,
+        cookieConsentBannerEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -66,6 +66,7 @@ describe("feature-flags.service", () => {
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
         messengerEnabled: false,
+        cookieConsentBannerEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -109,6 +110,7 @@ describe("feature-flags.service", () => {
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
         messengerEnabled: false,
+        cookieConsentBannerEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -147,6 +149,7 @@ describe("feature-flags.service", () => {
       flags: expect.objectContaining({
         alertsEnabled: false,
         customPilotFlag: true,
+        cookieConsentBannerEnabled: false,
         messengerEnabled: false,
       }),
       updatedAt: now.toISOString(),
@@ -173,6 +176,7 @@ describe("feature-flags.service", () => {
         prometheusMetricsEnabled: false,
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
+        cookieConsentBannerEnabled: false,
         messengerEnabled: false,
       },
       updatedAt: "2026-02-07T00:00:00.000Z",
