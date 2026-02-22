@@ -4,10 +4,17 @@
 (function () {
   "use strict";
 
+  // configuration for each supported page; delaySeconds is the default value used when
+  // no min/max range is specified.  New properties `minDelaySeconds` and
+  // `maxDelaySeconds` may be provided to randomise the popup delay within a range.
   const PROMO_CONFIG = {
     home: {
       flag: "promoAdvertsHomeEnabled",
       title: "Welcome to Rolnopol",
+      // show the popup after at least 2s and at most 5s (randomised)
+      minDelaySeconds: 2,
+      maxDelaySeconds: 5,
+      // legacy field, still supported for backwards compatibility
       delaySeconds: 3,
       cookieKey: "rolnopolPromoAdvertSeen_home",
       videoUrls: ["/images/rolnopol_ad2.mp4", "/images/rolnopol_ad3.mp4"],
@@ -16,6 +23,9 @@
     alerts: {
       flag: "promoAdvertsAlertsEnabled",
       title: "Discover Rolnopol",
+      // same min/max as above – you can adjust per page as needed
+      minDelaySeconds: 2,
+      maxDelaySeconds: 5,
       delaySeconds: 3,
       cookieKey: "rolnopolPromoAdvertSeen_alerts",
       videoUrl: "/images/rolnopol_ad2.mp4",
@@ -314,8 +324,8 @@
       // Mark as shown first to prevent multiple popups
       // Note: Cookie is actually set when user closes the modal, not when it appears
 
-      // Delay showing the popup
-      const delayMs = config.delaySeconds ? config.delaySeconds * 1000 : 3000;
+      // Delay showing the popup (could be fixed or randomised within a range)
+      const delayMs = getDelayMs(config);
       setTimeout(() => {
         showPromoModal(pageKey);
       }, delayMs);
@@ -324,7 +334,48 @@
     }
   }
 
-  // Export for external use
-  window.initPromoAdverts = initPromoAdverts;
-  window.showPromoModal = showPromoModal;
+  /**
+   * Compute the delay in milliseconds based on configuration.
+   * Supports:
+   *  - `delaySeconds` (legacy fixed value)
+   *  - `minDelaySeconds` + `maxDelaySeconds` (randomised range)
+   * If invalid values are provided the default of 3000ms is used.
+   */
+  function getDelayMs(config) {
+    if (!config) {
+      return 3000;
+    }
+
+    // range form takes precedence
+    if (typeof config.minDelaySeconds === "number" && typeof config.maxDelaySeconds === "number") {
+      // ensure properly ordered and non-negative
+      const min = Math.max(0, Math.min(config.minDelaySeconds, config.maxDelaySeconds));
+      const max = Math.max(min, config.maxDelaySeconds);
+      const rand = Math.random();
+      // inclusive of both bounds
+      const seconds = min + rand * (max - min);
+      return Math.floor(seconds * 1000);
+    }
+
+    if (typeof config.delaySeconds === "number") {
+      return config.delaySeconds * 1000;
+    }
+
+    return 3000;
+  }
+
+  // Export for external use in browser context
+  if (typeof window !== "undefined") {
+    window.initPromoAdverts = initPromoAdverts;
+    window.showPromoModal = showPromoModal;
+  }
+
+  // expose helpers for unit tests (Node environment)
+  if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
+    module.exports = {
+      getRandomItem,
+      getVideoUrl,
+      getDelayMs,
+    };
+  }
 })();
