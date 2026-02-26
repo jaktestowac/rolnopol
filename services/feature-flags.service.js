@@ -15,6 +15,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   prometheusMetricsEnabled: "Enable or disable Prometheus metrics collection endpoint",
   homeWelcomeVideoEnabled: "Enable or disable the homepage welcome promotional video",
   homeStatsSectionEnabled: "Enable or disable advanced statistics section on the homepage",
+  homeModernRestyleEnabled: "Enable or disable modern redesigned homepage layout and styling",
   messengerEnabled: "Enable or disable internal messenger feature",
   cookieConsentBannerEnabled: "Enable or disable cookie consent banner shown at the bottom of pages",
   promoAdvertsHomeEnabled: "Enable or disable Rolnopol promotional popups on home/dashboard pages",
@@ -23,7 +24,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
 };
 
 const FEATURE_FLAG_GROUPS = {
-  homepage: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled"],
+  homepage: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled", "homeModernRestyleEnabled"],
   alert: ["alertsEnabled", "alertsSeverityFilterEnabled"],
   map: ["rolnopolMapEnabled"],
   documentation: ["docsSearchEnabled", "docsAdvancedSearchEnabled"],
@@ -50,6 +51,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   prometheusMetricsEnabled: false,
   homeWelcomeVideoEnabled: false,
   homeStatsSectionEnabled: false,
+  homeModernRestyleEnabled: false,
   cookieConsentBannerEnabled: false,
   messengerEnabled: false,
   promoAdvertsHomeEnabled: false,

@@ -13,11 +13,12 @@
     "prometheusMetricsEnabled": false,
     "homeWelcomeVideoEnabled": false,
     "homeStatsSectionEnabled": false,
+    "homeModernRestyleEnabled": false,
     "cookieConsentBannerEnabled": false,
     "messengerEnabled": false,
     "promoAdvertsHomeEnabled": false,
     "promoAdvertsAlertsEnabled": false,
     "promoAdvertsGeneralAdEnabled": false
   },
-  "updatedAt": "2026-02-22T21:28:46.057Z"
+  "updatedAt": "2026-02-25T16:48:04.159Z"
 }

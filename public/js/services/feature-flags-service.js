@@ -5,10 +5,14 @@
 class FeatureFlagsService {
   constructor() {
     this.apiService = null;
+    this.app = null;
     this._flagsCache = null;
     this._cacheTimestamp = 0;
     this._cacheTtlMs = 30000;
     this._inFlight = null;
+    this._storageKey = "rolnopol.featureFlagsCache.v1";
+
+    this._hydrateCacheFromStorage();
   }
 
   /**
@@ -16,6 +20,7 @@ class FeatureFlagsService {
    * @param {App} app - Application instance
    */
   init(app) {
+    this.app = app;
     this.apiService = app.getModule("apiService");
   }
 
@@ -28,6 +33,7 @@ class FeatureFlagsService {
   _clearCache() {
     this._flagsCache = null;
     this._cacheTimestamp = 0;
+    this._clearStoredCache();
   }
 
   _isCacheValid() {
@@ -43,6 +49,70 @@ class FeatureFlagsService {
       return null;
     }
     return payload.flags;
+  }
+
+  _hydrateCacheFromStorage() {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(this._storageKey);
+      if (!raw) {
+        return;
+      }
+
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") {
+        return;
+      }
+
+      const flags = parsed.flags;
+      const timestamp = Number(parsed.timestamp);
+      if (!flags || typeof flags !== "object" || !Number.isFinite(timestamp)) {
+        return;
+      }
+
+      if (Date.now() - timestamp >= this._cacheTtlMs) {
+        this._clearStoredCache();
+        return;
+      }
+
+      this._flagsCache = flags;
+      this._cacheTimestamp = timestamp;
+    } catch (error) {
+      this._clearStoredCache();
+    }
+  }
+
+  _persistCacheToStorage() {
+    if (typeof window === "undefined" || !window.localStorage || !this._flagsCache) {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(
+        this._storageKey,
+        JSON.stringify({
+          flags: this._flagsCache,
+          timestamp: this._cacheTimestamp,
+        }),
+      );
+    } catch (error) {
+      // Ignore storage quota/privacy mode issues.
+    }
+  }
+
+  _clearStoredCache() {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return;
+    }
+
+    try {
+      window.localStorage.removeItem(this._storageKey);
+    } catch (error) {
+      // Ignore storage access issues.
+    }
   }
 
   /**
@@ -96,6 +166,7 @@ class FeatureFlagsService {
 
       this._flagsCache = flags;
       this._cacheTimestamp = Date.now();
+      this._persistCacheToStorage();
       return this._flagsCache;
     })();
 
@@ -137,7 +208,9 @@ class FeatureFlagsService {
   async updateFlags(flags) {
     this._ensureApiService();
     this._clearCache();
-    return this.apiService.request("PATCH", "feature-flags", { body: { flags } });
+    const response = this.apiService.request("PATCH", "feature-flags", { body: { flags } });
+    this._emitFlagsChangedEvent();
+    return response;
   }
 
   /**
@@ -147,7 +220,9 @@ class FeatureFlagsService {
   async replaceFlags(flags) {
     this._ensureApiService();
     this._clearCache();
-    return this.apiService.put("feature-flags", { flags });
+    const response = this.apiService.put("feature-flags", { flags });
+    this._emitFlagsChangedEvent();
+    return response;
   }
 
   /**
@@ -156,7 +231,21 @@ class FeatureFlagsService {
   async resetFlags() {
     this._ensureApiService();
     this._clearCache();
-    return this.apiService.post("feature-flags/reset", {});
+    const response = this.apiService.post("feature-flags/reset", {});
+    this._emitFlagsChangedEvent();
+    return response;
+  }
+
+  /**
+   * Emit a feature flags changed event
+   */
+  _emitFlagsChangedEvent() {
+    if (this.app && typeof this.app.getEventBus === "function") {
+      const eventBus = this.app.getEventBus();
+      if (eventBus) {
+        eventBus.emit("feature-flags:changed");
+      }
+    }
   }
 }
 

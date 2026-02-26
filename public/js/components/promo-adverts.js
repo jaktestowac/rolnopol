@@ -15,7 +15,10 @@
       maxDelaySeconds: 5,
       delaySeconds: 3,
       cookieKey: "rolnopolPromoAdvertSeen_home",
-      videoUrls: ["/images/rolnopol_ad2.mp4", "/images/rolnopol_ad3.mp4"],
+      videoUrls: [
+        { url: "/images/rolnopol_ad2.mp4", title: "Welcome to Rolnopol" },
+        { url: "/images/rolnopol_ad3.mp4", title: "Welcome to Rolnopol" },
+      ],
       videoAlt: "Rolnopol Home Feature Demo",
     },
     alerts: {
@@ -30,13 +33,32 @@
     },
     general: {
       flag: "promoAdvertsGeneralAdEnabled",
-      title: "Discover Rolnopol",
+      title: "Discover Rolnopol Features",
       minDelaySeconds: 3,
       maxDelaySeconds: 6,
       delaySeconds: 4,
       cookieKey: "rolnopolPromoAdvertSeen_general",
-      videoUrls: ["/images/rolnopol_ad2.mp4", "/images/rolnopol_ad3.mp4", "/images/rolnopol_ad4.mp4", "/images/rolnopol_ad5.mp4"],
+      videoUrls: [
+        { url: "/images/rolnopol_ad2.mp4", title: "Discover Rolnopol Features" },
+        { url: "/images/rolnopol_ad3.mp4", title: "Discover Rolnopol Features" },
+        { url: "/images/rolnopol_ad4.mp4", title: "Discover Rolnopol Features" },
+        { url: "/images/rolnopol_ad5.mp4", title: "Discover Rolnopol Features" },
+        { url: "/images/rolnopol_ad6.mp4", title: "Discover Rolnopol Features" },
+        { url: "/images/rolnopol_ad7.mp4", title: "Discover Rolnopol Features" },
+        { url: "/images/rolnopol_ad8.mp4", title: "Discover Rolnopol Features" },
+        { url: "/images/rolnopol_ad9.mp4", title: "Discover AI_Testers" },
+      ],
       videoAlt: "Rolnopol General Feature Demo",
+    },
+    newProducts: {
+      flag: "promoAdvertsNewProductsEnabled",
+      title: "Discover New Products",
+      minDelaySeconds: 3,
+      maxDelaySeconds: 6,
+      delaySeconds: 4,
+      cookieKey: "newProductAdvertSeen_general",
+      videoUrls: [{ url: "/images/rolnopol_ad9.mp4", title: "Discover AI_Testers" }],
+      videoAlt: "Discover New Products",
     },
   };
 
@@ -52,6 +74,7 @@
 
   /**
    * Get video URL for promo config (randomly selected if multiple available)
+   * Handles both old format (string arrays) and new format (object arrays with url property)
    */
   function getVideoUrl(config) {
     if (!config) {
@@ -59,10 +82,28 @@
     }
     // Prefer videoUrls array if available
     if (Array.isArray(config.videoUrls) && config.videoUrls.length > 0) {
-      return getRandomItem(config.videoUrls);
+      const selected = getRandomItem(config.videoUrls);
+      // Handle both object format { url, title } and plain string format
+      return typeof selected === "object" ? selected.url : selected;
     }
     // Fall back to single videoUrl
     return config.videoUrl || null;
+  }
+
+  /**
+   * Get video title for promo config (from selected video if available)
+   * Falls back to config title if video-specific title is not available
+   */
+  function getVideoTitle(config, selectedVideo) {
+    if (!config) {
+      return null;
+    }
+    // If selectedVideo is provided and has a title property, use it
+    if (selectedVideo && typeof selectedVideo === "object" && selectedVideo.title) {
+      return selectedVideo.title;
+    }
+    // Fall back to config title
+    return config.title || null;
   }
 
   /**
@@ -289,19 +330,27 @@
     const titleEl = modal.querySelector(".promo-modal__title");
     const videoEl = modal.querySelector("#promo-video");
 
-    if (titleEl) {
-      titleEl.textContent = config.title;
-    }
-
     if (videoEl) {
       // Clear existing sources
       videoEl.innerHTML = "";
+
+      // Get selected video item (might be string or object)
+      let selectedVideo = null;
+      if (Array.isArray(config.videoUrls) && config.videoUrls.length > 0) {
+        selectedVideo = getRandomItem(config.videoUrls);
+      }
 
       // Get video URL (randomly selected if multiple available)
       const videoUrl = getVideoUrl(config);
       if (!videoUrl) {
         console.warn(`No video URL configured for page: ${pageKey}`);
         return;
+      }
+
+      // Set title: use video-specific title if available, otherwise use config title
+      if (titleEl) {
+        const videoTitle = getVideoTitle(config, selectedVideo);
+        titleEl.textContent = videoTitle || "Discover Rolnopol";
       }
 
       // Create and add source element
@@ -312,6 +361,9 @@
 
       // Reset video element so browser re-reads the source
       videoEl.load();
+    } else if (titleEl) {
+      // If no video element but title element exists, just set the config title
+      titleEl.textContent = config.title || "Discover Rolnopol";
     }
 
     modal.style.display = "flex";
@@ -348,7 +400,7 @@
   async function initPromoAdverts() {
     try {
       // Get current page key
-      const pageKey = getCurrentPageKey();
+      let pageKey = getCurrentPageKey();
       if (!pageKey) {
         // Current page doesn't have a promo configured
         return;
@@ -382,7 +434,21 @@
             if (typeof service.init === "function") {
               await service.init();
             }
-            const isEnabled = await isPromoFlagEnabled(service, config.flag, false);
+            let isEnabled = await isPromoFlagEnabled(service, config.flag, false);
+
+            // If page-specific flag is disabled, fall back to general flag
+            if (!isEnabled && pageKey !== "general") {
+              const generalConfig = PROMO_CONFIG["general"];
+              if (generalConfig) {
+                const generalEnabled = await isPromoFlagEnabled(service, generalConfig.flag, false);
+                if (generalEnabled) {
+                  // Switch to general config and page key
+                  pageKey = "general";
+                  isEnabled = true;
+                }
+              }
+            }
+
             if (!isEnabled) {
               return;
             }
@@ -395,17 +461,37 @@
         }
       } else {
         // Check if feature flag is enabled
-        const isEnabled = await isPromoFlagEnabled(featureFlagsService, config.flag, false);
+        let isEnabled = await isPromoFlagEnabled(featureFlagsService, config.flag, false);
+
+        // If page-specific flag is disabled, fall back to general flag
+        if (!isEnabled && pageKey !== "general") {
+          const generalConfig = PROMO_CONFIG["general"];
+          if (generalConfig) {
+            const generalEnabled = await isPromoFlagEnabled(featureFlagsService, generalConfig.flag, false);
+            if (generalEnabled) {
+              // Switch to general config and page key
+              pageKey = "general";
+              isEnabled = true;
+            }
+          }
+        }
+
         if (!isEnabled) {
           return;
         }
+      }
+
+      // Re-fetch config in case pageKey was switched to 'general'
+      const finalConfig = PROMO_CONFIG[pageKey];
+      if (!finalConfig) {
+        return;
       }
 
       // Mark as shown first to prevent multiple popups
       // Note: Cookie is actually set when user closes the modal, not when it appears
 
       // Delay showing the popup (could be fixed or randomised within a range)
-      const delayMs = getDelayMs(config);
+      const delayMs = getDelayMs(finalConfig);
       setTimeout(() => {
         showPromoModal(pageKey);
       }, delayMs);
@@ -455,6 +541,7 @@
     module.exports = {
       getRandomItem,
       getVideoUrl,
+      getVideoTitle,
       getDelayMs,
       isPromoFlagEnabled,
     };

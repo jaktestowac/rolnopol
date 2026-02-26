@@ -26,6 +26,10 @@ describe("Feature Flags API", () => {
     expect(res.body.data.groups).toHaveProperty("privacy");
     expect(Array.isArray(res.body.data.groups.privacy)).toBe(true);
     expect(res.body.data.groups.privacy).toContain("cookieConsentBannerEnabled");
+    expect(res.body.data.flags).toHaveProperty("homeModernRestyleEnabled");
+    expect(res.body.data.groups).toHaveProperty("homepage");
+    expect(Array.isArray(res.body.data.groups.homepage)).toBe(true);
+    expect(res.body.data.groups.homepage).toContain("homeModernRestyleEnabled");
     // marketing group should include advert-related flags
     expect(res.body.data.flags).toHaveProperty("promoAdvertsGeneralAdEnabled");
     expect(res.body.data.groups).toHaveProperty("marketing (Ads)");

@@ -107,7 +107,308 @@
         background-position-x: -200%;
       }
     }
+
+    .home-modern-main {
+      margin-bottom: 1.2rem;
+    }
+
+    html.home-modern-prefers-modern #home-legacy-header,
+    html.home-modern-prefers-modern #home-legacy-main {
+      display: none !important;
+    }
+
+    html.home-modern-prefers-modern .js-home-modern-main {
+      display: block !important;
+    }
+
+    .home-modern-hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1.2rem;
+      padding: 1.6rem 1.2rem;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(106, 123, 94, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 20%, rgba(52, 140, 240, 0.12), transparent 55%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 253, 246, 0.9));
+      border: 1px solid rgba(106, 123, 94, 0.18);
+      box-shadow: 0 16px 40px rgba(45, 58, 45, 0.12);
+    }
+
+    .home-modern-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
+      color: #2d3a2d;
+      background: rgba(106, 123, 94, 0.14);
+      border: 1px solid rgba(106, 123, 94, 0.25);
+      margin-bottom: 0.8rem;
+      font-weight: 600;
+    }
+
+    .home-modern-title {
+      margin: 0;
+      font-size: clamp(1.45rem, 2.5vw, 2rem);
+      color: #233023;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .home-modern-subtitle {
+      margin: 0.75rem auto 1rem;
+      max-width: 650px;
+      text-align: center;
+      color: #4d6450;
+      font-size: 1rem;
+      line-height: 1.55;
+    }
+
+    .home-modern-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1.1rem;
+    }
+
+    .home-modern-kpi {
+      border-radius: 0.8rem;
+      border: 1px solid rgba(106, 123, 94, 0.22);
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(6px);
+      padding: 0.75rem 0.7rem;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .home-modern-kpi:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 22px rgba(45, 58, 45, 0.1);
+    }
+
+    .home-modern-kpi__icon {
+      font-size: 1.1rem;
+      color: #6a7b5e;
+      margin-bottom: 0.25rem;
+    }
+
+    .home-modern-kpi__value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #223022;
+      min-height: 1.4rem;
+    }
+
+    .home-modern-kpi__label {
+      color: #617662;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 0.2rem;
+    }
+
+    .home-modern-actions {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+
+    .home-modern-note {
+      text-align: center;
+      color: #5b6f5d;
+      font-size: 0.84rem;
+      margin-top: 0.8rem;
+    }
+
+    /* Modern Header Styles */
+    .home-modern-header {
+      position: relative;
+      overflow: hidden;
+      /* animated multicolour background for a lively effect */
+      background:
+        radial-gradient(circle at 0% 0%, rgba(106, 123, 94, 0.12), transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(52, 140, 240, 0.1), transparent 50%),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.98), rgba(248, 253, 246, 0.95));
+      background-size: 200% 200%;
+      animation: bgMorph 20s infinite alternate;
+      border-bottom: 1px solid rgba(106, 123, 94, 0.15);
+      padding: 2.5rem 1.5rem;
+      margin: 0 -1.5rem 1.5rem -1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 32px rgba(45, 58, 45, 0.1);
+      backdrop-filter: blur(4px);
+    }
+
+    .home-modern-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(106, 123, 94, 0.3), transparent);
+    }
+
+    /* floating glow effect behind the header */
+    .home-modern-header::after {
+      content: '';
+      position: absolute;
+      inset: -10px;
+      background: radial-gradient(circle at center, rgba(106, 123, 94, 0.05), transparent 70%);
+      filter: blur(16px);
+      z-index: -1;
+    }
+
+    .home-modern-header__branding {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .home-modern-header__icon {
+      font-size: 2.8rem;
+      background: linear-gradient(135deg, #6a7b5e, #4d6450);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .home-modern-header__icon i {
+      display: inline-block;
+      transition: transform 0.3s ease;
+    }
+
+    .home-modern-header__title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #1a3a1a;
+      margin: 0;
+      letter-spacing: -0.01em;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+      transition: color 0.3s ease;
+    }
+
+    .home-modern-header__title:hover {
+      color: #2d3a2d;
+    }
+
+    .home-modern-header__tagline {
+      font-size: 0.95rem;
+      color: #5b6f5d;
+      margin: 0.5rem 0 0 0;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      max-width: 550px;
+      margin-left: auto;
+      margin-right: auto;
+      opacity: 0.85;
+      transition: opacity 0.3s ease;
+    }
+
+    .home-modern-header__tagline:hover {
+      opacity: 1;
+    }
+
+    .home-modern-header__accent {
+      display: inline-block;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg,
+          transparent,
+          #6a7b5e 20%,
+          #8ba888 50%,
+          #6a7b5e 80%,
+          transparent);
+      background-size: 200% 100%;
+      animation: accentMove 4s infinite linear;
+      margin-top: 1.2rem;
+      border-radius: 2px;
+    }
+
+    /* animations */
+    @keyframes bgMorph {
+      0% {
+        background-position: 0% 0%;
+      }
+
+      50% {
+        background-position: 100% 100%;
+      }
+
+      100% {
+        background-position: 0% 0%;
+      }
+    }
+
+    @keyframes accentMove {
+      from {
+        background-position: 0 0;
+      }
+
+      to {
+        background-position: -200% 0;
+      }
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .home-modern-header__wave {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 50px;
+      pointer-events: none;
+      z-index: 1;
+    }
   </style>
+  <script>
+    (function () {
+      const FEATURE_FLAGS_CACHE_KEY = "rolnopol.featureFlagsCache.v1";
+      const FEATURE_FLAGS_MAX_AGE_MS = 30000;
+
+      try {
+        const raw = localStorage.getItem(FEATURE_FLAGS_CACHE_KEY);
+        if (!raw) {
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") {
+          return;
+        }
+
+        const flags = parsed.flags;
+        const timestamp = Number(parsed.timestamp);
+        const isFresh = Number.isFinite(timestamp) && Date.now() - timestamp < FEATURE_FLAGS_MAX_AGE_MS;
+
+        if (isFresh && flags && flags.homeModernRestyleEnabled === true) {
+          document.documentElement.classList.add("home-modern-prefers-modern");
+        }
+      } catch (error) {
+        // Ignore cache parsing/storage issues.
+      }
+    })();
+  </script>
 </head>
 
 <body class="bg-agri-pattern">
@@ -115,7 +416,7 @@
   <div id="header-component"></div>
 
   <div class="container" style="margin-top: 1rem; max-width: 900px">
-    <header class="header glass" style="
+    <header id="home-legacy-header" class="header glass" style="
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -136,7 +437,7 @@
       </div>
     </header>
 
-    <main class="main" style="padding-top: 0">
+    <main id="home-legacy-main" class="main" style="padding-top: 0">
       <div class="welcome-section bg-futuristic-alt glass fade-in farm-pattern-overlay" style="margin-bottom: 1.2rem; padding: 1.5rem 1.2rem; min-height: unset">
         <h2 style="
               display: flex;
@@ -336,6 +637,8 @@
       </div>
     </main>
 
+    <main class="main home-modern-main js-home-modern-main" data-feature-flag="homeModernRestyleEnabled" data-feature-flag-default="false" style="display: none; padding-top: 0"></main>
+
     <!-- Dynamic Footer Component -->
     <div id="footer-component"></div>
   </div>
@@ -515,26 +818,232 @@
   </script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const video = document.getElementById("home-welcome-video");
-      const skeleton = document.getElementById("home-welcome-video-skeleton");
+      const videoPairs = [
+        {
+          video: document.getElementById("home-welcome-video"),
+          skeleton: document.getElementById("home-welcome-video-skeleton"),
+        },
+        {
+          video: document.getElementById("modern-home-welcome-video"),
+          skeleton: document.getElementById("modern-home-welcome-video-skeleton"),
+        },
+      ];
 
-      if (!video || !skeleton) {
+      videoPairs.forEach(({ video, skeleton }) => {
+        if (!video || !skeleton) {
+          return;
+        }
+
+        const revealVideo = () => {
+          video.style.display = "block";
+          video.classList.add("is-loaded");
+          skeleton.classList.add("is-hidden");
+        };
+
+        if (video.readyState >= 1) {
+          revealVideo();
+          return;
+        }
+
+        video.addEventListener("loadeddata", revealVideo, { once: true });
+        video.addEventListener("error", revealVideo, { once: true });
+      });
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const legacyMain = document.getElementById("home-legacy-main");
+      const modernMain = document.querySelector(".js-home-modern-main");
+      if (modernMain && modernMain.id !== "home-modern-main") {
+        modernMain.id = "home-modern-main";
+      }
+
+      if (modernMain) {
+        modernMain.innerHTML = `
+          <header class="home-modern-header">
+            <div class="home-modern-header__branding">
+              <div class="home-modern-header__icon">
+                <i class="fas fa-tractor"></i>
+              </div>
+              <div style="text-align: left">
+                <h1 class="home-modern-header__title">Rolnopol</h1>
+                <p class="home-modern-header__tagline">Modern Agricultural Management Platform</p>
+              </div>
+            </div>
+            <div class="home-modern-header__accent"></div>
+            <!-- decorative wavy bottom edge -->
+            <svg class="home-modern-header__wave" viewBox="0 0 1200 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,0 C300,100 900,0 1200,100 L1200,0 L0,0 Z" fill="#f4f7f2" />
+            </svg>
+          </header>
+
+          <section class="home-modern-hero glass fade-in">
+            
+            <p class="home-modern-subtitle">
+              A fresher and more elegant view of your farm operations - with faster insight into users, fields, staff, and livestock.
+            </p>
+
+            <div data-feature-flag="homeWelcomeVideoEnabled" data-feature-flag-default="false" style="margin-top: 0.9rem">
+              <div class="welcome-video-block">
+                <div id="modern-home-welcome-video-skeleton" class="welcome-video-skeleton" aria-hidden="true"></div>
+                <video id="modern-home-welcome-video" class="welcome-video" style="display: none" controls preload="metadata">
+                  <source src="/images/rolnopol_ad.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+
+            <div class="home-modern-grid">
+              <article class="home-modern-kpi" title="Total number of registered users in the Rolnopol agricultural management system">
+                <div class="home-modern-kpi__icon"><i class="fas fa-users"></i></div>
+                <div id="modern-stat-users" class="home-modern-kpi__value">-</div>
+                <div class="home-modern-kpi__label">Users</div>
+              </article>
+              <article class="home-modern-kpi" title="Total number of farms and agricultural properties managed through the platform">
+                <div class="home-modern-kpi__icon"><i class="fas fa-tractor"></i></div>
+                <div id="modern-stat-farms" class="home-modern-kpi__value">-</div>
+                <div class="home-modern-kpi__label">Farms</div>
+              </article>
+              <article class="home-modern-kpi" title="Total agricultural land area managed across all farms">
+                <div class="home-modern-kpi__icon"><i class="fas fa-ruler-combined"></i></div>
+                <div id="modern-stat-area" class="home-modern-kpi__value">-</div>
+                <div class="home-modern-kpi__label">Area (ha)</div>
+              </article>
+              <article class="home-modern-kpi" title="Total number of staff members and workers employed across all agricultural operations">
+                <div class="home-modern-kpi__icon"><i class="fas fa-users-cog"></i></div>
+                <div id="modern-stat-staff" class="home-modern-kpi__value">-</div>
+                <div class="home-modern-kpi__label">Staff</div>
+              </article>
+              <article class="home-modern-kpi" title="Total number of livestock animals including cattle, pigs, chickens, and other farm animals">
+                <div class="home-modern-kpi__icon"><i class="fas fa-cow"></i></div>
+                <div id="modern-stat-animals" class="home-modern-kpi__value">-</div>
+                <div class="home-modern-kpi__label">Animals</div>
+              </article>
+            </div>
+
+            <div data-feature-flag="homeStatsSectionEnabled" data-feature-flag-default="false" style="margin-top: 1rem; border-top: 1px dashed rgba(106, 123, 94, 0.25); padding-top: 0.95rem">
+              <h3 style="margin: 0 0 0.75rem 0; color: #2d3a2d; font-size: 1rem; text-align: center">
+                <i class="fas fa-chart-line" style="margin-right: 0.4rem; color: #6a7b5e"></i>
+                Advanced Farm Intelligence
+              </h3>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.7rem">
+                <div class="stat-block" style="text-align: center; padding: 0.65rem; border-radius: 0.6rem; background: rgba(106, 123, 94, 0.08)" title="Average land area managed by one farm account.">
+                  <div style="font-size: 0.8rem; color: #6a7b5e">Avg area / farm</div>
+                  <div id="modern-advanced-stat-area-per-farm" style="font-size: 1.1rem; font-weight: 700; color: #2d3a2d">-</div>
+                </div>
+                <div class="stat-block" style="text-align: center; padding: 0.65rem; border-radius: 0.6rem; background: rgba(106, 123, 94, 0.08)" title="Average number of animals handled by one staff member.">
+                  <div style="font-size: 0.8rem; color: #6a7b5e">Animals / staff</div>
+                  <div id="modern-advanced-stat-animals-per-staff" style="font-size: 1.1rem; font-weight: 700; color: #2d3a2d">-</div>
+                </div>
+                <div class="stat-block" style="text-align: center; padding: 0.65rem; border-radius: 0.6rem; background: rgba(106, 123, 94, 0.08)" title="Average value of currently active marketplace offers.">
+                  <div style="font-size: 0.8rem; color: #6a7b5e">Avg offer value</div>
+                  <div id="modern-advanced-stat-offer-value" style="font-size: 1.1rem; font-weight: 700; color: #2d3a2d">-</div>
+                </div>
+                <div class="stat-block" style="text-align: center; padding: 0.65rem; border-radius: 0.6rem; background: rgba(106, 123, 94, 0.08)" title="Number of completed marketplace transactions.">
+                  <div style="font-size: 0.8rem; color: #6a7b5e">Completed deals</div>
+                  <div id="modern-advanced-stat-completed-transactions" style="font-size: 1.1rem; font-weight: 700; color: #2d3a2d">-</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="home-modern-actions">
+              <a href="/register.html" class="btn btn-agri"><i class="fas fa-user-plus" style="margin-right: 0.35rem"></i>Start Free</a>
+              <a href="/login.html" class="btn btn-outline"><i class="fas fa-sign-in-alt" style="margin-right: 0.35rem"></i>Sign In</a>
+            </div>
+
+            <p class="home-modern-note">
+              <i class="fas fa-info-circle" style="margin-right: 0.5rem"></i>
+              Experience the future of farm management with Rolnopol's modern dashboard.
+            </p>
+          </section>
+        `;
+
+        // Setup video loading for modern video elements (after innerHTML is set)
+        setTimeout(() => {
+          const modernVideo = document.getElementById("modern-home-welcome-video");
+          const modernSkeleton = document.getElementById("modern-home-welcome-video-skeleton");
+          if (modernVideo && modernSkeleton) {
+            const revealModernVideo = () => {
+              modernVideo.style.display = "block";
+              modernVideo.classList.add("is-loaded");
+              modernSkeleton.classList.add("is-hidden");
+            };
+
+            if (modernVideo.readyState >= 1) {
+              revealModernVideo();
+            } else {
+              modernVideo.addEventListener("loadeddata", revealModernVideo, { once: true });
+              modernVideo.addEventListener("error", revealModernVideo, { once: true });
+            }
+          }
+        }, 0);
+      }
+
+      if (!legacyMain || !modernMain) {
         return;
       }
 
-      const revealVideo = () => {
-        video.style.display = "block";
-        video.classList.add("is-loaded");
-        skeleton.classList.add("is-hidden");
+      const legacyHeader = document.getElementById("home-legacy-header");
+
+      const applyToggle = (enabled) => {
+        document.documentElement.classList.toggle("home-modern-prefers-modern", enabled === true);
+
+        if (enabled) {
+          legacyMain.style.display = "none";
+          if (legacyHeader) legacyHeader.style.display = "none";
+          modernMain.style.removeProperty("display");
+          modernMain.setAttribute("data-feature-flag-enabled", "true");
+          modernMain.removeAttribute("data-feature-flag-hidden");
+        } else {
+          legacyMain.style.removeProperty("display");
+          if (legacyHeader) legacyHeader.style.removeProperty("display");
+        }
       };
 
-      if (video.readyState >= 1) {
-        revealVideo();
-        return;
-      }
+      const waitForFeatureFlagsService = async (maxAttempts = 40) => {
+        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+          const service = window.App?.getModule?.("featureFlagsService");
+          if (service && typeof service.isEnabled === "function") {
+            return service;
+          }
+          await new Promise((resolve) => setTimeout(resolve, attempt < 15 ? 50 : 150));
+        }
+        return null;
+      };
 
-      video.addEventListener("loadeddata", revealVideo, { once: true });
-      video.addEventListener("error", revealVideo, { once: true });
+      const checkAndApplyModernLayout = async (featureFlagsService) => {
+        if (!featureFlagsService) {
+          return;
+        }
+        try {
+          const modernEnabled = await featureFlagsService.isEnabled("homeModernRestyleEnabled", false);
+          applyToggle(modernEnabled === true);
+        } catch (error) {
+          // Keep legacy layout on failure.
+        }
+      };
+
+      (async () => {
+        const featureFlagsService = await waitForFeatureFlagsService();
+        if (!featureFlagsService) {
+          return;
+        }
+
+        // Check and apply the toggle on initial page load
+        await checkAndApplyModernLayout(featureFlagsService);
+
+        // Listen for feature flag changes and re-apply instantly
+        const app = window.App;
+        if (app && typeof app.getEventBus === "function") {
+          const eventBus = app.getEventBus();
+          if (eventBus) {
+            eventBus.on("feature-flags:changed", () => {
+              checkAndApplyModernLayout(featureFlagsService);
+            });
+          }
+        }
+      })();
     });
   </script>
 
@@ -767,22 +1276,42 @@
         if (usersElement && stats.users !== undefined) {
           const safeUsers = safeValue(stats.users);
           animateValue(usersElement, 0, safeUsers, 1500, false, "users");
+          const modernUsersElement = document.getElementById("modern-stat-users");
+          if (modernUsersElement) {
+            animateValue(modernUsersElement, 0, safeUsers, 1500, false, "users");
+          }
         }
         if (farmsElement && stats.farms !== undefined) {
           const safeFarms = safeValue(stats.farms);
           animateValue(farmsElement, 0, safeFarms, 1500, false, "farms");
+          const modernFarmsElement = document.getElementById("modern-stat-farms");
+          if (modernFarmsElement) {
+            animateValue(modernFarmsElement, 0, safeFarms, 1500, false, "farms");
+          }
         }
         if (areaElement && stats.area !== undefined) {
           const safeArea = safeValue(stats.area);
           animateValue(areaElement, 0, safeArea, 1500, true); // true for area formatting
+          const modernAreaElement = document.getElementById("modern-stat-area");
+          if (modernAreaElement) {
+            animateValue(modernAreaElement, 0, safeArea, 1500, true);
+          }
         }
         if (staffElement && stats.staff !== undefined) {
           const safeStaff = safeValue(stats.staff);
           animateValue(staffElement, 0, safeStaff, 1500, false, "staff");
+          const modernStaffElement = document.getElementById("modern-stat-staff");
+          if (modernStaffElement) {
+            animateValue(modernStaffElement, 0, safeStaff, 1500, false, "staff");
+          }
         }
         if (animalsElement && stats.animals !== undefined) {
           const safeAnimals = safeValue(stats.animals);
           animateValue(animalsElement, 0, safeAnimals, 1500, false, "animals");
+          const modernAnimalsElement = document.getElementById("modern-stat-animals");
+          if (modernAnimalsElement) {
+            animateValue(modernAnimalsElement, 0, safeAnimals, 1500, false, "animals");
+          }
         }
 
         const advancedStats = stats.advanced || {};
@@ -802,6 +1331,10 @@
         const advancedAnimalsPerStaffElement = document.getElementById("advanced-stat-animals-per-staff");
         const advancedOfferValueElement = document.getElementById("advanced-stat-offer-value");
         const advancedCompletedTransactionsElement = document.getElementById("advanced-stat-completed-transactions");
+        const modernAdvancedAreaPerFarmElement = document.getElementById("modern-advanced-stat-area-per-farm");
+        const modernAdvancedAnimalsPerStaffElement = document.getElementById("modern-advanced-stat-animals-per-staff");
+        const modernAdvancedOfferValueElement = document.getElementById("modern-advanced-stat-offer-value");
+        const modernAdvancedCompletedTransactionsElement = document.getElementById("modern-advanced-stat-completed-transactions");
 
         if (advancedAreaPerFarmElement) {
           advancedAreaPerFarmElement.textContent = `${areaPerFarmValue.toLocaleString("pl-PL", {
@@ -820,6 +1353,24 @@
         }
         if (advancedCompletedTransactionsElement) {
           advancedCompletedTransactionsElement.textContent = completedTransactions.toLocaleString("pl-PL");
+        }
+        if (modernAdvancedAreaPerFarmElement) {
+          modernAdvancedAreaPerFarmElement.textContent = `${areaPerFarmValue.toLocaleString("pl-PL", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 2,
+          })} ha`;
+        }
+        if (modernAdvancedAnimalsPerStaffElement) {
+          modernAdvancedAnimalsPerStaffElement.textContent = animalsPerStaffValue.toLocaleString("pl-PL", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 2,
+          });
+        }
+        if (modernAdvancedOfferValueElement) {
+          modernAdvancedOfferValueElement.textContent = formatCurrency(avgOfferValue);
+        }
+        if (modernAdvancedCompletedTransactionsElement) {
+          modernAdvancedCompletedTransactionsElement.textContent = completedTransactions.toLocaleString("pl-PL");
         }
 
         // Show staff info if available with safe values
@@ -877,6 +1428,11 @@
           { id: "stat-area", isArea: true, type: "" },
           { id: "stat-staff", isArea: false, type: "staff" },
           { id: "stat-animals", isArea: false, type: "animals" },
+          { id: "modern-stat-users", isArea: false, type: "users" },
+          { id: "modern-stat-farms", isArea: false, type: "farms" },
+          { id: "modern-stat-area", isArea: true, type: "" },
+          { id: "modern-stat-staff", isArea: false, type: "staff" },
+          { id: "modern-stat-animals", isArea: false, type: "animals" },
         ];
         elements.forEach((item) => {
           const element = document.getElementById(item.id);
@@ -891,6 +1447,10 @@
           "advanced-stat-animals-per-staff",
           "advanced-stat-offer-value",
           "advanced-stat-completed-transactions",
+          "modern-advanced-stat-area-per-farm",
+          "modern-advanced-stat-animals-per-staff",
+          "modern-advanced-stat-offer-value",
+          "modern-advanced-stat-completed-transactions",
         ];
         advancedFallbackIds.forEach((id) => {
           const element = document.getElementById(id);
