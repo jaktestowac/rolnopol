@@ -26,13 +26,14 @@ describe("feature-flags.service", () => {
         financialCsvExportEnabled: false,
         prometheusMetricsEnabled: false,
         homeWelcomeVideoEnabled: false,
-         : false,
+        homeStatsSectionEnabled: false,
         homeModernRestyleEnabled: false,
         messengerEnabled: false,
         cookieConsentBannerEnabled: false,
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
+        promoAdvertsBottomBannerEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -76,6 +77,7 @@ describe("feature-flags.service", () => {
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
+        promoAdvertsBottomBannerEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -124,6 +126,7 @@ describe("feature-flags.service", () => {
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
+        promoAdvertsBottomBannerEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -166,6 +169,7 @@ describe("feature-flags.service", () => {
         messengerEnabled: false,
         homeModernRestyleEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
+        promoAdvertsBottomBannerEnabled: false,
       }),
       updatedAt: now.toISOString(),
     });
@@ -197,6 +201,7 @@ describe("feature-flags.service", () => {
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
+        promoAdvertsBottomBannerEnabled: false,
       },
       updatedAt: "2026-02-07T00:00:00.000Z",
     };

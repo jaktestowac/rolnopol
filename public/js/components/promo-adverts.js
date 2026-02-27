@@ -62,6 +62,15 @@
     },
   };
 
+  const BOTTOM_BANNER_CONFIG = {
+    id: "promo-bottom-banner",
+    flag: "promoAdvertsBottomBannerEnabled",
+    title: "Rolnopol Promo",
+    message: "🚜 Discover smarter farm workflows with Rolnopol. Explore new features and boost your daily operations!",
+    ctaLabel: "Learn more",
+    ctaHref: "/docs.html",
+  };
+
   /**
    * Get random item from array
    */
@@ -399,6 +408,12 @@
    */
   async function initPromoAdverts() {
     try {
+      // Get feature flags service early so we can initialize bottom banner independently
+      const featureFlagsService =
+        window.App && typeof window.App.getModule === "function" ? window.App.getModule("featureFlagsService") : null;
+
+      await initBottomBanner(featureFlagsService);
+
       // Get current page key
       let pageKey = getCurrentPageKey();
       if (!pageKey) {
@@ -423,9 +438,6 @@
       }
 
       // Get feature flags service
-      const featureFlagsService =
-        window.App && typeof window.App.getModule === "function" ? window.App.getModule("featureFlagsService") : null;
-
       if (!featureFlagsService) {
         // Service not available, try waiting for it
         if (window.FeatureFlagsService && typeof window.FeatureFlagsService === "function") {
@@ -528,6 +540,55 @@
     }
 
     return 3000;
+  }
+
+  function removeBottomBanner() {
+    const existing = document.getElementById(BOTTOM_BANNER_CONFIG.id);
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing);
+    }
+  }
+
+  function createBottomBanner() {
+    if (document.getElementById(BOTTOM_BANNER_CONFIG.id)) {
+      return;
+    }
+
+    const banner = document.createElement("aside");
+    banner.id = BOTTOM_BANNER_CONFIG.id;
+    banner.className = "promo-bottom-banner";
+    banner.setAttribute("role", "complementary");
+    banner.setAttribute("aria-label", "Promotional banner");
+
+    banner.innerHTML = `
+      <div class="promo-bottom-banner__content">
+        <div class="promo-bottom-banner__text">
+          <strong class="promo-bottom-banner__title">${BOTTOM_BANNER_CONFIG.title}</strong>
+          <span class="promo-bottom-banner__message">${BOTTOM_BANNER_CONFIG.message}</span>
+        </div>
+        <div class="promo-bottom-banner__actions">
+          <a class="promo-bottom-banner__cta" href="${BOTTOM_BANNER_CONFIG.ctaHref}">${BOTTOM_BANNER_CONFIG.ctaLabel}</a>
+          <button type="button" class="promo-bottom-banner__close" aria-label="Close promotional banner">×</button>
+        </div>
+      </div>
+    `;
+
+    const closeBtn = banner.querySelector(".promo-bottom-banner__close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", removeBottomBanner);
+    }
+
+    document.body.appendChild(banner);
+  }
+
+  async function initBottomBanner(featureFlagsService) {
+    const enabled = await isPromoFlagEnabled(featureFlagsService, BOTTOM_BANNER_CONFIG.flag, false);
+    if (!enabled) {
+      removeBottomBanner();
+      return;
+    }
+
+    createBottomBanner();
   }
 
   // Export for external use in browser context

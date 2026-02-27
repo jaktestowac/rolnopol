@@ -18,7 +18,8 @@
     "messengerEnabled": false,
     "promoAdvertsHomeEnabled": false,
     "promoAdvertsAlertsEnabled": false,
-    "promoAdvertsGeneralAdEnabled": false
+    "promoAdvertsGeneralAdEnabled": false,
+    "promoAdvertsBottomBannerEnabled": false
   },
   "updatedAt": "2026-02-25T16:48:04.159Z"
 }

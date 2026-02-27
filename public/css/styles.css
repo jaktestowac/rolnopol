@@ -1517,6 +1517,70 @@ body {
   transform: translateY(0);
 }
 
+/* Bottom Promo Banner (kept behind cookie consent with lower z-index) */
+.promo-bottom-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1040;
+  background: linear-gradient(90deg, rgba(34, 48, 34, 0.97), rgba(39, 74, 57, 0.97));
+  color: #f7fff8;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.promo-bottom-banner__content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.promo-bottom-banner__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.promo-bottom-banner__title {
+  font-size: 0.95rem;
+}
+
+.promo-bottom-banner__message {
+  font-size: 0.85rem;
+  opacity: 0.95;
+}
+
+.promo-bottom-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.promo-bottom-banner__cta {
+  text-decoration: none;
+  color: #123428;
+  background: #d9f8c8;
+  border-radius: 0.45rem;
+  padding: 0.35rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.promo-bottom-banner__close {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: transparent;
+  color: #fff;
+  border-radius: 0.4rem;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .cookie-consent-banner__content {
     flex-direction: column;
@@ -1531,6 +1595,16 @@ body {
 
   .cookie-consent-banner__accept {
     flex-shrink: 0;
+  }
+
+  .promo-bottom-banner__content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .promo-bottom-banner__actions {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 

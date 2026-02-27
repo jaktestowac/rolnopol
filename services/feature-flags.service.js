@@ -21,6 +21,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   promoAdvertsHomeEnabled: "Enable or disable Rolnopol promotional popups on home/dashboard pages",
   promoAdvertsAlertsEnabled: "Enable or disable Rolnopol promotional popups on alerts pages",
   promoAdvertsGeneralAdEnabled: "Enable or disable Rolnopol promotional popups on any general page",
+  promoAdvertsBottomBannerEnabled: "Enable or disable Rolnopol promotional banner fixed at the bottom of pages",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -34,7 +35,12 @@ const FEATURE_FLAG_GROUPS = {
   monitoring: ["prometheusMetricsEnabled"],
   communication: ["messengerEnabled"],
   privacy: ["cookieConsentBannerEnabled"],
-  "marketing (Ads)": ["promoAdvertsHomeEnabled", "promoAdvertsAlertsEnabled", "promoAdvertsGeneralAdEnabled"],
+  "marketing (Ads)": [
+    "promoAdvertsHomeEnabled",
+    "promoAdvertsAlertsEnabled",
+    "promoAdvertsGeneralAdEnabled",
+    "promoAdvertsBottomBannerEnabled",
+  ],
 };
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -57,6 +63,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   promoAdvertsHomeEnabled: false,
   promoAdvertsAlertsEnabled: false,
   promoAdvertsGeneralAdEnabled: false,
+  promoAdvertsBottomBannerEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {
