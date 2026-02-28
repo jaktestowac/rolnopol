@@ -59,12 +59,7 @@ class MarketplaceController {
       );
     } catch (error) {
       logger.logError("Error creating marketplace offer:", error);
-      return sendError(
-        req,
-        res,
-        error.statusCode || 500,
-        error.message || "Failed to create offer",
-      );
+      return sendError(req, res, error.statusCode || 500, error.message || "Failed to create offer");
     }
   }
 
@@ -82,12 +77,7 @@ class MarketplaceController {
       });
     } catch (error) {
       logger.logError("Error buying item from marketplace:", error);
-      return sendError(
-        req,
-        res,
-        error.statusCode || 500,
-        error.message || "Failed to complete purchase",
-      );
+      return sendError(req, res, error.statusCode || 500, error.message || "Failed to complete purchase");
     }
   }
 
@@ -104,12 +94,7 @@ class MarketplaceController {
       });
     } catch (error) {
       logger.logError("Error cancelling offer:", error);
-      return sendError(
-        req,
-        res,
-        error.statusCode || 500,
-        error.message || "Failed to cancel offer",
-      );
+      return sendError(req, res, error.statusCode || 500, error.message || "Failed to cancel offer");
     }
   }
 
@@ -119,8 +104,7 @@ class MarketplaceController {
   async getTransactionHistory(req, res) {
     try {
       const userId = req.user.userId;
-      const transactions =
-        await marketplaceService.getTransactionHistory(userId);
+      const transactions = await marketplaceService.getTransactionHistory(userId);
       return sendSuccess(req, res, {
         transactions: transactions.userTransactions,
         total: transactions.userTransactions.length,
@@ -139,10 +123,21 @@ class MarketplaceController {
       if (!req.user.isAdmin) {
         return sendError(req, res, 403, "Forbidden: Admin access required");
       }
+      const page = Math.max(1, Number(req.query.page || 1));
+      const pageSize = Math.min(200, Math.max(1, Number(req.query.pageSize || 50)));
+      const offset = (page - 1) * pageSize;
+
       const offers = await marketplaceService.getAllOffersAdmin(req.query);
+      const allItems = Array.isArray(offers.enrichedOffers) ? offers.enrichedOffers : [];
+      const pagedItems = allItems.slice(offset, offset + pageSize);
+
       return sendSuccess(req, res, {
-        offers: offers.enrichedOffers,
-        total: offers.enrichedOffers.length,
+        offers: pagedItems,
+        items: pagedItems,
+        total: allItems.length,
+        page,
+        pageSize,
+        hasMore: offset + pagedItems.length < allItems.length,
       });
     } catch (error) {
       logger.logError("Error getting all marketplace offers (admin):", error);
@@ -158,24 +153,25 @@ class MarketplaceController {
       if (!req.user.isAdmin) {
         return sendError(req, res, 403, "Forbidden: Admin access required");
       }
-      const transactions = await marketplaceService.getAllTransactionsAdmin(
-        req.query,
-      );
+      const page = Math.max(1, Number(req.query.page || 1));
+      const pageSize = Math.min(200, Math.max(1, Number(req.query.pageSize || 50)));
+      const offset = (page - 1) * pageSize;
+
+      const transactions = await marketplaceService.getAllTransactionsAdmin(req.query);
+      const allItems = Array.isArray(transactions.transactions) ? transactions.transactions : [];
+      const pagedItems = allItems.slice(offset, offset + pageSize);
+
       return sendSuccess(req, res, {
-        transactions: transactions.transactions,
-        total: transactions.transactions.length,
+        transactions: pagedItems,
+        items: pagedItems,
+        total: allItems.length,
+        page,
+        pageSize,
+        hasMore: offset + pagedItems.length < allItems.length,
       });
     } catch (error) {
-      logger.logError(
-        "Error getting all marketplace transactions (admin):",
-        error,
-      );
-      return sendError(
-        req,
-        res,
-        500,
-        "Failed to get all marketplace transactions",
-      );
+      logger.logError("Error getting all marketplace transactions (admin):", error);
+      return sendError(req, res, 500, "Failed to get all marketplace transactions");
     }
   }
 }

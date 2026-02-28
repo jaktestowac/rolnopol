@@ -227,6 +227,8 @@
         </p>
         <p>Uptime: <span id="serverUptime">Loading...</span></p>
         <p>Version: <span id="serverVersion">Loading...</span></p>
+        <p>Node: <span id="nodeVersion">Loading...</span></p>
+        <p>Environment: <span id="environment">Loading...</span></p>
       </div>
       <div class="system-card">
         <h3><i class="fas fa-database"></i> Database Overview</h3>
@@ -330,6 +332,31 @@
         this.lastUpdatedElement.textContent = `${dateString} at ${timeString}`;
       }
 
+      formatLocaleNumber(value, options = {}) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) {
+          return "N/A";
+        }
+        return numeric.toLocaleString("pl-PL", options);
+      }
+
+      formatBytes(bytes) {
+        if (!Number.isFinite(bytes) || bytes < 0) return "N/A";
+        if (bytes === 0) return "0 Bytes";
+
+        const k = 1024;
+        const units = ["Bytes", "KB", "MB", "GB", "TB"];
+        const exponent = Math.min(
+          Math.floor(Math.log(bytes) / Math.log(k)),
+          units.length - 1,
+        );
+        const value = bytes / Math.pow(k, exponent);
+        return `${value.toLocaleString("pl-PL", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })} ${units[exponent]}`;
+      }
+
       async loadSystemData() {
         try {
           const response = await secureFetch("/api/v1/admin/dashboard", {
@@ -344,33 +371,33 @@
             // Update system info from API
             if (document.getElementById("serverUptime")) {
               document.getElementById("serverUptime").textContent =
-                data.systemHealth?.uptimeFormatted || "N/A";
+                data.systemHealth?.uptimeFormatted ?? "N/A";
             }
             if (document.getElementById("memoryUsage")) {
               document.getElementById("memoryUsage").textContent =
-                data.systemHealth?.memoryUsage?.formatted?.heapUsed || "N/A";
+                data.systemHealth?.memoryUsage?.formatted?.heapUsed ?? "N/A";
             }
             if (document.getElementById("nodeVersion")) {
               document.getElementById("nodeVersion").textContent =
-                data.systemHealth?.nodeVersion || "N/A";
+                data.systemHealth?.nodeVersion ?? "N/A";
             }
             if (document.getElementById("environment")) {
               document.getElementById("environment").textContent =
-                data.systemHealth?.environment || "N/A";
+                data.systemHealth?.environment ?? "N/A";
             }
 
             // Update database info
             if (document.getElementById("dbTotalRecords")) {
               document.getElementById("dbTotalRecords").textContent =
-                data.database?.totalRecords || "N/A";
+                data.database?.totalRecords ?? "N/A";
             }
             if (document.getElementById("dbTotalSize")) {
               document.getElementById("dbTotalSize").textContent =
-                data.database?.formattedTotalSize || "N/A";
+                data.database?.formattedTotalSize ?? "N/A";
             }
             if (document.getElementById("dbFileCount")) {
               document.getElementById("dbFileCount").textContent =
-                data.database?.totalFiles || "N/A";
+                data.database?.totalFiles ?? "N/A";
             }
 
             // Update database details section
@@ -378,12 +405,17 @@
 
             // Update performance metrics
             if (document.getElementById("responseTime")) {
+              const avgResponse = Number(
+                data.systemHealth?.responseTimes?.average,
+              );
               document.getElementById("responseTime").textContent =
-                data.performance?.responseTime || "N/A";
+                Number.isFinite(avgResponse) && avgResponse > 0
+                  ? `${avgResponse} ms`
+                  : "N/A";
             }
             if (document.getElementById("cpuUsage")) {
               document.getElementById("cpuUsage").textContent =
-                data.systemHealth?.cpuUsage?.formatted || "N/A";
+                data.systemHealth?.cpuUsage?.formatted ?? "N/A";
             }
 
             // Update last updated timestamp
@@ -426,7 +458,7 @@
       }
 
       updateDatabaseDetails(databaseInfo) {
-        if (!databaseInfo || !databaseInfo.databases) {
+        if (!databaseInfo || !Array.isArray(databaseInfo.databases)) {
           return;
         }
 
@@ -447,9 +479,21 @@
 
         // Generate database cards
         databaseInfo.databases.forEach((db) => {
-          const card = this.createDatabaseCard(db);
-          databaseGrid.appendChild(card);
+          try {
+            const card = this.createDatabaseCard(db);
+            databaseGrid.appendChild(card);
+          } catch (error) {
+            console.error("Failed to render database card", db, error);
+          }
         });
+
+        if (databaseInfo.databases.length === 0) {
+          const emptyState = document.createElement("div");
+          emptyState.className = "alert-enhanced alert-info-enhanced";
+          emptyState.innerHTML =
+            '<i class="fas fa-info-circle"></i><span>No database details available.</span>';
+          databaseGrid.appendChild(emptyState);
+        }
       }
 
       createDatabaseCard(db) {
@@ -459,20 +503,31 @@
         const header = document.createElement("div");
         header.className = "database-card-header";
         header.innerHTML = `
-                    <h4 class="database-name">${db.displayName}</h4>
-                    <span class="database-file">${db.name}</span>
+                    <h4 class="database-name">${db.displayName || "Unknown Database"}</h4>
+                    <span class="database-file">${db.name || "unknown.json"}</span>
                 `;
+
+        const normalizedRecordCount = Number(db?.recordCount);
+        const recordCountText = Number.isFinite(normalizedRecordCount)
+          ? normalizedRecordCount.toLocaleString("pl-PL")
+          : "N/A";
+
+        const sizeText =
+          db?.formattedSize ||
+          (Number.isFinite(Number(db?.fileSize))
+            ? this.formatBytes(Number(db.fileSize))
+            : "N/A");
 
         const stats = document.createElement("div");
         stats.className = "database-stats";
         stats.innerHTML = `
                     <div class="stat-item">
                         <span class="stat-label">Records:</span>
-                        <span class="stat-value">${db.recordCount.toLocaleString("pl-PL")}</span>
+                        <span class="stat-value">${recordCountText}</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Size:</span>
-                        <span class="stat-value">${db.formattedSize}</span>
+                        <span class="stat-value">${sizeText}</span>
                     </div>
                 `;
 
@@ -535,6 +590,10 @@
           totalTokens: "Total Tokens",
           activeUserTokens: "User Tokens",
           activeAdminTokens: "Admin Tokens",
+          symbols: "Symbols",
+          usersWithHoldings: "Users with Holdings",
+          totalQuantity: "Total Quantity",
+          totalInvested: "Total Invested",
         };
 
         return (
@@ -547,9 +606,34 @@
 
       formatStatValue(key, value) {
         if (key === "profileCompletionRate") {
-          return `${value}%`;
+          return `${Number.isFinite(Number(value)) ? Number(value) : 0}%`;
         }
-        return value.toLocaleString("pl-PL");
+
+        if (value === null || value === undefined) {
+          return "N/A";
+        }
+
+        if (typeof value === "number") {
+          return value.toLocaleString("pl-PL");
+        }
+
+        if (typeof value === "boolean") {
+          return value ? "Yes" : "No";
+        }
+
+        if (typeof value === "string") {
+          return value;
+        }
+
+        if (Array.isArray(value)) {
+          return value.length.toLocaleString("pl-PL");
+        }
+
+        if (typeof value === "object") {
+          return Object.keys(value).length.toLocaleString("pl-PL");
+        }
+
+        return String(value);
       }
     }
 

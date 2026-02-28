@@ -1,663 +1,866 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Overview - Kraken Dashboard</title>
-    <link rel="stylesheet" href="../css/kraken.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
-    />
-    <style>
-      .metric-desc {
-        font-size: 0.85em;
-        color: #8b949e;
-        margin-top: 2px;
-        margin-bottom: 0.5em;
-        display: block;
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overview - Kraken Dashboard</title>
+  <link rel="stylesheet" href="../css/kraken.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
+  <style>
+    .metric-desc {
+      font-size: 0.85em;
+      color: #8b949e;
+      margin-top: 2px;
+      margin-bottom: 0.5em;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="resources-header" style="margin-bottom: 0.75rem;">
+    <h2 class="resources-title"><i class="fas fa-chart-bar"></i> Overview</h2>
+    <div class="resources-actions" style="display:flex; gap: 0.5rem; align-items:center; flex-wrap:wrap;">
+      <span id="overviewLastUpdated" class="badge-enhanced badge-info-enhanced">Last updated: never</span>
+      <button id="refreshOverviewBtn" class="btn-enhanced btn-primary-enhanced">
+        <span class="spinner-enhanced hidden"></span>
+        <i class="fas fa-sync-alt btn-icon"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon total-users">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">Total Users</h3>
+        </div>
+        <p id="totalUsers" class="stat-value">-</p>
+        <p class="stat-change">Registered users</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon active-users">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">Active Users</h3>
+        </div>
+        <p id="activeUsers" class="stat-value">-</p>
+        <p class="stat-change">Currently active</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-user-slash"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">Inactive Users</h3>
+        </div>
+        <p id="inactiveUsers" class="stat-value">-</p>
+        <p class="stat-change">Currently inactive</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-map"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">Total Fields</h3>
+        </div>
+        <p id="totalFields" class="stat-value">-</p>
+        <p class="stat-change">Agricultural fields</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-user-friends"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">Total Staff</h3>
+        </div>
+        <p id="totalStaff" class="stat-value">-</p>
+        <p class="stat-change">Farm workers</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-cow"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">Total Animals</h3>
+        </div>
+        <p id="totalAnimals" class="stat-value">-</p>
+        <p class="stat-change">Livestock count</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon system-status">
+        <i class="fas fa-heartbeat"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">System Status</h3>
+        </div>
+        <p id="systemStatus" class="stat-value">-</p>
+        <p class="stat-change">Operational</p>
+      </div>
+    </div>
+    <!-- Add new cards for marketplace and transactions -->
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-store"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">Marketplace Offers</h3>
+        </div>
+        <p id="totalOffers" class="stat-value">-</p>
+        <p class="stat-change">
+          Active: <span id="activeOffers">-</span>, Sold:
+          <span id="soldOffers">-</span>
+        </p>
+        <p class="stat-change">
+          Cancelled: <span id="cancelledOffers">-</span>, Unavailable:
+          <span id="unavailableOffers">-</span>
+        </p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-exchange-alt"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">Marketplace Transactions</h3>
+        </div>
+        <p id="totalTransactions" class="stat-value">-</p>
+        <p class="stat-change">
+          Total Volume: <span id="totalTransactionVolume">-</span>
+        </p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-money-check-alt"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">Financial Transactions</h3>
+        </div>
+        <p id="totalFinancialTransactions" class="stat-value">-</p>
+        <p class="stat-change">
+          Total Volume: <span id="totalFinancialVolume">-</span>
+        </p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-database"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-header">
+          <h3 class="stat-title">Database Files</h3>
+        </div>
+        <p id="overviewDatabaseFiles" class="stat-value">-</p>
+        <p class="stat-change">Total records: <span id="overviewDatabaseRecords">-</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resource Summary Section -->
+  <div class="resource-summary-section">
+    <h3 class="section-title">
+      <i class="fas fa-database"></i> Resource Overview
+    </h3>
+    <div class="resource-summary-grid">
+      <div class="resource-summary-card">
+        <div class="resource-summary-header">
+          <h4><i class="fas fa-map"></i> Fields Distribution</h4>
+        </div>
+        <div class="resource-summary-content">
+          <div class="resource-metric">
+            <span class="metric-label">Total Area:</span>
+            <span class="metric-value" id="totalArea">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Avg Area per Field:</span>
+            <span class="metric-value" id="avgAreaPerField">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Avg Area per User:</span>
+            <span class="metric-value" id="avgAreaPerUser">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Largest Field:</span>
+            <span class="metric-value" id="insightLargestField">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Median Field Area:</span>
+            <span class="metric-value" id="insightMedianFieldArea">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Top Field Owner (ID):</span>
+            <span class="metric-value" id="insightTopFieldOwner">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Users with Fields:</span>
+            <span class="metric-value" id="usersWithFields">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Users with No Fields:</span>
+            <span class="metric-value" id="insightUsersWithNoFields">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="resource-summary-card">
+        <div class="resource-summary-header">
+          <h4><i class="fas fa-users"></i> Staff Overview</h4>
+        </div>
+        <div class="resource-summary-content">
+          <div class="resource-metric">
+            <span class="metric-label">Total Staff:</span>
+            <span class="metric-value" id="totalStaffCount">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Avg Age:</span>
+            <span class="metric-value" id="avgStaffAge">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Users with Staff:</span>
+            <span class="metric-value" id="usersWithStaff">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Users with No Staff:</span>
+            <span class="metric-value" id="insightUsersWithNoStaff">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="resource-summary-card">
+        <div class="resource-summary-header">
+          <h4><i class="fas fa-cow"></i> Animals Overview</h4>
+        </div>
+        <div class="resource-summary-content">
+          <div class="resource-metric">
+            <span class="metric-label">Total Animals:</span>
+            <span class="metric-value" id="totalAnimalsCount">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Animal Types:</span>
+            <span class="metric-value" id="animalTypes">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Users with Animals:</span>
+            <span class="metric-value" id="usersWithAnimals">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Largest Animal Herd:</span>
+            <span class="metric-value" id="insightLargestAnimalHerd">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">User with Most Animals (ID):</span>
+            <span class="metric-value" id="insightUsersWithMostAnimals">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Users with No Animals:</span>
+            <span class="metric-value" id="insightUsersWithNoAnimals">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="resource-summary-card">
+        <div class="resource-summary-header">
+          <h4><i class="fas fa-store"></i> Marketplace Overview</h4>
+        </div>
+        <div class="resource-summary-content">
+          <div class="resource-metric">
+            <span class="metric-label">Total Offers:</span>
+            <span class="metric-value" id="summaryTotalOffers">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Active:</span>
+            <span class="metric-value" id="summaryActiveOffers">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Sold:</span>
+            <span class="metric-value" id="summarySoldOffers">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Cancelled:</span>
+            <span class="metric-value" id="summaryCancelledOffers">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Unavailable:</span>
+            <span class="metric-value" id="summaryUnavailableOffers">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Most Traded Item Type:</span>
+            <span class="metric-value" id="insightMostTradedItemType">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Mean Market Price:</span>
+            <span class="metric-value" id="insightMeanMarketPrice">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Average Offer Price:</span>
+            <span class="metric-value" id="insightAverageOfferPrice">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Total Marketplace Revenue:</span>
+            <span class="metric-value" id="insightTotalMarketplaceRevenue">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="resource-summary-card">
+        <div class="resource-summary-header">
+          <h4><i class="fas fa-exchange-alt"></i> Transactions Overview</h4>
+        </div>
+        <div class="resource-summary-content">
+          <div class="resource-metric">
+            <span class="metric-label">Marketplace Transactions:</span>
+            <span class="metric-value" id="summaryTotalTransactions">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Total value of all completed marketplace transactions:</span>
+            <span class="metric-value" id="summaryTotalTransactionVolume">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Financial Transactions:</span>
+            <span class="metric-value" id="summaryTotalFinancialTransactions">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Total value of all financial transactions in the system:</span>
+            <span class="metric-value" id="summaryTotalFinancialVolume">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Average Transaction Value:</span>
+            <span class="metric-value" id="insightAverageTransactionValue">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="resource-summary-card">
+        <div class="resource-summary-header">
+          <h4><i class="fas fa-boxes-stacked"></i> Operations Resources</h4>
+        </div>
+        <div class="resource-summary-content">
+          <div class="resource-metric">
+            <span class="metric-label">Assignments:</span>
+            <span class="metric-value" id="resourceAssignmentsTotal">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Users with Assignments:</span>
+            <span class="metric-value" id="resourceAssignmentsUsers">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Documentation Records:</span>
+            <span class="metric-value" id="resourceDocsTotal">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="resource-summary-card">
+        <div class="resource-summary-header">
+          <h4><i class="fas fa-chart-line"></i> Commodities Resources</h4>
+        </div>
+        <div class="resource-summary-content">
+          <div class="resource-metric">
+            <span class="metric-label">Holdings:</span>
+            <span class="metric-value" id="resourceCommoditiesHoldings">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Symbols:</span>
+            <span class="metric-value" id="resourceCommoditiesSymbols">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Users with Holdings:</span>
+            <span class="metric-value" id="resourceCommoditiesUsers">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Total Quantity:</span>
+            <span class="metric-value" id="resourceCommoditiesQuantity">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Total Invested:</span>
+            <span class="metric-value" id="resourceCommoditiesInvested">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="resource-summary-card">
+        <div class="resource-summary-header">
+          <h4><i class="fas fa-comments"></i> Messaging & Flags</h4>
+        </div>
+        <div class="resource-summary-content">
+          <div class="resource-metric">
+            <span class="metric-label">Messages:</span>
+            <span class="metric-value" id="resourceMessagesTotal">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Conversations:</span>
+            <span class="metric-value" id="resourceMessagesConversations">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Unread Messages:</span>
+            <span class="metric-value" id="resourceMessagesUnread">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Feature Flags:</span>
+            <span class="metric-value" id="resourceFeatureFlagsTotal">-</span>
+          </div>
+          <div class="resource-metric">
+            <span class="metric-label">Enabled/Disabled:</span>
+            <span class="metric-value" id="resourceFeatureFlagsEnabledDisabled">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insights Section -->
+  <!-- Shared Utilities -->
+  <script src="../js/kraken-utils.js"></script>
+
+  <script>
+    class OverviewTab {
+      constructor() {
+        this.token = getCookie("krakenToken");
+        this.refreshButton = document.getElementById("refreshOverviewBtn");
+        this.lastUpdatedBadge = document.getElementById("overviewLastUpdated");
+        this.init();
       }
-    </style>
-  </head>
 
-  <body>
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon total-users">
-          <i class="fas fa-users"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3 class="stat-title">Total Users</h3>
-          </div>
-          <p id="totalUsers" class="stat-value">-</p>
-          <p class="stat-change">Registered users</p>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon active-users">
-          <i class="fas fa-user-check"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3 class="stat-title">Active Users</h3>
-          </div>
-          <p id="activeUsers" class="stat-value">-</p>
-          <p class="stat-change">Currently active</p>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-map"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3 class="stat-title">Total Fields</h3>
-          </div>
-          <p id="totalFields" class="stat-value">-</p>
-          <p class="stat-change">Agricultural fields</p>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-user-friends"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3 class="stat-title">Total Staff</h3>
-          </div>
-          <p id="totalStaff" class="stat-value">-</p>
-          <p class="stat-change">Farm workers</p>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-cow"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3 class="stat-title">Total Animals</h3>
-          </div>
-          <p id="totalAnimals" class="stat-value">-</p>
-          <p class="stat-change">Livestock count</p>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon system-status">
-          <i class="fas fa-heartbeat"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3 class="stat-title">System Status</h3>
-          </div>
-          <p id="systemStatus" class="stat-value">-</p>
-          <p class="stat-change">Operational</p>
-        </div>
-      </div>
-      <!-- Add new cards for marketplace and transactions -->
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-store"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3 class="stat-title">Marketplace Offers</h3>
-          </div>
-          <p id="totalOffers" class="stat-value">-</p>
-          <p class="stat-change">
-            Active: <span id="activeOffers">-</span>, Sold:
-            <span id="soldOffers">-</span>
-          </p>
-          <p class="stat-change">
-            Cancelled: <span id="cancelledOffers">-</span>, Unavailable:
-            <span id="unavailableOffers">-</span>
-          </p>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-exchange-alt"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3 class="stat-title">Marketplace Transactions</h3>
-          </div>
-          <p id="totalTransactions" class="stat-value">-</p>
-          <p class="stat-change">
-            Total Volume: <span id="totalTransactionVolume">-</span>
-          </p>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-money-check-alt"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-header">
-            <h3 class="stat-title">Financial Transactions</h3>
-          </div>
-          <p id="totalFinancialTransactions" class="stat-value">-</p>
-          <p class="stat-change">
-            Total Volume: <span id="totalFinancialVolume">-</span>
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Resource Summary Section -->
-    <div class="resource-summary-section">
-      <h3 class="section-title">
-        <i class="fas fa-database"></i> Resource Overview
-      </h3>
-      <div class="resource-summary-grid">
-        <div class="resource-summary-card">
-          <div class="resource-summary-header">
-            <h4><i class="fas fa-map"></i> Fields Distribution</h4>
-          </div>
-          <div class="resource-summary-content">
-            <div class="resource-metric">
-              <span class="metric-label">Total Area:</span>
-              <span class="metric-value" id="totalArea">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Avg Area per Field:</span>
-              <span class="metric-value" id="avgAreaPerField">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Avg Area per User:</span>
-              <span class="metric-value" id="avgAreaPerUser">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Largest Field:</span>
-              <span class="metric-value" id="insightLargestField">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Median Field Area:</span>
-              <span class="metric-value" id="insightMedianFieldArea">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Top Field Owner (ID):</span>
-              <span class="metric-value" id="insightTopFieldOwner">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Users with Fields:</span>
-              <span class="metric-value" id="usersWithFields">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Users with No Fields:</span>
-              <span class="metric-value" id="insightUsersWithNoFields">-</span>
-            </div>
-          </div>
-        </div>
-        <div class="resource-summary-card">
-          <div class="resource-summary-header">
-            <h4><i class="fas fa-users"></i> Staff Overview</h4>
-          </div>
-          <div class="resource-summary-content">
-            <div class="resource-metric">
-              <span class="metric-label">Total Staff:</span>
-              <span class="metric-value" id="totalStaffCount">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Avg Age:</span>
-              <span class="metric-value" id="avgStaffAge">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Users with Staff:</span>
-              <span class="metric-value" id="usersWithStaff">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Users with No Staff:</span>
-              <span class="metric-value" id="insightUsersWithNoStaff">-</span>
-            </div>
-          </div>
-        </div>
-        <div class="resource-summary-card">
-          <div class="resource-summary-header">
-            <h4><i class="fas fa-cow"></i> Animals Overview</h4>
-          </div>
-          <div class="resource-summary-content">
-            <div class="resource-metric">
-              <span class="metric-label">Total Animals:</span>
-              <span class="metric-value" id="totalAnimalsCount">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Animal Types:</span>
-              <span class="metric-value" id="animalTypes">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Users with Animals:</span>
-              <span class="metric-value" id="usersWithAnimals">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Largest Animal Herd:</span>
-              <span class="metric-value" id="insightLargestAnimalHerd">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">User with Most Animals (ID):</span>
-              <span class="metric-value" id="insightUsersWithMostAnimals"
-                >-</span
-              >
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Users with No Animals:</span>
-              <span class="metric-value" id="insightUsersWithNoAnimals">-</span>
-            </div>
-          </div>
-        </div>
-        <div class="resource-summary-card">
-          <div class="resource-summary-header">
-            <h4><i class="fas fa-store"></i> Marketplace Overview</h4>
-          </div>
-          <div class="resource-summary-content">
-            <div class="resource-metric">
-              <span class="metric-label">Total Offers:</span>
-              <span class="metric-value" id="summaryTotalOffers">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Active:</span>
-              <span class="metric-value" id="summaryActiveOffers">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Sold:</span>
-              <span class="metric-value" id="summarySoldOffers">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Cancelled:</span>
-              <span class="metric-value" id="summaryCancelledOffers">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Unavailable:</span>
-              <span class="metric-value" id="summaryUnavailableOffers">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Most Traded Item Type:</span>
-              <span class="metric-value" id="insightMostTradedItemType">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Mean Market Price:</span>
-              <span class="metric-value" id="insightMeanMarketPrice">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Average Offer Price:</span>
-              <span class="metric-value" id="insightAverageOfferPrice">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Total Marketplace Revenue:</span>
-              <span class="metric-value" id="insightTotalMarketplaceRevenue"
-                >-</span
-              >
-            </div>
-          </div>
-        </div>
-        <div class="resource-summary-card">
-          <div class="resource-summary-header">
-            <h4><i class="fas fa-exchange-alt"></i> Transactions Overview</h4>
-          </div>
-          <div class="resource-summary-content">
-            <div class="resource-metric">
-              <span class="metric-label">Marketplace Transactions:</span>
-              <span class="metric-value" id="summaryTotalTransactions">-</span>
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label"
-                >Total value of all completed marketplace transactions:</span
-              >
-              <span class="metric-value" id="summaryTotalTransactionVolume"
-                >-</span
-              >
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Financial Transactions:</span>
-              <span class="metric-value" id="summaryTotalFinancialTransactions"
-                >-</span
-              >
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label"
-                >Total value of all financial transactions in the system:</span
-              >
-              <span class="metric-value" id="summaryTotalFinancialVolume"
-                >-</span
-              >
-            </div>
-            <div class="resource-metric">
-              <span class="metric-label">Average Transaction Value:</span>
-              <span class="metric-value" id="insightAverageTransactionValue"
-                >-</span
-              >
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Key Insights Section -->
-    <!-- Shared Utilities -->
-    <script src="../js/kraken-utils.js"></script>
-
-    <script>
-      class OverviewTab {
-        constructor() {
-          this.token = getCookie("krakenToken");
-          this.init();
-        }
-
-        init() {
-          // Listen for token from parent window
-          window.addEventListener("message", (event) => {
-            if (event.data.type === "SET_TOKEN") {
-              this.token = event.data.token;
-              this.loadOverviewData();
-            }
-          });
-
-          // If we already have a token, load data immediately
-          if (this.token) {
+      init() {
+        // Listen for token from parent window
+        window.addEventListener("message", (event) => {
+          if (event.data.type === "SET_TOKEN") {
+            this.token = event.data.token;
             this.loadOverviewData();
           }
-        }
+        });
 
-        async loadOverviewData() {
-          try {
-            // Fetch all stats from the new lightweight endpoint
-            const response = await secureFetch("/api/v1/admin/overview-stats", {
-              headers: { Authorization: `Bearer ${this.token}` },
-            });
-            const result = await response.json();
-            if (result.success && result.data) {
-              this.updateOverviewStats(result.data);
-              document.getElementById("systemStatus").textContent =
-                result.data.system?.status || "Online";
-            } else {
-              throw new Error(result.error || "Failed to load overview stats");
-            }
-          } catch (error) {
-            if (error.message.includes("Authentication failed")) {
-              // Authentication error already handled by secureFetch
-              return;
-            }
-            console.error("Error loading overview data:", error);
-            document.getElementById("systemStatus").textContent = "Error";
-          }
-        }
+        this.refreshButton?.addEventListener("click", () => this.loadOverviewData());
 
-        updateOverviewStats(stats) {
-          // Users
-          const elTotalUsers = document.getElementById("totalUsers");
-          if (elTotalUsers)
-            elTotalUsers.textContent = stats.users?.total ?? "-";
-          const elActiveUsers = document.getElementById("activeUsers");
-          if (elActiveUsers)
-            elActiveUsers.textContent = stats.users?.active ?? "-";
-          // Fields
-          const elTotalFields = document.getElementById("totalFields");
-          if (elTotalFields)
-            elTotalFields.textContent = stats.fields?.total ?? "-";
-          const elTotalArea = document.getElementById("totalArea");
-          if (elTotalArea)
-            elTotalArea.textContent = stats.fields?.totalArea
-              ? `${stats.fields.totalArea} ha`
-              : "-";
-          const elAvgAreaPerField = document.getElementById("avgAreaPerField");
-          if (elAvgAreaPerField)
-            elAvgAreaPerField.textContent = stats.fields?.avgAreaPerField
-              ? `${stats.fields.avgAreaPerField} ha`
-              : "-";
-          const elAvgAreaPerUser = document.getElementById("avgAreaPerUser");
-          if (elAvgAreaPerUser)
-            elAvgAreaPerUser.textContent = stats.fields?.avgAreaPerUser
-              ? `${stats.fields.avgAreaPerUser} ha`
-              : "-";
-          const elUsersWithFields = document.getElementById("usersWithFields");
-          if (elUsersWithFields)
-            elUsersWithFields.textContent =
-              stats.fields?.usersWithFields ?? "-";
-          const elInsightUsersWithNoFields = document.getElementById(
-            "insightUsersWithNoFields",
-          );
-          // Staff
-          const elTotalStaff = document.getElementById("totalStaff");
-          if (elTotalStaff)
-            elTotalStaff.textContent = stats.staff?.total ?? "-";
-          const elTotalStaffCount = document.getElementById("totalStaffCount");
-          if (elTotalStaffCount)
-            elTotalStaffCount.textContent = stats.staff?.total ?? "-";
-          const elAvgStaffAge = document.getElementById("avgStaffAge");
-          if (elAvgStaffAge)
-            elAvgStaffAge.textContent = stats.staff?.avgAge
-              ? `${stats.staff.avgAge} years`
-              : "-";
-          const elUsersWithStaff = document.getElementById("usersWithStaff");
-          if (elUsersWithStaff)
-            elUsersWithStaff.textContent = stats.staff?.usersWithStaff ?? "-";
-          const elInsightUsersWithNoStaff = document.getElementById(
-            "insightUsersWithNoStaff",
-          );
-          // Animals
-          const totalAnimals = stats.animals?.total ?? "-";
-          const elTotalAnimals = document.getElementById("totalAnimals");
-          if (elTotalAnimals) elTotalAnimals.textContent = totalAnimals;
-          const elTotalAnimalsCount =
-            document.getElementById("totalAnimalsCount");
-          if (elTotalAnimalsCount)
-            elTotalAnimalsCount.textContent = totalAnimals;
-          const elAnimalTypes = document.getElementById("animalTypes");
-          if (elAnimalTypes)
-            elAnimalTypes.textContent = stats.animals?.types ?? "-";
-          const elUsersWithAnimals =
-            document.getElementById("usersWithAnimals");
-          if (elUsersWithAnimals)
-            elUsersWithAnimals.textContent =
-              stats.animals?.usersWithAnimals ?? "-";
-          // Marketplace
-          const elTotalOffers = document.getElementById("totalOffers");
-          if (elTotalOffers)
-            elTotalOffers.textContent = stats.marketplace?.totalOffers ?? "-";
-          const elActiveOffers = document.getElementById("activeOffers");
-          if (elActiveOffers)
-            elActiveOffers.textContent = stats.marketplace?.activeOffers ?? "-";
-          const elSoldOffers = document.getElementById("soldOffers");
-          if (elSoldOffers)
-            elSoldOffers.textContent = stats.marketplace?.soldOffers ?? "-";
-          const elCancelledOffers = document.getElementById("cancelledOffers");
-          if (elCancelledOffers)
-            elCancelledOffers.textContent =
-              stats.marketplace?.cancelledOffers ?? "-";
-          const elUnavailableOffers =
-            document.getElementById("unavailableOffers");
-          if (elUnavailableOffers)
-            elUnavailableOffers.textContent =
-              stats.marketplace?.unavailableOffers ?? "-";
-          // Marketplace Transactions
-          const elTotalTransactions =
-            document.getElementById("totalTransactions");
-          if (elTotalTransactions)
-            elTotalTransactions.textContent = stats.transactions?.total ?? "-";
-          const elTotalTransactionVolume = document.getElementById(
-            "totalTransactionVolume",
-          );
-          if (elTotalTransactionVolume)
-            elTotalTransactionVolume.textContent = stats.transactions
-              ?.totalVolume
-              ? stats.transactions.totalVolume.toLocaleString("pl-PL")
-              : "-";
-          // Financial Transactions
-          const elTotalFinancialTransactions = document.getElementById(
-            "totalFinancialTransactions",
-          );
-          if (elTotalFinancialTransactions)
-            elTotalFinancialTransactions.textContent =
-              stats.financial?.totalTransactions ?? "-";
-          const elTotalFinancialVolume = document.getElementById(
-            "totalFinancialVolume",
-          );
-          if (elTotalFinancialVolume)
-            elTotalFinancialVolume.textContent = stats.financial?.totalVolume
-              ? stats.financial.totalVolume.toLocaleString("pl-PL")
-              : "-";
-          // Marketplace Resource Summary
-          const elSummaryTotalOffers =
-            document.getElementById("summaryTotalOffers");
-          if (elSummaryTotalOffers)
-            elSummaryTotalOffers.textContent =
-              stats.marketplace?.totalOffers ?? "-";
-          const elSummaryActiveOffers = document.getElementById(
-            "summaryActiveOffers",
-          );
-          if (elSummaryActiveOffers)
-            elSummaryActiveOffers.textContent =
-              stats.marketplace?.activeOffers ?? "-";
-          const elSummarySoldOffers =
-            document.getElementById("summarySoldOffers");
-          if (elSummarySoldOffers)
-            elSummarySoldOffers.textContent =
-              stats.marketplace?.soldOffers ?? "-";
-          const elSummaryCancelledOffers = document.getElementById(
-            "summaryCancelledOffers",
-          );
-          if (elSummaryCancelledOffers)
-            elSummaryCancelledOffers.textContent =
-              stats.marketplace?.cancelledOffers ?? "-";
-          const elSummaryUnavailableOffers = document.getElementById(
-            "summaryUnavailableOffers",
-          );
-          if (elSummaryUnavailableOffers)
-            elSummaryUnavailableOffers.textContent =
-              stats.marketplace?.unavailableOffers ?? "-";
-          // Transactions Resource Summary
-          const elSummaryTotalTransactions = document.getElementById(
-            "summaryTotalTransactions",
-          );
-          if (elSummaryTotalTransactions)
-            elSummaryTotalTransactions.textContent =
-              stats.transactions?.total ?? "-";
-          const elSummaryTotalTransactionVolume = document.getElementById(
-            "summaryTotalTransactionVolume",
-          );
-          if (elSummaryTotalTransactionVolume)
-            elSummaryTotalTransactionVolume.textContent = stats.transactions
-              ?.totalVolume
-              ? stats.transactions.totalVolume.toLocaleString("pl-PL")
-              : "-";
-          const elSummaryTotalFinancialTransactions = document.getElementById(
-            "summaryTotalFinancialTransactions",
-          );
-          if (elSummaryTotalFinancialTransactions)
-            elSummaryTotalFinancialTransactions.textContent =
-              stats.financial?.totalTransactions ?? "-";
-          const elSummaryTotalFinancialVolume = document.getElementById(
-            "summaryTotalFinancialVolume",
-          );
-          if (elSummaryTotalFinancialVolume)
-            elSummaryTotalFinancialVolume.textContent = stats.financial
-              ?.totalVolume
-              ? stats.financial.totalVolume.toLocaleString("pl-PL")
-              : "-";
-          // Key Insights
-          const insights = stats.insights || {};
-          // Fields
-          const elInsightLargestField = document.getElementById(
-            "insightLargestField",
-          );
-          if (elInsightLargestField)
-            elInsightLargestField.textContent =
-              insights.largestField && insights.largestField !== "-"
-                ? `${insights.largestField} ha`
-                : "-";
-          const elInsightMedianFieldArea = document.getElementById(
-            "insightMedianFieldArea",
-          );
-          if (elInsightMedianFieldArea)
-            elInsightMedianFieldArea.textContent =
-              insights.medianFieldArea && insights.medianFieldArea !== "-"
-                ? `${insights.medianFieldArea} ha`
-                : "-";
-          const elInsightTopFieldOwner = document.getElementById(
-            "insightTopFieldOwner",
-          );
-          if (elInsightTopFieldOwner)
-            elInsightTopFieldOwner.textContent = insights.topFieldOwner ?? "-";
-          if (elInsightUsersWithNoFields)
-            elInsightUsersWithNoFields.textContent =
-              insights.usersWithNoFields ?? "-";
-          // Staff
-          if (elInsightUsersWithNoStaff)
-            elInsightUsersWithNoStaff.textContent =
-              insights.usersWithNoStaff ?? "-";
-          // Animals
-          const elInsightLargestAnimalHerd = document.getElementById(
-            "insightLargestAnimalHerd",
-          );
-          if (elInsightLargestAnimalHerd)
-            elInsightLargestAnimalHerd.textContent =
-              insights.largestAnimalHerd ?? "-";
-          const elInsightUsersWithMostAnimals = document.getElementById(
-            "insightUsersWithMostAnimals",
-          );
-          if (elInsightUsersWithMostAnimals)
-            elInsightUsersWithMostAnimals.textContent =
-              insights.usersWithMostAnimals ?? "-";
-          const elInsightUsersWithNoAnimals = document.getElementById(
-            "insightUsersWithNoAnimals",
-          );
-          if (elInsightUsersWithNoAnimals)
-            elInsightUsersWithNoAnimals.textContent =
-              insights.usersWithNoAnimals ?? "-";
-          // Marketplace
-          const elInsightMostTradedItemType = document.getElementById(
-            "insightMostTradedItemType",
-          );
-          if (elInsightMostTradedItemType)
-            elInsightMostTradedItemType.textContent =
-              insights.mostTradedItemType ?? "-";
-          const elInsightMeanMarketPrice = document.getElementById(
-            "insightMeanMarketPrice",
-          );
-          if (elInsightMeanMarketPrice)
-            elInsightMeanMarketPrice.textContent = insights.meanMarketPrice
-              ? insights.meanMarketPrice.toLocaleString("pl-PL", {
-                  maximumFractionDigits: 2,
-                })
-              : "-";
-          const elInsightAverageOfferPrice = document.getElementById(
-            "insightAverageOfferPrice",
-          );
-          if (elInsightAverageOfferPrice)
-            elInsightAverageOfferPrice.textContent = insights.averageOfferPrice
-              ? insights.averageOfferPrice.toLocaleString("pl-PL", {
-                  maximumFractionDigits: 2,
-                })
-              : "-";
-          const elInsightTotalMarketplaceRevenue = document.getElementById(
-            "insightTotalMarketplaceRevenue",
-          );
-          if (elInsightTotalMarketplaceRevenue)
-            elInsightTotalMarketplaceRevenue.textContent =
-              insights.totalMarketplaceRevenue
-                ? insights.totalMarketplaceRevenue.toLocaleString("pl-PL", {
-                    maximumFractionDigits: 2,
-                  })
-                : "-";
-          // Transactions
-          const elInsightAverageTransactionValue = document.getElementById(
-            "insightAverageTransactionValue",
-          );
-          if (elInsightAverageTransactionValue)
-            elInsightAverageTransactionValue.textContent =
-              insights.averageTransactionValue
-                ? insights.averageTransactionValue.toLocaleString("pl-PL", {
-                    maximumFractionDigits: 2,
-                  })
-                : "-";
+        // If we already have a token, load data immediately
+        if (this.token) {
+          this.loadOverviewData();
         }
       }
 
-      // Initialize overview tab when the page loads
-      document.addEventListener("DOMContentLoaded", () => {
-        new OverviewTab();
-      });
-    </script>
-  </body>
+      async loadOverviewData() {
+        this._setLoading(true);
+        try {
+          // Fetch all stats from the new lightweight endpoint
+          const response = await secureFetch("/api/v1/admin/overview-stats", {
+            headers: { Authorization: `Bearer ${this.token}` },
+          });
+          const result = await response.json();
+          if (result.success && result.data) {
+            this.updateOverviewStats(result.data);
+            document.getElementById("systemStatus").textContent =
+              result.data.system?.status || "Online";
+            this._markUpdated();
+          } else {
+            throw new Error(result.error || "Failed to load overview stats");
+          }
+        } catch (error) {
+          if (error.message.includes("Authentication failed")) {
+            // Authentication error already handled by secureFetch
+            return;
+          }
+          console.error("Error loading overview data:", error);
+          document.getElementById("systemStatus").textContent = "Error";
+        } finally {
+          this._setLoading(false);
+        }
+      }
+
+      _setLoading(isLoading) {
+        if (!this.refreshButton) return;
+        const spinner = this.refreshButton.querySelector(".spinner-enhanced");
+        this.refreshButton.disabled = isLoading === true;
+        if (spinner) {
+          spinner.classList.toggle("hidden", isLoading !== true);
+        }
+      }
+
+      _markUpdated() {
+        if (!this.lastUpdatedBadge) return;
+        this.lastUpdatedBadge.textContent = `Last updated: ${new Date().toLocaleString("pl-PL")}`;
+      }
+
+      _isPresent(value) {
+        return value !== null && value !== undefined;
+      }
+
+      _formatNumber(value, options = {}) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) {
+          return "-";
+        }
+        return numeric.toLocaleString("pl-PL", options);
+      }
+
+      updateOverviewStats(stats) {
+        // Users
+        const elTotalUsers = document.getElementById("totalUsers");
+        if (elTotalUsers)
+          elTotalUsers.textContent = stats.users?.total ?? "-";
+        const elActiveUsers = document.getElementById("activeUsers");
+        if (elActiveUsers)
+          elActiveUsers.textContent = stats.users?.active ?? "-";
+        const elInactiveUsers = document.getElementById("inactiveUsers");
+        if (elInactiveUsers)
+          elInactiveUsers.textContent = stats.users?.inactive ?? "-";
+        // Fields
+        const elTotalFields = document.getElementById("totalFields");
+        if (elTotalFields)
+          elTotalFields.textContent = stats.fields?.total ?? "-";
+        const elTotalArea = document.getElementById("totalArea");
+        if (elTotalArea)
+          elTotalArea.textContent = this._isPresent(stats.fields?.totalArea)
+            ? `${this._formatNumber(stats.fields.totalArea)} ha`
+            : "-";
+        const elAvgAreaPerField = document.getElementById("avgAreaPerField");
+        if (elAvgAreaPerField)
+          elAvgAreaPerField.textContent = this._isPresent(stats.fields?.avgAreaPerField)
+            ? `${this._formatNumber(stats.fields.avgAreaPerField)} ha`
+            : "-";
+        const elAvgAreaPerUser = document.getElementById("avgAreaPerUser");
+        if (elAvgAreaPerUser)
+          elAvgAreaPerUser.textContent = this._isPresent(stats.fields?.avgAreaPerUser)
+            ? `${this._formatNumber(stats.fields.avgAreaPerUser)} ha`
+            : "-";
+        const elUsersWithFields = document.getElementById("usersWithFields");
+        if (elUsersWithFields)
+          elUsersWithFields.textContent =
+            stats.fields?.usersWithFields ?? "-";
+        const elInsightUsersWithNoFields = document.getElementById(
+          "insightUsersWithNoFields",
+        );
+        // Staff
+        const elTotalStaff = document.getElementById("totalStaff");
+        if (elTotalStaff)
+          elTotalStaff.textContent = stats.staff?.total ?? "-";
+        const elTotalStaffCount = document.getElementById("totalStaffCount");
+        if (elTotalStaffCount)
+          elTotalStaffCount.textContent = stats.staff?.total ?? "-";
+        const elAvgStaffAge = document.getElementById("avgStaffAge");
+        if (elAvgStaffAge)
+          elAvgStaffAge.textContent = this._isPresent(stats.staff?.avgAge)
+            ? `${this._formatNumber(stats.staff.avgAge)} years`
+            : "-";
+        const elUsersWithStaff = document.getElementById("usersWithStaff");
+        if (elUsersWithStaff)
+          elUsersWithStaff.textContent = stats.staff?.usersWithStaff ?? "-";
+        const elInsightUsersWithNoStaff = document.getElementById(
+          "insightUsersWithNoStaff",
+        );
+        // Animals
+        const totalAnimals = stats.animals?.total ?? "-";
+        const elTotalAnimals = document.getElementById("totalAnimals");
+        if (elTotalAnimals) elTotalAnimals.textContent = totalAnimals;
+        const elTotalAnimalsCount =
+          document.getElementById("totalAnimalsCount");
+        if (elTotalAnimalsCount)
+          elTotalAnimalsCount.textContent = totalAnimals;
+        const elAnimalTypes = document.getElementById("animalTypes");
+        if (elAnimalTypes)
+          elAnimalTypes.textContent = stats.animals?.types ?? "-";
+        const elUsersWithAnimals =
+          document.getElementById("usersWithAnimals");
+        if (elUsersWithAnimals)
+          elUsersWithAnimals.textContent =
+            stats.animals?.usersWithAnimals ?? "-";
+        // Marketplace
+        const elTotalOffers = document.getElementById("totalOffers");
+        if (elTotalOffers)
+          elTotalOffers.textContent = stats.marketplace?.totalOffers ?? "-";
+        const elActiveOffers = document.getElementById("activeOffers");
+        if (elActiveOffers)
+          elActiveOffers.textContent = stats.marketplace?.activeOffers ?? "-";
+        const elSoldOffers = document.getElementById("soldOffers");
+        if (elSoldOffers)
+          elSoldOffers.textContent = stats.marketplace?.soldOffers ?? "-";
+        const elCancelledOffers = document.getElementById("cancelledOffers");
+        if (elCancelledOffers)
+          elCancelledOffers.textContent =
+            stats.marketplace?.cancelledOffers ?? "-";
+        const elUnavailableOffers =
+          document.getElementById("unavailableOffers");
+        if (elUnavailableOffers)
+          elUnavailableOffers.textContent =
+            stats.marketplace?.unavailableOffers ?? "-";
+        // Marketplace Transactions
+        const elTotalTransactions =
+          document.getElementById("totalTransactions");
+        if (elTotalTransactions)
+          elTotalTransactions.textContent = stats.transactions?.total ?? "-";
+        const elTotalTransactionVolume = document.getElementById(
+          "totalTransactionVolume",
+        );
+        if (elTotalTransactionVolume)
+          elTotalTransactionVolume.textContent = this._isPresent(stats.transactions?.totalVolume)
+            ? this._formatNumber(stats.transactions.totalVolume)
+            : "-";
+        // Financial Transactions
+        const elTotalFinancialTransactions = document.getElementById(
+          "totalFinancialTransactions",
+        );
+        if (elTotalFinancialTransactions)
+          elTotalFinancialTransactions.textContent =
+            stats.financial?.totalTransactions ?? "-";
+        const elTotalFinancialVolume = document.getElementById(
+          "totalFinancialVolume",
+        );
+        if (elTotalFinancialVolume)
+          elTotalFinancialVolume.textContent = this._isPresent(stats.financial?.totalVolume)
+            ? this._formatNumber(stats.financial.totalVolume)
+            : "-";
+        // Marketplace Resource Summary
+        const elSummaryTotalOffers =
+          document.getElementById("summaryTotalOffers");
+        if (elSummaryTotalOffers)
+          elSummaryTotalOffers.textContent =
+            stats.marketplace?.totalOffers ?? "-";
+        const elSummaryActiveOffers = document.getElementById(
+          "summaryActiveOffers",
+        );
+        if (elSummaryActiveOffers)
+          elSummaryActiveOffers.textContent =
+            stats.marketplace?.activeOffers ?? "-";
+        const elSummarySoldOffers =
+          document.getElementById("summarySoldOffers");
+        if (elSummarySoldOffers)
+          elSummarySoldOffers.textContent =
+            stats.marketplace?.soldOffers ?? "-";
+        const elSummaryCancelledOffers = document.getElementById(
+          "summaryCancelledOffers",
+        );
+        if (elSummaryCancelledOffers)
+          elSummaryCancelledOffers.textContent =
+            stats.marketplace?.cancelledOffers ?? "-";
+        const elSummaryUnavailableOffers = document.getElementById(
+          "summaryUnavailableOffers",
+        );
+        if (elSummaryUnavailableOffers)
+          elSummaryUnavailableOffers.textContent =
+            stats.marketplace?.unavailableOffers ?? "-";
+        // Transactions Resource Summary
+        const elSummaryTotalTransactions = document.getElementById(
+          "summaryTotalTransactions",
+        );
+        if (elSummaryTotalTransactions)
+          elSummaryTotalTransactions.textContent =
+            stats.transactions?.total ?? "-";
+        const elSummaryTotalTransactionVolume = document.getElementById(
+          "summaryTotalTransactionVolume",
+        );
+        if (elSummaryTotalTransactionVolume)
+          elSummaryTotalTransactionVolume.textContent = this._isPresent(stats.transactions?.totalVolume)
+            ? this._formatNumber(stats.transactions.totalVolume)
+            : "-";
+        const elSummaryTotalFinancialTransactions = document.getElementById(
+          "summaryTotalFinancialTransactions",
+        );
+        if (elSummaryTotalFinancialTransactions)
+          elSummaryTotalFinancialTransactions.textContent =
+            stats.financial?.totalTransactions ?? "-";
+        const elSummaryTotalFinancialVolume = document.getElementById(
+          "summaryTotalFinancialVolume",
+        );
+        if (elSummaryTotalFinancialVolume)
+          elSummaryTotalFinancialVolume.textContent = this._isPresent(stats.financial?.totalVolume)
+            ? this._formatNumber(stats.financial.totalVolume)
+            : "-";
+        // Key Insights
+        const insights = stats.insights || {};
+        // Fields
+        const elInsightLargestField = document.getElementById(
+          "insightLargestField",
+        );
+        if (elInsightLargestField)
+          elInsightLargestField.textContent =
+            insights.largestField && insights.largestField !== "-"
+              ? `${insights.largestField} ha`
+              : "-";
+        const elInsightMedianFieldArea = document.getElementById(
+          "insightMedianFieldArea",
+        );
+        if (elInsightMedianFieldArea)
+          elInsightMedianFieldArea.textContent =
+            insights.medianFieldArea && insights.medianFieldArea !== "-"
+              ? `${insights.medianFieldArea} ha`
+              : "-";
+        const elInsightTopFieldOwner = document.getElementById(
+          "insightTopFieldOwner",
+        );
+        if (elInsightTopFieldOwner)
+          elInsightTopFieldOwner.textContent = insights.topFieldOwner ?? "-";
+        if (elInsightUsersWithNoFields)
+          elInsightUsersWithNoFields.textContent =
+            insights.usersWithNoFields ?? "-";
+        // Staff
+        if (elInsightUsersWithNoStaff)
+          elInsightUsersWithNoStaff.textContent =
+            insights.usersWithNoStaff ?? "-";
+        // Animals
+        const elInsightLargestAnimalHerd = document.getElementById(
+          "insightLargestAnimalHerd",
+        );
+        if (elInsightLargestAnimalHerd)
+          elInsightLargestAnimalHerd.textContent =
+            insights.largestAnimalHerd ?? "-";
+        const elInsightUsersWithMostAnimals = document.getElementById(
+          "insightUsersWithMostAnimals",
+        );
+        if (elInsightUsersWithMostAnimals)
+          elInsightUsersWithMostAnimals.textContent =
+            insights.usersWithMostAnimals ?? "-";
+        const elInsightUsersWithNoAnimals = document.getElementById(
+          "insightUsersWithNoAnimals",
+        );
+        if (elInsightUsersWithNoAnimals)
+          elInsightUsersWithNoAnimals.textContent =
+            insights.usersWithNoAnimals ?? "-";
+        // Marketplace
+        const elInsightMostTradedItemType = document.getElementById(
+          "insightMostTradedItemType",
+        );
+        if (elInsightMostTradedItemType)
+          elInsightMostTradedItemType.textContent =
+            insights.mostTradedItemType ?? "-";
+        const elInsightMeanMarketPrice = document.getElementById(
+          "insightMeanMarketPrice",
+        );
+        if (elInsightMeanMarketPrice)
+          elInsightMeanMarketPrice.textContent = this._isPresent(insights.meanMarketPrice)
+            ? this._formatNumber(insights.meanMarketPrice, {
+              maximumFractionDigits: 2,
+            })
+            : "-";
+        const elInsightAverageOfferPrice = document.getElementById(
+          "insightAverageOfferPrice",
+        );
+        if (elInsightAverageOfferPrice)
+          elInsightAverageOfferPrice.textContent = this._isPresent(insights.averageOfferPrice)
+            ? this._formatNumber(insights.averageOfferPrice, {
+              maximumFractionDigits: 2,
+            })
+            : "-";
+        const elInsightTotalMarketplaceRevenue = document.getElementById(
+          "insightTotalMarketplaceRevenue",
+        );
+        if (elInsightTotalMarketplaceRevenue)
+          elInsightTotalMarketplaceRevenue.textContent =
+            this._isPresent(insights.totalMarketplaceRevenue)
+              ? this._formatNumber(insights.totalMarketplaceRevenue, {
+                maximumFractionDigits: 2,
+              })
+              : "-";
+        // Transactions
+        const elInsightAverageTransactionValue = document.getElementById(
+          "insightAverageTransactionValue",
+        );
+        if (elInsightAverageTransactionValue)
+          elInsightAverageTransactionValue.textContent =
+            this._isPresent(insights.averageTransactionValue)
+              ? this._formatNumber(insights.averageTransactionValue, {
+                maximumFractionDigits: 2,
+              })
+              : "-";
+
+        // Database summary
+        const elOverviewDatabaseFiles = document.getElementById("overviewDatabaseFiles");
+        if (elOverviewDatabaseFiles)
+          elOverviewDatabaseFiles.textContent = stats.database?.totalFiles ?? "-";
+        const elOverviewDatabaseRecords = document.getElementById("overviewDatabaseRecords");
+        if (elOverviewDatabaseRecords)
+          elOverviewDatabaseRecords.textContent = this._isPresent(stats.database?.totalRecords)
+            ? this._formatNumber(stats.database.totalRecords)
+            : "-";
+
+        // Additional resource summaries
+        const resources = stats.resources || {};
+        const assignments = resources.assignments || {};
+        const docs = resources.docs || {};
+        const commodities = resources.commodities || {};
+        const messages = resources.messages || {};
+        const featureFlags = resources.featureFlags || {};
+
+        const elResourceAssignmentsTotal = document.getElementById("resourceAssignmentsTotal");
+        if (elResourceAssignmentsTotal)
+          elResourceAssignmentsTotal.textContent = assignments.total ?? "-";
+
+        const elResourceAssignmentsUsers = document.getElementById("resourceAssignmentsUsers");
+        if (elResourceAssignmentsUsers)
+          elResourceAssignmentsUsers.textContent = assignments.usersWithAssignments ?? "-";
+
+        const elResourceDocsTotal = document.getElementById("resourceDocsTotal");
+        if (elResourceDocsTotal)
+          elResourceDocsTotal.textContent = docs.total ?? "-";
+
+        const elResourceCommoditiesHoldings = document.getElementById("resourceCommoditiesHoldings");
+        if (elResourceCommoditiesHoldings)
+          elResourceCommoditiesHoldings.textContent = commodities.totalHoldings ?? "-";
+
+        const elResourceCommoditiesSymbols = document.getElementById("resourceCommoditiesSymbols");
+        if (elResourceCommoditiesSymbols)
+          elResourceCommoditiesSymbols.textContent = commodities.symbols ?? "-";
+
+        const elResourceCommoditiesUsers = document.getElementById("resourceCommoditiesUsers");
+        if (elResourceCommoditiesUsers)
+          elResourceCommoditiesUsers.textContent = commodities.usersWithHoldings ?? "-";
+
+        const elResourceCommoditiesQuantity = document.getElementById("resourceCommoditiesQuantity");
+        if (elResourceCommoditiesQuantity)
+          elResourceCommoditiesQuantity.textContent = Number.isFinite(commodities.totalQuantity)
+            ? Number(commodities.totalQuantity).toLocaleString("pl-PL", { maximumFractionDigits: 4 })
+            : "-";
+
+        const elResourceCommoditiesInvested = document.getElementById("resourceCommoditiesInvested");
+        if (elResourceCommoditiesInvested)
+          elResourceCommoditiesInvested.textContent = Number.isFinite(commodities.totalInvested)
+            ? Number(commodities.totalInvested).toLocaleString("pl-PL", { maximumFractionDigits: 2 })
+            : "-";
+
+        const elResourceMessagesTotal = document.getElementById("resourceMessagesTotal");
+        if (elResourceMessagesTotal)
+          elResourceMessagesTotal.textContent = messages.total ?? "-";
+
+        const elResourceMessagesConversations = document.getElementById("resourceMessagesConversations");
+        if (elResourceMessagesConversations)
+          elResourceMessagesConversations.textContent = messages.conversations ?? "-";
+
+        const elResourceMessagesUnread = document.getElementById("resourceMessagesUnread");
+        if (elResourceMessagesUnread)
+          elResourceMessagesUnread.textContent = messages.unread ?? "-";
+
+        const elResourceFeatureFlagsTotal = document.getElementById("resourceFeatureFlagsTotal");
+        if (elResourceFeatureFlagsTotal)
+          elResourceFeatureFlagsTotal.textContent = featureFlags.total ?? "-";
+
+        const elResourceFeatureFlagsEnabledDisabled = document.getElementById(
+          "resourceFeatureFlagsEnabledDisabled",
+        );
+        if (elResourceFeatureFlagsEnabledDisabled)
+          elResourceFeatureFlagsEnabledDisabled.textContent =
+            `${featureFlags.enabled ?? "-"} / ${featureFlags.disabled ?? "-"}`;
+      }
+    }
+
+    // Initialize overview tab when the page loads
+    document.addEventListener("DOMContentLoaded", () => {
+      new OverviewTab();
+    });
+  </script>
+</body>
+
 </html>

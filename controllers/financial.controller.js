@@ -600,12 +600,25 @@ class FinancialController {
         return res.status(403).json(formatResponseBody({ error: "Forbidden: Admin access required" }));
       }
       const { type, category, startDate, endDate } = req.query;
+      const page = Math.max(1, Number(req.query.page || 1));
+      const pageSize = Math.min(200, Math.max(1, Number(req.query.pageSize || 50)));
+      const offset = (page - 1) * pageSize;
+
       const options = { type, category, startDate, endDate };
       const transactions = await financialService.getAllTransactions(options);
+      const items = Array.isArray(transactions) ? transactions : [];
+      const pagedItems = items.slice(offset, offset + pageSize);
+
       res.status(200).json(
         formatResponseBody({
-          data: transactions,
-          total: transactions.length,
+          data: {
+            items: pagedItems,
+            transactions: pagedItems,
+            total: items.length,
+            page,
+            pageSize,
+            hasMore: offset + pagedItems.length < items.length,
+          },
         }),
       );
     } catch (error) {

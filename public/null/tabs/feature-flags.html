@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feature Flags - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
+    <style>
+        .ff-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .ff-group .resource-summary-header {
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.4rem;
+        }
+
+        .ff-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .ff-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.45rem 0.55rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.35rem;
+            background: var(--bg-tertiary);
+        }
+
+        .ff-row__main {
+            min-width: 0;
+        }
+
+        .ff-row__key {
+            display: block;
+            font-size: 0.84rem;
+            line-height: 1.1;
+            color: var(--text-primary);
+            margin-bottom: 0.15rem;
+            word-break: break-word;
+        }
+
+        .ff-row__desc {
+            display: block;
+            font-size: 0.74rem;
+            color: var(--text-secondary);
+            line-height: 1.2;
+        }
+
+        .ff-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="resources-section">
+        <div class="resources-header">
+            <h2 class="resources-title">
+                <i class="fas fa-toggle-on"></i>
+                Feature Flags
+            </h2>
+            <div class="resources-actions" style="display: flex; gap: 0.5rem">
+                <button id="refreshFlagsBtn" class="btn-enhanced btn-primary-enhanced">
+                    <span class="spinner-enhanced hidden"></span>
+                    <i class="fas fa-sync-alt btn-icon"></i>
+                    Refresh
+                </button>
+                <button id="resetFlagsBtn" class="btn-enhanced btn-warning-enhanced">
+                    <span class="spinner-enhanced hidden"></span>
+                    <i class="fas fa-undo btn-icon"></i>
+                    Reset defaults
+                </button>
+            </div>
+        </div>
+
+        <div class="filters-bar" style="margin-bottom: 1rem">
+            <input type="text" id="flagsSearch" class="filter-input" placeholder="Search by flag key, group, or description" style="min-width: 320px" />
+        </div>
+
+        <div id="flagsLoading" class="loading-enhanced">
+            <span class="spinner-enhanced"></span>
+            Loading feature flags...
+        </div>
+
+        <div id="flagsError" class="alert-enhanced alert-error-enhanced" hidden>
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Failed to load feature flags.</span>
+        </div>
+
+        <div id="flagsEmpty" class="alert-enhanced alert-info-enhanced" hidden>
+            <i class="fas fa-info-circle"></i>
+            <span>No feature flags found.</span>
+        </div>
+
+        <div id="flagsGroupsContainer"></div>
+    </div>
+
+    <script src="../js/kraken-utils.js"></script>
+
+    <script>
+        class FeatureFlagsTab {
+            constructor() {
+                this.token = getCookie("krakenToken");
+                this.flagsData = {};
+                this.groups = {};
+                this.searchTerm = "";
+                this.pendingUpdate = new Set();
+                this.latestLoadRequestId = 0;
+                this.init();
+            }
+
+            init() {
+                window.addEventListener("message", (event) => {
+                    if (event.data.type === "SET_TOKEN") {
+                        this.token = event.data.token;
+                        this.loadFlags();
+                    }
+                });
+
+                this.bindEvents();
+
+                if (this.token) {
+                    this.loadFlags();
+                }
+            }
+
+            bindEvents() {
+                document.getElementById("refreshFlagsBtn")?.addEventListener("click", () => this.loadFlags());
+                document.getElementById("resetFlagsBtn")?.addEventListener("click", () => this.resetFlags());
+
+                document.getElementById("flagsSearch")?.addEventListener("input", (event) => {
+                    this.searchTerm = String(event.target.value || "")
+                        .trim()
+                        .toLowerCase();
+                    this.renderFlags();
+                });
+
+                document.getElementById("flagsGroupsContainer")?.addEventListener("change", (event) => {
+                    const target = event.target;
+                    if (!target || !target.matches("input[data-flag-key]")) {
+                        return;
+                    }
+
+                    const flagKey = target.getAttribute("data-flag-key");
+                    const nextValue = target.checked;
+                    this.updateSingleFlag(flagKey, nextValue, target);
+                });
+            }
+
+            _showNotification(message, type = "info") {
+                const notification = document.createElement("div");
+                notification.className = `notification-enhanced notification-${type === "error" ? "error" : type === "success" ? "success" : "info"}`;
+                notification.innerHTML = `<i class="fas fa-${type === "error" ? "exclamation-circle" : type === "success" ? "check-circle" : "info-circle"}"></i><span>${message}</span>`;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
+            }
+
+            _setButtonLoading(buttonId, isLoading) {
+                const button = document.getElementById(buttonId);
+                if (!button) return;
+
+                const spinner = button.querySelector(".spinner-enhanced");
+                button.disabled = isLoading;
+                if (spinner) {
+                    spinner.classList.toggle("hidden", !isLoading);
+                }
+            }
+
+            async loadFlags() {
+                const requestId = ++this.latestLoadRequestId;
+                const loading = document.getElementById("flagsLoading");
+                const error = document.getElementById("flagsError");
+                const empty = document.getElementById("flagsEmpty");
+                const container = document.getElementById("flagsGroupsContainer");
+
+                if (loading) loading.hidden = false;
+                if (error) error.hidden = true;
+                if (empty) empty.hidden = true;
+                if (container) container.innerHTML = "";
+
+                this._setButtonLoading("refreshFlagsBtn", true);
+
+                try {
+                    const response = await secureFetch("/api/v1/admin/feature-flags?descriptions=true", {
+                        headers: {
+                            Authorization: `Bearer ${this.token}`,
+                        },
+                    });
+
+                    const result = await response.json();
+
+                    if (requestId !== this.latestLoadRequestId) {
+                        return;
+                    }
+
+                    if (!result?.success) {
+                        throw new Error(result?.error || "Failed to load feature flags");
+                    }
+
+                    const payload = result?.data || {};
+                    const rawFlags = payload?.flags || {};
+                    this.groups = payload?.groups || {};
+                    this.flagsData = {};
+
+                    Object.entries(rawFlags).forEach(([key, value]) => {
+                        if (value && typeof value === "object") {
+                            this.flagsData[key] = {
+                                value: !!value.value,
+                                description: value.description || "",
+                            };
+                        } else {
+                            this.flagsData[key] = {
+                                value: !!value,
+                                description: "",
+                            };
+                        }
+                    });
+
+                    if (loading) loading.hidden = true;
+                    if (error) error.hidden = true;
+                    if (empty) empty.hidden = true;
+
+                    if (Object.keys(this.flagsData).length === 0) {
+                        if (empty) empty.hidden = false;
+                        return;
+                    }
+
+                    this.renderFlags();
+                } catch (err) {
+                    if (requestId !== this.latestLoadRequestId) {
+                        return;
+                    }
+
+                    if (loading) loading.hidden = true;
+                    if (error) {
+                        error.hidden = false;
+                        const span = error.querySelector("span");
+                        if (span) {
+                            span.textContent = err.message || "Failed to load feature flags.";
+                        }
+                    }
+                } finally {
+                    if (requestId !== this.latestLoadRequestId) {
+                        return;
+                    }
+                    this._setButtonLoading("refreshFlagsBtn", false);
+                }
+            }
+
+            _buildGroupMap() {
+                const reverseMap = {};
+                Object.entries(this.groups || {}).forEach(([groupName, keys]) => {
+                    if (!Array.isArray(keys)) return;
+                    keys.forEach((key) => {
+                        reverseMap[key] = groupName;
+                    });
+                });
+                return reverseMap;
+            }
+
+            renderFlags() {
+                const container = document.getElementById("flagsGroupsContainer");
+                if (!container) return;
+
+                const grouped = {};
+                const groupMap = this._buildGroupMap();
+
+                Object.entries(this.flagsData).forEach(([key, metadata]) => {
+                    const groupName = groupMap[key] || "other";
+                    if (!grouped[groupName]) grouped[groupName] = [];
+                    grouped[groupName].push({ key, ...metadata });
+                });
+
+                const filterText = this.searchTerm;
+                const groupEntries = Object.entries(grouped)
+                    .map(([groupName, flags]) => {
+                        const filteredFlags = flags.filter((flag) => {
+                            if (!filterText) return true;
+                            return (
+                                flag.key.toLowerCase().includes(filterText) ||
+                                String(flag.description || "").toLowerCase().includes(filterText) ||
+                                groupName.toLowerCase().includes(filterText)
+                            );
+                        });
+                        return [groupName, filteredFlags];
+                    })
+                    .filter(([, flags]) => flags.length > 0)
+                    .sort((a, b) => a[0].localeCompare(b[0]));
+
+                if (groupEntries.length === 0) {
+                    container.innerHTML = '<div class="alert-enhanced alert-info-enhanced"><i class="fas fa-search"></i><span>No flags match the current search.</span></div>';
+                    return;
+                }
+
+                container.innerHTML = groupEntries
+                    .map(([groupName, flags]) => {
+                        const title = groupName.charAt(0).toUpperCase() + groupName.slice(1);
+                        const rows = flags
+                            .sort((a, b) => a.key.localeCompare(b.key))
+                            .map((flag) => {
+                                const isPending = this.pendingUpdate.has(flag.key);
+                                return `
+                    <div class="ff-row">
+                      <div class="ff-row__main">
+                        <strong class="ff-row__key">${this._escapeHtml(flag.key)}</strong>
+                        <span class="ff-row__desc">${this._escapeHtml(flag.description || "No description")}</span>
+                      </div>
+                      <label class="ff-toggle" style="color: var(--text-primary);">
+                        <input type="checkbox" data-flag-key="${this._escapeHtml(flag.key)}" ${flag.value ? "checked" : ""} ${isPending ? "disabled" : ""} />
+                        <span>${flag.value ? "ON" : "OFF"}</span>
+                      </label>
+                    </div>
+                  `;
+                            })
+                            .join("");
+
+                        return `
+                <section class="resource-summary-card ff-group">
+                  <div class="resource-summary-header">
+                    <h4><i class="fas fa-layer-group"></i> ${this._escapeHtml(title)}</h4>
+                  </div>
+                  <div class="ff-list">${rows}</div>
+                </section>
+              `;
+                    })
+                    .join("");
+            }
+
+            async updateSingleFlag(flagKey, value, inputElement) {
+                if (!flagKey || this.pendingUpdate.has(flagKey)) return;
+
+                const previousValue = this.flagsData[flagKey]?.value;
+                this.pendingUpdate.add(flagKey);
+                if (inputElement) inputElement.disabled = true;
+
+                try {
+                    const response = await secureFetch("/api/v1/admin/feature-flags", {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${this.token}`,
+                        },
+                        body: JSON.stringify({
+                            flags: {
+                                [flagKey]: !!value,
+                            },
+                        }),
+                    });
+
+                    const result = await response.json();
+                    if (!result?.success) {
+                        throw new Error(result?.error || "Failed to update flag");
+                    }
+
+                    if (this.flagsData[flagKey]) {
+                        this.flagsData[flagKey].value = !!value;
+                    }
+                    this._showNotification(`Flag ${flagKey} updated.`, "success");
+                } catch (err) {
+                    if (this.flagsData[flagKey]) {
+                        this.flagsData[flagKey].value = !!previousValue;
+                    }
+                    this._showNotification(err.message || "Failed to update flag.", "error");
+                } finally {
+                    this.pendingUpdate.delete(flagKey);
+                    if (inputElement) inputElement.disabled = false;
+                    this.renderFlags();
+                }
+            }
+
+            async resetFlags() {
+                const confirmed = window.confirm("Reset all feature flags to default values?");
+                if (!confirmed) return;
+
+                this._setButtonLoading("resetFlagsBtn", true);
+                try {
+                    const response = await secureFetch("/api/v1/admin/feature-flags/reset", {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${this.token}`,
+                        },
+                    });
+
+                    const result = await response.json();
+                    if (!result?.success) {
+                        throw new Error(result?.error || "Failed to reset flags");
+                    }
+
+                    this._showNotification("Feature flags reset to defaults.", "success");
+                    await this.loadFlags();
+                } catch (err) {
+                    this._showNotification(err.message || "Failed to reset feature flags.", "error");
+                } finally {
+                    this._setButtonLoading("resetFlagsBtn", false);
+                }
+            }
+
+            _escapeHtml(value) {
+                return String(value)
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#39;");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            new FeatureFlagsTab();
+        });
+    </script>
+</body>
+
+</html>

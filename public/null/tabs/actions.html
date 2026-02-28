@@ -1,241 +1,260 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Actions - Kraken Dashboard</title>
-    <link rel="stylesheet" href="../css/kraken.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
-    />
-  </head>
-  <body>
-    <div class="actions-section">
-      <div class="actions-header">
-        <h2 class="actions-title"><i class="fas fa-cogs"></i> Quick Actions</h2>
-      </div>
-      <div class="actions-grid">
-        <button id="backupBtn" class="btn-enhanced btn-success-enhanced">
-          <span class="spinner-enhanced hidden"></span>
-          <i class="fas fa-download btn-icon"></i>
-          Download Backup
-        </button>
-        <label
-          for="restoreFile"
-          class="btn-enhanced btn-warning-enhanced"
-          style="cursor: pointer"
-        >
-          <span class="spinner-enhanced hidden"></span>
-          <i class="fas fa-upload btn-icon"></i>
-          Restore Database
-        </label>
-        <input
-          type="file"
-          id="restoreFile"
-          accept=".json"
-          style="display: none"
-        />
-        <button id="clearCacheBtn" class="btn-enhanced btn-info-enhanced">
-          <span class="spinner-enhanced hidden"></span>
-          <i class="fas fa-broom btn-icon"></i>
-          Clear Cache
-        </button>
-        <button id="exportLogsBtn" class="btn-enhanced btn-secondary-enhanced">
-          <span class="spinner-enhanced hidden"></span>
-          <i class="fas fa-file-export btn-icon"></i>
-          Export Logs
-        </button>
-      </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Actions - Kraken Dashboard</title>
+  <link rel="stylesheet" href="../css/kraken.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
+</head>
+
+<body>
+  <div class="actions-section">
+    <div class="actions-header">
+      <h2 class="actions-title"><i class="fas fa-cogs"></i> Quick Actions</h2>
     </div>
+    <div class="actions-grid">
+      <button id="backupBtn" class="btn-enhanced btn-success-enhanced">
+        <span class="spinner-enhanced hidden"></span>
+        <i class="fas fa-download btn-icon"></i>
+        Download Backup
+      </button>
+      <label for="restoreFile" class="btn-enhanced btn-warning-enhanced" style="cursor: pointer">
+        <span class="spinner-enhanced hidden"></span>
+        <i class="fas fa-upload btn-icon"></i>
+        Restore Database
+      </label>
+      <input type="file" id="restoreFile" accept=".json" style="display: none" />
+      <button id="clearCacheBtn" class="btn-enhanced btn-info-enhanced">
+        <span class="spinner-enhanced hidden"></span>
+        <i class="fas fa-broom btn-icon"></i>
+        Clear Cache
+      </button>
+      <button id="exportLogsBtn" class="btn-enhanced btn-secondary-enhanced">
+        <span class="spinner-enhanced hidden"></span>
+        <i class="fas fa-file-export btn-icon"></i>
+        Export Logs
+      </button>
+    </div>
+  </div>
 
-    <!-- Shared Utilities -->
-    <script src="../js/kraken-utils.js"></script>
+  <!-- Shared Utilities -->
+  <script src="../js/kraken-utils.js"></script>
 
-    <script>
-      class ActionsTab {
-        constructor() {
-          this.token = getCookie("krakenToken");
-          this.init();
-        }
+  <script>
+    class ActionsTab {
+      constructor() {
+        this.token = getCookie("krakenToken");
+        this.init();
+      }
 
-        init() {
-          // Listen for token from parent window
-          window.addEventListener("message", (event) => {
-            if (event.data.type === "SET_TOKEN") {
-              this.token = event.data.token;
-            }
-          });
-
-          this.bindEvents();
-        }
-
-        bindEvents() {
-          document
-            .getElementById("backupBtn")
-            .addEventListener("click", () => this.downloadBackup());
-          document
-            .getElementById("restoreFile")
-            .addEventListener("change", (e) => this.handleRestore(e));
-          document
-            .getElementById("clearCacheBtn")
-            .addEventListener("click", () => this.clearCache());
-          document
-            .getElementById("exportLogsBtn")
-            .addEventListener("click", () => this.exportLogs());
-        }
-
-        async downloadBackup() {
-          const backupBtn = document.getElementById("backupBtn");
-          const spinner = backupBtn.querySelector(".spinner-enhanced");
-
-          backupBtn.disabled = true;
-          spinner.classList.remove("hidden");
-
-          try {
-            const response = await secureFetch(
-              "/api/v1/admin/database/backup",
-              {
-                headers: { Authorization: `Bearer ${this.token}` },
-              },
-            );
-
-            if (response.ok) {
-              const blob = await response.blob();
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `backup-${new Date().toISOString().slice(0, 10)}.json`;
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
-
-              this.showAlert("Backup downloaded successfully!", "success");
-            } else {
-              this.showAlert("Failed to download backup", "error");
-            }
-          } catch (error) {
-            if (error.message.includes("Authentication failed")) {
-              // Authentication error already handled by secureFetch
-              return;
-            }
-            this.showAlert("Failed to download backup", "error");
-          } finally {
-            backupBtn.disabled = false;
-            spinner.classList.add("hidden");
+      init() {
+        // Listen for token from parent window
+        window.addEventListener("message", (event) => {
+          if (event.data.type === "SET_TOKEN") {
+            this.token = event.data.token;
           }
-        }
+        });
 
-        async handleRestore(e) {
-          const file = e.target.files[0];
-          if (!file) return;
+        this.bindEvents();
+      }
 
-          const confirmRestore = confirm(
-            "Are you sure you want to restore the database? This will replace all current data!",
+      bindEvents() {
+        document
+          .getElementById("backupBtn")
+          .addEventListener("click", () => this.downloadBackup());
+        document
+          .getElementById("restoreFile")
+          .addEventListener("change", (e) => this.handleRestore(e));
+        document
+          .getElementById("clearCacheBtn")
+          .addEventListener("click", () => this.clearCache());
+        document
+          .getElementById("exportLogsBtn")
+          .addEventListener("click", () => this.exportLogs());
+      }
+
+      async downloadBackup() {
+        const backupBtn = document.getElementById("backupBtn");
+        const spinner = backupBtn.querySelector(".spinner-enhanced");
+
+        backupBtn.disabled = true;
+        spinner.classList.remove("hidden");
+
+        try {
+          const response = await secureFetch(
+            "/api/v1/admin/database/backup",
+            {
+              headers: { Authorization: `Bearer ${this.token}` },
+            },
           );
-          if (!confirmRestore) {
-            e.target.value = "";
-            return;
-          }
 
-          try {
-            const fileContent = await file.text();
-            const backupData = JSON.parse(fileContent);
-
-            if (!backupData.users || !Array.isArray(backupData.users)) {
-              throw new Error("Invalid backup file format");
-            }
-
-            const response = await secureFetch(
-              "/api/v1/admin/database/restore",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${this.token}`,
-                },
-                body: JSON.stringify(backupData),
-              },
-            );
-
-            const result = await response.json();
-
-            if (result.success) {
-              this.showAlert(result.data.message, "success");
-            } else {
-              this.showAlert(result.error, "error");
-            }
-          } catch (error) {
-            if (error.message.includes("Authentication failed")) {
-              // Authentication error already handled by secureFetch
-              return;
-            }
-            this.showAlert(
-              "Failed to restore database: " + error.message,
-              "error",
-            );
-          } finally {
-            e.target.value = "";
-          }
-        }
-
-        async clearCache() {
-          const btn = document.getElementById("clearCacheBtn");
-          const spinner = btn.querySelector(".spinner-enhanced");
-
-          btn.disabled = true;
-          spinner.classList.remove("hidden");
-
-          try {
-            // Mock cache clear - replace with actual API call
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            this.showAlert("Cache cleared successfully!", "success");
-          } catch (error) {
-            console.error("Failed to clear cache:", error);
-            this.showAlert("Failed to clear cache", "error");
-          } finally {
-            btn.disabled = false;
-            spinner.classList.add("hidden");
-          }
-        }
-
-        async exportLogs() {
-          const btn = document.getElementById("exportLogsBtn");
-          const spinner = btn.querySelector(".spinner-enhanced");
-
-          btn.disabled = true;
-          spinner.classList.remove("hidden");
-
-          try {
-            // Mock log export - replace with actual API call
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-
-            const logData = "Mock log export data...";
-            const blob = new Blob([logData], { type: "text/plain" });
+          if (response.ok) {
+            const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `logs-${new Date().toISOString().slice(0, 10)}.txt`;
+            a.download = `backup-${new Date().toISOString().slice(0, 10)}.json`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
-            this.showAlert("Logs exported successfully!", "success");
-          } catch (error) {
-            console.error("Failed to export logs:", error);
-            this.showAlert("Failed to export logs", "error");
-          } finally {
-            btn.disabled = false;
-            spinner.classList.add("hidden");
+            this.showAlert("Backup downloaded successfully!", "success");
+          } else {
+            this.showAlert("Failed to download backup", "error");
           }
+        } catch (error) {
+          if (error.message.includes("Authentication failed")) {
+            // Authentication error already handled by secureFetch
+            return;
+          }
+          this.showAlert("Failed to download backup", "error");
+        } finally {
+          backupBtn.disabled = false;
+          spinner.classList.add("hidden");
+        }
+      }
+
+      async handleRestore(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const confirmRestore = confirm(
+          "Are you sure you want to restore the database? This will replace all current data!",
+        );
+        if (!confirmRestore) {
+          e.target.value = "";
+          return;
         }
 
-        showAlert(message, type) {
-          // Create a simple alert notification
-          const alertDiv = document.createElement("div");
-          alertDiv.style.cssText = `
+        try {
+          const fileContent = await file.text();
+          const backupData = JSON.parse(fileContent);
+
+          if (!backupData.users || !Array.isArray(backupData.users)) {
+            throw new Error("Invalid backup file format");
+          }
+
+          const response = await secureFetch(
+            "/api/v1/admin/database/restore",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${this.token}`,
+              },
+              body: JSON.stringify(backupData),
+            },
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            this.showAlert(result.data.message, "success");
+          } else {
+            this.showAlert(result.error, "error");
+          }
+        } catch (error) {
+          if (error.message.includes("Authentication failed")) {
+            // Authentication error already handled by secureFetch
+            return;
+          }
+          this.showAlert(
+            "Failed to restore database: " + error.message,
+            "error",
+          );
+        } finally {
+          e.target.value = "";
+        }
+      }
+
+      async clearCache() {
+        const btn = document.getElementById("clearCacheBtn");
+        const spinner = btn.querySelector(".spinner-enhanced");
+
+        btn.disabled = true;
+        spinner.classList.remove("hidden");
+
+        try {
+          const response = await secureFetch("/api/v1/admin/cache/clear", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${this.token}`,
+            },
+          });
+
+          const result = await response.json();
+          if (!result?.success) {
+            throw new Error(result?.error || "Failed to clear cache");
+          }
+
+          const details = result?.data || {};
+          this.showAlert(
+            `Cache cleared. Expired tokens removed: ${details.expiredTokensRemoved ?? 0}, logs cleared: ${details.logsCleared ?? 0}.`,
+            "success",
+          );
+        } catch (error) {
+          console.error("Failed to clear cache:", error);
+          if (error.message.includes("Authentication failed")) {
+            return;
+          }
+          this.showAlert("Failed to clear cache", "error");
+        } finally {
+          btn.disabled = false;
+          spinner.classList.add("hidden");
+        }
+      }
+
+      async exportLogs() {
+        const btn = document.getElementById("exportLogsBtn");
+        const spinner = btn.querySelector(".spinner-enhanced");
+
+        btn.disabled = true;
+        spinner.classList.remove("hidden");
+
+        try {
+          const response = await secureFetch(
+            "/api/v1/admin/logs/export?format=ndjson&level=all",
+            {
+              headers: {
+                Authorization: `Bearer ${this.token}`,
+              },
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error("Failed to export logs");
+          }
+
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `kraken-logs-${new Date().toISOString().slice(0, 10)}.ndjson`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+          this.showAlert("Logs exported successfully!", "success");
+        } catch (error) {
+          console.error("Failed to export logs:", error);
+          if (error.message.includes("Authentication failed")) {
+            return;
+          }
+          this.showAlert("Failed to export logs", "error");
+        } finally {
+          btn.disabled = false;
+          spinner.classList.add("hidden");
+        }
+      }
+
+      showAlert(message, type) {
+        // Create a simple alert notification
+        const alertDiv = document.createElement("div");
+        alertDiv.style.cssText = `
                     position: fixed;
                     top: 20px;
                     right: 20px;
@@ -248,29 +267,30 @@
                     word-wrap: break-word;
                 `;
 
-          const bgColor =
-            type === "success"
-              ? "#238636"
-              : type === "error"
-                ? "#da3633"
-                : "#58a6ff";
-          alertDiv.style.backgroundColor = bgColor;
+        const bgColor =
+          type === "success"
+            ? "#238636"
+            : type === "error"
+              ? "#da3633"
+              : "#58a6ff";
+        alertDiv.style.backgroundColor = bgColor;
 
-          alertDiv.textContent = message;
-          document.body.appendChild(alertDiv);
+        alertDiv.textContent = message;
+        document.body.appendChild(alertDiv);
 
-          setTimeout(() => {
-            if (alertDiv.parentNode) {
-              alertDiv.parentNode.removeChild(alertDiv);
-            }
-          }, 5000);
-        }
+        setTimeout(() => {
+          if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+          }
+        }, 5000);
       }
+    }
 
-      // Initialize actions tab when the page loads
-      document.addEventListener("DOMContentLoaded", () => {
-        new ActionsTab();
-      });
-    </script>
-  </body>
+    // Initialize actions tab when the page loads
+    document.addEventListener("DOMContentLoaded", () => {
+      new ActionsTab();
+    });
+  </script>
+</body>
+
 </html>

@@ -1,6 +1,7 @@
 const dbManager = require("../data/database-manager");
 const financialService = require("./financial.service");
 const pricingService = require("./commodities-pricing.service");
+const commoditiesAdminControlsService = require("./commodities-admin-controls.service");
 
 class CommoditiesService {
   constructor() {
@@ -109,6 +110,7 @@ class CommoditiesService {
 
     const symbol = pricingService.normalizeSymbol(payload.symbol);
     const quantity = this._validateQuantity(payload.quantity);
+    commoditiesAdminControlsService.validateTrade(symbol, quantity);
 
     const quote = pricingService.getExecutionQuote(symbol, "buy", quantity);
     const totalCost = Number((quote.executionPrice * quantity).toFixed(2));
@@ -191,6 +193,7 @@ class CommoditiesService {
 
     const symbol = pricingService.normalizeSymbol(payload.symbol);
     const quantity = this._validateQuantity(payload.quantity);
+    commoditiesAdminControlsService.validateTrade(symbol, quantity);
 
     const result = await this._withStoreLock(async () => {
       const store = await this._readStore();

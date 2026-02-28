@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Messenger Admin - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
+    <style>
+        .msg-select-checkbox {
+            width: 1rem;
+            height: 1rem;
+            accent-color: var(--accent-blue);
+            cursor: pointer;
+        }
+
+        .selected-message-row {
+            background: rgb(88 166 255 / 0.12) !important;
+        }
+
+        .pager-enhanced {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .pager-enhanced .page-indicator {
+            min-width: 84px;
+            text-align: center;
+        }
+
+        .pager-enhanced .page-jump-input {
+            width: 72px;
+            min-width: 72px;
+            padding: 0.25rem 0.45rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.78rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="resources-section">
+        <div class="resources-header">
+            <h2 class="resources-title">
+                <i class="fas fa-comments"></i>
+                Messenger Admin Console
+            </h2>
+            <div class="resources-actions" style="display:flex; gap: 0.5rem;">
+                <button id="refreshMessengerAdminBtn" class="btn-enhanced btn-primary-enhanced">
+                    <span class="spinner-enhanced hidden"></span>
+                    <i class="fas fa-sync-alt btn-icon"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="filters-bar" style="margin-bottom: 1rem; display:flex; gap:0.5rem; flex-wrap: wrap; align-items: center;">
+            <input type="text" id="messengerFilterUserId" class="filter-input" placeholder="User ID" style="min-width: 110px;" />
+            <input type="text" id="messengerFilterWithUserId" class="filter-input" placeholder="With user ID" style="min-width: 110px;" />
+            <input type="text" id="messengerFilterContains" class="filter-input" placeholder="Message contains..." style="min-width: 240px;" />
+            <input type="date" id="messengerFilterFrom" class="filter-input" />
+            <input type="date" id="messengerFilterTo" class="filter-input" />
+            <label style="display:inline-flex; align-items:center; gap:0.3rem; font-size:0.8rem; color: var(--text-secondary);">
+                <input type="checkbox" id="messengerFilterMutedOnly" />
+                Muted users only
+            </label>
+            <select id="messengerPageSize" class="filter-input" style="min-width: 120px;">
+                <option value="10">10 / page</option>
+                <option value="25">25 / page</option>
+                <option value="50" selected>50 / page</option>
+                <option value="100">100 / page</option>
+                <option value="200">200 / page</option>
+            </select>
+            <button id="messengerApplyFiltersBtn" class="btn-enhanced btn-primary-enhanced">
+                <i class="fas fa-filter btn-icon"></i>
+                Apply
+            </button>
+            <button id="messengerClearFiltersBtn" class="btn-enhanced btn-tertiary-enhanced">
+                <i class="fas fa-eraser btn-icon"></i>
+                Clear
+            </button>
+        </div>
+
+        <div id="messengerAdminLoading" class="loading-enhanced">
+            <span class="spinner-enhanced"></span>
+            Loading messenger admin data...
+        </div>
+
+        <div id="messengerAdminError" class="alert-enhanced alert-error-enhanced" hidden>
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Failed to load messenger data.</span>
+        </div>
+
+        <section class="resource-summary-card" style="margin-bottom: 1rem;">
+            <div class="resource-summary-header">
+                <h4><i class="fas fa-layer-group"></i> Conversation Summaries</h4>
+            </div>
+            <div class="table-container">
+                <table class="table-enhanced">
+                    <thead>
+                        <tr>
+                            <th>Participants</th>
+                            <th>Messages</th>
+                            <th>First Message</th>
+                            <th>Last Message</th>
+                            <th>Preview</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messengerConversationsBody">
+                        <tr>
+                            <td colspan="5" class="text-center">No data</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 0.65rem; gap: 0.5rem; flex-wrap: wrap;">
+                <span id="messengerConversationsMeta" class="badge-enhanced badge-info-enhanced">0 conversations</span>
+                <div class="pager-enhanced">
+                    <button id="messengerConversationsFirstBtn" class="btn-enhanced btn-tertiary-enhanced" style="padding: 0.25rem 0.5rem;" title="First page">First</button>
+                    <button id="messengerConversationsPrevBtn" class="btn-enhanced btn-tertiary-enhanced" style="padding: 0.25rem 0.5rem;">Prev</button>
+                    <span id="messengerConversationsPageIndicator" class="badge-enhanced badge-info-enhanced page-indicator">Page 1 / 1</span>
+                    <button id="messengerConversationsNextBtn" class="btn-enhanced btn-tertiary-enhanced" style="padding: 0.25rem 0.5rem;">Next</button>
+                    <button id="messengerConversationsLastBtn" class="btn-enhanced btn-tertiary-enhanced" style="padding: 0.25rem 0.5rem;" title="Last page">Last</button>
+                    <input id="messengerConversationsJumpInput" class="page-jump-input" type="number" min="1" step="1" placeholder="Page" title="Go to page" />
+                    <button id="messengerConversationsJumpBtn" class="btn-enhanced btn-tertiary-enhanced" style="padding: 0.25rem 0.5rem;" title="Go to page">Go</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="resource-summary-card">
+            <div class="resource-summary-header" style="display:flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <h4><i class="fas fa-envelope"></i> Messages</h4>
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <span id="messengerMessageCount" class="badge-enhanced badge-info-enhanced">0 items</span>
+                    <button id="messengerRemoveSelectedBtn" class="btn-enhanced btn-danger-enhanced" disabled>
+                        <i class="fas fa-trash btn-icon"></i>
+                        Remove selected
+                    </button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="table-enhanced">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="messengerSelectAll" class="msg-select-checkbox" title="Select all visible" /></th>
+                            <th>ID</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Content</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messengerMessagesBody">
+                        <tr>
+                            <td colspan="7" class="text-center">No data</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 0.65rem; gap: 0.5rem; flex-wrap: wrap;">
+                <span id="messengerMessagesMeta" class="badge-enhanced badge-info-enhanced">0 messages</span>
+                <div class="pager-enhanced">
+                    <button id="messengerMessagesFirstBtn" class="btn-enhanced btn-tertiary-enhanced" style="padding: 0.25rem 0.5rem;" title="First page">First</button>
+                    <button id="messengerMessagesPrevBtn" class="btn-enhanced btn-tertiary-enhanced" style="padding: 0.25rem 0.5rem;">Prev</button>
+                    <span id="messengerMessagesPageIndicator" class="badge-enhanced badge-info-enhanced page-indicator">Page 1 / 1</span>
+                    <button id="messengerMessagesNextBtn" class="btn-enhanced btn-tertiary-enhanced" style="padding: 0.25rem 0.5rem;">Next</button>
+                    <button id="messengerMessagesLastBtn" class="btn-enhanced btn-tertiary-enhanced" style="padding: 0.25rem 0.5rem;" title="Last page">Last</button>
+                    <input id="messengerMessagesJumpInput" class="page-jump-input" type="number" min="1" step="1" placeholder="Page" title="Go to page" />
+                    <button id="messengerMessagesJumpBtn" class="btn-enhanced btn-tertiary-enhanced" style="padding: 0.25rem 0.5rem;" title="Go to page">Go</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/kraken-utils.js"></script>
+    <script>
+        class MessengerAdminTab {
+            constructor() {
+                this.token = getCookie("krakenToken");
+                this.conversations = [];
+                this.messages = [];
+                this.selectedMessageIds = new Set();
+                this.isLoading = false;
+                this.pagination = {
+                    conversations: { page: 1, pageSize: 50, total: 0, hasMore: false },
+                    messages: { page: 1, pageSize: 50, total: 0, hasMore: false },
+                };
+                this.init();
+            }
+
+            init() {
+                window.addEventListener("message", (event) => {
+                    if (event.data.type === "SET_TOKEN") {
+                        this.token = event.data.token;
+                        this.loadAll();
+                    }
+                });
+
+                document.getElementById("refreshMessengerAdminBtn")?.addEventListener("click", () => this.loadAll({ resetPages: false }));
+                document.getElementById("messengerApplyFiltersBtn")?.addEventListener("click", () => this.loadAll({ resetPages: true }));
+                document.getElementById("messengerClearFiltersBtn")?.addEventListener("click", () => this.clearFilters());
+
+                document.getElementById("messengerConversationsPrevBtn")?.addEventListener("click", () => this.changePage("conversations", -1));
+                document.getElementById("messengerConversationsNextBtn")?.addEventListener("click", () => this.changePage("conversations", 1));
+                document.getElementById("messengerConversationsFirstBtn")?.addEventListener("click", () => this.goToBoundaryPage("conversations", "first"));
+                document.getElementById("messengerConversationsLastBtn")?.addEventListener("click", () => this.goToBoundaryPage("conversations", "last"));
+                document.getElementById("messengerConversationsJumpBtn")?.addEventListener("click", () => this.jumpToPage("conversations"));
+                document.getElementById("messengerConversationsJumpInput")?.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        this.jumpToPage("conversations");
+                    }
+                });
+
+                document.getElementById("messengerMessagesPrevBtn")?.addEventListener("click", () => this.changePage("messages", -1));
+                document.getElementById("messengerMessagesNextBtn")?.addEventListener("click", () => this.changePage("messages", 1));
+                document.getElementById("messengerMessagesFirstBtn")?.addEventListener("click", () => this.goToBoundaryPage("messages", "first"));
+                document.getElementById("messengerMessagesLastBtn")?.addEventListener("click", () => this.goToBoundaryPage("messages", "last"));
+                document.getElementById("messengerMessagesJumpBtn")?.addEventListener("click", () => this.jumpToPage("messages"));
+                document.getElementById("messengerMessagesJumpInput")?.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        this.jumpToPage("messages");
+                    }
+                });
+
+                document.getElementById("messengerPageSize")?.addEventListener("change", () => {
+                    const nextSize = Number(document.getElementById("messengerPageSize")?.value || 50);
+                    this.pagination.conversations.pageSize = nextSize;
+                    this.pagination.messages.pageSize = nextSize;
+                    this.loadAll({ resetPages: true });
+                });
+
+                document.getElementById("messengerMessagesBody")?.addEventListener("click", (event) => {
+                    const button = event.target.closest("button[data-action]");
+                    if (!button) return;
+
+                    const action = button.getAttribute("data-action");
+                    if (action === "mute") {
+                        const userId = button.getAttribute("data-user-id");
+                        this.muteUser(userId);
+                    } else if (action === "unmute") {
+                        const userId = button.getAttribute("data-user-id");
+                        this.unmuteUser(userId);
+                    }
+                });
+
+                document.getElementById("messengerMessagesBody")?.addEventListener("change", (event) => {
+                    const checkbox = event.target.closest("input[data-action='select-message']");
+                    if (!checkbox) return;
+
+                    const selectedId = Number(checkbox.getAttribute("data-message-id"));
+                    if (!Number.isInteger(selectedId) || selectedId <= 0) return;
+
+                    if (checkbox.checked) {
+                        this.selectedMessageIds.add(selectedId);
+                    } else {
+                        this.selectedMessageIds.delete(selectedId);
+                    }
+                    this._syncSelectedMessageState();
+                });
+
+                document.getElementById("messengerSelectAll")?.addEventListener("change", (event) => {
+                    const checked = event.target.checked === true;
+                    const visibleIds = this.messages
+                        .map((message) => Number(message?.id))
+                        .filter((id) => Number.isInteger(id) && id > 0);
+
+                    if (checked) {
+                        visibleIds.forEach((id) => this.selectedMessageIds.add(id));
+                    } else {
+                        visibleIds.forEach((id) => this.selectedMessageIds.delete(id));
+                    }
+
+                    this.renderMessages();
+                });
+
+                document.getElementById("messengerRemoveSelectedBtn")?.addEventListener("click", () => this.removeSelectedMessage());
+
+                document.getElementById("messengerConversationsBody")?.addEventListener("click", (event) => {
+                    const target = event.target.closest("button[data-with-user-id]");
+                    if (!target) return;
+                    const withUserId = target.getAttribute("data-with-user-id") || "";
+                    const withUserInput = document.getElementById("messengerFilterWithUserId");
+                    if (withUserInput) {
+                        withUserInput.value = withUserId;
+                    }
+                    this.loadAll({ resetPages: true });
+                });
+
+                if (this.token) {
+                    this.loadAll({ resetPages: true });
+                }
+            }
+
+            _setLoading(isLoading) {
+                this.isLoading = isLoading === true;
+                const loading = document.getElementById("messengerAdminLoading");
+                if (loading) loading.hidden = !isLoading;
+
+                const btn = document.getElementById("refreshMessengerAdminBtn");
+                if (btn) {
+                    btn.disabled = isLoading;
+                    const spinner = btn.querySelector(".spinner-enhanced");
+                    if (spinner) spinner.classList.toggle("hidden", !isLoading);
+                }
+            }
+
+            _showError(message) {
+                const el = document.getElementById("messengerAdminError");
+                if (!el) return;
+                el.hidden = false;
+                const span = el.querySelector("span");
+                if (span) span.textContent = message || "Failed to load messenger data.";
+            }
+
+            _hideError() {
+                const el = document.getElementById("messengerAdminError");
+                if (el) el.hidden = true;
+            }
+
+            _showNotification(message, type = "info") {
+                const notification = document.createElement("div");
+                notification.className = `notification-enhanced notification-${type === "error" ? "error" : type === "success" ? "success" : "info"}`;
+                notification.innerHTML = `<i class="fas fa-${type === "error" ? "exclamation-circle" : type === "success" ? "check-circle" : "info-circle"}"></i><span>${this._escapeHtml(message)}</span>`;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 2500);
+            }
+
+            _getBaseQuery() {
+                const userId = String(document.getElementById("messengerFilterUserId")?.value || "").trim();
+                const withUserId = String(document.getElementById("messengerFilterWithUserId")?.value || "").trim();
+                const contains = String(document.getElementById("messengerFilterContains")?.value || "").trim();
+                const from = String(document.getElementById("messengerFilterFrom")?.value || "").trim();
+                const to = String(document.getElementById("messengerFilterTo")?.value || "").trim();
+                const mutedOnly = document.getElementById("messengerFilterMutedOnly")?.checked === true;
+
+                const params = new URLSearchParams();
+                if (userId) params.set("userId", userId);
+                if (withUserId) params.set("withUserId", withUserId);
+                if (contains) params.set("contains", contains);
+                if (from) params.set("from", from);
+                if (to) params.set("to", to);
+                if (mutedOnly) params.set("mutedOnly", "true");
+
+                return params;
+            }
+
+            _toQueryString(params) {
+                const text = params.toString();
+                return text ? `?${text}` : "";
+            }
+
+            async loadAll(options = {}) {
+                const { resetPages = false } = options;
+
+                if (resetPages) {
+                    this.pagination.conversations.page = 1;
+                    this.pagination.messages.page = 1;
+                }
+
+                this._setLoading(true);
+                this._hideError();
+
+                try {
+                    const baseQuery = this._getBaseQuery();
+                    const conversationsQuery = new URLSearchParams(baseQuery);
+                    const messagesQuery = new URLSearchParams(baseQuery);
+
+                    conversationsQuery.set("page", String(this.pagination.conversations.page));
+                    conversationsQuery.set("pageSize", String(this.pagination.conversations.pageSize));
+                    messagesQuery.set("page", String(this.pagination.messages.page));
+                    messagesQuery.set("pageSize", String(this.pagination.messages.pageSize));
+
+                    const conversationsSuffix = this._toQueryString(conversationsQuery);
+                    const messagesSuffix = this._toQueryString(messagesQuery);
+
+                    const [conversationsResponse, messagesResponse] = await Promise.all([
+                        secureFetch(`/api/v1/admin/messenger/conversations${conversationsSuffix}`, {
+                            headers: { Authorization: `Bearer ${this.token}` },
+                        }),
+                        secureFetch(`/api/v1/admin/messenger/messages${messagesSuffix}`, {
+                            headers: { Authorization: `Bearer ${this.token}` },
+                        }),
+                    ]);
+
+                    const [conversationsResult, messagesResult] = await Promise.all([conversationsResponse.json(), messagesResponse.json()]);
+
+                    if (!conversationsResult?.success) {
+                        throw new Error(conversationsResult?.error || "Failed to load conversation summaries");
+                    }
+
+                    if (!messagesResult?.success) {
+                        throw new Error(messagesResult?.error || "Failed to load messages");
+                    }
+
+                    this.conversations = Array.isArray(conversationsResult?.data?.items) ? conversationsResult.data.items : [];
+                    this.messages = Array.isArray(messagesResult?.data?.items) ? messagesResult.data.items : [];
+
+                    this.pagination.conversations.total = Number(conversationsResult?.data?.total || 0);
+                    this.pagination.conversations.hasMore = conversationsResult?.data?.hasMore === true;
+                    this.pagination.messages.total = Number(messagesResult?.data?.total || 0);
+                    this.pagination.messages.hasMore = messagesResult?.data?.hasMore === true;
+
+                    this.renderConversations();
+                    this.renderMessages();
+                    this._renderPaginationState();
+                    this._syncSelectedMessageState();
+                } catch (error) {
+                    this._showError(error?.message || "Failed to load messenger data.");
+                } finally {
+                    this._setLoading(false);
+                }
+            }
+
+            changePage(section, delta) {
+                const target = this.pagination?.[section];
+                if (!target) return;
+
+                if (this.isLoading) {
+                    this._showNotification("Please wait for current page to finish loading.", "info");
+                    return;
+                }
+
+                const nextPage = target.page + Number(delta || 0);
+                this._setPage(section, nextPage, { notifyOnBoundary: true });
+            }
+
+            _getTotalPages(section) {
+                const target = this.pagination?.[section];
+                if (!target) return 1;
+                const total = Number(target.total || 0);
+                const pageSize = Number(target.pageSize || 1);
+                if (total <= 0) return 1;
+                return Math.max(1, Math.ceil(total / Math.max(1, pageSize)));
+            }
+
+            _setPage(section, desiredPage, options = {}) {
+                const { notifyOnBoundary = false } = options;
+                const target = this.pagination?.[section];
+                if (!target) return;
+
+                if (this.isLoading) {
+                    this._showNotification("Please wait for current page to finish loading.", "info");
+                    return;
+                }
+
+                const totalPages = this._getTotalPages(section);
+                const numericDesired = Number(desiredPage);
+                if (!Number.isFinite(numericDesired)) {
+                    this._showNotification("Please enter a valid page number.", "error");
+                    return;
+                }
+
+                const clampedPage = Math.min(totalPages, Math.max(1, Math.trunc(numericDesired)));
+                if (clampedPage === target.page) {
+                    if (notifyOnBoundary) {
+                        if (clampedPage <= 1 && numericDesired < 1) {
+                            this._showNotification("You are already on the first page.", "info");
+                        } else if (clampedPage >= totalPages && numericDesired > totalPages) {
+                            this._showNotification("You are already on the last page.", "info");
+                        }
+                    }
+                    return;
+                }
+
+                target.page = clampedPage;
+                this.loadAll({ resetPages: false });
+            }
+
+            goToBoundaryPage(section, boundary) {
+                const totalPages = this._getTotalPages(section);
+                const nextPage = boundary === "last" ? totalPages : 1;
+                this._setPage(section, nextPage, { notifyOnBoundary: true });
+            }
+
+            jumpToPage(section) {
+                const inputId = section === "conversations"
+                    ? "messengerConversationsJumpInput"
+                    : "messengerMessagesJumpInput";
+                const input = document.getElementById(inputId);
+                if (!input) return;
+
+                const raw = String(input.value || "").trim();
+                if (!raw) {
+                    this._showNotification("Enter a page number first.", "info");
+                    return;
+                }
+
+                const page = Number(raw);
+                if (!Number.isInteger(page) || page <= 0) {
+                    this._showNotification("Page number must be a positive integer.", "error");
+                    return;
+                }
+
+                this._setPage(section, page, { notifyOnBoundary: true });
+            }
+
+            _renderPaginationState() {
+                const conversationsMeta = document.getElementById("messengerConversationsMeta");
+                const messagesMeta = document.getElementById("messengerMessagesMeta");
+                const conversationsPageIndicator = document.getElementById("messengerConversationsPageIndicator");
+                const messagesPageIndicator = document.getElementById("messengerMessagesPageIndicator");
+                const conversationsFirstBtn = document.getElementById("messengerConversationsFirstBtn");
+                const conversationsPrevBtn = document.getElementById("messengerConversationsPrevBtn");
+                const conversationsNextBtn = document.getElementById("messengerConversationsNextBtn");
+                const conversationsLastBtn = document.getElementById("messengerConversationsLastBtn");
+                const messagesFirstBtn = document.getElementById("messengerMessagesFirstBtn");
+                const messagesPrevBtn = document.getElementById("messengerMessagesPrevBtn");
+                const messagesNextBtn = document.getElementById("messengerMessagesNextBtn");
+                const messagesLastBtn = document.getElementById("messengerMessagesLastBtn");
+                const conversationsJumpInput = document.getElementById("messengerConversationsJumpInput");
+                const messagesJumpInput = document.getElementById("messengerMessagesJumpInput");
+
+                const conversationsPage = Number(this.pagination.conversations.page || 1);
+                const messagesPage = Number(this.pagination.messages.page || 1);
+                const conversationsTotal = Number(this.pagination.conversations.total || 0);
+                const messagesTotal = Number(this.pagination.messages.total || 0);
+                const conversationsPageSize = Number(this.pagination.conversations.pageSize || 1);
+                const messagesPageSize = Number(this.pagination.messages.pageSize || 1);
+                const conversationsTotalPages = this._getTotalPages("conversations");
+                const messagesTotalPages = this._getTotalPages("messages");
+                const conversationsFrom = conversationsTotal > 0 ? (conversationsPage - 1) * conversationsPageSize + 1 : 0;
+                const conversationsTo = conversationsTotal > 0 ? Math.min(conversationsTotal, conversationsPage * conversationsPageSize) : 0;
+                const messagesFrom = messagesTotal > 0 ? (messagesPage - 1) * messagesPageSize + 1 : 0;
+                const messagesTo = messagesTotal > 0 ? Math.min(messagesTotal, messagesPage * messagesPageSize) : 0;
+
+                if (conversationsMeta) {
+                    conversationsMeta.textContent = `${conversationsTotal} conversations • showing ${conversationsFrom}-${conversationsTo}`;
+                }
+                if (messagesMeta) {
+                    messagesMeta.textContent = `${messagesTotal} messages • showing ${messagesFrom}-${messagesTo}`;
+                }
+                if (conversationsPageIndicator) {
+                    conversationsPageIndicator.textContent = `Page ${conversationsPage} / ${conversationsTotalPages}`;
+                }
+                if (messagesPageIndicator) {
+                    messagesPageIndicator.textContent = `Page ${messagesPage} / ${messagesTotalPages}`;
+                }
+
+                if (conversationsJumpInput) {
+                    conversationsJumpInput.max = String(conversationsTotalPages);
+                    conversationsJumpInput.placeholder = `1-${conversationsTotalPages}`;
+                }
+                if (messagesJumpInput) {
+                    messagesJumpInput.max = String(messagesTotalPages);
+                    messagesJumpInput.placeholder = `1-${messagesTotalPages}`;
+                }
+
+                const isConversationsFirst = conversationsPage <= 1;
+                const isConversationsLast = conversationsPage >= conversationsTotalPages;
+                const isMessagesFirst = messagesPage <= 1;
+                const isMessagesLast = messagesPage >= messagesTotalPages;
+
+                if (conversationsFirstBtn) conversationsFirstBtn.disabled = isConversationsFirst;
+                if (conversationsPrevBtn) conversationsPrevBtn.disabled = isConversationsFirst;
+                if (conversationsNextBtn) conversationsNextBtn.disabled = isConversationsLast;
+                if (conversationsLastBtn) conversationsLastBtn.disabled = isConversationsLast;
+                if (messagesFirstBtn) messagesFirstBtn.disabled = isMessagesFirst;
+                if (messagesPrevBtn) messagesPrevBtn.disabled = isMessagesFirst;
+                if (messagesNextBtn) messagesNextBtn.disabled = isMessagesLast;
+                if (messagesLastBtn) messagesLastBtn.disabled = isMessagesLast;
+
+                if (conversationsFirstBtn) {
+                    conversationsFirstBtn.title = isConversationsFirst ? "Already on first page" : "Go to first page";
+                }
+                if (conversationsPrevBtn) {
+                    conversationsPrevBtn.title = isConversationsFirst ? "Already on first page" : "Go to previous page";
+                }
+                if (conversationsNextBtn) {
+                    conversationsNextBtn.title = isConversationsLast ? "Already on last page" : "Go to next page";
+                }
+                if (conversationsLastBtn) {
+                    conversationsLastBtn.title = isConversationsLast ? "Already on last page" : "Go to last page";
+                }
+                if (messagesFirstBtn) {
+                    messagesFirstBtn.title = isMessagesFirst ? "Already on first page" : "Go to first page";
+                }
+                if (messagesPrevBtn) {
+                    messagesPrevBtn.title = isMessagesFirst ? "Already on first page" : "Go to previous page";
+                }
+                if (messagesNextBtn) {
+                    messagesNextBtn.title = isMessagesLast ? "Already on last page" : "Go to next page";
+                }
+                if (messagesLastBtn) {
+                    messagesLastBtn.title = isMessagesLast ? "Already on last page" : "Go to last page";
+                }
+            }
+
+            renderConversations() {
+                const body = document.getElementById("messengerConversationsBody");
+                if (!body) return;
+
+                if (!this.conversations.length) {
+                    body.innerHTML = `<tr><td colspan="5" class="text-center">No conversations found.</td></tr>`;
+                    return;
+                }
+
+                body.innerHTML = this.conversations.map((item) => {
+                    const left = item?.participants?.[0];
+                    const right = item?.participants?.[1];
+                    const participants = `${left?.displayedName || left?.id || "-"} ↔ ${right?.displayedName || right?.id || "-"}`;
+                    const firstAt = item.firstMessageAt ? new Date(item.firstMessageAt).toLocaleString() : "-";
+                    const lastAt = item.lastMessageAt ? new Date(item.lastMessageAt).toLocaleString() : "-";
+                    const preview = item?.preview?.content || "-";
+                    const leftId = left?.id || "";
+                    const rightId = right?.id || "";
+                    const pair = [leftId, rightId].filter(Boolean).join("↔");
+
+                    return `
+            <tr>
+              <td>${participants}</td>
+              <td>${item.messageCount || 0}</td>
+              <td>${firstAt}</td>
+              <td>${lastAt}</td>
+                            <td>
+                                <div>${this._escapeHtml(preview)}</div>
+                                ${pair ? `<button class="btn-enhanced btn-tertiary-enhanced" data-with-user-id="${this._escapeHtml(String(rightId || leftId))}" style="margin-top:0.3rem; padding:0.2rem 0.45rem;">Filter thread</button>` : ""}
+                            </td>
+            </tr>
+          `;
+                }).join("");
+            }
+
+            renderMessages() {
+                const body = document.getElementById("messengerMessagesBody");
+                const count = document.getElementById("messengerMessageCount");
+                if (!body) return;
+
+                if (count) {
+                    count.textContent = `${this.messages.length} item${this.messages.length === 1 ? "" : "s"}`;
+                }
+
+                if (!this.messages.length) {
+                    body.innerHTML = `<tr><td colspan="7" class="text-center">No messages found.</td></tr>`;
+                    return;
+                }
+
+                const visibleMessageIds = new Set(this.messages.map((message) => Number(message?.id)).filter((id) => Number.isInteger(id) && id > 0));
+                this.selectedMessageIds = new Set(
+                    [...this.selectedMessageIds].filter((id) => Number.isInteger(id) && id > 0 && visibleMessageIds.has(id)),
+                );
+
+                body.innerHTML = this.messages.map((message) => {
+                    const messageId = Number(message?.id || 0);
+                    const created = message.createdAt ? new Date(message.createdAt).toLocaleString() : "-";
+                    const fromId = message?.fromUser?.id || message.fromUserId;
+                    const fromName = message?.fromUser?.displayedName || `User ${fromId}`;
+                    const toName = message?.toUser?.displayedName || `User ${message.toUserId}`;
+                    const mutedUntil = message?.fromUser?.messengerMutedUntil || null;
+                    const isMuted = mutedUntil && new Date(mutedUntil).getTime() > Date.now();
+                    const mutedLabel = isMuted ? `<div style="font-size:0.7rem; color: var(--warning-color);">Muted until ${new Date(mutedUntil).toLocaleString()}</div>` : "";
+                    const isSelected = this.selectedMessageIds.has(messageId);
+
+                    return `
+                        <tr class="${isSelected ? "selected-message-row" : ""}">
+              <td>
+                                <input type="checkbox" class="msg-select-checkbox" data-action="select-message" data-message-id="${messageId}" ${isSelected ? "checked" : ""} title="Select message ${messageId}" />
+              </td>
+              <td>${message.id}</td>
+              <td>${this._escapeHtml(fromName)}</td>
+              <td>${this._escapeHtml(toName)}</td>
+                            <td>${this._escapeHtml(String(message.content || ""))}${mutedLabel}</td>
+              <td>${created}</td>
+              <td>
+                ${isMuted ? `<button data-action="unmute" data-user-id="${fromId}" class="btn-enhanced btn-warning-enhanced" style="padding: 0.25rem 0.5rem;">Unmute</button>` : `<button data-action="mute" data-user-id="${fromId}" class="btn-enhanced btn-danger-enhanced" style="padding: 0.25rem 0.5rem;">Mute 60m</button>`}
+              </td>
+            </tr>
+          `;
+                }).join("");
+
+                this._syncSelectedMessageState();
+            }
+
+            _syncSelectedMessageState() {
+                const removeBtn = document.getElementById("messengerRemoveSelectedBtn");
+                if (!removeBtn) return;
+                const selectedCount = this.selectedMessageIds.size;
+                const hasSelection = selectedCount > 0;
+                removeBtn.disabled = !hasSelection || this.isLoading;
+                removeBtn.title = hasSelection ? `Remove ${selectedCount} selected message${selectedCount === 1 ? "" : "s"}` : "Select message(s) first";
+                removeBtn.innerHTML = `<i class="fas fa-trash btn-icon"></i>Remove selected${hasSelection ? ` (${selectedCount})` : ""}`;
+
+                const selectAll = document.getElementById("messengerSelectAll");
+                if (selectAll) {
+                    const visibleIds = this.messages
+                        .map((message) => Number(message?.id))
+                        .filter((id) => Number.isInteger(id) && id > 0);
+                    const selectedVisibleCount = visibleIds.filter((id) => this.selectedMessageIds.has(id)).length;
+                    selectAll.checked = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length;
+                    selectAll.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleIds.length;
+                }
+            }
+
+            async removeSelectedMessage() {
+                const selectedIds = [...this.selectedMessageIds].filter((id) => Number.isInteger(id) && id > 0);
+                if (!selectedIds.length) {
+                    this._showNotification("Select message(s) to remove first.", "info");
+                    return;
+                }
+
+                const confirmed = window.confirm(`Remove ${selectedIds.length} selected message${selectedIds.length === 1 ? "" : "s"}? This action cannot be undone.`);
+                if (!confirmed) return;
+
+                try {
+                    let removedCount = 0;
+                    for (const messageId of selectedIds) {
+                        const response = await secureFetch(`/api/v1/admin/messenger/messages/${messageId}`, {
+                            method: "DELETE",
+                            headers: {
+                                Authorization: `Bearer ${this.token}`,
+                            },
+                        });
+
+                        const result = await response.json();
+                        if (!result?.success) {
+                            throw new Error(result?.error || `Failed to remove message #${messageId}`);
+                        }
+                        removedCount += 1;
+                    }
+
+                    this._showNotification(`${removedCount} message${removedCount === 1 ? "" : "s"} removed.`, "success");
+                    this.selectedMessageIds.clear();
+                    await this.loadAll({ resetPages: false });
+                } catch (error) {
+                    this._showError(error?.message || "Failed to remove message.");
+                }
+            }
+
+            async muteUser(userId) {
+                await this._setMute(userId, true);
+            }
+
+            async unmuteUser(userId) {
+                await this._setMute(userId, false);
+            }
+
+            async _setMute(userId, mute) {
+                try {
+                    const endpoint = mute
+                        ? `/api/v1/admin/messenger/users/${userId}/mute`
+                        : `/api/v1/admin/messenger/users/${userId}/unmute`;
+
+                    const durationRaw = mute ? window.prompt("Mute duration in minutes", "60") : null;
+                    const durationMinutes = mute ? Number(durationRaw || 60) : null;
+
+                    const payload = mute
+                        ? { durationMinutes, reason: "Muted from Kraken Messenger Admin Console" }
+                        : {};
+
+                    const response = await secureFetch(endpoint, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${this.token}`,
+                        },
+                        body: JSON.stringify(payload),
+                    });
+
+                    const result = await response.json();
+                    if (!result?.success) {
+                        throw new Error(result?.error || "Failed to update mute state");
+                    }
+
+                    this._showNotification(mute ? `User ${userId} muted.` : `User ${userId} unmuted.`, "success");
+                    await this.loadAll();
+                } catch (error) {
+                    this._showError(error?.message || "Failed to update mute state.");
+                }
+            }
+
+            clearFilters() {
+                const ids = ["messengerFilterUserId", "messengerFilterWithUserId", "messengerFilterContains", "messengerFilterFrom", "messengerFilterTo"];
+                ids.forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = "";
+                });
+
+                const mutedOnly = document.getElementById("messengerFilterMutedOnly");
+                if (mutedOnly) mutedOnly.checked = false;
+
+                const pageSize = document.getElementById("messengerPageSize");
+                if (pageSize) pageSize.value = "50";
+                this.pagination.conversations.pageSize = 50;
+                this.pagination.messages.pageSize = 50;
+                this.selectedMessageIds.clear();
+
+                const selectAll = document.getElementById("messengerSelectAll");
+                if (selectAll) {
+                    selectAll.checked = false;
+                    selectAll.indeterminate = false;
+                }
+
+                this.loadAll({ resetPages: true });
+            }
+
+            _escapeHtml(value) {
+                return String(value)
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#39;");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            new MessengerAdminTab();
+        });
+    </script>
+</body>
+
+</html>

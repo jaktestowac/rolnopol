@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Commodities Admin - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
+</head>
+
+<body>
+    <div class="resources-section">
+        <div class="resources-header">
+            <h2 class="resources-title">
+                <i class="fas fa-chart-line"></i>
+                Commodities Admin Console
+            </h2>
+            <div class="resources-actions" style="display:flex; gap:0.5rem;">
+                <button id="refreshCommoditiesAdminBtn" class="btn-enhanced btn-primary-enhanced">
+                    <span class="spinner-enhanced hidden"></span>
+                    <i class="fas fa-sync-alt btn-icon"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <div id="commoditiesAdminLoading" class="loading-enhanced">
+            <span class="spinner-enhanced"></span>
+            Loading commodities market state...
+        </div>
+
+        <div id="commoditiesAdminError" class="alert-enhanced alert-error-enhanced" hidden>
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Failed to load commodities admin data.</span>
+        </div>
+
+        <section class="resource-summary-card" style="margin-bottom: 1rem;">
+            <div class="resource-summary-header" style="display:flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <h4><i class="fas fa-shield-alt"></i> Symbol Controls</h4>
+                <span id="commoditiesSummaryBadge" class="badge-enhanced badge-info-enhanced">-</span>
+            </div>
+            <div class="table-container">
+                <table class="table-enhanced">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Enabled</th>
+                            <th>Max Order Qty</th>
+                            <th>Updated</th>
+                            <th>Note</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commodityControlsBody">
+                        <tr>
+                            <td colspan="6" class="text-center">No data</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="resource-summary-card" style="margin-bottom: 1rem;">
+            <div class="resource-summary-header">
+                <h4><i class="fas fa-balance-scale"></i> Exposures</h4>
+            </div>
+            <div class="table-container">
+                <table class="table-enhanced">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Users</th>
+                            <th>Quantity</th>
+                            <th>Invested</th>
+                            <th>Market Value</th>
+                            <th>P/L</th>
+                            <th>Concentration</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commodityExposuresBody">
+                        <tr>
+                            <td colspan="7" class="text-center">No data</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="resource-summary-card">
+            <div class="resource-summary-header">
+                <h4><i class="fas fa-triangle-exclamation"></i> Anomalies</h4>
+            </div>
+            <ul id="commodityAnomaliesList" style="margin: 0; padding-left: 1.1rem;"></ul>
+        </section>
+    </div>
+
+    <script src="../js/kraken-utils.js"></script>
+    <script>
+        class CommoditiesAdminTab {
+            constructor() {
+                this.token = getCookie("krakenToken");
+                this.marketState = null;
+                this.init();
+            }
+
+            init() {
+                window.addEventListener("message", (event) => {
+                    if (event.data.type === "SET_TOKEN") {
+                        this.token = event.data.token;
+                        this.loadState();
+                    }
+                });
+
+                document.getElementById("refreshCommoditiesAdminBtn")?.addEventListener("click", () => this.loadState());
+
+                document.getElementById("commodityControlsBody")?.addEventListener("click", async (event) => {
+                    const button = event.target.closest("button[data-symbol][data-action]");
+                    if (!button) return;
+
+                    const symbol = button.getAttribute("data-symbol");
+                    const action = button.getAttribute("data-action");
+
+                    if (action === "toggle") {
+                        const currentEnabled = button.getAttribute("data-enabled") === "true";
+                        await this.updateControl(symbol, { enabled: !currentEnabled });
+                    }
+
+                    if (action === "limit") {
+                        const raw = window.prompt(`Set max order quantity for ${symbol}`, "1000");
+                        if (!raw) return;
+                        const value = Number(raw);
+                        if (!Number.isFinite(value) || value <= 0) return;
+                        await this.updateControl(symbol, { maxOrderQuantity: value });
+                    }
+                });
+
+                if (this.token) {
+                    this.loadState();
+                }
+            }
+
+            _setLoading(isLoading) {
+                const loading = document.getElementById("commoditiesAdminLoading");
+                if (loading) loading.hidden = !isLoading;
+
+                const btn = document.getElementById("refreshCommoditiesAdminBtn");
+                if (btn) {
+                    btn.disabled = isLoading;
+                    const spinner = btn.querySelector(".spinner-enhanced");
+                    if (spinner) spinner.classList.toggle("hidden", !isLoading);
+                }
+            }
+
+            _showError(message) {
+                const el = document.getElementById("commoditiesAdminError");
+                if (!el) return;
+                el.hidden = false;
+                const span = el.querySelector("span");
+                if (span) span.textContent = message || "Failed to load commodities admin data.";
+            }
+
+            _hideError() {
+                const el = document.getElementById("commoditiesAdminError");
+                if (el) el.hidden = true;
+            }
+
+            async loadState() {
+                this._setLoading(true);
+                this._hideError();
+
+                try {
+                    const response = await secureFetch("/api/v1/admin/commodities/market-state", {
+                        headers: {
+                            Authorization: `Bearer ${this.token}`,
+                        },
+                    });
+                    const result = await response.json();
+                    if (!result?.success) {
+                        throw new Error(result?.error || "Failed to load market state");
+                    }
+
+                    this.marketState = result.data || null;
+                    this.render();
+                } catch (error) {
+                    this._showError(error?.message || "Failed to load commodities admin data.");
+                } finally {
+                    this._setLoading(false);
+                }
+            }
+
+            async updateControl(symbol, payload) {
+                try {
+                    const response = await secureFetch(`/api/v1/admin/commodities/symbols/${encodeURIComponent(symbol)}`, {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${this.token}`,
+                        },
+                        body: JSON.stringify(payload || {}),
+                    });
+                    const result = await response.json();
+                    if (!result?.success) {
+                        throw new Error(result?.error || "Failed to update symbol control");
+                    }
+                    await this.loadState();
+                } catch (error) {
+                    this._showError(error?.message || "Failed to update symbol control.");
+                }
+            }
+
+            render() {
+                this.renderSummary();
+                this.renderControls();
+                this.renderExposures();
+                this.renderAnomalies();
+            }
+
+            renderSummary() {
+                const badge = document.getElementById("commoditiesSummaryBadge");
+                if (!badge) return;
+                const totals = this.marketState?.totals || {};
+                badge.textContent = `${totals.holdings || 0} holdings • ${Number(totals.marketValue || 0).toFixed(2)} ROL`;
+            }
+
+            renderControls() {
+                const body = document.getElementById("commodityControlsBody");
+                if (!body) return;
+
+                const controls = Array.isArray(this.marketState?.controls) ? this.marketState.controls : [];
+                if (!controls.length) {
+                    body.innerHTML = `<tr><td colspan="6" class="text-center">No symbol controls found.</td></tr>`;
+                    return;
+                }
+
+                body.innerHTML = controls.map((control) => {
+                    const updated = control.updatedAt ? new Date(control.updatedAt).toLocaleString() : "-";
+                    const enabledLabel = control.enabled ? "Yes" : "No";
+                    return `
+            <tr>
+              <td>${control.symbol}</td>
+              <td>${enabledLabel}</td>
+              <td>${Number(control.maxOrderQuantity || 0).toFixed(4)}</td>
+              <td>${updated}</td>
+              <td>${this._escapeHtml(control.note || "-")}</td>
+              <td style="display:flex; gap:0.35rem;">
+                <button class="btn-enhanced ${control.enabled ? "btn-warning-enhanced" : "btn-success-enhanced"}" data-action="toggle" data-symbol="${control.symbol}" data-enabled="${control.enabled}" style="padding: 0.25rem 0.5rem;">
+                  ${control.enabled ? "Halt" : "Enable"}
+                </button>
+                <button class="btn-enhanced btn-tertiary-enhanced" data-action="limit" data-symbol="${control.symbol}" style="padding: 0.25rem 0.5rem;">
+                  Set limit
+                </button>
+              </td>
+            </tr>
+          `;
+                }).join("");
+            }
+
+            renderExposures() {
+                const body = document.getElementById("commodityExposuresBody");
+                if (!body) return;
+
+                const exposures = Array.isArray(this.marketState?.exposures) ? this.marketState.exposures : [];
+                if (!exposures.length) {
+                    body.innerHTML = `<tr><td colspan="7" class="text-center">No exposures found.</td></tr>`;
+                    return;
+                }
+
+                body.innerHTML = exposures.map((exposure) => {
+                    return `
+            <tr>
+              <td>${exposure.symbol}</td>
+              <td>${exposure.userCount || 0}</td>
+              <td>${Number(exposure.quantity || 0).toFixed(4)}</td>
+              <td>${Number(exposure.invested || 0).toFixed(2)}</td>
+              <td>${Number(exposure.marketValue || 0).toFixed(2)}</td>
+              <td>${Number(exposure.pnl || 0).toFixed(2)} (${Number(exposure.pnlPct || 0).toFixed(2)}%)</td>
+              <td>${Number(exposure.concentrationPct || 0).toFixed(2)}%</td>
+            </tr>
+          `;
+                }).join("");
+            }
+
+            renderAnomalies() {
+                const list = document.getElementById("commodityAnomaliesList");
+                if (!list) return;
+
+                const anomalies = Array.isArray(this.marketState?.anomalies) ? this.marketState.anomalies : [];
+                if (!anomalies.length) {
+                    list.innerHTML = `<li>No anomalies detected.</li>`;
+                    return;
+                }
+
+                list.innerHTML = anomalies.map((item) => `<li><strong>${item.symbol}</strong> — ${this._escapeHtml(item.message || item.code || "anomaly")}</li>`).join("");
+            }
+
+            _escapeHtml(value) {
+                return String(value)
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#39;");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            new CommoditiesAdminTab();
+        });
+    </script>
+</body>
+
+</html>

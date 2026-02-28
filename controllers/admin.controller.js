@@ -7,6 +7,19 @@ const fs = require("fs");
 const path = require("path");
 
 class AdminController {
+  _escapeCsv(value) {
+    if (value === null || value === undefined) return "";
+    const str = String(value);
+    if (/[",\n\r]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
+  _toCsv(rows) {
+    return rows.map((row) => row.map((cell) => this._escapeCsv(cell)).join(",")).join("\n");
+  }
+
   /**
    * Admin login
    */
@@ -15,10 +28,7 @@ class AdminController {
       const { username, password } = req.body;
       const clientId = getClientId(req);
 
-      const result = await adminService.loginAdmin(
-        { username, password },
-        clientId,
-      );
+      const result = await adminService.loginAdmin({ username, password }, clientId);
 
       // Clear any previous failed attempts on successful login
       req.adminLoginAttempts.clear();
@@ -50,9 +60,7 @@ class AdminController {
       if (attemptsLeft > 0) {
         errorMessage += `. ${attemptsLeft} attempt${attemptsLeft === 1 ? "" : "s"} remaining before temporary block.`;
       } else {
-        const timeLeft = Math.ceil(
-          (attemptData.blockedUntil - Date.now()) / 1000 / 60,
-        );
+        const timeLeft = Math.ceil((attemptData.blockedUntil - Date.now()) / 1000 / 60);
         errorMessage = `Too many failed attempts. Access blocked for ${timeLeft} minute${timeLeft === 1 ? "" : "s"}.`;
         statusCode = 429;
       }
@@ -368,6 +376,340 @@ class AdminController {
   }
 
   /**
+   * Get feature flags
+   */
+  async getFeatureFlags(req, res) {
+    try {
+      const includeDescriptions = req.query.descriptions !== "false";
+      const flags = await adminService.getFeatureFlags(includeDescriptions);
+
+      res.status(200).json(
+        formatResponseBody({
+          data: flags,
+        }),
+      );
+    } catch (error) {
+      logError("Error getting feature flags:", error);
+      res.status(500).json(
+        formatResponseBody({
+          error: "Failed to get feature flags",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Update feature flags
+   */
+  async updateFeatureFlags(req, res) {
+    try {
+      const flags = req.body?.flags;
+      const data = await adminService.updateFeatureFlags(flags);
+
+      res.status(200).json(
+        formatResponseBody({
+          message: "Feature flags updated successfully",
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error updating feature flags:", error);
+      const message = String(error?.message || "Failed to update feature flags");
+      const statusCode = message.includes("Validation failed") ? 400 : 500;
+
+      res.status(statusCode).json(
+        formatResponseBody({
+          error: message,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Reset feature flags
+   */
+  async resetFeatureFlags(req, res) {
+    try {
+      const data = await adminService.resetFeatureFlags();
+
+      res.status(200).json(
+        formatResponseBody({
+          message: "Feature flags reset successfully",
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error resetting feature flags:", error);
+      res.status(500).json(
+        formatResponseBody({
+          error: "Failed to reset feature flags",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Admin: list messenger conversation summaries
+   */
+  async getMessengerConversations(req, res) {
+    try {
+      const data = await adminService.getMessengerConversationsAdmin(req.query || {});
+      return res.status(200).json(
+        formatResponseBody({
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error getting messenger conversations (admin):", error);
+      const statusCode = String(error?.message || "").includes("Validation failed") ? 400 : 500;
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message || "Failed to get messenger conversations",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Admin: list messenger messages with filters
+   */
+  async getMessengerMessages(req, res) {
+    try {
+      const data = await adminService.getMessengerMessagesAdmin(req.query || {});
+      return res.status(200).json(
+        formatResponseBody({
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error getting messenger messages (admin):", error);
+      const statusCode = String(error?.message || "").includes("Validation failed") ? 400 : 500;
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message || "Failed to get messenger messages",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Admin: remove a messenger message
+   */
+  async removeMessengerMessage(req, res) {
+    try {
+      const { messageId } = req.params;
+      const data = await adminService.removeMessengerMessageAdmin(messageId);
+      return res.status(200).json(
+        formatResponseBody({
+          message: `Message ${data?.id} removed`,
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error removing messenger message (admin):", error);
+      const message = String(error?.message || "Failed to remove messenger message");
+      let statusCode = 500;
+      if (message.includes("Validation failed")) statusCode = 400;
+      if (message.includes("Message not found")) statusCode = 404;
+
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: message,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Admin: mute user for messenger
+   */
+  async muteMessengerUser(req, res) {
+    try {
+      const { userId } = req.params;
+      const { durationMinutes, reason } = req.body || {};
+      const data = await adminService.setMessengerMuteAdmin(userId, {
+        mute: true,
+        durationMinutes,
+        reason,
+      });
+
+      return res.status(200).json(
+        formatResponseBody({
+          message: "User muted for messenger",
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error muting messenger user (admin):", error);
+      const message = String(error?.message || "Failed to mute user");
+      let statusCode = 500;
+      if (message.includes("Validation failed")) statusCode = 400;
+      if (message.includes("User not found")) statusCode = 404;
+
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: message,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Admin: unmute user for messenger
+   */
+  async unmuteMessengerUser(req, res) {
+    try {
+      const { userId } = req.params;
+      const data = await adminService.setMessengerMuteAdmin(userId, {
+        mute: false,
+      });
+
+      return res.status(200).json(
+        formatResponseBody({
+          message: "User unmuted for messenger",
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error unmuting messenger user (admin):", error);
+      const message = String(error?.message || "Failed to unmute user");
+      let statusCode = 500;
+      if (message.includes("Validation failed")) statusCode = 400;
+      if (message.includes("User not found")) statusCode = 404;
+
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: message,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Admin: commodities market state summary
+   */
+  async getCommoditiesMarketState(req, res) {
+    try {
+      const data = await adminService.getCommoditiesMarketStateAdmin(req.query || {});
+      return res.status(200).json(
+        formatResponseBody({
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error getting commodities market state (admin):", error);
+      const statusCode = String(error?.message || "").includes("Validation failed") ? 400 : 500;
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message || "Failed to get commodities market state",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Admin: update commodities symbol controls
+   */
+  async updateCommoditySymbolControl(req, res) {
+    try {
+      const { symbol } = req.params;
+      const data = await adminService.updateCommoditySymbolControl(symbol, req.body || {});
+      return res.status(200).json(
+        formatResponseBody({
+          message: `Commodity symbol ${String(symbol || "").toUpperCase()} control updated`,
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error updating commodities symbol control (admin):", error);
+      const message = String(error?.message || "Failed to update symbol control");
+      const statusCode = message.includes("Validation failed") ? 400 : 500;
+      return res.status(statusCode).json(
+        formatResponseBody({
+          error: message,
+        }),
+      );
+    }
+  }
+
+  /**
+   * Clear runtime cache/log buffers
+   */
+  async clearCache(req, res) {
+    try {
+      const result = await adminService.clearRuntimeCache();
+
+      res.status(200).json(
+        formatResponseBody({
+          message: "Runtime cache cleared successfully",
+          data: result,
+        }),
+      );
+    } catch (error) {
+      logError("Error clearing runtime cache:", error);
+      res.status(500).json(
+        formatResponseBody({
+          error: "Failed to clear runtime cache",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Export logs in json, ndjson, or csv format
+   */
+  async exportLogs(req, res) {
+    try {
+      const format = String(req.query.format || "json").toLowerCase();
+      const level = String(req.query.level || "all").toLowerCase();
+      const logs = await adminService.getLogsForExport({ level });
+      const dateStamp = new Date().toISOString().slice(0, 10);
+
+      if (format === "csv") {
+        const rows = [["timestamp", "level", "method", "url", "status", "message", "data"]];
+        for (const entry of logs) {
+          rows.push([
+            entry?.timestamp || "",
+            entry?.level || "",
+            entry?.method || "",
+            entry?.url || "",
+            entry?.status || "",
+            entry?.message || "",
+            typeof entry?.data === "string" ? entry.data : JSON.stringify(entry?.data || ""),
+          ]);
+        }
+
+        const csv = this._toCsv(rows);
+        const fileName = `kraken-logs-${level}-${dateStamp}.csv`;
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+        return res.status(200).send(csv);
+      }
+
+      if (format === "ndjson") {
+        const fileName = `kraken-logs-${level}-${dateStamp}.ndjson`;
+        const ndjson = logs.map((entry) => JSON.stringify(entry)).join("\n");
+        res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+        res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+        return res.status(200).send(ndjson);
+      }
+
+      // default json
+      const fileName = `kraken-logs-${level}-${dateStamp}.json`;
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+      return res.status(200).json(logs);
+    } catch (error) {
+      logError("Error exporting logs:", error);
+      return res.status(500).json(
+        formatResponseBody({
+          error: "Failed to export logs",
+        }),
+      );
+    }
+  }
+
+  /**
    * Create database backup
    */
   async createBackup(req, res) {
@@ -375,10 +717,7 @@ class AdminController {
       const backupData = await adminService.createDatabaseBackup();
 
       res.setHeader("Content-Type", "application/json");
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="backup-${new Date().toISOString().slice(0, 10)}.json"`,
-      );
+      res.setHeader("Content-Disposition", `attachment; filename="backup-${new Date().toISOString().slice(0, 10)}.json"`);
 
       res.status(200).json(backupData);
     } catch (error) {
@@ -436,11 +775,7 @@ class AdminController {
       for (const [key, db] of dbManager.instances) {
         if (typeof db.getAll === "function") {
           const data = await db.getAll();
-          before[key] = Array.isArray(data)
-            ? data.length
-            : data && typeof data === "object"
-              ? Object.keys(data).length
-              : 0;
+          before[key] = Array.isArray(data) ? data.length : data && typeof data === "object" ? Object.keys(data).length : 0;
         }
       }
       const { reloadDatabasesFromDisk } = require("../data/database-init");
@@ -450,11 +785,7 @@ class AdminController {
       for (const [key, db] of dbManager.instances) {
         if (typeof db.getAll === "function") {
           const data = await db.getAll();
-          after[key] = Array.isArray(data)
-            ? data.length
-            : data && typeof data === "object"
-              ? Object.keys(data).length
-              : 0;
+          after[key] = Array.isArray(data) ? data.length : data && typeof data === "object" ? Object.keys(data).length : 0;
         }
       }
       logInfo("All database services reinitialized from current JSON files.", {
@@ -463,8 +794,7 @@ class AdminController {
       });
       res.status(200).json(
         formatResponseBody({
-          message:
-            "All database services reinitialized from current JSON files.",
+          message: "All database services reinitialized from current JSON files.",
           data: { before, after },
         }),
       );
@@ -490,9 +820,7 @@ async function getDocumentation(req, res) {
     res.status(200).json({ success: true, docs });
   } catch (error) {
     logError("Error reading documentation data:", error);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to load documentation data" });
+    res.status(500).json({ success: false, error: "Failed to load documentation data" });
   }
 }
 

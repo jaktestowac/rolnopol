@@ -15,6 +15,12 @@ function getLogList() {
   return [..._logList];
 }
 
+function clearLogList() {
+  const clearedCount = _logList.length;
+  _logList.length = 0;
+  return clearedCount;
+}
+
 /**
  * Simple logging utilities
  */
@@ -164,4 +170,5 @@ module.exports = {
   logRequest,
   logResponse,
   getLogList,
+  clearLogList,
 };

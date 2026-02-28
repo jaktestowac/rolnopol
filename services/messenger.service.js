@@ -43,6 +43,20 @@ class MessengerService {
     return user;
   }
 
+  _isMessengerMuted(user) {
+    const mutedUntil = user?.messengerMutedUntil;
+    if (!mutedUntil) {
+      return false;
+    }
+
+    const until = new Date(mutedUntil);
+    if (Number.isNaN(until.getTime())) {
+      return false;
+    }
+
+    return until.getTime() > Date.now();
+  }
+
   _toPublicUserSummary(user) {
     if (!user) {
       return null;
@@ -254,6 +268,11 @@ class MessengerService {
 
   async sendMessage(fromUserId, payload = {}) {
     const sender = await this._getActiveUserOrThrow(fromUserId);
+
+    if (this._isMessengerMuted(sender)) {
+      const mutedUntil = new Date(sender.messengerMutedUntil).toISOString();
+      throw new Error(`Messaging forbidden: account is muted until ${mutedUntil}`);
+    }
 
     const toUserId = Number(payload?.toUserId);
     if (!Number.isInteger(toUserId) || toUserId <= 0) {

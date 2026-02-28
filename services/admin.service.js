@@ -9,11 +9,87 @@ const {
 } = require("../helpers/token.helpers");
 const { ADMIN_USERNAME, ADMIN_PASSWORD, loginExpirationAdmin } = require("../data/settings");
 const { logDebug, logError } = require("../helpers/logger-api");
+const { getLogList, clearLogList } = require("../helpers/logger-api");
+const featureFlagsService = require("./feature-flags.service");
+const dbManager = require("../data/database-manager");
+const pricingService = require("./commodities-pricing.service");
+const commoditiesAdminControlsService = require("./commodities-admin-controls.service");
 const packageJson = require("../package.json");
 
 class AdminService {
   constructor() {
     this.userDataInstance = UserDataSingleton.getInstance();
+  }
+
+  _normalizePagination(rawQuery = {}, { defaultPageSize = 25, maxPageSize = 200 } = {}) {
+    const page = Number(rawQuery.page || 1);
+    const pageSize = Number(rawQuery.pageSize || defaultPageSize);
+
+    if (!Number.isInteger(page) || page <= 0) {
+      throw new Error("Validation failed: page must be a positive integer");
+    }
+
+    if (!Number.isInteger(pageSize) || pageSize <= 0) {
+      throw new Error("Validation failed: pageSize must be a positive integer");
+    }
+
+    const normalizedPageSize = Math.min(pageSize, maxPageSize);
+    const offset = (page - 1) * normalizedPageSize;
+
+    return {
+      page,
+      pageSize: normalizedPageSize,
+      offset,
+    };
+  }
+
+  _safeDate(rawValue) {
+    if (!rawValue) return null;
+    const parsed = new Date(rawValue);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new Error("Validation failed: date filter is invalid");
+    }
+    return parsed;
+  }
+
+  _parseBooleanQuery(value) {
+    if (value === undefined || value === null || value === "") {
+      return null;
+    }
+
+    const text = String(value).trim().toLowerCase();
+    if (["true", "1", "yes", "on"].includes(text)) {
+      return true;
+    }
+    if (["false", "0", "no", "off"].includes(text)) {
+      return false;
+    }
+
+    throw new Error("Validation failed: boolean filter is invalid");
+  }
+
+  _toPublicUser(user) {
+    if (!user) return null;
+    return {
+      id: user.id,
+      displayedName: user.displayedName || user.username || null,
+      email: user.email || null,
+      isActive: user.isActive === true,
+      messengerMutedUntil: user.messengerMutedUntil || null,
+      messengerMuteReason: user.messengerMuteReason || null,
+    };
+  }
+
+  async _getMessagesStore() {
+    const messagesDb = dbManager.getMessagesDatabase();
+    const raw = await messagesDb.getAll();
+    if (!raw || typeof raw !== "object") {
+      return { messages: [] };
+    }
+    return {
+      ...raw,
+      messages: Array.isArray(raw.messages) ? raw.messages : [],
+    };
   }
 
   /**
@@ -396,6 +472,9 @@ class AdminService {
       const animalsDb = dbManager.getAnimalsDatabase();
       const marketplaceDb = dbManager.getMarketplaceDatabase();
       const financialDb = dbManager.getFinancialDatabase();
+      const featureFlagsDb = dbManager.getFeatureFlagsDatabase ? dbManager.getFeatureFlagsDatabase() : null;
+      const messagesDb = dbManager.getMessagesDatabase ? dbManager.getMessagesDatabase() : null;
+      const commoditiesDb = dbManager.getCommoditiesDatabase ? dbManager.getCommoditiesDatabase() : null;
       const assignmentsDb = dbManager.getAssignmentsDatabase ? dbManager.getAssignmentsDatabase() : null;
       const docsDb = dbManager.getDocsDatabase ? dbManager.getDocsDatabase() : null;
       const testDb = dbManager.getTestDatabase ? dbManager.getTestDatabase() : null;
@@ -539,6 +618,80 @@ class AdminService {
           additionalStats: {
             totalTransactions: totalFinancialTransactions,
             totalVolume: totalFinancialVolume,
+          },
+        });
+      }
+
+      // Feature Flags
+      if (featureFlagsDb) {
+        const featureFlagsData = await featureFlagsDb.getAll();
+        const flags = featureFlagsData && typeof featureFlagsData === "object" ? featureFlagsData.flags || {} : {};
+        const entries = Object.entries(flags);
+        const enabledFlags = entries.filter(([, value]) => value === true).length;
+        const featureFlagsSize = this.calculateObjectSize(featureFlagsData);
+
+        databaseInfo.databases.push({
+          name: "feature-flags.json",
+          displayName: "Feature Flags Database",
+          recordCount: entries.length,
+          fileSize: featureFlagsSize,
+          formattedSize: this.formatBytes(featureFlagsSize),
+          lastModified: new Date(),
+          additionalStats: {
+            enabledFlags,
+            disabledFlags: entries.length - enabledFlags,
+          },
+        });
+      }
+
+      // Messages
+      if (messagesDb) {
+        const messagesStore = await messagesDb.getAll();
+        const messages = Array.isArray(messagesStore?.messages) ? messagesStore.messages : [];
+        const conversationPairs = new Set(
+          messages.map((message) => [Number(message?.fromUserId || 0), Number(message?.toUserId || 0)].sort((a, b) => a - b).join(":")),
+        );
+        const unreadMessages = messages.filter((message) => !message?.readAt).length;
+        const messagesSize = this.calculateObjectSize(messagesStore);
+
+        databaseInfo.databases.push({
+          name: "messages.json",
+          displayName: "Messages Database",
+          recordCount: messages.length,
+          fileSize: messagesSize,
+          formattedSize: this.formatBytes(messagesSize),
+          lastModified: new Date(),
+          additionalStats: {
+            conversations: conversationPairs.size,
+            unreadMessages,
+          },
+        });
+      }
+
+      // Commodities
+      if (commoditiesDb) {
+        const commoditiesStore = await commoditiesDb.getAll();
+        const holdings = Array.isArray(commoditiesStore?.holdings) ? commoditiesStore.holdings : [];
+        const uniqueSymbols = new Set(holdings.map((entry) => String(entry?.symbol || "").toUpperCase()).filter(Boolean));
+        const usersWithHoldings = new Set(
+          holdings.map((entry) => Number(entry?.userId || 0)).filter((id) => Number.isInteger(id) && id > 0),
+        );
+        const totalQuantity = holdings.reduce((sum, entry) => sum + Number(entry?.quantity || 0), 0);
+        const totalInvested = holdings.reduce((sum, entry) => sum + Number(entry?.totalInvested || 0), 0);
+        const commoditiesSize = this.calculateObjectSize(commoditiesStore);
+
+        databaseInfo.databases.push({
+          name: "commodities.json",
+          displayName: "Commodities Database",
+          recordCount: holdings.length,
+          fileSize: commoditiesSize,
+          formattedSize: this.formatBytes(commoditiesSize),
+          lastModified: new Date(),
+          additionalStats: {
+            symbols: uniqueSymbols.size,
+            usersWithHoldings: usersWithHoldings.size,
+            totalQuantity,
+            totalInvested,
           },
         });
       }
@@ -729,20 +882,32 @@ class AdminService {
     const animalsDb = dbManager.getAnimalsDatabase();
     const marketplaceDb = dbManager.getMarketplaceDatabase();
     const financialDb = dbManager.getFinancialDatabase();
+    const assignmentsDb = dbManager.getAssignmentsDatabase ? dbManager.getAssignmentsDatabase() : null;
+    const docsDb = dbManager.getDocsDatabase ? dbManager.getDocsDatabase() : null;
+    const commoditiesDb = dbManager.getCommoditiesDatabase ? dbManager.getCommoditiesDatabase() : null;
+    const messagesDb = dbManager.getMessagesDatabase ? dbManager.getMessagesDatabase() : null;
+    const featureFlagsDb = dbManager.getFeatureFlagsDatabase ? dbManager.getFeatureFlagsDatabase() : null;
 
     // Fetch all data in parallel
-    const [users, fields, staff, animals, marketplace, financial] = await Promise.all([
-      userData.getUsers(),
-      fieldsDb.getAll(),
-      staffDb.getAll(),
-      animalsDb.getAll(),
-      marketplaceDb.read(),
-      financialDb.read(),
-    ]);
+    const [users, fields, staff, animals, marketplace, financial, assignments, docs, commodities, messagesStore, featureFlagsData] =
+      await Promise.all([
+        userData.getUsers(),
+        fieldsDb.getAll(),
+        staffDb.getAll(),
+        animalsDb.getAll(),
+        marketplaceDb.read(),
+        financialDb.read(),
+        assignmentsDb ? assignmentsDb.getAll() : Promise.resolve([]),
+        docsDb ? docsDb.getAll() : Promise.resolve([]),
+        commoditiesDb ? commoditiesDb.getAll() : Promise.resolve({ holdings: [] }),
+        messagesDb ? messagesDb.getAll() : Promise.resolve({ messages: [] }),
+        featureFlagsDb ? featureFlagsDb.getAll() : Promise.resolve({ flags: {} }),
+      ]);
 
     // Users
     const totalUsers = users.length;
     const activeUsers = users.filter((u) => u.isActive).length;
+    const inactiveUsers = users.filter((u) => !u.isActive).length;
 
     // Fields
     const totalFields = fields.length;
@@ -785,6 +950,26 @@ class AdminService {
         totalFinancialVolume += acc.transactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
       }
     });
+
+    // Additional resources
+    const assignmentsList = Array.isArray(assignments) ? assignments : [];
+    const docsList = Array.isArray(docs) ? docs : [];
+    const holdings = Array.isArray(commodities?.holdings) ? commodities.holdings : [];
+    const messages = Array.isArray(messagesStore?.messages) ? messagesStore.messages : [];
+    const featureFlags = featureFlagsData && typeof featureFlagsData === "object" ? featureFlagsData.flags || {} : {};
+
+    const commoditiesSymbols = new Set(holdings.map((entry) => String(entry?.symbol || "").toUpperCase()).filter(Boolean));
+    const commoditiesUsers = new Set(holdings.map((entry) => Number(entry?.userId || 0)).filter((id) => Number.isInteger(id) && id > 0));
+    const commoditiesTotalQuantity = holdings.reduce((sum, entry) => sum + Number(entry?.quantity || 0), 0);
+    const commoditiesTotalInvested = holdings.reduce((sum, entry) => sum + Number(entry?.totalInvested || 0), 0);
+
+    const messageConversations = new Set(
+      messages.map((message) => [Number(message?.fromUserId || 0), Number(message?.toUserId || 0)].sort((a, b) => a - b).join(":")),
+    );
+    const unreadMessages = messages.filter((message) => !message?.readAt).length;
+
+    const featureFlagEntries = Object.entries(featureFlags);
+    const enabledFeatureFlags = featureFlagEntries.filter(([, value]) => value === true).length;
 
     // System status (simple for now)
     const systemStatus = "Online";
@@ -847,8 +1032,25 @@ class AdminService {
     // Total Marketplace Revenue (sum of all completed transaction prices)
     const totalMarketplaceRevenue = transactions.reduce((sum, t) => sum + (t.price || 0), 0);
 
+    let databaseSummary = {
+      totalFiles: 0,
+      totalRecords: 0,
+      formattedTotalSize: "0 Bytes",
+    };
+
+    try {
+      const dbInfo = await this.getDatabaseInfo();
+      databaseSummary = {
+        totalFiles: Number(dbInfo?.totalFiles || 0),
+        totalRecords: Number(dbInfo?.totalRecords || 0),
+        formattedTotalSize: dbInfo?.formattedTotalSize || "0 Bytes",
+      };
+    } catch (error) {
+      logError("Error collecting database summary for overview:", error);
+    }
+
     return {
-      users: { total: totalUsers, active: activeUsers },
+      users: { total: totalUsers, active: activeUsers, inactive: inactiveUsers },
       fields: {
         total: totalFields,
         totalArea,
@@ -873,6 +1075,33 @@ class AdminService {
         totalTransactions: totalFinancialTransactions,
         totalVolume: totalFinancialVolume,
       },
+      resources: {
+        assignments: {
+          total: assignmentsList.length,
+          usersWithAssignments: new Set(assignmentsList.map((entry) => Number(entry?.userId || 0))).size,
+        },
+        docs: {
+          total: docsList.length,
+        },
+        commodities: {
+          totalHoldings: holdings.length,
+          symbols: commoditiesSymbols.size,
+          usersWithHoldings: commoditiesUsers.size,
+          totalQuantity: commoditiesTotalQuantity,
+          totalInvested: commoditiesTotalInvested,
+        },
+        messages: {
+          total: messages.length,
+          conversations: messageConversations.size,
+          unread: unreadMessages,
+        },
+        featureFlags: {
+          total: featureFlagEntries.length,
+          enabled: enabledFeatureFlags,
+          disabled: featureFlagEntries.length - enabledFeatureFlags,
+        },
+      },
+      database: databaseSummary,
       system: { status: systemStatus },
       insights: {
         mostTradedItemType,
@@ -890,6 +1119,451 @@ class AdminService {
         totalMarketplaceRevenue,
       },
     };
+  }
+
+  /**
+   * Get feature flags for admin dashboard
+   */
+  async getFeatureFlags(includeDescriptions = true) {
+    if (includeDescriptions) {
+      return featureFlagsService.getFeaturesWithDescriptions();
+    }
+    return featureFlagsService.getFeatureFlags();
+  }
+
+  /**
+   * Update feature flags (partial)
+   */
+  async updateFeatureFlags(flags) {
+    return featureFlagsService.updateFlags(flags);
+  }
+
+  /**
+   * Reset feature flags to defaults
+   */
+  async resetFeatureFlags() {
+    return featureFlagsService.resetFeatureFlags();
+  }
+
+  /**
+   * Clear runtime caches and stale runtime data
+   */
+  async clearRuntimeCache() {
+    const expiredTokensRemoved = cleanupExpiredTokens();
+    const logsCleared = clearLogList();
+
+    return {
+      expiredTokensRemoved,
+      logsCleared,
+      clearedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Get logs for export
+   */
+  async getLogsForExport(options = {}) {
+    const level = String(options.level || "all").toLowerCase();
+    const logs = getLogList();
+
+    if (level === "all") {
+      return logs;
+    }
+
+    const normalizedLevel = level === "warning" ? "warn" : level;
+    return logs.filter((entry) => String(entry?.level || "").toLowerCase() === normalizedLevel);
+  }
+
+  /**
+   * Messenger admin console: conversation-level summaries with filters
+   */
+  async getMessengerConversationsAdmin(query = {}) {
+    const pagination = this._normalizePagination(query, { defaultPageSize: 20, maxPageSize: 100 });
+    const userId = query.userId ? Number(query.userId) : null;
+    const contains = String(query.contains || "")
+      .trim()
+      .toLowerCase();
+    const fromDate = this._safeDate(query.from);
+    const toDate = this._safeDate(query.to);
+    const mutedOnly = this._parseBooleanQuery(query.mutedOnly);
+
+    if (query.userId && (!Number.isInteger(userId) || userId <= 0)) {
+      throw new Error("Validation failed: userId must be a positive integer");
+    }
+
+    const users = await this.userDataInstance.getUsers();
+    const usersById = new Map(users.map((u) => [Number(u.id), u]));
+
+    const store = await this._getMessagesStore();
+    const pairs = new Map();
+
+    for (const message of store.messages) {
+      const fromUserId = Number(message?.fromUserId);
+      const toUserId = Number(message?.toUserId);
+      const createdAt = message?.createdAt ? new Date(message.createdAt) : null;
+
+      if (!Number.isInteger(fromUserId) || !Number.isInteger(toUserId)) {
+        continue;
+      }
+
+      if (userId && fromUserId !== userId && toUserId !== userId) {
+        continue;
+      }
+
+      if (fromDate && (!createdAt || createdAt < fromDate)) {
+        continue;
+      }
+
+      if (toDate && (!createdAt || createdAt > toDate)) {
+        continue;
+      }
+
+      const text = String(message?.content || "").toLowerCase();
+      if (contains && !text.includes(contains)) {
+        continue;
+      }
+
+      const pairKey = [fromUserId, toUserId].sort((a, b) => a - b).join(":");
+      const current = pairs.get(pairKey) || {
+        participants: [fromUserId, toUserId],
+        messageCount: 0,
+        firstMessageAt: null,
+        lastMessageAt: null,
+        preview: null,
+      };
+
+      current.messageCount += 1;
+
+      if (!current.firstMessageAt || (createdAt && createdAt.toISOString() < current.firstMessageAt)) {
+        current.firstMessageAt = createdAt ? createdAt.toISOString() : current.firstMessageAt;
+      }
+
+      if (!current.lastMessageAt || (createdAt && createdAt.toISOString() > current.lastMessageAt)) {
+        current.lastMessageAt = createdAt ? createdAt.toISOString() : current.lastMessageAt;
+        current.preview = {
+          messageId: Number(message?.id || 0),
+          content: String(message?.content || "").slice(0, 120),
+          fromUserId,
+          toUserId,
+        };
+      }
+
+      pairs.set(pairKey, current);
+    }
+
+    const items = [...pairs.values()]
+      .map((entry) => {
+        const [leftId, rightId] = entry.participants;
+        const leftUser = this._toPublicUser(usersById.get(leftId)) || { id: leftId };
+        const rightUser = this._toPublicUser(usersById.get(rightId)) || { id: rightId };
+        return {
+          ...entry,
+          participants: [leftUser, rightUser],
+        };
+      })
+      .filter((entry) => {
+        if (mutedOnly !== true) {
+          return true;
+        }
+        const participants = Array.isArray(entry.participants) ? entry.participants : [];
+        return participants.some((participant) => {
+          const mutedUntil = participant?.messengerMutedUntil;
+          if (!mutedUntil) return false;
+          const parsed = Date.parse(mutedUntil);
+          return !Number.isNaN(parsed) && parsed > Date.now();
+        });
+      })
+      .sort((a, b) => String(b.lastMessageAt || "").localeCompare(String(a.lastMessageAt || "")));
+
+    const total = items.length;
+    const pagedItems = items.slice(pagination.offset, pagination.offset + pagination.pageSize);
+
+    return {
+      items: pagedItems,
+      total,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      hasMore: pagination.offset + pagedItems.length < total,
+      filters: {
+        userId,
+        contains: contains || null,
+        from: fromDate ? fromDate.toISOString() : null,
+        to: toDate ? toDate.toISOString() : null,
+        mutedOnly,
+      },
+    };
+  }
+
+  /**
+   * Messenger admin console: message-level view with filters
+   */
+  async getMessengerMessagesAdmin(query = {}) {
+    const pagination = this._normalizePagination(query, { defaultPageSize: 50, maxPageSize: 200 });
+    const userId = query.userId ? Number(query.userId) : null;
+    const withUserId = query.withUserId ? Number(query.withUserId) : null;
+    const contains = String(query.contains || "")
+      .trim()
+      .toLowerCase();
+    const fromDate = this._safeDate(query.from);
+    const toDate = this._safeDate(query.to);
+    const mutedOnly = this._parseBooleanQuery(query.mutedOnly);
+
+    if (query.userId && (!Number.isInteger(userId) || userId <= 0)) {
+      throw new Error("Validation failed: userId must be a positive integer");
+    }
+    if (query.withUserId && (!Number.isInteger(withUserId) || withUserId <= 0)) {
+      throw new Error("Validation failed: withUserId must be a positive integer");
+    }
+
+    const users = await this.userDataInstance.getUsers();
+    const usersById = new Map(users.map((u) => [Number(u.id), u]));
+    const store = await this._getMessagesStore();
+
+    let messages = store.messages.filter((message) => {
+      const fromUser = Number(message?.fromUserId);
+      const toUser = Number(message?.toUserId);
+      const createdAt = message?.createdAt ? new Date(message.createdAt) : null;
+
+      if (!Number.isInteger(fromUser) || !Number.isInteger(toUser)) return false;
+      if (userId && fromUser !== userId && toUser !== userId) return false;
+      if (withUserId && fromUser !== withUserId && toUser !== withUserId) return false;
+      if (fromDate && (!createdAt || createdAt < fromDate)) return false;
+      if (toDate && (!createdAt || createdAt > toDate)) return false;
+      if (
+        contains &&
+        !String(message?.content || "")
+          .toLowerCase()
+          .includes(contains)
+      )
+        return false;
+
+      if (mutedOnly === true) {
+        const sourceUser = usersById.get(fromUser);
+        const mutedUntil = sourceUser?.messengerMutedUntil;
+        const mutedTimestamp = mutedUntil ? Date.parse(mutedUntil) : NaN;
+        if (Number.isNaN(mutedTimestamp) || mutedTimestamp <= Date.now()) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    messages.sort((a, b) => String(b?.createdAt || "").localeCompare(String(a?.createdAt || "")));
+
+    const total = messages.length;
+    messages = messages.slice(pagination.offset, pagination.offset + pagination.pageSize);
+
+    const items = messages.map((message) => {
+      const fromUser = Number(message?.fromUserId);
+      const toUser = Number(message?.toUserId);
+      return {
+        id: Number(message?.id || 0),
+        fromUserId: fromUser,
+        toUserId: toUser,
+        fromUser: this._toPublicUser(usersById.get(fromUser)) || { id: fromUser },
+        toUser: this._toPublicUser(usersById.get(toUser)) || { id: toUser },
+        content: String(message?.content || ""),
+        createdAt: message?.createdAt || null,
+        deliveredAt: message?.deliveredAt || null,
+        readAt: message?.readAt || null,
+        readBy: Array.isArray(message?.readBy) ? message.readBy : [],
+      };
+    });
+
+    return {
+      items,
+      total,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      hasMore: pagination.offset + items.length < total,
+      filters: {
+        userId,
+        withUserId,
+        contains: contains || null,
+        from: fromDate ? fromDate.toISOString() : null,
+        to: toDate ? toDate.toISOString() : null,
+        mutedOnly,
+      },
+    };
+  }
+
+  /**
+   * Messenger admin console: remove message by id
+   */
+  async removeMessengerMessageAdmin(messageId) {
+    const numericMessageId = Number(messageId);
+    if (!Number.isInteger(numericMessageId) || numericMessageId <= 0) {
+      throw new Error("Validation failed: messageId must be a positive integer");
+    }
+
+    const store = await this._getMessagesStore();
+    const messages = Array.isArray(store.messages) ? [...store.messages] : [];
+    const index = messages.findIndex((message) => Number(message?.id) === numericMessageId);
+
+    if (index < 0) {
+      throw new Error("Message not found");
+    }
+
+    const [removed] = messages.splice(index, 1);
+    const messagesDb = dbManager.getMessagesDatabase();
+    await messagesDb.replaceAll({
+      ...store,
+      messages,
+    });
+
+    return {
+      id: numericMessageId,
+      fromUserId: Number(removed?.fromUserId || 0),
+      toUserId: Number(removed?.toUserId || 0),
+      createdAt: removed?.createdAt || null,
+    };
+  }
+
+  /**
+   * Mute/unmute a user for messenger
+   */
+  async setMessengerMuteAdmin(userId, options = {}) {
+    const numericUserId = Number(userId);
+    if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+      throw new Error("Validation failed: userId must be a positive integer");
+    }
+
+    const user = await this.userDataInstance.findUser(numericUserId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const mute = options.mute !== false;
+
+    if (!mute) {
+      const updated = await this.userDataInstance.updateUser(numericUserId, {
+        messengerMutedUntil: null,
+        messengerMuteReason: null,
+      });
+      return this._toPublicUser(updated);
+    }
+
+    const durationMinutesRaw = options.durationMinutes ?? 60;
+    const durationMinutes = Number(durationMinutesRaw);
+
+    if (!Number.isInteger(durationMinutes) || durationMinutes <= 0 || durationMinutes > 60 * 24 * 30) {
+      throw new Error("Validation failed: durationMinutes must be between 1 and 43200");
+    }
+
+    const mutedUntil = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
+    const reason = options.reason ? String(options.reason).trim().slice(0, 250) : "Muted by administrator";
+
+    const updated = await this.userDataInstance.updateUser(numericUserId, {
+      messengerMutedUntil: mutedUntil,
+      messengerMuteReason: reason,
+    });
+
+    return this._toPublicUser(updated);
+  }
+
+  /**
+   * Commodities admin console market snapshot and derived risk metrics
+   */
+  async getCommoditiesMarketStateAdmin() {
+    const commoditiesDb = dbManager.getCommoditiesDatabase();
+    const storeRaw = await commoditiesDb.getAll();
+    const holdings = Array.isArray(storeRaw?.holdings) ? storeRaw.holdings : [];
+    const symbols = pricingService.getSupportedSymbols();
+
+    const exposuresBySymbol = new Map();
+    let totalMarketValue = 0;
+
+    for (const symbol of symbols) {
+      exposuresBySymbol.set(symbol, {
+        symbol,
+        userCount: 0,
+        quantity: 0,
+        invested: 0,
+        marketValue: 0,
+        pnl: 0,
+      });
+    }
+
+    for (const holding of holdings) {
+      const symbol = pricingService.normalizeSymbol(holding?.symbol);
+      const quantity = Number(holding?.quantity || 0);
+      const totalInvested = Number(holding?.totalInvested || 0);
+      const price = pricingService.getCurrentPrice(symbol).price;
+      const marketValue = Number((quantity * price).toFixed(2));
+      const pnl = Number((marketValue - totalInvested).toFixed(2));
+
+      const entry = exposuresBySymbol.get(symbol) || {
+        symbol,
+        userCount: 0,
+        quantity: 0,
+        invested: 0,
+        marketValue: 0,
+        pnl: 0,
+      };
+
+      entry.userCount += 1;
+      entry.quantity = Number((entry.quantity + quantity).toFixed(4));
+      entry.invested = Number((entry.invested + totalInvested).toFixed(2));
+      entry.marketValue = Number((entry.marketValue + marketValue).toFixed(2));
+      entry.pnl = Number((entry.pnl + pnl).toFixed(2));
+
+      exposuresBySymbol.set(symbol, entry);
+      totalMarketValue = Number((totalMarketValue + marketValue).toFixed(2));
+    }
+
+    const exposures = [...exposuresBySymbol.values()].map((entry) => {
+      const concentrationPct = totalMarketValue > 0 ? Number(((entry.marketValue / totalMarketValue) * 100).toFixed(2)) : 0;
+      const pnlPct = entry.invested > 0 ? Number((((entry.marketValue - entry.invested) / entry.invested) * 100).toFixed(2)) : 0;
+      const control = commoditiesAdminControlsService.getControl(entry.symbol);
+
+      return {
+        ...entry,
+        concentrationPct,
+        pnlPct,
+        control,
+      };
+    });
+
+    const anomalies = [];
+    for (const exposure of exposures) {
+      if (exposure.concentrationPct >= 65) {
+        anomalies.push({
+          symbol: exposure.symbol,
+          severity: "high",
+          code: "CONCENTRATION_SPIKE",
+          message: `Concentration is ${exposure.concentrationPct}%`,
+        });
+      }
+
+      if (exposure.pnlPct <= -20) {
+        anomalies.push({
+          symbol: exposure.symbol,
+          severity: "medium",
+          code: "UNREALIZED_LOSS",
+          message: `Unrealized P/L is ${exposure.pnlPct}%`,
+        });
+      }
+    }
+
+    return {
+      generatedAt: new Date().toISOString(),
+      symbols,
+      controls: commoditiesAdminControlsService.getAllControls(),
+      exposures,
+      anomalies,
+      totals: {
+        holdings: holdings.length,
+        marketValue: totalMarketValue,
+      },
+    };
+  }
+
+  /**
+   * Update runtime commodities symbol control settings
+   */
+  async updateCommoditySymbolControl(symbol, payload = {}) {
+    return commoditiesAdminControlsService.updateControl(symbol, payload);
   }
 }
 
