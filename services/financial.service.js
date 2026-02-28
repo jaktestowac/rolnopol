@@ -1,5 +1,5 @@
 const dbManager = require("../data/database-manager");
-const { logError, logInfo } = require("../helpers/logger-api");
+const { logError, logInfo, logDebug } = require("../helpers/logger-api");
 const { FINANCE_INTEGRITY_CALCULATION } = require("../data/settings");
 const JSONDatabase = require("../data/json-database");
 
@@ -187,7 +187,7 @@ class FinancialService {
         };
         accounts.push(account);
         await this._saveAccounts(accounts);
-        logInfo(`Financial account initialized for user: ${numericUserId}`);
+        logDebug(`Financial account initialized for user: ${numericUserId}`);
       }
       return account;
     } catch (error) {

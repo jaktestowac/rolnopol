@@ -85,7 +85,9 @@
       // Only try to create NavigationComponent if it's available and page doesn't use dynamic header/footer
       try {
         const currentPage = getCurrentPageName();
-        const usesDynamicHeader = ["marketplace", "financial", "staff-fields", "rolnopolmap"].includes(currentPage);
+        const usesDynamicHeader = ["marketplace", "financial", "financial-commodities", "staff-fields", "rolnopolmap"].includes(
+          currentPage,
+        );
 
         if (typeof NavigationComponent !== "undefined" && !usesDynamicHeader) {
           navigation = new NavigationComponent();
@@ -260,6 +262,9 @@
         break;
       case "financial":
         setupFinancialPage();
+        break;
+      case "financial-commodities":
+        setupFinancialCommoditiesPage();
         break;
       case "fieldmap":
         setupFieldMapPage();
@@ -477,6 +482,21 @@
       const financialPage = new FinancialPage();
       // Registering after App.init will auto-call module.init(app)
       window.App.registerModule("financialPage", financialPage);
+    }
+  }
+
+  function setupFinancialCommoditiesPage() {
+    const authService = window.App.getModule("authService");
+
+    if (!authService || !authService.requireAuth("/login.html")) {
+      return;
+    }
+
+    if (window.FinancialCommoditiesPage) {
+      const financialCommoditiesPage = new FinancialCommoditiesPage();
+      window.App.registerModule("financialCommoditiesPage", financialCommoditiesPage);
+    } else {
+      console.error("FinancialCommoditiesPage class not found");
     }
   }
 

@@ -20,6 +20,10 @@ async function initializeDatabases() {
     await financialDb.getAll(); // This will create the file if it doesn't exist
     logDebug("Financial database initialized");
 
+    const commoditiesDb = dbManager.getCommoditiesDatabase();
+    await commoditiesDb.getAll();
+    logDebug("Commodities database initialized");
+
     logDebug("Databases initialized successfully");
   } catch (error) {
     logError("Failed to initialize databases:", error);

@@ -113,6 +113,7 @@ const initializeAllDatabases = async () => {
       dbManager.getUsersDatabase(),
       dbManager.getMessagesDatabase(),
       dbManager.getFinancialDatabase(),
+      dbManager.getCommoditiesDatabase(),
       dbManager.getMarketplaceDatabase(),
       dbManager.getFeatureFlagsDatabase(),
       dbManager.getFieldsDatabase(),

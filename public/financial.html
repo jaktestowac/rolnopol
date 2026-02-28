@@ -48,6 +48,31 @@
       margin-top: 0.5rem;
     }
 
+    .commodities-shortcut {
+      margin-bottom: 1.5rem;
+      border-radius: 1rem;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border: 1px solid rgba(106, 123, 94, 0.14);
+      background: linear-gradient(135deg, rgba(106, 123, 94, 0.08), rgba(255, 255, 255, 0.98));
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .commodities-shortcut__content h3 {
+      margin: 0;
+      color: #2f3d2b;
+      font-size: 1.05rem;
+    }
+
+    .commodities-shortcut__content p {
+      margin: 0.25rem 0 0;
+      color: #5b6457;
+      font-size: 0.92rem;
+    }
+
     .stat-item {
       text-align: center;
       padding: 0.5rem;
@@ -627,6 +652,11 @@
         grid-template-columns: 1fr;
       }
 
+      .commodities-shortcut {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
       .form-grid {
         grid-template-columns: 1fr;
       }
@@ -728,6 +758,17 @@
           </div>
         </div>
       </div>
+
+      <section class="commodities-shortcut" data-feature-flag="financialCommoditiesEnabled" data-feature-flag-default="false" aria-label="Commodities trading shortcut">
+        <div class="commodities-shortcut__content">
+          <h3><i class="fas fa-chart-line"></i> Commodities Trading</h3>
+          <p>Monitor hourly prices and buy goods like gold, silver, platinum, and palladium.</p>
+        </div>
+        <a href="/financial-commodities.html" class="btn btn-futuristic" data-testid="financial-commodities-link">
+          <i class="fas fa-arrow-right"></i>
+          Open commodities page
+        </a>
+      </section>
 
       <!-- Transfer Funds Form -->
       <div class="transaction-form-modern" style="margin-bottom: 2rem">

@@ -10,6 +10,8 @@
     "staffFieldsExportEnabled": false,
     "financialReportsEnabled": false,
     "financialCsvExportEnabled": false,
+    "financialCommoditiesEnabled": false,
+    "financialCommoditiesTradingEnabled": false,
     "prometheusMetricsEnabled": false,
     "homeWelcomeVideoEnabled": false,
     "homeStatsSectionEnabled": false,
@@ -21,5 +23,5 @@
     "promoAdvertsGeneralAdEnabled": false,
     "promoAdvertsBottomBannerEnabled": false
   },
-  "updatedAt": "2026-02-25T16:48:04.159Z"
+  "updatedAt": "2026-02-27T18:03:44.529Z"
 }

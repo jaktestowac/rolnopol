@@ -114,6 +114,19 @@ class DatabaseManager {
   }
 
   /**
+   * Get commodities database singleton
+   */
+  getCommoditiesDatabase() {
+    return this.getDatabase("commodities", "commodities.json", {
+      holdings: [],
+      metadata: {
+        version: 1,
+        updatedAt: null,
+      },
+    });
+  }
+
+  /**
    * Get a custom database singleton
    */
   getCustomDatabase(resourceName, fileName, defaultData = []) {

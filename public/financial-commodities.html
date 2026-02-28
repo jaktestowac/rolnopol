@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <title>Financial Commodities - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/financial-commodities.css" />
+</head>
+
+<body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="container commodities-page">
+        <header class="header glass" style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 1.2rem 0 1.2rem 0;
+                    margin-bottom: 1.2rem;
+                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+                    border-radius: 1.2rem 1.2rem 0 0;
+                ">
+            <div style="
+                        display: flex;
+                        align-items: center;
+                        gap: 1.1rem;
+                        width: 100%;
+                        justify-content: center;
+                    ">
+                <h1 style="
+                            display: flex;
+                            align-items: center;
+                            gap: 0.6rem;
+                            font-size: 2rem;
+                        ">
+                    <span class="bg-agri-gradient"><i class="fas fa-chart-line"></i></span>
+                </h1>
+                <div style="
+                            display: flex;
+                            flex-direction: column;
+                            align-items: flex-start;
+                        ">
+                    <span class="main-title">Commodities</span>
+                    <span style="
+                                font-size: 1.08rem;
+                                color: #6a7b5e;
+                                font-weight: 400;
+                                margin-top: 0.1rem;
+                            ">Track hourly prices and trade virtual commodities in your financial portfolio.</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="commodities-layout">
+            <section class="glass commodities-card commodities-card--wide">
+                <div class="commodities-card__header">
+                    <h2><i class="fas fa-chart-area"></i> Price history</h2>
+                </div>
+                <form id="historyForm" class="commodities-form commodities-form--compact" aria-label="Commodity history query" style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin:0;">
+                    <div class="form-group" style="min-width:10rem;margin:0;">
+                        <label class="form-label" for="historySymbol" style="font-size:0.85rem;margin-bottom:0.2rem;">Symbol</label>
+                        <select id="historySymbol" class="form-input" disabled style="min-width:9rem;padding:0.35rem 0.5rem;">
+                            <option value="" selected>Loading symbols...</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="min-width:9rem;margin:0;">
+                        <label class="form-label" for="historyHours" style="font-size:0.85rem;margin-bottom:0.2rem;">Time</label>
+                        <select id="historyHours" class="form-input" style="padding:0.35rem 0.5rem;">
+                            <option value="12">12 hours</option>
+                            <option value="24">24 hours</option>
+                            <option value="168" selected>7 days</option>
+                            <option value="336">14 days</option>
+                            <option value="720">1 month</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-compact btn-outline" type="submit" style="margin-left:4px;margin-bottom: -12px;">
+                        <i class="fas fa-filter"></i>
+                        Load
+                    </button>
+                </form>
+                <div id="historyLoading" class="commodities-state" hidden>Loading history...</div>
+                <div id="historyError" class="commodities-state commodities-state--error" hidden>Failed to load history.</div>
+                <div id="historyMeta" class="commodities-meta" hidden></div>
+                <div id="historyChartWrap" class="commodities-history" hidden>
+                    <div class="commodities-history__chart-shell">
+                        <svg id="historyChart" class="commodities-history__chart" role="img" aria-label="Commodity price history chart"></svg>
+                    </div>
+                    <div id="historyStats" class="commodities-history__stats"></div>
+                </div>
+            </section>
+
+            <section id="pricesSection" class="glass commodities-card">
+                <div class="commodities-card__header">
+                    <h2><i class="fas fa-coins"></i> Current prices</h2>
+                    <button id="refreshPricesBtn" class="btn btn-compact btn-outline" type="button" aria-label="Refresh prices">
+                        <i class="fas fa-rotate"></i>
+                    </button>
+                </div>
+                <div id="pricesHourStamp" class="commodities-meta" aria-live="polite"></div>
+                <div id="pricesLoading" class="commodities-state">Loading prices...</div>
+                <div id="pricesError" class="commodities-state commodities-state--error" hidden>Failed to load prices.</div>
+                <div id="pricesTableWrap" hidden>
+                    <table class="commodities-table" id="pricesTable" aria-label="Current commodity prices">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Mid (ROL)</th>
+                                <th>Buy (Ask)</th>
+                                <th>Sell (Bid)</th>
+                                <th>Hour start (UTC)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="buyCommoditySection" class="glass commodities-card">
+                <div class="commodities-card__header">
+                    <h2><i class="fas fa-cart-plus"></i> Buy commodity</h2>
+                </div>
+                <form id="buyCommodityForm" class="commodities-form" aria-label="Buy commodity form">
+                    <div class="form-group">
+                        <label class="form-label" for="buySymbol">Symbol</label>
+                        <select id="buySymbol" class="form-input" required disabled>
+                            <option value="" selected>Loading symbols...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="buyQuantity">Quantity</label>
+                        <input id="buyQuantity" class="form-input" type="number" min="0.0001" step="0.0001" required placeholder="e.g. 1.2500" />
+                    </div>
+                    <button id="buyCommodityBtn" class="btn btn-futuristic" type="submit">
+                        <i class="fas fa-basket-shopping"></i>
+                        Buy now
+                    </button>
+                </form>
+                <div id="buyFeedback" class="commodities-inline-feedback" aria-live="polite" hidden></div>
+            </section>
+
+            <section id="sellCommoditySection" class="glass commodities-card">
+                <div class="commodities-card__header">
+                    <h2><i class="fas fa-hand-holding-dollar"></i> Sell commodity</h2>
+                </div>
+                <form id="sellCommodityForm" class="commodities-form" aria-label="Sell commodity form">
+                    <div class="form-group">
+                        <label class="form-label" for="sellSymbol">Symbol</label>
+                        <select id="sellSymbol" class="form-input" required disabled>
+                            <option value="" selected>Loading holdings...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="sellQuantity">Quantity</label>
+                        <input id="sellQuantity" class="form-input" type="number" min="0.0001" step="0.0001" required placeholder="Loading holdings..." disabled />
+                    </div>
+                    <button id="sellCommodityBtn" class="btn btn-outline" type="submit" disabled>
+                        <i class="fas fa-dollar-sign"></i>
+                        Sell now
+                    </button>
+                </form>
+                <div id="sellFeedback" class="commodities-inline-feedback" aria-live="polite" hidden></div>
+            </section>
+
+            <section class="glass commodities-card">
+                <div class="commodities-card__header">
+                    <h2><i class="fas fa-wallet"></i> Portfolio</h2>
+                    <button id="refreshPortfolioBtn" class="btn btn-compact btn-outline" type="button" aria-label="Refresh portfolio">
+                        <i class="fas fa-rotate"></i>
+                    </button>
+                </div>
+                <div id="portfolioLoading" class="commodities-state">Loading portfolio...</div>
+                <div id="portfolioError" class="commodities-state commodities-state--error" hidden>Failed to load portfolio.</div>
+                <div id="portfolioEmpty" class="commodities-state" hidden>No holdings yet. Buy your first commodity.</div>
+                <div id="portfolioTableWrap" hidden>
+                    <table class="commodities-table" aria-label="Commodity holdings table">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Quantity</th>
+                                <th>Avg buy</th>
+                                <th>Current</th>
+                                <th>P/L</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolioTableBody"></tbody>
+                    </table>
+                    <div id="portfolioSummary" class="commodities-summary"></div>
+                </div>
+            </section>
+        </main>
+
+        <div id="footer-component"></div>
+    </div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <script src="/js/pages/financial-commodities.js"></script>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+        initNavigation("financial-commodities");
+    </script>
+</body>
+
+</html>

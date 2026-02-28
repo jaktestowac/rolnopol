@@ -6,6 +6,11 @@ const {
   HIGH_RATE_LIMIT_MAX_REQUESTS,
 } = require("../data/settings");
 
+const IS_TEST_ENV = process.env.NODE_ENV === "test";
+const TEST_SAFE_MAX_REQUESTS = 1_000_000;
+
+const resolveMax = (max) => (IS_TEST_ENV ? TEST_SAFE_MAX_REQUESTS : max);
+
 /**
  * Rate limiting configuration
  */
@@ -15,7 +20,7 @@ const {
  */
 const apiLimiter = rateLimit({
   windowMs: RATE_LIMIT_WINDOW_MS,
-  max: RATE_LIMIT_MAX_REQUESTS,
+  max: resolveMax(RATE_LIMIT_MAX_REQUESTS),
   message: {
     success: false,
     error: "Too many requests from this IP, please try again later.",
@@ -27,7 +32,7 @@ const apiLimiter = rateLimit({
 
 const apiHighLimiter = rateLimit({
   windowMs: HIGH_RATE_LIMIT_WINDOW_MS,
-  max: HIGH_RATE_LIMIT_MAX_REQUESTS,
+  max: resolveMax(HIGH_RATE_LIMIT_MAX_REQUESTS),
   message: {
     success: false,
     error: "Too many requests from this IP, please try again later.",
@@ -42,7 +47,7 @@ const apiHighLimiter = rateLimit({
  */
 const strictLimiter = rateLimit({
   windowMs: RATE_LIMIT_WINDOW_MS,
-  max: 20007, // Lower limit for sensitive operations
+  max: resolveMax(20007), // Lower limit for sensitive operations
   message: {
     success: false,
     error: "Too many requests for this operation, please try again later.",
@@ -57,7 +62,7 @@ const strictLimiter = rateLimit({
  */
 const authLimiter = rateLimit({
   windowMs: RATE_LIMIT_WINDOW_MS,
-  max: 1000, // Even stricter for auth endpoints
+  max: resolveMax(1000), // Even stricter for auth endpoints
   message: {
     success: false,
     error: "Too many authentication attempts, please try again later.",
@@ -72,7 +77,7 @@ const authLimiter = rateLimit({
  */
 const verifyLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 500, // Very strict for verification
+  max: resolveMax(500), // Very strict for verification
   message: {
     success: false,
     error: "Too many verification attempts, please try again in 5 minutes.",
@@ -87,7 +92,7 @@ const verifyLimiter = rateLimit({
  */
 const adminDashboardLimiter = rateLimit({
   windowMs: RATE_LIMIT_WINDOW_MS, // 15 minutes
-  max: 2000, // More generous for dashboard operations
+  max: resolveMax(2000), // More generous for dashboard operations
   message: {
     success: false,
     error: "Too many dashboard requests, please try again later.",

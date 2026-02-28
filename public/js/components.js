@@ -98,6 +98,7 @@ function setActiveNavLink(explicitPage = null) {
         (explicitPage === "admin" && linkPath === "/admin.html") ||
         (explicitPage === "backend" && linkPath === "/backend.html") ||
         (explicitPage === "financial" && linkPath === "/financial.html") ||
+        (explicitPage === "financial-commodities" && linkPath === "/financial-commodities.html") ||
         (explicitPage === "fieldmap" && linkPath === "/fieldmap.html") ||
         (explicitPage === "rolnopolmap" && linkPath === "/rolnopolmap.html") ||
         (explicitPage === "feature-flags" && linkPath === "/feature-flags.html") ||
@@ -123,26 +124,27 @@ function setActiveNavLink(explicitPage = null) {
 async function getNavFeatureFlagState() {
   const featureFlagsService = window.App?.getModule?.("featureFlagsService");
   if (!featureFlagsService || typeof featureFlagsService.isEnabled !== "function") {
-    return { alertsEnabled: true, rolnopolMapEnabled: true, messengerEnabled: false };
+    return { alertsEnabled: true, rolnopolMapEnabled: true, messengerEnabled: false, financialCommoditiesEnabled: false };
   }
 
   if (window.App && window.App.isInitialized === false) {
-    return { alertsEnabled: false, rolnopolMapEnabled: false, messengerEnabled: false };
+    return { alertsEnabled: false, rolnopolMapEnabled: false, messengerEnabled: false, financialCommoditiesEnabled: false };
   }
 
   if (!featureFlagsService.apiService) {
-    return { alertsEnabled: false, rolnopolMapEnabled: false, messengerEnabled: false };
+    return { alertsEnabled: false, rolnopolMapEnabled: false, messengerEnabled: false, financialCommoditiesEnabled: false };
   }
 
   try {
-    const [alertsEnabled, rolnopolMapEnabled, messengerEnabled] = await Promise.all([
+    const [alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled] = await Promise.all([
       featureFlagsService.isEnabled("alertsEnabled", true),
       featureFlagsService.isEnabled("rolnopolMapEnabled", true),
       featureFlagsService.isEnabled("messengerEnabled", false),
+      featureFlagsService.isEnabled("financialCommoditiesEnabled", false),
     ]);
-    return { alertsEnabled, rolnopolMapEnabled, messengerEnabled };
+    return { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled };
   } catch (error) {
-    return { alertsEnabled: true, rolnopolMapEnabled: true, messengerEnabled: false };
+    return { alertsEnabled: true, rolnopolMapEnabled: true, messengerEnabled: false, financialCommoditiesEnabled: false };
   }
 }
 
@@ -277,7 +279,7 @@ async function updateHeaderNav(username = "") {
     return;
   }
 
-  const { alertsEnabled, rolnopolMapEnabled, messengerEnabled } = await getNavFeatureFlagState();
+  const { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled } = await getNavFeatureFlagState();
   const mapLink = rolnopolMapEnabled
     ? '<li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>'
     : "";
@@ -286,6 +288,9 @@ async function updateHeaderNav(username = "") {
     : "";
   const messengerLink = messengerEnabled
     ? '<li><a href="/messenger.html" class="nav-link" title="Messenger" aria-label="Messenger" data-testid="nav-messenger"><i class="fas fa-comments"></i><span class="nav-text">Messenger</span></a></li>'
+    : "";
+  const commoditiesLink = financialCommoditiesEnabled
+    ? '<li><a href="/financial-commodities.html" class="nav-link" title="Commodities" aria-label="Commodities" data-testid="nav-commodities"><i class="fas fa-chart-line"></i><span class="nav-text">Commodities</span></a></li>'
     : "";
 
   // Check authentication using standardized cookie names
@@ -298,6 +303,7 @@ async function updateHeaderNav(username = "") {
       <li><a href="/" class="nav-link" title="Home" aria-label="Home" data-testid="nav-home"><i class="fas fa-home"></i><span class="nav-text">Home</span></a></li>
       <li><a href="/staff-fields-main.html" class="nav-link" title="Staff & Fields Management" aria-label="Staff & Fields Management" data-testid="nav-staff-fields"><i class="fas fa-seedling"></i><span class="nav-text">Staff & Fields</span></a></li>
       <li><a href="/financial.html" class="nav-link" title="Financial Tracking" aria-label="Financial Tracking" data-testid="nav-financial"><i class="fas fa-coins"></i><span class="nav-text">Financial</span></a></li>
+      ${commoditiesLink}
       <li><a href="/marketplace.html" class="nav-link" title="Marketplace" aria-label="Marketplace" data-testid="nav-marketplace"><i class="fas fa-store"></i><span class="nav-text">Marketplace</span></a></li>
       ${mapLink}
       ${alertsLink}
