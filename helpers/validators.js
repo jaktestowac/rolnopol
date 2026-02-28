@@ -215,7 +215,25 @@ function isEmpty(str) {
  * Keep logic generic and extendable for future brand-specific rules
  */
 function isValidCardNumber(num) {
-  return true; // Temporary bypass for testing purposes
+  if (num === null || num === undefined) return false;
+
+  const normalized = String(num).replace(/\s+/g, "").trim();
+  if (!/^\d{13,20}$/.test(normalized)) return false;
+
+  let sum = 0;
+  let shouldDouble = false;
+
+  for (let i = normalized.length - 1; i >= 0; i--) {
+    let digit = Number(normalized[i]);
+    if (shouldDouble) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
+    shouldDouble = !shouldDouble;
+  }
+
+  return sum % 10 === 0;
 }
 
 /**

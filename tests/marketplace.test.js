@@ -463,7 +463,7 @@ describe("Marketplace API", () => {
         sellerToken = sellerRes.body.data.token;
       } else {
         const loginRes = await request(app).post("/api/v1/login").send({ email: seller.email, password: seller.password });
-        expect(buyRes.status).toBe(200);
+        expect(loginRes.status).toBe(200);
         sellerToken = loginRes.body.data.token;
       }
       // Create a field for the seller
@@ -495,8 +495,7 @@ describe("Marketplace API", () => {
         buyerToken = buyerRes.body.data.token;
       } else {
         const loginRes = await request(app).post("/api/v1/login").send({ email: buyer.email, password: buyer.password });
-
-        expect(buyRes.status, `Login response should have status 200. Response: ${JSON.stringify(buyRes.body)}`).toBe(200);
+        expect(loginRes.status, `Login response should have status 200. Response: ${JSON.stringify(loginRes.body)}`).toBe(200);
         buyerToken = loginRes.body.data.token;
       }
       await request(app)
@@ -507,9 +506,14 @@ describe("Marketplace API", () => {
       // Buy offer as buyer
       const buyRes = await request(app).post("/api/v1/marketplace/buy").set("token", buyerToken).send({ offerId });
 
-      expect(buyRes.status, `Buy response should have status 400. Response: ${JSON.stringify(buyRes.body)}`).toBe(400);
-      expect(buyRes.body).toHaveProperty("success", false);
-      // TODO: Verify field ownership transferred (requires API support)
+      expect(buyRes.status, `Buy response should have status 200. Response: ${JSON.stringify(buyRes.body)}`).toBe(200);
+      expect(buyRes.body).toHaveProperty("success", true);
+      expect(buyRes.body).toHaveProperty("data.transaction");
+
+      // Verify ownership transferred: buyer should see the field in their resources
+      const buyerFieldsRes = await request(app).get("/api/v1/fields").set("token", buyerToken).expect(200);
+      const buyerFields = Array.isArray(buyerFieldsRes.body?.data) ? buyerFieldsRes.body.data : [];
+      expect(buyerFields.some((field) => Number(field.id) === Number(fieldId))).toBe(true);
     });
   });
 });

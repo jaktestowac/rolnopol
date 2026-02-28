@@ -31,8 +31,6 @@ class ResourceService {
       districtName,
       resourceType: this.resourceType,
     });
-    userId = undefined;
-    logDebug("For now userId is set to undefined to get all fields");
 
     // Load fields for user (if provided), else all
     let fields = [];
@@ -48,8 +46,7 @@ class ResourceService {
     // Aggregate by district name (case-insensitive, trimmed)
     const byDistrict = new Map(); // normName -> { name, fieldsCount, fieldsAreaHa }
     for (const f of fields) {
-      const rawName =
-        f.districtName || f.powiatName || f.countyName || f.district || "";
+      const rawName = f.districtName || f.powiatName || f.countyName || f.district || "";
       if (typeof rawName !== "string") continue;
       logDebug("Processing field for district aggregation:", {
         fieldId: f.id,
@@ -75,9 +72,7 @@ class ResourceService {
 
     // Build response object keyed by district name
     const resultObj = {};
-    const list = Array.from(byDistrict.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+    const list = Array.from(byDistrict.values()).sort((a, b) => a.name.localeCompare(b.name));
     for (const d of list) {
       resultObj[d.name] = {
         fieldsCount: d.fieldsCount,
@@ -124,20 +119,14 @@ class ResourceService {
     const numericUserId = Number(userId);
     const numericId = Number(id);
 
-    if (
-      isNaN(numericUserId) ||
-      !Number.isInteger(numericUserId) ||
-      numericUserId <= 0
-    ) {
+    if (isNaN(numericUserId) || !Number.isInteger(numericUserId) || numericUserId <= 0) {
       throw new Error("Invalid user ID format");
     }
     if (isNaN(numericId) || !Number.isInteger(numericId) || numericId <= 0) {
       throw new Error("Invalid resource ID format");
     }
 
-    await this.db.remove(
-      (item) => item.userId === numericUserId && item.id === numericId,
-    );
+    await this.db.remove((item) => item.userId === numericUserId && item.id === numericId);
     // Cascade delete related assignments
     if (this.resourceType === "fields") {
       await ResourceService.cascadeDelete({ type: "field", id: numericId });
@@ -154,11 +143,7 @@ class ResourceService {
     const numericUserId = Number(userId);
     const numericId = Number(id);
 
-    if (
-      isNaN(numericUserId) ||
-      !Number.isInteger(numericUserId) ||
-      numericUserId <= 0
-    ) {
+    if (isNaN(numericUserId) || !Number.isInteger(numericUserId) || numericUserId <= 0) {
       throw new Error("Invalid user ID format");
     }
     if (isNaN(numericId) || !Number.isInteger(numericId) || numericId <= 0) {
@@ -170,11 +155,7 @@ class ResourceService {
       (item) => ({ ...item, ...updateData }),
     );
     // Return the updated item (if found)
-    return Array.isArray(updatedArr)
-      ? updatedArr.find(
-          (item) => item.userId === numericUserId && item.id === numericId,
-        )
-      : null;
+    return Array.isArray(updatedArr) ? updatedArr.find((item) => item.userId === numericUserId && item.id === numericId) : null;
   }
 
   // --- Cascading delete logic ---
@@ -194,34 +175,14 @@ class ResourceService {
     if (type === "user") {
       // Convert userId to number for comparison
       const numericUserId = Number(userId);
-      if (
-        isNaN(numericUserId) ||
-        !Number.isInteger(numericUserId) ||
-        numericUserId <= 0
-      ) {
+      if (isNaN(numericUserId) || !Number.isInteger(numericUserId) || numericUserId <= 0) {
         throw new Error("Invalid user ID format");
       }
       // Delete all fields, staff, animals, and assignments for this user
-      await fieldsDb.update((data) =>
-        Array.isArray(data)
-          ? data.filter((f) => f.userId !== numericUserId)
-          : data,
-      );
-      await staffDb.update((data) =>
-        Array.isArray(data)
-          ? data.filter((s) => s.userId !== numericUserId)
-          : data,
-      );
-      await animalsDb.update((data) =>
-        Array.isArray(data)
-          ? data.filter((a) => a.userId !== numericUserId)
-          : data,
-      );
-      await assignmentsDb.update((data) =>
-        Array.isArray(data)
-          ? data.filter((a) => a.userId !== numericUserId)
-          : data,
-      );
+      await fieldsDb.update((data) => (Array.isArray(data) ? data.filter((f) => f.userId !== numericUserId) : data));
+      await staffDb.update((data) => (Array.isArray(data) ? data.filter((s) => s.userId !== numericUserId) : data));
+      await animalsDb.update((data) => (Array.isArray(data) ? data.filter((a) => a.userId !== numericUserId) : data));
+      await assignmentsDb.update((data) => (Array.isArray(data) ? data.filter((a) => a.userId !== numericUserId) : data));
     } else if (type === "field") {
       // Convert field ID to number for comparison
       const numericId = Number(id);
@@ -229,11 +190,7 @@ class ResourceService {
         throw new Error("Invalid field ID format");
       }
       // Delete all assignments for this field
-      await assignmentsDb.update((data) =>
-        Array.isArray(data)
-          ? data.filter((a) => a.fieldId !== numericId)
-          : data,
-      );
+      await assignmentsDb.update((data) => (Array.isArray(data) ? data.filter((a) => a.fieldId !== numericId) : data));
     } else if (type === "staff") {
       // Convert staff ID to number for comparison
       const numericId = Number(id);
@@ -241,11 +198,7 @@ class ResourceService {
         throw new Error("Invalid staff ID format");
       }
       // Delete all assignments for this staff
-      await assignmentsDb.update((data) =>
-        Array.isArray(data)
-          ? data.filter((a) => a.staffId !== numericId)
-          : data,
-      );
+      await assignmentsDb.update((data) => (Array.isArray(data) ? data.filter((a) => a.staffId !== numericId) : data));
     } else if (type === "animal") {
       // Convert animal ID to number for comparison
       const numericId = Number(id);
@@ -255,11 +208,7 @@ class ResourceService {
       // For animals, we might want to handle field assignments differently
       // Currently, animals can be assigned to fields, so we update the fieldId to null/undefined
       await animalsDb.update((data) =>
-        Array.isArray(data)
-          ? data.map((a) =>
-              a.id === numericId ? { ...a, fieldId: undefined } : a,
-            )
-          : data,
+        Array.isArray(data) ? data.map((a) => (a.id === numericId ? { ...a, fieldId: undefined } : a)) : data,
       );
     }
     // To extend: add more resource types here as needed
@@ -268,35 +217,19 @@ class ResourceService {
 
 const assignmentsDb = dbManager.getAssignmentsDatabase();
 
-ResourceService.prototype.assignStaffToField = async function (
-  userId,
-  fieldId,
-  staffId,
-) {
+ResourceService.prototype.assignStaffToField = async function (userId, fieldId, staffId) {
   // Convert all IDs to numbers for storage and comparison
   const numericUserId = Number(userId);
   const numericFieldId = Number(fieldId);
   const numericStaffId = Number(staffId);
 
-  if (
-    isNaN(numericUserId) ||
-    !Number.isInteger(numericUserId) ||
-    numericUserId <= 0
-  ) {
+  if (isNaN(numericUserId) || !Number.isInteger(numericUserId) || numericUserId <= 0) {
     throw new Error("Invalid user ID format");
   }
-  if (
-    isNaN(numericFieldId) ||
-    !Number.isInteger(numericFieldId) ||
-    numericFieldId <= 0
-  ) {
+  if (isNaN(numericFieldId) || !Number.isInteger(numericFieldId) || numericFieldId <= 0) {
     throw new Error("Invalid field ID format");
   }
-  if (
-    isNaN(numericStaffId) ||
-    !Number.isInteger(numericStaffId) ||
-    numericStaffId <= 0
-  ) {
+  if (isNaN(numericStaffId) || !Number.isInteger(numericStaffId) || numericStaffId <= 0) {
     throw new Error("Invalid staff ID format");
   }
 
@@ -310,10 +243,7 @@ ResourceService.prototype.assignStaffToField = async function (
   // The add() method will assign the next numeric ID
   // Return the assignment with the assigned ID
   const assignments = await assignmentsDb.find(
-    (a) =>
-      a.userId === numericUserId &&
-      a.fieldId === numericFieldId &&
-      a.staffId === numericStaffId,
+    (a) => a.userId === numericUserId && a.fieldId === numericFieldId && a.staffId === numericStaffId,
   );
   return assignments[assignments.length - 1];
 };
@@ -324,32 +254,19 @@ ResourceService.prototype.listAssignments = async function (userId) {
   return await assignmentsDb.find((a) => a.userId === numericUserId);
 };
 
-ResourceService.prototype.removeAssignment = async function (
-  userId,
-  assignmentId,
-) {
+ResourceService.prototype.removeAssignment = async function (userId, assignmentId) {
   // Convert userId and assignmentId to numbers for comparison
   const numericUserId = Number(userId);
   const numericAssignmentId = Number(assignmentId);
 
-  if (
-    isNaN(numericUserId) ||
-    !Number.isInteger(numericUserId) ||
-    numericUserId <= 0
-  ) {
+  if (isNaN(numericUserId) || !Number.isInteger(numericUserId) || numericUserId <= 0) {
     throw new Error("Invalid user ID format");
   }
-  if (
-    isNaN(numericAssignmentId) ||
-    !Number.isInteger(numericAssignmentId) ||
-    numericAssignmentId <= 0
-  ) {
+  if (isNaN(numericAssignmentId) || !Number.isInteger(numericAssignmentId) || numericAssignmentId <= 0) {
     throw new Error("Invalid assignment ID format");
   }
 
-  await assignmentsDb.remove(
-    (a) => a.userId === numericUserId && a.id === numericAssignmentId,
-  );
+  await assignmentsDb.remove((a) => a.userId === numericUserId && a.id === numericAssignmentId);
   return true;
 };
 
@@ -366,11 +283,7 @@ ResourceService.prototype.validateAnimal = function (data) {
     errors.push("Amount must be a positive number.");
   }
   // fieldId is optional, but if present must be a number
-  if (
-    data.fieldId !== undefined &&
-    data.fieldId !== null &&
-    isNaN(Number(data.fieldId))
-  ) {
+  if (data.fieldId !== undefined && data.fieldId !== null && isNaN(Number(data.fieldId))) {
     errors.push("fieldId must be a number if provided.");
   }
   return errors;
@@ -397,20 +310,12 @@ ResourceService.prototype.createAnimal = async function (userId, data) {
   return items[items.length - 1];
 };
 
-ResourceService.prototype.updateAnimal = async function (
-  userId,
-  id,
-  updateData,
-) {
+ResourceService.prototype.updateAnimal = async function (userId, id, updateData) {
   // Convert userId and id to numbers for comparison
   const numericUserId = Number(userId);
   const numericId = Number(id);
 
-  if (
-    isNaN(numericUserId) ||
-    !Number.isInteger(numericUserId) ||
-    numericUserId <= 0
-  ) {
+  if (isNaN(numericUserId) || !Number.isInteger(numericUserId) || numericUserId <= 0) {
     throw new Error("Invalid user ID format");
   }
   if (isNaN(numericId) || !Number.isInteger(numericId) || numericId <= 0) {
@@ -421,30 +326,18 @@ ResourceService.prototype.updateAnimal = async function (
   const errors = [];
 
   // Validate type if it's being updated
-  if (
-    updateData.type !== undefined &&
-    (!updateData.type || !ALLOWED_ANIMAL_TYPES[updateData.type])
-  ) {
+  if (updateData.type !== undefined && (!updateData.type || !ALLOWED_ANIMAL_TYPES[updateData.type])) {
     const allowedTypes = Object.keys(ALLOWED_ANIMAL_TYPES).join(", ");
     errors.push(`Invalid animal type. Allowed: ${allowedTypes}.`);
   }
 
   // Validate amount if it's being updated
-  if (
-    updateData.amount !== undefined &&
-    (!updateData.amount ||
-      isNaN(Number(updateData.amount)) ||
-      Number(updateData.amount) <= 0)
-  ) {
+  if (updateData.amount !== undefined && (!updateData.amount || isNaN(Number(updateData.amount)) || Number(updateData.amount) <= 0)) {
     errors.push("Amount must be a positive number.");
   }
 
   // Validate fieldId if it's being updated
-  if (
-    updateData.fieldId !== undefined &&
-    updateData.fieldId !== null &&
-    isNaN(Number(updateData.fieldId))
-  ) {
+  if (updateData.fieldId !== undefined && updateData.fieldId !== null && isNaN(Number(updateData.fieldId))) {
     errors.push("fieldId must be a number if provided.");
   }
 
@@ -459,19 +352,12 @@ ResourceService.prototype.updateAnimal = async function (
     (item) => {
       const updated = { ...item };
       if (updateData.type !== undefined) updated.type = updateData.type;
-      if (updateData.amount !== undefined)
-        updated.amount = Number(updateData.amount);
-      if (updateData.fieldId !== undefined)
-        updated.fieldId =
-          updateData.fieldId !== null ? Number(updateData.fieldId) : undefined;
+      if (updateData.amount !== undefined) updated.amount = Number(updateData.amount);
+      if (updateData.fieldId !== undefined) updated.fieldId = updateData.fieldId !== null ? Number(updateData.fieldId) : undefined;
       return updated;
     },
   );
-  return Array.isArray(updatedArr)
-    ? updatedArr.find(
-        (item) => item.userId === numericUserId && item.id === numericId,
-      )
-    : null;
+  return Array.isArray(updatedArr) ? updatedArr.find((item) => item.userId === numericUserId && item.id === numericId) : null;
 };
 
 module.exports = ResourceService;

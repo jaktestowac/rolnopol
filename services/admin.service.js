@@ -301,7 +301,10 @@ class AdminService {
     // Clear existing users
     const existingUsers = await this.userDataInstance.getUsers();
     for (const user of existingUsers) {
-      await this.userDataInstance.deleteUser(user.userId);
+      const existingUserId = user?.userId ?? user?.id;
+      if (existingUserId !== undefined && existingUserId !== null) {
+        await this.userDataInstance.deleteUser(existingUserId);
+      }
     }
 
     // Restore users from backup

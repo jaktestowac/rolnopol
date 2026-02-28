@@ -66,6 +66,10 @@
                 <form id="messageForm" class="messenger-compose" aria-label="Send message">
                     <label class="sr-only" for="messageInput">Message input</label>
                     <textarea id="messageInput" class="form-input-modern" rows="2" maxlength="500" placeholder="Type your message..." disabled aria-label="Message"></textarea>
+                    <button id="emojiPickerBtn" type="button" class="btn btn-compact btn-outline messenger-emoji-trigger" aria-label="Open emoji picker" disabled>
+                        😊
+                    </button>
+                    <div id="emojiPopup" class="messenger-emoji-popup" role="listbox" aria-label="Emoji suggestions" hidden></div>
                     <button id="sendMessageBtn" type="submit" class="btn btn-compact btn-futuristic" disabled aria-label="Send message">
                         <i class="fas fa-paper-plane"></i>
                         Send
