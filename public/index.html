@@ -1118,8 +1118,9 @@
       // Safe value converter and formatter for frontend
       const safeValue = (value) => {
         const num = parseInt(value);
+        // if value is not a valid non-negative number, fall back to zero
         if (isNaN(num) || num < 0) {
-          return Math.floor(Math.random() * 100) + 10;
+          return 0;
         }
         return num;
       };
@@ -1437,7 +1438,8 @@
         elements.forEach((item) => {
           const element = document.getElementById(item.id);
           if (element) {
-            const fallbackValue = Math.floor(Math.random() * 50) + 10;
+            // when stats cannot be fetched, show zeros rather than random data
+            const fallbackValue = 0;
             animateValue(element, 0, fallbackValue, 1000, item.isArea, item.type);
           }
         });

@@ -57,8 +57,8 @@ router.get("/statistics", async (req, res) => {
     // Get staff count
     const staffCount = staff.length;
 
-    // Get animals count
-    const animalsCount = animals.reduce((sum, animal) => sum + (animal.quantity || 1), 0);
+    // Get animals count (use amount field from records)
+    const animalsCount = animals.reduce((sum, animal) => sum + (Number(animal.amount) || 0), 0);
 
     // Calculate average staff age
     const staffWithAge = staff.filter((staffMember) => staffMember.age);
