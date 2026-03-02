@@ -469,18 +469,31 @@ async function initFooter() {
       // Fallback footer if component fails to load
       footerContainer.innerHTML = `
         <footer class="footer">
-          <p>&copy; ${new Date().getFullYear()} Rolnopol. build by <a href="https://jaktestowac.pl" target="_blank" rel="noopener">jaktestowac.pl</a> | <a href="https://aitesters.pl" target="_blank" rel="noopener" style="margin-left: 4px; margin-right: 4px; ">AI_Testers</a></p> 
+          <p>&copy; ${new Date().getFullYear()} Rolnopol. build by <a href="https://jaktestowac.pl" target="_blank" rel="noopener">jaktestowac.pl</a> </p> 
         <span aria-hidden="true">|</span>
         <a href="https://github.com/jaktestowac" target="_blank" rel="noopener" aria-label="GitHub" data-testid="footer-github" class="footer-github-link" style="margin-left: 4px; margin-right: 4px; ">
           <i class="fab fa-github" aria-hidden="true"></i><span class="sr-only">GitHub</span>
         </a>
         <span aria-hidden="true">|</span>
-        <a href="https://www.youtube.com/c/jaktestowac?sub_confirmation=1" target="_blank" rel="noopener" aria-label="YouTube" data-testid="footer-youtube" class="footer-youtube-link" style="margin-left: 4px; margin-right: 4px; ">
-          <i class="fab fa-youtube" aria-hidden="true"></i><span class="sr-only">YouTube</span>
-        </a>        <span aria-hidden="true">|</span>
-        <a href="https://www.linkedin.com/company/jaktestowac" target="_blank" rel="noopener" aria-label="LinkedIn" data-testid="footer-linkedin" class="footer-linkedin-link" style="margin-left: 4px; margin-right: 4px; ">
-          <i class="fab fa-linkedin" aria-hidden="true"></i><span class="sr-only">LinkedIn</span>
-        </a>        </footer>
+        <a href="https://www.youtube.com/@jaktestowac?sub_confirmation=1" target="_blank" rel="noopener" aria-label="YouTube jaktestowac.pl" data-testid="footer-youtube" class="footer-youtube-link" style="margin-left: 4px; margin-right: 4px; ">
+          <i class="fab fa-youtube" aria-hidden="true"></i><span class="sr-only">YouTube jaktestowac.pl</span>
+        </a>        
+        <span aria-hidden="true">|</span>
+        <a href="https://www.linkedin.com/company/jaktestowac" target="_blank" rel="noopener" aria-label="LinkedIn jaktestowac.pl" data-testid="footer-linkedin" class="footer-linkedin-link" style="margin-left: 4px; margin-right: 4px; ">
+          <i class="fab fa-linkedin" aria-hidden="true"></i><span class="sr-only">LinkedIn jaktestowac.pl</span>
+        </a>        
+        <br />
+        <a href="https://aitesters.pl" target="_blank" rel="noopener" style="margin-left: 4px; margin-right: 4px; ">AI_Testers</a> 
+        <span aria-hidden="true">|</span>
+        <a href="https://www.youtube.com/@AITesterspl?sub_confirmation=1" target="_blank" rel="noopener" aria-label="YouTube AI_Testers" data-testid="footer-youtube" class="footer-youtube-link" style="margin-left: 4px; margin-right: 4px; ">
+          <i class="fab fa-youtube" aria-hidden="true"></i><span class="sr-only">YouTube AI_Testers</span>
+        </a>        
+        <span aria-hidden="true">|</span>
+        <a href="https://www.linkedin.com/company/aitesters" target="_blank" rel="noopener" aria-label="LinkedIn AI_Testers" data-testid="footer-linkedin" class="footer-linkedin-link" style="margin-left: 4px; margin-right: 4px; ">
+          <i class="fab fa-linkedin" aria-hidden="true"></i><span class="sr-only">LinkedIn AI_Testers</span>
+        </a>      
+        
+        </footer>
       `;
     }
   }
