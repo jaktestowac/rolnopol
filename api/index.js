@@ -1,6 +1,8 @@
 const { readFileSync } = require("fs");
 const { resolve } = require("path");
 
+console.log("Starting Rolnopol application...");
+
 const getVisualWidth = (str) => {
   let width = 0;
   for (const char of str) {
@@ -20,6 +22,7 @@ const getVisualWidth = (str) => {
 };
 
 const checkAllDependencies = () => {
+  console.log("Checking for required dependencies...");
   try {
     const pkg = JSON.parse(readFileSync(resolve(__dirname, "../package.json"), "utf-8"));
     const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
@@ -72,7 +75,8 @@ const checkAllDependencies = () => {
       process.exit(1);
     }
   } catch (error) {
-    // Silently ignore errors in dependency check, let normal error handler catch startup issues
+    console.error("❌ Error while checking dependencies:");
+    throw error;
   }
 };
 
@@ -96,6 +100,7 @@ const notFoundStatsModule = require("../helpers/notfound-stats");
 const prometheusMetrics = require("../helpers/prometheus-metrics");
 const featureFlagsService = require("../services/feature-flags.service");
 const messengerWebSocketService = require("../services/messenger-ws.service");
+const chaosEngineMiddleware = require("../middleware/chaos-engine.middleware");
 
 app.set("etag", false);
 
@@ -116,6 +121,7 @@ const initializeAllDatabases = async () => {
       dbManager.getCommoditiesDatabase(),
       dbManager.getMarketplaceDatabase(),
       dbManager.getFeatureFlagsDatabase(),
+      dbManager.getChaosEngineDatabase(),
       dbManager.getFieldsDatabase(),
       dbManager.getStaffDatabase(),
       dbManager.getAnimalsDatabase(),
@@ -185,6 +191,9 @@ try {
 }
 
 app.use(prometheusMetrics.observeRequest);
+
+// Chaos Engine middleware (affects API calls only, supports runtime reconfiguration)
+app.use("/api", chaosEngineMiddleware);
 
 // Default route for root path - must come before static file serving
 app.get("/api", (req, res) => {

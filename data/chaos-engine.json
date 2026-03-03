@@ -1,0 +1,64 @@
+{
+  "mode": "off",
+  "customConfig": {
+    "enabled": true,
+    "latency": {
+      "enabled": true,
+      "probability": 0.2,
+      "minMs": 120,
+      "maxMs": 400
+    },
+    "responseLoss": {
+      "enabled": false,
+      "probability": 0.02,
+      "mode": "timeout",
+      "timeoutMs": 1500
+    },
+    "errorInjection": {
+      "enabled": true,
+      "probability": 0.06,
+      "statusCodes": [
+        500,
+        502,
+        503
+      ],
+      "randomStatus": false,
+      "message": "[Chaos Engine] Injected a synthetic backend error."
+    },
+    "stateful": {
+      "enabled": false,
+      "requestCount": 0
+    },
+    "mirroring": {
+      "enabled": false,
+      "probability": 0,
+      "targetUrl": ""
+    },
+    "scope": {
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE"
+      ],
+      "excludePaths": [
+        "/v1/chaos-engine*",
+        "/v1/healthcheck",
+        "/version",
+        "/metrics",
+        "/admin",
+        "/feature-flags"
+      ],
+      "includePaths": [],
+      "queryParams": {},
+      "headers": {},
+      "hostnames": [],
+      "roles": [],
+      "ipRanges": [],
+      "geolocation": [],
+      "percentOfTraffic": 100
+    }
+  },
+  "updatedAt": null
+}

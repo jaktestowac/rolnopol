@@ -24,6 +24,10 @@ async function initializeDatabases() {
     await commoditiesDb.getAll();
     logDebug("Commodities database initialized");
 
+    const chaosEngineDb = dbManager.getChaosEngineDatabase();
+    await chaosEngineDb.getAll();
+    logDebug("Chaos Engine database initialized");
+
     logDebug("Databases initialized successfully");
   } catch (error) {
     logError("Failed to initialize databases:", error);

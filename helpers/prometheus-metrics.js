@@ -2,10 +2,18 @@ const DEFAULT_BUCKETS = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10
 
 const requestCounters = new Map();
 const requestDuration = new Map();
+const chaosCounters = new Map();
 let metricsEnabled = false;
 
 function setEnabled(enabled) {
+  const was = metricsEnabled;
   metricsEnabled = enabled === true;
+  if (!metricsEnabled && was) {
+    // clear counters when disabling to avoid stale metrics
+    requestCounters.clear();
+    requestDuration.clear();
+    chaosCounters.clear();
+  }
 }
 
 function isEnabled() {
@@ -92,6 +100,18 @@ function observeRequest(req, res, next) {
   next();
 }
 
+function recordChaosEvent(effect, mode, route) {
+  if (!metricsEnabled) {
+    return;
+  }
+  const key = `${effect}|${mode}|${route}`;
+  chaosCounters.set(key, (chaosCounters.get(key) || 0) + 1);
+}
+
+function resetChaosCounters() {
+  chaosCounters.clear();
+}
+
 function collect() {
   const memory = process.memoryUsage();
   const lines = [];
@@ -137,6 +157,14 @@ function collect() {
     lines.push(`rolnopol_http_request_duration_seconds_count${buildLabels({ method, route, status_code: statusCode })} ${entry.count}`);
   }
 
+  // chaos events counters
+  lines.push("# HELP rolnopol_chaos_events_total Total number of chaos engine events triggered.");
+  lines.push("# TYPE rolnopol_chaos_events_total counter");
+  for (const [key, count] of chaosCounters.entries()) {
+    const [effect, mode, route] = key.split("|");
+    lines.push(`rolnopol_chaos_events_total${buildLabels({ effect, mode, route })} ${count}`);
+  }
+
   return `${lines.join("\n")}\n`;
 }
 
@@ -145,4 +173,7 @@ module.exports = {
   isEnabled,
   observeRequest,
   collect,
+  // chaos-specific helpers
+  recordChaosEvent,
+  resetChaosCounters,
 };

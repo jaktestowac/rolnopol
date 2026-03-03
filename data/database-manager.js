@@ -1,5 +1,6 @@
 const path = require("path");
 const JSONDatabase = require("./json-database");
+const { CHAOS_ENGINE_DEFAULT_DATA } = require("./chaos-engine.defaults");
 
 /**
  * Global Database Manager - Provides singleton JSONDatabase instances
@@ -95,6 +96,16 @@ class DatabaseManager {
   getFeatureFlagsDatabase() {
     const defaultFlags = require("./feature-flags.json");
     return this.getDatabase("feature-flags", "feature-flags.json", defaultFlags);
+  }
+
+  /**
+   * Get chaos engine database singleton
+   */
+  getChaosEngineDatabase() {
+    // Do not require("./chaos-engine.json") here: if file is missing, startup should not crash.
+    // JSONDatabase will recreate the file from provided defaults when it does not exist.
+    const defaultChaosEngine = JSON.parse(JSON.stringify(CHAOS_ENGINE_DEFAULT_DATA));
+    return this.getDatabase("chaos-engine", "chaos-engine.json", defaultChaosEngine);
   }
 
   /**

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chaos Engine - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/pages/chaos-engine.css">
+</head>
+
+<body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="container chaos-page">
+        <div class="chaos-ambient" aria-hidden="true"><span class="chaos-orb chaos-orb--one"></span><span class="chaos-orb chaos-orb--two"></span></div>
+
+        <header class="header glass chaos-header">
+            <div class="chaos-header__title"><span class="bg-agri-gradient"><i class="fas fa-biohazard"></i></span>
+                <div>
+                    <h1>Chaos Engine</h1>
+                    <p>Inject controlled instability for reliability testing.</p>
+                </div>
+            </div>
+            <div class="chaos-header__actions">
+                <a href="/backend.html" class="btn btn-outline"><i class="fas fa-sitemap"></i>&nbsp;Backend</a>
+                <button id="reloadChaosBtn" class="btn btn-outline" type="button"><i class="fas fa-rotate"></i>&nbsp;Reload</button>
+                <button id="resetChaosBtn" class="btn btn-outline" type="button"><i class="fas fa-power-off"></i>&nbsp;Reset Off</button>
+            </div>
+        </header>
+
+        <section class="glass chaos-panel">
+            <h2>Mode</h2>
+            <div class="chaos-grid">
+                <label class="chaos-field">
+                    <span>Preset</span>
+                    <select id="chaosMode"></select>
+                </label>
+                <div class="chaos-field chaos-field--button">
+                    <button id="applyModeBtn" class="btn" type="button"><i class="fas fa-check"></i>Apply mode</button>
+                </div>
+            </div>
+            <p id="chaosModeDescription" class="chaos-hint">-</p>
+            <div class="chaos-meta">
+                <div><span class="meta-label">Last update</span><span id="chaosUpdatedAt" class="meta-value">-</span></div>
+            </div>
+        </section>
+
+        <section class="glass chaos-panel">
+            <h2>Custom configuration</h2>
+
+            <div class="chaos-group">
+                <h3>Latency</h3>
+                <div class="chaos-grid">
+                    <label class="chaos-field"><label class="chaos-field--toggle"><input id="latencyEnabled" type="checkbox"><span> Enable latency injection</span></label><span class="chaos-hint">Turn on to randomly delay responses.</span></label>
+                    <label class="chaos-field"><span>Probability (0..1)</span><input id="latencyProbability" type="number" min="0" max="1" step="0.01"></input><span class="chaos-hint">Fraction of requests that will incur latency.</span></label>
+                    <label class="chaos-field"><span>Min latency (ms)</span><input id="latencyMinMs" type="number" min="0" step="1"></input><span class="chaos-hint">Minimum delay applied when latency occurs.</span></label>
+                    <label class="chaos-field"><span>Max latency (ms)</span><input id="latencyMaxMs" type="number" min="0" step="1"></input><span class="chaos-hint">Maximum delay for injected latency.</span></label>
+                </div>
+            </div>
+
+            <div class="chaos-group">
+                <h3>Response loss</h3>
+                <div class="chaos-grid">
+                    <label class="chaos-field"><label class="chaos-field--toggle"><input id="lossEnabled" type="checkbox"><span> Enable response loss</span></label><span class="chaos-hint">Randomly drop or timeout requests.</span></label>
+                    <label class="chaos-field"><span>Probability (0..1)</span><input id="lossProbability" type="number" min="0" max="1" step="0.01"></input><span class="chaos-hint">Chance that a request will be lost.</span></label>
+                    <label class="chaos-field"><span>Loss mode</span><select id="lossMode">
+                            <option value="timeout">Timeout (504)</option>
+                            <option value="drop">Drop connection</option>
+                            <option value="partial">Partial (headers + truncated body)</option>
+                            <option value="reset">Connection reset (alias of drop)</option>
+                        </select><span class="chaos-hint">How the lost response should behave.</span></label>
+                    <label class="chaos-field"><span>Timeout (ms)</span><input id="lossTimeoutMs" type="number" min="100" step="50"></input><span class="chaos-hint">Delay before sending a timeout status.</span></label>
+                </div>
+            </div>
+
+            <div class="chaos-group">
+                <h3>Error responses</h3>
+                <div class="chaos-grid">
+                    <label class="chaos-field"><label class="chaos-field--toggle"><input id="errorEnabled" type="checkbox"><span> Enable random errors</span></label><span class="chaos-hint">Inject HTTP error codes into responses.</span></label>
+                    <label class="chaos-field"><label class="chaos-field--toggle"><input id="errorRandomStatus" type="checkbox"><span> Use status code range</span></label><span class="chaos-hint">Choose codes randomly from a range instead of list.</span></label>
+                    <label class="chaos-field"><span>Probability (0..1)</span><input id="errorProbability" type="number" min="0" max="1" step="0.01"></input><span class="chaos-hint">Chance that an error response is returned.</span></label>
+                    <label class="chaos-field"><span>Status codes (comma separated)</span><input id="errorStatusCodes" type="text" placeholder="500,502,503"></input><span class="chaos-hint">List of HTTP codes to use for errors.</span></label>
+                    <label class="chaos-field"><span>Error message</span><input id="errorMessage" type="text"></input><span class="chaos-hint">Optional message returned with error status.</span></label>
+                </div>
+            </div>
+
+            <div class="chaos-group">
+                <h3>Scope</h3>
+                <div class="chaos-grid">
+                    <label class="chaos-field"><span>Methods (comma separated)</span><input id="scopeMethods" type="text" placeholder="GET,POST,PUT,PATCH,DELETE"></input><span class="chaos-hint">Limit chaos to specific HTTP methods.</span></label>
+                    <label class="chaos-field"><span>Percent of traffic (%)</span><input id="scopePercentOfTraffic" type="number" min="0" max="100" step="1"></input><span class="chaos-hint">Fraction of requests affected by chaos.</span></label>
+                    <label class="chaos-field chaos-field--full"><span>Exclude paths (one per line)</span><textarea id="scopeExcludePaths" rows="4" placeholder="/v1/chaos-engine"></textarea><span class="chaos-hint">Requests matching these paths will be ignored.</span></label>
+                    <label class="chaos-field chaos-field--full"><span>Include paths (one per line)</span><textarea id="scopeIncludePaths" rows="4" placeholder="/v1/healthcheck"></textarea><span class="chaos-hint">Only these paths will be targeted if set.</span></label>
+                    <label class="chaos-field chaos-field--full"><span>Query params (key=value per line)</span><textarea id="scopeQueryParams" rows="4" placeholder="foo=bar"></textarea><span class="chaos-hint">Match requests with these query parameters.</span></label>
+                    <label class="chaos-field chaos-field--full"><span>Headers (name:value per line)</span><textarea id="scopeHeaders" rows="4" placeholder="x-test:foo"></textarea><span class="chaos-hint">Only affect requests with matching headers.</span></label>
+                    <label class="chaos-field"><span>Hostnames (comma)</span><input id="scopeHostnames" type="text" placeholder="example.com"></input><span class="chaos-hint">Restrict chaos to these hostnames.</span></label>
+                    <label class="chaos-field"><span>Roles (comma)</span><input id="scopeRoles" type="text" placeholder="admin"></input><span class="chaos-hint">Apply only for users with these roles.</span></label>
+                    <label class="chaos-field chaos-field--full"><span>IP ranges (one per line)</span><textarea id="scopeIpRanges" rows="4" placeholder="/127\\.0\\.0\\.1$/"></textarea><span class="chaos-hint">Only requests from these IPs are affected.</span></label>
+                    <label class="chaos-field"><span>Geolocation (comma)</span><input id="scopeGeolocation" type="text" placeholder="us"></input><span class="chaos-hint">Locale codes to focus chaos on specific regions.</span></label>
+                </div>
+            </div>
+
+            <div class="chaos-group">
+                <h3>Stateful failures</h3>
+                <div class="chaos-grid">
+                    <label class="chaos-field"><label class=" chaos-field--toggle"><input id="statefulEnabled" type="checkbox"><span> Enable stateful trigger</span></label><span class="chaos-hint">Activate failure after a set number of requests.</span></label>
+                    <label class="chaos-field"><span>Requests before failure</span><input id="statefulRequestCount" type="number" min="0" step="1"></input><span class="chaos-hint">Number of requests allowed before chaos kicks in.</span></label>
+                </div>
+            </div>
+
+            <div class="chaos-group">
+                <h3>Mirroring</h3>
+                <div class="chaos-grid">
+                    <label class="chaos-field"><label class=" chaos-field--toggle"><input id="mirroringEnabled" type="checkbox"><span> Enable request mirroring</span></label><span class="chaos-hint">Send an asynchronous shadow request (same method/path/headers/body) to the target URL.</span></label>
+                    <label class="chaos-field"><span>Probability (0..1)</span><input id="mirroringProbability" type="number" min="0" max="1" step="0.01"></input><span class="chaos-hint">Probability that a request will be sent to the mirror target; original response not delayed.</span></label>
+                    <label class="chaos-field chaos-field--full"><span>Target URL</span><input id="mirroringTargetUrl" type="text"></input><span class="chaos-hint">Destination for mirrored requests.</span></label>
+                </div>
+            </div>
+
+            <div class="chaos-actions">
+                <button id="saveCustomBtn" class="btn" type="button"><i class="fas fa-floppy-disk"></i>&nbsp;Save as custom</button>
+                <p class="chaos-hint">Saving custom config automatically switches mode to <strong>custom</strong>.</p>
+            </div>
+        </section>
+
+        <!-- summary area showing current configuration and dirty state -->
+        <div id="chaosSummary" class="chaos-summary">Loading current settings...</div>
+        <!-- JSON display of applied configuration for reference -->
+        <pre id="chaosConfigDisplay" class="chaos-config-display">{}</pre>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script src="/js/pages/chaos-engine.js"></script>
+    <script src="/js/app.js"></script>
+    <script>initNavigation("chaos-engine")</script>
+</body>
+
+</html>

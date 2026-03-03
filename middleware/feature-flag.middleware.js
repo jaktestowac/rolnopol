@@ -22,6 +22,8 @@ function requireFeatureFlag(flagName, options = {}) {
 
       return next();
     } catch (error) {
+      const { logError } = require("../helpers/logger-api");
+      logError("Feature flag middleware failed", { error: error instanceof Error ? error.stack || error.message : error });
       return sendInternalError(req, res);
     }
   };

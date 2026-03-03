@@ -10,6 +10,8 @@ router.get("/metrics", requireFeatureFlag("prometheusMetricsEnabled", { resource
     res.set("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
     return res.status(200).send(output);
   } catch (error) {
+    const { logError } = require("../../helpers/logger-api");
+    logError("Metrics collection failed", { error: error instanceof Error ? error.stack || error.message : error });
     return res.status(500).json({
       success: false,
       timestamp: new Date().toISOString(),

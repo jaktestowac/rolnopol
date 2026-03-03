@@ -275,6 +275,9 @@
       case "feature-flags":
         setupFeatureFlagsPage();
         break;
+      case "chaos-engine":
+        setupChaosEnginePage();
+        break;
       case "messenger":
         setupMessengerPage();
         break;
@@ -540,6 +543,15 @@
       window.App.registerModule("featureFlagsPage", featureFlagsPage);
     } else {
       console.error("FeatureFlagsPage class not found");
+    }
+  }
+
+  function setupChaosEnginePage() {
+    if (window.ChaosEnginePage) {
+      const chaosEnginePage = new ChaosEnginePage();
+      window.App.registerModule("chaosEnginePage", chaosEnginePage);
+    } else {
+      console.error("ChaosEnginePage class not found");
     }
   }
 
