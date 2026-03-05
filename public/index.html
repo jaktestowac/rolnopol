@@ -428,7 +428,7 @@
         ">
       <div style="display: flex; align-items: center; gap: 1.1rem; width: 100%; justify-content: center">
         <h1 style="display: flex; align-items: center; gap: 0.6rem; font-size: 2rem">
-          <span class="bg-agri-gradient"><i class="fas fa-tractor"></i></span>
+          <span class="bg-agri-gradient"><i class="fas fa-tractor js-secret-tractor"></i></span>
         </h1>
         <div style="display: flex; flex-direction: column; align-items: flex-start">
           <span class="main-title">Rolnopol</span>
@@ -691,6 +691,30 @@
       }
     }
 
+    // Secret click counter for tractor icon (easter-egg/backend access)
+    document.addEventListener("DOMContentLoaded", function () {
+      const secretIcons = document.querySelectorAll(".js-secret-tractor");
+      let clickCount = 0;
+      let resetTimer = null;
+      const REQUIRED = 7;
+      const RESET_DELAY = 3000; // ms
+      function resetCount() {
+        clickCount = 0;
+        clearTimeout(resetTimer);
+        resetTimer = null;
+      }
+      function handleClick() {
+        clickCount += 1;
+        if (resetTimer) clearTimeout(resetTimer);
+        resetTimer = setTimeout(resetCount, RESET_DELAY);
+        if (clickCount >= REQUIRED) {
+          // navigate to backend/admin page
+          window.location.href = "/backend.html";
+        }
+      }
+      secretIcons.forEach((el) => el.addEventListener("click", handleClick));
+    });
+
     // Initialize navigation after DOM is loaded
     document.addEventListener("DOMContentLoaded", async function () {
       // Load the header component
@@ -864,7 +888,7 @@
           <header class="home-modern-header">
             <div class="home-modern-header__branding">
               <div class="home-modern-header__icon">
-                <i class="fas fa-tractor"></i>
+                <i class="fas fa-tractor js-secret-tractor"></i>
               </div>
               <div style="text-align: left">
                 <h1 class="home-modern-header__title">Rolnopol</h1>

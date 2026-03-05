@@ -471,6 +471,10 @@ async function initFooter() {
         <footer class="footer">
           <p>&copy; ${new Date().getFullYear()} Rolnopol. build by <a href="https://jaktestowac.pl" target="_blank" rel="noopener">jaktestowac.pl</a> </p> 
         <span aria-hidden="true">|</span>
+        <a href="https://github.com/jaktestowac/rolnopol" target="_blank" rel="noopener" aria-label="GitHub Rolnopol repository" data-testid="footer-github" class="footer-github-link" style="margin-left: 4px; margin-right: 4px; ">
+          <i class="fa-solid fa-code-branch"></i><span class="sr-only">GitHub</span>
+        </a>
+        <span aria-hidden="true">|</span>
         <a href="https://github.com/jaktestowac" target="_blank" rel="noopener" aria-label="GitHub" data-testid="footer-github" class="footer-github-link" style="margin-left: 4px; margin-right: 4px; ">
           <i class="fab fa-github" aria-hidden="true"></i><span class="sr-only">GitHub</span>
         </a>

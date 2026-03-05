@@ -98,12 +98,15 @@
    */
   async function initCookieConsent() {
     try {
-      // Check if cookie already exists (user has already consented)
+      // If user has already accepted cookies we don't need a banner or
+      // active listeners. Early exit avoids unnecessary work.
       if (hasConsentCookie()) {
         return;
       }
 
-      // Check if feature flag service is available
+      // Feature flags are required for the banner logic.  Bail out if the
+      // service isn't available so we don't throw in environments such as
+      // static documentation pages.
       if (!window.App || typeof window.App.getModule !== "function") {
         return;
       }
@@ -113,9 +116,39 @@
         return;
       }
 
-      // Check if feature flag is enabled (default: false to be safe)
+      // Helper invoked when anything in feature flag store changes.  We
+      // always evaluate the banner state so that toggling the flag off
+      // causes the banner (if previously rendered) to disappear, and
+      // toggling back on can re‑create it.
+      async function handleFlagsChanged() {
+        try {
+          const enabled = await featureFlagsService.isEnabled(FEATURE_FLAG_KEY, false);
+          if (!enabled) {
+            hideBanner();
+            return;
+          }
+          // only create if the user hasn't consented yet
+          if (!hasConsentCookie()) {
+            createBanner();
+          }
+        } catch (e) {
+          // ignore errors, banner is non‑critical
+        }
+      }
+
+      // wire up event listener for future flag changes
+      if (typeof window.App.getEventBus === "function") {
+        const eventBus = window.App.getEventBus();
+        if (eventBus && typeof eventBus.on === "function") {
+          eventBus.on("feature-flags:changed", handleFlagsChanged);
+        }
+      }
+
+      // initial feature‑flag check
       const isEnabled = await featureFlagsService.isEnabled(FEATURE_FLAG_KEY, false);
       if (!isEnabled) {
+        // make sure any stale banner left behind from previous page isn't visible
+        hideBanner();
         return;
       }
 
@@ -130,5 +163,18 @@
   }
 
   // Export for use in navigation initialization
-  window.initCookieConsent = initCookieConsent;
+  if (typeof window !== "undefined") {
+    window.initCookieConsent = initCookieConsent;
+  }
+
+  // expose helpers for unit tests (Node environment)
+  if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
+    module.exports = {
+      hasConsentCookie,
+      setConsentCookie,
+      hideBanner,
+      createBanner,
+      initCookieConsent,
+    };
+  }
 })();
