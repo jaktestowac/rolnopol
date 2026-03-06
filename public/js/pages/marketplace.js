@@ -22,6 +22,8 @@ class MarketplacePage {
     this.offersPage = 1;
     this.offersPageSize = 9;
     this.offersTotalPages = 1;
+    this.offersFilterQuery = "";
+    this.offersFilterField = "";
   }
 
   /**
@@ -139,6 +141,8 @@ class MarketplacePage {
     const createForm = document.getElementById("createOfferForm");
     const itemTypeSelect = document.getElementById("itemType");
     const itemIdSelect = document.getElementById("itemId");
+    const offersFilterInput = document.getElementById("offersFilterInput");
+    const offersFilterField = document.getElementById("offersFilterField");
 
     // Handle item type change
     itemTypeSelect.addEventListener("change", () => {
@@ -150,6 +154,23 @@ class MarketplacePage {
       e.preventDefault();
       this._createOffer();
     });
+
+    // Handle browse offers filtering
+    if (offersFilterInput) {
+      offersFilterInput.addEventListener("input", () => {
+        this.offersFilterQuery = offersFilterInput.value || "";
+        this.offersPage = 1;
+        this._renderOffers("browseOffers", this._getFilteredOffers());
+      });
+    }
+
+    if (offersFilterField) {
+      offersFilterField.addEventListener("change", () => {
+        this.offersFilterField = offersFilterField.value || "";
+        this.offersPage = 1;
+        this._renderOffers("browseOffers", this._getFilteredOffers());
+      });
+    }
 
     this.formHandlersSetup = true;
   }
@@ -244,8 +265,7 @@ class MarketplacePage {
       });
       if (response.success) {
         // Handle new nested response format: data.account
-        const accountData =
-          response.data.data.account || response.data.data || response.data;
+        const accountData = response.data.data.account || response.data.data || response.data;
         this.userBalance = accountData.balance || 0;
         const balanceElement = document.getElementById("userBalance");
         if (balanceElement) {
@@ -271,20 +291,13 @@ class MarketplacePage {
       });
       if (userStatsResponse.success) {
         // Handle new nested response format: data.statistics
-        this.financialStats =
-          userStatsResponse.data.statistics ||
-          userStatsResponse.data.data ||
-          userStatsResponse.data;
+        this.financialStats = userStatsResponse.data.statistics || userStatsResponse.data.data || userStatsResponse.data;
       }
 
       // Load comprehensive marketplace statistics across all users
-      const marketplaceStatsResponse = await this.apiService.get(
-        "financial/marketplace-stats",
-        { requiresAuth: true },
-      );
+      const marketplaceStatsResponse = await this.apiService.get("financial/marketplace-stats", { requiresAuth: true });
       if (marketplaceStatsResponse.success) {
-        this.marketplaceStats =
-          marketplaceStatsResponse.data.data || marketplaceStatsResponse.data;
+        this.marketplaceStats = marketplaceStatsResponse.data.data || marketplaceStatsResponse.data;
       }
     } catch (error) {
       errorLogger.log("Marketplace Load Financial Stats", error);
@@ -344,7 +357,7 @@ class MarketplacePage {
         this.offers = response.data.data.offers || [];
         // Reset to first page on new data
         this.offersPage = 1;
-        this._renderOffers("browseOffers", this.offers);
+        this._renderOffers("browseOffers", this._getFilteredOffers());
       }
     } catch (error) {
       errorLogger.log("Marketplace Load Offers", error);
@@ -455,10 +468,7 @@ class MarketplacePage {
         // Get fields that are empty (no animals assigned)
         const availableFields = this.fields.filter((field) => {
           const fieldAnimals = this.animals.filter(
-            (animal) =>
-              animal.fieldId === field.id ||
-              animal.fieldId === field.id.toString() ||
-              animal.fieldId === parseInt(field.id),
+            (animal) => animal.fieldId === field.id || animal.fieldId === field.id.toString() || animal.fieldId === parseInt(field.id),
           );
           return fieldAnimals.length === 0;
         });
@@ -473,14 +483,7 @@ class MarketplacePage {
         // Get animals that are not assigned to fields
         const availableAnimals = this.animals.filter((animal) => {
           const fieldId = animal.fieldId;
-          return (
-            !fieldId ||
-            fieldId === 0 ||
-            fieldId === "0" ||
-            fieldId === null ||
-            fieldId === undefined ||
-            fieldId === ""
-          );
+          return !fieldId || fieldId === 0 || fieldId === "0" || fieldId === null || fieldId === undefined || fieldId === "";
         });
 
         availableAnimals.forEach((animal) => {
@@ -529,17 +532,12 @@ class MarketplacePage {
       description,
     };
     try {
-      const response = await this.apiService.post(
-        "marketplace/offers",
-        offerData,
-        { requiresAuth: true },
-      );
+      const response = await this.apiService.post("marketplace/offers", offerData, { requiresAuth: true });
 
       if (response.success) {
         this._showNotification("Offer created successfully!", "success");
         form.reset();
-        document.getElementById("itemId").innerHTML =
-          '<option value="">Select an item</option>';
+        document.getElementById("itemId").innerHTML = '<option value="">Select an item</option>';
         // Refresh offers
         await this._loadMyOffers();
         await this._loadOffers();
@@ -570,9 +568,7 @@ class MarketplacePage {
 
     // Get item details for confirmation message
     const item = this._getItemDetails(offer.itemType, offer.itemId);
-    const itemName = item
-      ? item.name || `${offer.itemType} #${offer.itemId}`
-      : `${offer.itemType} #${offer.itemId}`;
+    const itemName = item ? item.name || `${offer.itemType} #${offer.itemId}` : `${offer.itemType} #${offer.itemId}`;
 
     // Create confirmation message
     const confirmationMessage = `Are you sure you want to buy "${itemName}" for ${offer.price} ROL?`;
@@ -583,25 +579,13 @@ class MarketplacePage {
       confirmationMessage,
       async () => {
         try {
-          const response = await this.apiService.post(
-            "marketplace/buy",
-            { offerId },
-            { requiresAuth: true },
-          );
+          const response = await this.apiService.post("marketplace/buy", { offerId }, { requiresAuth: true });
 
           if (response.success) {
-            this._showNotification(
-              "Purchase completed successfully!",
-              "success",
-            );
+            this._showNotification("Purchase completed successfully!", "success");
 
             // Refresh data
-            await Promise.all([
-              this._loadUserBalance(),
-              this._loadOffers(),
-              this._loadMyOffers(),
-              this._loadTransactions(),
-            ]);
+            await Promise.all([this._loadUserBalance(), this._loadOffers(), this._loadMyOffers(), this._loadTransactions()]);
 
             // Refresh global statistics to update total value
             await this._refreshGlobalStatistics();
@@ -634,9 +618,7 @@ class MarketplacePage {
 
     // Get item details for confirmation message
     const item = this._getItemDetails(offer.itemType, offer.itemId);
-    const itemName = item
-      ? item.name || `${offer.itemType} #${offer.itemId}`
-      : `${offer.itemType} #${offer.itemId}`;
+    const itemName = item ? item.name || `${offer.itemType} #${offer.itemId}` : `${offer.itemType} #${offer.itemId}`;
 
     // Create confirmation message
     const confirmationMessage = `Are you sure you want to cancel your offer for "${itemName}" (${offer.price} ROL)?`;
@@ -647,10 +629,7 @@ class MarketplacePage {
       confirmationMessage,
       async () => {
         try {
-          const response = await this.apiService.delete(
-            `marketplace/offers/${offerId}`,
-            { requiresAuth: true },
-          );
+          const response = await this.apiService.delete(`marketplace/offers/${offerId}`, { requiresAuth: true });
           console.log("Cancel offer response:", response);
 
           if (response.success) {
@@ -710,9 +689,7 @@ class MarketplacePage {
       const offersHTML = paginatedOffers
         .map((offer) => {
           const item = this._getItemDetails(offer.itemType, offer.itemId);
-          const itemName = item
-            ? item.name || `${offer.itemType} #${offer.itemId}`
-            : `${offer.itemType} #${offer.itemId}`;
+          const itemName = item ? item.name || `${offer.itemType} #${offer.itemId}` : `${offer.itemType} #${offer.itemId}`;
 
           // Determine status class and text based on offer status
           let statusClass = "";
@@ -727,8 +704,7 @@ class MarketplacePage {
             case "unavailable":
               statusClass = "offer-unavailable";
               statusText = " (Unavailable)";
-              statusMessage =
-                "Item is currently in use and unavailable for purchase";
+              statusMessage = "Item is currently in use and unavailable for purchase";
               isDisabled = true;
               break;
             case "sold":
@@ -789,6 +765,84 @@ class MarketplacePage {
     }
   }
 
+  _getOfferNameForFilter(offer) {
+    if (!offer) return "";
+
+    const detailsName = offer.details?.name;
+    if (typeof detailsName === "string" && detailsName.trim()) {
+      return detailsName;
+    }
+
+    if (offer.itemType === "animal") {
+      const animalType = offer.details?.type;
+      if (typeof animalType === "string" && animalType.trim()) {
+        return animalType;
+      }
+    }
+
+    const item = this._getItemDetails(offer.itemType, offer.itemId);
+    if (item?.name) {
+      return item.name;
+    }
+
+    return `${offer.itemType || "item"} #${offer.itemId || ""}`.trim();
+  }
+
+  _getFilteredOffers() {
+    if (!Array.isArray(this.offers) || this.offers.length === 0) {
+      return [];
+    }
+
+    const query = (this.offersFilterQuery || "").trim().toLowerCase();
+    const field = this.offersFilterField || "";
+
+    if (!query) {
+      return this.offers;
+    }
+
+    return this.offers.filter((offer) => {
+      if (!offer) return false;
+
+      const name = this._getOfferNameForFilter(offer);
+      const normalizedName = String(name).toLowerCase();
+      const normalizedDescription = String(offer.description || "").toLowerCase();
+      const normalizedType = String(offer.itemType || "").toLowerCase();
+      const normalizedPrice = String(offer.price ?? "").toLowerCase();
+
+      if (field === "itemType") {
+        return normalizedType.includes(query);
+      }
+
+      if (field === "name") {
+        return normalizedName.includes(query);
+      }
+
+      if (field === "description") {
+        return normalizedDescription.includes(query);
+      }
+
+      if (field === "price") {
+        return normalizedPrice.includes(query);
+      }
+
+      const sellerText = String(offer.sellerLabel || offer.sellerDisplayedName || "").toLowerCase();
+      const detailsType = String(offer.details?.type || "").toLowerCase();
+      const detailsArea = String(offer.details?.area || "").toLowerCase();
+      const detailsAmount = String(offer.details?.amount || "").toLowerCase();
+
+      return (
+        normalizedType.includes(query) ||
+        normalizedName.includes(query) ||
+        normalizedDescription.includes(query) ||
+        normalizedPrice.includes(query) ||
+        sellerText.includes(query) ||
+        detailsType.includes(query) ||
+        detailsArea.includes(query) ||
+        detailsAmount.includes(query)
+      );
+    });
+  }
+
   _renderOffersPagination() {
     const pagDiv = document.getElementById("offersPagination");
     const page = this.offersPage;
@@ -832,7 +886,7 @@ class MarketplacePage {
         }
         if (newPage !== this.offersPage) {
           this.offersPage = newPage;
-          this._renderOffers("browseOffers", this.offers);
+          this._renderOffers("browseOffers", this._getFilteredOffers());
         }
       };
     });
@@ -844,7 +898,7 @@ class MarketplacePage {
         if (newSize !== this.offersPageSize) {
           this.offersPageSize = newSize;
           this.offersPage = 1;
-          this._renderOffers("browseOffers", this.offers);
+          this._renderOffers("browseOffers", this._getFilteredOffers());
         }
       };
     }
@@ -870,25 +924,15 @@ class MarketplacePage {
     const transactionsHTML = this.transactions
       .map((transaction) => {
         // Get current user ID from multiple possible fields
-        const currentUserId =
-          this.currentUser.userId ||
-          this.currentUser.id ||
-          this.currentUser.internalId;
+        const currentUserId = this.currentUser.userId || this.currentUser.id || this.currentUser.internalId;
 
         // Check if current user is the buyer (purchased the item)
-        const isBuyer =
-          Number(transaction.buyerId) === Number(currentUserId) ||
-          String(transaction.buyerId) === String(currentUserId);
+        const isBuyer = Number(transaction.buyerId) === Number(currentUserId) || String(transaction.buyerId) === String(currentUserId);
 
         // Check if current user is the seller (sold the item)
-        const isSeller =
-          Number(transaction.sellerId) === Number(currentUserId) ||
-          String(transaction.sellerId) === String(currentUserId);
+        const isSeller = Number(transaction.sellerId) === Number(currentUserId) || String(transaction.sellerId) === String(currentUserId);
 
-        const item = this._getItemDetails(
-          transaction.itemType,
-          transaction.itemId,
-        );
+        const item = this._getItemDetails(transaction.itemType, transaction.itemId);
         const itemName = item
           ? item.name || `${transaction.itemType} #${transaction.itemId}`
           : `${transaction.itemType} #${transaction.itemId}`;
@@ -920,19 +964,9 @@ class MarketplacePage {
    */
   _getItemDetails(itemType, itemId) {
     if (itemType === "field") {
-      return this.fields.find(
-        (field) =>
-          Number(field.id) === Number(itemId) ||
-          field.id === itemId ||
-          field.id === parseInt(itemId),
-      );
+      return this.fields.find((field) => Number(field.id) === Number(itemId) || field.id === itemId || field.id === parseInt(itemId));
     } else if (itemType === "animal") {
-      return this.animals.find(
-        (animal) =>
-          Number(animal.id) === Number(itemId) ||
-          animal.id === itemId ||
-          animal.id === parseInt(itemId),
-      );
+      return this.animals.find((animal) => Number(animal.id) === Number(itemId) || animal.id === itemId || animal.id === parseInt(itemId));
     }
     return null;
   }
@@ -941,13 +975,7 @@ class MarketplacePage {
    * Show confirmation modal
    * @private
    */
-  _showConfirmationModal(
-    title,
-    message,
-    confirmAction,
-    confirmButtonText = "Confirm",
-    isDanger = false,
-  ) {
+  _showConfirmationModal(title, message, confirmAction, confirmButtonText = "Confirm", isDanger = false) {
     const modal = document.getElementById("confirmationModal");
     const titleElement = document.getElementById("confirmationModalTitle");
     const messageElement = document.getElementById("confirmationModalMessage");
@@ -1009,27 +1037,22 @@ class MarketplacePage {
   _updateHeaderStats() {
     const totalOffersElement = document.getElementById("totalOffers");
     const myOffersCountElement = document.getElementById("myOffersCount");
-    const totalTransactionsElement =
-      document.getElementById("totalTransactions");
+    const totalTransactionsElement = document.getElementById("totalTransactions");
     // const totalTransferredElement = document.getElementById('totalTransferred'); // Removed
 
     if (totalOffersElement && this.marketplaceStats) {
       // Show total active offers from all users
-      totalOffersElement.textContent =
-        this.marketplaceStats.totalActiveOffers || 0;
+      totalOffersElement.textContent = this.marketplaceStats.totalActiveOffers || 0;
     }
 
     if (myOffersCountElement) {
-      const myActiveOffers = this.myOffers.filter(
-        (offer) => offer.status === "active",
-      ).length;
+      const myActiveOffers = this.myOffers.filter((offer) => offer.status === "active").length;
       myOffersCountElement.textContent = myActiveOffers;
     }
 
     if (totalTransactionsElement && this.marketplaceStats) {
       // Show total transactions from all users
-      totalTransactionsElement.textContent =
-        this.marketplaceStats.totalTransactions || 0;
+      totalTransactionsElement.textContent = this.marketplaceStats.totalTransactions || 0;
     }
 
     // Remove totalTransferredElement update
@@ -1087,8 +1110,7 @@ class MarketplacePage {
     // Clear header stats
     const totalOffersElement = document.getElementById("totalOffers");
     const myOffersCountElement = document.getElementById("myOffersCount");
-    const totalTransactionsElement =
-      document.getElementById("totalTransactions");
+    const totalTransactionsElement = document.getElementById("totalTransactions");
     const totalValueElement = document.getElementById("totalValue");
 
     if (totalOffersElement) totalOffersElement.textContent = "0";
