@@ -11,6 +11,8 @@ class StaffFieldsMainPage {
     this.staffPage = 1;
     this.animalsPage = 1;
     this.itemsPerPage = 5;
+    this.fieldSearchTerm = "";
+    this.staffSearchTerm = "";
     this.animalSearchTerm = "";
     this.animalTypes = {}; // Cache for animal types
   }
@@ -209,9 +211,14 @@ class StaffFieldsMainPage {
   async _renderFieldsPage() {
     const fieldsList = document.getElementById("fieldsList");
     if (!fieldsList) return;
+    const filteredFields = this._getFilteredFields();
+    const totalPages = Math.max(1, Math.ceil(filteredFields.length / this.itemsPerPage));
+    if (this.fieldsPage > totalPages) {
+      this.fieldsPage = totalPages;
+    }
     const start = (this.fieldsPage - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
-    const pageFields = this.fields.slice(start, end);
+    const pageFields = filteredFields.slice(start, end);
     fieldsList.innerHTML = pageFields.length === 0 ? "<li>No fields found.</li>" : "";
     for (const field of pageFields) {
       // Get animals assigned to this field
@@ -298,7 +305,7 @@ class StaffFieldsMainPage {
       });
       fieldsList.appendChild(li);
     }
-    this._renderFieldsPagination();
+    this._renderFieldsPagination(filteredFields.length);
     this._renderFieldAssignments();
     // Add pointer-events CSS for assigned-animal badges to not block drag
     const styleId = "assigned-animal-pointer-events-style";
@@ -313,7 +320,7 @@ class StaffFieldsMainPage {
     }
   }
 
-  _renderFieldsPagination() {
+  _renderFieldsPagination(filteredCount) {
     let pagination = document.getElementById("fieldsPagination");
     if (pagination && pagination.parentNode) {
       pagination.parentNode.removeChild(pagination);
@@ -331,7 +338,7 @@ class StaffFieldsMainPage {
     } else {
       fieldsList.before(pagination);
     }
-    const totalPages = Math.ceil(this.fields.length / this.itemsPerPage);
+    const totalPages = Math.max(1, Math.ceil((filteredCount !== undefined ? filteredCount : this.fields.length) / this.itemsPerPage));
     let html = "";
     html += `<button class='pagination-btn' data-page='prev' ${
       this.fieldsPage === 1 ? "disabled" : ""
@@ -393,9 +400,14 @@ class StaffFieldsMainPage {
   _renderStaffPage() {
     const staffList = document.getElementById("staffList");
     if (!staffList) return;
+    const filteredStaff = this._getFilteredStaff();
+    const totalPages = Math.max(1, Math.ceil(filteredStaff.length / this.itemsPerPage));
+    if (this.staffPage > totalPages) {
+      this.staffPage = totalPages;
+    }
     const start = (this.staffPage - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
-    const pageStaff = this.staff.slice(start, end);
+    const pageStaff = filteredStaff.slice(start, end);
     staffList.innerHTML = pageStaff.length === 0 ? "<li>No staff found.</li>" : "";
     pageStaff.forEach((staff) => {
       // Find assignment for this staff
@@ -464,14 +476,14 @@ class StaffFieldsMainPage {
       }
       staffList.appendChild(li);
     });
-    this._renderStaffPagination();
+    this._renderStaffPagination(filteredStaff.length);
     // Use setTimeout to ensure DOM is fully updated before setting up drag and drop
     setTimeout(() => {
       this._setupDragAndDrop();
     }, 50);
   }
 
-  _renderStaffPagination() {
+  _renderStaffPagination(filteredCount) {
     let pagination = document.getElementById("staffPagination");
     if (pagination && pagination.parentNode) {
       pagination.parentNode.removeChild(pagination);
@@ -489,7 +501,7 @@ class StaffFieldsMainPage {
     } else {
       staffList.before(pagination);
     }
-    const totalPages = Math.ceil(this.staff.length / this.itemsPerPage);
+    const totalPages = Math.max(1, Math.ceil((filteredCount !== undefined ? filteredCount : this.staff.length) / this.itemsPerPage));
     let html = "";
     html += `<button class='pagination-btn' data-page='prev' ${
       this.staffPage === 1 ? "disabled" : ""
@@ -628,8 +640,8 @@ class StaffFieldsMainPage {
         <div class="list-card-header" style="display:flex;align-items:center;gap:0.5em;justify-content:space-between;">
           <div style="display:flex;align-items:center;gap:0.5em;flex:1;min-width:0;">
             <span class="drag-handle${assigned ? " drag-disabled" : ""}" title="${
-        assigned ? "Already assigned" : "Drag to assign to field"
-      }" style="flex-shrink:0;"><i class='fas fa-grip-lines'></i></span>
+              assigned ? "Already assigned" : "Drag to assign to field"
+            }" style="flex-shrink:0;"><i class='fas fa-grip-lines'></i></span>
             <span class="list-card-icon animal-icon" title="Animal" style="flex-shrink:0;">${emoji}</span>
             <span class="list-card-title list-card-title-animal" style="flex:1;min-width:0;"><strong>${animal.type}</strong></span>
             <span class="list-card-amount" style="display:inline-block;width:60px;text-align:right;flex-shrink:0;" title="Amount of ${animal.type}: ${animal.amount}">${animal.amount}</span>
@@ -726,13 +738,14 @@ class StaffFieldsMainPage {
       fieldSearch.className = "form-input-modern";
       fieldSearch.id = "fieldsSearch";
       fieldsList.parentNode.insertBefore(fieldSearch, fieldsList);
-      fieldSearch.addEventListener("input", () => {
-        const val = fieldSearch.value.toLowerCase();
-        Array.from(fieldsList.children).forEach((li) => {
-          li.style.display = li.textContent.toLowerCase().includes(val) ? "" : "none";
-        });
+      fieldSearch.addEventListener("input", async () => {
+        this.fieldSearchTerm = fieldSearch.value || "";
+        this.fieldsPage = 1;
+        await this._renderFieldsPage();
+        this._setupDragAndDrop();
       });
     }
+    this.fieldSearchTerm = fieldSearch.value || "";
     let staffSearch = document.getElementById("staffSearch");
     if (!staffSearch) {
       staffSearch = document.createElement("input");
@@ -742,12 +755,38 @@ class StaffFieldsMainPage {
       staffSearch.id = "staffSearch";
       staffList.parentNode.insertBefore(staffSearch, staffList);
       staffSearch.addEventListener("input", () => {
-        const val = staffSearch.value.toLowerCase();
-        Array.from(staffList.children).forEach((li) => {
-          li.style.display = li.textContent.toLowerCase().includes(val) ? "" : "none";
-        });
+        this.staffSearchTerm = staffSearch.value || "";
+        this.staffPage = 1;
+        this._renderStaffPage();
+        this._setupDragAndDrop();
       });
     }
+    this.staffSearchTerm = staffSearch.value || "";
+  }
+
+  _getFilteredFields() {
+    const term = (this.fieldSearchTerm || "").trim().toLowerCase();
+    if (!term) return this.fields;
+
+    return this.fields.filter((field) => {
+      const name = String(field.name || "").toLowerCase();
+      const area = String(field.area || "").toLowerCase();
+      const district = String(field.district || field.districtName || field.powiatName || "").toLowerCase();
+      return name.includes(term) || area.includes(term) || district.includes(term);
+    });
+  }
+
+  _getFilteredStaff() {
+    const term = (this.staffSearchTerm || "").trim().toLowerCase();
+    if (!term) return this.staff;
+
+    return this.staff.filter((staff) => {
+      const name = String(staff.name || "").toLowerCase();
+      const surname = String(staff.surname || "").toLowerCase();
+      const age = String(staff.age || "").toLowerCase();
+      const position = String(staff.position || "").toLowerCase();
+      return name.includes(term) || surname.includes(term) || age.includes(term) || position.includes(term);
+    });
   }
 
   // Update assignment logic to reload and re-render assignments and badges as needed
@@ -790,7 +829,7 @@ class StaffFieldsMainPage {
     if (!field) return;
 
     const confirmed = await this._showConfirmModal(
-      `Are you sure you want to unassign all animals from "${field.name}"? This action cannot be undone.`
+      `Are you sure you want to unassign all animals from "${field.name}"? This action cannot be undone.`,
     );
     if (!confirmed) return;
 

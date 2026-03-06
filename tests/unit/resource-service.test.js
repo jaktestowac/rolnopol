@@ -3,9 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 
 describe("resource.service", () => {
   it("should throw error for invalid resource type", () => {
-    expect(() => new ResourceService("invalid")).toThrow(
-      "Unsupported resource type",
-    );
+    expect(() => new ResourceService("invalid")).toThrow("Unsupported resource type");
   });
 
   it("should delegate to db for fields", async () => {
@@ -24,6 +22,37 @@ describe("resource.service", () => {
     expect(result).toEqual([{ id: 1, userId: 2 }]);
   });
 
+  it("should filter resources by search term", async () => {
+    const service = new ResourceService("staff");
+    vi.spyOn(service.db, "find").mockResolvedValue([
+      { id: 1, userId: 2, name: "Alice", surname: "Nowak" },
+      { id: 2, userId: 2, name: "Bob", surname: "Kowalski" },
+    ]);
+
+    const result = await service.list(2, { search: "kow" });
+    expect(result).toEqual([{ id: 2, userId: 2, name: "Bob", surname: "Kowalski" }]);
+  });
+
+  it("should paginate filtered resources when requested", async () => {
+    const service = new ResourceService("fields");
+    vi.spyOn(service.db, "find").mockResolvedValue([
+      { id: 1, userId: 2, name: "Field A" },
+      { id: 2, userId: 2, name: "Field B" },
+      { id: 3, userId: 2, name: "Field C" },
+    ]);
+
+    const result = await service.list(2, { paginate: true, page: 2, limit: 2 });
+    expect(result.items).toEqual([{ id: 3, userId: 2, name: "Field C" }]);
+    expect(result.pagination).toMatchObject({
+      page: 2,
+      limit: 2,
+      totalItems: 3,
+      totalPages: 2,
+      hasNextPage: false,
+      hasPrevPage: true,
+    });
+  });
+
   it("should create resource for user", async () => {
     const service = new ResourceService("fields");
     vi.spyOn(service.db, "add").mockResolvedValue();
@@ -38,9 +67,7 @@ describe("resource.service", () => {
   it("should delete resource and cascade", async () => {
     const service = new ResourceService("fields");
     vi.spyOn(service.db, "remove").mockResolvedValue();
-    const cascadeSpy = vi
-      .spyOn(ResourceService, "cascadeDelete")
-      .mockResolvedValue();
+    const cascadeSpy = vi.spyOn(ResourceService, "cascadeDelete").mockResolvedValue();
     const result = await service.delete(2, 3);
     expect(result).toBe(true);
     expect(cascadeSpy).toHaveBeenCalled();
@@ -48,9 +75,7 @@ describe("resource.service", () => {
 
   it("should update resource", async () => {
     const service = new ResourceService("fields");
-    vi.spyOn(service.db, "updateRecords").mockResolvedValue([
-      { id: 1, userId: 2, name: "Updated" },
-    ]);
+    vi.spyOn(service.db, "updateRecords").mockResolvedValue([{ id: 1, userId: 2, name: "Updated" }]);
     const result = await service.update(2, 1, { name: "Updated" });
     expect(result).toEqual({ id: 1, userId: 2, name: "Updated" });
   });
@@ -79,29 +104,23 @@ describe("resource.service", () => {
 
   it("should update animal successfully", async () => {
     const service = new ResourceService("animals");
-    vi.spyOn(service.db, "updateRecords").mockResolvedValue([
-      { id: 1, userId: 2, type: "cow", amount: 2 },
-    ]);
+    vi.spyOn(service.db, "updateRecords").mockResolvedValue([{ id: 1, userId: 2, type: "cow", amount: 2 }]);
     const result = await service.updateAnimal(2, 1, { type: "cow", amount: 2 });
     expect(result).toEqual({ id: 1, userId: 2, type: "cow", amount: 2 });
   });
 
   it("should assign staff to field", async () => {
     const service = new ResourceService("fields");
-    const assignmentsDb =
-      require("../../data/database-manager").getAssignmentsDatabase();
+    const assignmentsDb = require("../../data/database-manager").getAssignmentsDatabase();
     vi.spyOn(assignmentsDb, "add").mockResolvedValue();
-    vi.spyOn(assignmentsDb, "find").mockResolvedValue([
-      { id: 1, userId: 2, fieldId: 3, staffId: 4 },
-    ]);
+    vi.spyOn(assignmentsDb, "find").mockResolvedValue([{ id: 1, userId: 2, fieldId: 3, staffId: 4 }]);
     const result = await service.assignStaffToField(2, 3, 4);
     expect(result).toEqual({ id: 1, userId: 2, fieldId: 3, staffId: 4 });
   });
 
   it("should list assignments", async () => {
     const service = new ResourceService("fields");
-    const assignmentsDb =
-      require("../../data/database-manager").getAssignmentsDatabase();
+    const assignmentsDb = require("../../data/database-manager").getAssignmentsDatabase();
     vi.spyOn(assignmentsDb, "find").mockResolvedValue([{ id: 1, userId: 2 }]);
     const result = await service.listAssignments(2);
     expect(result).toEqual([{ id: 1, userId: 2 }]);
@@ -109,8 +128,7 @@ describe("resource.service", () => {
 
   it("should remove assignment", async () => {
     const service = new ResourceService("fields");
-    const assignmentsDb =
-      require("../../data/database-manager").getAssignmentsDatabase();
+    const assignmentsDb = require("../../data/database-manager").getAssignmentsDatabase();
     vi.spyOn(assignmentsDb, "remove").mockResolvedValue();
     const result = await service.removeAssignment(2, 5);
     expect(result).toBe(true);

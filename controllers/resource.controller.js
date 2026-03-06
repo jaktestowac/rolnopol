@@ -12,8 +12,35 @@ class ResourceController {
 
   async list(req, res) {
     try {
-      const items = await this.service.list(req.user.userId);
-      res.status(200).json(formatResponseBody({ data: items }, false));
+      const rawSearch = req.query?.search;
+      const hasSearch = typeof rawSearch === "string" && rawSearch.trim().length > 0;
+      const hasPagination = req.query?.page !== undefined || req.query?.limit !== undefined;
+
+      if (!hasSearch && !hasPagination) {
+        const items = await this.service.list(req.user.userId);
+        return res.status(200).json(formatResponseBody({ data: items }, false));
+      }
+
+      const page = Math.max(1, Number.parseInt(req.query?.page, 10) || 1);
+      const limit = Math.min(100, Math.max(1, Number.parseInt(req.query?.limit, 10) || 10));
+      const result = await this.service.list(req.user.userId, {
+        search: hasSearch ? rawSearch : "",
+        page,
+        limit,
+        paginate: true,
+      });
+
+      res.status(200).json(
+        formatResponseBody(
+          {
+            data: {
+              data: result.items,
+              pagination: result.pagination,
+            },
+          },
+          false,
+        ),
+      );
     } catch (error) {
       logError(`Error offer ${this.resourceType}:`, error);
       res.status(500).json(formatResponseBody({ error: error.message }));
@@ -30,8 +57,8 @@ class ResourceController {
             data: newItem,
             message: `${this.resourceType.slice(0, -1)} added`,
           },
-          false
-        )
+          false,
+        ),
       );
     } catch (error) {
       logError(`Error creating ${this.resourceType.slice(0, -1)}:`, error);
@@ -51,7 +78,7 @@ class ResourceController {
       res.status(200).json(
         formatResponseBody({
           data: { message: `${this.resourceType.slice(0, -1)} deleted` },
-        })
+        }),
       );
     } catch (error) {
       logError(`Error deleting ${this.resourceType.slice(0, -1)}:`, error);
@@ -117,7 +144,7 @@ class ResourceController {
         formatResponseBody({
           data: updated,
           message: "Updated successfully",
-        })
+        }),
       );
     } catch (error) {
       logError(`Error updating ${this.resourceType}:`, error);

@@ -96,10 +96,61 @@ class ResourceService {
     return resultObj;
   }
 
-  async list(userId) {
+  async list(userId, options = {}) {
     // Convert userId to number for comparison with database
     const numericUserId = Number(userId);
-    return await this.db.find((item) => item.userId === numericUserId);
+    const items = await this.db.find((item) => item.userId === numericUserId);
+
+    const searchTerm = typeof options.search === "string" ? options.search.trim().toLowerCase() : "";
+    const shouldPaginate = Boolean(options.paginate);
+
+    let filteredItems = items;
+    if (searchTerm) {
+      filteredItems = items.filter((item) => this._matchesSearch(item, searchTerm));
+    }
+
+    if (!shouldPaginate) {
+      return filteredItems;
+    }
+
+    const page = Math.max(1, Number.parseInt(options.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(options.limit, 10) || 10));
+    const totalItems = filteredItems.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+    const currentPage = Math.min(page, totalPages);
+    const start = (currentPage - 1) * limit;
+    const end = start + limit;
+
+    return {
+      items: filteredItems.slice(start, end),
+      pagination: {
+        page: currentPage,
+        limit,
+        totalItems,
+        totalPages,
+        hasNextPage: currentPage < totalPages,
+        hasPrevPage: currentPage > 1,
+      },
+    };
+  }
+
+  _matchesSearch(item, searchTerm) {
+    if (!item || typeof item !== "object") return false;
+
+    let fieldsToSearch = [];
+
+    if (this.resourceType === "fields") {
+      fieldsToSearch = [item.name, item.area, item.district, item.districtName, item.powiatName, item.location, item.cropType];
+    } else if (this.resourceType === "staff") {
+      fieldsToSearch = [item.name, item.surname, item.age, item.position, item.salary, item.hireDate];
+    } else {
+      fieldsToSearch = Object.values(item);
+    }
+
+    return fieldsToSearch.some((value) => {
+      if (value === undefined || value === null) return false;
+      return String(value).toLowerCase().includes(searchTerm);
+    });
   }
 
   async create(userId, data) {

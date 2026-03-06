@@ -64,6 +64,25 @@ describe("Resource Management API", () => {
       expect(Array.isArray(res.body.data), `Staff should be an array. Response: ${JSON.stringify(res.body)}`).toBe(true);
     });
 
+    it("GET /api/v1/staff with search + pagination should return filtered page with metadata", async () => {
+      await request(app).post("/api/v1/staff").set("token", authToken).send({ name: "Anna", surname: "FilterOne", age: 31 });
+      await request(app).post("/api/v1/staff").set("token", authToken).send({ name: "Bruno", surname: "FilterTwo", age: 32 });
+
+      const res = await request(app)
+        .get("/api/v1/staff")
+        .query({ search: "filter", page: 1, limit: 1 })
+        .set("token", authToken)
+        .expect(200);
+
+      expect(res.body).toHaveProperty("success", true);
+      expect(res.body.data).toHaveProperty("data");
+      expect(Array.isArray(res.body.data.data)).toBe(true);
+      expect(res.body.data).toHaveProperty("pagination");
+      expect(res.body.data.pagination).toHaveProperty("page", 1);
+      expect(res.body.data.pagination).toHaveProperty("limit", 1);
+      expect(res.body.data.pagination.totalItems).toBeGreaterThanOrEqual(2);
+    });
+
     it("POST /api/v1/staff should create new staff member", async () => {
       const res = await request(app).post("/api/v1/staff").set("token", authToken).send(testStaff);
       expect(res.status, `Create staff should return 201 status. Response: ${JSON.stringify(res.body)}`).toBe(201);

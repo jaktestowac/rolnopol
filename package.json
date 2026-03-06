@@ -1,6 +1,6 @@
 {
   "name": "rolnopol-app",
-  "version": "1.0.109",
+  "version": "1.0.110",
   "description": "A Rolnopol app with JSON database, authentication, and admin panel",
   "main": "api/index.js",
   "scripts": {

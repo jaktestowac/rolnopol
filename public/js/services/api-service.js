@@ -40,9 +40,20 @@ class ApiService {
    * @returns {Promise} API response with success/error handling
    */
   async request(method, endpoint, options = {}) {
-    const { body, headers = {}, requiresAuth = false, timeout = 15000, throwOnError = false } = options;
+    const { body, headers = {}, requiresAuth = false, timeout = 15000, throwOnError = false, query } = options;
 
-    const url = this.getApiUrl(endpoint);
+    let url = this.getApiUrl(endpoint);
+    if (query && typeof query === "object") {
+      const queryParams = new URLSearchParams();
+      Object.entries(query).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === "") return;
+        queryParams.append(key, String(value));
+      });
+      const qs = queryParams.toString();
+      if (qs) {
+        url = `${url}?${qs}`;
+      }
+    }
     const requestHeaders = { ...this.defaultHeaders, ...headers };
 
     // Add authentication if required
