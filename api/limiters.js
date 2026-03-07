@@ -6,7 +6,7 @@ const {
   HIGH_RATE_LIMIT_MAX_REQUESTS,
 } = require("../data/settings");
 
-const IS_TEST_ENV = process.env.NODE_ENV === "test";
+const IS_TEST_ENV = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
 const TEST_SAFE_MAX_REQUESTS = 1_000_000;
 
 const resolveMax = (max) => (IS_TEST_ENV ? TEST_SAFE_MAX_REQUESTS : max);

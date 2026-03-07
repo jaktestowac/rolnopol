@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import request from "supertest";
 
 const app = require("../api/index.js");
@@ -29,6 +29,13 @@ async function setMessengerEnabled(enabled) {
     .expect(200);
 }
 
+async function ensureMessengerEnabled() {
+  const current = await getCurrentFlags();
+  if (current.messengerEnabled !== true) {
+    await setMessengerEnabled(true);
+  }
+}
+
 async function createAndLoginUser(displayedName = "User") {
   const email = `regression_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`;
   const password = "testpass123";
@@ -43,6 +50,10 @@ describe("Messenger Service - Regression Tests", () => {
   beforeAll(async () => {
     originalFlags = await getCurrentFlags();
     await setMessengerEnabled(true);
+  });
+
+  beforeEach(async () => {
+    await ensureMessengerEnabled();
   });
 
   afterAll(async () => {
