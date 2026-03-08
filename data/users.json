@@ -87,5 +87,27 @@
     "createdAt": "2028-01-01T00:00:00.000Z",
     "updatedAt": "2025-09-17T10:43:35.335Z",
     "lastLogin": "2025-09-17T10:43:35.334Z"
+  },
+  {
+    "id": 9,
+    "username": "Lucy Westenra",
+    "displayedName": "Lucy Westenra",
+    "email": "lucy.westenra@rolnopol.demo.pl",
+    "password": "lucyPass123",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-17T10:43:35.335Z",
+    "lastLogin": "2025-09-17T10:43:35.334Z"
+  },
+  {
+    "id": 10,
+    "username": "Jonathan Harker",
+    "displayedName": "Jonathan Harker",
+    "email": "jonathan.harker@rolnopol.demo.pl",
+    "password": "jonathanPass123",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-17T10:43:35.335Z",
+    "lastLogin": "2025-09-17T10:43:35.334Z"
   }
 ]

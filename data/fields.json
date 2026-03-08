@@ -77,26 +77,146 @@
     "area": 132,
     "id": 13
   },
-  { "id": 14, "userId": 2, "name": "Green Meadow", "area": 120, "district": "powiat sławieński" },
-  { "id": 15, "userId": 2, "name": "Sunny Acres", "area": 45, "district": "powiat sławieński" },
-  { "id": 16, "userId": 2, "name": "Doe's Field", "area": 130, "district": "powiat sztumski" },
-  { "id": 17, "userId": 3, "name": "Riverbank", "area": 128, "district": "powiat sztumski" },
-  { "id": 18, "userId": 4, "name": "Smith's Patch", "area": 22, "district": "powiat sztumski" },
-  { "id": 19, "userId": 4, "name": "Golden Plain", "area": 227, "district": "powiat Poznań" },
-  { "id": 20, "userId": 5, "name": "Dev Field", "area": 19, "district": "powiat łaski" },
-  { "id": 21, "userId": 3, "name": "Innovation Acres", "area": 23, "district": "powiat ostrowiecki" },
-  { "id": 22, "userId": 2, "name": "Willow Grove", "area": 28, "district": "powiat sławieński" },
-  { "id": 23, "userId": 3, "name": "Maple Ridge", "area": 35, "district": "powiat ostrowiecki" },
-  { "id": 24, "userId": 5, "name": "Sunset Valley", "area": 240, "district": "powiat sławieński" },
-  { "id": 25, "userId": 4, "name": "Birch Pasture", "area": 122, "district": "powiat sławieński" },
-  { "id": 26, "userId": 2, "name": "Cedar Hill", "area": 331, "district": "powiat sławieński" },
-  { "id": 27, "userId": 6, "name": "Research Field Alpha", "area": 150, "district": "powiat łaski" },
-  { "id": 28, "userId": 6, "name": "Research Field Beta", "area": 275, "district": "powiat łaski" },
-  { "id": 29, "userId": 6, "name": "Research Orchard Delta", "area": 120, "district": "powiat łaski" },
-  { "id": 30, "userId": 6, "name": "Research Field Gamma", "area": 160, "district": "powiat łaski" },
-  { "id": 31, "userId": 6, "name": "Research Meadow", "area": 100, "district": "powiat łaski" },
-  { "id": 32, "userId": 6, "name": "Experimental Plot Delta", "area": 80, "district": "powiat sieradzki" },
-  { "id": 33, "userId": 6, "name": "Solar Field", "area": 350, "district": "powiat częstochowski" },
+  {
+    "id": 14,
+    "userId": 2,
+    "name": "Green Meadow",
+    "area": 120,
+    "district": "powiat sławieński"
+  },
+  {
+    "id": 15,
+    "userId": 2,
+    "name": "Sunny Acres",
+    "area": 45,
+    "district": "powiat sławieński"
+  },
+  {
+    "id": 16,
+    "userId": 2,
+    "name": "Doe's Field",
+    "area": 130,
+    "district": "powiat sztumski"
+  },
+  {
+    "id": 17,
+    "userId": 3,
+    "name": "Riverbank",
+    "area": 128,
+    "district": "powiat sztumski"
+  },
+  {
+    "id": 18,
+    "userId": 4,
+    "name": "Smith's Patch",
+    "area": 22,
+    "district": "powiat sztumski"
+  },
+  {
+    "id": 19,
+    "userId": 4,
+    "name": "Golden Plain",
+    "area": 227,
+    "district": "powiat Poznań"
+  },
+  {
+    "id": 20,
+    "userId": 5,
+    "name": "Dev Field",
+    "area": 19,
+    "district": "powiat łaski"
+  },
+  {
+    "id": 21,
+    "userId": 3,
+    "name": "Innovation Acres",
+    "area": 23,
+    "district": "powiat ostrowiecki"
+  },
+  {
+    "id": 22,
+    "userId": 2,
+    "name": "Willow Grove",
+    "area": 28,
+    "district": "powiat sławieński"
+  },
+  {
+    "id": 23,
+    "userId": 3,
+    "name": "Maple Ridge",
+    "area": 35,
+    "district": "powiat ostrowiecki"
+  },
+  {
+    "id": 24,
+    "userId": 5,
+    "name": "Sunset Valley",
+    "area": 240,
+    "district": "powiat sławieński"
+  },
+  {
+    "id": 25,
+    "userId": 4,
+    "name": "Birch Pasture",
+    "area": 122,
+    "district": "powiat sławieński"
+  },
+  {
+    "id": 26,
+    "userId": 2,
+    "name": "Cedar Hill",
+    "area": 331,
+    "district": "powiat sławieński"
+  },
+  {
+    "id": 27,
+    "userId": 6,
+    "name": "Research Field Alpha",
+    "area": 150,
+    "district": "powiat łaski"
+  },
+  {
+    "id": 28,
+    "userId": 6,
+    "name": "Research Field Beta",
+    "area": 275,
+    "district": "powiat łaski"
+  },
+  {
+    "id": 29,
+    "userId": 6,
+    "name": "Research Orchard Delta",
+    "area": 120,
+    "district": "powiat łaski"
+  },
+  {
+    "id": 30,
+    "userId": 6,
+    "name": "Research Field Gamma",
+    "area": 160,
+    "district": "powiat łaski"
+  },
+  {
+    "id": 31,
+    "userId": 6,
+    "name": "Research Meadow",
+    "area": 100,
+    "district": "powiat łaski"
+  },
+  {
+    "id": 32,
+    "userId": 6,
+    "name": "Experimental Plot Delta",
+    "area": 80,
+    "district": "powiat sieradzki"
+  },
+  {
+    "id": 33,
+    "userId": 6,
+    "name": "Solar Field",
+    "area": 350,
+    "district": "powiat częstochowski"
+  },
   {
     "id": 34,
     "userId": 7,

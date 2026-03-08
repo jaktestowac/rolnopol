@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Rolnopol",
-    "version": "1.0.112",
+    "version": "1.0.113",
     "description": "API documentation for the Rolnopol service with versioning support",
     "contact": {
       "name": "API Support",
@@ -1270,6 +1270,56 @@
                     "LOG_STACK_TRACE": { "type": "boolean" },
                     "LOG_REQUEST": { "type": "boolean" }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/debug/database/restore-base": {
+      "post": {
+        "servers": [
+          {
+            "url": "/api"
+          }
+        ],
+        "summary": "Restore all databases to immutable base snapshot",
+        "description": "Restores all managed JSON databases (users, fields, staff, animals, assignments, financial, marketplace, feature flags, chaos engine, commodities, messages) from a read-only base snapshot file.",
+        "tags": ["Debug"],
+        "responses": {
+          "200": {
+            "description": "All databases restored to base state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "baseStateVersion": { "type": "integer", "example": 1 },
+                        "restored": {
+                          "type": "object",
+                          "additionalProperties": { "type": "integer" },
+                          "description": "Per-database restored record counters"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Restore failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
