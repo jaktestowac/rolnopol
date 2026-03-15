@@ -20,6 +20,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   homeStatsSectionEnabled: "Enable or disable advanced statistics section on the homepage",
   homeModernRestyleEnabled: "Enable or disable modern redesigned homepage layout and styling",
   messengerEnabled: "Enable or disable internal messenger feature",
+  notificationCenterEnabled: "Enable or disable event-driven multi-channel notification center module",
   cookieConsentBannerEnabled: "Enable or disable cookie consent banner shown at the bottom of pages",
   promoAdvertsHomeEnabled: "Enable or disable Rolnopol promotional popups on home/dashboard pages",
   promoAdvertsAlertsEnabled: "Enable or disable Rolnopol promotional popups on alerts pages",
@@ -38,6 +39,7 @@ const FEATURE_FLAG_GROUPS = {
   financial: ["financialCommoditiesEnabled", "financialCommoditiesTradingEnabled"],
   monitoring: ["prometheusMetricsEnabled"],
   communication: ["messengerEnabled"],
+  notifications: ["notificationCenterEnabled"],
   privacy: ["cookieConsentBannerEnabled"],
   "marketing (Ads)": [
     "promoAdvertsHomeEnabled",
@@ -66,6 +68,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   homeModernRestyleEnabled: false,
   cookieConsentBannerEnabled: false,
   messengerEnabled: false,
+  notificationCenterEnabled: false,
   promoAdvertsHomeEnabled: false,
   promoAdvertsAlertsEnabled: false,
   promoAdvertsGeneralAdEnabled: false,

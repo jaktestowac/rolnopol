@@ -91,6 +91,10 @@
             <i class="fas fa-file-alt"></i>
             Logs
           </button>
+          <button class="tab-button" data-tab="notifications-admin">
+            <i class="fas fa-bell"></i>
+            Notifications (Events)
+          </button>
           <button class="tab-button" data-tab="actions">
             <i class="fas fa-cogs"></i>
             Actions
@@ -122,6 +126,9 @@
 
         <!-- Logs Tab Iframe -->
         <iframe id="logsIframe" class="tab-iframe"></iframe>
+
+        <!-- Notifications Tab Iframe -->
+        <iframe id="notifications-adminIframe" class="tab-iframe"></iframe>
 
         <!-- Secret Codes Tab Iframe -->
         <iframe id="secret-codesIframe" class="tab-iframe"></iframe>
@@ -187,7 +194,7 @@
         // Bind tab events
         document.querySelectorAll(".tab-button").forEach((button) => {
           button.addEventListener("click", async (e) => {
-            const tabName = e.target.dataset.tab;
+            const tabName = e.currentTarget.dataset.tab;
             await this.switchTab(tabName);
           });
         });

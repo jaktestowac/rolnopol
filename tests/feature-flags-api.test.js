@@ -23,9 +23,13 @@ describe("Feature Flags API", () => {
     expect(res.body.data.groups).toHaveProperty("communication");
     expect(Array.isArray(res.body.data.groups.communication)).toBe(true);
     expect(res.body.data.flags).toHaveProperty("cookieConsentBannerEnabled");
+    expect(res.body.data.flags).toHaveProperty("notificationCenterEnabled");
     expect(res.body.data.groups).toHaveProperty("privacy");
+    expect(res.body.data.groups).toHaveProperty("notifications");
     expect(Array.isArray(res.body.data.groups.privacy)).toBe(true);
     expect(res.body.data.groups.privacy).toContain("cookieConsentBannerEnabled");
+    expect(Array.isArray(res.body.data.groups.notifications)).toBe(true);
+    expect(res.body.data.groups.notifications).toContain("notificationCenterEnabled");
     expect(res.body.data.flags).toHaveProperty("homeModernRestyleEnabled");
     expect(res.body.data.groups).toHaveProperty("homepage");
     expect(Array.isArray(res.body.data.groups.homepage)).toBe(true);

@@ -9,9 +9,7 @@ describe("financial.service", () => {
   });
 
   it("should call db.getAll for account retrieval", async () => {
-    const spy = vi
-      .spyOn(db, "getAll")
-      .mockResolvedValue([{ userId: 1, balance: 100 }]);
+    const spy = vi.spyOn(db, "getAll").mockResolvedValue([{ userId: 1, balance: 100 }]);
     const result = await db.getAll();
     expect(result).toEqual([{ userId: 1, balance: 100 }]);
     expect(spy).toHaveBeenCalled();
@@ -20,18 +18,14 @@ describe("financial.service", () => {
 
   it("should initialize account if not found", async () => {
     vi.spyOn(financialService, "_getAccounts").mockResolvedValue([]);
-    const initSpy = vi
-      .spyOn(financialService, "initializeAccount")
-      .mockResolvedValue({ id: 1, userId: 2, balance: 0 });
+    const initSpy = vi.spyOn(financialService, "initializeAccount").mockResolvedValue({ id: 1, userId: 2, balance: 0 });
     const result = await financialService.getAccount(2);
     expect(initSpy).toHaveBeenCalledWith(2);
     expect(result).toMatchObject({ id: 1, userId: 2, balance: 0 });
   });
 
   it("should add income transaction", async () => {
-    vi.spyOn(financialService, "_getAccounts").mockResolvedValue([
-      { userId: 2, balance: 0, transactions: [] },
-    ]);
+    vi.spyOn(financialService, "_getAccounts").mockResolvedValue([{ userId: 2, balance: 0, transactions: [] }]);
     vi.spyOn(financialService, "_getNextTransactionId").mockResolvedValue(1);
     vi.spyOn(financialService, "_saveAccounts").mockResolvedValue();
     const result = await financialService.addTransaction(2, {
@@ -46,10 +40,35 @@ describe("financial.service", () => {
     });
   });
 
+  it("should add transaction even if notification publish fails", async () => {
+    vi.spyOn(financialService, "_getAccounts").mockResolvedValue([{ userId: 2, balance: 0, transactions: [] }]);
+    vi.spyOn(financialService, "_getNextTransactionId").mockResolvedValue(44);
+    vi.spyOn(financialService, "_saveAccounts").mockResolvedValue();
+
+    const notificationCenter = require("../../modules/notification-center");
+    vi.spyOn(notificationCenter, "getEventPublisher").mockReturnValue({
+      isEnabled: () => true,
+      publish: () => {
+        throw new Error("publisher_down");
+      },
+    });
+
+    const result = await financialService.addTransaction(2, {
+      type: "income",
+      amount: 50,
+      description: "Resilient",
+    });
+
+    expect(result).toMatchObject({
+      id: 44,
+      type: "income",
+      amount: 50,
+      description: "Resilient",
+    });
+  });
+
   it("should throw error for overdraft on expense", async () => {
-    vi.spyOn(financialService, "_getAccounts").mockResolvedValue([
-      { userId: 2, balance: 10, transactions: [] },
-    ]);
+    vi.spyOn(financialService, "_getAccounts").mockResolvedValue([{ userId: 2, balance: 10, transactions: [] }]);
     await expect(
       financialService.addTransaction(2, {
         type: "expense",

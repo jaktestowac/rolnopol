@@ -7,6 +7,7 @@ const settings = {
   ADMIN_USERNAME: "superadmin",
   ADMIN_PASSWORD: "SuperPass1234",
   DEBUG_MODE: process.env.DEBUG_MODE === "true",
+  LOG_TRACE: process.env.LOG_TRACE === "true" || false, // Default to false
   LOG_REQUEST: process.env.LOG_REQUEST === "true" || false, // Default to false
   LOG_STACK_TRACE: process.env.LOG_STACK_TRACE === "true" || false, // Default to false
   FINANCE_INTEGRITY_CALCULATION: process.env.FINANCE_INTEGRITY_CALCULATION !== "false", // Default to true

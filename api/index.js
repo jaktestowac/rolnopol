@@ -101,6 +101,7 @@ const prometheusMetrics = require("../helpers/prometheus-metrics");
 const featureFlagsService = require("../services/feature-flags.service");
 const messengerWebSocketService = require("../services/messenger-ws.service");
 const chaosEngineMiddleware = require("../middleware/chaos-engine.middleware");
+const notificationCenter = require("../modules/notification-center");
 
 app.set("etag", false);
 
@@ -140,6 +141,10 @@ const initializeAllDatabases = async () => {
 
 initializeAllDatabases();
 
+notificationCenter.initialize({ featureFlagsService }).catch((error) => {
+  logError("Notification center initialization error", { error });
+});
+
 // Clear all tokens on startup for system migration
 const clearedTokens = clearAllTokens();
 logInfo(`System migration: Cleared ${clearedTokens} existing tokens`);
@@ -147,18 +152,21 @@ logInfo(`System migration: Cleared ${clearedTokens} existing tokens`);
 // Graceful shutdown handling
 process.on("SIGINT", async () => {
   logDebug("Received SIGINT. Graceful shutdown...");
+  await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
   logDebug("Received SIGTERM. Graceful shutdown...");
+  await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
 });
 
 process.on("SIGHUP", async () => {
   logDebug("Received SIGHUP. Graceful shutdown...");
+  await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
 });

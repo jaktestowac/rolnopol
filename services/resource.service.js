@@ -1,6 +1,16 @@
 const dbManager = require("../data/database-manager");
 const { ALLOWED_ANIMAL_TYPES } = require("../data/animal-types");
 const { logDebug, logInfo } = require("../helpers/logger-api");
+const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+
+const publishEvent = (event) => {
+  publishNotificationEvent(event, {
+    action: "resource_service_notification",
+    meta: {
+      eventType: event?.type,
+    },
+  });
+};
 
 class ResourceService {
   constructor(resourceType) {
@@ -162,7 +172,37 @@ class ResourceService {
     // Return the item with the assigned ID
     logDebug("Created new item:", { newItem });
     const items = await this.db.find((i) => i.userId === numericUserId);
-    return items[items.length - 1];
+    const created = items[items.length - 1];
+
+    if (this.resourceType === "fields") {
+      publishEvent({
+        type: "field.created",
+        payload: {
+          userId: numericUserId,
+          fieldId: created.id,
+          name: created.name,
+          area: created.area,
+        },
+        correlationId: `field-${created.id}`,
+        source: "resource.service",
+      });
+    }
+
+    if (this.resourceType === "staff") {
+      publishEvent({
+        type: "staff.created",
+        payload: {
+          userId: numericUserId,
+          staffId: created.id,
+          name: created.name,
+          surname: created.surname,
+        },
+        correlationId: `staff-${created.id}`,
+        source: "resource.service",
+      });
+    }
+
+    return created;
   }
 
   async delete(userId, id) {
@@ -358,7 +398,35 @@ ResourceService.prototype.createAnimal = async function (userId, data) {
   };
   await this.db.add(animal);
   const items = await this.db.find((i) => i.userId === numericUserId);
-  return items[items.length - 1];
+  const created = items[items.length - 1];
+
+  publishEvent({
+    type: "animal.created",
+    payload: {
+      userId: numericUserId,
+      animalId: created.id,
+      type: created.type,
+      amount: created.amount,
+      fieldId: created.fieldId,
+    },
+    correlationId: `animal-${created.id}`,
+    source: "resource.service",
+  });
+
+  if (created.fieldId !== undefined && created.fieldId !== null) {
+    publishEvent({
+      type: "animal.assigned",
+      payload: {
+        userId: numericUserId,
+        animalId: created.id,
+        fieldId: created.fieldId,
+      },
+      correlationId: `animal-assigned-${created.id}-${created.fieldId}`,
+      source: "resource.service",
+    });
+  }
+
+  return created;
 };
 
 ResourceService.prototype.updateAnimal = async function (userId, id, updateData) {
@@ -398,6 +466,8 @@ ResourceService.prototype.updateAnimal = async function (userId, id, updateData)
     throw err;
   }
 
+  const existing = await this.db.findOne((item) => item.userId === numericUserId && item.id === numericId);
+
   const updatedArr = await this.db.updateRecords(
     (item) => item.userId === numericUserId && item.id === numericId,
     (item) => {
@@ -408,7 +478,22 @@ ResourceService.prototype.updateAnimal = async function (userId, id, updateData)
       return updated;
     },
   );
-  return Array.isArray(updatedArr) ? updatedArr.find((item) => item.userId === numericUserId && item.id === numericId) : null;
+  const updated = Array.isArray(updatedArr) ? updatedArr.find((item) => item.userId === numericUserId && item.id === numericId) : null;
+
+  if (updated && updateData.fieldId !== undefined && updateData.fieldId !== null && existing?.fieldId !== updated.fieldId) {
+    publishEvent({
+      type: "animal.assigned",
+      payload: {
+        userId: numericUserId,
+        animalId: updated.id,
+        fieldId: updated.fieldId,
+      },
+      correlationId: `animal-assigned-${updated.id}-${updated.fieldId}`,
+      source: "resource.service",
+    });
+  }
+
+  return updated;
 };
 
 module.exports = ResourceService;

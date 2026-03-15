@@ -44,6 +44,22 @@ function logDebug(message, data = null) {
   }
 }
 
+function logTrace(message, data = null) {
+  if (settings.DEBUG_MODE && settings.LOG_TRACE) {
+    const timestamp = new Date().toISOString();
+    console.log(`[TRACE] ${timestamp} - ${message}`);
+    if (data) {
+      console.log("[TRACE]    Data:", JSON.stringify(data, null, 2));
+    }
+    addLogEntry({
+      level: "TRACE",
+      timestamp,
+      message,
+      data,
+    });
+  }
+}
+
 /**
  * Log info messages
  */
@@ -171,4 +187,5 @@ module.exports = {
   logResponse,
   getLogList,
   clearLogList,
+  logTrace,
 };

@@ -1,0 +1,1334 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notifications (Events) - Kraken Dashboard</title>
+    <link rel="stylesheet" href="../css/kraken.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
+    <style>
+        .notification-toast {
+            position: fixed;
+            right: 20px;
+            bottom: 40px;
+            z-index: 1000;
+            max-width: min(440px, calc(100vw - 24px));
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #1f2937;
+            color: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            opacity: 0.98;
+        }
+
+        .notification-toast .toast-icon {
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .notification-toast.toast-success {
+            background: #14532d;
+            border-color: rgba(34, 197, 94, 0.45);
+        }
+
+        .notification-toast.toast-error {
+            background: #7f1d1d;
+            border-color: rgba(239, 68, 68, 0.45);
+        }
+
+        .notification-toast.toast-warning {
+            background: #78350f;
+            border-color: rgba(245, 158, 11, 0.45);
+        }
+
+        .notification-toast.toast-info {
+            background: #1e3a8a;
+            border-color: rgba(59, 130, 246, 0.45);
+        }
+
+        @media (max-width: 768px) {
+            .notification-toast {
+                right: 12px;
+                bottom: 12px;
+                max-width: calc(100vw - 24px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="notifications-section">
+        <div class="notifications-header">
+            <h2 class="notifications-title">
+                <i class="fas fa-bell"></i>
+                Notifications Center (Events)
+            </h2>
+            <div class="notifications-header-actions">
+                <button id="refreshHealthBtn" class="btn-enhanced btn-secondary-enhanced">
+                    <span class="spinner-enhanced hidden"></span>
+                    <i class="fas fa-heartbeat btn-icon"></i>
+                    Refresh Health
+                </button>
+                <button id="refreshEventsBtn" class="btn-enhanced btn-primary-enhanced">
+                    <span class="spinner-enhanced hidden"></span>
+                    <i class="fas fa-sync-alt btn-icon"></i>
+                    Refresh Events
+                </button>
+            </div>
+        </div>
+
+        <div id="notificationAlert" class="notification-toast toast-info hidden" role="status" aria-live="polite" aria-atomic="true">
+            <i class="fas fa-info-circle toast-icon"></i>
+            <span></span>
+        </div>
+
+        <div id="notificationsFeatureDisabledAlert" class="alert-enhanced alert-warning-enhanced hidden">
+            <i class="fas fa-toggle-off alert-icon"></i>
+            <span>
+                Notifications API is currently disabled by feature flag (<code>notificationCenterEnabled=false</code>).
+                Enable it to use <code>/api/v1/notifications/*</code> in this tab.
+            </span>
+            <button id="enableNotificationsFeatureBtn" class="btn-enhanced btn-warning-enhanced" style="margin-left: auto; width: auto;">
+                <span class="spinner-enhanced hidden"></span>
+                <i class="fas fa-toggle-on btn-icon"></i>
+                Enable Notifications
+            </button>
+        </div>
+
+        <div class="notifications-layout-grid">
+            <section class="notifications-card">
+                <h3><i class="fas fa-stethoscope"></i> Module Health</h3>
+                <div id="healthSummary" class="notifications-health-grid">
+                    <div class="loading-enhanced"><span class="spinner-enhanced"></span> Loading health data...</div>
+                </div>
+            </section>
+
+            <section class="notifications-card">
+                <h3><i class="fas fa-flask"></i> Trigger Events</h3>
+
+                <div style="margin-bottom: 20px; border-bottom: 2px solid #ddd; display: flex; gap: 10px;">
+                    <button id="triggerModeTest" class="btn-enhanced btn-primary-enhanced trigger-mode-btn" style="border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;">
+                        <i class="fas fa-flask"></i> Test Event (Legacy)
+                    </button>
+                    <button id="triggerModeEvent" class="btn-enhanced trigger-mode-btn" style="padding-bottom: 10px;">
+                        <i class="fas fa-bullseye"></i> Trigger Any Event
+                    </button>
+                </div>
+
+                <!-- Test Event Mode -->
+                <div id="triggerModeTestContent" class="trigger-mode-content">
+                    <div class="test-event-grid">
+                        <label>
+                            Preset Event
+                            <select id="testPreset" class="form-control">
+                                <option value="custom" selected>Custom (manual)</option>
+                                <option value="smoke">Smoke Test</option>
+                                <option value="highRiskPayment">High-Risk Payment Alert</option>
+                                <option value="marketVolatility">Market Volatility Notice</option>
+                                <option value="weatherDisruption">Weather Disruption Warning</option>
+                                <option value="webhookRetry">Webhook Retry Scenario</option>
+                            </select>
+                        </label>
+                        <label>
+                            Method
+                            <select id="testMethod" class="form-control">
+                                <option value="POST" selected>POST /api/v1/notifications/test-event</option>
+                                <option value="GET">GET /api/v1/notifications/test-event</option>
+                            </select>
+                        </label>
+                        <label>
+                            User ID
+                            <input id="testUserId" class="form-control" type="text" placeholder="test-user" value="kraken-admin" />
+                        </label>
+                        <label>
+                            Note
+                            <input id="testNote" class="form-control" type="text" placeholder="smoke" value="triggered-from-dashboard" />
+                        </label>
+                        <label>
+                            Correlation ID (optional)
+                            <input id="testCorrelationId" class="form-control" type="text" placeholder="corr-123" />
+                        </label>
+                        <label style="grid-column: 1 / -1;">
+                            Extra Payload JSON (optional)
+                            <textarea id="testExtraPayload" class="form-control" rows="4" placeholder='{"severity":"warning","channel":"in-app"}'></textarea>
+                        </label>
+                        <label style="grid-column: 1 / -1; display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                            <input id="testForceFail" type="checkbox" />
+                            Force event status to <code>failed</code> (adds <code>forceFail: true</code> to payload)
+                        </label>
+                    </div>
+                    <div class="test-event-actions">
+                        <button id="triggerTestEventBtn" class="btn-enhanced btn-success-enhanced">
+                            <span class="spinner-enhanced hidden"></span>
+                            <i class="fas fa-paper-plane btn-icon"></i>
+                            Trigger Test Event
+                        </button>
+                    </div>
+                    <pre id="testEventResult" class="notifications-json-output">No test event triggered yet.</pre>
+                </div>
+
+                <!-- Event Type Mode -->
+                <div id="triggerModeEventContent" class="trigger-mode-content" style="display: none;">
+                    <div class="test-event-grid">
+                        <label>
+                            Event Type
+                            <select id="eventTypeSelect" class="form-control">
+                                <option value="" selected disabled>Loading event types...</option>
+                            </select>
+                        </label>
+                        <label>
+                            User ID
+                            <input id="eventTypeUserId" class="form-control" type="text" placeholder="kraken-admin" value="kraken-admin" />
+                        </label>
+                        <label>
+                            Correlation ID (optional)
+                            <input id="eventTypeCorrelationId" class="form-control" type="text" placeholder="corr-123" />
+                        </label>
+                        <label style="grid-column: 1 / -1;">
+                            Custom Payload Overrides (JSON, optional)
+                            <textarea id="eventTypePayloadOverrides" class="form-control" rows="4" placeholder='{"amount": 99.99}&#10;Override template fields above'></textarea>
+                        </label>
+                        <label style="grid-column: 1 / -1; display: flex; flex-direction: row; align-items: center; gap: 10px;">
+                            <input id="eventTypeForceFail" type="checkbox" />
+                            Force event status to <code>failed</code>
+                        </label>
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <h4>Payload Preview</h4>
+                        <pre id="eventTypePayloadPreview" class="notifications-json-output" style="max-height: 300px; overflow: auto;">Select an event type to see the default payload...</pre>
+                    </div>
+                    <div class="test-event-actions">
+                        <button id="triggerEventTypeBtn" class="btn-enhanced btn-success-enhanced">
+                            <span class="spinner-enhanced hidden"></span>
+                            <i class="fas fa-bullseye btn-icon"></i>
+                            Trigger Event
+                        </button>
+                    </div>
+                    <pre id="eventTypeResult" class="notifications-json-output">No event triggered yet.</pre>
+                </div>
+            </section>
+        </div>
+
+        <section class="notifications-card notifications-events-card">
+            <div class="notifications-events-header">
+                <h3><i class="fas fa-stream"></i> Events</h3>
+                <div class="notifications-pagination-meta" id="eventsMeta">0 events</div>
+            </div>
+
+            <div class="filters-bar">
+                <input id="searchInput" class="filter-input" type="text" placeholder="Search id, type, source, correlation, payload..." />
+
+                <select id="statusFilter" class="form-control">
+                    <option value="all">All statuses</option>
+                    <option value="enqueued">enqueued</option>
+                    <option value="received">received</option>
+                    <option value="processing">processing</option>
+                    <option value="processed">processed</option>
+                    <option value="failed">failed</option>
+                </select>
+
+                <input id="typeFilter" class="filter-input" type="text" placeholder="Type filter (contains)" />
+
+                <input id="correlationFilter" class="filter-input" type="text" placeholder="Correlation ID" />
+
+                <select id="pageSizeSelect" class="form-control">
+                    <option value="10">10 / page</option>
+                    <option value="20" selected>20 / page</option>
+                    <option value="50">50 / page</option>
+                </select>
+
+                <button id="applyFiltersBtn" class="btn-enhanced btn-secondary-enhanced">Apply</button>
+                <button id="clearFiltersBtn" class="btn-enhanced btn-outline">Clear</button>
+            </div>
+
+            <div class="table-container notifications-table-container">
+                <table class="table-enhanced notifications-table">
+                    <thead>
+                        <tr>
+                            <th><button class="sort-btn" data-sort="timestamp">Timestamp <i class="fas fa-sort"></i></button></th>
+                            <th><button class="sort-btn" data-sort="status">Status <i class="fas fa-sort"></i></button></th>
+                            <th><button class="sort-btn" data-sort="type">Type <i class="fas fa-sort"></i></button></th>
+                            <th><button class="sort-btn" data-sort="source">Source <i class="fas fa-sort"></i></button></th>
+                            <th><button class="sort-btn" data-sort="correlationId">Correlation</button></th>
+                            <th>Payload</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTableBody">
+                        <tr>
+                            <td colspan="6" class="text-center loading-enhanced">
+                                <span class="spinner-enhanced"></span>
+                                Loading events...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="notifications-pagination">
+                <button id="prevPageBtn" class="btn-enhanced btn-secondary-enhanced">Previous</button>
+                <span id="paginationInfo">Page 1 / 1</span>
+                <button id="nextPageBtn" class="btn-enhanced btn-secondary-enhanced">Next</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/kraken-utils.js"></script>
+    <script>
+        class NotificationsTab {
+            constructor() {
+                this.token = getCookie("krakenToken");
+                this.allEvents = [];
+                this.filteredEvents = [];
+                this.currentPage = 1;
+                this.pageSize = 20;
+                this.sortField = "timestamp";
+                this.sortDirection = "desc";
+                this.lastServerFilters = {
+                    status: "all",
+                    type: "",
+                    correlationId: "",
+                };
+                this.testEventPresets = {
+                    custom: null,
+                    smoke: {
+                        method: "POST",
+                        userId: "kraken-admin",
+                        note: "smoke-test-dashboard",
+                        extraPayload: {
+                            severity: "info",
+                            channel: "in-app",
+                            category: "smoke",
+                        },
+                    },
+                    highRiskPayment: {
+                        method: "POST",
+                        userId: "finance-audit-user",
+                        note: "high-risk-payment-detected",
+                        extraPayload: {
+                            severity: "critical",
+                            amount: 184000,
+                            currency: "PLN",
+                            riskScore: 0.93,
+                            channel: "email",
+                        },
+                    },
+                    marketVolatility: {
+                        method: "POST",
+                        userId: "commodities-ops",
+                        note: "commodity-volatility-threshold-exceeded",
+                        extraPayload: {
+                            severity: "warning",
+                            commodity: "wheat",
+                            deltaPct: 12.6,
+                            channel: "in-app",
+                        },
+                    },
+                    weatherDisruption: {
+                        method: "POST",
+                        userId: "field-manager-north",
+                        note: "severe-weather-disruption",
+                        extraPayload: {
+                            severity: "warning",
+                            region: "north-farm-zone",
+                            etaHours: 6,
+                            channel: "sms",
+                        },
+                    },
+                    webhookRetry: {
+                        method: "GET",
+                        userId: "webhook-dispatcher",
+                        note: "webhook-retry-simulation",
+                        extraPayload: {
+                            severity: "error",
+                            webhookTarget: "partner-crm",
+                            retryAttempt: 3,
+                            channel: "webhook",
+                        },
+                    },
+                };
+                this.notificationFeatureEnabled = null;
+                this.init();
+            }
+
+            init() {
+                window.addEventListener("message", (event) => {
+                    if (event.data?.type === "SET_TOKEN") {
+                        this.token = event.data.token;
+                        this.initializeData();
+                    }
+                });
+
+                this.bindEvents();
+                this.initializeData();
+            }
+
+            bindEvents() {
+                document.getElementById("refreshHealthBtn").addEventListener("click", () => this.loadHealth());
+                document.getElementById("refreshEventsBtn").addEventListener("click", () => this.loadEvents({ forceServerReload: true }));
+                document.getElementById("applyFiltersBtn").addEventListener("click", () => {
+                    this.currentPage = 1;
+                    this.loadEvents({ forceServerReload: true });
+                });
+                document.getElementById("clearFiltersBtn").addEventListener("click", () => this.clearFilters());
+                document.getElementById("pageSizeSelect").addEventListener("change", (e) => {
+                    this.pageSize = Number(e.target.value) || 20;
+                    this.currentPage = 1;
+                    this.applyClientFiltersAndRender();
+                });
+                document.getElementById("searchInput").addEventListener("input", () => {
+                    this.currentPage = 1;
+                    this.applyClientFiltersAndRender();
+                });
+                document.getElementById("prevPageBtn").addEventListener("click", () => this.changePage(-1));
+                document.getElementById("nextPageBtn").addEventListener("click", () => this.changePage(1));
+                document.getElementById("triggerTestEventBtn").addEventListener("click", () => this.triggerTestEvent());
+                document.getElementById("testPreset").addEventListener("change", (e) => this.applyTestPreset(e.target.value));
+                document.getElementById("enableNotificationsFeatureBtn")?.addEventListener("click", () => this.enableNotificationsFeature());
+
+                // Trigger mode tabs
+                document.getElementById("triggerModeTest").addEventListener("click", () => this.switchTriggerMode("test"));
+                document.getElementById("triggerModeEvent").addEventListener("click", () => this.switchTriggerMode("event"));
+
+                // Event type triggering
+                document.getElementById("eventTypeSelect").addEventListener("change", () => this.updateEventTypePayloadPreview());
+                document.getElementById("eventTypePayloadOverrides").addEventListener("input", () => this.updateEventTypePayloadPreview());
+                document.getElementById("triggerEventTypeBtn").addEventListener("click", () => this.triggerEventType());
+
+                document.querySelectorAll(".sort-btn").forEach((btn) => {
+                    btn.addEventListener("click", () => this.handleSort(btn.dataset.sort));
+                });
+            }
+
+            async initializeData() {
+                const enabled = await this.loadNotificationFeatureFlagState();
+                if (!enabled) {
+                    this.setFeatureDisabledUi(true);
+                    return;
+                }
+
+                this.setFeatureDisabledUi(false);
+                await this.loadHealth();
+                await this.loadEvents({ forceServerReload: true });
+            }
+
+            async apiFetchJson(url, options = {}) {
+                const response = await secureFetch(url, options);
+                let result = null;
+
+                try {
+                    result = await response.json();
+                } catch {
+                    result = null;
+                }
+
+                return {
+                    response,
+                    result,
+                };
+            }
+
+            extractFlagBoolean(flagValue) {
+                if (typeof flagValue === "boolean") return flagValue;
+                if (flagValue && typeof flagValue === "object") {
+                    return flagValue.value === true;
+                }
+                return false;
+            }
+
+            async loadNotificationFeatureFlagState() {
+                try {
+                    const { result } = await this.apiFetchJson("/api/v1/admin/feature-flags?descriptions=true", {
+                        headers: this.token ? { Authorization: `Bearer ${this.token}` } : {},
+                    });
+
+                    if (!result?.success || !result?.data?.flags) {
+                        throw new Error(result?.error || "Failed to load notification feature-flag state");
+                    }
+
+                    const enabled = this.extractFlagBoolean(result.data.flags.notificationCenterEnabled);
+                    this.notificationFeatureEnabled = enabled;
+                    return enabled;
+                } catch (error) {
+                    console.error("Failed to load notification feature-flag state:", error);
+                    this.notificationFeatureEnabled = null;
+                    return null;
+                }
+            }
+
+            setFeatureDisabledUi(disabled) {
+                const disabledAlert = document.getElementById("notificationsFeatureDisabledAlert");
+                disabledAlert?.classList.toggle("hidden", !disabled);
+
+                const interactiveIds = [
+                    "refreshHealthBtn",
+                    "refreshEventsBtn",
+                    "triggerTestEventBtn",
+                    "applyFiltersBtn",
+                    "clearFiltersBtn",
+                    "prevPageBtn",
+                    "nextPageBtn",
+                    "searchInput",
+                    "statusFilter",
+                    "typeFilter",
+                    "correlationFilter",
+                    "pageSizeSelect",
+                    "testMethod",
+                    "testPreset",
+                    "testUserId",
+                    "testNote",
+                    "testCorrelationId",
+                    "testExtraPayload",
+                    "testForceFail",
+                ];
+
+                interactiveIds.forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.disabled = disabled;
+                    }
+                });
+
+                if (disabled) {
+                    const healthSummary = document.getElementById("healthSummary");
+                    if (healthSummary) {
+                        healthSummary.innerHTML = '<div class="text-center">Notifications feature is disabled. Enable it to view health.</div>';
+                    }
+
+                    const tbody = document.getElementById("eventsTableBody");
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Notifications feature is disabled. Enable it to load events.</td></tr>';
+                    }
+
+                    this.renderMeta(0);
+                    this.renderPagination(1);
+                }
+            }
+
+            applyTestPreset(presetKey) {
+                const preset = this.testEventPresets[presetKey];
+                if (!preset) {
+                    return;
+                }
+
+                const methodEl = document.getElementById("testMethod");
+                const userIdEl = document.getElementById("testUserId");
+                const noteEl = document.getElementById("testNote");
+                const correlationIdEl = document.getElementById("testCorrelationId");
+                const extraPayloadEl = document.getElementById("testExtraPayload");
+                const forceFailEl = document.getElementById("testForceFail");
+
+                if (methodEl) methodEl.value = preset.method || "POST";
+                if (userIdEl) userIdEl.value = preset.userId || "kraken-admin";
+                if (noteEl) noteEl.value = preset.note || "triggered-from-dashboard";
+                if (correlationIdEl) correlationIdEl.value = "";
+                if (extraPayloadEl) {
+                    extraPayloadEl.value = preset.extraPayload ? JSON.stringify(preset.extraPayload, null, 2) : "";
+                }
+                if (forceFailEl) forceFailEl.checked = false;
+            }
+
+            normalizePayloadForQuery(payload) {
+                const normalized = {};
+                Object.entries(payload || {}).forEach(([key, value]) => {
+                    if (value === undefined || value === null || value === "") {
+                        return;
+                    }
+
+                    if (typeof value === "object") {
+                        normalized[key] = JSON.stringify(value);
+                        return;
+                    }
+
+                    normalized[key] = String(value);
+                });
+                return normalized;
+            }
+
+            async enableNotificationsFeature() {
+                const button = document.getElementById("enableNotificationsFeatureBtn");
+                const spinner = button?.querySelector(".spinner-enhanced");
+
+                if (button) button.disabled = true;
+                spinner?.classList.remove("hidden");
+
+                try {
+                    const { result } = await this.apiFetchJson("/api/v1/admin/feature-flags", {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                            ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+                        },
+                        body: JSON.stringify({
+                            flags: {
+                                notificationCenterEnabled: true,
+                            },
+                        }),
+                    });
+
+                    if (!result?.success) {
+                        throw new Error(result?.error || "Failed to enable notifications feature flag");
+                    }
+
+                    this.notificationFeatureEnabled = true;
+                    this.setFeatureDisabledUi(false);
+                    this.showAlert("Notifications feature enabled", "success");
+                    await this.loadHealth();
+                    await this.loadEvents({ forceServerReload: true });
+                } catch (error) {
+                    console.error("Failed to enable notifications feature:", error);
+                    this.showAlert("Could not enable notificationCenterEnabled", "error");
+                } finally {
+                    if (button) button.disabled = false;
+                    spinner?.classList.add("hidden");
+                }
+            }
+
+            isEndpointDisabledError(error) {
+                const message = String(error?.message || "").toLowerCase();
+                return error?.status === 404 && message.includes("notifications endpoint not found");
+            }
+
+            async handleFeatureDisabledError() {
+                const enabled = await this.loadNotificationFeatureFlagState();
+                if (enabled === false) {
+                    this.setFeatureDisabledUi(true);
+                    this.showAlert("Notifications feature is disabled. Enable it from this tab.", "warning");
+                    return true;
+                }
+                return false;
+            }
+
+            async loadHealth() {
+                const button = document.getElementById("refreshHealthBtn");
+                const spinner = button.querySelector(".spinner-enhanced");
+                const healthSummary = document.getElementById("healthSummary");
+
+                button.disabled = true;
+                spinner.classList.remove("hidden");
+
+                try {
+                    const { response, result } = await this.apiFetchJson("/api/v1/notifications/health", {
+                        headers: this.token ? { Authorization: `Bearer ${this.token}` } : {},
+                    });
+
+                    if (!result?.success || !result?.data) {
+                        const error = new Error(result?.error || "Failed to load notifications health");
+                        error.status = response.status;
+                        throw error;
+                    }
+
+                    const data = result.data;
+                    const healthItems = [
+                        { label: "Status", value: data.status || "unknown" },
+                        { label: "Feature flag", value: data.featureFlags?.notificationCenterEnabled ? "enabled" : "disabled" },
+                        { label: "Module enabled", value: data.module?.enabled ? "yes" : "no" },
+                        { label: "Module degraded", value: data.module?.degraded ? "yes" : "no" },
+                        { label: "Version", value: data.module?.version || "n/a" },
+                        { label: "Queue length", value: String(data.queue?.length ?? 0) },
+                        { label: "Avg processing ms", value: String(data.queue?.avgProcessingTime ?? 0) },
+                        { label: "Total events", value: String(data.events?.total ?? 0) },
+                    ];
+
+                    healthSummary.innerHTML = healthItems
+                        .map((item) => `
+              <div class="notification-health-item">
+                <span class="metric-label">${this.escapeHtml(item.label)}</span>
+                <span class="metric-value">${this.escapeHtml(item.value)}</span>
+              </div>
+            `)
+                        .join("");
+                } catch (error) {
+                    if (this.isEndpointDisabledError(error)) {
+                        await this.handleFeatureDisabledError();
+                        return;
+                    }
+                    console.error("Failed to load notifications health:", error);
+                    healthSummary.innerHTML = '<div class="text-center">Failed to load health data</div>';
+                    this.showAlert("Could not load /notifications/health", "error");
+                } finally {
+                    button.disabled = false;
+                    spinner.classList.add("hidden");
+                }
+            }
+
+            getServerFiltersFromUi() {
+                const status = document.getElementById("statusFilter").value;
+                const type = document.getElementById("typeFilter").value.trim();
+                const correlationId = document.getElementById("correlationFilter").value.trim();
+
+                return {
+                    status,
+                    type,
+                    correlationId,
+                };
+            }
+
+            async fetchAllEvents(serverFilters) {
+                const allItems = [];
+                const batchSize = 200;
+                let offset = 0;
+                let total = 0;
+                const maxSafety = 2000;
+
+                while (offset < maxSafety) {
+                    const query = new URLSearchParams({
+                        limit: String(batchSize),
+                        offset: String(offset),
+                    });
+
+                    if (serverFilters.status && serverFilters.status !== "all") {
+                        query.set("status", serverFilters.status);
+                    }
+                    if (serverFilters.type) {
+                        query.set("type", serverFilters.type);
+                    }
+                    if (serverFilters.correlationId) {
+                        query.set("correlationId", serverFilters.correlationId);
+                    }
+
+                    const { response, result } = await this.apiFetchJson(`/api/v1/notifications/events?${query.toString()}`, {
+                        headers: this.token ? { Authorization: `Bearer ${this.token}` } : {},
+                    });
+
+                    if (!result?.success || !result?.data) {
+                        const error = new Error(result?.error || "Failed to load notifications events");
+                        error.status = response.status;
+                        throw error;
+                    }
+
+                    const { items = [], total: responseTotal = 0 } = result.data;
+                    total = Number(responseTotal) || 0;
+                    allItems.push(...items);
+
+                    if (allItems.length >= total || items.length < batchSize) {
+                        break;
+                    }
+
+                    offset += batchSize;
+                }
+
+                return allItems;
+            }
+
+            async loadEvents({ forceServerReload = false } = {}) {
+                const button = document.getElementById("refreshEventsBtn");
+                const spinner = button.querySelector(".spinner-enhanced");
+
+                button.disabled = true;
+                spinner.classList.remove("hidden");
+
+                try {
+                    const serverFilters = this.getServerFiltersFromUi();
+                    const shouldReload =
+                        forceServerReload ||
+                        this.lastServerFilters.status !== serverFilters.status ||
+                        this.lastServerFilters.type !== serverFilters.type ||
+                        this.lastServerFilters.correlationId !== serverFilters.correlationId;
+
+                    if (shouldReload) {
+                        this.lastServerFilters = { ...serverFilters };
+                        this.allEvents = await this.fetchAllEvents(serverFilters);
+                    }
+
+                    this.applyClientFiltersAndRender();
+                } catch (error) {
+                    if (this.isEndpointDisabledError(error)) {
+                        await this.handleFeatureDisabledError();
+                        return;
+                    }
+                    console.error("Failed to load notifications events:", error);
+                    this.showAlert("Could not load /notifications/events", "error");
+                    this.renderEventsError();
+                } finally {
+                    button.disabled = false;
+                    spinner.classList.add("hidden");
+                }
+            }
+
+            applyClientFiltersAndRender() {
+                const search = document.getElementById("searchInput").value.trim().toLowerCase();
+
+                this.filteredEvents = this.allEvents.filter((event) => {
+                    if (!search) return true;
+
+                    const haystack = [
+                        event.id,
+                        event.type,
+                        event.status,
+                        event.source,
+                        event.correlationId,
+                        event.timestamp,
+                        JSON.stringify(event.payload || {}),
+                    ]
+                        .filter(Boolean)
+                        .join(" ")
+                        .toLowerCase();
+
+                    return haystack.includes(search);
+                });
+
+                this.sortEvents();
+                this.renderEventsTable();
+                this.renderPagination();
+                this.renderMeta();
+            }
+
+            sortEvents() {
+                const field = this.sortField;
+                const directionFactor = this.sortDirection === "asc" ? 1 : -1;
+
+                this.filteredEvents.sort((a, b) => {
+                    let aValue = a?.[field];
+                    let bValue = b?.[field];
+
+                    if (field === "timestamp") {
+                        aValue = new Date(aValue || 0).getTime();
+                        bValue = new Date(bValue || 0).getTime();
+                    } else {
+                        aValue = String(aValue || "").toLowerCase();
+                        bValue = String(bValue || "").toLowerCase();
+                    }
+
+                    if (aValue < bValue) return -1 * directionFactor;
+                    if (aValue > bValue) return 1 * directionFactor;
+                    return 0;
+                });
+            }
+
+            handleSort(field) {
+                if (this.sortField === field) {
+                    this.sortDirection = this.sortDirection === "asc" ? "desc" : "asc";
+                } else {
+                    this.sortField = field;
+                    this.sortDirection = field === "timestamp" ? "desc" : "asc";
+                }
+
+                this.currentPage = 1;
+                this.applyClientFiltersAndRender();
+            }
+
+            getPaginatedEvents() {
+                const totalItems = this.filteredEvents.length;
+                const totalPages = Math.max(1, Math.ceil(totalItems / this.pageSize));
+                if (this.currentPage > totalPages) {
+                    this.currentPage = totalPages;
+                }
+
+                const start = (this.currentPage - 1) * this.pageSize;
+                const end = start + this.pageSize;
+                return this.filteredEvents.slice(start, end);
+            }
+
+            renderEventsTable() {
+                const tbody = document.getElementById("eventsTableBody");
+                const rows = this.getPaginatedEvents();
+
+                if (rows.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No events match the selected filters.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = rows
+                    .map((event) => {
+                        const payloadString = JSON.stringify(event.payload || {}, null, 0);
+                        const shortPayload = payloadString.length > 120 ? `${payloadString.slice(0, 120)}...` : payloadString;
+                        const badgeClass =
+                            event.status === "processed"
+                                ? "badge-success-enhanced"
+                                : event.status === "failed"
+                                    ? "badge-danger-enhanced"
+                                    : event.status === "processing"
+                                        ? "badge-warning-enhanced"
+                                        : "badge-info-enhanced";
+
+                        return `
+              <tr>
+                <td>${this.escapeHtml(this.formatDate(event.timestamp))}</td>
+                <td><span class="badge-enhanced ${badgeClass}">${this.escapeHtml(event.status || "unknown")}</span></td>
+                <td title="${this.escapeHtml(event.type || "")}">${this.escapeHtml(event.type || "-")}</td>
+                <td title="${this.escapeHtml(event.source || "")}">${this.escapeHtml(event.source || "-")}</td>
+                <td title="${this.escapeHtml(event.correlationId || "")}">${this.escapeHtml(event.correlationId || "-")}</td>
+                <td>
+                  <details>
+                    <summary>${this.escapeHtml(shortPayload)}</summary>
+                    <pre class="notifications-json-cell">${this.escapeHtml(JSON.stringify(event.payload || {}, null, 2))}</pre>
+                  </details>
+                </td>
+              </tr>
+            `;
+                    })
+                    .join("");
+            }
+
+            renderEventsError() {
+                const tbody = document.getElementById("eventsTableBody");
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Failed to load events</td></tr>';
+                this.renderMeta(0);
+                this.renderPagination(1);
+            }
+
+            renderMeta(forceCount) {
+                const count = typeof forceCount === "number" ? forceCount : this.filteredEvents.length;
+                const meta = document.getElementById("eventsMeta");
+                meta.textContent = `${count} event${count === 1 ? "" : "s"}`;
+            }
+
+            renderPagination(forcePages) {
+                const totalPages = forcePages || Math.max(1, Math.ceil(this.filteredEvents.length / this.pageSize));
+                const paginationInfo = document.getElementById("paginationInfo");
+                const prevBtn = document.getElementById("prevPageBtn");
+                const nextBtn = document.getElementById("nextPageBtn");
+
+                if (this.currentPage > totalPages) {
+                    this.currentPage = totalPages;
+                }
+
+                paginationInfo.textContent = `Page ${this.currentPage} / ${totalPages}`;
+                prevBtn.disabled = this.currentPage <= 1;
+                nextBtn.disabled = this.currentPage >= totalPages;
+            }
+
+            changePage(delta) {
+                const totalPages = Math.max(1, Math.ceil(this.filteredEvents.length / this.pageSize));
+                const nextPage = this.currentPage + delta;
+                if (nextPage < 1 || nextPage > totalPages) return;
+                this.currentPage = nextPage;
+                this.renderEventsTable();
+                this.renderPagination();
+            }
+
+            clearFilters() {
+                document.getElementById("searchInput").value = "";
+                document.getElementById("statusFilter").value = "all";
+                document.getElementById("typeFilter").value = "";
+                document.getElementById("correlationFilter").value = "";
+                document.getElementById("pageSizeSelect").value = "20";
+
+                this.pageSize = 20;
+                this.currentPage = 1;
+                this.loadEvents({ forceServerReload: true });
+            }
+
+            async triggerTestEvent() {
+                const button = document.getElementById("triggerTestEventBtn");
+                const spinner = button.querySelector(".spinner-enhanced");
+                const output = document.getElementById("testEventResult");
+
+                button.disabled = true;
+                spinner.classList.remove("hidden");
+
+                try {
+                    const method = document.getElementById("testMethod").value;
+                    const userId = document.getElementById("testUserId").value.trim() || "kraken-admin";
+                    const note = document.getElementById("testNote").value.trim() || "triggered-from-dashboard";
+                    const correlationId = document.getElementById("testCorrelationId").value.trim();
+                    const extraPayload = this.parseExtraPayloadFromInput();
+                    const forceFail = document.getElementById("testForceFail")?.checked === true;
+
+                    const payload = {
+                        userId,
+                        note,
+                        ...extraPayload,
+                    };
+
+                    if (forceFail) {
+                        payload.forceFail = true;
+                        if (!payload.forceFailReason) {
+                            payload.forceFailReason = "forced-from-kraken-dashboard";
+                        }
+                    }
+
+                    if (correlationId) {
+                        payload.correlationId = correlationId;
+                    }
+
+                    let response;
+                    if (method === "GET") {
+                        const params = new URLSearchParams(this.normalizePayloadForQuery(payload));
+                        response = await this.apiFetchJson(`/api/v1/notifications/test-event?${params.toString()}`, {
+                            method: "GET",
+                            headers: this.token ? { Authorization: `Bearer ${this.token}` } : {},
+                        });
+                    } else {
+                        response = await this.apiFetchJson("/api/v1/notifications/test-event", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+                            },
+                            body: JSON.stringify(payload),
+                        });
+                    }
+
+                    const { response: rawResponse, result } = response;
+                    if (!result?.success || !result?.data) {
+                        const error = new Error(result?.error || "Failed to trigger test event");
+                        error.status = rawResponse.status;
+                        throw error;
+                    }
+
+                    output.textContent = JSON.stringify(result.data, null, 2);
+                    this.showAlert("Test event triggered successfully", "success");
+                    await this.loadHealth();
+                    await this.loadEvents({ forceServerReload: true });
+                } catch (error) {
+                    if (this.isEndpointDisabledError(error)) {
+                        await this.handleFeatureDisabledError();
+                        output.textContent = "Notifications feature is disabled. Enable it to trigger test events.";
+                        return;
+                    }
+                    console.error("Failed to trigger test event:", error);
+                    output.textContent = `Error: ${error.message}`;
+                    this.showAlert("Could not trigger /notifications/test-event", "error");
+                } finally {
+                    button.disabled = false;
+                    spinner.classList.add("hidden");
+                }
+            }
+
+            switchTriggerMode(mode) {
+                const testBtn = document.getElementById("triggerModeTest");
+                const eventBtn = document.getElementById("triggerModeEvent");
+                const testContent = document.getElementById("triggerModeTestContent");
+                const eventContent = document.getElementById("triggerModeEventContent");
+
+                if (mode === "test") {
+                    testBtn.classList.add("btn-primary-enhanced");
+                    eventBtn.classList.remove("btn-primary-enhanced");
+                    testContent.style.display = "block";
+                    eventContent.style.display = "none";
+                } else {
+                    testBtn.classList.remove("btn-primary-enhanced");
+                    eventBtn.classList.add("btn-primary-enhanced");
+                    testContent.style.display = "none";
+                    eventContent.style.display = "block";
+                    this.loadEventTypes();
+                }
+            }
+
+            async loadEventTypes() {
+                const select = document.getElementById("eventTypeSelect");
+                try {
+                    const { result } = await this.apiFetchJson("/api/v1/notifications/event-types", {
+                        headers: this.token ? { Authorization: `Bearer ${this.token}` } : {},
+                    });
+
+                    if (!result?.success || !Array.isArray(result?.data?.eventTypes)) {
+                        throw new Error("Failed to load event types");
+                    }
+
+                    const eventTypes = result.data.eventTypes;
+                    select.innerHTML = '<option value="" selected disabled>Select an event type...</option>' +
+                        eventTypes.map(type => `<option value="${type}">${type}</option>`).join("");
+                } catch (error) {
+                    console.error("Failed to load event types:", error);
+                    select.innerHTML = '<option value="" disabled>Error loading event types</option>';
+                    this.showAlert("Could not load available event types", "error");
+                }
+            }
+
+            updateEventTypePayloadPreview() {
+                const eventType = document.getElementById("eventTypeSelect").value;
+                const preview = document.getElementById("eventTypePayloadPreview");
+
+                if (!eventType) {
+                    preview.textContent = "Select an event type to see the default payload...";
+                    return;
+                }
+
+                // Import the payload templates (these are defined inline below)
+                const templates = this.getEventPayloadTemplates();
+                const template = templates[eventType];
+
+                if (!template) {
+                    preview.textContent = "No template found for this event type";
+                    return;
+                }
+
+                let payload = template.template({});
+                const overrides = this.parseExtraPayloadFromInput("eventTypePayloadOverrides");
+                if (overrides && typeof overrides === "object") {
+                    payload = { ...payload, ...overrides };
+                }
+
+                const userId = document.getElementById("eventTypeUserId").value.trim() || "kraken-admin";
+                if (userId) {
+                    payload.userId = userId;
+                }
+
+                preview.textContent = JSON.stringify(payload, null, 2);
+            }
+
+            async triggerEventType() {
+                const button = document.getElementById("triggerEventTypeBtn");
+                const spinner = button.querySelector(".spinner-enhanced");
+                const output = document.getElementById("eventTypeResult");
+                const eventType = document.getElementById("eventTypeSelect").value.trim();
+
+                if (!eventType) {
+                    this.showAlert("Please select an event type", "warning");
+                    return;
+                }
+
+                button.disabled = true;
+                spinner.classList.remove("hidden");
+
+                try {
+                    const templates = this.getEventPayloadTemplates();
+                    const template = templates[eventType];
+
+                    if (!template) {
+                        throw new Error(`No template found for event type: ${eventType}`);
+                    }
+
+                    let payload = template.template({});
+                    const overrides = this.parseExtraPayloadFromInput("eventTypePayloadOverrides");
+                    if (overrides && typeof overrides === "object") {
+                        payload = { ...payload, ...overrides };
+                    }
+
+                    const userId = document.getElementById("eventTypeUserId").value.trim() || "kraken-admin";
+                    const correlationId = document.getElementById("eventTypeCorrelationId").value.trim();
+                    const forceFail = document.getElementById("eventTypeForceFail")?.checked === true;
+
+                    if (userId) {
+                        payload.userId = userId;
+                    }
+
+                    if (forceFail) {
+                        payload.forceFail = true;
+                        payload.forceFailReason = "forced-from-kraken-dashboard";
+                    }
+
+                    if (correlationId) {
+                        payload.correlationId = correlationId;
+                    }
+
+                    const response = await this.apiFetchJson("/api/v1/notifications/trigger", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+                        },
+                        body: JSON.stringify({
+                            eventType,
+                            ...payload,
+                        }),
+                    });
+
+                    const { response: rawResponse, result } = response;
+                    if (!result?.success || !result?.data) {
+                        const error = new Error(result?.error || "Failed to trigger event");
+                        error.status = rawResponse.status;
+                        throw error;
+                    }
+
+                    output.textContent = JSON.stringify(result.data, null, 2);
+                    this.showAlert(`Event "${eventType}" triggered successfully`, "success");
+                    await this.loadHealth();
+                    await this.loadEvents({ forceServerReload: true });
+                } catch (error) {
+                    if (this.isEndpointDisabledError(error)) {
+                        await this.handleFeatureDisabledError();
+                        output.textContent = "Notifications feature is disabled. Enable it to trigger events.";
+                        return;
+                    }
+                    console.error("Failed to trigger event:", error);
+                    output.textContent = `Error: ${error.message}`;
+                    this.showAlert("Could not trigger event", "error");
+                } finally {
+                    button.disabled = false;
+                    spinner.classList.add("hidden");
+                }
+            }
+
+            getEventPayloadTemplates() {
+                return {
+                    "transaction.created": {
+                        label: "Transaction Created",
+                        template: (overrides = {}) => ({
+                            transactionId: overrides.transactionId || `txn-${Date.now()}`,
+                            amount: overrides.amount ?? 150.50,
+                            currency: overrides.currency || "ROL",
+                            type: overrides.type || "credit",
+                            ...overrides,
+                        }),
+                    },
+                    "user.account.created": {
+                        label: "User Account Created",
+                        template: (overrides = {}) => ({
+                            email: overrides.email || `user-${Date.now()}@example.com`,
+                            username: overrides.username || `user_${Date.now()}`,
+                            ...overrides,
+                        }),
+                    },
+                    "field.created": {
+                        label: "Field Created",
+                        template: (overrides = {}) => ({
+                            fieldId: overrides.fieldId || `field-${Date.now()}`,
+                            name: overrides.name || `Field ${Math.floor(Math.random() * 100)}`,
+                            size: overrides.size ?? 50.5,
+                            location: overrides.location || "Region A",
+                            ...overrides,
+                        }),
+                    },
+                    "staff.created": {
+                        label: "Staff Created",
+                        template: (overrides = {}) => ({
+                            staffId: overrides.staffId || `staff-${Date.now()}`,
+                            name: overrides.name || `Staff Member ${Math.floor(Math.random() * 1000)}`,
+                            role: overrides.role || "Manager",
+                            email: overrides.email || `staff-${Date.now()}@example.com`,
+                            ...overrides,
+                        }),
+                    },
+                    "animal.created": {
+                        label: "Animal Created",
+                        template: (overrides = {}) => ({
+                            animalId: overrides.animalId || `animal-${Date.now()}`,
+                            type: overrides.type || "cow",
+                            amount: overrides.amount ?? 5,
+                            breed: overrides.breed || "Angus",
+                            ...overrides,
+                        }),
+                    },
+                    "animal.assigned": {
+                        label: "Animal Assigned",
+                        template: (overrides = {}) => ({
+                            animalId: overrides.animalId || `animal-${Date.now()}`,
+                            fieldId: overrides.fieldId || `field-${Date.now()}`,
+                            quantity: overrides.quantity ?? 1,
+                            assignedDate: overrides.assignedDate || new Date().toISOString(),
+                            ...overrides,
+                        }),
+                    },
+                    "marketplace.offer.created": {
+                        label: "Marketplace Offer Created",
+                        template: (overrides = {}) => ({
+                            offerId: overrides.offerId || `offer-${Date.now()}`,
+                            itemType: overrides.itemType || "vegetables",
+                            title: overrides.title || "Fresh Produce Bundle",
+                            price: overrides.price ?? 99.99,
+                            quantity: overrides.quantity ?? 10,
+                            ...overrides,
+                        }),
+                    },
+                    "marketplace.purchase.completed": {
+                        label: "Marketplace Purchase Completed",
+                        template: (overrides = {}) => ({
+                            purchaseId: overrides.purchaseId || `purchase-${Date.now()}`,
+                            offerId: overrides.offerId || `offer-${Date.now()}`,
+                            itemType: overrides.itemType || "vegetables",
+                            price: overrides.price ?? 99.99,
+                            buyerId: overrides.buyerId || `buyer-${Date.now()}`,
+                            ...overrides,
+                        }),
+                    },
+                    "transfer.completed": {
+                        label: "Transfer Completed",
+                        template: (overrides = {}) => ({
+                            transferId: overrides.transferId || `transfer-${Date.now()}`,
+                            amount: overrides.amount ?? 500.0,
+                            currency: overrides.currency || "ROL",
+                            fromUserId: overrides.fromUserId || "system",
+                            toUserId: overrides.toUserId || `user-${Date.now()}`,
+                            ...overrides,
+                        }),
+                    },
+                    "user.login.failed": {
+                        label: "User Login Failed",
+                        template: (overrides = {}) => ({
+                            email: overrides.email || `user-${Date.now()}@example.com`,
+                            reason: overrides.reason || "invalid_credentials",
+                            attempts: overrides.attempts ?? 1,
+                            timestamp: overrides.timestamp || new Date().toISOString(),
+                            ...overrides,
+                        }),
+                    },
+                    "user.login.invalid_credentials": {
+                        label: "Invalid Login Credentials",
+                        template: (overrides = {}) => ({
+                            attemptedEmail: overrides.attemptedEmail || `user-${Date.now()}@example.com`,
+                            reason: overrides.reason || "invalid_credentials",
+                            attempts: overrides.attempts ?? 1,
+                            timestamp: overrides.timestamp || new Date().toISOString(),
+                            ...overrides,
+                        }),
+                    },
+                    "user.registration.failed.user_exists": {
+                        label: "Registration Failed: User Exists",
+                        template: (overrides = {}) => ({
+                            existingUserId: overrides.existingUserId || `user-${Date.now()}`,
+                            attemptedEmail: overrides.attemptedEmail || `user-${Date.now()}@example.com`,
+                            reason: overrides.reason || "user_already_exists",
+                            timestamp: overrides.timestamp || new Date().toISOString(),
+                            ...overrides,
+                        }),
+                    },
+                };
+            }
+
+            parseExtraPayloadFromInput(elementId = "testExtraPayload") {
+                const input = document.getElementById(elementId);
+                if (!input || !input.value.trim()) return {};
+
+                try {
+                    return JSON.parse(input.value.trim());
+                } catch {
+                    console.warn("Failed to parse extra payload JSON");
+                    return {};
+                }
+            }
+
+            showAlert(message, type = "info") {
+                const alertDiv = document.getElementById("notificationAlert");
+                const icon = alertDiv.querySelector("i");
+                const text = alertDiv.querySelector("span");
+
+                const iconClassByType = {
+                    success: "fa-check-circle",
+                    error: "fa-exclamation-triangle",
+                    warning: "fa-exclamation-circle",
+                    info: "fa-info-circle",
+                };
+
+                alertDiv.className = `notification-toast toast-${type}`;
+                icon.className = `fas ${iconClassByType[type] || iconClassByType.info} toast-icon`;
+                text.textContent = message;
+                alertDiv.classList.remove("hidden");
+
+                clearTimeout(this.alertTimeout);
+                this.alertTimeout = setTimeout(() => {
+                    alertDiv.classList.add("hidden");
+                }, 4500);
+            }
+
+            formatDate(value) {
+                if (!value) return "-";
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return String(value);
+                return date.toLocaleString();
+            }
+
+            escapeHtml(value) {
+                return String(value ?? "")
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#39;");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            new NotificationsTab();
+        });
+    </script>
+</body>
+
+</html>

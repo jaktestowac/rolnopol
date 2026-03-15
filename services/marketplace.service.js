@@ -1,5 +1,17 @@
 const dbManager = require("../data/database-manager");
 const logger = require("../helpers/logger-api");
+const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+
+const publishEvent = (event) => {
+  publishNotificationEvent(event, {
+    action: "marketplace_notification",
+    meta: {
+      eventType: event?.type,
+      offerId: event?.payload?.offerId,
+      transactionId: event?.payload?.transactionId,
+    },
+  });
+};
 
 class MarketplaceService {
   constructor() {
@@ -134,6 +146,21 @@ class MarketplaceService {
     };
     marketplaceData.offers.push(newOffer);
     await this.marketplaceDb.write(marketplaceData);
+
+    publishEvent({
+      type: "marketplace.offer.created",
+      payload: {
+        userId: Number(userId),
+        offerId: newOffer.id,
+        sellerId: newOffer.sellerId,
+        itemType: newOffer.itemType,
+        itemId: newOffer.itemId,
+        price: newOffer.price,
+      },
+      correlationId: `market-offer-${newOffer.id}`,
+      source: "marketplace.service",
+    });
+
     return { newOffer };
   }
 
@@ -345,6 +372,23 @@ class MarketplaceService {
     await this._updateFinancialBalances(offer.sellerId, buyerId, offer.price);
     marketplaceData.transactions.push(transaction);
     await this.marketplaceDb.write(marketplaceData);
+
+    publishEvent({
+      type: "marketplace.purchase.completed",
+      payload: {
+        userId: Number(buyerId),
+        transactionId: transaction.id,
+        offerId: transaction.offerId,
+        buyerId: Number(transaction.buyerId),
+        sellerId: Number(transaction.sellerId),
+        itemType: transaction.itemType,
+        itemId: Number(transaction.itemId),
+        price: transaction.price,
+      },
+      correlationId: `market-purchase-${transaction.id}`,
+      source: "marketplace.service",
+    });
+
     return transaction;
   }
 

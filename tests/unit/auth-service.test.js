@@ -95,6 +95,39 @@ describe("auth.service", () => {
     expect(result.token).toBeDefined();
   });
 
+  it("should register user even if notification publish fails", async () => {
+    vi.spyOn(authService.userDataInstance, "findUserByEmail").mockResolvedValue(null);
+    vi.spyOn(authService.userDataInstance, "createUser").mockResolvedValue({
+      id: 99,
+      email: "nonotify@example.com",
+      displayedName: "No Notify",
+      password: "pass",
+      isActive: true,
+    });
+    vi.spyOn(require("../../services/financial.service.js"), "initializeAccount").mockResolvedValue({ id: 99 });
+
+    const notificationCenter = require("../../modules/notification-center");
+    vi.spyOn(notificationCenter, "getEventPublisher").mockReturnValue({
+      isEnabled: () => true,
+      publish: () => {
+        throw new Error("publisher_down");
+      },
+    });
+
+    const result = await authService.registerUser({
+      email: "nonotify@example.com",
+      displayedName: "No Notify",
+      password: "pass",
+    });
+
+    expect(result.user).toMatchObject({
+      id: 99,
+      email: "nonotify@example.com",
+      displayedName: "No Notify",
+    });
+    expect(result.token).toBeDefined();
+  });
+
   it("should throw error for duplicate email", async () => {
     vi.spyOn(authService.userDataInstance, "findUserByEmail").mockResolvedValue({ id: 1 });
     await expect(
@@ -104,6 +137,36 @@ describe("auth.service", () => {
         password: "pass",
       }),
     ).rejects.toThrow("User with this email already exists");
+  });
+
+  it("publishes user.registration.failed.user_exists event for duplicate registration", async () => {
+    const publisher = {
+      isEnabled: vi.fn(() => true),
+      publish: vi.fn(),
+    };
+
+    const notificationCenter = require("../../modules/notification-center");
+    vi.spyOn(notificationCenter, "getEventPublisher").mockReturnValue(publisher);
+    vi.spyOn(authService.userDataInstance, "findUserByEmail").mockResolvedValue({ id: 101 });
+
+    await expect(
+      authService.registerUser({
+        email: "duplicate@example.com",
+        displayedName: "Duplicate User",
+        password: "pass",
+      }),
+    ).rejects.toThrow("User with this email already exists");
+
+    expect(publisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "user.registration.failed.user_exists",
+        source: "auth.service",
+        payload: expect.objectContaining({
+          existingUserId: 101,
+          reason: "user_already_exists",
+        }),
+      }),
+    );
   });
 
   it("should login user successfully", async () => {
@@ -130,6 +193,36 @@ describe("auth.service", () => {
       isActive: true,
     });
     await expect(authService.loginUser({ email: "user@example.com", password: "pass" })).rejects.toThrow("Invalid credentials");
+  });
+
+  it("publishes user.login.invalid_credentials event for invalid password", async () => {
+    const publisher = {
+      isEnabled: vi.fn(() => true),
+      publish: vi.fn(),
+    };
+
+    const notificationCenter = require("../../modules/notification-center");
+    vi.spyOn(notificationCenter, "getEventPublisher").mockReturnValue(publisher);
+
+    vi.spyOn(authService.userDataInstance, "findUserByEmail").mockResolvedValue({
+      id: 1,
+      email: "user@example.com",
+      password: "other",
+      isActive: true,
+    });
+
+    await expect(authService.loginUser({ email: "user@example.com", password: "pass" })).rejects.toThrow("Invalid credentials");
+
+    expect(publisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "user.login.invalid_credentials",
+        source: "auth.service",
+        payload: expect.objectContaining({
+          userId: 1,
+          reason: "invalid_credentials",
+        }),
+      }),
+    );
   });
 
   it("should validate user token successfully", async () => {

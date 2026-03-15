@@ -2,6 +2,7 @@ const dbManager = require("../data/database-manager");
 const { logError, logInfo, logDebug } = require("../helpers/logger-api");
 const { FINANCE_INTEGRITY_CALCULATION } = require("../data/settings");
 const JSONDatabase = require("../data/json-database");
+const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
 
 class FinancialService {
   constructor() {
@@ -45,9 +46,7 @@ class FinancialService {
   recalculateAllBalances(account) {
     let runningBalance = 0;
     // Sort transactions by timestamp ascending
-    account.transactions.sort(
-      (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
-    );
+    account.transactions.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     for (const tx of account.transactions) {
       tx.balanceBefore = runningBalance;
       if (tx.type === "income") {
@@ -63,9 +62,7 @@ class FinancialService {
   // Verify balance calculation is correct
   verifyBalanceCalculation(account) {
     let calculatedBalance = 0;
-    const transactions = [...(account.transactions || [])].sort(
-      (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
-    );
+    const transactions = [...(account.transactions || [])].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
     for (const tx of transactions) {
       if (tx.type === "income") {
@@ -98,15 +95,8 @@ class FinancialService {
     }
     // Scan accounts for max IDs if needed
     if (data.accounts) {
-      const maxAccountId = data.accounts.reduce(
-        (max, acc) =>
-          typeof acc.id === "number" && acc.id > max ? acc.id : max,
-        0,
-      );
-      if (
-        !data.counters.lastAccountId ||
-        data.counters.lastAccountId < maxAccountId
-      ) {
+      const maxAccountId = data.accounts.reduce((max, acc) => (typeof acc.id === "number" && acc.id > max ? acc.id : max), 0);
+      if (!data.counters.lastAccountId || data.counters.lastAccountId < maxAccountId) {
         data.counters.lastAccountId = maxAccountId;
         changed = true;
       }
@@ -116,10 +106,7 @@ class FinancialService {
           if (typeof t.id === "number" && t.id > maxTxId) maxTxId = t.id;
         }
       }
-      if (
-        !data.counters.lastTransactionId ||
-        data.counters.lastTransactionId < maxTxId
-      ) {
+      if (!data.counters.lastTransactionId || data.counters.lastTransactionId < maxTxId) {
         data.counters.lastTransactionId = maxTxId;
         changed = true;
       }
@@ -144,8 +131,7 @@ class FinancialService {
     if (this._ensureCounters(data)) {
       await this._saveData(data);
     }
-    data.counters.lastTransactionId =
-      (data.counters.lastTransactionId || 0) + 1;
+    data.counters.lastTransactionId = (data.counters.lastTransactionId || 0) + 1;
     await this._saveData(data);
     return data.counters.lastTransactionId;
   }
@@ -171,9 +157,7 @@ class FinancialService {
       const accounts = await this._getAccounts();
       // Convert userId to number for consistent comparison
       const numericUserId = parseInt(userId, 10);
-      let account = accounts.find(
-        (acc) => parseInt(acc.userId, 10) === numericUserId,
-      );
+      let account = accounts.find((acc) => parseInt(acc.userId, 10) === numericUserId);
       if (!account) {
         const newId = await this._getNextAccountId();
         account = {
@@ -204,9 +188,7 @@ class FinancialService {
       const accounts = await this._getAccounts();
       // Convert userId to number for consistent comparison
       const numericUserId = parseInt(userId, 10);
-      const account = accounts.find(
-        (acc) => parseInt(acc.userId, 10) === numericUserId,
-      );
+      const account = accounts.find((acc) => parseInt(acc.userId, 10) === numericUserId);
       if (!account) {
         return await this.initializeAccount(userId);
       }
@@ -219,25 +201,16 @@ class FinancialService {
         // Verify the calculation is correct
         const isBalanceCorrect = this.verifyBalanceCalculation(account);
         if (!isBalanceCorrect) {
-          logError(
-            `Balance verification failed for user ${numericUserId}, recalculating...`,
-          );
+          logError(`Balance verification failed for user ${numericUserId}, recalculating...`);
           this.recalculateAllBalances(account);
         }
 
         // If balance was recalculated, save the updated account
         const accountsAfterRecalc = await this._getAccounts();
-        const accountAfterRecalc = accountsAfterRecalc.find(
-          (acc) => parseInt(acc.userId, 10) === numericUserId,
-        );
-        if (
-          accountAfterRecalc &&
-          accountAfterRecalc.balance !== account.balance
-        ) {
+        const accountAfterRecalc = accountsAfterRecalc.find((acc) => parseInt(acc.userId, 10) === numericUserId);
+        if (accountAfterRecalc && accountAfterRecalc.balance !== account.balance) {
           await this._saveAccounts(accountsAfterRecalc);
-          logInfo(
-            `Balance updated for user ${numericUserId}: ${account.balance} -> ${accountAfterRecalc.balance}`,
-          );
+          logInfo(`Balance updated for user ${numericUserId}: ${account.balance} -> ${accountAfterRecalc.balance}`);
         }
       }
 
@@ -254,8 +227,7 @@ class FinancialService {
    */
   async addTransaction(userId, transactionData) {
     try {
-      const { type, amount, description, category, referenceId } =
-        transactionData;
+      const { type, amount, description, category, referenceId } = transactionData;
       if (!type || !amount || !description) {
         throw new Error("Missing required transaction fields");
       }
@@ -264,9 +236,7 @@ class FinancialService {
       }
       const accounts = await this._getAccounts();
       const numericUserId = parseInt(userId, 10);
-      const account = accounts.find(
-        (acc) => parseInt(acc.userId, 10) === numericUserId,
-      );
+      const account = accounts.find((acc) => parseInt(acc.userId, 10) === numericUserId);
       if (!account) throw new Error("Account not found");
       if (type === "expense" && account.balance < amount) {
         throw new Error("Insufficient funds: overdraft is not allowed");
@@ -301,6 +271,29 @@ class FinancialService {
       account.updatedAt = new Date().toISOString();
       // Save all accounts
       await this._saveAccounts(accounts);
+
+      publishNotificationEvent(
+        {
+          type: "transaction.created",
+          payload: {
+            transactionId: transaction.id,
+            userId: numericUserId,
+            amount: transaction.amount,
+            transactionType: transaction.type,
+            category: transaction.category,
+          },
+          correlationId: `tx-${transaction.id}`,
+          source: "financial.service",
+        },
+        {
+          action: "add_transaction_notification",
+          meta: {
+            userId: numericUserId,
+            transactionId: transaction.id,
+          },
+        },
+      );
+
       logInfo(`Transaction added for user ${userId}: ${type} ${amount} ROL`);
       return transaction;
     } catch (error) {
@@ -314,14 +307,7 @@ class FinancialService {
    */
   async getTransactionHistory(userId, options = {}) {
     try {
-      const {
-        limit = 50,
-        offset = 0,
-        type = null,
-        category = null,
-        startDate = null,
-        endDate = null,
-      } = options;
+      const { limit = 50, offset = 0, type = null, category = null, startDate = null, endDate = null } = options;
 
       const account = await this.getAccount(userId);
       let transactions = account.transactions || [];
@@ -338,20 +324,14 @@ class FinancialService {
 
       // Filter by date range
       if (startDate) {
-        transactions = transactions.filter(
-          (t) => new Date(t.timestamp) >= new Date(startDate),
-        );
+        transactions = transactions.filter((t) => new Date(t.timestamp) >= new Date(startDate));
       }
       if (endDate) {
-        transactions = transactions.filter(
-          (t) => new Date(t.timestamp) <= new Date(endDate),
-        );
+        transactions = transactions.filter((t) => new Date(t.timestamp) <= new Date(endDate));
       }
 
       // Sort by timestamp (newest first)
-      transactions.sort(
-        (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
-      );
+      transactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
       // Apply pagination
       const paginatedTransactions = transactions.slice(offset, offset + limit);
@@ -395,10 +375,7 @@ class FinancialService {
         }
 
         // Calculate total transferred money (transfers and marketplace transactions)
-        if (
-          transaction.category === "transfer" ||
-          transaction.category === "marketplace"
-        ) {
+        if (transaction.category === "transfer" || transaction.category === "marketplace") {
           stats.totalTransferred += transaction.amount;
         }
 
@@ -413,9 +390,7 @@ class FinancialService {
         stats.categories[transaction.category].total += transaction.amount;
 
         // Monthly statistics
-        const month = new Date(transaction.timestamp)
-          .toISOString()
-          .substring(0, 7);
+        const month = new Date(transaction.timestamp).toISOString().substring(0, 7);
         if (!stats.monthlyStats[month]) {
           stats.monthlyStats[month] = {
             income: 0,
@@ -499,10 +474,7 @@ class FinancialService {
       }
 
       // Count transactions
-      if (
-        marketplaceData.transactions &&
-        Array.isArray(marketplaceData.transactions)
-      ) {
+      if (marketplaceData.transactions && Array.isArray(marketplaceData.transactions)) {
         stats.totalTransactions = marketplaceData.transactions.length;
       }
 
@@ -517,9 +489,7 @@ class FinancialService {
   async findAccount(userId) {
     const accounts = await this._getAccounts();
     const numericUserId = parseInt(userId, 10);
-    return (
-      accounts.find((acc) => parseInt(acc.userId, 10) === numericUserId) || null
-    );
+    return accounts.find((acc) => parseInt(acc.userId, 10) === numericUserId) || null;
   }
 
   /**
@@ -535,9 +505,7 @@ class FinancialService {
       }
       const fromAccount = await this.getAccount(fromUserId);
       if (fromAccount.balance < amount) {
-        throw new Error(
-          "Insufficient funds for transfer: overdraft is not allowed",
-        );
+        throw new Error("Insufficient funds for transfer: overdraft is not allowed");
       }
       // Check if recipient exists (do not create)
       const toAccount = await this.findAccount(toUserId);
@@ -560,9 +528,33 @@ class FinancialService {
         category: "transfer",
         referenceId: fromUserId,
       });
-      logInfo(
-        `Transfer completed: ${fromUserId} -> ${toUserId}, amount: ${amount} ROL`,
+
+      const numericFromUserId = parseInt(fromUserId, 10);
+      const numericToUserId = parseInt(toUserId, 10);
+
+      publishNotificationEvent(
+        {
+          type: "transfer.completed",
+          payload: {
+            userId: numericFromUserId,
+            fromUserId: numericFromUserId,
+            toUserId: numericToUserId,
+            amount: parseFloat(amount),
+            description: description || "transfer",
+          },
+          correlationId: `transfer-${numericFromUserId}-${numericToUserId}-${Date.now()}`,
+          source: "financial.service",
+        },
+        {
+          action: "transfer_completed_notification",
+          meta: {
+            fromUserId: numericFromUserId,
+            toUserId: numericToUserId,
+          },
+        },
       );
+
+      logInfo(`Transfer completed: ${fromUserId} -> ${toUserId}, amount: ${amount} ROL`);
       return { success: true, amount };
     } catch (error) {
       logError("Error transferring funds:", error);
@@ -624,24 +616,16 @@ class FinancialService {
       allTransactions = allTransactions.filter((tx) => tx.type === type);
     }
     if (category) {
-      allTransactions = allTransactions.filter(
-        (tx) => tx.category === category,
-      );
+      allTransactions = allTransactions.filter((tx) => tx.category === category);
     }
     if (startDate) {
-      allTransactions = allTransactions.filter(
-        (tx) => new Date(tx.timestamp) >= new Date(startDate),
-      );
+      allTransactions = allTransactions.filter((tx) => new Date(tx.timestamp) >= new Date(startDate));
     }
     if (endDate) {
-      allTransactions = allTransactions.filter(
-        (tx) => new Date(tx.timestamp) <= new Date(endDate),
-      );
+      allTransactions = allTransactions.filter((tx) => new Date(tx.timestamp) <= new Date(endDate));
     }
     // Sort by timestamp descending
-    allTransactions.sort(
-      (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
-    );
+    allTransactions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     return allTransactions;
   }
 }

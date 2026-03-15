@@ -6,10 +6,27 @@ const { loginExpiration } = require("../data/settings");
 const { logDebug, logError } = require("../helpers/logger-api");
 const financialService = require("./financial.service");
 const featureFlagsService = require("./feature-flags.service");
+const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
 
 class AuthService {
   constructor() {
     this.userDataInstance = UserDataSingleton.getInstance();
+  }
+
+  _maskEmail(email) {
+    if (typeof email !== "string" || email.length === 0) {
+      return null;
+    }
+
+    const atIndex = email.indexOf("@");
+    if (atIndex <= 0) {
+      return "***";
+    }
+
+    const local = email.slice(0, atIndex);
+    const domain = email.slice(atIndex + 1);
+    const visible = local.slice(0, Math.min(local.length, 2));
+    return `${visible}***@${domain}`;
   }
 
   async _isRegistrationStrongPasswordEnabled() {
@@ -54,6 +71,27 @@ class AuthService {
         email,
         reason: "User already exists",
       });
+
+      publishNotificationEvent(
+        {
+          type: "user.registration.failed.user_exists",
+          payload: {
+            existingUserId: existingUserByEmail.id,
+            attemptedEmail: this._maskEmail(email),
+            reason: "user_already_exists",
+          },
+          correlationId: `registration-failed-${Date.now()}`,
+          source: "auth.service",
+        },
+        {
+          action: "registration_failed_user_exists_notification",
+          meta: {
+            existingUserId: existingUserByEmail.id,
+            reason: "user_already_exists",
+          },
+        },
+      );
+
       throw new Error("User with this email already exists");
     }
 
@@ -93,6 +131,25 @@ class AuthService {
       email: newUser.email,
     });
 
+    publishNotificationEvent(
+      {
+        type: "user.account.created",
+        payload: {
+          userId: newUser.id,
+          email: newUser.email,
+          displayedName: newUser.displayedName,
+        },
+        correlationId: `user-${newUser.id}`,
+        source: "auth.service",
+      },
+      {
+        action: "register_user_notification",
+        meta: {
+          userId: newUser.id,
+        },
+      },
+    );
+
     return {
       user: userResponse,
       token,
@@ -107,53 +164,91 @@ class AuthService {
    */
   async loginUser(credentials) {
     const { email, password } = credentials;
+    let resolvedUserId = null;
 
-    // Validate input data
-    const validation = validateLoginData({ email, password });
-    if (!validation.isValid) {
-      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+    try {
+      // Validate input data
+      const validation = validateLoginData({ email, password });
+      if (!validation.isValid) {
+        throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+      }
+
+      // Find user by email
+      const user = await this.userDataInstance.findUserByEmail(email);
+      if (!user) {
+        throw new Error("Invalid credentials");
+      }
+
+      resolvedUserId = user.id;
+
+      // Check if user is active
+      if (!user.isActive) {
+        throw new Error("Account is deactivated");
+      }
+
+      // Verify password (plain text comparison)
+      if (!validatePassword(password, user.password)) {
+        throw new Error("Invalid credentials");
+      }
+
+      // Update last login
+      await this.userDataInstance.updateUserLastLogin(user.id.toString());
+
+      // Generate token
+      const token = generateToken(user.id.toString(), loginExpiration);
+
+      // Calculate cookie expiration time in milliseconds
+      const cookieMaxAge = loginExpiration.hours ? loginExpiration.hours * 60 * 60 * 1000 : loginExpiration.minutes * 60 * 1000;
+
+      // Remove password from response
+      const { password: _, ...userResponse } = user;
+
+      logDebug("User logged in successfully", {
+        userId: user.id,
+        email: user.email,
+      });
+
+      return {
+        user: userResponse,
+        token,
+        expiration: loginExpiration,
+        loginTime: new Date().toISOString(),
+        cookieMaxAge,
+      };
+    } catch (error) {
+      const message = typeof error?.message === "string" ? error.message : "unknown_error";
+      const reason = message.includes("deactivated")
+        ? "account_deactivated"
+        : message.includes("Invalid credentials")
+          ? "invalid_credentials"
+          : message.includes("Validation failed")
+            ? "validation_failed"
+            : "unknown_error";
+
+      const eventType = reason === "invalid_credentials" ? "user.login.invalid_credentials" : "user.login.failed";
+
+      publishNotificationEvent(
+        {
+          type: eventType,
+          payload: {
+            userId: resolvedUserId,
+            attemptedEmail: this._maskEmail(email),
+            reason,
+          },
+          correlationId: `login-failed-${Date.now()}`,
+          source: "auth.service",
+        },
+        {
+          action: eventType === "user.login.invalid_credentials" ? "login_invalid_credentials_notification" : "login_failed_notification",
+          meta: {
+            userId: resolvedUserId,
+            reason,
+          },
+        },
+      );
+
+      throw error;
     }
-
-    // Find user by email
-    const user = await this.userDataInstance.findUserByEmail(email);
-    if (!user) {
-      throw new Error("Invalid credentials");
-    }
-
-    // Check if user is active
-    if (!user.isActive) {
-      throw new Error("Account is deactivated");
-    }
-
-    // Verify password (plain text comparison)
-    if (!validatePassword(password, user.password)) {
-      throw new Error("Invalid credentials");
-    }
-
-    // Update last login
-    await this.userDataInstance.updateUserLastLogin(user.id.toString());
-
-    // Generate token
-    const token = generateToken(user.id.toString(), loginExpiration);
-
-    // Calculate cookie expiration time in milliseconds
-    const cookieMaxAge = loginExpiration.hours ? loginExpiration.hours * 60 * 60 * 1000 : loginExpiration.minutes * 60 * 1000;
-
-    // Remove password from response
-    const { password: _, ...userResponse } = user;
-
-    logDebug("User logged in successfully", {
-      userId: user.id,
-      email: user.email,
-    });
-
-    return {
-      user: userResponse,
-      token,
-      expiration: loginExpiration,
-      loginTime: new Date().toISOString(),
-      cookieMaxAge,
-    };
   }
 
   /**

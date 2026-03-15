@@ -64,6 +64,23 @@ describe("resource.service", () => {
     expect(result).toEqual({ id: 2, userId: 2 });
   });
 
+  it("should create resource even if notification publish fails", async () => {
+    const service = new ResourceService("fields");
+    vi.spyOn(service.db, "add").mockResolvedValue();
+    vi.spyOn(service.db, "find").mockResolvedValue([{ id: 7, userId: 2, name: "Field" }]);
+
+    const notificationCenter = require("../../modules/notification-center");
+    vi.spyOn(notificationCenter, "getEventPublisher").mockReturnValue({
+      isEnabled: () => true,
+      publish: () => {
+        throw new Error("publisher_down");
+      },
+    });
+
+    const result = await service.create(2, { name: "Field" });
+    expect(result).toEqual({ id: 7, userId: 2, name: "Field" });
+  });
+
   it("should delete resource and cascade", async () => {
     const service = new ResourceService("fields");
     vi.spyOn(service.db, "remove").mockResolvedValue();
