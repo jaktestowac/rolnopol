@@ -34,7 +34,12 @@
         <div><span class="meta-label">Total flags</span><span id="flagsCount" class="meta-value">0</span></div>
       </div>
       <div class="flags-search-container">
-        <input type="text" id="flagsSearchInput" class="flags-search-input" placeholder="Search flags by name or description..." aria-label="Search feature flags">
+        <div class="flags-search-input-wrap">
+          <input type="text" id="flagsSearchInput" class="flags-search-input" placeholder="Search flags by name or description..." aria-label="Search feature flags">
+          <button type="button" id="flagsSearchClearBtn" class="flags-search-clear is-hidden" aria-label="Clear search" title="Clear search">
+            <i class="fas fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
         <span id="flagsSearchResults" class="flags-search-results"></span>
       </div>
       <div id="flagsList" class="flags-list" aria-live="polite"></div>

@@ -102,7 +102,8 @@ function setActiveNavLink(explicitPage = null) {
         (explicitPage === "fieldmap" && linkPath === "/fieldmap.html") ||
         (explicitPage === "rolnopolmap" && linkPath === "/rolnopolmap.html") ||
         (explicitPage === "feature-flags" && linkPath === "/feature-flags.html") ||
-        (explicitPage === "messenger" && linkPath === "/messenger.html")
+        (explicitPage === "messenger" && linkPath === "/messenger.html") ||
+        (explicitPage === "weather" && linkPath === "/weather.html")
       ) {
         link.classList.add("active");
         return;
@@ -124,27 +125,52 @@ function setActiveNavLink(explicitPage = null) {
 async function getNavFeatureFlagState() {
   const featureFlagsService = window.App?.getModule?.("featureFlagsService");
   if (!featureFlagsService || typeof featureFlagsService.isEnabled !== "function") {
-    return { alertsEnabled: true, rolnopolMapEnabled: true, messengerEnabled: false, financialCommoditiesEnabled: false };
+    return {
+      alertsEnabled: true,
+      rolnopolMapEnabled: true,
+      messengerEnabled: false,
+      financialCommoditiesEnabled: false,
+      weatherPageEnabled: false,
+    };
   }
 
   if (window.App && window.App.isInitialized === false) {
-    return { alertsEnabled: false, rolnopolMapEnabled: false, messengerEnabled: false, financialCommoditiesEnabled: false };
+    return {
+      alertsEnabled: false,
+      rolnopolMapEnabled: false,
+      messengerEnabled: false,
+      financialCommoditiesEnabled: false,
+      weatherPageEnabled: false,
+    };
   }
 
   if (!featureFlagsService.apiService) {
-    return { alertsEnabled: false, rolnopolMapEnabled: false, messengerEnabled: false, financialCommoditiesEnabled: false };
+    return {
+      alertsEnabled: false,
+      rolnopolMapEnabled: false,
+      messengerEnabled: false,
+      financialCommoditiesEnabled: false,
+      weatherPageEnabled: false,
+    };
   }
 
   try {
-    const [alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled] = await Promise.all([
+    const [alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled] = await Promise.all([
       featureFlagsService.isEnabled("alertsEnabled", true),
       featureFlagsService.isEnabled("rolnopolMapEnabled", true),
       featureFlagsService.isEnabled("messengerEnabled", false),
       featureFlagsService.isEnabled("financialCommoditiesEnabled", false),
+      featureFlagsService.isEnabled("weatherPageEnabled", false),
     ]);
-    return { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled };
+    return { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled };
   } catch (error) {
-    return { alertsEnabled: true, rolnopolMapEnabled: true, messengerEnabled: false, financialCommoditiesEnabled: false };
+    return {
+      alertsEnabled: true,
+      rolnopolMapEnabled: true,
+      messengerEnabled: false,
+      financialCommoditiesEnabled: false,
+      weatherPageEnabled: false,
+    };
   }
 }
 
@@ -279,7 +305,8 @@ async function updateHeaderNav(username = "") {
     return;
   }
 
-  const { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled } = await getNavFeatureFlagState();
+  const { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled } =
+    await getNavFeatureFlagState();
   const mapLink = rolnopolMapEnabled
     ? '<li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>'
     : "";
@@ -291,6 +318,9 @@ async function updateHeaderNav(username = "") {
     : "";
   const commoditiesLink = financialCommoditiesEnabled
     ? '<li><a href="/financial-commodities.html" class="nav-link" title="Commodities" aria-label="Commodities" data-testid="nav-commodities"><i class="fas fa-chart-line"></i><span class="nav-text">Commodities</span></a></li>'
+    : "";
+  const weatherLink = weatherPageEnabled
+    ? '<li><a href="/weather.html" class="nav-link" title="Weather" aria-label="Weather" data-testid="nav-weather"><i class="fas fa-cloud-sun-rain"></i><span class="nav-text">Weather</span></a></li>'
     : "";
 
   // Check authentication using standardized cookie names
@@ -307,6 +337,7 @@ async function updateHeaderNav(username = "") {
       <li><a href="/marketplace.html" class="nav-link" title="Marketplace" aria-label="Marketplace" data-testid="nav-marketplace"><i class="fas fa-store"></i><span class="nav-text">Marketplace</span></a></li>
       ${mapLink}
       ${alertsLink}
+      ${weatherLink}
       ${messengerLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
@@ -328,6 +359,7 @@ async function updateHeaderNav(username = "") {
     nav.innerHTML = `
       <li><a href="/" class="nav-link" title="Home" aria-label="Home" data-testid="nav-home"><i class="fas fa-home"></i><span class="nav-text">Home</span></a></li>
       ${alertsLink}
+      ${weatherLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Documentation</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li><a href="/register.html" class="nav-link" title="Register" aria-label="Register" data-testid="nav-register"><i class="fas fa-user-plus"></i><span class="nav-text">Register</span></a></li>

@@ -19,10 +19,14 @@
     "cookieConsentBannerEnabled": false,
     "messengerEnabled": false,
     "notificationCenterEnabled": false,
+    "weatherPageEnabled": false,
+    "weatherWeatherDataExport": false,
+    "weatherUserInsightsEnabled": false,
+    "weatherTrendChartEnabled": false,
     "promoAdvertsHomeEnabled": false,
     "promoAdvertsAlertsEnabled": false,
     "promoAdvertsGeneralAdEnabled": false,
     "promoAdvertsBottomBannerEnabled": false
   },
-  "updatedAt": "2026-03-13T00:28:22.980Z"
+  "updatedAt": "2026-03-16T20:16:13.083Z"
 }

@@ -105,6 +105,8 @@ const notificationCenter = require("../modules/notification-center");
 
 app.set("etag", false);
 
+let easterBreadcrumbCounter = 0;
+
 // Initialize databases on startup
 initializeDatabases().catch((error) => {
   logError("Failed to initialize databases:", { error });
@@ -185,6 +187,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Easter egg: breadcrumb header every Nth request
+app.use((req, res, next) => {
+  easterBreadcrumbCounter += 1;
+  if (easterBreadcrumbCounter % 11 === 0) {
+    res.setHeader("x-rolnopol-clue", "follow-the-red-rain");
+  }
+  next();
+});
+
 // Native Prometheus metrics collection middleware (hot-toggle enabled)
 try {
   // eslint-disable-next-line global-require
@@ -250,6 +261,28 @@ app.get(["/messenger", "/messenger.html"], async (req, res, next) => {
     return next();
   } catch (error) {
     logError("Messenger feature gate check failed", { error });
+    return next();
+  }
+});
+
+// Feature-gate weather UI entry page before static serving
+app.get(["/weather", "/weather.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.weatherPageEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/weather") {
+      return res.redirect(302, "/weather.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Weather feature gate check failed", { error });
     return next();
   }
 });

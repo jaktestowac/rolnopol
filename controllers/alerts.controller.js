@@ -2,10 +2,41 @@ const { formatResponseBody } = require("../helpers/response-helper");
 const { logError } = require("../helpers/logger-api");
 
 class AlertsController {
+  _buildRedEventDecoder(seedDate) {
+    const encoded = Buffer.from(`RED-EVENT:${seedDate}:beware of the falling crimson rain`, "utf8").toString("base64");
+    return {
+      id: "red-event-decoder",
+      encoded,
+      hint: "Decode using base64",
+    };
+  }
+
+  _applyRedEventDecoder(alerts, seedDate) {
+    if (!Array.isArray(alerts)) {
+      return alerts;
+    }
+
+    const decoder = this._buildRedEventDecoder(seedDate);
+    return alerts.map((alert) => {
+      if (alert?.title !== "RED EVENT") {
+        return alert;
+      }
+
+      return {
+        ...alert,
+        details: {
+          ...(alert.details || {}),
+          redEventDecoder: decoder,
+        },
+      };
+    });
+  }
+
   async getCombined(req, res) {
     try {
       const date = req.query.date || new Date().toISOString().slice(0, 10);
       const region = req.query.region || "PL-MA";
+      const redEventDecodeEnabled = req.query?.redDecode === "1" || req.query?.redDecode === "true";
       const alertsService = require("../services/alerts.service")(region);
 
       // Get today's and tomorrow's dates in UTC
@@ -55,6 +86,22 @@ class AlertsController {
           history,
         },
       };
+
+      if (redEventDecodeEnabled) {
+        body.data.today.alerts = this._applyRedEventDecoder(body.data.today.alerts, date);
+        body.data.upcoming.alerts = this._applyRedEventDecoder(body.data.upcoming.alerts, date);
+        body.data.history = Array.isArray(body.data.history)
+          ? body.data.history.map((entry) => ({
+              ...entry,
+              alerts: this._applyRedEventDecoder(entry.alerts, date),
+            }))
+          : body.data.history;
+
+        body.meta = {
+          easterEgg: this._buildRedEventDecoder(date),
+        };
+      }
+
       // If any future restriction applied, include message as in tests
       if (
         today.date > tomorrowISO ||
@@ -75,6 +122,7 @@ class AlertsController {
     try {
       const date = req.query.date || new Date().toISOString().slice(0, 10);
       const region = req.query.region || "PL-24";
+      const redEventDecodeEnabled = req.query?.redDecode === "1" || req.query?.redDecode === "true";
       const alertsService = require("../services/alerts.service")(region);
 
       // Get tomorrow's date in UTC
@@ -93,14 +141,32 @@ class AlertsController {
           formatResponseBody({
             data: { seed: date, history: [] },
             message: "We don't have predictions for dates beyond tomorrow.",
-          })
+          }),
         );
         return;
       }
 
       // Otherwise, get history
       const history = alertsService.getHistory(date, 7);
-      res.status(200).json(formatResponseBody({ data: { seed: date, history } }));
+      const responsePayload = {
+        data: {
+          seed: date,
+          history: redEventDecodeEnabled
+            ? history.map((entry) => ({
+                ...entry,
+                alerts: this._applyRedEventDecoder(entry.alerts, date),
+              }))
+            : history,
+        },
+      };
+
+      if (redEventDecodeEnabled) {
+        responsePayload.meta = {
+          easterEgg: this._buildRedEventDecoder(date),
+        };
+      }
+
+      res.status(200).json(formatResponseBody(responsePayload));
     } catch (error) {
       logError("Error getting alerts history:", error);
       res.status(400).json(formatResponseBody({ error: error.message }));
@@ -111,6 +177,7 @@ class AlertsController {
     try {
       const date = req.query.date || new Date().toISOString().slice(0, 10);
       const region = req.query.region || "PL-MA";
+      const redEventDecodeEnabled = req.query?.redDecode === "1" || req.query?.redDecode === "true";
       const alertsService = require("../services/alerts.service")(region);
 
       // Get tomorrow's date in UTC
@@ -132,14 +199,32 @@ class AlertsController {
           formatResponseBody({
             data: { seed: date, upcoming: { date: nextDate, alerts: [] } },
             message: "We don't have predictions for dates beyond tomorrow.",
-          })
+          }),
         );
         return;
       }
 
       // Otherwise, get upcoming
       const upcoming = alertsService.getUpcoming(date);
-      res.status(200).json(formatResponseBody({ data: { seed: date, upcoming } }));
+      const responsePayload = {
+        data: {
+          seed: date,
+          upcoming: redEventDecodeEnabled
+            ? {
+                ...upcoming,
+                alerts: this._applyRedEventDecoder(upcoming.alerts, date),
+              }
+            : upcoming,
+        },
+      };
+
+      if (redEventDecodeEnabled) {
+        responsePayload.meta = {
+          easterEgg: this._buildRedEventDecoder(date),
+        };
+      }
+
+      res.status(200).json(formatResponseBody(responsePayload));
     } catch (error) {
       logError("Error getting upcoming alerts:", error);
       res.status(400).json(formatResponseBody({ error: error.message }));

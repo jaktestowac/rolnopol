@@ -39,10 +39,24 @@ function filterInternalFields(data, isAdmin = false) {
  * Format a successful response
  */
 function formatResponseBody(payload, isAdmin = false) {
+  const now = new Date();
   const response = {
     success: true,
-    timestamp: new Date().toISOString(),
+    timestamp: now.toISOString(),
   };
+
+  if (payload.meta && typeof payload.meta === "object" && !Array.isArray(payload.meta)) {
+    response.meta = { ...payload.meta };
+  }
+
+  // Easter egg: Night Owl Footer (00:00-03:59 local server time)
+  const hour = now.getHours();
+  if (hour >= 0 && hour < 4) {
+    response.meta = {
+      ...(response.meta || {}),
+      nightOwlFooter: "🌙 Night shift bonus: dreams grow best before sunrise.",
+    };
+  }
 
   // If there's an error, mark success as false
   if (payload.error) {

@@ -12,7 +12,9 @@ class FeatureFlagsPage {
     this.reloadBtn = null;
     this.resetBtn = null;
     this.searchInput = null;
+    this.searchClearBtn = null;
     this.searchResultsEl = null;
+    this.searchQuery = "";
   }
 
   init(app) {
@@ -38,6 +40,7 @@ class FeatureFlagsPage {
     this.resetModalCancel = this.resetModal?.querySelector(".modal-cancel");
     this.resetModalOverlay = this.resetModal?.querySelector(".modal-overlay");
     this.searchInput = document.getElementById("flagsSearchInput");
+    this.searchClearBtn = document.getElementById("flagsSearchClearBtn");
     this.searchResultsEl = document.getElementById("flagsSearchResults");
   }
 
@@ -64,6 +67,10 @@ class FeatureFlagsPage {
 
     if (this.searchInput) {
       this.searchInput.addEventListener("input", (event) => this._handleSearch(event.target.value));
+    }
+
+    if (this.searchClearBtn) {
+      this.searchClearBtn.addEventListener("click", () => this._clearSearch());
     }
 
     if (this.listEl) {
@@ -127,17 +134,42 @@ class FeatureFlagsPage {
       this.allFlags = JSON.parse(JSON.stringify(this.flags));
       this.groups = payload.groups || {};
       this.updatedAt = payload.updatedAt || null;
-      if (this.searchInput) {
-        this.searchInput.value = "";
+
+      if (this.searchInput && this.searchInput.value !== this.searchQuery) {
+        this.searchInput.value = this.searchQuery;
       }
-      this._renderFlags();
+
+      this._applySearchFilter();
     } catch (error) {
       this._setStatus("Failed to load feature flags", true);
     }
   }
 
   _handleSearch(query) {
-    const searchTerm = query.toLowerCase().trim();
+    this.searchQuery = typeof query === "string" ? query : "";
+    this._applySearchFilter();
+  }
+
+  _clearSearch() {
+    this.searchQuery = "";
+    if (this.searchInput) {
+      this.searchInput.value = "";
+      this.searchInput.focus();
+    }
+    this._applySearchFilter();
+  }
+
+  _toggleSearchClearVisibility(hasValue) {
+    if (!this.searchClearBtn) {
+      return;
+    }
+    this.searchClearBtn.classList.toggle("is-hidden", !hasValue);
+  }
+
+  _applySearchFilter() {
+    const searchTerm = this.searchQuery.toLowerCase().trim();
+    const hasSearchTerm = searchTerm.length > 0;
+    this._toggleSearchClearVisibility(hasSearchTerm);
 
     if (!searchTerm) {
       this.flags = JSON.parse(JSON.stringify(this.allFlags));

@@ -12,13 +12,32 @@ class ResourceController {
 
   async list(req, res) {
     try {
+      const isSunday = new Date().getDay() === 0;
+      const shouldIncludeSundaySoilPoem = this.resourceType === "fields" && isSunday;
+      const sundaySoilMeta = shouldIncludeSundaySoilPoem
+        ? {
+            easterEgg: {
+              id: "sunday-soil-poem",
+              poem: "Turn the earth with gentle hands; tomorrow's harvest starts in quiet soil.",
+            },
+          }
+        : undefined;
+
       const rawSearch = req.query?.search;
       const hasSearch = typeof rawSearch === "string" && rawSearch.trim().length > 0;
       const hasPagination = req.query?.page !== undefined || req.query?.limit !== undefined;
 
       if (!hasSearch && !hasPagination) {
         const items = await this.service.list(req.user.userId);
-        return res.status(200).json(formatResponseBody({ data: items }, false));
+        return res.status(200).json(
+          formatResponseBody(
+            {
+              data: items,
+              meta: sundaySoilMeta,
+            },
+            false,
+          ),
+        );
       }
 
       const page = Math.max(1, Number.parseInt(req.query?.page, 10) || 1);
@@ -37,6 +56,7 @@ class ResourceController {
               data: result.items,
               pagination: result.pagination,
             },
+            meta: sundaySoilMeta,
           },
           false,
         ),

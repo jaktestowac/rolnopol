@@ -1,10 +1,11 @@
-import { describe, it, expect } from "vitest";
-import {
-  formatResponseBody,
-  filterInternalFields,
-} from "../../helpers/response-helper";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { formatResponseBody, filterInternalFields } from "../../helpers/response-helper";
 
 describe("response-helper", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("should format a success response", () => {
     const result = formatResponseBody({ data: { foo: "bar" } });
     expect(result.success).toBe(true);
@@ -39,5 +40,20 @@ describe("response-helper", () => {
     const filtered = filterInternalFields(arr);
     expect(filtered[0]).not.toHaveProperty("internalId");
     expect(filtered[1]).not.toHaveProperty("internalId");
+  });
+
+  it("should pass through meta payload", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-16T12:00:00"));
+    const result = formatResponseBody({ data: { ok: true }, meta: { source: "test" } });
+    expect(result.meta).toEqual({ source: "test" });
+  });
+
+  it("should include night owl footer between 00:00 and 03:59", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-16T01:15:00"));
+    const result = formatResponseBody({ data: { ok: true } });
+    expect(result.meta).toBeDefined();
+    expect(result.meta.nightOwlFooter).toContain("Night shift bonus");
   });
 });

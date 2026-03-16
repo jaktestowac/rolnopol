@@ -31,9 +31,18 @@ describe("Feature Flags API", () => {
     expect(Array.isArray(res.body.data.groups.notifications)).toBe(true);
     expect(res.body.data.groups.notifications).toContain("notificationCenterEnabled");
     expect(res.body.data.flags).toHaveProperty("homeModernRestyleEnabled");
+    expect(res.body.data.flags).toHaveProperty("weatherPageEnabled");
+    expect(res.body.data.flags).toHaveProperty("weatherWeatherDataExport");
+    expect(res.body.data.flags).toHaveProperty("weatherUserInsightsEnabled");
     expect(res.body.data.groups).toHaveProperty("homepage");
+    expect(res.body.data.groups).toHaveProperty("weather");
     expect(Array.isArray(res.body.data.groups.homepage)).toBe(true);
     expect(res.body.data.groups.homepage).toContain("homeModernRestyleEnabled");
+    expect(Array.isArray(res.body.data.groups.weather)).toBe(true);
+    expect(res.body.data.groups.weather).toContain("weatherPageEnabled");
+    expect(res.body.data.groups.weather).toContain("weatherUserInsightsEnabled");
+    expect(res.body.data.groups).toHaveProperty("export");
+    expect(res.body.data.groups.export).toContain("weatherWeatherDataExport");
     // marketing group should include advert-related flags
     expect(res.body.data.flags).toHaveProperty("promoAdvertsGeneralAdEnabled");
     expect(res.body.data.groups).toHaveProperty("marketing (Ads)");

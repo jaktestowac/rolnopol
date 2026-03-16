@@ -3,6 +3,27 @@ const { logError } = require("../helpers/logger-api");
 const userService = require("../services/user.service");
 const { isValidId } = require("../helpers/validators");
 
+const BLOCKLIST_PARADOX_STATE = new Map();
+
+function getBlocklistParadoxMeta(currentUserId, targetUserId) {
+  const key = `${Number(currentUserId)}:${Number(targetUserId)}`;
+  const current = BLOCKLIST_PARADOX_STATE.get(key) || { cycles: 0 };
+  const next = { cycles: current.cycles + 1 };
+  BLOCKLIST_PARADOX_STATE.set(key, next);
+
+  if (next.cycles % 3 !== 0) {
+    return null;
+  }
+
+  return {
+    easterEgg: {
+      id: "blocklist-paradox",
+      warning: "Paradox detected: block/unblock ritual repeated thrice. Social fabric mildly unstable.",
+      cycles: next.cycles,
+    },
+  };
+}
+
 class UserController {
   /**
    * List blocked users
@@ -69,11 +90,13 @@ class UserController {
     try {
       const { blockedUserId } = req.params;
       const result = await userService.unblockUser(req.user.userId, blockedUserId);
+      const paradoxMeta = getBlocklistParadoxMeta(req.user.userId, result?.unblockedUserId || blockedUserId);
 
       return res.status(200).json(
         formatResponseBody({
           message: "User unblocked successfully",
           data: result,
+          meta: paradoxMeta,
         }),
       );
     } catch (error) {

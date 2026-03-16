@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/weather.css" />
+</head>
+
+<body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="container weather-page">
+        <header class="header glass weather-header">
+            <div class="weather-header__title">
+                <h1><span class="bg-agri-gradient"><i class="fas fa-cloud-sun-rain"></i></span></h1>
+                <div>
+                    <span class="main-title">Weather</span>
+                    <p>Smart daily weather for agriculture</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="glass weather-toolbar" aria-label="Weather controls">
+            <div class="weather-toolbar__field">
+                <label for="weatherDateInput">Forecast start date</label>
+                <input id="weatherDateInput" type="date" class="form-input" />
+            </div>
+            <div class="weather-toolbar__field">
+                <label for="weatherRegionSelect">Region</label>
+                <select id="weatherRegionSelect" class="form-input">
+                    <option value="" selected>Loading regions...</option>
+                </select>
+            </div>
+            <button id="weatherRefreshBtn" class="btn btn-outline" type="button" aria-label="Refresh weather data">
+                <i class="fas fa-rotate"></i>&nbsp;
+                Refresh
+            </button>
+            <div id="weatherExportActions" class="weather-toolbar__actions" hidden>
+                <button id="weatherExportCsvBtn" class="btn btn-outline" type="button" aria-label="Export weather data as CSV">
+                    <i class="fas fa-file-csv"></i>&nbsp;
+                    Export CSV
+                </button>
+                <button id="weatherExportPdfBtn" class="btn btn-outline" type="button" aria-label="Export weather data as PDF">
+                    <i class="fas fa-file-pdf"></i>&nbsp;
+                    Export PDF
+                </button>
+            </div>
+        </section>
+
+        <p id="weatherStatus" class="weather-status" aria-live="polite">Loading weather data...</p>
+
+        <section id="weatherUserPanel" class="glass weather-section weather-user-panel" hidden>
+            <h2><i class="fas fa-user-gear"></i> Personalized weather insights</h2>
+            <p id="weatherUserPanelStatus" class="weather-user-panel__status" aria-live="polite">Loading your recommendations...</p>
+            <div id="weatherUserPanelSummary" class="weather-user-panel__summary"></div>
+            <div id="weatherUserPanelRisks" class="weather-user-panel__risks"></div>
+            <ul id="weatherUserPanelActions" class="weather-user-panel__actions"></ul>
+        </section>
+
+        <section class="glass weather-section">
+            <h2><i class="fas fa-calendar-day"></i> Selected day</h2>
+            <div id="weatherToday" class="weather-today"></div>
+            <div id="weatherAdvisory" class="weather-advisory"></div>
+        </section>
+
+        <section id="weatherTrendModule" class="glass weather-section weather-trend" hidden>
+            <h2><i class="fas fa-chart-line"></i> Temperature, humidity & wind trend</h2>
+            <div id="weatherTrendChart" class="weather-trend__chart" aria-live="polite"></div>
+        </section>
+
+        <section class="glass weather-section">
+            <h2><i class="fas fa-calendar-week"></i> 7-day forecast</h2>
+            <div id="weatherForecast" class="weather-forecast"></div>
+        </section>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <script src="/js/pages/weather.js"></script>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+        initNavigation("weather");
+    </script>
+</body>
+
+</html>

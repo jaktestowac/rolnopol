@@ -19,8 +19,10 @@ const alertsRoute = require("./alerts.route");
 const featureFlagsRoute = require("./feature-flags.route");
 const chaosEngineRoute = require("./chaos-engine.route");
 const metricsRoute = require("./metrics.route");
+const pingRoute = require("./ping.route");
 const messengerRoute = require("./messenger.route");
 const notificationsRoute = require("./notifications.route");
+const weatherRoute = require("./weather.route");
 const contactRoute = require("../contact.route");
 const { logInfo, logError } = require("../../helpers/logger-api");
 
@@ -160,8 +162,10 @@ router.use("/", alertsRoute);
 router.use("/", featureFlagsRoute);
 router.use("/", chaosEngineRoute);
 router.use("/", metricsRoute);
+router.use("/", pingRoute);
 router.use("/", messengerRoute);
 router.use("/", notificationsRoute);
+router.use("/", weatherRoute);
 router.use("/contact", contactRoute);
 
 // Apply rate limiting to specific endpoints

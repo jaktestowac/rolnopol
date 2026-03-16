@@ -3,6 +3,71 @@ const { logError } = require("../helpers/logger-api");
 const financialService = require("../services/financial.service");
 
 class FinancialController {
+  _round2(value) {
+    return Math.round(Number(value) * 100) / 100;
+  }
+
+  _getLedgerHaikuMeta(amount) {
+    const normalizedAmount = this._round2(amount);
+    const linesByAmount = {
+      17.17: "Seventeen drops fall / ledgers whisper in red rain / dawn audits the sum",
+      34.34: "Twin echoes of rain / debit, credit, silent ash / balance bows at dusk",
+      51.51: "Fifty-one red sparks / numbers bloom then fade to mist / midnight keeps the books",
+      68.68: "Sixty-eight red leaves / flutter down on empty rows / autumn counts the cost",
+      85.85: "Eighty-five red stars / twinkle in the ledger's night / frost settles the score",
+      102.02: "One hundred two drops / a crimson tide of numbers / winter's final sum",
+    };
+
+    const poem = linesByAmount[normalizedAmount.toFixed(2)];
+    if (!poem) {
+      return null;
+    }
+
+    return {
+      easterEgg: {
+        id: "ledger-haiku",
+        amount: normalizedAmount,
+        poem,
+      },
+    };
+  }
+
+  _buildRedRainLedgerMeta(seedDate) {
+    return {
+      redRainLedger: {
+        tearsInRain: true,
+        seedDate,
+      },
+    };
+  }
+
+  _isRedRainWindow(req) {
+    if (String(req.query?.redRainLedger || "") === "1") {
+      return true;
+    }
+
+    const date = req.query?.date || new Date().toISOString().slice(0, 10);
+    const region = req.query?.region || "PL-MA";
+
+    try {
+      const alertsService = require("../services/alerts.service")(region);
+      const alerts = alertsService.generateAlertsForDate(date);
+
+      return alerts.some((alert) =>
+        typeof alert?.title === "string" && alert.title.toUpperCase().includes("RED EVENT")
+          ? true
+          : typeof alert?.message === "string" && alert.message.toLowerCase().includes("crimson rain"),
+      );
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  _mergeMeta(...chunks) {
+    const merged = Object.assign({}, ...chunks.filter(Boolean));
+    return Object.keys(merged).length > 0 ? merged : undefined;
+  }
+
   _escapeCsv(value) {
     if (value === null || value === undefined) return "";
     const str = String(value);
@@ -125,6 +190,11 @@ class FinancialController {
         category: category || "general",
       });
 
+      const ledgerHaikuMeta = this._getLedgerHaikuMeta(amount);
+      const redRainMeta = this._isRedRainWindow(req)
+        ? this._buildRedRainLedgerMeta(req.query?.date || new Date().toISOString().slice(0, 10))
+        : null;
+
       res.status(201).json(
         formatResponseBody({
           message: "Transaction added successfully",
@@ -132,6 +202,7 @@ class FinancialController {
             // never return sensitive data
             transaction: transaction,
           },
+          meta: this._mergeMeta(ledgerHaikuMeta, redRainMeta),
         }),
       );
     } catch (error) {

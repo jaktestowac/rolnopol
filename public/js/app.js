@@ -281,6 +281,9 @@
       case "messenger":
         setupMessengerPage();
         break;
+      case "weather":
+        setupWeatherPage();
+        break;
       default:
         setupDefaultPage();
     }
@@ -567,6 +570,15 @@
       window.App.registerModule("messengerPage", messengerPage);
     } else {
       console.error("MessengerPage class not found");
+    }
+  }
+
+  function setupWeatherPage() {
+    if (window.WeatherPage) {
+      const weatherPage = new WeatherPage();
+      window.App.registerModule("weatherPage", weatherPage);
+    } else {
+      console.error("WeatherPage class not found");
     }
   }
 
