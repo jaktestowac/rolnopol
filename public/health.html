@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>System Health - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/health.css" />
+</head>
+
+<body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="container health-page">
+        <header class="header glass health-header">
+            <div class="health-header__title">
+                <h1><span class="bg-agri-gradient"><i class="fas fa-heart-pulse"></i></span></h1>
+                <div>
+                    <span class="main-title">Service Status</span>
+                    <p>Live operational health of Rolnopol services and dependencies</p>
+                </div>
+            </div>
+            <button id="healthRefreshBtn" type="button" class="btn btn-outline">
+                <i class="fas fa-rotate"></i>&nbsp; Refresh
+            </button>
+        </header>
+
+        <p id="healthStatusText" class="health-status" aria-live="polite">Loading health status...</p>
+
+        <section class="glass health-overview" aria-label="Overall status overview">
+            <div class="health-overview__left">
+                <span id="healthBadge" class="health-badge health-badge--unknown">Unknown</span>
+                <h2 id="healthHeadline">Checking Rolnopol health...</h2>
+                <p id="healthTimestamp">Last update: -</p>
+            </div>
+            <div class="health-overview__meta">
+                <div class="health-meta-box">
+                    <span>Version</span>
+                    <strong id="healthVersion">-</strong>
+                </div>
+                <div class="health-meta-box">
+                    <span>Uptime</span>
+                    <strong id="healthUptime">-</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="glass health-section" aria-label="Core components health">
+            <h3><i class="fas fa-server"></i> Components</h3>
+            <div id="healthComponentsGrid" class="health-components-grid"></div>
+        </section>
+
+        <section class="glass health-section" aria-label="Database validation">
+            <h3><i class="fas fa-database"></i> Database validation</h3>
+            <div id="healthDbTableWrap" class="health-table-wrap"></div>
+        </section>
+
+        <section class="glass health-section" aria-label="Memory usage">
+            <h3><i class="fas fa-memory"></i> Memory usage</h3>
+            <div id="healthMemoryGrid" class="health-memory-grid"></div>
+        </section>
+
+        <section class="glass health-section" aria-label="Raw API response">
+            <h3><i class="fas fa-code"></i> Raw health payload</h3>
+            <pre id="healthRawPayload" class="health-raw-payload">-</pre>
+        </section>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <script src="/js/pages/health.js"></script>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+        initNavigation("health");
+    </script>
+</body>
+
+</html>

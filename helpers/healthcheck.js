@@ -128,7 +128,6 @@ async function performStartupHealthCheck() {
 
     // Check for presence of project marker file `rolno.d` in repository root
     const rolno = checkRolnoFileExists();
-    health.rolno = rolno;
     const dbValidation = await dbManager.validateAll();
     health.databaseValidation = dbValidation;
     const failing = Object.entries(dbValidation).filter(([_, v]) => v.status === "error");
@@ -142,7 +141,6 @@ async function performStartupHealthCheck() {
     lines.push(`Status   : ${health.status.toUpperCase()}`);
     lines.push(`Version  : ${health.version}`);
     lines.push(`Uptime   : ${formatUptime(health.uptime)}`);
-    lines.push(`Marker   : ${health.rolno.exists ? `FOUND (${health.rolno.filePath})` : "NOT FOUND"}`);
     const mem = health.memory.memoryUsage;
     lines.push(
       `Memory   : Heap Used ${formatBytes(mem.heapUsed)} / Heap Total ${formatBytes(mem.heapTotal)} | RSS ${formatBytes(mem.rss)}`,
@@ -325,7 +323,6 @@ async function performStartupHealthCheck() {
     lines.push(`Status   : ${health.status.toUpperCase()}`);
     lines.push(`Version  : ${health.version}`);
     lines.push(`Uptime   : ${formatUptime(health.uptime)}`);
-    lines.push(`Marker   : ${health.rolno.exists ? `FOUND (${health.rolno.filePath})` : "NOT FOUND"}`);
     const mem = health.memory.memoryUsage;
     lines.push(
       `Memory   : Heap Used ${formatBytes(mem.heapUsed)} / Heap Total ${formatBytes(mem.heapTotal)} | RSS ${formatBytes(mem.rss)}`,

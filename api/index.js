@@ -287,6 +287,15 @@ app.get(["/weather", "/weather.html"], async (req, res, next) => {
   }
 });
 
+// Public health status page entry point
+app.get(["/health", "/status", "/health.html"], (req, res, next) => {
+  if (req.path === "/health" || req.path === "/status") {
+    return res.redirect(302, "/health.html");
+  }
+
+  return next();
+});
+
 // Serve static files
 app.use(express.static(path.join(__dirname, "../public")));
 
@@ -448,13 +457,6 @@ if (require.main === module) {
         logInfo(`👤 Admin: http://localhost:${port}/null/kraken.html`);
         logInfo(`Start here:`);
         logInfo(`🌐 Access: http://localhost:${port}`);
-
-        // TODO: check if rolno.d exists - if Yes then print SECRET MESSAGE
-        const { checkRolnoFileExists } = require("../helpers/healthcheck");
-        const rolno = checkRolnoFileExists();
-        if (rolno.exists) {
-          logInfo(`SECRET MESSAGE: ${rolno.content}`);
-        }
       });
     } catch (err) {
       logError("Startup health check failed. Server will not start.", err);
