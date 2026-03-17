@@ -287,10 +287,19 @@ app.get(["/weather", "/weather.html"], async (req, res, next) => {
   }
 });
 
-// Public health status page entry point
-app.get(["/health", "/status", "/health.html"], (req, res, next) => {
-  if (req.path === "/health" || req.path === "/status") {
+// Public health status page entry points
+app.get(["/health", "/health.html"], (req, res, next) => {
+  if (req.path === "/health") {
     return res.redirect(302, "/health.html");
+  }
+
+  return next();
+});
+
+// Public simplified status page entry point
+app.get(["/status", "/status.html"], (req, res, next) => {
+  if (req.path === "/status") {
+    return res.redirect(302, "/status.html");
   }
 
   return next();

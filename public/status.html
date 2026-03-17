@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Status - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/status.css" />
+</head>
+
+<body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <main class="container status-page">
+        <section class="glass status-overview" style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="status-title-wrap">
+                <h1 class="status-title"><i class="fas fa-signal"></i> Rolnopol Status</h1>
+                <p id="statusHeadline" class="status-headline">
+                    <span class="status-dot status-dot--unknown"></span>
+                    Checking current status...
+                </p>
+            </span>
+            <span class="status-meta">
+                <p id="statusUpdatedAt" class="status-updated">Last updated: -</p>
+                <p id="statusAutoRefresh" class="status-autorefresh">Auto refresh: every 20s</p>
+                <button id="statusRefreshBtn" class="btn btn-outline" type="button">
+                    <i class="fas fa-rotate"></i>&nbsp;Refresh
+                </button>
+            </span>
+        </section>
+
+        <section class="glass status-section">
+            <h2>Components</h2>
+            <ul id="statusComponents" class="status-components" aria-live="polite"></ul>
+        </section>
+
+        <section class="glass status-section">
+            <h2>Uptime (last 60 minutes)</h2>
+            <div id="statusBars" class="status-bars" aria-live="polite"></div>
+            <p id="statusSummary" class="status-summary">-</p>
+            <p class="status-help" title="Hover over each bar to see minute-by-minute status details.">Tip: hover bars for per-minute details</p>
+        </section>
+    </main>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <script src="/js/pages/status.js"></script>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+        initNavigation("status");
+    </script>
+</body>
+
+</html>
