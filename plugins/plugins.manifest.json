@@ -1,0 +1,25 @@
+{
+  "plugins": {
+    "startup-info-plugin": {
+      "enabled": false,
+      "config": {
+        "message": "Startup info plugin loaded"
+      }
+    },
+    "test-header-plugin": {
+      "enabled": false,
+      "config": {
+        "headerName": "x-rolnopol-plugin-test",
+        "headerValue": "enabled"
+      }
+    },
+    "response-size-logger-plugin": {
+      "enabled": false,
+      "config": {}
+    },
+    "plugin-template": {
+      "enabled": false,
+      "config": {}
+    }
+  }
+}

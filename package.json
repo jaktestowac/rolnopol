@@ -1,12 +1,13 @@
 {
   "name": "rolnopol-app",
-  "version": "1.0.117",
+  "version": "1.0.118",
   "description": "A Rolnopol app with JSON database, authentication, and admin panel",
   "main": "api/index.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test vitest run --dir tests",
     "unit": "vitest run --dir tests/unit",
     "start": "node ./api/index.js",
+    "start-debug": "cross-env DEBUG_MODE=true node ./api/index.js",
     "dev": "node ./api/index.js",
     "format": "npx prettier --write .",
     "bump-version": "bump-version.sh patch"

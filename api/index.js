@@ -102,6 +102,7 @@ const featureFlagsService = require("../services/feature-flags.service");
 const messengerWebSocketService = require("../services/messenger-ws.service");
 const chaosEngineMiddleware = require("../middleware/chaos-engine.middleware");
 const notificationCenter = require("../modules/notification-center");
+const pluginRuntime = require("../modules/plugin-runtime");
 
 app.set("etag", false);
 
@@ -147,6 +148,19 @@ notificationCenter.initialize({ featureFlagsService }).catch((error) => {
   logError("Notification center initialization error", { error });
 });
 
+pluginRuntime.initialize({
+  pluginsDir: path.join(__dirname, "../plugins"),
+});
+
+const startupPlugins = pluginRuntime.getPlugins();
+logInfo("Plugins loaded on startup", {
+  enabled: startupPlugins.filter((plugin) => plugin.enabled).map((plugin) => plugin.name),
+});
+logDebug("Plugins loaded on startup", {
+  loaded: startupPlugins.map((plugin) => plugin.name),
+  disabled: startupPlugins.filter((plugin) => !plugin.enabled).map((plugin) => plugin.name),
+});
+
 // Clear all tokens on startup for system migration
 const clearedTokens = clearAllTokens();
 logInfo(`System migration: Cleared ${clearedTokens} existing tokens`);
@@ -154,6 +168,7 @@ logInfo(`System migration: Cleared ${clearedTokens} existing tokens`);
 // Graceful shutdown handling
 process.on("SIGINT", async () => {
   logDebug("Received SIGINT. Graceful shutdown...");
+  await pluginRuntime.shutdown();
   await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
@@ -161,6 +176,7 @@ process.on("SIGINT", async () => {
 
 process.on("SIGTERM", async () => {
   logDebug("Received SIGTERM. Graceful shutdown...");
+  await pluginRuntime.shutdown();
   await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
@@ -168,6 +184,7 @@ process.on("SIGTERM", async () => {
 
 process.on("SIGHUP", async () => {
   logDebug("Received SIGHUP. Graceful shutdown...");
+  await pluginRuntime.shutdown();
   await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
@@ -179,6 +196,9 @@ app.use(express.json());
 
 // Cookie parser middleware
 app.use(cookieParser());
+
+// Plugin runtime middleware (request/response hooks)
+pluginRuntime.attach(app);
 
 // Request logging middleware
 app.use((req, res, next) => {

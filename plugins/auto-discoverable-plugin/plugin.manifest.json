@@ -1,0 +1,7 @@
+{
+  "autoDiscoverable": true,
+  "enabled": false,
+  "config": {
+    "feature": "example"
+  }
+}
