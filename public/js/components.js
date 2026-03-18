@@ -340,7 +340,6 @@ async function updateHeaderNav(username = "") {
       ${alertsLink}
       ${weatherLink}
       ${messengerLink}
-      <li><a href="/health.html" class="nav-link" title="System Health" aria-label="System Health" data-testid="nav-health"><i class="fas fa-heart-pulse"></i><span class="nav-text">Health</span></a></li>
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li class="nav-user" >
@@ -362,7 +361,6 @@ async function updateHeaderNav(username = "") {
       <li><a href="/" class="nav-link" title="Home" aria-label="Home" data-testid="nav-home"><i class="fas fa-home"></i><span class="nav-text">Home</span></a></li>
       ${alertsLink}
       ${weatherLink}
-      <li><a href="/health.html" class="nav-link" title="System Health" aria-label="System Health" data-testid="nav-health"><i class="fas fa-heart-pulse"></i><span class="nav-text">Health</span></a></li>
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Documentation</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li><a href="/register.html" class="nav-link" title="Register" aria-label="Register" data-testid="nav-register"><i class="fas fa-user-plus"></i><span class="nav-text">Register</span></a></li>
