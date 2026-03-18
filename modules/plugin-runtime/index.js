@@ -22,6 +22,7 @@ const state = {
   plugins: [],
   pluginsDir: null,
   manifestPath: null,
+  services: {},
 };
 
 function _safeRequire(modulePath) {
@@ -140,6 +141,7 @@ function _discoverPluginEntryFiles(pluginsDir) {
 function initialize(options = {}) {
   const pluginsDir = options.pluginsDir || path.resolve(__dirname, "../../plugins");
   const manifestPath = options.manifestPath || path.join(pluginsDir, DEFAULT_MANIFEST_FILE);
+  const services = _isObject(options.services) ? options.services : {};
 
   const manifest = _loadManifest(manifestPath);
   const pluginFiles = _discoverPluginEntryFiles(pluginsDir);
@@ -197,6 +199,7 @@ function initialize(options = {}) {
   state.initialized = true;
   state.pluginsDir = pluginsDir;
   state.manifestPath = manifestPath;
+  state.services = services;
 
   const enabledPlugins = loaded.filter((p) => p.enabled).map((p) => p.name);
   const disabledPlugins = loaded.filter((p) => !p.enabled).map((p) => p.name);
@@ -216,7 +219,13 @@ function initialize(options = {}) {
     }
 
     try {
-      plugin.init({ logInfo, logError, logDebug, config: plugin.config });
+      plugin.init({
+        logInfo,
+        logError,
+        logDebug,
+        config: plugin.config,
+        services,
+      });
     } catch (error) {
       logError("Plugin runtime: plugin init failed", { plugin: plugin.name, error: error.message });
     }
@@ -244,6 +253,7 @@ function attach(app) {
           res,
           pluginContext: req.pluginContext,
           config: plugin.config,
+          services: state.services,
           logInfo,
           logError,
           logDebug,
@@ -286,6 +296,7 @@ function attach(app) {
             responseType,
             pluginContext: req.pluginContext || {},
             config: plugin.config,
+            services: state.services,
             logInfo,
             logError,
             logDebug,

@@ -150,6 +150,9 @@ notificationCenter.initialize({ featureFlagsService }).catch((error) => {
 
 pluginRuntime.initialize({
   pluginsDir: path.join(__dirname, "../plugins"),
+  services: {
+    featureFlagsService,
+  },
 });
 
 const startupPlugins = pluginRuntime.getPlugins();
