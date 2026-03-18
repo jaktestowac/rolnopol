@@ -32,6 +32,9 @@ Each plugin should export an object with at least:
 - `init({ logInfo, logError, logDebug, config })` (optional)
 - `enabled` (boolean, optional; default is `true`)
 - `order` (number, optional; used to sort plugin init order)
+  - Lower numbers run earlier; the runtime sorts plugins ascending by `order`.
+  - If omitted, a plugin defaults to `order: 1000`.
+  - When multiple plugins share the same `order`, their relative init order is not explicitly guaranteed.
 
 Plugins can optionally implement:
 
