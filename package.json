@@ -1,11 +1,12 @@
 {
   "name": "rolnopol-app",
-  "version": "1.0.119",
+  "version": "1.0.120",
   "description": "A Rolnopol app with JSON database, authentication, and admin panel",
   "main": "api/index.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test vitest run --dir tests",
     "unit": "vitest run --dir tests/unit",
+    "pbt": "cross-env NODE_ENV=test vitest run --environment=node --project property",
     "start": "node ./api/index.js",
     "start-debug": "cross-env DEBUG_MODE=true node ./api/index.js",
     "dev": "node ./api/index.js",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
+    "fast-check": "^4.6.0",
     "husky": "^9.1.7",
     "supertest": "^7.1.3",
     "vitest": "^3.2.4"

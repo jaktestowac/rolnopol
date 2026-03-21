@@ -356,4 +356,12 @@ module.exports = {
   attach,
   shutdown,
   getPlugins,
+
+  // Expose private helpers for property-based tests
+  _isObject,
+  _loadManifest,
+  _loadPluginManifest,
+  _resolveEnabled,
+  _resolveConfig,
+  _isAutoDiscoverable,
 };
