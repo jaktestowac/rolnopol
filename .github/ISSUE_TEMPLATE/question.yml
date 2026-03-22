@@ -1,0 +1,26 @@
+name: "Questions / Help 💬"
+description: If you have questions, please check our Discord server
+title: "[Please read the message below]"
+labels: [":speech_balloon: Question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Questions and Help 💬
+
+        This issue tracker is reserved for bug reports and feature requests.
+
+        For anything else, such as questions or getting help, please see:
+
+        - [Our Discord server](https://jaktestowac.pl/discord)
+  - type: checkboxes
+    id: no-post
+    attributes:
+      label: |
+        Please do not submit this issue.
+      description: |
+        > [!IMPORTANT]
+        > This issue will be closed.
+      options:
+        - label: I understand that this issue will be closed
+          required: true

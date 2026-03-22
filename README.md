@@ -1,7 +1,7 @@
-# Introduction
+# 🌱 Rolnopol - Introduction
 
 <p align="center">
-  <img src="./assets/rolnopol-app.png" alt="Rolnopol" width="450" height="450">
+  <img src="./assets/rolnopol-app.png" alt="Rolnopol" width="400" height="400">
 </p>
 
 > [!TIP]
@@ -10,15 +10,12 @@
 > - 🇬🇧 [English](./README.md)
 > - 🇵🇱 [Polski](./README.pl.md)
 
-This application (called **🌱 Rolnopol**) was prepared and developed **only for testing purposes**. It provides:
+A realistic farming management application designed for **test automation practice**. Features a GUI, REST API, intentional bugs, and real-world scenarios for practicing automation and testing techniques.
 
-- A graphical user interface (GUI)
-- REST API
-- Integrated Swagger documentation
-
-The application includes features such as logic, resource management, authorization, statistics and charts. It is intentionally designed with **deliberately bugs**🐛 and challenges to simulate real-world project complexities.
-
-**🌱 Rolnopol** is ideal for learning test automation, refining QA techniques, and practicing with scenarios encountered in diverse, **real-world projects** with diverse real-world scenarios.
+- 📊 **Express.js API** with role-based access and rate limiting
+- 🗄️ **JSON database** for easy test data control
+- 🐛 **Intentional bugs & edge cases** for debugging practice
+- 🧪 **Complex workflows** (financial, resource, authorization)
 
 # Table of Contents
 
@@ -26,39 +23,45 @@ The application includes features such as logic, resource management, authorizat
 - [Features](#features)
 - [Deployment](#deployment)
 - [Contact & Support](#-contact--support)
+- [Learning Resources](#-learning-resources)
 
-# Features
+## Quick Start
 
-🌱 **Rolnopol** is a realistic farming management application built specifically for practicing test automation in a real-world domain. It simulates complex business workflows while providing an architecture perfect for testing various automation scenarios.
+### Requirements
 
-## 🏗️ Architecture for Testing
+- **Node.js** v22+ ([download](https://nodejs.org/))
+- **Git** ([download](https://git-scm.com/))
 
-- **Express.js Framework** with modular middleware (authentication, rate limiting, logging)
-- **Versioned REST APIs** (v1/v2) for testing API evolution and compatibility
-- **JSON File Database** for easy data manipulation and test state control
-- **Layered Architecture**: routes → controllers → services → data access
+### Get Running in 3 Steps
 
-## 🧪 Testing Scenarios & Challenges
+```bash
+git clone https://github.com/jaktestowac/rolnopol.git
+cd rolnopol
+npm i && npm run start
+```
 
-- **Authentication & Authorization**: tokens, role-based access, session management
-- **API Testing**: CRUD operations, data validation, error handling, rate limiting
-- **Business Logic**: Financial transactions, marketplace workflows, resource management
-- **UI & Integration**: Web interfaces, real-time updates, end-to-end workflows
+App is available at: **http://localhost:3000**
 
-## 🎯 Domain-Specific Testing Practice
+> 💡 **Startup Scripts:** For convenience, use `start.bat` (Windows), `./start.ps1` (PowerShell), `./start.sh` (Linux/macOS). See [START_SCRIPTS.md](./START_SCRIPTS.md) for details.
 
-- **Agricultural Business**: Farm management, livestock operations, staff coordination
-- **Financial Operations**: Digital banking, payment systems, financial reporting
-- **Data Processing**: Weather integration, performance metrics, analytics
+### Demo Credentials
 
-## 🎮 Learning Through Challenges
+For testing and demonstration purposes, the application includes several pre-configured demo users:
 
-- **Intentional Bugs** for debugging and error handling practice
-- **Edge Cases** requiring thorough test coverage
-- **Progressive Difficulty** from basic CRUD to complex workflows
-- **Real-world Scenarios** simulating production application behavior
+| Email                        | Password       |
+| ---------------------------- | -------------- |
+| `demo@example.com`           | `demo123`      |
+| `test@example.com`           | `brownPass123` |
+| `john.doe@example.com`       | `johndoe123`   |
+| `jane.smith@example.com`     | `janesmith456` |
+| `developer@example.com`      | `dev123456`    |
+| `emptyuser@rolnopol.demo.pl` | `demoPass123`  |
 
-This architecture provides a perfect playground for practicing modern test automation techniques while working with realistic business domains and complex system interactions.
+**Note:** These are demo credentials for local development and testing only. Passwords are stored in plain text for easier testing and account management.
+
+## Swagger UI
+
+API documentation is available at: **http://localhost:3000/api-docs**
 
 # Deployment
 
@@ -99,21 +102,6 @@ For convenience, the project includes several scripts to start the application i
 - **Linux/macOS (Zsh)**: Run `./start.zsh`
 
 For more details, see [START_SCRIPTS.md](./START_SCRIPTS.md).
-
-### Demo Users & Login Credentials
-
-For testing and demonstration purposes, the application includes several pre-configured demo users. You can use these credentials to explore different features:
-
-| Email                        | Password       |
-| ---------------------------- | -------------- |
-| `demo@example.com`           | `demo123`      |
-| `test@example.com`           | `brownPass123` |
-| `john.doe@example.com`       | `johndoe123`   |
-| `jane.smith@example.com`     | `janesmith456` |
-| `developer@example.com`      | `dev123456`    |
-| `emptyuser@rolnopol.demo.pl` | `demoPass123`  |
-
-**Note:** These are demo credentials for local development and testing only. Passwords are stored in plain text for easier testing and account management.
 
 ### Update version
 

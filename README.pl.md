@@ -1,7 +1,7 @@
-# Wprowadzenie
+# 🌱 Rolnopol - Wprowadzenie
 
 <p align="center">
-  <img src="./assets/rolnopol-app.png" alt="Rolnopol" width="450" height="450">
+  <img src="./assets/rolnopol-app.png" alt="Rolnopol" width="400" height="400">
 </p>
 
 > [!TIP]
@@ -10,55 +10,58 @@
 > - 🇬🇧 [English](./README.md)
 > - 🇵🇱 [Polski](./README.pl.md)
 
-Ta aplikacja (nazywana **🌱 Rolnopol**) została przygotowana i opracowana **wyłącznie w celach testowych**. Zapewnia:
+Realistyczna aplikacja do zarządzania gospodarstwem rolnym zaprojektowana do **ćwiczenia automatyzacji testów**. Zawiera interfejs graficzny, REST API, specjalnie wprowadzone błędy i scenariusze do ćwiczenia automatyzacji i testowania.
 
-- Graficzny interfejs użytkownika (GUI)
-- REST API
-- Zintegrowaną dokumentację Swagger
-
-Aplikacja zawiera funkcje takie jak logikę biznesową, autoryzację, zarządzanie zasobami, statystyki i wykresy. Jest celowo zaprojektowana z **umyślnymi błędami**🐛 i wyzwaniami, aby symulować złożoności rzeczywistych projektów.
-
-**🌱 Rolnopol** jest idealny do nauki automatyzacji testów, doskonalenia technik QA oraz ćwiczenia scenariuszy spotykanych w różnorodnych **rzeczywistych projektach** z różnorodnymi rzeczywistymi scenariuszami.
+- 📊 **Express.js API** z dostępem opartym na rolach i ograniczaniem szybkości
+- 🗄️ **Baza danych JSON** do łatwej kontroli danych testowych
+- 🐛 **Umyślne błędy i przypadki brzegowe** do ćwiczenia debugowania
+- 🧪 **Złożone przepływy** (finansowe, zasobów, autoryzacji)
 
 # Spis treści
 
 - [Wprowadzenie](#wprowadzenie)
 - [Funkcje](#funkcje)
 - [Wdrażanie](#wdrażanie)
-- [Kontakt i wsparcie](#kontakt-i-wsparcie)
+- [Kontakt i wsparcie](#-kontakt-i-wsparcie)
+- [Zasoby edukacyjne](#-zasoby-edukacyjne)
 
-# Funkcje
+## Szybki Start
 
-🌱 **Rolnopol** to realistyczna aplikacja do zarządzania gospodarstwem rolnym, zbudowana specjalnie do ćwiczenia automatyzacji testów w rzeczywistej domenie. Symuluje złożone procesy biznesowe, jednocześnie zapewniając architekturę doskonałą do testowania różnorodnych scenariuszy automatyzacji.
+### Wymagania
 
-## 🏗️ Architektura
+- **Node.js** v22+ ([pobierz](https://nodejs.org/))
+- **Git** ([pobierz](https://git-scm.com/))
 
-- **Framework Express.js** z modularnym oprogramowaniem pośredniczącym (uwierzytelnianie, ograniczanie szybkości, logowanie)
-- **Wersjonowane REST API** (v1/v2) do testowania ewolucji API i kompatybilności
-- **Baza danych plików JSON** do łatwej manipulacji danymi i kontroli stanu testów
-- **Warstwowa architektura**: routes → controllers → services → data access
+### Uruchomienie w 3 krokach
 
-## 🧪 Scenariusze testowania i wyzwania
+```bash
+git clone https://github.com/jaktestowac/rolnopol.git
+cd rolnopol
+npm i && npm run start
+```
 
-- **Uwierzytelnianie i autoryzacja**: tokeny JWT, dostęp oparty na rolach, zarządzanie sesjami
-- **Testowanie API**: operacje CRUD, walidacja danych, obsługa błędów, ograniczanie szybkości
-- **Logika biznesowa**: transakcje finansowe, procesy rynku, zarządzanie zasobami
-- **UI i integracja**: interfejsy webowe, aktualizacje w czasie rzeczywistym, kompleksowe procesy
+Aplikacja jest dostępna pod adresem: **http://localhost:3000**
 
-## 🎯 Specyficzne dla domeny ćwiczenia testowania
+> 💡 **Skrypty startowe:** Do wygody możesz użyć `start.bat` (Windows), `./start.ps1` (PowerShell), `./start.sh` (Linux/macOS). Szczegóły w pliku [START_SCRIPTS.md](./START_SCRIPTS.md).
 
-- **Biznes rolniczy**: zarządzanie gospodarstwem, operacje hodowlane, koordynacja personelu
-- **Operacje finansowe**: bankowość cyfrowa, systemy płatności, raportowanie finansowe
-- **Przetwarzanie danych**: integracja pogody, metryki wydajności, analityka
+### Dane logowania do kont demonstracyjnych
 
-## 🎮 Nauka poprzez wyzwania
+Do celów testowych i demonstracyjnych aplikacja zawiera kilka wstępnie skonfigurowanych kont użytkowników:
 
-- **Umyślne błędy** do ćwiczenia debugowania i obsługi błędów
-- **Przypadki brzegowe** wymagające dokładnego pokrycia testami
-- **Progresywna trudność** od podstawowych operacji CRUD do złożonych procesów
-- **Scenariusze rzeczywiste** symulujące zachowanie aplikacji produkcyjnych
+| Email                        | Hasło          |
+| ---------------------------- | -------------- |
+| `demo@example.com`           | `demo123`      |
+| `test@example.com`           | `brownPass123` |
+| `john.doe@example.com`       | `johndoe123`   |
+| `jane.smith@example.com`     | `janesmith456` |
+| `developer@example.com`      | `dev123456`    |
+| `emptyuser@rolnopol.demo.pl` | `demoPass123`  |
 
-Ta architektura zapewnia doskonałe środowisko do ćwiczenia nowoczesnych technik automatyzacji testów przy pracy z realistycznymi domenami biznesowymi i złożonymi interakcjami systemów.
+**Uwaga:** Są to dane demonstracyjne wyłącznie do lokalnego rozwoju i testowania. Hasła są przechowywane w formacie tekstowym (plain text) dla ułatwienia testów.
+
+## Swagger UI
+
+Dokumentacja API jest dostępna pod adresem: **http://localhost:3000/api-docs**
 
 # Wdrażanie
 
@@ -71,8 +74,9 @@ Instrukcje wdrażania prezentowanej usługi na różnych bezpłatnych platformac
 
 Wymagania:
 
-- **node.js** [https://nodejs.org/](https://nodejs.org/) - (**v22** i wyższe)
-- **git** [https://git-scm.com/](https://git-scm.com/)
+- **node.js** [https://nodejs.org/](https://nodejs.org/) - zainstalowany w systemie
+  - testowano na node.js **v22** i **v24**
+- **git** [https://git-scm.com/](https://git-scm.com/) - zainstalowany w systemie
 
 ### Pierwsze użycie
 
@@ -90,7 +94,7 @@ Aplikacja będzie dostępna pod adresem `http://localhost:3000`
 
 ### Skrypty startowe
 
-Dla wygody projekt zawiera kilka skryptów do uruchamiania aplikacji w różnych środowiskach. Skrypty te automatycznie przechodzą do katalogu głównego projektu i utrzymują okno terminala otwarte w przypadku zatrzymania lub awarii aplikacji.
+Dla wygody projekt zawiera kilka skryptów do uruchamiania aplikacji w różnych środowiskach. Skrypty te automatycznie przechodzą do katalogu głównego projektu i utrzymują okno terminala otwarte w przypadku zatrzymania lub błędu aplikacji.
 
 - **Windows (CMD)**: Uruchom `start.bat`
 - **PowerShell**: Uruchom `.\start.ps1`
@@ -99,19 +103,7 @@ Dla wygody projekt zawiera kilka skryptów do uruchamiania aplikacji w różnych
 
 Więcej szczegółów znajdziesz w pliku [START_SCRIPTS.md](./START_SCRIPTS.md).
 
-### Konta demonstracyjne i dane logowania
-
-Do celów testowych i demonstracyjnych aplikacja zawiera kilka wstępnie skonfigurowanych kont użytkowników:
-
-| Email                    | Hasło          | Rola            |
-| ------------------------ | -------------- | --------------- |
-| `demo@example.com`       | `demo123`      | Użytkownik Demo |
-| `test@example.com`       | `brownPass123` | John Brown      |
-| `john.doe@example.com`   | `johndoe123`   | John Doe        |
-| `jane.smith@example.com` | `janesmith456` | Jane Smith      |
-| `developer@example.com`  | `dev123456`    | Deweloper       |
-
-**Uwaga:** Są to dane demonstracyjne wyłącznie do lokalnego rozwoju i testowania. Hasła są przechowywane w formacie tekstowym (plain text) dla ułatwienia testów.
+### Aktualizacja wersji
 
 #### Jeśli używasz pakietu zip
 
@@ -213,7 +205,7 @@ Twoja opinia pomaga uczynić **🌱 Rolnopol** lepszym dla wszystkich!
 
 📢 Nie możemy się doczekać Twoich wkładów i miłej zabawy w testowaniu!
 
-[🔝 Powrót na górę](#wprowadzenie)
+[🔝 Powrót na górę](#-rolnopol)
 
 # 📞 Kontakt i wsparcie
 

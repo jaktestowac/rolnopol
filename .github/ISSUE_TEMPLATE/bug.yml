@@ -1,0 +1,96 @@
+name: Bug Report
+description: Create a bug report to help us improve Rolnopol
+labels: ["bug"]
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Please provide a concise, reproducible bug report.**
+
+        1) Describe what happened
+        2) Share steps to reproduce
+        3) Include expected vs actual behavior
+        4) Add environment details
+
+        > If at all possible, include a minimal reproduction repository.
+  - type: textarea
+    id: describe
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: "e.g. The modal stays open when clicking close after login."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: To reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '/login'
+        2. Enter valid credentials
+        3. Click 'Sign in'
+        4. Click close on modal
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: "e.g. The modal should close and redirect to the dashboard."
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: A clear and concise description of what actually happened.
+      placeholder: "e.g. The modal remains open and an error is shown."
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots (optional)
+      description: Paste images, links, or base64 screenshots if available.
+      placeholder: "Optional screenshots to help explain the problem."
+    validations:
+      required: false
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "e.g. Windows 11, macOS 13.5"
+    validations:
+      required: false
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: "e.g. Chrome 124, Firefox 124"
+    validations:
+      required: false
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      placeholder: "e.g. 20.10.0"
+    validations:
+      required: false
+  - type: input
+    id: app-version
+    attributes:
+      label: Rolnopol version
+      placeholder: "e.g. 1.0.0"
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Any other context about the problem here.
+      placeholder: "Additional context (e.g. running in Docker, specific feature flags, environment variables, network conditions, etc.)."
+    validations:
+      required: false

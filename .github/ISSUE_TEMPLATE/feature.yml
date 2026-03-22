@@ -1,0 +1,54 @@
+name: Feature request
+about: Suggest an idea for Rolnopol
+title: "[Feature] "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Is your feature request related to a problem? Please describe.**
+        A clear and concise description of the problem. Ex. I'm always frustrated when [...]
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem"
+      description: Describe the problem you are solving.
+      placeholder: "e.g. The export button is hard to discover and always fails on large datasets."
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        **Describe the solution you'd like**
+        A clear and concise description of what you want to happen.
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Proposed solution"
+      placeholder: "e.g. Add a new 'Download as CSV' button with async processing."
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        **Describe alternatives you've considered**
+        A clear and concise description of any alternative solutions or features you've considered.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives considered"
+      placeholder: "e.g. We tried in-place filtering first but performance was poor."
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        **Additional context**
+        Add any other context or screenshots about the feature request here.
+  - type: textarea
+    id: context
+    attributes:
+      label: "Additional context"
+      placeholder: "e.g. This is needed for the upcoming 3rd-party integration."
+    validations:
+      required: false

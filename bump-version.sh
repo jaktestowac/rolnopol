@@ -61,6 +61,7 @@ print_status "Bumping version: $current_version -> $new_version"
 # 3. Update only JSON files with "version" field
 json_files=(
     "package.json"
+    "package-lock.json"
     "app-data.json" 
     "public/schema/openapi.json"
 )
