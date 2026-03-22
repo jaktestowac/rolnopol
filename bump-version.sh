@@ -58,11 +58,10 @@ fi
 
 print_status "Bumping version: $current_version -> $new_version"
 
-# 3. Update only JSON files with "version" field
+# 3. Update only JSON files with "version" field (excluding package-lock.json)
 json_files=(
     "package.json"
-    "package-lock.json"
-    "app-data.json" 
+    "app-data.json"
     "public/schema/openapi.json"
 )
 
@@ -77,6 +76,32 @@ for file in "${json_files[@]}"; do
         print_warning "File not found: $file"
     fi
 done
+
+# 4. Update package-lock.json carefully via JSON parse/write
+if [ -f "package-lock.json" ]; then
+    if command -v node >/dev/null 2>&1; then
+        node - <<NODE
+const fs = require('fs');
+const path = 'package-lock.json';
+const raw = fs.readFileSync(path, 'utf8');
+const json = JSON.parse(raw);
+json.version = '$new_version';
+if (json.packages && json.packages['']) {
+  json.packages[''].version = '$new_version';
+}
+fs.writeFileSync(path, JSON.stringify(json, null, 2) + '\n', 'utf8');
+NODE
+        if [ $? -eq 0 ]; then
+            print_success "Updated package-lock.json"
+        else
+            print_warning "Failed to update package-lock.json via node json manipulation"
+        fi
+    else
+        print_warning "Node.js not available; package-lock.json not updated."
+    fi
+else
+    print_warning "File not found: package-lock.json"
+fi
 
 # Verify the update by checking package.json
 final_version=$(grep -oP '"version":\s*"\K[0-9]+\.[0-9]+\.[0-9]+' package.json)
