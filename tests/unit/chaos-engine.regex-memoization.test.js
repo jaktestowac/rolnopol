@@ -50,12 +50,7 @@ describe("Chaos Engine Middleware - Regex Memoization", () => {
         customConfig: {
           enabled: true,
           scope: {
-            includePaths: [
-              "/api/*",
-              "/v1/*/health",
-              "/users/*/profile",
-              "/admin/*/config",
-            ],
+            includePaths: ["/api/*", "/v1/*/health", "/users/*/profile", "/admin/*/config"],
           },
         },
       };
@@ -107,7 +102,7 @@ describe("Chaos Engine Middleware - Regex Memoization", () => {
           scope: {
             queryParams: {
               "test-mode": "on",
-              "debug": "*/enabled",
+              debug: "*/enabled",
             },
           },
         },
@@ -125,7 +120,7 @@ describe("Chaos Engine Middleware - Regex Memoization", () => {
           scope: {
             headers: {
               "x-chaos-mode": "enabled",
-              "authorization": "Bearer *",
+              authorization: "Bearer *",
               "x-request-id": "/[a-f0-9]+/",
             },
           },
@@ -144,16 +139,7 @@ describe("Chaos Engine Middleware - Regex Memoization", () => {
         customConfig: {
           enabled: true,
           scope: {
-            includePaths: [
-              "/api",
-              "/v1",
-              "/users",
-              "/admin",
-              "/health",
-              "/metrics",
-              "/status",
-              "/version",
-            ],
+            includePaths: ["/api", "/v1", "/users", "/admin", "/health", "/metrics", "/status", "/version"],
           },
         },
       };

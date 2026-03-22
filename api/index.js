@@ -84,6 +84,10 @@ checkAllDependencies();
 
 require("dotenv").config();
 
+if (process.env.NODE_ENV === "test") {
+  process.env.JSON_DB_WRITE_DEBOUNCE_MS = "0"; // Immediate writes in tests to avoid timing issues
+}
+
 const express = require("express");
 const http = require("http");
 const cookieParser = require("cookie-parser");
@@ -94,6 +98,7 @@ const { PORT } = require("../data/settings");
 const { logDebug, logInfo, logError } = require("../helpers/logger-api");
 const { initializeDatabases, cleanupDatabases } = require("../data/database-init");
 const versionMiddleware = require("../middleware/version.middleware");
+const { restoreAllDatabasesFromBaseState } = require("../services/debug-database-restore.service");
 const { clearAllTokens } = require("../helpers/token.helpers");
 const packageJson = require("../package.json");
 const notFoundStatsModule = require("../helpers/notfound-stats");
@@ -116,6 +121,9 @@ initializeDatabases().catch((error) => {
 
 // Initialize all databases into memory
 const dbManager = require("../data/database-manager");
+let dbInitializationPromise = null;
+let isDatabaseReady = false;
+
 const initializeAllDatabases = async () => {
   try {
     const databases = [
@@ -137,12 +145,38 @@ const initializeAllDatabases = async () => {
     }
 
     logInfo("All databases loaded into memory");
+
+    if (process.env.NODE_ENV === "test") {
+      try {
+        const restoreResult = await restoreAllDatabasesFromBaseState();
+        logInfo("Database base state restored for test environment", { restoreResult });
+      } catch (restoreError) {
+        logError("Failed to restore database state in test environment", restoreError);
+      }
+    }
+
+    isDatabaseReady = true;
   } catch (error) {
     logError("Error during database initialization:", error);
+    isDatabaseReady = false;
+    throw error;
   }
 };
 
-initializeAllDatabases();
+// Start initialization immediately and allow middleware to await it before processing requests.
+dbInitializationPromise = initializeAllDatabases();
+
+app.use(async (req, res, next) => {
+  if (!isDatabaseReady) {
+    try {
+      await dbInitializationPromise;
+    } catch (err) {
+      const { sendError } = require("../helpers/response-helper");
+      return sendError(req, res, 503, "Service initialization in progress");
+    }
+  }
+  next();
+});
 
 notificationCenter.initialize({ featureFlagsService }).catch((error) => {
   logError("Notification center initialization error", { error });

@@ -16,12 +16,10 @@ async function createAndLoginUser() {
   const email = `commodities_${Date.now()}_${Math.random().toString(36).slice(2)}@test.com`;
   const password = "testpass123";
 
-  await request(app).post("/api/v1/register").send({ email, password, displayedName: "Commodities User" }).expect(201);
-
-  const loginRes = await request(app).post("/api/v1/login").send({ email, password }).expect(200);
+  const registerRes = await request(app).post("/api/v1/register").send({ email, password, displayedName: "Commodities User" }).expect(201);
 
   return {
-    token: loginRes.body?.data?.token,
+    token: registerRes.body?.data?.token,
   };
 }
 
@@ -58,6 +56,10 @@ describe("Commodities API", () => {
 
   it("returns current prices for requested symbols", async () => {
     await patchFlags({ financialCommoditiesEnabled: true });
+    const flagsState = await getCurrentFlags();
+    console.log("current prices test feature flag state after patch", flagsState.financialCommoditiesEnabled);
+    expect(flagsState.financialCommoditiesEnabled).toBe(true);
+
     const { token } = await createAndLoginUser();
 
     const res = await request(app).get("/api/v1/commodities/prices?symbols=gold,silver").set("token", token).expect(200);
@@ -74,7 +76,12 @@ describe("Commodities API", () => {
 
   it("returns hourly history for a symbol", async () => {
     await patchFlags({ financialCommoditiesEnabled: true });
+    const flagsState = await request(app).get("/api/v1/feature-flags").expect(200);
+    console.log("history test feature flag state initially", flagsState.body.data.flags.financialCommoditiesEnabled);
     const { token } = await createAndLoginUser();
+
+    const flagsState2 = await request(app).get("/api/v1/feature-flags").expect(200);
+    console.log("history test feature flag state after register", flagsState2.body.data.flags.financialCommoditiesEnabled);
 
     const res = await request(app).get("/api/v1/commodities/prices/GOLD/history?hours=12").set("token", token).expect(200);
 

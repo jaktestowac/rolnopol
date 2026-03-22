@@ -53,95 +53,30 @@ describe("AuthService property-based tests", () => {
     await fc.assert(
       fc.asyncProperty(
         fc.emailAddress(),
-        fc
-          .array(
-            fc.constantFrom(
-              "a",
-              "b",
-              "c",
-              "d",
-              "e",
-              "f",
-              "g",
-              "h",
-              "i",
-              "j",
-              "k",
-              "l",
-              "m",
-              "n",
-              "o",
-              "p",
-              "q",
-              "r",
-              "s",
-              "t",
-              "u",
-              "v",
-              "w",
-              "x",
-              "y",
-              "z",
-              "A",
-              "B",
-              "C",
-              "D",
-              "E",
-              "F",
-              "G",
-              "H",
-              "I",
-              "J",
-              "K",
-              "L",
-              "M",
-              "N",
-              "O",
-              "P",
-              "Q",
-              "R",
-              "S",
-              "T",
-              "U",
-              "V",
-              "W",
-              "X",
-              "Y",
-              "Z",
-              "0",
-              "1",
-              "2",
-              "3",
-              "4",
-              "5",
-              "6",
-              "7",
-              "8",
-              "9",
-              " ",
-              "_",
-              "-",
-            ),
-            { minLength: 3, maxLength: 20 },
-          )
-          .map((arr) => arr.join("")),
+        fc.string({ minLength: 3, maxLength: 20 }),
         fc.string({ minLength: 10, maxLength: 30 }),
-        async (email, displayedName, password) => {
-          const trimmed = displayedName.trim();
+        async (email, baseDisplayedName, password) => {
+          const sanitized = baseDisplayedName.replace(/[^A-Za-z0-9 _-]/g, "");
+          const normalized = sanitized.trim();
+          if (normalized.length < 3) {
+            return;
+          }
+
+          const displayName = `  ${normalized}  `;
           const findUser = vi.spyOn(authService.userDataInstance, "findUserByEmail").mockResolvedValue(null);
           const createUser = vi.spyOn(authService.userDataInstance, "createUser").mockResolvedValue({
             id: 123,
             email,
-            displayedName: trimmed,
+            displayedName: normalized,
             password,
             isActive: true,
           });
           vi.spyOn(featureFlagsService, "getFeatureFlags").mockResolvedValue({ flags: { registrationStrongPasswordEnabled: false } });
           vi.spyOn(require("../../services/financial.service"), "initializeAccount").mockResolvedValue({ id: 123 });
 
-          const result = await authService.registerUser({ email, displayedName: `  ${trimmed}  `, password });
+          const result = await authService.registerUser({ email, displayedName: displayName, password });
 
-          expect(result.user).toEqual({ id: 123, email, displayedName: trimmed, isActive: true });
+          expect(result.user).toEqual({ id: 123, email, displayedName: normalized, isActive: true });
           expect(result.token).toBeDefined();
 
           findUser.mockRestore();

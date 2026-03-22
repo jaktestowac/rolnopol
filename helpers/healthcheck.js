@@ -104,7 +104,8 @@ async function performStartupHealthCheck() {
     });
     const deps = Array.from(declaredDeps);
 
-    if (!fs.existsSync(nodeModulesPath)) {
+    const existsNodeModules = fs.existsSync(nodeModulesPath);
+    if (!existsNodeModules) {
       // Mark all declared dependencies as missing
       missingModules.push(...deps);
     } else {
@@ -118,6 +119,7 @@ async function performStartupHealthCheck() {
         }
       }
     }
+    console.log("healthcheck missing modules", missingModules.length, missingModules);
 
     if (missingModules.length > 0) {
       health.status = "degraded";
@@ -263,26 +265,7 @@ async function buildHealthData() {
   // const installCmd = getInstallCommand();
   const installCmd = "npm install"; // For API response, we can just suggest npm install as a generic command
 
-  // collect declared dependency names
-  // const declaredDeps = new Set();
-  // ["dependencies", "optionalDependencies", "peerDependencies"].forEach((k) => {
-  //   const map = packageJson[k] || {};
-  //   Object.keys(map).forEach((name) => declaredDeps.add(name));
-  // });
-  // const deps = Array.from(declaredDeps);
-
   const missingModules = [];
-  // if (!fs.existsSync(nodeModulesPath)) {
-  //   missingModules.push(...deps);
-  // } else {
-  //   for (const dep of deps) {
-  //     try {
-  //       require.resolve(dep, { paths: [projectRoot] });
-  //     } catch (e) {
-  //       missingModules.push(dep);
-  //     }
-  //   }
-  // }
 
   health.modules = { missing: missingModules, installCommand: installCmd };
 

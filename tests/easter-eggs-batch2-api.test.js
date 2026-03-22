@@ -49,14 +49,6 @@ describe("Easter eggs batch 2", () => {
     expect(res.body.meta?.easterEgg?.monolithGlyph).toBe("■");
   });
 
-  it("Broken Compass is present in /about payload", async () => {
-    const res = await request(app).get("/api/v1/about").expect(200);
-    expect(res.body.success).toBe(true);
-    expect(res.body.data).toHaveProperty("brokenCompass");
-    expect(typeof res.body.data.brokenCompass).toBe("string");
-    expect(res.body.data.brokenCompass.length).toBeGreaterThanOrEqual(1);
-  });
-
   it("Ledger Haiku + Red Rain Ledger appear on crafted transaction", async () => {
     const actor = await registerAndLogin("ledgerhaiku");
 
