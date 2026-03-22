@@ -44,3 +44,4 @@ Plugins can optionally implement:
 
 - `auto-discoverable-plugin/` is configured to be auto-discovered and disabled by default.
 - `response-size-logger-plugin/` and `startup-info-plugin/` are simple, manual plugins that may be enabled via `plugins.manifest.json`.
+- `teapot-blocker-plugin/` is an auto-discoverable runtime plugin that intercepts every request in `onRequest`, returns HTTP 418, and stops further middleware/routing.

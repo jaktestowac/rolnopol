@@ -44,7 +44,7 @@ const FEATURE_FLAG_GROUPS = {
   monitoring: ["prometheusMetricsEnabled"],
   communication: ["messengerEnabled"],
   notifications: ["notificationCenterEnabled"],
-  weather: ["weatherPageEnabled", "weatherWeatherDataExport", "weatherUserInsightsEnabled"],
+  weather: ["weatherPageEnabled", "weatherWeatherDataExport", "weatherUserInsightsEnabled", "weatherTrendChartEnabled"],
   privacy: ["cookieConsentBannerEnabled"],
   "marketing (Ads)": [
     "promoAdvertsHomeEnabled",

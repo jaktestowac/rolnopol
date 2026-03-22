@@ -28,7 +28,6 @@ describe("Startup dependency check", () => {
     const projectRoot = path.resolve(__dirname, "..");
     const nodeModulesPath = path.join(projectRoot, "node_modules");
     await hc.performStartupHealthCheck();
-    expect(process.exit).toHaveBeenCalled();
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 });
