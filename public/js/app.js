@@ -132,6 +132,9 @@
 
       // Setup page-specific initialization
       setupPageHandlers();
+
+      // Setup global assistant chat widget (auth + feature-flag gated)
+      initializeAssistantChatWidget();
     } catch (error) {
       errorLogger.logCritical("Application Initialization", error, {
         showToUser: false,
@@ -588,6 +591,464 @@
     // Setup welcome message for authenticated users
     if (authService && authService.isAuthenticated()) {
       setupAuthenticatedWelcome();
+    }
+  }
+
+  async function initializeAssistantChatWidget() {
+    const authService = window.App.getModule("authService");
+    const apiService = window.App.getModule("apiService");
+    const storage = window.App.getModule("storage");
+
+    if (!authService || !apiService) {
+      return;
+    }
+
+    const currentPage = getCurrentPageName();
+    if (currentPage === "login" || currentPage === "register" || Utils.isSwaggerPage()) {
+      return;
+    }
+
+    if (!authService.isAuthenticated()) {
+      return;
+    }
+
+    try {
+      const flagsResponse = await apiService.get("feature-flags", { requiresAuth: true });
+      const enabled = flagsResponse?.success && flagsResponse?.data?.data?.flags?.assistantChatEnabled === true;
+
+      if (!enabled) {
+        return;
+      }
+
+      if (document.getElementById("assistant-chat-widget")) {
+        return;
+      }
+
+      const widget = document.createElement("div");
+      widget.id = "assistant-chat-widget";
+      widget.className = "assistant-chat-widget";
+      widget.innerHTML = `
+        <button type="button" id="assistant-chat-toggle" class="assistant-chat-widget__toggle" aria-expanded="false" aria-controls="assistant-chat-panel">
+          🐷
+          <span> Ask Porky, an AI Assistant!</span>
+        </button>
+        <section id="assistant-chat-panel" class="assistant-chat-widget__panel" aria-hidden="true">
+          <header class="assistant-chat-widget__header">
+            <div>
+              <strong>🐷 Porky - AI Assistant</strong>
+              <p>Ask about your fields, staff, and animals.</p>
+            </div>
+            <div class="assistant-chat-widget__header-buttons">
+              <button type="button" id="assistant-chat-clear" class="assistant-chat-widget__clear" aria-label="Clear chat history" title="Clear all messages">
+                <i class="fas fa-trash" aria-hidden="true"></i>
+              </button>
+              <button type="button" id="assistant-chat-close" class="assistant-chat-widget__close" aria-label="Close assistant chat">
+                <i class="fas fa-times" aria-hidden="true"></i>
+              </button>
+            </div>
+          </header>
+          <div id="assistant-chat-messages" class="assistant-chat-widget__messages"></div>
+          <form id="assistant-chat-form" class="assistant-chat-widget__form">
+            <div id="assistant-chat-suggestions" class="assistant-chat-widget__suggestions" aria-hidden="true" role="listbox"></div>
+            <input id="assistant-chat-input" class="assistant-chat-widget__input" type="text" maxlength="1024" aria-label="Assistant chat message" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" required />
+            <button type="submit" class="assistant-chat-widget__send">Send</button>
+          </form>
+          <div id="assistant-chat-clear-confirm" class="assistant-chat-widget__confirm" aria-hidden="true">
+            <p class="assistant-chat-widget__confirm-text">Clear all chat messages? This action cannot be undone.</p>
+            <div class="assistant-chat-widget__confirm-actions">
+              <button type="button" id="assistant-chat-clear-cancel" class="assistant-chat-widget__confirm-btn assistant-chat-widget__confirm-btn--cancel">Cancel</button>
+              <button type="button" id="assistant-chat-clear-accept" class="assistant-chat-widget__confirm-btn assistant-chat-widget__confirm-btn--danger">Clear</button>
+            </div>
+          </div>
+        </section>
+      `;
+
+      document.body.appendChild(widget);
+
+      const toggleButton = document.getElementById("assistant-chat-toggle");
+      const panel = document.getElementById("assistant-chat-panel");
+      const closeButton = document.getElementById("assistant-chat-close");
+      const clearButton = document.getElementById("assistant-chat-clear");
+      const messagesContainer = document.getElementById("assistant-chat-messages");
+      const suggestionsContainer = document.getElementById("assistant-chat-suggestions");
+      const form = document.getElementById("assistant-chat-form");
+      const input = document.getElementById("assistant-chat-input");
+      const clearConfirm = document.getElementById("assistant-chat-clear-confirm");
+      const clearConfirmCancel = document.getElementById("assistant-chat-clear-cancel");
+      const clearConfirmAccept = document.getElementById("assistant-chat-clear-accept");
+
+      const userId = storage?.cookie?.get("rolnopolUserId");
+      const canPersistState = typeof userId === "string" && userId.trim().length > 0;
+      const chatStateStorageKey = canPersistState ? `rolnopol.assistantChat.state.v1.${userId}` : null;
+      const chatSyncChannelName = canPersistState ? `rolnopol.assistantChat.sync.v1.${userId}` : null;
+      const currentTabId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      let chatSyncChannel = null;
+
+      if (chatSyncChannelName && "BroadcastChannel" in window) {
+        try {
+          chatSyncChannel = new BroadcastChannel(chatSyncChannelName);
+        } catch (error) {
+          chatSyncChannel = null;
+        }
+      }
+
+      const normalizeStoredState = (payload) => {
+        if (!payload || typeof payload !== "object") {
+          return null;
+        }
+
+        const messages = Array.isArray(payload.messages)
+          ? payload.messages
+              .filter((item) => item && (item.role === "assistant" || item.role === "user") && typeof item.text === "string")
+              .slice(-50)
+          : [];
+
+        return {
+          isOpen: payload.isOpen === true,
+          messages,
+        };
+      };
+
+      const formatTime = (timestamp) => {
+        if (!timestamp) return "";
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      };
+
+      const readStoredState = () => {
+        if (!canPersistState || !chatStateStorageKey) {
+          return null;
+        }
+
+        try {
+          const raw = window.localStorage.getItem(chatStateStorageKey);
+          if (!raw) {
+            return null;
+          }
+
+          const parsed = JSON.parse(raw);
+          return normalizeStoredState(parsed);
+        } catch (error) {
+          return null;
+        }
+      };
+
+      const writeStoredState = ({ isOpen, messages }, options = {}) => {
+        if (!canPersistState || !chatStateStorageKey) {
+          return;
+        }
+
+        const shouldBroadcast = options.broadcast !== false;
+        const normalized = {
+          isOpen: isOpen === true,
+          messages: Array.isArray(messages) ? messages.slice(-50) : [],
+        };
+
+        try {
+          window.localStorage.setItem(chatStateStorageKey, JSON.stringify(normalized));
+
+          if (shouldBroadcast && chatSyncChannel) {
+            chatSyncChannel.postMessage({
+              type: "assistant-chat:state-sync",
+              sourceTabId: currentTabId,
+              payload: normalized,
+            });
+          }
+        } catch (error) {
+          // Ignore storage quota/private mode issues.
+        }
+      };
+
+      const state = {
+        isOpen: false,
+        messages: [],
+      };
+
+      let clearConfirmResolve = null;
+
+      const clearMessages = () => {
+        state.messages = [];
+        if (messagesContainer) {
+          messagesContainer.innerHTML = "";
+        }
+        appendMessage("assistant", "Chat cleared. Hi! I'm Porky, your AI Assistant! Ask about your fields, staff, and animals.");
+      };
+
+      const commands = [{ name: "/clear", description: "Clear all messages" }];
+
+      const showSuggestions = (filter = "") => {
+        if (!suggestionsContainer) return;
+        suggestionsContainer.innerHTML = "";
+        const normalizedFilter = (filter || "").toLowerCase();
+        const visibleCommands = commands.filter((cmd) => cmd.name.toLowerCase().startsWith(`/${normalizedFilter}`));
+
+        if (!visibleCommands.length) {
+          suggestionsContainer.setAttribute("aria-hidden", "true");
+          return;
+        }
+
+        suggestionsContainer.setAttribute("aria-hidden", "false");
+
+        visibleCommands.forEach((cmd) => {
+          const option = document.createElement("div");
+          option.className = "assistant-chat-widget__suggestion-item";
+          option.setAttribute("role", "option");
+          option.innerHTML = `<strong>${cmd.name}</strong> <span class="assistant-chat-widget__suggestion-desc">${cmd.description}</span>`;
+          option.addEventListener("click", () => {
+            input.value = cmd.name;
+            hideSuggestions();
+            input.focus();
+          });
+          suggestionsContainer.appendChild(option);
+        });
+      };
+
+      const hideSuggestions = () => {
+        if (suggestionsContainer) {
+          suggestionsContainer.setAttribute("aria-hidden", "true");
+          suggestionsContainer.innerHTML = "";
+        }
+      };
+
+      const hideClearConfirmation = () => {
+        if (!clearConfirm) {
+          return;
+        }
+        clearConfirm.setAttribute("aria-hidden", "true");
+      };
+
+      const showClearConfirmation = () => {
+        if (!clearConfirm || !clearConfirmAccept || !clearConfirmCancel) {
+          return Promise.resolve(false);
+        }
+
+        clearConfirm.setAttribute("aria-hidden", "false");
+
+        return new Promise((resolve) => {
+          clearConfirmResolve = resolve;
+          clearConfirmAccept.focus();
+        });
+      };
+
+      const resolveClearConfirmation = (accepted) => {
+        if (!clearConfirmResolve) {
+          hideClearConfirmation();
+          return;
+        }
+
+        const resolve = clearConfirmResolve;
+        clearConfirmResolve = null;
+        hideClearConfirmation();
+        resolve(accepted === true);
+      };
+
+      const appendMessage = (role, text) => {
+        if (!messagesContainer) return;
+        const timestamp = new Date().toISOString();
+        const item = document.createElement("div");
+        item.className = `assistant-chat-widget__message assistant-chat-widget__message--${role}`;
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = text;
+
+        const timeSpan = document.createElement("span");
+        timeSpan.className = "assistant-chat-widget__message-time";
+        timeSpan.textContent = formatTime(timestamp);
+
+        item.appendChild(textSpan);
+        item.appendChild(timeSpan);
+        messagesContainer.appendChild(item);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        state.messages.push({ role, text, timestamp });
+        writeStoredState(state);
+        hideSuggestions();
+      };
+
+      const renderHistory = (messages) => {
+        if (!messagesContainer) return;
+        messagesContainer.innerHTML = "";
+        for (const message of messages) {
+          const item = document.createElement("div");
+          item.className = `assistant-chat-widget__message assistant-chat-widget__message--${message.role}`;
+
+          const textSpan = document.createElement("span");
+          textSpan.textContent = message.text;
+
+          const timeSpan = document.createElement("span");
+          timeSpan.className = "assistant-chat-widget__message-time";
+          timeSpan.textContent = formatTime(message.timestamp);
+
+          item.appendChild(textSpan);
+          item.appendChild(timeSpan);
+          messagesContainer.appendChild(item);
+        }
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      };
+
+      const applySyncedState = (incomingState) => {
+        const normalizedIncoming = normalizeStoredState(incomingState);
+        if (!normalizedIncoming) {
+          return;
+        }
+
+        state.isOpen = normalizedIncoming.isOpen;
+        state.messages = [...normalizedIncoming.messages];
+        renderHistory(state.messages);
+
+        panel.classList.toggle("is-open", state.isOpen);
+        panel.setAttribute("aria-hidden", state.isOpen ? "false" : "true");
+        toggleButton.setAttribute("aria-expanded", state.isOpen ? "true" : "false");
+      };
+
+      const setOpen = (open) => {
+        state.isOpen = open === true;
+        panel.classList.toggle("is-open", open);
+        panel.setAttribute("aria-hidden", open ? "false" : "true");
+        toggleButton.setAttribute("aria-expanded", open ? "true" : "false");
+        writeStoredState(state);
+        if (open) {
+          setTimeout(() => input?.focus(), 50);
+        }
+      };
+
+      const storedState = readStoredState();
+      if (storedState && storedState.messages.length > 0) {
+        state.isOpen = storedState.isOpen;
+        state.messages = [...storedState.messages];
+        renderHistory(state.messages);
+      } else {
+        appendMessage(
+          "assistant",
+          "Hi! I'm Porky, your AI Assistant! I can summarize your private farm data. Try asking 'How are my fields doing?' or 'Tell me about animals.'",
+        );
+      }
+
+      if (storedState?.isOpen === true) {
+        setOpen(true);
+      }
+
+      if (canPersistState && chatStateStorageKey) {
+        window.addEventListener("storage", (event) => {
+          if (event.key !== chatStateStorageKey || !event.newValue) {
+            return;
+          }
+
+          try {
+            const nextState = JSON.parse(event.newValue);
+            applySyncedState(nextState);
+          } catch (error) {
+            // Ignore malformed sync payload.
+          }
+        });
+      }
+
+      if (chatSyncChannel) {
+        chatSyncChannel.onmessage = (event) => {
+          const message = event?.data;
+          if (!message || message.type !== "assistant-chat:state-sync") {
+            return;
+          }
+
+          if (message.sourceTabId === currentTabId) {
+            return;
+          }
+
+          applySyncedState(message.payload);
+        };
+      }
+
+      toggleButton?.addEventListener("click", () => {
+        const isOpen = panel.classList.contains("is-open");
+        setOpen(!isOpen);
+      });
+
+      input?.addEventListener("input", () => {
+        const value = (input.value || "").trim();
+        if (value.startsWith("/")) {
+          showSuggestions(value.slice(1));
+        } else {
+          hideSuggestions();
+        }
+      });
+
+      input?.addEventListener("focus", () => {
+        const value = (input.value || "").trim();
+        if (value.startsWith("/")) {
+          showSuggestions(value.slice(1));
+        }
+      });
+
+      input?.addEventListener("blur", () => {
+        setTimeout(() => hideSuggestions(), 200);
+      });
+
+      closeButton?.addEventListener("click", () => setOpen(false));
+
+      clearConfirmCancel?.addEventListener("click", () => {
+        resolveClearConfirmation(false);
+      });
+
+      clearConfirmAccept?.addEventListener("click", () => {
+        resolveClearConfirmation(true);
+      });
+
+      panel?.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && clearConfirm?.getAttribute("aria-hidden") === "false") {
+          event.preventDefault();
+          resolveClearConfirmation(false);
+        }
+      });
+
+      clearButton?.addEventListener("click", async () => {
+        const accepted = await showClearConfirmation();
+        if (accepted) {
+          clearMessages();
+        }
+      });
+
+      form?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const message = (input?.value || "").trim();
+        if (!message) {
+          return;
+        }
+
+        // Handle /clear command
+        if (message.toLowerCase() === "/clear") {
+          input.value = "";
+          const accepted = await showClearConfirmation();
+          if (accepted) {
+            clearMessages();
+          }
+          input.focus();
+          return;
+        }
+
+        appendMessage("user", message);
+        input.value = "";
+        input.disabled = true;
+
+        try {
+          const response = await apiService.post("assistant-chat/messages", { message }, { requiresAuth: true, timeout: 20000 });
+
+          if (!response?.success) {
+            appendMessage("assistant", response?.error || "Sorry, I couldn't answer right now.");
+            return;
+          }
+
+          const reply = response?.data?.data?.reply;
+          appendMessage("assistant", reply || "I have no answer yet. Please try another question.");
+        } catch (error) {
+          appendMessage("assistant", "Something went wrong while contacting the assistant.");
+        } finally {
+          input.disabled = false;
+          input.focus();
+        }
+      });
+    } catch (error) {
+      // Keep page silent when feature-flag lookup fails.
     }
   }
 

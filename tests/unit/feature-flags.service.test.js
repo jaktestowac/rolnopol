@@ -31,6 +31,7 @@ describe("feature-flags.service", () => {
         homeStatsSectionEnabled: false,
         homeModernRestyleEnabled: false,
         messengerEnabled: false,
+        assistantChatEnabled: false,
         notificationCenterEnabled: false,
         weatherPageEnabled: false,
         weatherWeatherDataExport: false,
@@ -82,6 +83,7 @@ describe("feature-flags.service", () => {
         homeStatsSectionEnabled: false,
         homeModernRestyleEnabled: false,
         messengerEnabled: false,
+        assistantChatEnabled: false,
         notificationCenterEnabled: false,
         weatherPageEnabled: false,
         weatherWeatherDataExport: false,
@@ -138,6 +140,7 @@ describe("feature-flags.service", () => {
         homeStatsSectionEnabled: false,
         homeModernRestyleEnabled: false,
         messengerEnabled: false,
+        assistantChatEnabled: false,
         notificationCenterEnabled: false,
         weatherPageEnabled: false,
         weatherWeatherDataExport: false,
@@ -181,6 +184,7 @@ describe("feature-flags.service", () => {
     expect(result.flags.alertsEnabled).toBe(false);
     expect(result.flags.customPilotFlag).toBe(true);
     expect(result.flags).toHaveProperty("messengerEnabled", false);
+    expect(result.flags).toHaveProperty("assistantChatEnabled", false);
     expect(result.updatedAt).toBe(now.toISOString());
     expect(replaceSpy).toHaveBeenCalledWith({
       flags: expect.objectContaining({
@@ -188,6 +192,7 @@ describe("feature-flags.service", () => {
         customPilotFlag: true,
         cookieConsentBannerEnabled: false,
         messengerEnabled: false,
+        assistantChatEnabled: false,
         homeModernRestyleEnabled: false,
         weatherPageEnabled: false,
         weatherWeatherDataExport: false,
@@ -225,6 +230,7 @@ describe("feature-flags.service", () => {
         homeModernRestyleEnabled: false,
         cookieConsentBannerEnabled: false,
         messengerEnabled: false,
+        assistantChatEnabled: false,
         notificationCenterEnabled: false,
         weatherPageEnabled: false,
         weatherWeatherDataExport: false,
