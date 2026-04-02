@@ -1,4 +1,5 @@
 const BaseProvider = require("./base.provider");
+const { getToolsForOpenRouter } = require("../tools/tools-registry");
 
 const DEFAULT_OPENROUTER_API_BASE_URL = "https://openrouter.ai/api/v1";
 const DEFAULT_OPENROUTER_MODEL = "openai/gpt-4-turbo";
@@ -37,33 +38,72 @@ class OpenRouterProvider extends BaseProvider {
     return message.content.trim();
   }
 
+  _extractToolCalls(data) {
+    const message = data?.choices?.[0]?.message;
+    if (!message || !message.tool_calls) {
+      return null;
+    }
+
+    const toolCalls = message.tool_calls.map((tc) => ({
+      name: tc.function.name,
+      arguments: JSON.parse(tc.function.arguments || "{}"),
+    }));
+
+    return toolCalls.length > 0 ? toolCalls : null;
+  }
+
   async askText(userMessage, options = {}) {
     const systemInstruction = options?.systemInstruction?.parts?.[0]?.text || "";
     const generationConfig = options?.generationConfig || {};
+    const useTools = options.useTools !== false; // Enable tools by default
+    const messages = options.messages; // Support full conversation history
 
     const data = await this._callApiWithRetry(
-      () => ({
-        model: this.model,
-        messages: [
-          {
-            role: "system",
-            content: systemInstruction,
-          },
-          {
-            role: "user",
-            content: userMessage,
-          },
-        ],
-        temperature: generationConfig?.temperature ?? 0.7,
-        max_tokens: generationConfig?.maxOutputTokens ?? 2048,
-      }),
+      () => {
+        // If messages provided, use full conversation; otherwise build from single message
+        const msgArray = messages
+          ? messages.map((msg) => ({
+              role: msg.role,
+              content: msg.content,
+            }))
+          : userMessage
+            ? [
+                {
+                  role: "user",
+                  content: userMessage,
+                },
+              ]
+            : [];
+
+        const payload = {
+          model: this.model,
+          messages: [
+            {
+              role: "system",
+              content: systemInstruction,
+            },
+            ...msgArray,
+          ],
+          temperature: generationConfig?.temperature ?? 0.7,
+          max_tokens: generationConfig?.maxOutputTokens ?? 2048,
+        };
+
+        // Add tools if supported and enabled
+        if (useTools) {
+          payload.tools = getToolsForOpenRouter();
+        }
+
+        return payload;
+      },
       (data) => this._extractText(data),
     );
 
     const text = this._extractText(data);
+    const toolCalls = this._extractToolCalls(data);
 
     return {
       text: text || "No response from model.",
+      toolCalls: toolCalls || null,
     };
   }
 }

@@ -119,6 +119,7 @@ class ChatbotService {
     const reply = await this.connector.generateResponse({
       prompt,
       context: compactedContext,
+      userId,
     });
 
     return {

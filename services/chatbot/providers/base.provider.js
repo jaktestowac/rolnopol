@@ -67,6 +67,22 @@ class BaseProvider {
   }
 
   /**
+   * Template method for extracting tool/function calls - override in subclass if provider supports it
+   * Should return array of { name, arguments } or null if no tool calls
+   */
+  _extractToolCalls(data) {
+    return null; // Override in subclass if provider supports tool calling
+  }
+
+  /**
+   * Check if response indicates a tool/function call is needed
+   */
+  _hasToolCall(data) {
+    const toolCalls = this._extractToolCalls(data);
+    return toolCalls && toolCalls.length > 0;
+  }
+
+  /**
    * Make HTTP request with timeout handling
    */
   async _requestWithTimeout(url, payload) {
