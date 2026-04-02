@@ -2,6 +2,7 @@ const { sanitizeString } = require("../../helpers/validators");
 const { logInfo, logWarning } = require("../../helpers/logger-api");
 const MockLlmConnector = require("./connectors/mock-llm.connector");
 const GeminiLlmConnector = require("./connectors/gemini-llm.connector");
+const OpenRouterLlmConnector = require("./connectors/openrouter-llm.connector");
 const chatbotContextService = require("./chatbot-context.service");
 
 const MAX_PROMPT_LENGTH = 1024;
@@ -32,6 +33,26 @@ class ChatbotService {
         return new GeminiLlmConnector();
       } catch (error) {
         logWarning("Gemini connector could not be initialized. Falling back to mock connector.", error);
+        return new MockLlmConnector();
+      }
+    }
+
+    if (provider === "openrouter") {
+      const hasOpenRouterApiKey = Boolean(process.env.OPENROUTER_API_KEY && String(process.env.OPENROUTER_API_KEY).trim());
+      const hasOpenRouterModel = Boolean(process.env.OPENROUTER_MODEL && String(process.env.OPENROUTER_MODEL).trim());
+
+      if (!hasOpenRouterApiKey || !hasOpenRouterModel) {
+        const missing = [!hasOpenRouterApiKey ? "OPENROUTER_API_KEY" : null, !hasOpenRouterModel ? "OPENROUTER_MODEL" : null]
+          .filter(Boolean)
+          .join(", ");
+        logWarning(`LLM provider 'openrouter' is configured but missing: ${missing}. Falling back to mock connector.`);
+        return new MockLlmConnector();
+      }
+
+      try {
+        return new OpenRouterLlmConnector();
+      } catch (error) {
+        logWarning("OpenRouter connector could not be initialized. Falling back to mock connector.", error);
         return new MockLlmConnector();
       }
     }
