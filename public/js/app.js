@@ -774,22 +774,39 @@
         appendMessage("assistant", "Chat cleared. Hi! I'm Porky, your AI Assistant! Ask about your fields, staff, and animals.");
       };
 
-      const commands = [{ name: "/clear", description: "Clear all messages" }];
+      const commands = [
+        { name: "/clear", description: "Clear all messages" },
+        { name: "/status", description: "Get Porky's info and status" },
+        { name: "/help", description: "Show available commands" },
+        { name: "/alerts", description: "Get active farm alerts" },
+      ];
+
+      let currentVisibleCommands = [];
+      let selectedSuggestionIndex = -1;
+
+      const highlightSuggestion = () => {
+        if (!suggestionsContainer) return;
+        const items = Array.from(suggestionsContainer.querySelectorAll(".assistant-chat-widget__suggestion-item"));
+        items.forEach((item, index) => {
+          item.classList.toggle("assistant-chat-widget__suggestion-item--active", index === selectedSuggestionIndex);
+        });
+      };
 
       const showSuggestions = (filter = "") => {
         if (!suggestionsContainer) return;
         suggestionsContainer.innerHTML = "";
         const normalizedFilter = (filter || "").toLowerCase();
-        const visibleCommands = commands.filter((cmd) => cmd.name.toLowerCase().startsWith(`/${normalizedFilter}`));
+        currentVisibleCommands = commands.filter((cmd) => cmd.name.toLowerCase().startsWith(`/${normalizedFilter}`));
 
-        if (!visibleCommands.length) {
+        if (!currentVisibleCommands.length) {
           suggestionsContainer.setAttribute("aria-hidden", "true");
           return;
         }
 
+        selectedSuggestionIndex = -1;
         suggestionsContainer.setAttribute("aria-hidden", "false");
 
-        visibleCommands.forEach((cmd) => {
+        currentVisibleCommands.forEach((cmd, index) => {
           const option = document.createElement("div");
           option.className = "assistant-chat-widget__suggestion-item";
           option.setAttribute("role", "option");
@@ -799,8 +816,14 @@
             hideSuggestions();
             input.focus();
           });
+          option.addEventListener("mouseenter", () => {
+            selectedSuggestionIndex = index;
+            highlightSuggestion();
+          });
           suggestionsContainer.appendChild(option);
         });
+
+        highlightSuggestion();
       };
 
       const hideSuggestions = () => {
@@ -808,6 +831,8 @@
           suggestionsContainer.setAttribute("aria-hidden", "true");
           suggestionsContainer.innerHTML = "";
         }
+        currentVisibleCommands = [];
+        selectedSuggestionIndex = -1;
       };
 
       const hideClearConfirmation = () => {
@@ -972,6 +997,33 @@
         }
       });
 
+      input?.addEventListener("keydown", (event) => {
+        if (!suggestionsContainer || suggestionsContainer.getAttribute("aria-hidden") === "true") {
+          return;
+        }
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, currentVisibleCommands.length - 1);
+          highlightSuggestion();
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, 0);
+          highlightSuggestion();
+        } else if (event.key === "Enter") {
+          if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < currentVisibleCommands.length) {
+            event.preventDefault();
+            const selected = currentVisibleCommands[selectedSuggestionIndex];
+            if (selected) {
+              input.value = selected.name;
+              hideSuggestions();
+            }
+          }
+        } else if (event.key === "Escape") {
+          hideSuggestions();
+        }
+      });
+
       input?.addEventListener("focus", () => {
         const value = (input.value || "").trim();
         if (value.startsWith("/")) {
@@ -1023,6 +1075,74 @@
             clearMessages();
           }
           input.focus();
+          return;
+        }
+
+        // Handle /status command
+        if (message.toLowerCase() === "/status") {
+          appendMessage("user", message);
+          input.value = "";
+          appendMessage(
+            "assistant",
+            "🐷 Porky - Rolnopol Farm Assistant\n\nCode Name: Porky\nSystem: Rolnopol AI Assistant v1.0\nPurpose: Farm management and decision support\n\nCapabilities: Fields, animals, staff, finances, weather, commodities, marketplace, alerts, and messaging.",
+          );
+          input.focus();
+          return;
+        }
+
+        // Handle /help command
+        if (message.toLowerCase() === "/help") {
+          appendMessage("user", message);
+          input.value = "";
+          appendMessage(
+            "assistant",
+            "📚 Available Commands:\n\n/status - Get Porky's info and status\n/help - Show this help message\n/alerts - Get active farm alerts\n/clear - Clear chat history\n\nOr just ask me anything about your fields, animals, staff, finances, weather forecasts, commodities, marketplace, or farm alerts!",
+          );
+          input.focus();
+          return;
+        }
+
+        // Handle /alerts command
+        if (message.toLowerCase() === "/alerts") {
+          appendMessage("user", message);
+          input.value = "";
+          input.disabled = true;
+          try {
+            const alertsResponse = await apiService.get("alerts", { requiresAuth: true });
+            if (alertsResponse?.success && alertsResponse?.data?.data) {
+              const data = alertsResponse.data.data;
+              const todayAlerts = (data.today?.alerts || []).map((a) => ({ ...a, dateLabel: "Today" }));
+              const upcomingAlerts = (data.upcoming?.alerts || []).map((a) => ({ ...a, dateLabel: "Upcoming" }));
+              const historyAlerts = (data.history || [])
+                .flatMap((h) => (h.alerts || []).map((a) => ({ ...a, dateLabel: h.date })))
+                .filter((a) => a);
+
+              const allAlerts = [...todayAlerts, ...upcomingAlerts, ...historyAlerts];
+
+              if (allAlerts.length === 0) {
+                appendMessage("assistant", "✅ No active alerts. Your farm is looking good!");
+              } else {
+                const alertsList = allAlerts
+                  .slice(0, 5)
+                  .map((alert) => {
+                    const dateLabel = alert.dateLabel ? ` (${alert.dateLabel})` : "";
+                    const message = alert.message ? `\n   ${alert.message}` : "";
+                    return `• [${alert.category.toUpperCase()}] ${alert.title}${dateLabel}${message}`;
+                  })
+                  .join("\n\n");
+                const message = `⚠️ Farm Alerts (showing latest ${Math.min(allAlerts.length, 5)}):\n\n${alertsList}`;
+                appendMessage("assistant", message);
+              }
+            } else {
+              appendMessage("assistant", "Could not fetch alerts. Please try again.");
+            }
+          } catch (error) {
+            console.error("Error fetching alerts:", error);
+            appendMessage("assistant", "Error fetching alerts. Please try again.");
+          } finally {
+            input.disabled = false;
+            input.focus();
+          }
           return;
         }
 

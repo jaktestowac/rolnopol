@@ -5,6 +5,7 @@ class WeatherService {
 
   _supportedRegions() {
     return [
+      { code: "PL-00", name: "Polska" },
       { code: "PL-02", name: "dolnośląskie" },
       { code: "PL-04", name: "kujawsko-pomorskie" },
       { code: "PL-08", name: "lubuskie" },
@@ -24,6 +25,11 @@ class WeatherService {
     ];
   }
 
+  _subRegions() {
+    // All regions except PL-00 (Whole Poland)
+    return this._supportedRegions().filter((r) => r.code !== "PL-00");
+  }
+
   getSupportedRegions() {
     return this._supportedRegions().map((item) => ({ ...item }));
   }
@@ -33,6 +39,40 @@ class WeatherService {
     const candidate = String(regionCode || "").trim();
     const known = regions.find((item) => item.code === candidate);
     return known ? known.code : this.region;
+  }
+
+  _aggregateRegionWeather(dateStr, subRegions) {
+    // Generate weather for all sub-regions and aggregate
+    const weatherByRegion = subRegions.map((region) => this.generateDay(dateStr, { region: region.code }));
+
+    // Aggregate: average temperature, total rainfall, max wind, etc.
+    const aggregated = {
+      date: dateStr,
+      region: "PL-00",
+      temperatureMinC: Math.round((weatherByRegion.reduce((sum, w) => sum + w.temperatureMinC, 0) / weatherByRegion.length) * 10) / 10,
+      temperatureMaxC: Math.round((weatherByRegion.reduce((sum, w) => sum + w.temperatureMaxC, 0) / weatherByRegion.length) * 10) / 10,
+      precipitationMm: Math.round((weatherByRegion.reduce((sum, w) => sum + w.precipitationMm, 0) / weatherByRegion.length) * 10) / 10,
+      humidityPct: Math.round(weatherByRegion.reduce((sum, w) => sum + w.humidityPct, 0) / weatherByRegion.length),
+      windKmh: Math.round(weatherByRegion.reduce((sum, w) => sum + w.windKmh, 0) / weatherByRegion.length),
+      pressureHpa: Math.round(weatherByRegion.reduce((sum, w) => sum + w.pressureHpa, 0) / weatherByRegion.length),
+      cloudCoverPct: Math.round(weatherByRegion.reduce((sum, w) => sum + w.cloudCoverPct, 0) / weatherByRegion.length),
+      droughtIndex: Math.round(weatherByRegion.reduce((sum, w) => sum + w.droughtIndex, 0) / weatherByRegion.length),
+      soilMoisturePct: Math.round(weatherByRegion.reduce((sum, w) => sum + w.soilMoisturePct, 0) / weatherByRegion.length),
+      spellType: weatherByRegion[0].spellType, // Use most common spell type from first region
+      condition: this._conditionLabel(
+        weatherByRegion.reduce((sum, w) => sum + (w.temperatureMinC + w.temperatureMaxC) / 2, 0) / weatherByRegion.length,
+        weatherByRegion.reduce((sum, w) => sum + w.precipitationMm, 0) / weatherByRegion.length,
+        Math.round(weatherByRegion.reduce((sum, w) => sum + w.cloudCoverPct, 0) / weatherByRegion.length),
+        Math.round(weatherByRegion.reduce((sum, w) => sum + w.windKmh, 0) / weatherByRegion.length),
+      ),
+      dataType: "Cumulative/Summary",
+      note: "This is aggregated weather data across all 16 Polish regions. Individual regional weather may differ significantly. Check specific region forecasts for more accurate local conditions.",
+    };
+
+    return {
+      ...aggregated,
+      advisory: this._advisory(aggregated),
+    };
   }
 
   _parseISODate(dateStr) {
@@ -161,6 +201,11 @@ class WeatherService {
   generateDay(dateStr, options = {}) {
     const date = this._parseISODate(dateStr);
     const region = options.region || this.region;
+
+    // Handle special "Whole Poland" region by aggregating sub-regions
+    if (region === "PL-00") {
+      return this._aggregateRegionWeather(dateStr, this._subRegions());
+    }
 
     const season = this._seasonProfile(date.getUTCMonth());
     const regime = this._regimeForDate(date, region);
