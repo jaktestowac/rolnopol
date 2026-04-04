@@ -11,7 +11,7 @@
     "start-debug": "cross-env DEBUG_MODE=true node ./api/index.js",
     "dev": "node ./api/index.js",
     "format": "npx prettier --write .",
-    "bump-version": "bump-version.sh patch"
+    "bump-version": "node bump-version.js patch"
   },
   "keywords": [
     "express",
