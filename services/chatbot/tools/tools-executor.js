@@ -1,4 +1,5 @@
 const { logInfo, logWarning, logTrace } = require("../../../helpers/logger-api");
+const docsService = require("../../docs.service");
 
 /**
  * Tools Executor
@@ -44,6 +45,10 @@ class ToolsExecutor {
         result = this._getStaffWorkload(toolArgs);
         break;
 
+      case "get_documentation_answer":
+        result = await this._getDocumentationAnswer(toolArgs);
+        break;
+
       default:
         logWarning(`Unknown tool requested: ${toolName}`);
         result = { error: `Tool '${toolName}' is not available` };
@@ -58,6 +63,29 @@ class ToolsExecutor {
     });
 
     return result;
+  }
+
+  /**
+   * Get documentation answer from docs service
+   */
+  async _getDocumentationAnswer(args) {
+    const { query = "", max_results = 3 } = args || {};
+
+    if (!query || typeof query !== "string" || !query.trim()) {
+      return { error: "query is required for get_documentation_answer" };
+    }
+
+    try {
+      const docsResult = await docsService.search(query.trim(), Number(max_results) || 3);
+      return {
+        query: docsResult.query,
+        totalMatches: docsResult.totalMatches,
+        answer: docsResult.answer,
+        matches: docsResult.matches,
+      };
+    } catch (error) {
+      return { error: `Docs query failed: ${error.message || String(error)}` };
+    }
   }
 
   /**

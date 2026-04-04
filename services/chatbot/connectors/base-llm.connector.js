@@ -6,11 +6,13 @@ const { logInfo, logWarning, logTrace } = require("../../../helpers/logger-api")
  * Handles common prompt building, generation logic, and function calling
  */
 class BaseLlmConnector {
-  constructor(provider, providerName) {
+  constructor(provider, providerName, prometheusMetrics = null) {
     this.providerName = providerName;
     this.provider = provider;
+    this.metrics = prometheusMetrics;
     this.provider.ensureConfigured();
     this.maxToolCalls = 5; // Prevent infinite loops
+    this.maxToolCallsPerTool = 2; // Prevent one tool dominating behavior
     this.maxConversationTokens = 8000; // Prevent token overflow (rough estimate)
     this.approximateTokensPerMessage = 200; // Rough estimate for pruning
   }
@@ -113,6 +115,8 @@ class BaseLlmConnector {
       const result = await executor.execute(toolCall.name, toolCall.arguments);
       const executionTime = Date.now() - startTime;
 
+      this.metrics?.recordChatbotToolCall(toolCall.name);
+
       logTrace(`[TOOL RESULT] Tool '${toolCall.name}' completed`, {
         toolName: toolCall.name,
         executionTimeMs: executionTime,
@@ -159,6 +163,7 @@ class BaseLlmConnector {
 
     let toolCallCount = 0;
     let finalResponse = null;
+    const toolUsage = {}; // toolName -> times used in this request
 
     // Agentic loop - keep asking until we get a final response (no tool calls)
     while (toolCallCount < this.maxToolCalls) {
@@ -172,18 +177,48 @@ class BaseLlmConnector {
       });
 
       // Get response from LLM - pass FULL conversation history
-      const response = await this.provider.askText(null, {
-        messages: conversationMessages,
-        systemInstruction: this._buildSystemInstruction(),
-        generationConfig: {
-          temperature: 0.5,
-        },
-      });
+      const llmStart = Date.now();
+      let response;
+
+      try {
+        response = await this.provider.askText(null, {
+          messages: conversationMessages,
+          systemInstruction: this._buildSystemInstruction(),
+          generationConfig: {
+            temperature: 0.5,
+          },
+        });
+      } catch (error) {
+        logWarning(`LLM provider '${this.providerName}' failed in askText`, { error: error.message || error });
+        this.metrics?.recordChatbotRequest(this.providerName, "failure");
+        throw error;
+      } finally {
+        const llmDurationMs = Date.now() - llmStart;
+        this.metrics?.recordChatbotDuration(this.providerName, llmDurationMs / 1000);
+      }
+
+      // Record estimated tokens for the model reply (best-effort)
+      if (response && typeof response.text === "string") {
+        const tokenEstimate = this._estimateTokens(response.text);
+        this.metrics?.recordChatbotTokenUsage(this.providerName, tokenEstimate);
+      }
 
       // Check if model wants to call tools
       if (response.toolCalls && response.toolCalls.length > 0) {
         toolCallCount++;
+
         const toolNames = response.toolCalls.map((tc) => tc.name);
+
+        // Count and enforce per-tool limits
+        for (const toolName of toolNames) {
+          toolUsage[toolName] = (toolUsage[toolName] || 0) + 1;
+          if (toolUsage[toolName] > this.maxToolCallsPerTool) {
+            logWarning(`Tool '${toolName}' called more than ${this.maxToolCallsPerTool} times`);
+            finalResponse = `Tool usage limit exceeded for '${toolName}'. Please try a more specific query.`;
+            return finalResponse;
+          }
+        }
+
         logInfo(`Tool call #${toolCallCount}: ${toolNames.join(", ")}`);
 
         logTrace(`[LLM TOOLS REQUESTED] Agentic iteration #${toolCallCount}`, {
@@ -227,6 +262,8 @@ class BaseLlmConnector {
         toolCallsMade: toolCallCount,
         finalResponseLength: finalResponse?.length || 0,
       });
+
+      this.metrics?.recordChatbotRequest(this.providerName, "success");
       break;
     }
 
@@ -236,6 +273,7 @@ class BaseLlmConnector {
         maxToolCalls: this.maxToolCalls,
         totalCallsMade: toolCallCount,
       });
+      this.metrics?.recordChatbotRequest(this.providerName, "tool_limit");
     }
 
     return finalResponse;

@@ -123,4 +123,16 @@ describe("chatbot.service provider selection", () => {
     expect(response.provider).toBe("mock");
     expect(response.reply).toContain("Here is a quick summary of your farm data");
   });
+
+  it("runs chatbot smoke evals for core intents", async () => {
+    const { chatbotService } = await loadChatbotService({ provider: "mock" });
+
+    const evalResult = await chatbotService.runSmokeEval(1);
+
+    expect(evalResult).toHaveProperty("total", 4);
+    expect(evalResult).toHaveProperty("failures", 0);
+    expect(evalResult).toHaveProperty("healthy", true);
+    expect(Array.isArray(evalResult.results)).toBe(true);
+    expect(evalResult.results.every((item) => item.passed)).toBe(true);
+  });
 });

@@ -1,4 +1,5 @@
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const { logWarning } = require("../../../helpers/logger-api");
 
 /**
  * BaseProvider - Abstract parent class for LLM providers
@@ -13,6 +14,13 @@ class BaseProvider {
     this.defaultTimeoutMs = providerConfig.defaultTimeoutMs ?? 30_000;
     this.defaultRetries = providerConfig.defaultRetries ?? 2;
 
+    // Circuit breaker config
+    this.failureCount = 0;
+    this.failureThreshold = Number(options.failureThreshold ?? 5);
+    this.cooldownMs = Number(options.cooldownMs ?? 30_000);
+    this.circuitOpen = false;
+    this.nextAttemptAt = 0;
+
     // Load configuration from options or env
     this.apiKey = options.apiKey ?? this._getEnvVar("API_KEY");
     this.model = options.model ?? this._getEnvVar("MODEL") ?? this.defaultModel;
@@ -25,6 +33,22 @@ class BaseProvider {
   _getEnvVar(suffix) {
     const envKey = `${this.envKeyPrefix}_${suffix}`;
     return process.env[envKey];
+  }
+
+  _getRetryDelay(attempt) {
+    const base = 300 * (attempt + 1);
+    const jitter = Math.random() * base * 0.4; // +/-20%
+    return Math.floor(base + jitter - base * 0.2);
+  }
+
+  _checkCircuit() {
+    if (!this.circuitOpen) return;
+    if (Date.now() >= this.nextAttemptAt) {
+      this.circuitOpen = false;
+      this.failureCount = 0;
+      return;
+    }
+    throw new Error(`${this.providerName} circuit is open; unavailable temporarily`);
   }
 
   isConfigured() {
@@ -109,6 +133,8 @@ class BaseProvider {
     const url = this._buildUrl();
     let lastError;
 
+    this._checkCircuit();
+
     for (let attempt = 0; attempt <= this.retries; attempt += 1) {
       try {
         const payload = buildPayloadFn();
@@ -121,7 +147,8 @@ class BaseProvider {
           error.status = response.status;
 
           if (attempt < this.retries && this._isRetryableStatus(response.status)) {
-            await sleep(300 * (attempt + 1));
+            const delay = this._getRetryDelay(attempt);
+            await sleep(delay);
             continue;
           }
 
@@ -134,20 +161,61 @@ class BaseProvider {
         const isAbort = error?.name === "AbortError";
 
         if (attempt < this.retries && (isAbort || !error?.status)) {
-          await sleep(300 * (attempt + 1));
+          const delay = this._getRetryDelay(attempt);
+          await sleep(delay);
           continue;
+        }
+
+        this.failureCount += 1;
+        if (this.failureCount >= this.failureThreshold) {
+          this.circuitOpen = true;
+          this.nextAttemptAt = Date.now() + this.cooldownMs;
+          logWarning(`${this.providerName} circuit opened due to repeated failures. Cooling down for ${this.cooldownMs}ms.`);
         }
 
         throw lastError;
       }
     }
 
-    throw lastError;
+    this.failureCount = 0;
+    if (lastError) {
+      throw lastError;
+    }
+
+    throw new Error(`${this.providerName} request failed after ${this.retries + 1} attempts`);
   }
 
   /**
    * Convert provider-specific error response format to standardized text
    */
+  _parseToolArguments(rawArgs) {
+    if (rawArgs === undefined || rawArgs === null) {
+      return {};
+    }
+
+    if (typeof rawArgs === "object") {
+      return rawArgs;
+    }
+
+    if (typeof rawArgs === "string") {
+      try {
+        return JSON.parse(rawArgs);
+      } catch (error) {
+        logWarning("Failed to parse tool arguments, using empty object", {
+          rawArgs,
+          error: error.message,
+        });
+        return {};
+      }
+    }
+
+    logWarning("Unexpected tool argument type, using empty object", {
+      rawArgs,
+      type: typeof rawArgs,
+    });
+    return {};
+  }
+
   async askText(userMessage, options = {}) {
     throw new Error("askText() must be implemented by subclass");
   }

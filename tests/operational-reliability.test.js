@@ -89,4 +89,13 @@ describe("Operational reliability regressions", () => {
     expect(invalidId.headers["x-api-version"]).toBe("v1");
     expect(invalidId.headers["ratelimit-limit"]).toBeDefined();
   });
+
+  it("exposes chatbot smoke tests in healthcheck result", async () => {
+    const chatHealth = await request(app).get("/api/v1/healthcheck").expect(200);
+
+    expect(chatHealth.body).toHaveProperty("success", true);
+    expect(chatHealth.body.data).toHaveProperty("chatbot");
+    expect(chatHealth.body.data.chatbot).toHaveProperty("smokeTest");
+    expect(chatHealth.body.data.chatbot.smokeTest).toHaveProperty("healthy");
+  });
 });

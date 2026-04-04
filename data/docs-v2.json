@@ -1,0 +1,959 @@
+[
+  {
+    "section": "overview",
+    "title": "System Overview",
+    "content": "Rolnopol is a comprehensive, multi-featured agricultural management platform designed for farmers, administrators, and superadmins. It enables secure management of farms, resources, users, and financial operations across multiple business domains. The system features: real-time farm resource management (fields, animals, staff), peer-to-peer marketplace for resource trading, integrated financial tracking with virtual currency, real-time multi-user messaging with WebSocket support, commodity portfolio management, weather data integration with regional alerts, event-driven notification system, AI-powered chatbot assistance, and robust administrative controls with feature flags and system monitoring. Built for collaborative workflows, the platform combines traditional agricultural management with modern financial and trading capabilities."
+  },
+  {
+    "section": "entities",
+    "title": "Main Data Entities",
+    "content": [
+      {
+        "entity": "User",
+        "description": "Represents a system user (farmer, admin, or superadmin) with authentication, profile, and role information. Manages relationships (friends, blocked users) and social interactions."
+      },
+      {
+        "entity": "Field",
+        "description": "A plot of land owned by a user. Fields have a name, area, location/district info, and can have staff or animals assigned. Fields are core tradeable assets."
+      },
+      {
+        "entity": "Animal",
+        "description": "Livestock or other animals owned by a user. Includes type, quantity, and optional field assignment. Animals are core tradeable assets."
+      },
+      {
+        "entity": "Staff",
+        "description": "Human resources (workers) associated with a user's farm. Includes demographics and field assignments. Staff can be assigned to fields for work management."
+      },
+      {
+        "entity": "Assignment",
+        "description": "Links staff to fields, representing work assignments and resource allocation on the farm."
+      },
+      {
+        "entity": "FinancialAccount",
+        "description": "Tracks a user's virtual currency (ROL) balance, transaction history (income/expense), and financial operations."
+      },
+      {
+        "entity": "MarketplaceOffer",
+        "description": "Represents an offer to buy or sell a resource (field or animal) in the peer-to-peer marketplace. Tracks offer status (active, sold, cancelled, unavailable)."
+      },
+      {
+        "entity": "MarketplaceTransaction",
+        "description": "Records a completed marketplace transaction including buyer, seller, asset, price, and timestamp for audit trail and financial reconciliation."
+      },
+      {
+        "entity": "Commodity",
+        "description": "Investment commodity (gold, silver, platinum, crypto, etc.) that users can buy, hold in portfolio, and sell for speculative trading."
+      },
+      {
+        "entity": "Message",
+        "description": "Direct message between users including sender, recipient, content, timestamp, and read status for real-time communication."
+      },
+      {
+        "entity": "Conversation",
+        "description": "A conversation thread between two users with message history and metadata (participants, last activity)."
+      },
+      {
+        "entity": "Alert",
+        "description": "Regional or user-specific alerts covering weather, irrigation, disease, pests, soil conditions, machinery, livestock, and logistics events."
+      },
+      {
+        "entity": "Event",
+        "description": "System event emitted by application for notification processing, with event type, payload, and dispatch status tracking."
+      },
+      {
+        "entity": "Notification",
+        "description": "Processed event resulting in a notification delivered through channels (in-app, webhooks) with delivery status and destination."
+      }
+    ]
+  },
+  {
+    "section": "user-roles",
+    "title": "User Types & Permissions",
+    "content": [
+      {
+        "type": "User (Farmer)",
+        "description": "Can manage their own farm, resources, assignments, and transactions. Can buy and sell on the marketplace. Access to premium features depends on feature flags. ⚠️ Some permissions below marked with ⚠️ are feature-flagged and may not be available.",
+        "permissions": [
+          "Register and log in",
+          "Manage own profile and farm data",
+          "Add/edit/delete fields, animals, staff, and assignments",
+          "View and create marketplace offers for resources",
+          "Buy/sell resources from the peer-to-peer marketplace",
+          "View and manage own financial account with transaction history",
+          "Transfer virtual currency to other users",
+          "View weather forecasts and regional alerts ⚠️ (feature-flagged: weather, alerts)",
+          "Buy and sell commodities with portfolio tracking ⚠️ (feature-flagged: commodities)",
+          "Send/receive direct messages with other users ⚠️ (feature-flagged: messenger)",
+          "Access AI chatbot for farming assistance ⚠️ (feature-flagged: assistant)",
+          "Manage social connections: add friends, block users",
+          "Download financial reports (PDF/CSV exports)",
+          "View system health and status information"
+        ]
+      },
+      {
+        "type": "Admin",
+        "description": "Oversees and manages resources and financial data for all users. Access to administrative dashboards, system monitoring, and operational controls. ⚠️ Can manage feature flags to control availability of flagged features.",
+        "permissions": [
+          "All user permissions",
+          "View and manage all users' resources (fields, animals, staff)",
+          "View all financial accounts and transaction history",
+          "View all marketplace offers and transactions",
+          "Manage feature flags (enable/disable features)",
+          "Access administrative dashboards and overview statistics",
+          "Manage user accounts (activate/deactivate/delete)",
+          "Access audit logs and system health checks",
+          "Backup and restore database state",
+          "Moderate messaging system (mute/unmute users, delete messages)",
+          "Control commodities market (enable/disable trading, set limits)",
+          "View system metrics and performance data",
+          "Export application logs"
+        ]
+      }
+    ]
+  },
+  {
+    "section": "features",
+    "title": "Main Features (Some features require feature flags - marked with ⚠️)",
+    "content": [
+      {
+        "category": "Core Agricultural Management",
+        "items": [
+          "User registration, login, logout with token-based authentication and session management (24h for users, 1h for admin)",
+          "Farm resource management: create, edit, delete fields with area and location data",
+          "Livestock management: add, edit, delete animals with type and quantity tracking",
+          "Staff/workforce management: hire workers with demographics and field assignments",
+          "Assignment management: assign staff to fields for work coordination",
+          "District/region-based field mapping with geographical data integration"
+        ]
+      },
+      {
+        "category": "Marketplace & Trading",
+        "items": [
+          "Peer-to-peer marketplace for trading fields and animals between users",
+          "Create, browse, and cancel marketplace offers with pricing and availability tracking",
+          "Offer statuses: active (available), sold (completed), cancelled (withdrawn), unavailable (in-use assets)",
+          "Purchase validation: buyer funds verification, asset availability checks, ownership transfer",
+          "Marketplace transaction history with buyer, seller, asset, and price records",
+          "Real-time marketplace statistics and activity monitoring"
+        ]
+      },
+      {
+        "category": "Financial Management",
+        "items": [
+          "Virtual currency (ROL) financial accounts with balance tracking",
+          "Transaction history: income and expense transactions with full audit trail",
+          "Fund transfers between users with validation and confirmation",
+          "No-overdraft protection: users cannot spend more than their balance",
+          "Financial reports with export to PDF and CSV formats",
+          "Financial statistics and analytics for personal and system-wide insights",
+          "Automatic transaction recording for marketplace, transfers, and commodity operations"
+        ]
+      },
+      {
+        "category": "Real-time Communication ⚠️ [FEATURE-FLAGGED: messenger]",
+        "isFeatureFlagged": true,
+        "items": [
+          "Direct user-to-user messaging system with message history",
+          "Real-time WebSocket support for instant message delivery and synchronization",
+          "Conversation management: maintain threads with message chronology",
+          "Message read receipts and delivery status tracking",
+          "Mute/unmute functionality for user conversation management",
+          "Conversation polling for message updates and notifications"
+        ]
+      },
+      {
+        "category": "Advanced Trading & Investments ⚠️ [FEATURE-FLAGGED: commodities]",
+        "isFeatureFlagged": true,
+        "items": [
+          "Commodity portfolio management: buy, hold, and sell investment commodities",
+          "Supported commodities: gold, silver, platinum, cryptocurrency, and more",
+          "Real-time commodity price tracking with historical data and trends",
+          "Algorithmic price generation with configurable volatility for realistic market simulation",
+          "Portfolio valuation and performance analytics",
+          "Trading limits and restrictions configurable by administrators",
+          "Buy/sell order execution with fund validation"
+        ]
+      },
+      {
+        "category": "Weather & Environmental Monitoring ⚠️ [FEATURE-FLAGGED: weather, alerts]",
+        "isFeatureFlagged": true,
+        "items": [
+          "Regional weather data integration covering 16 Polish voivodeships",
+          "Current weather conditions and forecasts for planning activities",
+          "Historical weather data queries for trend analysis",
+          "Weather-based user insights and recommendations",
+          "Export weather data to CSV and PDF formats",
+          "Regional alert system covering weather, irrigation, disease, pests, soil, machinery, livestock, and logistics"
+        ]
+      },
+      {
+        "category": "Notifications & Events ⚠️ [FEATURE-FLAGGED: notifications]",
+        "isFeatureFlagged": true,
+        "items": [
+          "Event-driven architecture with event bus for system-wide notifications",
+          "Event-to-notification processing with template-based payloads",
+          "Multi-channel notification delivery: in-app notifications and webhooks",
+          "Policy-based routing for intelligent notification filtering and targeting",
+          "Event store for audit trail and event replay capabilities",
+          "Notification status tracking and delivery confirmation",
+          "Configurable batch processing and delay mechanisms for optimization"
+        ]
+      },
+      {
+        "category": "AI & Assistance ⚠️ [FEATURE-FLAGGED: assistant]",
+        "isFeatureFlagged": true,
+        "items": [
+          "AI chatbot/assistant with context-aware responses",
+          "Multiple LLM connector support: Gemini, OpenRouter, Mock for flexibility",
+          "Knowledge base search with full-text documentation indexing",
+          "Farming-specific guidance and recommendations",
+          "Interactive conversational support for user queries",
+          "Caching mechanisms for improved response performance"
+        ]
+      },
+      {
+        "category": "Social & Community",
+        "items": [
+          "User profiles with customizable information and display names",
+          "Friend/contact management: add and remove friends",
+          "User blocking functionality for interaction control",
+          "Social statistics: user engagement and activity metrics",
+          "Friend lists and user discovery",
+          "User relationship management with history tracking"
+        ]
+      },
+      {
+        "category": "Administration & System Management",
+        "items": [
+          "Comprehensive admin console for system oversight",
+          "User management: view, activate, deactivate, delete user accounts",
+          "Role-based access control (RBAC) with farmer, admin, superadmin roles",
+          "Feature flag system for A/B testing and controlled feature rollout",
+          "System-wide statistics and performance dashboards",
+          "Audit logs and activity monitoring",
+          "Database backup and restore functionality",
+          "Admin-only metrics and performance data"
+        ]
+      },
+      {
+        "category": "API & Integration",
+        "items": [
+          "RESTful API with versioning (v1 production, v2 in development)",
+          "OpenAPI/Swagger schema for API documentation and exploration",
+          "Swagger UI for interactive API testing",
+          "Multiple authentication methods: Bearer token, cookie-based auth",
+          "Rate limiting with configurable tiers: auth, api, admin, high, verify",
+          "Contact form API endpoint for user inquiries"
+        ]
+      },
+      {
+        "category": "System Monitoring & Health",
+        "items": [
+          "Health check endpoints for system status verification",
+          "Database health monitoring and status checks",
+          "Memory usage and performance metrics",
+          "System uptime and availability monitoring",
+          "Ping endpoint with easter egg support",
+          "Comprehensive logging system with debug configuration",
+          "System information endpoint (/about)"
+        ]
+      },
+      {
+        "category": "Testing & Quality Assurance",
+        "items": [
+          "Chaos engineering controls for system resilience testing",
+          "Configurable chaos level for failure injection (latency, dropped connections, errors)",
+          "Database state snapshots and restore for repeatable testing",
+          "Feature toggle capability for A/B testing and experimentation",
+          "Intentional bugs for debugging and test automation practice",
+          "JSON database for simplified data control during testing"
+        ]
+      },
+      {
+        "category": "Extensibility & Configuration",
+        "items": [
+          "Plugin runtime system with dynamic plugin loading",
+          "Manifest-based plugin configuration with precedence rules",
+          "Service injection and dependency management for plugins",
+          "Feature flag configuration at global and instance level",
+          "Debug mode with request/response logging",
+          "Comprehensive configuration management"
+        ]
+      },
+      {
+        "category": "Data & Reporting ⚠️ [FEATURE-FLAGGED: exports]",
+        "isFeatureFlagged": true,
+        "items": [
+          "CSV export for financial reports, weather data, and logs",
+          "PDF export for financial statements and weather reports",
+          "Statistical aggregation and analysis",
+          "Transaction history with filtering and search",
+          "User activity and engagement metrics",
+          "System performance and resource utilization reports"
+        ]
+      }
+    ]
+  },
+  {
+    "section": "user-flows",
+    "title": "Key User Flows",
+    "content": [
+      {
+        "flow": "Registration & Login",
+        "summary": "Secure access to personalized features.",
+        "steps": [
+          "User navigates to the registration or login page.",
+          "To register, user provides a unique email, displayed name, and password.",
+          "System validates the input and creates a new user account.",
+          "After successful registration, the user is automatically logged in and redirected to their dashboard.",
+          "For login, user enters email and password and receives an authentication token upon success.",
+          "Authentication token is returned in the response and set as a cookie ('rolnopolToken'). Login time is also set as a cookie ('rolnopolLoginTime').",
+          "Authentication token is required for subsequent API requests to access protected resources. It can be sent as a cookie or in the Authorization header (Bearer token).",
+          "Session expiration: 24 hours for users, 1 hour for admin.",
+          "If login fails (invalid credentials, deactivated account, or validation error), user receives an error message and can retry.",
+          "Passwords are stored in plain text (for demo purposes only; not recommended for production).",
+          "Cookies are accessible to client-side JavaScript (not httpOnly).",
+          "Rate limiting is applied to login attempts.",
+          "Logout endpoint clears authentication cookies and invalidates the session.",
+          "After login, user is redirected to /profile.html."
+        ],
+        "api_endpoints": [
+          {
+            "method": "POST",
+            "path": "/api/v1/register",
+            "description": "Register a new user."
+          },
+          {
+            "method": "POST",
+            "path": "/api/v1/login",
+            "description": "Login as a user."
+          },
+          {
+            "method": "POST",
+            "path": "/api/logout",
+            "description": "Logout and clear session."
+          }
+        ],
+        "error_cases": [
+          {
+            "case": "Invalid credentials",
+            "status": 401,
+            "message": "Invalid credentials"
+          },
+          {
+            "case": "Deactivated account",
+            "status": 401,
+            "message": "Account is deactivated"
+          },
+          {
+            "case": "Validation failed",
+            "status": 400,
+            "message": "Validation failed: ..."
+          },
+          {
+            "case": "User already exists",
+            "status": 409,
+            "message": "User with this email already exists"
+          }
+        ]
+      },
+      {
+        "flow": "Marketplace Trading",
+        "summary": "Peer-to-peer trading of farm resources (fields, animals) between users with financial settlement.",
+        "steps": [
+          "User A navigates to the marketplace section to view available offers.",
+          "User A can filter, search, and browse offers for fields and animals by price, type, and seller.",
+          "To sell, User A selects an unassigned resource they own and creates a marketplace offer with pricing.",
+          "System checks: asset is not assigned to any staff/field and not already offered.",
+          "If valid, offer is created and listed as 'active' in the marketplace visible to all users.",
+          "User B browses marketplace offers, finds User A's offer, and initiates a purchase.",
+          "System validates: User B is not the seller, has sufficient funds, and the asset is still available.",
+          "Upon approval, virtual currency is transferred from buyer to seller.",
+          "Asset ownership is transferred to User B in the database.",
+          "Financial transactions are created for both buyer and seller.",
+          "Offer status is updated to 'sold' and a marketplace transaction record is created.",
+          "Users can view their marketplace transaction history with all trades and pricing."
+        ],
+        "related_features": ["Virtual currency balance", "Financial transactions", "User profiles"]
+      },
+      {
+        "flow": "Resource & Farm Management",
+        "summary": "Comprehensive management of farm assets, workforce, and operational planning.",
+        "steps": [
+          "User accesses the farm management dashboard from their profile.",
+          "User views comprehensive farm overview: all fields, animals, and staff.",
+          "To add a field: user provides name, area, and optional location/district data. Field is created and listed in inventory.",
+          "To add animals: user specifies type (cows, goats, sheep, etc.), quantity, and optional field assignment.",
+          "To hire staff: user enters worker demographics and field assignments. Staff is added to the farm team.",
+          "Assignments management: user assigns staff to fields for work coordination or animals to fields for grazing.",
+          "Rule enforcement: assigned assets cannot be listed on marketplace (marked 'unavailable' if attempted).",
+          "User editing: complete CRUD operations for all resources with real-time inventory updates.",
+          "User deletion: remove resources with validation (assigned resources cannot be deleted directly).",
+          "Search and filtering: locate specific resources by name, type, or assignment status.",
+          "Pagination support for farms with large resource inventories."
+        ]
+      },
+      {
+        "flow": "Financial Operations",
+        "summary": "Comprehensive financial management with virtual currency, transactions, and reporting.",
+        "steps": [
+          "User view their financial account showing current balance in ROL (virtual currency).",
+          "System displays all transactions: income (from sales, transfers) and expenses (purchases, transfers).",
+          "To transfer funds: user selects another user and amount, enters confirmation, transfer is executed. Both parties receive transaction records.",
+          "Each marketplace sale automatically creates financial transactions adjusting both parties' balances.",
+          "Users can filter and search transaction history by date, amount, type, and counterparty.",
+          "To generate reports: user exports financial statements to PDF or CSV for record keeping.",
+          "User views financial statistics: total income, expenses, balance trends, and marketplace activity.",
+          "System prevents overdraft: users cannot spend more than their balance.",
+          "Admin can view all users' financial accounts for auditing and oversight."
+        ]
+      },
+      {
+        "flow": "Real-time Messaging",
+        "summary": "Direct peer-to-peer communication with real-time delivery and message history.",
+        "isFeatureFlagged": true,
+        "steps": [
+          "User opens messaging interface and views list of existing conversations.",
+          "To start new conversation: user selects another user to message.",
+          "User types and sends a message, WebSocket connection delivers it in real-time to recipient.",
+          "Recipient receives notification and can see message immediately (if online) or upon next login.",
+          "Message history is maintained: users can scroll through previous conversations.",
+          "Read receipts show which messages have been seen.",
+          "User can mute a conversation to reduce notification noise.",
+          "Admin can moderate: view all conversations, delete inappropriate messages, mute disruptive users.",
+          "Conversation list shows recent activity and timestamps for easy navigation."
+        ],
+        "note": "⚠️ FEATURE-FLAGGED: This functionality requires 'messenger' feature flag to be enabled. May not be available."
+      },
+      {
+        "flow": "Commodity Trading",
+        "summary": "Investment portfolio management with real-time commodity price tracking.",
+        "isFeatureFlagged": true,
+        "steps": [
+          "User opens commodities section to view available commodities (gold, silver, platinum, crypto, etc.).",
+          "User views current prices for each commodity with hourly updates.",
+          "To buy: user selects commodity, enters quantity and purchase price, submits order.",
+          "System validates: user has sufficient funds for purchase. Balance is deducted, commodity is added to portfolio.",
+          "Portfolio dashboard shows current holdings, purchase price, current value, and profit/loss.",
+          "User can check price history for trend analysis and investment decisions.",
+          "To sell: user selects holding, enters selling quantity, completes transaction. Balance is credited.",
+          "Financial transactions are created for all buy/sell operations.",
+          "Admin controls: can enable/disable trading, set maximum order quantities, and monitor market state."
+        ],
+        "note": "⚠️ FEATURE-FLAGGED: This functionality requires 'commodities' feature flag to be enabled. May not be available."
+      },
+      {
+        "flow": "Weather & Alerts",
+        "summary": "Region-specific environmental monitoring for agricultural planning.",
+        "isFeatureFlagged": true,
+
+        "steps": [
+          "User views weather dashboard showing current conditions for their region/district.",
+          "Weather data available for all 16 Polish voivodeships with current and forecast information.",
+          "User checks forecast for upcoming week to plan field activities, irrigation, harvesting.",
+          "System generates specialized alerts: weather warnings, irrigation recommendations, pest alerts, disease risks, soil conditions, machinery maintenance, livestock health, logistics notifications.",
+          "User can export weather data to PDF or CSV for records and analysis.",
+          "Alerts appear in real-time as conditions develop: severe weather, frost warnings, irrigation needs, etc.",
+          "Admin manages alert triggers and thresholds.",
+          "Historical weather data available for trend analysis and planning."
+        ],
+        "note": "⚠️ FEATURE-FLAGGED: This functionality requires 'weather' and 'alerts' feature flags to be enabled. May not be available."
+      },
+      {
+        "flow": "Social Networking",
+        "summary": "Build connections and manage relationships with other farmers.",
+        "isFeatureFlagged": true,
+
+        "steps": [
+          "User views friend list and user discovery interface.",
+          "To add friend: user searches for another user and sends friend request.",
+          "Friend request is received and can be accepted or declined.",
+          "Once connected, users can see each other's public profile information.",
+          "Users can communicate via direct messaging with friends.",
+          "To block user: user can block another user to prevent communication.",
+          "Blocked users cannot send messages or see the blocker's profile.",
+          "Statistics show user engagement metrics and farm activity levels."
+        ]
+      },
+      {
+        "flow": "AI Assistance",
+        "summary": "Access farming knowledge and recommendations via AI chatbot.",
+        "isFeatureFlagged": true,
+        "steps": [
+          "User opens AI assistance chat interface.",
+          "User types a question about farming,resources, financial decisions, or system features.",
+          "System queries knowledge base and uses LLM (Gemini, OpenRouter) to generate contextual response.",
+          "Response is delivered with recommended actions or information.",
+          "User can continue conversation with follow-up questions, maintaining context.",
+          "Responses are cached for common queries, improving performance.",
+          "Knowledge base includes complete system documentation for instant querying."
+        ],
+        "note": "⚠️ FEATURE-FLAGGED: This functionality requires 'assistant' feature flag to be enabled. May not be available."
+      }
+    ]
+  },
+  {
+    "section": "unique-aspects",
+    "title": "Unique Aspects",
+    "content": [
+      "Intentional bugs for debugging and test automation practice.",
+      "JSON database for simplified data control during testing.",
+      "Complex workflows for realistic scenarios."
+    ]
+  },
+  {
+    "section": "api-basics",
+    "title": "API Basics",
+    "content": [
+      "All main features are accessible via RESTful API endpoints (see API Documentation section).",
+      "Authentication is required for most endpoints (token in Authorization header).",
+      "API versioning is supported (e.g., /api/v1/).",
+      "Swagger UI and OpenAPI schema are available at /swagger.html and /public/schema/openapi.json for interactive API exploration."
+    ]
+  },
+  {
+    "section": "testing-tips",
+    "title": "Testing Tips",
+    "content": [
+      "Use demo accounts to quickly access different roles and test permissions.",
+      "Test registration, login, and logout flows for all user types.",
+      "Verify role-based access: farmers should not access admin/superadmin features.",
+      "Test marketplace: create, buy, and approve offers as different roles.",
+      "Check financial operations: ensure balances update after transactions and transfers.",
+      "Try edge cases: invalid logins, insufficient funds, etc.",
+      "Use Swagger UI to test API endpoints directly."
+    ]
+  },
+  {
+    "section": "demo-accounts",
+    "title": "Demo Accounts",
+    "content": [
+      {
+        "role": "Demo Farmer",
+        "email": "demo@example.com",
+        "password": "demo123",
+        "description": "Basic farmer with access to personal farm management."
+      },
+      {
+        "role": "Demo Farmer",
+        "email": "test@example.com",
+        "password": "brownPass123",
+        "description": "Basic farmer with access to personal farm management."
+      },
+      {
+        "role": "Demo Farmer",
+        "email": "john.doe@example.com",
+        "password": "johndoe123",
+        "description": "Basic farmer with access to personal farm management."
+      }
+    ]
+  },
+  {
+    "section": "asset-finance-marketplace-flow",
+    "title": "Asset–Finance–Marketplace Flow",
+    "content": [
+      {
+        "heading": "Overview",
+        "content": [
+          "This section describes how assets (fields, animals), finances, and the marketplace interact in the system, including all rules, checks, and real-world scenarios."
+        ]
+      },
+      {
+        "heading": "Entities",
+        "content": [
+          {
+            "type": "list",
+            "items": [
+              "User: Owns assets and a financial account.",
+              "Field: Land plot, can be assigned to staff or animals.",
+              "Animal: Livestock, can be assigned to a field.",
+              "Assignment: Links staff or animals to fields.",
+              "FinancialAccount: Tracks user balance and transactions.",
+              "MarketplaceOffer: Represents an offer to sell a field or animal."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Asset Assignment and Ownership",
+        "content": [
+          {
+            "type": "list",
+            "items": [
+              "Assets (fields/animals) are owned by users.",
+              "Fields can have staff or animals assigned (see assignments.json and fieldId in animals).",
+              "Animals can be assigned to fields (fieldId > 0).",
+              "Rule: Assigned/in-use assets cannot be sold or bought; their offers are marked 'unavailable'.",
+              "Ownership is transferred on sale."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Financial Transactions",
+        "content": [
+          {
+            "type": "list",
+            "items": [
+              "Each user has a financial account with a balance and transaction history.",
+              "Transaction types: 'income' (money in), 'expense' (money out).",
+              "No overdraft: users cannot spend more than their balance."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Marketplace Flow",
+        "content": [
+          { "type": "paragraph", "text": "Creating an Offer:" },
+          {
+            "type": "list",
+            "items": [
+              "User selects an asset they own.",
+              "System checks: asset is not assigned/in use and not already offered.",
+              "If valid, offer is created as 'active'."
+            ]
+          },
+          { "type": "paragraph", "text": "Buying an Offer:" },
+          {
+            "type": "list",
+            "items": [
+              "Buyer selects an active offer.",
+              "System checks: not seller, enough funds, asset still available.",
+              "If valid: money is transferred, financial transactions are created, asset ownership is transferred, offer is marked 'sold', and a marketplace transaction is recorded."
+            ]
+          },
+          { "type": "paragraph", "text": "Offer Statuses:" },
+          {
+            "type": "list",
+            "items": [
+              "active: available for purchase",
+              "sold: already bought",
+              "cancelled: withdrawn by seller",
+              "unavailable: asset is in use/assigned"
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Example Cases",
+        "content": [
+          {
+            "type": "list",
+            "items": [
+              "Selling an Unassigned Field: User 2 owns 'Willow Grove' (field 22), not assigned. User 2 creates an offer (active). User 3 buys it: funds and assignment checked, balances updated, ownership transferred, offer marked 'sold'.",
+              "Attempting to Sell an Assigned Field: User 4 owns 'Birch Pasture' (field 25), assigned to staff. Offer is created as 'unavailable'.",
+              "Selling an Unassigned Animal: User 2 owns goats (animal 63), not assigned. Offer is 'active'. User 1 buys: funds and assignment checked, balances updated, ownership transferred, offer marked 'sold'.",
+              "Attempting to Buy with Insufficient Funds: User 2 tries to buy a field for 1000 ROL with only 420 ROL. System blocks purchase: 'Insufficient funds: overdraft is not allowed.'",
+              "Attempting to Sell an Assigned Animal: User 4 owns cows (animal 62), assigned to Birch Pasture. Offer is 'unavailable'."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Data Consistency Rules",
+        "content": [
+          {
+            "type": "list",
+            "items": [
+              "Every sale results in: asset ownership transfer, financial transactions for buyer and seller, marketplace offer and transaction records.",
+              "No asset can be sold or bought if assigned/in use.",
+              "No user can spend more than their balance.",
+              "All references (userId, fieldId, animalId) are consistent across all databases."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Summary Table",
+        "content": [
+          {
+            "type": "table",
+            "columns": ["Step", "Check for Assignment", "Check Funds", "Ownership Transfer", "Offer Status", "Financial Txn"],
+            "rows": [
+              ["Create Offer", "Yes", "N/A", "No", "active/unavailable", "No"],
+              ["Buy Offer", "Yes", "Yes", "Yes", "sold", "Yes"],
+              ["Cancel Offer", "N/A", "N/A", "No", "cancelled", "No"]
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "section": "e2e-scenarios",
+    "title": "End-to-End Scenarios",
+    "content": [
+      {
+        "scenario": "Register and Set Up Farm",
+        "description": "A new user registers, logs in, and sets up their farm with fields, animals, and staff.",
+        "steps": [
+          "Navigate to the registration page and create a new account with a unique username and password.",
+          "Log in with the new credentials.",
+          "Access the farm management dashboard.",
+          "Add a new field with a name and area.",
+          "Add animals (e.g., cows, goats) assign them to field.",
+          "Add staff members and assign them to field.",
+          "Review the farm overview to confirm all resources are listed."
+        ]
+      },
+      {
+        "scenario": "Sell a Field on the Marketplace",
+        "description": "A user creates a marketplace offer to sell a field, and another user purchases it.",
+        "steps": [
+          "User A logs in and navigates to their farm dashboard.",
+          "User A selects an unassigned field and creates a marketplace offer to sell it.",
+          "User B logs in",
+          "User B browses the marketplace offers.",
+          "User B finds User A's field offer",
+          "User B initiates a purchase.",
+          "System checks User B's balance and field availability.",
+          "Ownership of the field is transferred to User B, and balances are updated."
+        ]
+      },
+      {
+        "scenario": "Attempt to Buy with Insufficient Funds",
+        "description": "A user tries to buy a resource but does not have enough virtual currency.",
+        "steps": [
+          "User logs in and browses the marketplace.",
+          "User selects an offer that costs more than their current balance.",
+          "User attempts to purchase the offer.",
+          "System blocks the transaction and displays an 'Insufficient funds' error message.",
+          "User can view their balance and transaction history to understand the issue."
+        ]
+      }
+    ]
+  },
+  {
+    "section": "feature-flags",
+    "title": "Feature Flags & Toggle Management",
+    "content": [
+      {
+        "heading": "Overview",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-flag",
+            "title": "System-wide Feature Control",
+            "description": "Runtime feature management without code deployment",
+            "items": [
+              "Rolnopol uses a comprehensive feature flag system for controlled feature rollout, A/B testing, and operational management. Features can be enabled/disabled at runtime without code deployment. ⚠️ Note: Some core functionalities are behind feature flags and may be unavailable if disabled."
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Core Features",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-star",
+            "title": "Available Feature Flags",
+            "description": "Core and optional system capabilities",
+            "items": [
+              "⚠️ alerts - Regional and specialized alerts for weather, irrigation, livestock, machinery, and logistics",
+              "⚠️ commodities - Investment commodity trading and portfolio management",
+              "⚠️ exports - Export functionality for data in PDF and CSV formats",
+              "homepage - Homepage content and marketing features",
+              "⚠️ marketplace - Peer-to-peer marketplace for resource trading",
+              "⚠️ messenger - Real-time direct messaging with WebSocket support",
+              "⚠️ notifications - Event-driven notification system with multi-channel delivery",
+              "⚠️ weather - Regional weather data integration and forecasts",
+              "⚠️ assistant - AI chatbot assistance with LLM integration"
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Flag Management",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-sliders-h",
+            "title": "Administrative Controls",
+            "description": "Manage feature flags across different scopes",
+            "items": [
+              "Scope: can be controlled at global system level, per-user, or per-instance",
+              "Reset: Admins can reset all feature flags to default state",
+              "API Endpoints:",
+              "GET /api/v1/feature-flags - View all feature flags",
+              "PATCH /api/v1/feature-flags - Update specific feature flags",
+              "POST /api/v1/feature-flags/reset - Reset all flags to defaults",
+              "GET /admin/feature-flags - Admin view of feature configurations",
+              "PATCH /admin/feature-flags - Admin management of features"
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Use Cases",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-rocket",
+            "title": "Strategic Applications",
+            "description": "Real-world feature flag usage patterns",
+            "items": [
+              "Beta testing new features with subset of users",
+              "Gradual rollout of new functionality",
+              "Disable problematic features for incident response",
+              "A/B testing different feature implementations",
+              "Regional feature availability based on requirements"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "section": "testing-and-quality-assurance",
+    "title": "Testing & Quality Assurance Features",
+    "content": [
+      {
+        "heading": "Chaos Engineering",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-zap",
+            "title": "Resilience Testing Framework",
+            "description": "Inject failures and monitor system behavior",
+            "items": [
+              "Built-in chaos engineering controls for testing system resilience and failure handling.",
+              "Configurable chaos level: none, low, medium, high",
+              "Latency injection: introduce artificial delays",
+              "Connection dropping: simulate network failures",
+              "Partial responses: test incomplete data handling",
+              "Synthetic error generation: trigger exception handling",
+              "Per-endpoint configuration for targeted testing",
+              "API Endpoints: GET /chaos-engine, PATCH /chaos-engine, PUT /chaos-engine, POST /chaos-engine/reset",
+              "Usage: For testing application error handling, retry logic, and user experience during system faults"
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Testing Utilities",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-wrench",
+            "title": "QA Support Tools",
+            "description": "Simplify setup and execution of tests",
+            "items": [
+              "Tools and features designed to simplify testing and quality assurance.",
+              "JSON database for easy data reset between tests",
+              "Database snapshot and restore functionality",
+              "Intentional bugs for test automation practice",
+              "Demo accounts for quick role-based testing",
+              "Feature flags for testing specific functionality paths",
+              "Mock data generation for consistent test scenarios",
+              "Repeatable test database states"
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Testing Best Practices",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-check-circle",
+            "title": "Recommended Strategies",
+            "description": "Proven QA testing patterns and approaches",
+            "items": [
+              "Use demo accounts to test different user roles quickly",
+              "Enable/disable features via flags to isolate functionality",
+              "Create database backups before complex testing",
+              "Use chaos engine to verify error handling",
+              "Test edge cases: insufficient funds, assigned assets, invalid credentials",
+              "Verify financial consistency after transactions",
+              "Monitor logs during testing for unexpected errors",
+              "Use Swagger UI to test API contracts directly",
+              "Validate role-based access control across all endpoints",
+              "Test real-time WebSocket communication for messaging"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "section": "security-and-access-control",
+    "title": "Security & Access Control",
+    "content": [
+      {
+        "heading": "Authentication",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-lock",
+            "title": "Session & Token Management",
+            "description": "Secure access with token-based authentication",
+            "items": [
+              "Mechanism: Token-based authentication with session management",
+              "Token Storage: Authorization header 'Bearer <token>' for API requests",
+              "Cookies: 'rolnopolToken' for browser-based access",
+              "Login Time: rolnopolLoginTime cookie tracks session start",
+              "Session Expiration: Farmer users 24 hours, Admin users 1 hour",
+              "Logout: Clears authentication cookies and invalidates session"
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Rate Limiting",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-shield-alt",
+            "title": "API Rate Protection",
+            "description": "Resource protection and abuse prevention",
+            "items": [
+              "Configurable rate limiting tiers to protect system resources and prevent abuse.",
+              "Tiers: auth (authentication attempts), api (general API usage), admin (administrative operations), high (critical operations), verify (token validation)",
+              "Configuration: Configurable per endpoint and tier via system settings",
+              "Protection: Prevents resource exhaustion and malicious requests"
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Role-Based Access Control",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-users-cog",
+            "title": "Hierarchical Permission System",
+            "description": "Three-tier access control with granular permissions",
+            "items": [
+              "Three-tier RBAC system with hierarchical permissions.",
+              "User (Farmer): Access to own farm and public marketplace",
+              "Admin: Full data access and moderation capabilities",
+              "Superadmin: Complete system control including configuration",
+              "Feature flags: Can further restrict feature access based on role"
+            ]
+          }
+        ]
+      },
+      {
+        "heading": "Data Protection",
+        "content": [
+          {
+            "type": "subsection-card",
+            "icon": "fa-shield-heart",
+            "title": "Asset & Data Safeguards",
+            "description": "Comprehensive data integrity and user privacy protection",
+            "items": [
+              "Assigned assets cannot be sold or transferred (marketplace safety rule)",
+              "Blocking prevents unwanted communication and profile access",
+              "Virtual currency balance protection (no overdraft allowed)",
+              "Transaction audit trail for financial compliance",
+              "User account deactivation for access revocation",
+              "Admin moderation of user-generated content (messaging)"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

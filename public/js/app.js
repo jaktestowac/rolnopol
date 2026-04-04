@@ -779,7 +779,13 @@
         { name: "/status", description: "Get Porky's info and status" },
         { name: "/help", description: "Show available commands" },
         { name: "/alerts", description: "Get active farm alerts" },
+        { name: "/docs <query>", description: "Ask Porky about app documentation" },
       ];
+
+      const getHelpText = () => {
+        const commandLines = commands.map((cmd) => `${cmd.name} - ${cmd.description}`).join("\n");
+        return `📚 Available Commands:\n\n${commandLines}\n\nOr just ask me anything about your fields, animals, staff, finances, weather forecasts, commodities, marketplace, or farm alerts!`;
+      };
 
       let currentVisibleCommands = [];
       let selectedSuggestionIndex = -1;
@@ -1094,10 +1100,7 @@
         if (message.toLowerCase() === "/help") {
           appendMessage("user", message);
           input.value = "";
-          appendMessage(
-            "assistant",
-            "📚 Available Commands:\n\n/status - Get Porky's info and status\n/help - Show this help message\n/alerts - Get active farm alerts\n/clear - Clear chat history\n\nOr just ask me anything about your fields, animals, staff, finances, weather forecasts, commodities, marketplace, or farm alerts!",
-          );
+          appendMessage("assistant", getHelpText());
           input.focus();
           return;
         }

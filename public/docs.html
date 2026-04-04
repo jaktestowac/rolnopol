@@ -15,13 +15,119 @@
 
       .docs-sidebar {
         position: sticky;
-        top: 2rem;
+        top: 1rem;
         height: fit-content;
         background: rgba(255, 255, 255, 0.95);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(10px);
+        border-radius: 0.8rem;
+        padding: 0.8rem;
+        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(8px);
+      }
+      .docs-sidebar h3 {
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+      }
+      .docs-sidebar-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        width: 100%;
+        margin-bottom: 0.85rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(106, 123, 94, 0.22);
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f4fbf5 0%, #eaf5e8 100%);
+        color: #26462d;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        box-shadow: 0 12px 28px rgba(51, 98, 60, 0.12);
+        transition:
+          background 0.22s ease,
+          transform 0.2s ease,
+          box-shadow 0.2s ease,
+          border-color 0.2s ease;
+      }
+      .docs-sidebar-toggle-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 8px 16px rgba(51, 98, 60, 0.14);
+      }
+      .docs-sidebar-toggle-btn:focus-visible {
+        outline: 3px solid rgba(106, 123, 94, 0.28);
+        outline-offset: 2px;
+      }
+      .docs-sidebar-toggle-btn .docs-sidebar-toggle-side {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+      .docs-sidebar-toggle-btn .docs-sidebar-toggle-label {
+        display: inline-block;
+        min-width: 90px;
+      }
+      .docs-sidebar-toggle-btn .docs-sidebar-toggle-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+      }
+      .docs-sidebar-toggle-pill {
+        width: 42px;
+        height: 22px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(106, 123, 94, 0.25);
+        position: relative;
+        flex-shrink: 0;
+      }
+      .docs-sidebar-toggle-circle {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #6a7b5e;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        transition:
+          left 0.22s ease,
+          background 0.22s ease,
+          transform 0.22s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      .docs-sidebar-toggle-state {
+        color: #4a6a42;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .docs-sidebar-toggle-btn.active {
+        background: linear-gradient(135deg, #d8f3d7 0%, #b9e4b6 100%);
+        border-color: rgba(56, 120, 53, 0.35);
+      }
+      .docs-sidebar-toggle-btn.active .docs-sidebar-toggle-circle {
+        left: calc(100% - 20px);
+        background: #2d3a2d;
+        transform: scale(1.02);
+      }
+      .docs-sidebar-toggle-btn.active .docs-sidebar-toggle-state {
+        color: #1f3726;
+      }
+      .docs-sidebar-toggle-btn i {
+        font-size: 0.95rem;
+        color: #3b593c;
+      }
+      .docs-hide-flagged [data-feature-flagged="true"] {
+        display: none !important;
+      }
+      .docs-nav a {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+        line-height: 1.3;
+      }
+      .docs-nav li {
+        margin-bottom: 0rem !important;
       }
 
       .docs-content {
@@ -40,6 +146,15 @@
 
       .docs-nav li {
         margin-bottom: 0.5rem;
+      }
+
+      .docs-grid {
+        width: 100%;
+        max-width: 1160px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 250px minmax(0, 1fr);
+        gap: 1.2rem;
       }
 
       .docs-nav a {
@@ -97,10 +212,13 @@
         border-radius: 0.8rem;
         padding: 1.5rem;
         transition: all 0.3s ease;
+        text-align: left;
+      }
+      .feature-card-custom {
+        text-align: left;
       }
 
       .feature-card:hover {
-        transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(106, 123, 94, 0.15);
       }
 
@@ -201,7 +319,6 @@
       }
 
       .entity-card:hover {
-        transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(106, 123, 94, 0.15);
       }
 
@@ -549,6 +666,85 @@
         margin-top: 0.2rem;
         line-height: 1.7;
       }
+
+      /* Fancy subsection card styles */
+      .subsection-card {
+        background: linear-gradient(135deg, #f7f9f6 0%, #eaf6e7 100%);
+        border: 2px solid #d4e6cc;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 20px rgba(106, 123, 94, 0.12);
+        transition: all 0.3s ease;
+      }
+
+      .subsection-card:hover {
+        box-shadow: 0 8px 30px rgba(106, 123, 94, 0.18);
+        border-color: #6a7b5e;
+      }
+
+      .subsection-card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .subsection-card-icon {
+        font-size: 1.8rem;
+        color: #6a7b5e;
+        width: 3rem;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(106, 123, 94, 0.1);
+        border-radius: 0.7rem;
+      }
+
+      .subsection-card-title-group h4 {
+        color: #2d3a2d;
+        font-size: 1.3rem;
+        margin: 0 0 0.3rem 0;
+        font-weight: 700;
+      }
+
+      .subsection-card-description {
+        color: #6a7b5e;
+        font-size: 0.95rem;
+        font-style: italic;
+        margin: 0;
+      }
+
+      .subsection-card-content {
+        margin-top: 1.2rem;
+      }
+
+      .subsection-card-content ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .subsection-card-content li {
+        padding: 0rem 0;
+        padding-left: 0;
+        color: #3d4a3d;
+        font-size: 1.02rem;
+        line-height: 1.6;
+        border-bottom: 1px dotted rgba(106, 123, 94, 0.15);
+      }
+
+      .subsection-card-content li:last-child {
+        border-bottom: none;
+      }
+
+      .subsection-card-content li:before {
+        content: "▸ ";
+        color: #6a7b5e;
+        font-weight: bold;
+        margin-right: 0.5rem;
+      }
     </style>
   </head>
 
@@ -570,7 +766,7 @@
       </header>
 
       <div class="docs-container" data-testid="docs-container">
-        <div style="display: grid; grid-template-columns: 250px 1fr; gap: 2rem" data-testid="docs-grid">
+        <div class="docs-grid" data-testid="docs-grid">
           <!-- Sidebar Navigation -->
           <div class="docs-sidebar" data-testid="docs-sidebar">
             <h3
@@ -579,6 +775,23 @@
             >
               <i class="fas fa-list"></i> Contents
             </h3>
+            <button
+              type="button"
+              class="docs-sidebar-toggle-btn"
+              id="docs-sidebar-toggle"
+              data-testid="docs-sidebar-toggle"
+              aria-pressed="true"
+              style="display: none"
+            >
+              <span class="docs-sidebar-toggle-side">
+                <span class="docs-sidebar-toggle-label">Hide feature-flagged docs</span>
+              </span>
+              <span class="docs-sidebar-toggle-status">
+                <span class="docs-sidebar-toggle-pill" aria-hidden="true">
+                  <span class="docs-sidebar-toggle-circle"></span>
+                </span>
+              </span>
+            </button>
             <div class="docs-search" id="docs-search">
               <label class="docs-search-label" for="docs-search-input">Search</label>
               <div class="docs-search-input">
@@ -673,6 +886,29 @@
     <script src="/js/utils/init-navigation.js"></script>
     <script>
       initNavigation("docs");
+
+      const setupDocsSidebarToggle = () => {
+        const toggleButton = document.getElementById("docs-sidebar-toggle");
+        let showFlagged = false;
+
+        const updateToggle = (visible) => {
+          if (!toggleButton) return;
+          showFlagged = visible;
+          toggleButton.classList.toggle("active", visible);
+          toggleButton.setAttribute("aria-pressed", String(visible));
+          const label = toggleButton.querySelector(".docs-sidebar-toggle-label");
+          const state = toggleButton.querySelector(".docs-sidebar-toggle-state");
+          if (label) label.textContent = visible ? "Hide feature-flagged docs" : "Show feature-flagged docs";
+          document.body.classList.toggle("docs-hide-flagged", !visible);
+        };
+
+        if (toggleButton) {
+          toggleButton.addEventListener("click", () => updateToggle(!showFlagged));
+          updateToggle(showFlagged);
+        }
+      };
+
+      setupDocsSidebarToggle();
 
       const waitForAppInit = async () => {
         if (!window.App) {
@@ -958,11 +1194,20 @@
               "testing-tips": "fa-vial",
               "demo-accounts": "fa-user-check",
             };
+            const applyFeatureFlag = (element, flagged) => {
+              if (flagged) {
+                element.dataset.featureFlagged = "true";
+              }
+            };
             docs.forEach((section) => {
               const sectionDiv = document.createElement("div");
               sectionDiv.className = "docs-section";
               sectionDiv.id = section.section;
               sectionDiv.setAttribute("data-testid", `section-${section.section}`);
+              applyFeatureFlag(sectionDiv, section.isFeatureFlagged);
+              if (section.isFeatureFlagged) {
+                sectionDiv.dataset.featureFlagged = "true";
+              }
               // Section header with icon
               const title = document.createElement("h2");
               title.style.display = "flex";
@@ -1011,9 +1256,64 @@
                       const p = document.createElement("p");
                       p.textContent = item;
                       sectionDiv.appendChild(p);
+                    } else if (item.type === "subsection-card") {
+                      // Fancy subsection card
+                      const card = document.createElement("div");
+                      card.className = "subsection-card";
+
+                      // Header with icon
+                      const header = document.createElement("div");
+                      header.className = "subsection-card-header";
+
+                      if (item.icon) {
+                        const iconDiv = document.createElement("div");
+                        iconDiv.className = "subsection-card-icon";
+                        const icon = document.createElement("i");
+                        icon.className = `fas ${item.icon}`;
+                        iconDiv.appendChild(icon);
+                        header.appendChild(iconDiv);
+                      }
+
+                      const titleGroup = document.createElement("div");
+                      titleGroup.className = "subsection-card-title-group";
+                      const title = document.createElement("h4");
+                      title.textContent = item.title;
+                      titleGroup.appendChild(title);
+
+                      if (item.description) {
+                        const desc = document.createElement("p");
+                        desc.className = "subsection-card-description";
+                        desc.textContent = item.description;
+                        titleGroup.appendChild(desc);
+                      }
+
+                      header.appendChild(titleGroup);
+                      card.appendChild(header);
+
+                      // Content list
+                      applyFeatureFlag(card, item.isFeatureFlagged);
+                      if (item.items && Array.isArray(item.items)) {
+                        const contentDiv = document.createElement("div");
+                        contentDiv.className = "subsection-card-content";
+                        applyFeatureFlag(contentDiv, item.isFeatureFlagged);
+                        const ul = document.createElement("ul");
+                        applyFeatureFlag(ul, item.isFeatureFlagged);
+
+                        item.items.forEach((listItem) => {
+                          const li = document.createElement("li");
+                          li.textContent = listItem;
+                          ul.appendChild(li);
+                        });
+
+                        contentDiv.appendChild(ul);
+                        card.appendChild(contentDiv);
+                      }
+
+                      sectionDiv.appendChild(card);
                     } else if (item.type === "list" && Array.isArray(item.items)) {
                       // List
                       const ul = document.createElement("ul");
+                      applyFeatureFlag(ul, item.isFeatureFlagged);
                       item.items.forEach((str) => {
                         const li = document.createElement("li");
                         li.textContent = str;
@@ -1024,10 +1324,12 @@
                       // Paragraph (explicit)
                       const p = document.createElement("p");
                       p.textContent = item.text;
+                      applyFeatureFlag(p, item.isFeatureFlagged);
                       sectionDiv.appendChild(p);
                     } else if (item.type === "table" && item.columns && item.rows) {
                       // Table
                       const table = document.createElement("table");
+                      applyFeatureFlag(table, item.isFeatureFlagged);
                       table.style.margin = "1rem 0";
                       table.style.borderCollapse = "collapse";
                       table.style.width = "100%";
@@ -1175,6 +1477,9 @@
                   const flowDiv = document.createElement("div");
                   flowDiv.className = "feature-card feature-card-custom";
                   flowDiv.style.marginBottom = "1.5rem";
+                  if (flowObj.isFeatureFlagged) {
+                    flowDiv.dataset.featureFlagged = "true";
+                  }
                   const h4 = document.createElement("h4");
                   h4.innerHTML = `<i class='fas fa-route'></i> ${flowObj.flow}`;
                   h4.classList.add("feature-card-title");
@@ -1268,6 +1573,60 @@
                   }
                   sectionDiv.appendChild(card);
                 });
+              } else if (section.section === "features" && Array.isArray(section.content)) {
+                // Render features as a vertical list of category cards
+                const featuresGrid = document.createElement("div");
+                featuresGrid.style.display = "flex";
+                featuresGrid.style.flexDirection = "column";
+                featuresGrid.style.gap = "1rem";
+
+                section.content.forEach((feature) => {
+                  const card = document.createElement("div");
+                  card.className = "feature-card feature-card-custom";
+                  card.style.padding = "0.8rem";
+                  applyFeatureFlag(card, feature.isFeatureFlagged);
+
+                  const h4 = document.createElement("h4");
+                  h4.innerHTML = `<i class='fas fa-check-circle'></i> ${feature.category || "Feature"}`;
+                  h4.classList.add("feature-card-title");
+                  card.appendChild(h4);
+
+                  if (feature.summary) {
+                    const summary = document.createElement("p");
+                    summary.textContent = feature.summary;
+                    summary.style.marginBottom = "0.5rem";
+                    card.appendChild(summary);
+                  }
+
+                  if (Array.isArray(feature.items)) {
+                    const ul = document.createElement("ul");
+                    ul.style.margin = "0.4rem 0 0 1rem";
+                    ul.style.padding = "0";
+                    ul.style.listStyle = "disc";
+                    feature.items.slice(0, 12).forEach((item) => {
+                      const li = document.createElement("li");
+                      li.textContent = item;
+                      li.style.marginBottom = "0.25rem";
+                      li.style.lineHeight = "1.4";
+                      ul.appendChild(li);
+                    });
+                    if (feature.items.length > 12) {
+                      const li = document.createElement("li");
+                      li.textContent = `...and ${feature.items.length - 12} more`;
+                      li.style.fontStyle = "italic";
+                      ul.appendChild(li);
+                    }
+                    card.appendChild(ul);
+                  } else if (feature.content && typeof feature.content === "string") {
+                    const p = document.createElement("p");
+                    p.textContent = feature.content;
+                    card.appendChild(p);
+                  }
+
+                  featuresGrid.appendChild(card);
+                });
+
+                sectionDiv.appendChild(featuresGrid);
               } else {
                 // Fallback: show JSON
                 const pre = document.createElement("pre");

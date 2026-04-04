@@ -54,7 +54,7 @@ class GeminiProvider extends BaseProvider {
       if (part.functionCall) {
         toolCalls.push({
           name: part.functionCall.name,
-          arguments: part.functionCall.args || {},
+          arguments: this._parseToolArguments(part.functionCall.args),
         });
       }
     }

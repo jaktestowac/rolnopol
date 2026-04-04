@@ -135,4 +135,19 @@ describe("Assistant chat API", () => {
     expect(res.body.data.reply).toContain("Ask me about your fields, staff, animals");
     expect(res.body.data.contextSummary).toBeNull(); // No context loaded for short messages
   });
+
+  it("answers documentation queries via /docs", async () => {
+    await setAssistantChatEnabled(true);
+    const user = await registerUser("docs-query");
+
+    const res = await request(app)
+      .post("/api/v1/assistant-chat/messages")
+      .set("token", user.token)
+      .send({ message: "/docs system overview" })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.reply).toContain("Rolnopol is a comprehensive agricultural management system");
+    expect(res.body.data.contextSummary).toBe("docs-search");
+  });
 });

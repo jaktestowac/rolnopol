@@ -1,5 +1,6 @@
 const BaseProvider = require("./base.provider");
 const { getToolsForOpenRouter } = require("../tools/tools-registry");
+const { logWarning } = require("../../../helpers/logger-api");
 
 const DEFAULT_OPENROUTER_API_BASE_URL = "https://openrouter.ai/api/v1";
 const DEFAULT_OPENROUTER_MODEL = "openai/gpt-4-turbo";
@@ -46,7 +47,7 @@ class OpenRouterProvider extends BaseProvider {
 
     const toolCalls = message.tool_calls.map((tc) => ({
       name: tc.function.name,
-      arguments: JSON.parse(tc.function.arguments || "{}"),
+      arguments: this._parseToolArguments(tc.function.arguments),
     }));
 
     return toolCalls.length > 0 ? toolCalls : null;

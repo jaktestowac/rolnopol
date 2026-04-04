@@ -1,10 +1,9 @@
 const { formatResponseBody } = require("../helpers/response-helper");
 const { logError, logInfo } = require("../helpers/logger-api");
 const adminService = require("../services/admin.service");
+const docsService = require("../services/docs.service");
 const { getClientId } = require("../middleware/rate-limit.middleware");
 const { loginExpirationAdmin } = require("../data/settings");
-const fs = require("fs");
-const path = require("path");
 
 class AdminController {
   _escapeCsv(value) {
@@ -814,9 +813,7 @@ class AdminController {
  */
 async function getDocumentation(req, res) {
   try {
-    const docsPath = path.join(__dirname, "../data/docs.json");
-    const docsData = fs.readFileSync(docsPath, "utf-8");
-    const docs = JSON.parse(docsData);
+    const docs = await docsService.getAll();
     res.status(200).json({ success: true, docs });
   } catch (error) {
     logError("Error reading documentation data:", error);

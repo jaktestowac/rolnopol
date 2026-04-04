@@ -93,6 +93,25 @@ const tools = [
       required: [],
     },
   },
+  {
+    name: "get_documentation_answer",
+    description:
+      "Retrieve relevant documentation snippets based on a user query. Useful when the LLM should answer from Rolnopol docs in a precise and concise way.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "The question or topic to search in the documentation.",
+        },
+        max_results: {
+          type: "number",
+          description: "Maximum number of top matching results to return (default 3).",
+        },
+      },
+      required: ["query"],
+    },
+  },
 ];
 
 /**
