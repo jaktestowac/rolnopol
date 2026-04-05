@@ -31,6 +31,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   promoAdvertsAlertsEnabled: "Enable or disable Rolnopol promotional popups on alerts pages",
   promoAdvertsGeneralAdEnabled: "Enable or disable Rolnopol promotional popups on any general page",
   promoAdvertsBottomBannerEnabled: "Enable or disable Rolnopol promotional banner fixed at the bottom of pages",
+  petBuddyEnabled: "Enable or disable the pet buddy companion system",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -53,6 +54,7 @@ const FEATURE_FLAG_GROUPS = {
     "promoAdvertsGeneralAdEnabled",
     "promoAdvertsBottomBannerEnabled",
   ],
+  gameplay: ["petBuddyEnabled"],
 };
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -84,6 +86,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   promoAdvertsAlertsEnabled: false,
   promoAdvertsGeneralAdEnabled: false,
   promoAdvertsBottomBannerEnabled: false,
+  petBuddyEnabled: true,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

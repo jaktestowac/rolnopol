@@ -152,18 +152,21 @@ async function getNavFeatureFlagState() {
       messengerEnabled: false,
       financialCommoditiesEnabled: false,
       weatherPageEnabled: false,
+      petBuddyEnabled: false,
     };
   }
 
   try {
-    const [alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled] = await Promise.all([
-      featureFlagsService.isEnabled("alertsEnabled", true),
-      featureFlagsService.isEnabled("rolnopolMapEnabled", true),
-      featureFlagsService.isEnabled("messengerEnabled", false),
-      featureFlagsService.isEnabled("financialCommoditiesEnabled", false),
-      featureFlagsService.isEnabled("weatherPageEnabled", false),
-    ]);
-    return { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled };
+    const [alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled, petBuddyEnabled] =
+      await Promise.all([
+        featureFlagsService.isEnabled("alertsEnabled", true),
+        featureFlagsService.isEnabled("rolnopolMapEnabled", true),
+        featureFlagsService.isEnabled("messengerEnabled", false),
+        featureFlagsService.isEnabled("financialCommoditiesEnabled", false),
+        featureFlagsService.isEnabled("weatherPageEnabled", false),
+        featureFlagsService.isEnabled("petBuddyEnabled", true),
+      ]);
+    return { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled, petBuddyEnabled };
   } catch (error) {
     return {
       alertsEnabled: true,
@@ -171,6 +174,7 @@ async function getNavFeatureFlagState() {
       messengerEnabled: false,
       financialCommoditiesEnabled: false,
       weatherPageEnabled: false,
+      petBuddyEnabled: true,
     };
   }
 }
@@ -306,7 +310,7 @@ async function updateHeaderNav(username = "") {
     return;
   }
 
-  const { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled } =
+  const { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled, petBuddyEnabled } =
     await getNavFeatureFlagState();
   const mapLink = rolnopolMapEnabled
     ? '<li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>'
@@ -322,6 +326,9 @@ async function updateHeaderNav(username = "") {
     : "";
   const weatherLink = weatherPageEnabled
     ? '<li><a href="/weather.html" class="nav-link" title="Weather" aria-label="Weather" data-testid="nav-weather"><i class="fas fa-cloud-sun-rain"></i><span class="nav-text">Weather</span></a></li>'
+    : "";
+  const buddyLink = petBuddyEnabled
+    ? '<li><a href="/buddy.html" class="nav-link" title="Pet Buddy" aria-label="Pet Buddy" data-testid="nav-buddy"><i class="fas fa-egg"></i><span class="nav-text">Buddy</span></a></li>'
     : "";
 
   // Check authentication using standardized cookie names
@@ -340,6 +347,7 @@ async function updateHeaderNav(username = "") {
       ${alertsLink}
       ${weatherLink}
       ${messengerLink}
+      ${buddyLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li class="nav-user" >

@@ -344,6 +344,28 @@ app.get(["/weather", "/weather.html"], async (req, res, next) => {
   }
 });
 
+// Feature-gate pet buddy page before static serving
+app.get(["/buddy", "/buddy.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.petBuddyEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/buddy") {
+      return res.redirect(302, "/buddy.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Pet Buddy feature gate check failed", { error });
+    return next();
+  }
+});
+
 // Public health status page entry points
 app.get(["/health", "/health.html"], (req, res, next) => {
   if (req.path === "/health") {

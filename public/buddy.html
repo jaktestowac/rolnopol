@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pet Buddy Terminal - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/buddy.css" />
+  </head>
+
+  <body class="buddy-page-body">
+    <div id="header-component"></div>
+
+    <span class="buddy-page-span">
+      <div class="buddy-page-container">
+        <!-- Main Terminal Window -->
+        <div class="terminal-window">
+          <!-- Terminal Header -->
+          <div class="terminal-header">
+            <span class="terminal-title">~ buddy terminal ~</span>
+            <span class="terminal-status" id="statusDot"></span>
+          </div>
+
+          <!-- Terminal Screen -->
+          <div class="terminal-screen" id="terminalScreen">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+              <p>initializing buddy terminal...</p>
+            </div>
+
+            <!-- Feature Flag Disabled Notice -->
+            <div id="featureFlagNotice" class="feature-disabled" hidden>
+              <p><i class="fas fa-lock"></i> Pet Buddy feature is not enabled</p>
+            </div>
+
+            <!-- Pet Display Section -->
+            <div id="petSection" hidden>
+              <!-- Pet Info Header -->
+              <div class="pet-info-header">
+                <div class="pet-name-rarity">
+                  <h2 id="petName">Loading...</h2>
+                  <span id="petRarity" class="rarity-badge">★ COMMON</span>
+                </div>
+              </div>
+
+              <!-- Pet ASCII Art -->
+              <div class="pet-display">
+                <pre id="asciiArt"></pre>
+              </div>
+
+              <!-- Pet Stats Card -->
+              <div class="pet-stats-card">
+                <div class="stat-line">
+                  <span class="stat-label">FARMING</span>
+                  <span id="stat-farming-bar" class="stat-bar">████░░░░░░</span>
+                  <span id="stat-farming-value" class="stat-value">42</span>
+                </div>
+                <div class="stat-line">
+                  <span class="stat-label">PATIENCE</span>
+                  <span id="stat-patience-bar" class="stat-bar">██░░░░░░░░</span>
+                  <span id="stat-patience-value" class="stat-value">18</span>
+                </div>
+                <div class="stat-line">
+                  <span class="stat-label">CHAOS</span>
+                  <span id="stat-chaos-bar" class="stat-bar">████░░░░░░</span>
+                  <span id="stat-chaos-value" class="stat-value">37</span>
+                </div>
+                <div class="stat-line">
+                  <span class="stat-label">WISDOM</span>
+                  <span id="stat-wisdom-bar" class="stat-bar">████████░░</span>
+                  <span id="stat-wisdom-value" class="stat-value">77</span>
+                </div>
+              </div>
+
+              <!-- Pet Bio / Personality Description -->
+              <div class="pet-bio">
+                <p id="bioText">A remarkable companion with unique traits...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Terminal Output -->
+          <div class="terminal-output" id="terminalOutput"></div>
+
+          <!-- Terminal Input Panel -->
+          <div class="terminal-input">
+            <div class="terminal-command-panel">
+              <div class="terminal-command-hint" id="commandHint">Enter a command: /hatch, /pet, /talk, /ask-help, /info, /release</div>
+              <div class="terminal-command-input">
+                <span class="prompt">$</span>
+                <textarea
+                  id="terminalCommandInput"
+                  class="command-input"
+                  placeholder="Type /hatch to begin..."
+                  rows="3"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hatch Confirmation Modal -->
+      <div id="hatchModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+          <button class="modal-close" id="modalClose">&times;</button>
+          <h2>Hatch a New Buddy</h2>
+          <p class="modal-description">You're about to bring a new companion into the world. Are you ready?</p>
+          <div class="modal-actions">
+            <button class="btn btn-outline" id="modalCancel">Cancel</button>
+            <button class="cta-btn" id="modalConfirm">Yes, Hatch!</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Release Confirmation Modal -->
+      <div id="releaseModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+          <button class="modal-close" id="releaseModalClose">&times;</button>
+          <h2>Release <span id="releasePetName">Pet</span>?</h2>
+          <p class="modal-description warning">This action cannot be undone. Your companion will be gone forever.</p>
+          <div class="modal-actions">
+            <button class="btn btn-outline" id="releaseModalCancel">Cancel</button>
+            <button class="danger-btn" id="releaseModalConfirm">Yes, Release</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification Container -->
+      <div id="notification-container" class="notification-container"></div>
+
+      <!-- Scripts -->
+      <script src="/js/core/event-bus.js"></script>
+      <script src="/js/core/storage.js"></script>
+      <script src="/js/core/app.js"></script>
+
+      <script src="/js/services/api-service.js"></script>
+      <script src="/js/services/auth-service.js"></script>
+      <script src="/js/services/feature-flags-service.js"></script>
+
+      <script src="/js/components/notification.js"></script>
+      <script src="/js/components/navigation.js"></script>
+      <script src="/js/components/form.js"></script>
+      <script src="/js/components.js"></script>
+
+      <script src="/js/api.js"></script>
+
+      <script src="/js/utils/error-logger.js"></script>
+      <script src="/js/utils/utils.js"></script>
+      <script src="/js/utils/router.js"></script>
+      <script src="/js/utils/global-compat.js"></script>
+
+      <script src="/js/pages/buddy-page.js"></script>
+
+      <script src="/js/app.js"></script>
+      <script src="/js/utils/init-navigation.js"></script>
+      <script>
+        initNavigation("buddy");
+      </script>
+    </span>
+  </body>
+</html>

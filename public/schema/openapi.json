@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Rolnopol",
-    "version": "1.0.127",
+    "version": "1.0.128",
     "description": "API documentation for the Rolnopol service with versioning support",
     "contact": {
       "name": "API Support",
@@ -371,30 +371,64 @@
       "Field": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "description": "Field ID" },
-          "userId": { "type": "string", "description": "Owner userId" },
-          "name": { "type": "string" },
-          "district": { "type": "string" },
-          "area": { "type": "number" }
+          "id": {
+            "type": "integer",
+            "description": "Field ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Owner userId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "area": {
+            "type": "number"
+          }
         }
       },
       "Staff": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "description": "Staff ID" },
-          "userId": { "type": "string", "description": "Owner userId" },
-          "name": { "type": "string" },
-          "surname": { "type": "string" },
-          "age": { "type": "integer" }
+          "id": {
+            "type": "integer",
+            "description": "Staff ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Owner userId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "surname": {
+            "type": "string"
+          },
+          "age": {
+            "type": "integer"
+          }
         }
       },
       "Assignment": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "description": "Assignment ID" },
-          "userId": { "type": "string", "description": "Owner userId" },
-          "fieldId": { "type": "integer" },
-          "staffId": { "type": "integer" },
+          "id": {
+            "type": "integer",
+            "description": "Assignment ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Owner userId"
+          },
+          "fieldId": {
+            "type": "integer"
+          },
+          "staffId": {
+            "type": "integer"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -405,17 +439,31 @@
       "AdminUser": {
         "type": "object",
         "properties": {
-          "userId": { "type": "string" },
-          "userName": { "type": "string" },
-          "email": { "type": "string" },
-          "isActive": { "type": "boolean" }
+          "userId": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
         }
       },
       "Animal": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "description": "Animal ID" },
-          "userId": { "type": "string", "description": "Owner userId" },
+          "id": {
+            "type": "integer",
+            "description": "Animal ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Owner userId"
+          },
           "fieldId": {
             "type": "integer",
             "description": "Field ID where animal is located (optional)"
@@ -425,7 +473,10 @@
             "description": "Number of animals",
             "minimum": 1
           },
-          "type": { "type": "string", "description": "Animal type key" },
+          "type": {
+            "type": "string",
+            "description": "Animal type key"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -446,15 +497,24 @@
             "description": "Number of animals",
             "minimum": 1
           },
-          "type": { "type": "string", "description": "Animal type key" }
+          "type": {
+            "type": "string",
+            "description": "Animal type key"
+          }
         },
         "required": ["amount", "type"]
       },
       "FinancialAccount": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "description": "Account ID" },
-          "userId": { "type": "string", "description": "User ID" },
+          "id": {
+            "type": "integer",
+            "description": "Account ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID"
+          },
           "balance": {
             "type": "number",
             "description": "Current account balance"
@@ -476,7 +536,9 @@
           },
           "transactions": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/Transaction" },
+            "items": {
+              "$ref": "#/components/schemas/Transaction"
+            },
             "description": "List of transactions"
           }
         },
@@ -485,13 +547,19 @@
       "Transaction": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "description": "Transaction ID" },
+          "id": {
+            "type": "integer",
+            "description": "Transaction ID"
+          },
           "type": {
             "type": "string",
             "enum": ["income", "expense"],
             "description": "Transaction type"
           },
-          "amount": { "type": "number", "description": "Transaction amount" },
+          "amount": {
+            "type": "number",
+            "description": "Transaction amount"
+          },
           "description": {
             "type": "string",
             "description": "Transaction description"
@@ -568,7 +636,10 @@
       "TransferRequest": {
         "type": "object",
         "properties": {
-          "toUserId": { "type": "string", "description": "Recipient user ID" },
+          "toUserId": {
+            "type": "string",
+            "description": "Recipient user ID"
+          },
           "amount": {
             "type": "number",
             "minimum": 0.01,
@@ -649,8 +720,14 @@
       "MarketplaceOffer": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "description": "Offer ID" },
-          "sellerId": { "type": "integer", "description": "Seller user ID" },
+          "id": {
+            "type": "integer",
+            "description": "Offer ID"
+          },
+          "sellerId": {
+            "type": "integer",
+            "description": "Seller user ID"
+          },
           "itemType": {
             "type": "string",
             "enum": ["field", "animal"],
@@ -718,17 +795,35 @@
       "MarketplaceTransaction": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer", "description": "Transaction ID" },
-          "offerId": { "type": "integer", "description": "Related offer ID" },
-          "buyerId": { "type": "integer", "description": "Buyer user ID" },
-          "sellerId": { "type": "integer", "description": "Seller user ID" },
+          "id": {
+            "type": "integer",
+            "description": "Transaction ID"
+          },
+          "offerId": {
+            "type": "integer",
+            "description": "Related offer ID"
+          },
+          "buyerId": {
+            "type": "integer",
+            "description": "Buyer user ID"
+          },
+          "sellerId": {
+            "type": "integer",
+            "description": "Seller user ID"
+          },
           "itemType": {
             "type": "string",
             "enum": ["field", "animal"],
             "description": "Type of item sold"
           },
-          "itemId": { "type": "integer", "description": "ID of the item sold" },
-          "price": { "type": "number", "description": "Transaction price" },
+          "itemId": {
+            "type": "integer",
+            "description": "ID of the item sold"
+          },
+          "price": {
+            "type": "number",
+            "description": "Transaction price"
+          },
           "timestamp": {
             "type": "string",
             "format": "date-time",
@@ -874,7 +969,14 @@
           "flags": {
             "type": "object",
             "additionalProperties": {
-              "oneOf": [{ "type": "boolean" }, { "$ref": "#/components/schemas/FeatureFlag" }]
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "#/components/schemas/FeatureFlag"
+                }
+              ]
             },
             "description": "Feature flags map"
           },
@@ -882,7 +984,9 @@
             "type": "object",
             "additionalProperties": {
               "type": "array",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             },
             "description": "Feature flags grouped by category"
           },
@@ -1065,7 +1169,9 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TokenValidation" }
+              "schema": {
+                "$ref": "#/components/schemas/TokenValidation"
+              }
             }
           }
         },
@@ -1135,10 +1241,19 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string" },
-                  "email": { "type": "string", "format": "email" },
-                  "subject": { "type": "string" },
-                  "message": { "type": "string" }
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "subject": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
                 },
                 "required": ["name", "email", "subject", "message"]
               }
@@ -1153,9 +1268,15 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
-                    "id": { "type": "string" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1168,8 +1289,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "error": { "type": "string" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1182,8 +1307,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "error": { "type": "string" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1212,7 +1341,9 @@
                   "properties": {
                     "logs": {
                       "type": "array",
-                      "items": { "type": "object" }
+                      "items": {
+                        "type": "object"
+                      }
                     }
                   }
                 }
@@ -1236,25 +1367,37 @@
           {
             "name": "all",
             "in": "query",
-            "schema": { "type": "string", "enum": ["true", "false"] },
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
             "description": "Enable/disable all debug settings"
           },
           {
             "name": "debug",
             "in": "query",
-            "schema": { "type": "string", "enum": ["true", "false"] },
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
             "description": "Enable/disable debug mode"
           },
           {
             "name": "log",
             "in": "query",
-            "schema": { "type": "string", "enum": ["true", "false"] },
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
             "description": "Enable/disable log stack trace"
           },
           {
             "name": "request",
             "in": "query",
-            "schema": { "type": "string", "enum": ["true", "false"] },
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
             "description": "Enable/disable log request"
           }
         ],
@@ -1266,9 +1409,15 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "DEBUG_MODE": { "type": "boolean" },
-                    "LOG_STACK_TRACE": { "type": "boolean" },
-                    "LOG_REQUEST": { "type": "boolean" }
+                    "DEBUG_MODE": {
+                      "type": "boolean"
+                    },
+                    "LOG_STACK_TRACE": {
+                      "type": "boolean"
+                    },
+                    "LOG_REQUEST": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
@@ -1295,16 +1444,29 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean", "example": true },
-                    "timestamp": { "type": "string", "format": "date-time" },
-                    "message": { "type": "string" },
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "baseStateVersion": { "type": "integer", "example": 1 },
+                        "baseStateVersion": {
+                          "type": "integer",
+                          "example": 1
+                        },
                         "restored": {
                           "type": "object",
-                          "additionalProperties": { "type": "integer" },
+                          "additionalProperties": {
+                            "type": "integer"
+                          },
                           "description": "Per-database restored record counters"
                         }
                       }
@@ -1340,7 +1502,10 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "pong" }
+                    "message": {
+                      "type": "string",
+                      "example": "pong"
+                    }
                   }
                 }
               }
@@ -1455,7 +1620,9 @@
             "description": "System statistics retrieved successfully",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SystemStatistics" }
+                "schema": {
+                  "$ref": "#/components/schemas/SystemStatistics"
+                }
               }
             }
           },
@@ -1463,7 +1630,9 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1491,7 +1660,9 @@
             "description": "Metrics endpoint disabled",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -1499,7 +1670,9 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1781,7 +1954,11 @@
       "get": {
         "tags": ["Fields"],
         "summary": "List all fields for current user",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of fields",
@@ -1789,7 +1966,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Field" }
+                  "items": {
+                    "$ref": "#/components/schemas/Field"
+                  }
                 }
               }
             }
@@ -1799,12 +1978,18 @@
       "post": {
         "tags": ["Fields"],
         "summary": "Create a new field",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/Field" }
+              "schema": {
+                "$ref": "#/components/schemas/Field"
+              }
             }
           }
         },
@@ -1813,7 +1998,9 @@
             "description": "Field created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Field" }
+                "schema": {
+                  "$ref": "#/components/schemas/Field"
+                }
               }
             }
           }
@@ -1824,20 +2011,28 @@
       "put": {
         "tags": ["Fields"],
         "summary": "Update a field",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/Field" }
+              "schema": {
+                "$ref": "#/components/schemas/Field"
+              }
             }
           }
         },
@@ -1846,7 +2041,9 @@
             "description": "Field updated",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Field" }
+                "schema": {
+                  "$ref": "#/components/schemas/Field"
+                }
               }
             }
           }
@@ -1855,13 +2052,19 @@
       "delete": {
         "tags": ["Fields"],
         "summary": "Delete a field",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -1869,7 +2072,9 @@
             "description": "Field deleted",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
               }
             }
           }
@@ -1880,7 +2085,11 @@
       "get": {
         "tags": ["Staff"],
         "summary": "List all staff for current user",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of staff",
@@ -1888,7 +2097,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Staff" }
+                  "items": {
+                    "$ref": "#/components/schemas/Staff"
+                  }
                 }
               }
             }
@@ -1898,12 +2109,18 @@
       "post": {
         "tags": ["Staff"],
         "summary": "Create a new staff member",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/Staff" }
+              "schema": {
+                "$ref": "#/components/schemas/Staff"
+              }
             }
           }
         },
@@ -1912,7 +2129,9 @@
             "description": "Staff created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Staff" }
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
               }
             }
           }
@@ -1923,20 +2142,28 @@
       "put": {
         "tags": ["Staff"],
         "summary": "Update a staff member",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/Staff" }
+              "schema": {
+                "$ref": "#/components/schemas/Staff"
+              }
             }
           }
         },
@@ -1945,7 +2172,9 @@
             "description": "Staff updated",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Staff" }
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
               }
             }
           }
@@ -1954,13 +2183,19 @@
       "delete": {
         "tags": ["Staff"],
         "summary": "Delete a staff member",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -1968,7 +2203,9 @@
             "description": "Staff deleted",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
               }
             }
           }
@@ -1979,7 +2216,11 @@
       "post": {
         "tags": ["Assignments"],
         "summary": "Assign a staff member to a field",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1987,8 +2228,12 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "fieldId": { "type": "integer" },
-                  "staffId": { "type": "integer" }
+                  "fieldId": {
+                    "type": "integer"
+                  },
+                  "staffId": {
+                    "type": "integer"
+                  }
                 }
               }
             }
@@ -1999,7 +2244,9 @@
             "description": "Assignment created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Assignment" }
+                "schema": {
+                  "$ref": "#/components/schemas/Assignment"
+                }
               }
             }
           }
@@ -2008,7 +2255,11 @@
       "get": {
         "tags": ["Assignments"],
         "summary": "List assignments",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of assignments",
@@ -2016,7 +2267,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Assignment" }
+                  "items": {
+                    "$ref": "#/components/schemas/Assignment"
+                  }
                 }
               }
             }
@@ -2028,7 +2281,11 @@
       "get": {
         "tags": ["Assignments"],
         "summary": "List all assignments for current user",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of assignments",
@@ -2036,7 +2293,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Assignment" }
+                  "items": {
+                    "$ref": "#/components/schemas/Assignment"
+                  }
                 }
               }
             }
@@ -2048,13 +2307,19 @@
       "delete": {
         "tags": ["Assignments"],
         "summary": "Delete an assignment",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -2062,7 +2327,9 @@
             "description": "Assignment deleted",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
               }
             }
           }
@@ -2073,7 +2340,11 @@
       "get": {
         "tags": ["Animals"],
         "summary": "List all animals for current user",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of animals",
@@ -2081,7 +2352,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Animal" }
+                  "items": {
+                    "$ref": "#/components/schemas/Animal"
+                  }
                 }
               }
             }
@@ -2091,12 +2364,18 @@
       "post": {
         "tags": ["Animals"],
         "summary": "Create a new animal",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/AnimalCreate" }
+              "schema": {
+                "$ref": "#/components/schemas/AnimalCreate"
+              }
             }
           }
         },
@@ -2105,7 +2384,9 @@
             "description": "Animal created",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Animal" }
+                "schema": {
+                  "$ref": "#/components/schemas/Animal"
+                }
               }
             }
           },
@@ -2113,7 +2394,9 @@
             "description": "Validation error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2124,13 +2407,19 @@
       "delete": {
         "tags": ["Animals"],
         "summary": "Delete an animal",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -2138,7 +2427,9 @@
             "description": "Animal deleted",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
               }
             }
           }
@@ -2147,22 +2438,51 @@
       "put": {
         "tags": ["Animals"],
         "summary": "Update an animal",
-        "security": [{ "TokenAuth": [] }],
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/AnimalCreate" } }
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnimalCreate"
+              }
+            }
           }
         },
         "responses": {
           "200": {
             "description": "Animal updated",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Animal" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Animal"
+                }
+              }
+            }
           },
           "404": {
             "description": "Animal not found",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -2179,7 +2499,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
+                    "success": {
+                      "type": "boolean"
+                    },
                     "data": {
                       "type": "array",
                       "items": {
@@ -2205,7 +2527,9 @@
                         "required": ["key", "fullName", "description", "icon"]
                       }
                     },
-                    "message": { "type": "string" }
+                    "message": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -2219,7 +2543,11 @@
         "tags": ["Financial"],
         "summary": "Get user's financial account",
         "description": "Retrieve the current user's financial account information including balance and transaction history",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Financial account retrieved successfully",
@@ -2228,8 +2556,13 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "timestamp": { "type": "string", "format": "date-time" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
@@ -2247,7 +2580,9 @@
             "description": "Account not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2259,7 +2594,11 @@
         "tags": ["Financial"],
         "summary": "Get transaction history",
         "description": "Retrieve transaction history with optional filtering and pagination",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -2276,31 +2615,46 @@
             "name": "offset",
             "in": "query",
             "description": "Number of transactions to skip",
-            "schema": { "type": "integer", "default": 0, "minimum": 0 }
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
           },
           {
             "name": "type",
             "in": "query",
             "description": "Filter by transaction type",
-            "schema": { "type": "string", "enum": ["income", "expense"] }
+            "schema": {
+              "type": "string",
+              "enum": ["income", "expense"]
+            }
           },
           {
             "name": "category",
             "in": "query",
             "description": "Filter by transaction category",
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "startDate",
             "in": "query",
             "description": "Filter transactions from this date (ISO format)",
-            "schema": { "type": "string", "format": "date-time" }
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
           },
           {
             "name": "endDate",
             "in": "query",
             "description": "Filter transactions until this date (ISO format)",
-            "schema": { "type": "string", "format": "date-time" }
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
           }
         ],
         "responses": {
@@ -2311,7 +2665,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
+                    "success": {
+                      "type": "boolean"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
@@ -2346,12 +2702,18 @@
         "tags": ["Financial"],
         "summary": "Add a new transaction",
         "description": "Create a new income or expense transaction. For income transactions, cardNumber and cvv are required for validation; these fields are write-only, are not stored, and are never returned.",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TransactionCreate" },
+              "schema": {
+                "$ref": "#/components/schemas/TransactionCreate"
+              },
               "examples": {
                 "expense": {
                   "summary": "Expense transaction",
@@ -2385,9 +2747,16 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "timestamp": { "type": "string", "format": "date-time" },
-                    "message": { "type": "string" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
@@ -2405,7 +2774,9 @@
             "description": "Invalid input data",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2417,14 +2788,20 @@
         "tags": ["Financial"],
         "summary": "Get transaction by ID",
         "description": "Retrieve a specific transaction by its ID",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "transactionId",
             "in": "path",
             "required": true,
             "description": "Transaction ID",
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -2435,8 +2812,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "data": { "$ref": "#/components/schemas/Transaction" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Transaction"
+                    }
                   }
                 }
               }
@@ -2446,7 +2827,9 @@
             "description": "Transaction not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2458,7 +2841,11 @@
         "tags": ["Financial"],
         "summary": "Get financial statistics",
         "description": "Retrieve comprehensive financial statistics for the current user",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Financial statistics retrieved successfully",
@@ -2467,8 +2854,13 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "timestamp": { "type": "string", "format": "date-time" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
@@ -2491,7 +2883,11 @@
         "summary": "Get financial report payload",
         "description": "Returns encoded report data for client-side PDF generation. Endpoint availability is controlled by feature flag `financialReportsEnabled`.",
         "x-feature-flag": "financialReportsEnabled",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Financial report payload retrieved successfully",
@@ -2500,16 +2896,34 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "timestamp": { "type": "string", "format": "date-time" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "encodedReport": { "type": "string", "description": "Base64-encoded JSON report payload" },
-                        "filename": { "type": "string", "example": "financial-report-USER-2026-02-20.pdf" },
-                        "generatedAt": { "type": "string", "format": "date-time" },
-                        "totalTransactions": { "type": "integer" },
-                        "maxRows": { "type": "integer" }
+                        "encodedReport": {
+                          "type": "string",
+                          "description": "Base64-encoded JSON report payload"
+                        },
+                        "filename": {
+                          "type": "string",
+                          "example": "financial-report-USER-2026-02-20.pdf"
+                        },
+                        "generatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "totalTransactions": {
+                          "type": "integer"
+                        },
+                        "maxRows": {
+                          "type": "integer"
+                        }
                       }
                     }
                   }
@@ -2521,7 +2935,9 @@
             "description": "Authentication required",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -2529,7 +2945,9 @@
             "description": "Financial report endpoint disabled",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -2537,7 +2955,9 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2549,12 +2969,18 @@
         "tags": ["Financial"],
         "summary": "Transfer funds to another user",
         "description": "Transfer funds from current user's account to another user's account",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/TransferRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/TransferRequest"
+              }
             }
           }
         },
@@ -2566,16 +2992,31 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "fromUserId": { "type": "string" },
-                        "toUserId": { "type": "string" },
-                        "amount": { "type": "number" },
-                        "description": { "type": "string" },
-                        "timestamp": { "type": "string", "format": "date-time" }
+                        "fromUserId": {
+                          "type": "string"
+                        },
+                        "toUserId": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "number"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
                       }
                     }
                   }
@@ -2587,7 +3028,9 @@
             "description": "Invalid input data or insufficient funds",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2599,7 +3042,11 @@
         "tags": ["Financial"],
         "summary": "Get comprehensive marketplace statistics",
         "description": "Retrieve marketplace statistics across all users",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Marketplace statistics retrieved successfully",
@@ -2608,8 +3055,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "data": { "$ref": "#/components/schemas/MarketplaceStats" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MarketplaceStats"
+                    }
                   }
                 }
               }
@@ -2623,7 +3074,11 @@
         "tags": ["Financial"],
         "summary": "Get all financial accounts",
         "description": "Retrieve all financial accounts (admin access required)",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "All financial accounts retrieved successfully",
@@ -2663,7 +3118,11 @@
         "tags": ["Financial"],
         "summary": "Update account balance",
         "description": "Update account balance for a specific user (admin access required)",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2738,7 +3197,11 @@
         "tags": ["Marketplace"],
         "summary": "Get all marketplace offers",
         "description": "Retrieve all active marketplace offers excluding user's own offers",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Marketplace offers retrieved successfully",
@@ -2747,7 +3210,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
+                    "success": {
+                      "type": "boolean"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
@@ -2772,7 +3237,9 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2782,7 +3249,11 @@
         "tags": ["Marketplace"],
         "summary": "Create a new marketplace offer",
         "description": "Create a new offer to sell a field or animal",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2801,14 +3272,18 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
+                    "success": {
+                      "type": "boolean"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
                         "offer": {
                           "$ref": "#/components/schemas/MarketplaceOffer"
                         },
-                        "message": { "type": "string" }
+                        "message": {
+                          "type": "string"
+                        }
                       }
                     }
                   }
@@ -2820,7 +3295,9 @@
             "description": "Invalid input data or item already offered",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -2828,7 +3305,9 @@
             "description": "Item not found or not owned by user",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2840,7 +3319,11 @@
         "tags": ["Marketplace"],
         "summary": "Get user's own offers",
         "description": "Retrieve all marketplace offers created by the current user",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "User offers retrieved successfully",
@@ -2849,7 +3332,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
+                    "success": {
+                      "type": "boolean"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
@@ -2874,7 +3359,9 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2886,12 +3373,18 @@
         "tags": ["Marketplace"],
         "summary": "Buy an item from marketplace",
         "description": "Purchase an item from a marketplace offer",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/BuyRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/BuyRequest"
+              }
             }
           }
         },
@@ -2903,14 +3396,18 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
+                    "success": {
+                      "type": "boolean"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
                         "transaction": {
                           "$ref": "#/components/schemas/MarketplaceTransaction"
                         },
-                        "message": { "type": "string" }
+                        "message": {
+                          "type": "string"
+                        }
                       }
                     }
                   }
@@ -2922,7 +3419,9 @@
             "description": "Invalid input data, insufficient funds, or cannot buy own offer",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -2930,7 +3429,9 @@
             "description": "Offer not found or item no longer available",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2942,14 +3443,20 @@
         "tags": ["Marketplace"],
         "summary": "Cancel an offer",
         "description": "Cancel a marketplace offer created by the current user",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "offerId",
             "in": "path",
             "required": true,
             "description": "Offer ID to cancel",
-            "schema": { "type": "integer" }
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -2960,8 +3467,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -2971,7 +3482,9 @@
             "description": "Forbidden - not the offer owner",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -2979,7 +3492,9 @@
             "description": "Offer not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2991,7 +3506,11 @@
         "tags": ["Marketplace"],
         "summary": "Get marketplace transaction history",
         "description": "Retrieve marketplace transaction history for the current user",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Transaction history retrieved successfully",
@@ -3000,7 +3519,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
+                    "success": {
+                      "type": "boolean"
+                    },
                     "data": {
                       "type": "array",
                       "items": {
@@ -3016,7 +3537,9 @@
             "description": "Internal server error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -3031,13 +3554,34 @@
         "x-feature-flag": "alertsEnabled",
         "security": [],
         "parameters": [
-          { "name": "date", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Date in YYYY-MM-DD" },
-          { "name": "region", "in": "query", "schema": { "type": "string" }, "description": "Region in ISO 3166-2:PL format - PL-XX" }
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Date in YYYY-MM-DD"
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Region in ISO 3166-2:PL format - PL-XX"
+          }
         ],
         "responses": {
           "200": {
             "description": "Alerts retrieved",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3050,13 +3594,34 @@
         "x-feature-flag": "alertsEnabled",
         "security": [],
         "parameters": [
-          { "name": "date", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Date in YYYY-MM-DD" },
-          { "name": "region", "in": "query", "schema": { "type": "string" }, "description": "Region in ISO 3166-2:PL format - PL-XX" }
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Date in YYYY-MM-DD"
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Region in ISO 3166-2:PL format - PL-XX"
+          }
         ],
         "responses": {
           "200": {
             "description": "Alerts history retrieved",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3069,13 +3634,34 @@
         "x-feature-flag": "alertsEnabled",
         "security": [],
         "parameters": [
-          { "name": "date", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Date in YYYY-MM-DD" },
-          { "name": "region", "in": "query", "schema": { "type": "string" }, "description": "Region in ISO 3166-2:PL format - PL-XX" }
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Date in YYYY-MM-DD"
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Region in ISO 3166-2:PL format - PL-XX"
+          }
         ],
         "responses": {
           "200": {
             "description": "Upcoming alerts retrieved",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3084,12 +3670,31 @@
       "delete": {
         "tags": ["Assignments"],
         "summary": "Delete assignment",
-        "security": [{ "TokenAuth": [] }],
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Assignment deleted",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3099,11 +3704,21 @@
         "tags": ["Fields"],
         "summary": "List field districts",
         "description": "Return list of districts derived from fields",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Districts list",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3113,12 +3728,31 @@
         "tags": ["Fields"],
         "summary": "List field districts by id",
         "description": "Return list of districts for given id",
-        "security": [{ "TokenAuth": [] }],
-        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Districts list",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3128,41 +3762,76 @@
         "tags": ["Map"],
         "summary": "Map API info",
         "description": "Basic info about map endpoints",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Info",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
           }
         }
       }
     },
-
     "/map/fieldsmap": {
       "get": {
         "tags": ["Map"],
         "summary": "Get fields geojson",
         "description": "Return fields map JSON (GeoJSON-like)",
-        "security": [{ "TokenAuth": [] }],
-        "responses": { "200": { "description": "Fields map", "content": { "application/json": { "schema": { "type": "object" } } } } }
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fields map",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
       }
     },
-
     "/map/districts": {
       "get": {
         "tags": ["Map"],
         "summary": "List districts (map)",
         "description": "Return district names available in map data",
-        "security": [{ "TokenAuth": [] }],
+        "security": [
+          {
+            "TokenAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "District names",
-            "content": { "application/json": { "schema": { "type": "array", "items": { "type": "string" } } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
-
     "/feature-flags": {
       "get": {
         "tags": ["Feature Flags"],
@@ -3173,7 +3842,10 @@
             "name": "descriptions",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "enum": ["true", "false"] },
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
             "description": "Include flag descriptions and grouping information"
           }
         ],
@@ -3184,11 +3856,15 @@
               "application/json": {
                 "schema": {
                   "allOf": [
-                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
                     {
                       "type": "object",
                       "properties": {
-                        "data": { "$ref": "#/components/schemas/FeatureFlagsResponse" }
+                        "data": {
+                          "$ref": "#/components/schemas/FeatureFlagsResponse"
+                        }
                       }
                     }
                   ]
@@ -3198,7 +3874,13 @@
           },
           "500": {
             "description": "Internal server error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -3215,7 +3897,9 @@
                 "properties": {
                   "flags": {
                     "type": "object",
-                    "additionalProperties": { "type": "boolean" },
+                    "additionalProperties": {
+                      "type": "boolean"
+                    },
                     "description": "Flags to update (must be boolean values)"
                   }
                 },
@@ -3231,11 +3915,15 @@
               "application/json": {
                 "schema": {
                   "allOf": [
-                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
                     {
                       "type": "object",
                       "properties": {
-                        "data": { "$ref": "#/components/schemas/FeatureFlagsResponse" }
+                        "data": {
+                          "$ref": "#/components/schemas/FeatureFlagsResponse"
+                        }
                       }
                     }
                   ]
@@ -3245,11 +3933,23 @@
           },
           "400": {
             "description": "Validation error - flags must contain only boolean values",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal server error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -3266,7 +3966,9 @@
                 "properties": {
                   "flags": {
                     "type": "object",
-                    "additionalProperties": { "type": "boolean" },
+                    "additionalProperties": {
+                      "type": "boolean"
+                    },
                     "description": "Flags to replace with (must be boolean values, can be empty)"
                   }
                 },
@@ -3282,11 +3984,15 @@
               "application/json": {
                 "schema": {
                   "allOf": [
-                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
                     {
                       "type": "object",
                       "properties": {
-                        "data": { "$ref": "#/components/schemas/FeatureFlagsResponse" }
+                        "data": {
+                          "$ref": "#/components/schemas/FeatureFlagsResponse"
+                        }
                       }
                     }
                   ]
@@ -3296,11 +4002,23 @@
           },
           "400": {
             "description": "Validation error - flags must contain only boolean values",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal server error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -3317,11 +4035,15 @@
               "application/json": {
                 "schema": {
                   "allOf": [
-                    { "$ref": "#/components/schemas/SuccessResponse" },
+                    {
+                      "$ref": "#/components/schemas/SuccessResponse"
+                    },
                     {
                       "type": "object",
                       "properties": {
-                        "data": { "$ref": "#/components/schemas/FeatureFlagsResponse" }
+                        "data": {
+                          "$ref": "#/components/schemas/FeatureFlagsResponse"
+                        }
                       }
                     }
                   ]
@@ -3331,7 +4053,13 @@
           },
           "500": {
             "description": "Internal server error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -3344,7 +4072,13 @@
         "responses": {
           "200": {
             "description": "Shutdown initiated",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
           }
         }
       }

@@ -2,8 +2,9 @@
 const fs = require("fs");
 const path = require("path");
 
-const jsonFiles = ["package.json", "app-data.json", "public/schema/openapi.json"];
-const lockFile = "package-lock.json";
+const rootDir = path.resolve(__dirname);
+const jsonFiles = ["app-data.json", "public/schema/openapi.json"].map((file) => path.resolve(rootDir, file));
+const lockFile = path.resolve(rootDir, "package-lock.json");
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -45,12 +46,23 @@ function updateJsonFile(filePath, newVersion) {
   }
 
   const json = readJson(filePath);
+  let changed = false;
+
   if (Object.prototype.hasOwnProperty.call(json, "version")) {
     json.version = newVersion;
+    changed = true;
+  }
+
+  if (json.info && typeof json.info === "object" && Object.prototype.hasOwnProperty.call(json.info, "version")) {
+    json.info.version = newVersion;
+    changed = true;
+  }
+
+  if (changed) {
     writeJson(filePath, json);
     console.log(`Updated ${filePath}`);
   } else {
-    console.warn(`No top-level version field found in ${filePath}; file not updated.`);
+    console.warn(`No version field found in ${filePath}; file not updated.`);
   }
 }
 
@@ -71,7 +83,7 @@ function updatePackageLock(filePath, newVersion) {
 
 function main() {
   const bump = process.argv[2] || "patch";
-  const packageJsonPath = path.resolve("package.json");
+  const packageJsonPath = path.resolve(rootDir, "package.json");
   const packageJson = readJson(packageJsonPath);
   const currentVersion = packageJson.version;
 

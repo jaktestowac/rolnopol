@@ -1,0 +1,11 @@
+{
+  "petBuddy": {
+    "description": "Pet companion system - allows users to hatch and interact with virtual pet buddies",
+    "group": "gameplay",
+    "rollout": 100,
+    "metadata": {
+      "maxPetsPerUser": 1,
+      "enabled": true
+    }
+  }
+}

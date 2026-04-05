@@ -138,6 +138,15 @@ class DatabaseManager {
   }
 
   /**
+   * Get pets database singleton
+   */
+  getPetsDatabase() {
+    return this.getDatabase("pets", "pets.json", {
+      pets: [],
+    });
+  }
+
+  /**
    * Get a custom database singleton
    */
   getCustomDatabase(resourceName, fileName, defaultData = []) {
