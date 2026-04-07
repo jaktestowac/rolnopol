@@ -366,6 +366,39 @@ app.get(["/buddy", "/buddy.html"], async (req, res, next) => {
   }
 });
 
+// Feature-gate Farmlog UI pages before static serving
+app.get(
+  ["/farmlog", "/farmlog.html", "/farmlog-blog", "/farmlog-blog.html", "/farmlog-post", "/farmlog-post.html"],
+  async (req, res, next) => {
+    try {
+      const data = await featureFlagsService.getFeatureFlags();
+      const enabled = data?.flags?.rolnopolFarmlogEnabled === true;
+
+      if (!enabled) {
+        notFoundStatsModule.incrementHtml(req.originalUrl);
+        return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+      }
+
+      if (req.path === "/farmlog") {
+        return res.redirect(302, "/farmlog.html");
+      }
+
+      if (req.path === "/farmlog-blog") {
+        return res.redirect(302, "/farmlog-blog.html");
+      }
+
+      if (req.path === "/farmlog-post") {
+        return res.redirect(302, "/farmlog-post.html");
+      }
+
+      return next();
+    } catch (error) {
+      logError("Farmlog feature gate check failed", { error });
+      return next();
+    }
+  },
+);
+
 // Public health status page entry points
 app.get(["/health", "/health.html"], (req, res, next) => {
   if (req.path === "/health") {

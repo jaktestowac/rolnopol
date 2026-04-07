@@ -203,6 +203,7 @@ function createAppModal() {
       </div>
       <div class="app-modal__body"></div>
       <div class="app-modal__footer">
+        <button type="button" class="btn btn-outline app-modal__cancel" data-modal-close>Cancel</button>
         <button type="button" class="btn app-modal__confirm" data-modal-close>OK</button>
       </div>
     </div>
@@ -228,9 +229,12 @@ function showAppModal(options = {}) {
   const titleEl = modal.querySelector(".app-modal__title");
   const bodyEl = modal.querySelector(".app-modal__body");
   const confirmBtn = modal.querySelector(".app-modal__confirm");
+  const cancelBtn = modal.querySelector(".app-modal__cancel");
   const title = options.title || "Notice";
   const message = options.message || "";
   const confirmText = options.confirmText || "OK";
+  const cancelText = options.cancelText || "Cancel";
+  const showCancel = Boolean(options.showCancel);
 
   if (titleEl) {
     titleEl.textContent = title;
@@ -241,6 +245,10 @@ function showAppModal(options = {}) {
   if (confirmBtn) {
     confirmBtn.textContent = confirmText;
   }
+  if (cancelBtn) {
+    cancelBtn.textContent = cancelText;
+    cancelBtn.style.display = showCancel ? "inline-flex" : "none";
+  }
 
   modal.style.display = "flex";
   modal.setAttribute("aria-hidden", "false");
@@ -248,6 +256,67 @@ function showAppModal(options = {}) {
   if (confirmBtn && typeof confirmBtn.focus === "function") {
     confirmBtn.focus();
   }
+}
+
+function showConfirmationModal(options = {}) {
+  createAppModal();
+  const modal = document.getElementById("app-modal");
+  if (!modal) {
+    return Promise.resolve(false);
+  }
+
+  const confirmBtn = modal.querySelector(".app-modal__confirm");
+  const cancelBtn = modal.querySelector(".app-modal__cancel");
+
+  return new Promise((resolve) => {
+    const cleanup = () => {
+      if (confirmBtn) {
+        confirmBtn.removeEventListener("click", onConfirm);
+      }
+      if (cancelBtn) {
+        cancelBtn.removeEventListener("click", onCancel);
+      }
+      modal.removeEventListener("click", onOverlayClick);
+      document.removeEventListener("keydown", onEscape);
+      hideAppModal();
+    };
+
+    const onConfirm = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const onCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    const onOverlayClick = (event) => {
+      const target = event.target;
+      if (target && target.hasAttribute("data-modal-close") && target.classList.contains("app-modal__overlay")) {
+        cleanup();
+        resolve(false);
+      }
+    };
+
+    const onEscape = (event) => {
+      if (event.key === "Escape") {
+        cleanup();
+        resolve(false);
+      }
+    };
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", onConfirm);
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", onCancel);
+    }
+    modal.addEventListener("click", onOverlayClick);
+    document.addEventListener("keydown", onEscape);
+
+    showAppModal({ ...options, showCancel: true });
+  });
 }
 
 function hideAppModal() {

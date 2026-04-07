@@ -1,0 +1,761 @@
+.farmlog-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.farmlog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.farmlog-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #22c55e 0%, #2563eb 100%);
+  border-radius: 1rem 1rem 0 0;
+}
+
+.farmlog-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.farmlog-header p {
+  margin: 0.25rem 0 0;
+  color: #61735a;
+  font-size: 0.95rem;
+}
+
+.farmlog-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .farmlog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .farmlog-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .farmlog-header .btn {
+    align-self: flex-start;
+  }
+
+  .farmlog-detail-body > .farmlog-tabs {
+    flex-wrap: wrap;
+  }
+}
+
+#yourBlogPanel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(235, 248, 227, 0.96));
+  border: 1px solid rgba(47, 111, 55, 0.16);
+  box-shadow: 0 20px 50px rgba(44, 80, 45, 0.08);
+  border-top: 4px solid #4c7b33;
+  position: relative;
+}
+
+#yourBlogPanel h2 {
+  color: #2d5d28;
+  letter-spacing: 0.02em;
+}
+
+#yourBlogPanel #userBlogEmpty {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px dashed rgba(47, 111, 55, 0.2);
+  border-radius: 0.9rem;
+  padding: 1rem;
+}
+
+#yourBlogPanel #userBlogEmpty p {
+  margin: 0;
+  color: #4f6f4d;
+  line-height: 1.6;
+}
+
+#yourBlogPanel .farmlog-form {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(47, 111, 55, 0.14);
+  border-radius: 0.95rem;
+  padding: 1rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+#yourBlogPanel #createUserPostPanel {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(47, 111, 55, 0.14);
+}
+
+#yourBlogPanel #createUserPostPanel h3 {
+  margin-top: 0;
+}
+
+#yourBlogPanel .farmlog-preview-label {
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+  color: #3d6136;
+}
+
+.farmlog-panel {
+  border-radius: 1rem;
+  padding: 1.25rem;
+  min-height: 220px;
+}
+
+.farmlog-panel h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.farmlog-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.farmlog-form[hidden] {
+  display: none !important;
+}
+
+.farmlog-results[hidden] {
+  display: none !important;
+}
+
+.farmlog-form textarea,
+.farmlog-form input,
+.farmlog-form select {
+  width: 100%;
+}
+
+.farmlog-inline-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.farmlog-status {
+  margin-top: 0.75rem;
+  color: #3a5e2e;
+  min-height: 1.2rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding: 0.4rem 0;
+}
+
+.farmlog-status--error {
+  color: #b02a37;
+}
+
+.farmlog-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.farmlog-tabs .btn {
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.farmlog-tabs .btn.is-active {
+  border-color: #2f6f37;
+  background: rgba(227, 246, 229, 0.9);
+  color: #1f5c27;
+  font-weight: 600;
+}
+
+.farmlog-results {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.farmlog-result-card {
+  border: 1px solid rgba(84, 114, 74, 0.2);
+  border-radius: 0.8rem;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.8);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.farmlog-result-card:hover {
+  border-color: rgba(47, 111, 55, 0.45);
+  box-shadow: 0 4px 16px rgba(44, 80, 45, 0.1);
+}
+
+.farmlog-result-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.farmlog-result-card h3 a {
+  color: #235494;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.farmlog-result-card h3 a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.farmlog-result-card p {
+  margin: 0.2rem 0;
+  color: #4a5568;
+  font-size: 0.92rem;
+}
+
+.farmlog-empty {
+  color: #61735a;
+  font-style: italic;
+}
+
+.farmlog-mini-list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.farmlog-mini-list__item {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.92rem;
+}
+
+.farmlog-mini-list__item--post {
+  border: 1px solid rgba(84, 114, 74, 0.2);
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.6rem;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.farmlog-mini-list__item--post:hover {
+  border-color: rgba(47, 111, 55, 0.4);
+  background: rgba(243, 252, 244, 0.9);
+}
+
+.farmlog-mini-list__link {
+  color: #235494;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.farmlog-mini-list__link:hover {
+  text-decoration: underline;
+}
+
+.farmlog-mini-list__content,
+.farmlog-markdown-snippet {
+  color: #2a2a2a;
+}
+
+.farmlog-mini-list__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.farmlog-preview-label {
+  margin: 0 0 0.35rem;
+  color: #415e34;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.farmlog-markdown-preview {
+  border: 1px dashed rgba(84, 114, 74, 0.45);
+  border-radius: 0.75rem;
+  background: rgba(243, 252, 244, 0.75);
+  padding: 0.75rem;
+  min-height: 90px;
+}
+
+.farmlog-pill {
+  display: inline-block;
+  border: 1px solid rgba(42, 92, 51, 0.3);
+  color: #2f6f37;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
+}
+
+.farmlog-detail-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.farmlog-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.farmlog-pagination {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.8rem;
+}
+
+.farmlog-pagination .btn {
+  min-width: 2.25rem;
+  justify-content: center;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.farmlog-pagination .btn[aria-current="page"],
+.farmlog-pagination .btn.is-active {
+  border-color: #2f6f37;
+  background: rgba(227, 246, 229, 0.9);
+  color: #1f5c27;
+  font-weight: 600;
+}
+
+.farmlog-post-content {
+  border: 1px solid rgba(84, 114, 74, 0.2);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 1rem;
+}
+
+.farmlog-post-content h1,
+.farmlog-post-content h2,
+.farmlog-post-content h3 {
+  margin: 0.75rem 0 0.5rem;
+}
+
+.farmlog-post-content p {
+  margin: 0.5rem 0;
+}
+
+.farmlog-post-content ul {
+  margin: 0.5rem 0 0.5rem 1.25rem;
+}
+
+.farmlog-post-content pre {
+  background: #1f2937;
+  color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 0.7rem;
+  overflow: auto;
+}
+
+.farmlog-post-content code {
+  background: rgba(31, 41, 55, 0.1);
+  border-radius: 0.3rem;
+  padding: 0.05rem 0.25rem;
+}
+
+.farmlog-markdown-preview h1,
+.farmlog-markdown-preview h2,
+.farmlog-markdown-preview h3,
+.farmlog-markdown-snippet h1,
+.farmlog-markdown-snippet h2,
+.farmlog-markdown-snippet h3 {
+  margin: 0.55rem 0 0.4rem;
+}
+
+.farmlog-markdown-preview p,
+.farmlog-markdown-snippet p,
+.farmlog-markdown-preview ul,
+.farmlog-markdown-snippet ul {
+  margin: 0.4rem 0;
+}
+
+.farmlog-markdown-preview pre,
+.farmlog-markdown-snippet pre {
+  background: #1f2937;
+  color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 0.6rem;
+  overflow: auto;
+}
+
+.farmlog-markdown-preview code,
+.farmlog-markdown-snippet code {
+  background: rgba(31, 41, 55, 0.1);
+  border-radius: 0.3rem;
+  padding: 0.05rem 0.2rem;
+}
+
+/* Modern Compact PublicSearchPanel Styling */
+#publicSearchPanel {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 252, 244, 0.96) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.12);
+  box-shadow:
+    0 8px 32px rgba(34, 197, 94, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-top: 3px solid #22c55e;
+  padding: 1rem;
+}
+
+#publicSearchPanel h2 {
+  color: #15803d;
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+}
+
+#publicSearchPanel #farmlogSearchForm {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+#publicSearchPanel #farmlogSearchForm .form-input-modern {
+  padding: 0.6rem 0.85rem;
+  font-size: 0.95rem;
+  border: 1px solid rgba(47, 111, 55, 0.18);
+  border-radius: 0.6rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+#publicSearchPanel #farmlogSearchForm .form-input-modern:focus {
+  outline: none;
+  border-color: #22c55e;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+#publicSearchPanel #farmlogSearchForm .btn {
+  padding: 0.6rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 0.6rem;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+#publicSearchPanel #farmlogSearchForm .btn-outline {
+  border: 1.5px solid #22c55e;
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.08);
+}
+
+#publicSearchPanel #farmlogSearchForm .btn-outline:hover {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #16a34a;
+}
+
+/* Compact Modern Tabs */
+#publicSearchPanel .farmlog-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0 0 0.75rem;
+  border-bottom: 1.5px solid rgba(47, 111, 55, 0.12);
+  padding-bottom: 0.45rem;
+}
+
+#publicSearchPanel .farmlog-tabs .btn {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4f6f4d;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  margin-bottom: -0.65rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+#publicSearchPanel .farmlog-tabs .btn:hover {
+  color: #2f6f37;
+}
+
+#publicSearchPanel .farmlog-tabs .btn.is-active {
+  color: #15803d;
+  border-bottom-color: #22c55e;
+  background: transparent;
+  font-weight: 700;
+}
+
+/* Compact Results Container */
+#publicSearchPanel .farmlog-results {
+  display: grid;
+  gap: 0.6rem;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+}
+
+#publicSearchPanel .farmlog-results::-webkit-scrollbar {
+  width: 5px;
+}
+
+#publicSearchPanel .farmlog-results::-webkit-scrollbar-track {
+  background: rgba(34, 197, 94, 0.05);
+  border-radius: 10px;
+}
+
+#publicSearchPanel .farmlog-results::-webkit-scrollbar-thumb {
+  background: rgba(34, 197, 94, 0.25);
+  border-radius: 10px;
+}
+
+#publicSearchPanel .farmlog-results::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 197, 94, 0.4);
+}
+
+@media (max-width: 900px) {
+  .farmlog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .farmlog-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #publicSearchPanel #farmlogSearchForm {
+    grid-template-columns: 1fr;
+  }
+
+  #publicSearchPanel .farmlog-tabs {
+    gap: 0;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  #publicSearchPanel .farmlog-tabs .btn {
+    flex-shrink: 0;
+  }
+}
+
+/* Skeleton Loader Animations */
+@keyframes skeleton-pulse {
+  0% {
+    background-color: rgba(209, 250, 229, 0.4);
+  }
+  50% {
+    background-color: rgba(167, 243, 208, 0.6);
+  }
+  100% {
+    background-color: rgba(209, 250, 229, 0.4);
+  }
+}
+
+.farmlog-skeleton {
+  background: linear-gradient(90deg, rgba(209, 250, 229, 0.5), rgba(167, 243, 208, 0.5), rgba(209, 250, 229, 0.5));
+  background-size: 200% 100%;
+  animation: skeleton-pulse 2s infinite;
+  border-radius: 0.6rem;
+  display: block;
+}
+
+.farmlog-skeleton-card {
+  border: 1px solid rgba(47, 111, 55, 0.1);
+  border-radius: 0.8rem;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.6rem;
+  animation: none;
+}
+
+.farmlog-skeleton-card .farmlog-skeleton-title {
+  height: 1.2rem;
+  width: 70%;
+  margin-bottom: 0.6rem;
+}
+
+.farmlog-skeleton-card .farmlog-skeleton-text {
+  height: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.farmlog-skeleton-card .farmlog-skeleton-text:last-child {
+  width: 85%;
+  margin-bottom: 0;
+}
+
+.farmlog-skeleton-card .farmlog-skeleton-text:nth-child(2) {
+  width: 60%;
+}
+
+.farmlog-skeleton-card .farmlog-skeleton-text:nth-child(3) {
+  width: 75%;
+}
+
+.farmlog-results.is-loading {
+  pointer-events: none;
+}
+
+/* Enhanced Post Results Styling */
+#searchPostsResults .farmlog-result-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 253, 250, 0.9) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  padding: 1.1rem;
+  border-radius: 1rem;
+  box-shadow:
+    0 4px 12px rgba(34, 197, 94, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition:
+    all 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+#searchPostsResults .farmlog-result-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #22c55e 0%, #2563eb 50%, #a855f7 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#searchPostsResults .farmlog-result-card:hover {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(236, 254, 247, 0.98) 100%);
+  box-shadow:
+    0 12px 28px rgba(34, 197, 94, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+#searchPostsResults .farmlog-result-card:hover::before {
+  opacity: 1;
+}
+
+#searchPostsResults .farmlog-result-card h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+#searchPostsResults .farmlog-result-card h3 a {
+  color: #1e40af;
+  text-decoration: none;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: filter 0.3s ease;
+}
+
+#searchPostsResults .farmlog-result-card h3 a:hover {
+  filter: brightness(1.2);
+}
+
+#searchPostsResults .farmlog-result-card p {
+  margin: 0.5rem 0;
+  color: #475569;
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+#searchPostsResults .farmlog-result-card p strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+#searchPostsResults .farmlog-result-card a {
+  color: #0ea5e9;
+  transition: color 0.2s ease;
+}
+
+#searchPostsResults .farmlog-result-card a:hover {
+  color: #0284c7;
+  text-decoration: underline;
+}
+
+#searchPostsResults .farmlog-markdown-snippet {
+  background: linear-gradient(135deg, rgba(240, 253, 250, 0.7) 0%, rgba(236, 254, 247, 0.5) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+  margin: 0.6rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #364e4e;
+  max-height: 120px;
+  overflow: hidden;
+  position: relative;
+}
+
+#searchPostsResults .farmlog-markdown-snippet::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.9));
+  pointer-events: none;
+}
+
+#searchPostsResults .farmlog-markdown-snippet p {
+  margin: 0.3rem 0;
+  color: #364e4e;
+}
+
+#searchPostsResults .farmlog-markdown-snippet h1,
+#searchPostsResults .farmlog-markdown-snippet h2,
+#searchPostsResults .farmlog-markdown-snippet h3 {
+  color: #0f6942;
+  margin: 0.5rem 0 0.3rem;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  #searchPostsResults .farmlog-result-card {
+    padding: 0.95rem;
+  }
+
+  #searchPostsResults .farmlog-result-card h3 {
+    font-size: 1rem;
+  }
+}

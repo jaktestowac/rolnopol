@@ -28,6 +28,14 @@ async function initializeDatabases() {
     await chaosEngineDb.getAll();
     logDebug("Chaos Engine database initialized");
 
+    const blogsDb = dbManager.getBlogsDatabase();
+    await blogsDb.getAll();
+    logDebug("Blogs database initialized");
+
+    const postsDb = dbManager.getPostsDatabase();
+    await postsDb.getAll();
+    logDebug("Posts database initialized");
+
     logDebug("Databases initialized successfully");
   } catch (error) {
     logError("Failed to initialize databases:", error);

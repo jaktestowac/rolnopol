@@ -287,6 +287,15 @@
       case "weather":
         setupWeatherPage();
         break;
+      case "farmlog":
+        setupFarmlogPage();
+        break;
+      case "farmlog-blog":
+        setupFarmlogBlogPage();
+        break;
+      case "farmlog-post":
+        setupFarmlogPostPage();
+        break;
       default:
         setupDefaultPage();
     }
@@ -582,6 +591,33 @@
       window.App.registerModule("weatherPage", weatherPage);
     } else {
       console.error("WeatherPage class not found");
+    }
+  }
+
+  function setupFarmlogPage() {
+    if (window.FarmlogHubPage) {
+      const farmlogPage = new FarmlogHubPage();
+      window.App.registerModule("farmlogPage", farmlogPage);
+    } else {
+      console.error("FarmlogHubPage class not found");
+    }
+  }
+
+  function setupFarmlogBlogPage() {
+    if (window.FarmlogBlogDetailPage) {
+      const farmlogBlogPage = new FarmlogBlogDetailPage();
+      window.App.registerModule("farmlogBlogPage", farmlogBlogPage);
+    } else {
+      console.error("FarmlogBlogDetailPage class not found");
+    }
+  }
+
+  function setupFarmlogPostPage() {
+    if (window.FarmlogPostDetailPage) {
+      const farmlogPostPage = new FarmlogPostDetailPage();
+      window.App.registerModule("farmlogPostPage", farmlogPostPage);
+    } else {
+      console.error("FarmlogPostDetailPage class not found");
     }
   }
 

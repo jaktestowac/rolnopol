@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <title>Farmlog - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/farmlog.css" />
+  </head>
+
+  <body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="container farmlog-page">
+      <header class="farmlog-header glass">
+        <div>
+          <h1><i class="fas fa-feather-pointed"></i> Farmlog Space</h1>
+          <p>Create posts, discover public blogs, and share knowledge from your farm.</p>
+        </div>
+      </header>
+
+      <main class="farmlog-layout">
+        <aside class="farmlog-panel glass" aria-label="Your blog panel" id="yourBlogPanel">
+          <h2>Your Blog</h2>
+          <div id="userBlogEmpty" class="is-loading">
+            <div class="farmlog-skeleton-card" style="margin-bottom: 0.6rem">
+              <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text" style="width: 70%"></div>
+            </div>
+            <div class="farmlog-skeleton-card">
+              <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+            </div>
+            <p class="farmlog-empty" hidden>You do not have a blog yet.</p>
+            <form id="createBlogForm" class="farmlog-form" hidden>
+              <input id="createBlogTitle" class="form-input-modern" type="text" maxlength="255" placeholder="Blog title" required />
+              <select id="createBlogVisibility" class="form-input-modern">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+              <input id="createBlogTags" class="form-input-modern" type="text" placeholder="Tags (comma separated, max 5)" />
+              <button type="submit" class="btn btn-futuristic">Create Blog</button>
+            </form>
+          </div>
+          <div id="userBlogDetails" hidden></div>
+
+          <section id="createUserPostPanel" hidden>
+            <h3>Create Post</h3>
+            <form id="createUserPostForm" class="farmlog-form">
+              <input id="createUserPostTitle" class="form-input-modern" type="text" maxlength="255" placeholder="Post title" required />
+              <textarea
+                id="createUserPostContent"
+                class="form-input-modern"
+                rows="4"
+                maxlength="5000"
+                placeholder="Write your post in markdown"
+                required
+              ></textarea>
+              <div>
+                <p class="farmlog-preview-label">Live Preview</p>
+                <div id="createUserPostPreview" class="farmlog-markdown-preview"></div>
+              </div>
+              <button type="submit" class="btn btn-futuristic">Publish Post</button>
+            </form>
+          </section>
+        </aside>
+
+        <section class="farmlog-panel glass" aria-label="Public search panel" id="publicSearchPanel">
+          <h2>Search Public Blogs and Posts</h2>
+          <form id="farmlogSearchForm" class="farmlog-form">
+            <input id="farmlogSearchInput" class="form-input-modern" type="search" maxlength="120" placeholder="Search by keyword" />
+            <button type="submit" class="btn btn-outline">Search</button>
+          </form>
+
+          <div class="farmlog-tabs" role="tablist" aria-label="Search result tabs">
+            <button type="button" class="btn btn-compact btn-outline is-active" data-result-tab="blogs" aria-selected="true">Blogs</button>
+            <button type="button" class="btn btn-compact btn-outline" data-result-tab="posts" aria-selected="false">Posts</button>
+          </div>
+          <span id="searchResultsContainer">
+            <div class="farmlog-results is-loading" id="searchBlogsResults" role="tabpanel">
+              <div class="farmlog-skeleton-card">
+                <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              </div>
+              <div class="farmlog-skeleton-card">
+                <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              </div>
+              <div class="farmlog-skeleton-card">
+                <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              </div>
+            </div>
+            <div class="farmlog-results is-loading" id="searchPostsResults" role="tabpanel" hidden>
+              <div class="farmlog-skeleton-card">
+                <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              </div>
+              <div class="farmlog-skeleton-card">
+                <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              </div>
+              <div class="farmlog-skeleton-card">
+                <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+                <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              </div>
+            </div>
+          </span>
+        </section>
+      </main>
+
+      <div id="farmlogStatus" class="farmlog-status" hidden></div>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <script src="/js/pages/farmlog.js"></script>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("farmlog");
+    </script>
+  </body>
+</html>

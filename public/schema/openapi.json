@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Rolnopol",
-    "version": "1.0.128",
+    "version": "1.0.129",
     "description": "API documentation for the Rolnopol service with versioning support",
     "contact": {
       "name": "API Support",
@@ -174,11 +174,20 @@
             "description": "Account active status"
           }
         },
-        "required": ["id", "userId", "email", "createdAt", "isActive"]
+        "required": [
+          "id",
+          "userId",
+          "email",
+          "createdAt",
+          "isActive"
+        ]
       },
       "UserRegistration": {
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "properties": {
           "email": {
             "type": "string",
@@ -204,7 +213,10 @@
       },
       "UserLogin": {
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "properties": {
           "email": {
             "type": "string",
@@ -285,7 +297,10 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["healthy", "unhealthy"],
+            "enum": [
+              "healthy",
+              "unhealthy"
+            ],
             "description": "Service health status"
           },
           "timestamp": {
@@ -329,7 +344,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["stable", "development", "deprecated"],
+            "enum": [
+              "stable",
+              "development",
+              "deprecated"
+            ],
             "description": "Version status"
           },
           "deprecated": {
@@ -483,7 +502,13 @@
             "description": "Creation timestamp"
           }
         },
-        "required": ["id", "userId", "amount", "type", "createdAt"]
+        "required": [
+          "id",
+          "userId",
+          "amount",
+          "type",
+          "createdAt"
+        ]
       },
       "AnimalCreate": {
         "type": "object",
@@ -502,7 +527,10 @@
             "description": "Animal type key"
           }
         },
-        "required": ["amount", "type"]
+        "required": [
+          "amount",
+          "type"
+        ]
       },
       "FinancialAccount": {
         "type": "object",
@@ -542,7 +570,14 @@
             "description": "List of transactions"
           }
         },
-        "required": ["id", "userId", "balance", "currency", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "userId",
+          "balance",
+          "currency",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "Transaction": {
         "type": "object",
@@ -553,7 +588,10 @@
           },
           "type": {
             "type": "string",
-            "enum": ["income", "expense"],
+            "enum": [
+              "income",
+              "expense"
+            ],
             "description": "Transaction type"
           },
           "amount": {
@@ -588,14 +626,25 @@
             "description": "Account balance after transaction"
           }
         },
-        "required": ["id", "type", "amount", "description", "timestamp", "balanceBefore", "balanceAfter"]
+        "required": [
+          "id",
+          "type",
+          "amount",
+          "description",
+          "timestamp",
+          "balanceBefore",
+          "balanceAfter"
+        ]
       },
       "TransactionCreate": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["income", "expense"],
+            "enum": [
+              "income",
+              "expense"
+            ],
             "description": "Transaction type"
           },
           "amount": {
@@ -631,7 +680,11 @@
             "example": "123"
           }
         },
-        "required": ["type", "amount", "description"]
+        "required": [
+          "type",
+          "amount",
+          "description"
+        ]
       },
       "TransferRequest": {
         "type": "object",
@@ -653,7 +706,11 @@
             "description": "Transfer description (3-100 characters, alphanumeric and basic punctuation only)"
           }
         },
-        "required": ["toUserId", "amount", "description"]
+        "required": [
+          "toUserId",
+          "amount",
+          "description"
+        ]
       },
       "FinancialStats": {
         "type": "object",
@@ -730,7 +787,10 @@
           },
           "itemType": {
             "type": "string",
-            "enum": ["field", "animal"],
+            "enum": [
+              "field",
+              "animal"
+            ],
             "description": "Type of item being sold"
           },
           "itemId": {
@@ -748,7 +808,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["active", "cancelled", "sold"],
+            "enum": [
+              "active",
+              "cancelled",
+              "sold"
+            ],
             "description": "Offer status"
           },
           "createdAt": {
@@ -766,14 +830,26 @@
             "description": "Seller display label (display name or masked email)"
           }
         },
-        "required": ["id", "sellerId", "itemType", "itemId", "price", "status", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "sellerId",
+          "itemType",
+          "itemId",
+          "price",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "MarketplaceOfferCreate": {
         "type": "object",
         "properties": {
           "itemType": {
             "type": "string",
-            "enum": ["field", "animal"],
+            "enum": [
+              "field",
+              "animal"
+            ],
             "description": "Type of item to sell"
           },
           "itemId": {
@@ -790,7 +866,11 @@
             "description": "Offer description"
           }
         },
-        "required": ["itemType", "itemId", "price"]
+        "required": [
+          "itemType",
+          "itemId",
+          "price"
+        ]
       },
       "MarketplaceTransaction": {
         "type": "object",
@@ -813,7 +893,10 @@
           },
           "itemType": {
             "type": "string",
-            "enum": ["field", "animal"],
+            "enum": [
+              "field",
+              "animal"
+            ],
             "description": "Type of item sold"
           },
           "itemId": {
@@ -830,7 +913,16 @@
             "description": "Transaction timestamp"
           }
         },
-        "required": ["id", "offerId", "buyerId", "sellerId", "itemType", "itemId", "price", "timestamp"]
+        "required": [
+          "id",
+          "offerId",
+          "buyerId",
+          "sellerId",
+          "itemType",
+          "itemId",
+          "price",
+          "timestamp"
+        ]
       },
       "BuyRequest": {
         "type": "object",
@@ -840,7 +932,9 @@
             "description": "ID of the offer to buy"
           }
         },
-        "required": ["offerId"]
+        "required": [
+          "offerId"
+        ]
       },
       "SystemStatistics": {
         "type": "object",
@@ -929,7 +1023,9 @@
             "description": "Authentication token to validate"
           }
         },
-        "required": ["token"]
+        "required": [
+          "token"
+        ]
       },
       "MigrationResponse": {
         "type": "object",
@@ -947,7 +1043,11 @@
             "description": "Number of tokens cleared"
           }
         },
-        "required": ["success", "message", "clearedCount"]
+        "required": [
+          "success",
+          "message",
+          "clearedCount"
+        ]
       },
       "FeatureFlag": {
         "type": "object",
@@ -961,7 +1061,9 @@
             "description": "Feature flag description"
           }
         },
-        "required": ["value"]
+        "required": [
+          "value"
+        ]
       },
       "FeatureFlagsResponse": {
         "type": "object",
@@ -997,14 +1099,18 @@
             "description": "Last update timestamp"
           }
         },
-        "required": ["flags"]
+        "required": [
+          "flags"
+        ]
       }
     }
   },
   "paths": {
     "/": {
       "get": {
-        "tags": ["Version"],
+        "tags": [
+          "Version"
+        ],
         "summary": "Get API version information",
         "description": "Returns information about all available API versions",
         "responses": {
@@ -1023,7 +1129,9 @@
     },
     "/register": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Register new user",
         "description": "Create a new user account",
         "requestBody": {
@@ -1072,7 +1180,9 @@
     },
     "/login": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "User login",
         "description": "Authenticate user and get access token",
         "requestBody": {
@@ -1111,7 +1221,9 @@
     },
     "/logout": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "User logout",
         "description": "Logout user and invalidate session",
         "responses": {
@@ -1130,7 +1242,9 @@
     },
     "/authorization": {
       "get": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Get current user information",
         "description": "Validate token and return current user data",
         "security": [
@@ -1162,7 +1276,9 @@
         }
       },
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Validate and refresh token",
         "description": "Validate provided token and return user data",
         "requestBody": {
@@ -1201,7 +1317,9 @@
     },
     "/healthcheck": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Get service health information",
         "description": "Check service health and database connectivity",
         "responses": {
@@ -1233,7 +1351,9 @@
         "summary": "Submit contact form",
         "description": "Submit a contact form with name, email, subject, and message. This endpoint is controlled by feature flag `contactFormEnabled`.",
         "x-feature-flag": "contactFormEnabled",
-        "tags": ["Contact"],
+        "tags": [
+          "Contact"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1255,7 +1375,12 @@
                     "type": "string"
                   }
                 },
-                "required": ["name", "email", "subject", "message"]
+                "required": [
+                  "name",
+                  "email",
+                  "subject",
+                  "message"
+                ]
               }
             }
           }
@@ -1330,7 +1455,9 @@
         ],
         "summary": "Get log list",
         "description": "Returns a list of logs.",
-        "tags": ["Logs"],
+        "tags": [
+          "Logs"
+        ],
         "responses": {
           "200": {
             "description": "Log list",
@@ -1362,14 +1489,19 @@
         ],
         "summary": "Get or update debug settings",
         "description": "Get current debug settings or update them via query parameters.",
-        "tags": ["Debug"],
+        "tags": [
+          "Debug"
+        ],
         "parameters": [
           {
             "name": "all",
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["true", "false"]
+              "enum": [
+                "true",
+                "false"
+              ]
             },
             "description": "Enable/disable all debug settings"
           },
@@ -1378,7 +1510,10 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["true", "false"]
+              "enum": [
+                "true",
+                "false"
+              ]
             },
             "description": "Enable/disable debug mode"
           },
@@ -1387,7 +1522,10 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["true", "false"]
+              "enum": [
+                "true",
+                "false"
+              ]
             },
             "description": "Enable/disable log stack trace"
           },
@@ -1396,7 +1534,10 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["true", "false"]
+              "enum": [
+                "true",
+                "false"
+              ]
             },
             "description": "Enable/disable log request"
           }
@@ -1435,7 +1576,9 @@
         ],
         "summary": "Restore all databases to immutable base snapshot",
         "description": "Restores all managed JSON databases (users, fields, staff, animals, assignments, financial, marketplace, feature flags, chaos engine, commodities, messages) from a read-only base snapshot file.",
-        "tags": ["Debug"],
+        "tags": [
+          "Debug"
+        ],
         "responses": {
           "200": {
             "description": "All databases restored to base state",
@@ -1491,7 +1634,9 @@
     },
     "/ping": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Simple ping check",
         "description": "Basic connectivity test",
         "responses": {
@@ -1516,7 +1661,9 @@
     },
     "/databases": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Get database status",
         "description": "Returns detailed database status information",
         "responses": {
@@ -1545,7 +1692,9 @@
     },
     "/memory": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Get memory usage statistics",
         "description": "Returns memory usage information",
         "responses": {
@@ -1574,7 +1723,9 @@
     },
     "/about": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Get application information",
         "description": "Returns application metadata and information",
         "responses": {
@@ -1593,7 +1744,9 @@
     },
     "/documentation": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Get documentation data",
         "description": "Serve documentation data as JSON",
         "responses": {
@@ -1612,7 +1765,9 @@
     },
     "/statistics": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Get system statistics",
         "description": "Returns comprehensive system statistics including users, farms, fields, staff, animals, and marketplace data",
         "responses": {
@@ -1641,7 +1796,9 @@
     },
     "/metrics": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Get Prometheus metrics",
         "description": "Returns Prometheus-formatted application metrics. Endpoint availability is controlled by feature flag `prometheusMetricsEnabled` (disabled by default).",
         "x-feature-flag": "prometheusMetricsEnabled",
@@ -1681,7 +1838,9 @@
     },
     "/users/profile": {
       "get": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Get user profile",
         "description": "Get current user's profile information",
         "security": [
@@ -1713,7 +1872,9 @@
         }
       },
       "put": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Update user profile",
         "description": "Update current user's profile information",
         "security": [
@@ -1765,7 +1926,9 @@
         }
       },
       "delete": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Delete user account",
         "description": "Delete current user's account",
         "security": [
@@ -1799,7 +1962,9 @@
     },
     "/users/{userId}": {
       "put": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Update user by ID",
         "description": "Update user information by user ID (own profile only)",
         "security": [
@@ -1874,7 +2039,9 @@
     },
     "/users/statistics": {
       "get": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Get user statistics",
         "description": "Get statistics for the current user (display name, fields, staff, stocks)",
         "security": [
@@ -1908,7 +2075,9 @@
     },
     "/users/statistics/all": {
       "get": {
-        "tags": ["Users"],
+        "tags": [
+          "Users"
+        ],
         "summary": "Get all users statistics",
         "description": "Get statistics for all users (admin access required)",
         "security": [
@@ -1952,7 +2121,9 @@
     },
     "/fields": {
       "get": {
-        "tags": ["Fields"],
+        "tags": [
+          "Fields"
+        ],
         "summary": "List all fields for current user",
         "security": [
           {
@@ -1976,7 +2147,9 @@
         }
       },
       "post": {
-        "tags": ["Fields"],
+        "tags": [
+          "Fields"
+        ],
         "summary": "Create a new field",
         "security": [
           {
@@ -2009,7 +2182,9 @@
     },
     "/fields/{id}": {
       "put": {
-        "tags": ["Fields"],
+        "tags": [
+          "Fields"
+        ],
         "summary": "Update a field",
         "security": [
           {
@@ -2050,7 +2225,9 @@
         }
       },
       "delete": {
-        "tags": ["Fields"],
+        "tags": [
+          "Fields"
+        ],
         "summary": "Delete a field",
         "security": [
           {
@@ -2083,7 +2260,9 @@
     },
     "/staff": {
       "get": {
-        "tags": ["Staff"],
+        "tags": [
+          "Staff"
+        ],
         "summary": "List all staff for current user",
         "security": [
           {
@@ -2107,7 +2286,9 @@
         }
       },
       "post": {
-        "tags": ["Staff"],
+        "tags": [
+          "Staff"
+        ],
         "summary": "Create a new staff member",
         "security": [
           {
@@ -2140,7 +2321,9 @@
     },
     "/staff/{id}": {
       "put": {
-        "tags": ["Staff"],
+        "tags": [
+          "Staff"
+        ],
         "summary": "Update a staff member",
         "security": [
           {
@@ -2181,7 +2364,9 @@
         }
       },
       "delete": {
-        "tags": ["Staff"],
+        "tags": [
+          "Staff"
+        ],
         "summary": "Delete a staff member",
         "security": [
           {
@@ -2214,7 +2399,9 @@
     },
     "/fields/assign": {
       "post": {
-        "tags": ["Assignments"],
+        "tags": [
+          "Assignments"
+        ],
         "summary": "Assign a staff member to a field",
         "security": [
           {
@@ -2253,7 +2440,9 @@
         }
       },
       "get": {
-        "tags": ["Assignments"],
+        "tags": [
+          "Assignments"
+        ],
         "summary": "List assignments",
         "security": [
           {
@@ -2279,7 +2468,9 @@
     },
     "/assignments": {
       "get": {
-        "tags": ["Assignments"],
+        "tags": [
+          "Assignments"
+        ],
         "summary": "List all assignments for current user",
         "security": [
           {
@@ -2305,7 +2496,9 @@
     },
     "/assignments/{id}": {
       "delete": {
-        "tags": ["Assignments"],
+        "tags": [
+          "Assignments"
+        ],
         "summary": "Delete an assignment",
         "security": [
           {
@@ -2338,7 +2531,9 @@
     },
     "/animals": {
       "get": {
-        "tags": ["Animals"],
+        "tags": [
+          "Animals"
+        ],
         "summary": "List all animals for current user",
         "security": [
           {
@@ -2362,7 +2557,9 @@
         }
       },
       "post": {
-        "tags": ["Animals"],
+        "tags": [
+          "Animals"
+        ],
         "summary": "Create a new animal",
         "security": [
           {
@@ -2405,7 +2602,9 @@
     },
     "/animals/{id}": {
       "delete": {
-        "tags": ["Animals"],
+        "tags": [
+          "Animals"
+        ],
         "summary": "Delete an animal",
         "security": [
           {
@@ -2436,7 +2635,9 @@
         }
       },
       "put": {
-        "tags": ["Animals"],
+        "tags": [
+          "Animals"
+        ],
         "summary": "Update an animal",
         "security": [
           {
@@ -2489,7 +2690,9 @@
     },
     "/animals/types": {
       "get": {
-        "tags": ["Animals"],
+        "tags": [
+          "Animals"
+        ],
         "summary": "Get allowed animal types",
         "responses": {
           "200": {
@@ -2524,7 +2727,12 @@
                             "description": "Emoji icon for the animal type"
                           }
                         },
-                        "required": ["key", "fullName", "description", "icon"]
+                        "required": [
+                          "key",
+                          "fullName",
+                          "description",
+                          "icon"
+                        ]
                       }
                     },
                     "message": {
@@ -2540,7 +2748,9 @@
     },
     "/financial/account": {
       "get": {
-        "tags": ["Financial"],
+        "tags": [
+          "Financial"
+        ],
         "summary": "Get user's financial account",
         "description": "Retrieve the current user's financial account information including balance and transaction history",
         "security": [
@@ -2591,7 +2801,9 @@
     },
     "/financial/transactions": {
       "get": {
-        "tags": ["Financial"],
+        "tags": [
+          "Financial"
+        ],
         "summary": "Get transaction history",
         "description": "Retrieve transaction history with optional filtering and pagination",
         "security": [
@@ -2627,7 +2839,10 @@
             "description": "Filter by transaction type",
             "schema": {
               "type": "string",
-              "enum": ["income", "expense"]
+              "enum": [
+                "income",
+                "expense"
+              ]
             }
           },
           {
@@ -2699,7 +2914,9 @@
         }
       },
       "post": {
-        "tags": ["Financial"],
+        "tags": [
+          "Financial"
+        ],
         "summary": "Add a new transaction",
         "description": "Create a new income or expense transaction. For income transactions, cardNumber and cvv are required for validation; these fields are write-only, are not stored, and are never returned.",
         "security": [
@@ -2785,7 +3002,9 @@
     },
     "/financial/transactions/{transactionId}": {
       "get": {
-        "tags": ["Financial"],
+        "tags": [
+          "Financial"
+        ],
         "summary": "Get transaction by ID",
         "description": "Retrieve a specific transaction by its ID",
         "security": [
@@ -2838,7 +3057,9 @@
     },
     "/financial/stats": {
       "get": {
-        "tags": ["Financial"],
+        "tags": [
+          "Financial"
+        ],
         "summary": "Get financial statistics",
         "description": "Retrieve comprehensive financial statistics for the current user",
         "security": [
@@ -2879,7 +3100,9 @@
     },
     "/financial/report": {
       "get": {
-        "tags": ["Financial"],
+        "tags": [
+          "Financial"
+        ],
         "summary": "Get financial report payload",
         "description": "Returns encoded report data for client-side PDF generation. Endpoint availability is controlled by feature flag `financialReportsEnabled`.",
         "x-feature-flag": "financialReportsEnabled",
@@ -2966,7 +3189,9 @@
     },
     "/financial/transfer": {
       "post": {
-        "tags": ["Financial"],
+        "tags": [
+          "Financial"
+        ],
         "summary": "Transfer funds to another user",
         "description": "Transfer funds from current user's account to another user's account",
         "security": [
@@ -3039,7 +3264,9 @@
     },
     "/financial/marketplace-stats": {
       "get": {
-        "tags": ["Financial"],
+        "tags": [
+          "Financial"
+        ],
         "summary": "Get comprehensive marketplace statistics",
         "description": "Retrieve marketplace statistics across all users",
         "security": [
@@ -3071,7 +3298,9 @@
     },
     "/financial/accounts/all": {
       "get": {
-        "tags": ["Financial"],
+        "tags": [
+          "Financial"
+        ],
         "summary": "Get all financial accounts",
         "description": "Retrieve all financial accounts (admin access required)",
         "security": [
@@ -3115,7 +3344,9 @@
     },
     "/financial/accounts/balance": {
       "put": {
-        "tags": ["Financial"],
+        "tags": [
+          "Financial"
+        ],
         "summary": "Update account balance",
         "description": "Update account balance for a specific user (admin access required)",
         "security": [
@@ -3143,7 +3374,11 @@
                     "description": "Reason for balance update"
                   }
                 },
-                "required": ["userId", "amount", "description"]
+                "required": [
+                  "userId",
+                  "amount",
+                  "description"
+                ]
               }
             }
           }
@@ -3194,7 +3429,9 @@
     },
     "/marketplace/offers": {
       "get": {
-        "tags": ["Marketplace"],
+        "tags": [
+          "Marketplace"
+        ],
         "summary": "Get all marketplace offers",
         "description": "Retrieve all active marketplace offers excluding user's own offers",
         "security": [
@@ -3246,7 +3483,9 @@
         }
       },
       "post": {
-        "tags": ["Marketplace"],
+        "tags": [
+          "Marketplace"
+        ],
         "summary": "Create a new marketplace offer",
         "description": "Create a new offer to sell a field or animal",
         "security": [
@@ -3316,7 +3555,9 @@
     },
     "/marketplace/my-offers": {
       "get": {
-        "tags": ["Marketplace"],
+        "tags": [
+          "Marketplace"
+        ],
         "summary": "Get user's own offers",
         "description": "Retrieve all marketplace offers created by the current user",
         "security": [
@@ -3370,7 +3611,9 @@
     },
     "/marketplace/buy": {
       "post": {
-        "tags": ["Marketplace"],
+        "tags": [
+          "Marketplace"
+        ],
         "summary": "Buy an item from marketplace",
         "description": "Purchase an item from a marketplace offer",
         "security": [
@@ -3440,7 +3683,9 @@
     },
     "/marketplace/offers/{offerId}": {
       "delete": {
-        "tags": ["Marketplace"],
+        "tags": [
+          "Marketplace"
+        ],
         "summary": "Cancel an offer",
         "description": "Cancel a marketplace offer created by the current user",
         "security": [
@@ -3503,7 +3748,9 @@
     },
     "/marketplace/transactions": {
       "get": {
-        "tags": ["Marketplace"],
+        "tags": [
+          "Marketplace"
+        ],
         "summary": "Get marketplace transaction history",
         "description": "Retrieve marketplace transaction history for the current user",
         "security": [
@@ -3548,7 +3795,9 @@
     },
     "/alerts": {
       "get": {
-        "tags": ["Alerts"],
+        "tags": [
+          "Alerts"
+        ],
         "summary": "Get combined alerts",
         "description": "Get combined alerts (history and upcoming) for an optional date. Endpoint availability is controlled by feature flag `alertsEnabled`.",
         "x-feature-flag": "alertsEnabled",
@@ -3588,7 +3837,9 @@
     },
     "/alerts/history": {
       "get": {
-        "tags": ["Alerts"],
+        "tags": [
+          "Alerts"
+        ],
         "summary": "Get alerts history",
         "description": "Get past alerts for an optional date. Endpoint availability is controlled by feature flag `alertsEnabled`.",
         "x-feature-flag": "alertsEnabled",
@@ -3628,7 +3879,9 @@
     },
     "/alerts/upcoming": {
       "get": {
-        "tags": ["Alerts"],
+        "tags": [
+          "Alerts"
+        ],
         "summary": "Get upcoming alerts",
         "description": "Get upcoming alerts for an optional date. Endpoint availability is controlled by feature flag `alertsEnabled`.",
         "x-feature-flag": "alertsEnabled",
@@ -3668,7 +3921,9 @@
     },
     "/fields/assign/{id}": {
       "delete": {
-        "tags": ["Assignments"],
+        "tags": [
+          "Assignments"
+        ],
         "summary": "Delete assignment",
         "security": [
           {
@@ -3701,7 +3956,9 @@
     },
     "/fields/districts": {
       "post": {
-        "tags": ["Fields"],
+        "tags": [
+          "Fields"
+        ],
         "summary": "List field districts",
         "description": "Return list of districts derived from fields",
         "security": [
@@ -3725,7 +3982,9 @@
     },
     "/fields/districts/{id}": {
       "post": {
-        "tags": ["Fields"],
+        "tags": [
+          "Fields"
+        ],
         "summary": "List field districts by id",
         "description": "Return list of districts for given id",
         "security": [
@@ -3759,7 +4018,9 @@
     },
     "/map": {
       "get": {
-        "tags": ["Map"],
+        "tags": [
+          "Map"
+        ],
         "summary": "Map API info",
         "description": "Basic info about map endpoints",
         "security": [
@@ -3783,7 +4044,9 @@
     },
     "/map/fieldsmap": {
       "get": {
-        "tags": ["Map"],
+        "tags": [
+          "Map"
+        ],
         "summary": "Get fields geojson",
         "description": "Return fields map JSON (GeoJSON-like)",
         "security": [
@@ -3807,7 +4070,9 @@
     },
     "/map/districts": {
       "get": {
-        "tags": ["Map"],
+        "tags": [
+          "Map"
+        ],
         "summary": "List districts (map)",
         "description": "Return district names available in map data",
         "security": [
@@ -3834,7 +4099,9 @@
     },
     "/feature-flags": {
       "get": {
-        "tags": ["Feature Flags"],
+        "tags": [
+          "Feature Flags"
+        ],
         "summary": "Get feature flags",
         "description": "Retrieve all feature flags. Optionally include descriptions and grouping by passing `descriptions=true` as query parameter.",
         "parameters": [
@@ -3844,7 +4111,10 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["true", "false"]
+              "enum": [
+                "true",
+                "false"
+              ]
             },
             "description": "Include flag descriptions and grouping information"
           }
@@ -3885,7 +4155,9 @@
         }
       },
       "patch": {
-        "tags": ["Feature Flags"],
+        "tags": [
+          "Feature Flags"
+        ],
         "summary": "Update feature flags",
         "description": "Merge provided flags with existing flags (partial update)",
         "requestBody": {
@@ -3903,7 +4175,9 @@
                     "description": "Flags to update (must be boolean values)"
                   }
                 },
-                "required": ["flags"]
+                "required": [
+                  "flags"
+                ]
               }
             }
           }
@@ -3954,7 +4228,9 @@
         }
       },
       "put": {
-        "tags": ["Feature Flags"],
+        "tags": [
+          "Feature Flags"
+        ],
         "summary": "Replace all feature flags",
         "description": "Replace all feature flags with provided flags (full replacement)",
         "requestBody": {
@@ -3972,7 +4248,9 @@
                     "description": "Flags to replace with (must be boolean values, can be empty)"
                   }
                 },
-                "required": ["flags"]
+                "required": [
+                  "flags"
+                ]
               }
             }
           }
@@ -4025,7 +4303,9 @@
     },
     "/feature-flags/reset": {
       "post": {
-        "tags": ["Feature Flags"],
+        "tags": [
+          "Feature Flags"
+        ],
         "summary": "Reset feature flags to defaults",
         "description": "Reset all feature flags to their predefined default values",
         "responses": {
@@ -4066,7 +4346,9 @@
     },
     "/shutdown": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Shutdown endpoint",
         "description": "Shutdown the API server (for testing)",
         "responses": {

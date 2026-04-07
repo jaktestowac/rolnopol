@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <title>Farmlog Blog - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/farmlog.css" />
+  </head>
+
+  <body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="container farmlog-page">
+      <header class="farmlog-header glass">
+        <div>
+          <h1><i class="fas fa-book-open"></i> Blog Detail</h1>
+          <p>Explore posts, sort and paginate results, and manage entries if you are the owner.</p>
+        </div>
+        <a href="/farmlog.html" class="btn btn-outline">Back to Farmlog</a>
+      </header>
+
+      <main class="farmlog-detail-body">
+        <section id="blogDetailHeader" class="farmlog-panel glass"></section>
+
+        <div class="farmlog-tabs" role="tablist" aria-label="Blog detail tabs">
+          <button type="button" class="btn btn-compact btn-outline is-active" data-blog-tab="blog" aria-selected="true">Blog</button>
+          <button type="button" class="btn btn-compact btn-outline" data-blog-tab="posts" aria-selected="false">Posts</button>
+          <span id="ownerActionsBadge" class="farmlog-pill" hidden>Owner actions enabled</span>
+        </div>
+
+        <section id="blogInfoPanel" class="farmlog-panel glass">
+          <p>This tab contains blog metadata and ownership info.</p>
+        </section>
+
+        <section id="blogPostsPanel" class="farmlog-panel glass" hidden>
+          <div class="farmlog-controls">
+            <h2>Posts</h2>
+            <label>
+              Sort:
+              <select id="blogPostsSort" class="form-input-modern">
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="title-asc">Title A-Z</option>
+                <option value="title-desc">Title Z-A</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="blogPostsList" class="farmlog-results"></div>
+          <div id="blogPostsPagination" class="farmlog-pagination"></div>
+
+          <section id="createBlogPostPanel" hidden>
+            <h3>Create New Post</h3>
+            <form id="createBlogPostForm" class="farmlog-form">
+              <input id="createBlogPostTitle" class="form-input-modern" type="text" maxlength="255" placeholder="Post title" required />
+              <textarea
+                id="createBlogPostContent"
+                class="form-input-modern"
+                rows="5"
+                maxlength="5000"
+                placeholder="Write markdown content"
+                required
+              ></textarea>
+              <div>
+                <p class="farmlog-preview-label">Live Preview</p>
+                <div id="createBlogPostPreview" class="farmlog-markdown-preview"></div>
+              </div>
+              <button type="submit" class="btn btn-futuristic">Create Post</button>
+            </form>
+          </section>
+
+          <section id="editBlogPostPanel" hidden>
+            <h3>Edit Post</h3>
+            <form id="editBlogPostForm" class="farmlog-form">
+              <input id="editBlogPostTitle" class="form-input-modern" type="text" maxlength="255" placeholder="Post title" required />
+              <textarea
+                id="editBlogPostContent"
+                class="form-input-modern"
+                rows="7"
+                maxlength="5000"
+                placeholder="Update markdown content"
+                required
+              ></textarea>
+              <div>
+                <p class="farmlog-preview-label">Live Preview</p>
+                <div id="editBlogPostPreview" class="farmlog-markdown-preview"></div>
+              </div>
+              <div class="farmlog-inline-actions">
+                <button type="submit" class="btn btn-futuristic">Save Changes</button>
+                <button type="button" id="cancelEditBlogPost" class="btn btn-outline">Cancel</button>
+              </div>
+            </form>
+          </section>
+        </section>
+      </main>
+
+      <div id="farmlogStatus" class="farmlog-status" hidden></div>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <script src="/js/pages/farmlog.js"></script>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("farmlog-blog");
+    </script>
+  </body>
+</html>

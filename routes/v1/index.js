@@ -25,6 +25,7 @@ const messengerRoute = require("./messenger.route");
 const chatbotRoute = require("./chatbot.route");
 const notificationsRoute = require("./notifications.route");
 const weatherRoute = require("./weather.route");
+const blogRoute = require("./blogs.route");
 const contactRoute = require("../contact.route");
 const { logInfo, logError } = require("../../helpers/logger-api");
 
@@ -171,6 +172,7 @@ router.use("/", chatbotRoute);
 router.use("/", notificationsRoute);
 router.use("/", weatherRoute);
 router.use("/contact", contactRoute);
+router.use("/", blogRoute);
 
 // Apply rate limiting to specific endpoints
 router.use("/register", verifyLimiter);

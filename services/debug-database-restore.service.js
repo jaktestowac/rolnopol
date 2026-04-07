@@ -17,6 +17,8 @@ const DATABASE_ACCESSORS = {
   chaosEngine: () => dbManager.getChaosEngineDatabase(),
   commodities: () => dbManager.getCommoditiesDatabase(),
   messages: () => dbManager.getMessagesDatabase(),
+  blogs: () => dbManager.getBlogsDatabase(),
+  posts: () => dbManager.getPostsDatabase(),
 };
 
 function deepClone(value) {

@@ -109,6 +109,20 @@ class DatabaseManager {
   }
 
   /**
+   * Get blogs database singleton
+   */
+  getBlogsDatabase() {
+    return this.getDatabase("blogs", "blogs.json", []);
+  }
+
+  /**
+   * Get posts database singleton
+   */
+  getPostsDatabase() {
+    return this.getDatabase("posts", "posts.json", []);
+  }
+
+  /**
    * Get users database singleton
    */
   getUsersDatabase() {
