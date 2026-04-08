@@ -45,21 +45,22 @@ class NavigationComponent {
       }
     } catch (error) {
       errorLogger.log("Navigation Update", error, { showToUser: false });
-      this._renderUnauthenticatedNav({ alertsEnabled: true, rolnopolMapEnabled: true });
+      this._renderUnauthenticatedNav({ alertsEnabled: true, rolnopolMapEnabled: true, rolnopolFarmlogEnabled: false });
     }
   }
 
   async _getFeatureFlagState() {
     if (!this.featureFlagsService || typeof this.featureFlagsService.isEnabled !== "function") {
-      return { alertsEnabled: true, rolnopolMapEnabled: true };
+      return { alertsEnabled: true, rolnopolMapEnabled: true, rolnopolFarmlogEnabled: false };
     }
 
     try {
       const alertsEnabled = await this.featureFlagsService.isEnabled("alertsEnabled", true);
       const rolnopolMapEnabled = await this.featureFlagsService.isEnabled("rolnopolMapEnabled", true);
-      return { alertsEnabled, rolnopolMapEnabled };
+      const rolnopolFarmlogEnabled = await this.featureFlagsService.isEnabled("rolnopolFarmlogEnabled", false);
+      return { alertsEnabled, rolnopolMapEnabled, rolnopolFarmlogEnabled };
     } catch (error) {
-      return { alertsEnabled: true, rolnopolMapEnabled: true };
+      return { alertsEnabled: true, rolnopolMapEnabled: true, rolnopolFarmlogEnabled: false };
     }
   }
   /**
@@ -197,6 +198,14 @@ class NavigationComponent {
       `
       : "";
 
+    const farmlogLink = flagState?.rolnopolFarmlogEnabled
+      ? `
+        <a href="/farmlog.html" class="nav__item">
+          <i class="fa-solid fa-feather-pointed"></i> Farmlog
+        </a>
+      `
+      : "";
+
     this.navElement.innerHTML = `
       <span class="nav__welcome">
         Welcome, <span class="nav__username">${username}</span>
@@ -226,6 +235,7 @@ class NavigationComponent {
           <i class="fa-solid fa-store"></i> Marketplace
         </a>
         ${alertsLink}
+        ${farmlogLink}
         <a href="/docs.html" class="nav__item">
           <i class="fa-solid fa-book"></i> Documentation
         </a>
@@ -240,7 +250,14 @@ class NavigationComponent {
    * Render navigation for unauthenticated users
    * @private
    */
-  _renderUnauthenticatedNav() {
+  _renderUnauthenticatedNav(flagState = {}) {
+    const farmlogLink = flagState?.rolnopolFarmlogEnabled
+      ? `
+        <a href="/farmlog.html" class="nav__item">
+          <i class="fa-solid fa-feather-pointed"></i> Farmlog
+        </a>
+      `
+      : "";
     this.navElement.innerHTML = `
       <div class="nav__auth-buttons">
         <a href="/login.html" class="nav__button">Login</a>
@@ -258,6 +275,7 @@ class NavigationComponent {
         <a href="/tools.html" class="nav__item">
           <i class="fa-solid fa-tools"></i> Tools
         </a>
+        ${farmlogLink}
         <a href="/docs.html" class="nav__item">
           <i class="fa-solid fa-book"></i> Documentation
         </a>

@@ -132,6 +132,7 @@ async function getNavFeatureFlagState() {
       messengerEnabled: false,
       financialCommoditiesEnabled: false,
       weatherPageEnabled: false,
+      rolnopolFarmlogEnabled: false,
     };
   }
 
@@ -142,6 +143,7 @@ async function getNavFeatureFlagState() {
       messengerEnabled: false,
       financialCommoditiesEnabled: false,
       weatherPageEnabled: false,
+      rolnopolFarmlogEnabled: false,
     };
   }
 
@@ -153,20 +155,37 @@ async function getNavFeatureFlagState() {
       financialCommoditiesEnabled: false,
       weatherPageEnabled: false,
       petBuddyEnabled: false,
+      rolnopolFarmlogEnabled: false,
     };
   }
 
   try {
-    const [alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled, petBuddyEnabled] =
-      await Promise.all([
-        featureFlagsService.isEnabled("alertsEnabled", true),
-        featureFlagsService.isEnabled("rolnopolMapEnabled", true),
-        featureFlagsService.isEnabled("messengerEnabled", false),
-        featureFlagsService.isEnabled("financialCommoditiesEnabled", false),
-        featureFlagsService.isEnabled("weatherPageEnabled", false),
-        featureFlagsService.isEnabled("petBuddyEnabled", true),
-      ]);
-    return { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled, petBuddyEnabled };
+    const [
+      alertsEnabled,
+      rolnopolMapEnabled,
+      messengerEnabled,
+      financialCommoditiesEnabled,
+      weatherPageEnabled,
+      petBuddyEnabled,
+      rolnopolFarmlogEnabled,
+    ] = await Promise.all([
+      featureFlagsService.isEnabled("alertsEnabled", true),
+      featureFlagsService.isEnabled("rolnopolMapEnabled", true),
+      featureFlagsService.isEnabled("messengerEnabled", false),
+      featureFlagsService.isEnabled("financialCommoditiesEnabled", false),
+      featureFlagsService.isEnabled("weatherPageEnabled", false),
+      featureFlagsService.isEnabled("petBuddyEnabled", true),
+      featureFlagsService.isEnabled("rolnopolFarmlogEnabled", false),
+    ]);
+    return {
+      alertsEnabled,
+      rolnopolMapEnabled,
+      messengerEnabled,
+      financialCommoditiesEnabled,
+      weatherPageEnabled,
+      petBuddyEnabled,
+      rolnopolFarmlogEnabled,
+    };
   } catch (error) {
     return {
       alertsEnabled: true,
@@ -175,6 +194,7 @@ async function getNavFeatureFlagState() {
       financialCommoditiesEnabled: false,
       weatherPageEnabled: false,
       petBuddyEnabled: true,
+      rolnopolFarmlogEnabled: false,
     };
   }
 }
@@ -379,8 +399,15 @@ async function updateHeaderNav(username = "") {
     return;
   }
 
-  const { alertsEnabled, rolnopolMapEnabled, messengerEnabled, financialCommoditiesEnabled, weatherPageEnabled, petBuddyEnabled } =
-    await getNavFeatureFlagState();
+  const {
+    alertsEnabled,
+    rolnopolMapEnabled,
+    messengerEnabled,
+    financialCommoditiesEnabled,
+    weatherPageEnabled,
+    petBuddyEnabled,
+    rolnopolFarmlogEnabled,
+  } = await getNavFeatureFlagState();
   const mapLink = rolnopolMapEnabled
     ? '<li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>'
     : "";
@@ -399,6 +426,9 @@ async function updateHeaderNav(username = "") {
   const buddyLink = petBuddyEnabled
     ? '<li><a href="/buddy.html" class="nav-link" title="Pet Buddy" aria-label="Pet Buddy" data-testid="nav-buddy"><i class="fas fa-egg"></i><span class="nav-text">Buddy</span></a></li>'
     : "";
+  const farmlogLink = rolnopolFarmlogEnabled
+    ? '<li><a href="/farmlog.html" class="nav-link" title="Farmlog" aria-label="Farmlog" data-testid="nav-farmlog"><i class="fas fa-feather-pointed"></i><span class="nav-text">Farmlog</span></a></li>'
+    : "";
 
   // Check authentication using standardized cookie names
   const token = getCookie("rolnopolToken");
@@ -414,6 +444,7 @@ async function updateHeaderNav(username = "") {
       <li><a href="/marketplace.html" class="nav-link" title="Marketplace" aria-label="Marketplace" data-testid="nav-marketplace"><i class="fas fa-store"></i><span class="nav-text">Marketplace</span></a></li>
       ${mapLink}
       ${alertsLink}
+      ${farmlogLink}
       ${weatherLink}
       ${messengerLink}
       ${buddyLink}
@@ -437,6 +468,7 @@ async function updateHeaderNav(username = "") {
     nav.innerHTML = `
       <li><a href="/" class="nav-link" title="Home" aria-label="Home" data-testid="nav-home"><i class="fas fa-home"></i><span class="nav-text">Home</span></a></li>
       ${alertsLink}
+      ${farmlogLink}
       ${weatherLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Documentation</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
