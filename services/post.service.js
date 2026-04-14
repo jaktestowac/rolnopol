@@ -96,7 +96,26 @@ class PostService {
       .filter((post) => post.blogId === blog.id && post.deletedAt == null)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    return normalizedLimit === null ? results.slice(normalizedOffset) : results.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+    const paginatedResults =
+      normalizedLimit === null ? results.slice(normalizedOffset) : results.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+    const userDataInstance = UserDataSingleton.getInstance();
+
+    return await Promise.all(
+      paginatedResults.map(async (post) => {
+        try {
+          const user = await userDataInstance.findUser(post.userId);
+          return {
+            ...post,
+            authorName: user?.displayedName || user?.email || "Anonymous",
+          };
+        } catch {
+          return {
+            ...post,
+            authorName: "Anonymous",
+          };
+        }
+      }),
+    );
   }
 
   async searchPosts({ search, limit, offset } = {}) {

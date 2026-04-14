@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "userId": "9",
+    "blogId": 1,
+    "title": "Hello Farm!",
+    "slug": "hello-farm",
+    "content": "# Hello!\nThis is my first farming post. I will share my experiences and tips about farming here. Stay tuned for more updates!",
+    "createdAt": "2026-04-12T21:22:34.777Z",
+    "updatedAt": "2026-04-12T21:22:34.777Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 1
+  },
+  {
+    "userId": "9",
+    "blogId": 1,
+    "title": "Greetings from the garden!",
+    "slug": "greetings-from-the-garden",
+    "content": "# Hello friends\nI just wanted to share some photos from my garden. The tomatoes are growing well and the herbs are thriving. Can't wait to cook with them!",
+    "createdAt": "2026-04-13T21:39:34.777Z",
+    "updatedAt": "2026-04-13T21:39:34.777Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 2
+  }
+]

@@ -16,6 +16,8 @@ const ACCESSORS = {
   chaosEngine: () => dbManager.getChaosEngineDatabase(),
   commodities: () => dbManager.getCommoditiesDatabase(),
   messages: () => dbManager.getMessagesDatabase(),
+  blogs: () => dbManager.getBlogsDatabase(),
+  posts: () => dbManager.getPostsDatabase(),
 };
 
 function clone(value) {
@@ -50,6 +52,7 @@ describe("Debug database restore API", () => {
     expect(restoredKeys).toEqual([
       "animals",
       "assignments",
+      "blogs",
       "chaosEngine",
       "commodities",
       "featureFlags",
@@ -57,6 +60,7 @@ describe("Debug database restore API", () => {
       "financial",
       "marketplace",
       "messages",
+      "posts",
       "staff",
       "users",
     ]);
@@ -81,6 +85,34 @@ describe("Debug database restore API", () => {
     await ACCESSORS.messages().replaceAll({
       messages: [{ id: 1, fromUserId: 1, toUserId: 2, content: "temp", createdAt: new Date().toISOString() }],
     });
+    await ACCESSORS.blogs().replaceAll([
+      {
+        id: 99,
+        userId: "temp",
+        title: "temp",
+        slug: "temp",
+        visibility: "public",
+        tags: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+        deletedBy: null,
+      },
+    ]);
+    await ACCESSORS.posts().replaceAll([
+      {
+        id: 99,
+        userId: "temp",
+        blogId: 99,
+        title: "temp",
+        slug: "temp",
+        content: "temp",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+        deletedBy: null,
+      },
+    ]);
 
     await request(app).post("/api/debug/database/restore-base").expect(200);
 

@@ -8,6 +8,7 @@ describe("blog.service", () => {
   beforeEach(async () => {
     await dbManager.getBlogsDatabase().replaceAll([]);
     await dbManager.getPostsDatabase().replaceAll([]);
+    await dbManager.getUsersDatabase().replaceAll([]);
   });
 
   it("creates a public blog with generated slug and default values", async () => {
@@ -50,6 +51,16 @@ describe("blog.service", () => {
 
     const otherUserView = await blogService.getBlogBySlug(privateBlog.slug, 999);
     expect(otherUserView).toBeNull();
+  });
+
+  it("enriches blog details with the blog author name", async () => {
+    const userDb = dbManager.getUsersDatabase();
+    const user = await userDb.add({ email: "author@example.com", displayedName: "Farm Author", password: "password", isActive: true });
+
+    const blog = await blogService.createBlog(user.id, { title: "Attribution Blog" });
+    const result = await blogService.getBlogBySlug(blog.slug, null);
+
+    expect(result).toMatchObject({ slug: blog.slug, authorName: "Farm Author" });
   });
 
   it("searches public blogs by post content and excludes private blogs", async () => {

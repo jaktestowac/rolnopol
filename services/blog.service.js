@@ -197,7 +197,19 @@ class BlogService {
     if (blog.visibility === "private" && blog.userId !== currentUserId) {
       return null;
     }
-    return blog;
+
+    try {
+      const user = await UserDataSingleton.getInstance().findUser(blog.userId);
+      return {
+        ...blog,
+        authorName: user?.displayedName || user?.email || "Anonymous",
+      };
+    } catch {
+      return {
+        ...blog,
+        authorName: "Anonymous",
+      };
+    }
   }
 
   async createBlog(userId, data) {

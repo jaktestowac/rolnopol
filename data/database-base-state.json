@@ -13,8 +13,8 @@
         "password": "demo123",
         "isActive": true,
         "createdAt": "2025-01-01T00:00:00.000Z",
-        "updatedAt": "2025-09-11T18:06:37.673Z",
-        "lastLogin": "2025-09-11T18:06:37.673Z"
+        "updatedAt": "2026-04-13T21:11:30.755Z",
+        "lastLogin": "2026-04-13T21:11:30.755Z"
       },
       {
         "id": 2,
@@ -1489,12 +1489,20 @@
         "homeModernRestyleEnabled": false,
         "cookieConsentBannerEnabled": false,
         "messengerEnabled": false,
+        "assistantChatEnabled": false,
+        "notificationCenterEnabled": false,
+        "weatherPageEnabled": false,
+        "weatherWeatherDataExport": false,
+        "weatherUserInsightsEnabled": false,
+        "weatherTrendChartEnabled": false,
         "promoAdvertsHomeEnabled": false,
         "promoAdvertsAlertsEnabled": false,
         "promoAdvertsGeneralAdEnabled": false,
-        "promoAdvertsBottomBannerEnabled": false
+        "promoAdvertsBottomBannerEnabled": false,
+        "petBuddyEnabled": false,
+        "rolnopolFarmlogEnabled": true
       },
-      "updatedAt": "2026-03-08T12:17:17.413Z"
+      "updatedAt": "2026-04-13T21:10:58.796Z"
     },
     "chaosEngine": {
       "mode": "off",
@@ -1553,7 +1561,45 @@
     "messages": {
       "messages": []
     },
-    "blogs": [],
-    "posts": []
+    "blogs": [
+      {
+        "userId": "9",
+        "title": "My farming Blog",
+        "slug": "my-farming-blog",
+        "visibility": "public",
+        "tags": [],
+        "createdAt": "2026-04-13T21:12:09.916Z",
+        "updatedAt": "2026-04-13T21:12:09.916Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 1
+      }
+    ],
+    "posts": [
+      {
+        "userId": "9",
+        "blogId": 1,
+        "title": "Hello Farm!",
+        "slug": "hello-farm",
+        "content": "# Hello!\nThis is my first farming post. I will share my experiences and tips about farming here. Stay tuned for more updates!",
+        "createdAt": "2026-04-13T21:39:34.777Z",
+        "updatedAt": "2026-04-13T21:39:34.777Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 1
+      },
+      {
+        "userId": "9",
+        "blogId": 1,
+        "title": "Greetings from the garden!",
+        "slug": "greetings-from-the-garden",
+        "content": "# Hello friends\nI just wanted to share some photos from my garden. The tomatoes are growing well and the herbs are thriving. Can't wait to cook with them!",
+        "createdAt": "2026-04-13T21:39:34.777Z",
+        "updatedAt": "2026-04-13T21:39:34.777Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 2
+      }
+    ]
   }
 }

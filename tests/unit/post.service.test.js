@@ -8,6 +8,7 @@ describe("post.service", () => {
   beforeEach(async () => {
     await dbManager.getBlogsDatabase().replaceAll([]);
     await dbManager.getPostsDatabase().replaceAll([]);
+    await dbManager.getUsersDatabase().replaceAll([]);
   });
 
   it("creates posts and auto-resolves slug collisions within the same blog", async () => {
@@ -60,5 +61,17 @@ describe("post.service", () => {
     const results = await postService.searchPosts({ search: "find me" });
     expect(results.every((post) => post.blogId === publicBlog.id)).toBe(true);
     expect(results.some((post) => post.title === "Private Search Post")).toBe(false);
+  });
+
+  it("includes author name when listing blog posts", async () => {
+    const userDb = dbManager.getUsersDatabase();
+    const user = await userDb.add({ email: "postauthor@example.com", displayedName: "Post Author", password: "password", isActive: true });
+
+    const blog = await blogService.createBlog(user.id, { title: "Author Post Blog" });
+    await postService.createPost(user.id, blog.slug, { title: "First Post", content: "Hello world" });
+
+    const posts = await postService.listPosts(blog.slug, user.id);
+    expect(posts).toHaveLength(1);
+    expect(posts[0]).toMatchObject({ authorName: "Post Author" });
   });
 });

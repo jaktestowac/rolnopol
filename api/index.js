@@ -379,16 +379,18 @@ app.get(
         return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
       }
 
+      const queryString = req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : "";
+
       if (req.path === "/farmlog") {
-        return res.redirect(302, "/farmlog.html");
+        return res.redirect(302, `/farmlog.html${queryString}`);
       }
 
       if (req.path === "/farmlog-blog") {
-        return res.redirect(302, "/farmlog-blog.html");
+        return res.redirect(302, `/farmlog-blog.html${queryString}`);
       }
 
       if (req.path === "/farmlog-post") {
-        return res.redirect(302, "/farmlog-post.html");
+        return res.redirect(302, `/farmlog-post.html${queryString}`);
       }
 
       return next();

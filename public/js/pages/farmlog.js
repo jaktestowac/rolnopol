@@ -4,6 +4,7 @@ class FarmlogBasePage {
     this.apiService = null;
     this.featureFlagsService = null;
     this.currentUser = null;
+    this.isAuthenticated = false;
   }
 
   requiresAuthentication() {
@@ -21,6 +22,7 @@ class FarmlogBasePage {
     }
 
     const isAuthenticated = await this.authService.waitForAuth(3000);
+    this.isAuthenticated = isAuthenticated;
     if (this.requiresAuthentication() && (!isAuthenticated || !this.authService.requireAuth("/login.html"))) {
       return;
     }
@@ -64,6 +66,20 @@ class FarmlogBasePage {
     statusEl.hidden = !message;
     statusEl.textContent = message || "";
     statusEl.className = `farmlog-status${isError ? " farmlog-status--error" : ""}`;
+  }
+
+  _setDetailLoadingState(isLoading) {
+    const targets = ["blogDetailHeader", "blogInfoPanel", "blogPostsList"];
+
+    targets.forEach((id) => {
+      const element = document.getElementById(id);
+      if (!element) {
+        return;
+      }
+
+      element.classList.toggle("is-loading", isLoading);
+      element.setAttribute("aria-busy", isLoading ? "true" : "false");
+    });
   }
 
   _escapeHtml(value) {
@@ -552,6 +568,8 @@ class FarmlogHubPage extends FarmlogBasePage {
     createPostPanel.hidden = false;
 
     const tags = Array.isArray(this.userBlog.tags) ? this.userBlog.tags.join(", ") : "-";
+    const postCount = this.userBlogPosts.length;
+    const visibilityLabel = this.userBlog.visibility === "public" ? "Public blog" : "Private blog";
     const listMarkup = this.userBlogPosts
       .map((post) => {
         const postLink = this._toPostLink(this.userBlog.slug, post.slug);
@@ -570,27 +588,82 @@ class FarmlogHubPage extends FarmlogBasePage {
       .join("");
 
     details.innerHTML = `
-      <h3>${this._escapeHtml(this.userBlog.title)}</h3>
-      <p><strong>Slug:</strong> ${this._escapeHtml(this.userBlog.slug)}</p>
-      <p><strong>Visibility:</strong> ${this._escapeHtml(this.userBlog.visibility)}</p>
-      <p><strong>Tags:</strong> ${this._escapeHtml(tags)}</p>
-      <p><strong>Your Blog:</strong> <a href="${this._toBlogLink(this.userBlog.slug)}">${this._escapeHtml(this.userBlog.title)}</a></p>
-      <p><a class="btn btn-compact btn-outline" href="${this._toBlogLink(this.userBlog.slug)}">Open Blog Detail</a></p>
-      <h4>Manage Blog</h4>
-      <form id="editBlogForm" class="farmlog-form">
-        <input id="editBlogTitle" class="form-input-modern" type="text" maxlength="255" value="${this._escapeHtml(this.userBlog.title)}" required />
-        <select id="editBlogVisibility" class="form-input-modern">
-          <option value="public" ${this.userBlog.visibility === "public" ? "selected" : ""}>Public</option>
-          <option value="private" ${this.userBlog.visibility === "private" ? "selected" : ""}>Private</option>
-        </select>
-        <input id="editBlogTags" class="form-input-modern" type="text" value="${this._escapeHtml((this.userBlog.tags || []).join(", "))}" placeholder="Tags (comma separated, max 5)" />
-        <div class="farmlog-inline-actions">
-          <button type="submit" class="btn btn-compact btn-futuristic">Save Blog</button>
-          <button type="button" id="deleteBlogBtn" class="btn btn-compact btn-outline">Delete Blog</button>
+      <div class="user-blog-details__card glass">
+        <div class="user-blog-details__hero">
+          <div>
+            <p class="user-blog-details__eyebrow">Your blog</p>
+            <h3>${this._escapeHtml(this.userBlog.title)}</h3>
+          </div>
+          <div class="user-blog-details__badges">
+            <span class="farmlog-pill user-blog-details__pill">${this._escapeHtml(visibilityLabel)}</span>
+            <span class="farmlog-pill user-blog-details__pill">${postCount} post${postCount === 1 ? "" : "s"}</span>
+          </div>
         </div>
-      </form>
-      <h4>Recent Posts</h4>
-      <ul class="farmlog-mini-list">${listMarkup || "<li class='farmlog-mini-list__item'>No posts yet.</li>"}</ul>
+
+        <dl class="user-blog-details__meta">
+          <div class="user-blog-details__meta-item">
+            <dt>Slug</dt>
+            <dd>${this._escapeHtml(this.userBlog.slug)}</dd>
+          </div>
+          <div class="user-blog-details__meta-item">
+            <dt>Visibility</dt>
+            <dd>${this._escapeHtml(this.userBlog.visibility)}</dd>
+          </div>
+          <div class="user-blog-details__meta-item user-blog-details__meta-item--wide">
+            <dt>Tags</dt>
+            <dd>${this._escapeHtml(tags)}</dd>
+          </div>
+          <div class="user-blog-details__meta-item user-blog-details__meta-item--wide">
+            <dt>Blog link</dt>
+            <dd><a href="${this._toBlogLink(this.userBlog.slug)}">${this._escapeHtml(this.userBlog.title)}</a></dd>
+          </div>
+        </dl>
+
+        <div class="user-blog-details__actions">
+          <a class="btn btn-compact btn-outline" href="${this._toBlogLink(this.userBlog.slug)}">Open blog detail</a>
+        </div>
+
+        <details class="user-blog-details__section">
+          <summary class="user-blog-details__summary">
+            <div>
+              <p class="user-blog-details__eyebrow user-blog-details__eyebrow--section">Manage Blog</p>
+              <h4>Update the blog settings</h4>
+            </div>
+            <span class="user-blog-details__summary-hint" aria-hidden="true">
+              <i class="fas fa-chevron-down"></i>
+            </span>
+          </summary>
+          <div class="user-blog-details__section-content">
+            <form id="editBlogForm" class="farmlog-form user-blog-details__form">
+              <input id="editBlogTitle" class="form-input-modern" type="text" maxlength="255" value="${this._escapeHtml(this.userBlog.title)}" required />
+              <select id="editBlogVisibility" class="form-input-modern">
+                <option value="public" ${this.userBlog.visibility === "public" ? "selected" : ""}>Public</option>
+                <option value="private" ${this.userBlog.visibility === "private" ? "selected" : ""}>Private</option>
+              </select>
+              <input id="editBlogTags" class="form-input-modern" type="text" value="${this._escapeHtml((this.userBlog.tags || []).join(", "))}" placeholder="Tags (comma separated, max 5)" />
+              <div class="farmlog-inline-actions">
+                <button type="submit" class="btn btn-compact btn-futuristic">Save blog</button>
+                <button type="button" id="deleteBlogBtn" class="btn btn-compact btn-outline">Delete blog</button>
+              </div>
+            </form>
+          </div>
+        </details>
+
+        <details class="user-blog-details__section">
+          <summary class="user-blog-details__summary">
+            <div>
+              <p class="user-blog-details__eyebrow user-blog-details__eyebrow--section">Recent Posts</p>
+              <h4>Your latest posts</h4>
+            </div>
+            <span class="user-blog-details__summary-hint" aria-hidden="true">
+              <i class="fas fa-chevron-down"></i>
+            </span>
+          </summary>
+          <div class="user-blog-details__section-content">
+            <ul class="farmlog-mini-list">${listMarkup || '<li class="farmlog-mini-list__item farmlog-mini-list__item--empty">No posts yet. Publish your first update to bring this space to life.</li>'}</ul>
+          </div>
+        </details>
+      </div>
     `;
   }
 
@@ -705,6 +778,10 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
     this.editingPostSlug = null;
   }
 
+  requiresAuthentication() {
+    return false;
+  }
+
   async onReady() {
     const blogSlug = this._getQueryParam("blog");
     if (!blogSlug) {
@@ -778,32 +855,39 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
 
   async _loadData() {
     this._setStatus("Loading blog details...");
+    this._setDetailLoadingState(true);
 
-    const blogResponse = await this.apiService.get(`blogs/${this.blogSlug}`, { requiresAuth: true });
-    if (!blogResponse.success) {
-      this._setStatus(blogResponse.error || "Blog not found.", true);
-      return;
+    try {
+      const blogResponse = await this.apiService.get(`blogs/${this.blogSlug}`, { requiresAuth: true });
+      if (!blogResponse.success) {
+        this._setStatus(blogResponse.error || "Blog not found.", true);
+        return;
+      }
+
+      this.blog = blogResponse.data?.data || null;
+      this.isOwner = !!this.isAuthenticated && !!this.blog && this.blog.userId === this._getCurrentUserId();
+
+      const postsResponse = await this.apiService.get(`blogs/${this.blogSlug}/posts`, { requiresAuth: true });
+      if (!postsResponse.success) {
+        this._setStatus(postsResponse.error || "Unable to load posts.", true);
+        return;
+      }
+
+      this.posts = Array.isArray(postsResponse.data?.data) ? postsResponse.data.data : [];
+      if (this.editingPostSlug && !this.posts.some((post) => post.slug === this.editingPostSlug)) {
+        this.editingPostSlug = null;
+      }
+
+      this._renderHeader();
+      this._renderTabs();
+      this._renderPosts();
+      this._renderEditPanel();
+      this._setStatus("");
+    } catch (error) {
+      this._setStatus("Unable to load blog details.", true);
+    } finally {
+      this._setDetailLoadingState(false);
     }
-
-    this.blog = blogResponse.data?.data || null;
-    this.isOwner = !!this.blog && this.blog.userId === this._getCurrentUserId();
-
-    const postsResponse = await this.apiService.get(`blogs/${this.blogSlug}/posts`, { requiresAuth: true });
-    if (!postsResponse.success) {
-      this._setStatus(postsResponse.error || "Unable to load posts.", true);
-      return;
-    }
-
-    this.posts = Array.isArray(postsResponse.data?.data) ? postsResponse.data.data : [];
-    if (this.editingPostSlug && !this.posts.some((post) => post.slug === this.editingPostSlug)) {
-      this.editingPostSlug = null;
-    }
-
-    this._renderHeader();
-    this._renderTabs();
-    this._renderPosts();
-    this._renderEditPanel();
-    this._setStatus("");
   }
 
   _renderHeader() {
@@ -813,13 +897,69 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
     }
 
     const tags = Array.isArray(this.blog.tags) && this.blog.tags.length ? this.blog.tags.join(", ") : "-";
+    const visibilityLabel = this.blog.visibility === "public" ? "Public blog" : "Private blog";
+    const postCount = this.posts.length;
+    const updatedAt = this.blog.updatedAt || this.blog.createdAt;
+
     container.innerHTML = `
-      <h1>${this._escapeHtml(this.blog.title)}</h1>
-      <p><strong>Slug:</strong> ${this._escapeHtml(this.blog.slug)}</p>
-      <p><strong>Visibility:</strong> ${this._escapeHtml(this.blog.visibility)}</p>
-      <p><strong>Tags:</strong> ${this._escapeHtml(tags)}</p>
-      <p><strong>Created:</strong> ${this._formatDate(this.blog.createdAt)}</p>
+      <div class="farmlog-blog-hero__card">
+        <div class="farmlog-blog-hero__top">
+          <div>
+            <p class="farmlog-blog-hero__eyebrow">Blog overview</p>
+            <h1>${this._escapeHtml(this.blog.title)}</h1>
+            <p class="farmlog-blog-hero__subtitle">By ${this._escapeHtml(this.blog.authorName || "Unknown")}</p>
+          </div>
+          <div class="farmlog-blog-hero__badges">
+            <span class="farmlog-pill farmlog-blog-hero__pill">${this._escapeHtml(visibilityLabel)}</span>
+            <span class="farmlog-pill farmlog-blog-hero__pill">${postCount} post${postCount === 1 ? "" : "s"}</span>
+          </div>
+        </div>
+
+        <div class="farmlog-blog-hero__meta-row">
+          <div class="farmlog-blog-hero__meta-item">
+            <span>Slug</span>
+            <strong>${this._escapeHtml(this.blog.slug)}</strong>
+          </div>
+          <div class="farmlog-blog-hero__meta-item">
+            <span>Author</span>
+            <strong>${this._escapeHtml(this.blog.authorName || "Unknown")}</strong>
+          </div>
+          <div class="farmlog-blog-hero__meta-item">
+            <span>Visibility</span>
+            <strong>${this._escapeHtml(this.blog.visibility)}</strong>
+          </div>
+          <div class="farmlog-blog-hero__meta-item">
+            <span>Created</span>
+            <strong>${this._formatDate(this.blog.createdAt)}</strong>
+          </div>
+          <div class="farmlog-blog-hero__meta-item">
+            <span>Updated</span>
+            <strong>${this._formatDate(updatedAt)}</strong>
+          </div>
+        </div>
+
+        <div class="farmlog-blog-hero__tag-row">
+          <span class="farmlog-blog-hero__tag-label">Tags</span>
+          <div class="farmlog-blog-hero__tags">
+            ${
+              tags !== "-"
+                ? tags
+                    .split(", ")
+                    .map((tag) => `<span class="farmlog-pill farmlog-blog-hero__tag">${this._escapeHtml(tag)}</span>`)
+                    .join("")
+                : '<span class="farmlog-blog-hero__tag-empty">No tags added yet.</span>'
+            }
+          </div>
+        </div>
+
+        <div class="farmlog-blog-hero__actions">
+          <a class="btn btn-compact btn-outline" href="/farmlog.html"><i class="fas fa-arrow-left"></i> Back to hub</a>
+          <a class="btn btn-compact btn-futuristic" href="#blogPostsPanel"><i class="fas fa-angles-down"></i> Jump to posts</a>
+        </div>
+      </div>
     `;
+
+    container.classList.remove("is-loading");
 
     const ownerBadge = document.getElementById("ownerActionsBadge");
     if (ownerBadge) {
@@ -856,6 +996,82 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
     if (postsPanel) {
       postsPanel.hidden = this.activeTab !== "posts";
     }
+
+    if (this.activeTab === "blog") {
+      this._renderInfoPanel();
+    }
+  }
+
+  _renderInfoPanel() {
+    const infoPanel = document.getElementById("blogInfoPanel");
+
+    if (!infoPanel || !this.blog) {
+      return;
+    }
+
+    const tags = Array.isArray(this.blog.tags) && this.blog.tags.length ? this.blog.tags : [];
+    const postCount = this.posts.length;
+    const visibilityLabel = this.blog.visibility === "public" ? "Public blog" : "Private blog";
+    const ownerLabel = this.isOwner ? "Owner tools enabled" : "Read-only mode";
+    const route = `/farmlog-blog.html?blog=${encodeURIComponent(this.blog.slug)}`;
+    const openPostsText = postCount === 1 ? "1 post ready" : `${postCount} posts ready`;
+
+    infoPanel.innerHTML = `
+      <div class="farmlog-blog-info__card">
+        <div class="farmlog-blog-info__hero">
+          <div>
+            <p class="farmlog-blog-info__eyebrow">Blog metadata</p>
+            <h2>${this._escapeHtml(this.blog.title)}</h2>
+          </div>
+          <div class="farmlog-blog-info__badges">
+            <span class="farmlog-pill farmlog-blog-info__pill">${this._escapeHtml(visibilityLabel)}</span>
+            <span class="farmlog-pill farmlog-blog-info__pill">${this._escapeHtml(openPostsText)}</span>
+            <span class="farmlog-pill farmlog-blog-info__pill">${this._escapeHtml(ownerLabel)}</span>
+          </div>
+        </div>
+
+        <dl class="farmlog-blog-info__meta">
+          <div class="farmlog-blog-info__meta-item">
+            <dt>Slug</dt>
+            <dd>${this._escapeHtml(this.blog.slug)}</dd>
+          </div>
+          <div class="farmlog-blog-info__meta-item">
+            <dt>Visibility</dt>
+            <dd>${this._escapeHtml(this.blog.visibility)}</dd>
+          </div>
+          <div class="farmlog-blog-info__meta-item">
+            <dt>Author</dt>
+            <dd>${this._escapeHtml(this.blog.authorName || "Unknown")}</dd>
+          </div>
+          <div class="farmlog-blog-info__meta-item">
+            <dt>Created</dt>
+            <dd>${this._formatDate(this.blog.createdAt)}</dd>
+          </div>
+          <div class="farmlog-blog-info__meta-item">
+            <dt>Updated</dt>
+            <dd>${this._formatDate(this.blog.updatedAt || this.blog.createdAt)}</dd>
+          </div>
+          <div class="farmlog-blog-info__meta-item farmlog-blog-info__meta-item--wide">
+            <dt>Tags</dt>
+            <dd>${tags.length ? tags.map((tag) => this._escapeHtml(tag)).join(", ") : "No tags added yet."}</dd>
+          </div>
+          <div class="farmlog-blog-info__meta-item farmlog-blog-info__meta-item--wide">
+            <dt>Route</dt>
+            <dd><a href="${route}">${this._escapeHtml(route)}</a></dd>
+          </div>
+        </dl>
+
+        <div class="farmlog-blog-info__note">
+          <i class="fas fa-sparkles"></i>
+          <div>
+            <strong>${this.isOwner ? "Owner workflow available." : "Viewing as a reader."}</strong>
+            <p>${this.isOwner ? "Switch to the Posts tab to create, edit, or remove posts for this blog." : "Switch to the Posts tab to browse entries and open individual posts."}</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    infoPanel.classList.remove("is-loading");
   }
 
   _getSortedPosts() {
@@ -882,6 +1098,9 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
       return;
     }
 
+    listEl.classList.remove("is-loading");
+    listEl.setAttribute("aria-busy", "false");
+
     const sorted = this._getSortedPosts();
     const totalPages = Math.max(1, Math.ceil(sorted.length / this.postsPageSize));
     if (this.postsPage > totalPages) {
@@ -906,6 +1125,7 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
               <article class="farmlog-result-card">
                 <h3><a href="${this._toPostLink(this.blog.slug, post.slug)}">${this._escapeHtml(post.title)}</a></h3>
                 <div class="farmlog-markdown-snippet">${preview}</div>
+                <p><strong>Author:</strong> ${this._escapeHtml(post.authorName || "Unknown")}</p>
                 <p><strong>Created:</strong> ${this._formatDate(post.createdAt)}</p>
                 <div class="farmlog-inline-actions">${ownerActions}</div>
                 <a class="btn btn-compact btn-outline" href="${this._toPostLink(this.blog.slug, post.slug)}">Read more</a>
@@ -1043,6 +1263,9 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
     const previewEl = document.getElementById("editBlogPostPreview");
 
     if (!panel || !titleEl || !contentEl || !previewEl || !this.isOwner || !this.blog) {
+      if (panel) {
+        panel.hidden = true;
+      }
       return;
     }
 
@@ -1105,6 +1328,10 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
 }
 
 class FarmlogPostDetailPage extends FarmlogBasePage {
+  requiresAuthentication() {
+    return false;
+  }
+
   async onReady() {
     const blogSlug = this._getQueryParam("blog");
     const postSlug = this._getQueryParam("post");
