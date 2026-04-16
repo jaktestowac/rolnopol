@@ -35,6 +35,8 @@ class FeatureFlagsPage {
     this.flagsCountEl = document.getElementById("flagsCount");
     this.reloadBtn = document.getElementById("reloadFlagsBtn");
     this.resetBtn = document.getElementById("resetFlagsBtn");
+    this.enableAllBtn = document.getElementById("enableAllFlagsBtn");
+    this.disableAllBtn = document.getElementById("disableAllFlagsBtn");
     this.resetModal = document.getElementById("resetModal");
     this.resetModalConfirm = this.resetModal?.querySelector(".modal-confirm");
     this.resetModalCancel = this.resetModal?.querySelector(".modal-cancel");
@@ -51,6 +53,14 @@ class FeatureFlagsPage {
 
     if (this.resetBtn) {
       this.resetBtn.addEventListener("click", () => this._showResetModal());
+    }
+
+    if (this.enableAllBtn) {
+      this.enableAllBtn.addEventListener("click", () => this._setAllFlags(true));
+    }
+
+    if (this.disableAllBtn) {
+      this.disableAllBtn.addEventListener("click", () => this._setAllFlags(false));
     }
 
     if (this.resetModalConfirm) {
@@ -323,6 +333,42 @@ class FeatureFlagsPage {
       // Reload flags with descriptions to maintain them after update
       await this._loadFlags();
       this._setStatus("Flag updated.");
+    } catch (error) {
+      this._setStatus("Failed to update feature flags", true);
+      await this._loadFlags();
+    }
+  }
+
+  async _setAllFlags(value) {
+    const flagsToUpdate = {};
+
+    for (const [key, flagData] of Object.entries(this.allFlags || {})) {
+      if (this._isUnsafeKey(key)) {
+        continue;
+      }
+      const currentValue = typeof flagData === "object" ? !!flagData.value : !!flagData;
+      if (currentValue !== value) {
+        flagsToUpdate[key] = value;
+      }
+    }
+
+    if (Object.keys(flagsToUpdate).length === 0) {
+      this._setStatus(`All flags are already ${value ? "enabled" : "disabled"}.`);
+      return;
+    }
+
+    try {
+      const response = await this.featureFlagsService.updateFlags(flagsToUpdate);
+      const payload = response?.data?.data;
+      if (!response?.success || !payload || typeof payload.flags !== "object") {
+        const message = response?.data?.error || "Failed to update feature flags";
+        this._setStatus(message, true);
+        await this._loadFlags();
+        return;
+      }
+
+      await this._loadFlags();
+      this._setStatus(`All flags ${value ? "enabled" : "disabled"}.`);
     } catch (error) {
       this._setStatus("Failed to update feature flags", true);
       await this._loadFlags();

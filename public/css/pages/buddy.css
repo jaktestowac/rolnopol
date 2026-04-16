@@ -17,6 +17,11 @@
   color: white !important;
 }
 
+.notification-title,
+.notification-message {
+  color: white !important;
+}
+
 .buddy-page-container {
   padding: 2rem 1rem;
   display: flex;
@@ -58,7 +63,7 @@
 
 .terminal-title {
   font-weight: bold;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   text-shadow: 0 0 10px #00ff00;
   letter-spacing: 2px;
 }
@@ -90,7 +95,6 @@
 .terminal-screen {
   padding: 1.5rem;
   padding-bottom: 0rem;
-  min-height: 450px;
   max-height: 560px;
   overflow-y: auto;
   background: linear-gradient(135deg, #0d0d0d 0%, #0a1a0a 100%);
@@ -153,9 +157,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #00ff00;
 }
 
 .pet-name-rarity {
@@ -167,7 +168,7 @@
 
 #petName {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   text-shadow: 0 0 10px #00ff00;
 }
 
@@ -184,8 +185,8 @@
 
 .pet-display {
   text-align: center;
-  margin: 2rem 0;
-  padding: 2rem;
+  margin: 1rem 0;
+  padding: 1rem;
   background: rgba(0, 0, 0, 0.6);
   border: 1px dashed #00ff00;
   border-radius: 4px;
@@ -193,12 +194,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 12px !important;
 }
 
 #asciiArt {
   margin: 0;
-  font-size: 1.1rem;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1;
   letter-spacing: 0.05em;
   white-space: pre;
   animation: ascii-breathe 5s ease-in-out infinite;
@@ -230,11 +232,11 @@
 .pet-stats-card {
   background: rgba(0, 100, 0, 0.15);
   border: 1px solid #00ff00;
-  padding: 1rem;
-  margin: 1rem 0;
+  padding: 4px;
+  margin: 2px 0;
   border-radius: 4px;
   backdrop-filter: blur(3px);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .stat-line {
@@ -242,8 +244,8 @@
   grid-template-columns: 70px 1fr 45px;
   gap: 0.75rem;
   align-items: center;
-  padding: 0.5rem 0;
-  font-size: 0.9rem;
+  padding: 0.1rem 0;
+  font-size: 0.7rem;
   border-bottom: 1px solid rgba(0, 255, 0, 0.15);
 }
 
@@ -279,11 +281,12 @@
   border-radius: 2px;
   font-style: italic;
   opacity: 0.9;
+  font-size: 12px !important;
 }
 
 #bioText {
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.2;
 }
 
 .terminal-output {
@@ -346,7 +349,7 @@
 
 .terminal-command-hint {
   color: rgba(132, 255, 132, 0.9);
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   letter-spacing: 0.05em;
   opacity: 0.95;
 }
@@ -365,7 +368,7 @@
 .command-input {
   flex: 1;
   width: 100%;
-  min-height: 3rem;
+  height: 1rem;
   max-height: 10rem;
   resize: vertical;
   background: transparent;
@@ -373,9 +376,9 @@
   outline: none;
   color: #00ff00;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
-  line-height: 1.4;
+  line-height: 1;
   caret-color: #00ff00;
   overflow-y: auto;
   white-space: pre-wrap;
@@ -392,6 +395,7 @@
 .prompt {
   color: #00ff00;
   font-weight: bold;
+  font-size: 0.75rem;
 }
 
 .expand-btn {
@@ -728,7 +732,6 @@
   }
 
   .terminal-screen {
-    min-height: 400px;
     max-height: 600px;
     padding: 1rem;
   }
@@ -740,7 +743,7 @@
   .pet-info-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   #petName {
