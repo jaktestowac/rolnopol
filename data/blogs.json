@@ -10,5 +10,17 @@
     "deletedAt": null,
     "deletedBy": null,
     "id": 1
+  },
+  {
+    "userId": "10",
+    "title": "My Voyage Blog",
+    "slug": "my-voyage-blog",
+    "visibility": "public",
+    "tags": ["voyage", "travel", "adventure"],
+    "createdAt": "2026-04-11T12:12:09.916Z",
+    "updatedAt": "2026-04-11T12:12:09.916Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 2
   }
 ]

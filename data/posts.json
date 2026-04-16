@@ -22,5 +22,89 @@
     "deletedAt": null,
     "deletedBy": null,
     "id": 2
+  },
+  {
+    "userId": "10",
+    "blogId": 2,
+    "title": "A Letter from the Eastern Road",
+    "slug": "a-letter-from-the-eastern-road",
+    "content": "# A Letter from the Eastern Road\nI have traveled farther east than ever before, through villages where the roads grow narrow and the evenings strangely silent. The people here are polite, though they watch strangers with a kind of worry they do not explain.\n\nAt supper, my host insisted I keep to the main road after sunset. When I laughed at the warning, nobody joined me. Still, the mountains are magnificent, and I confess there is something exciting in reaching a place that feels untouched by ordinary life.",
+    "createdAt": "2026-04-14T20:10:34.777Z",
+    "updatedAt": "2026-04-14T20:10:34.777Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 3
+  },
+  {
+    "userId": "10",
+    "blogId": 2,
+    "title": "The Innkeeper's Advice",
+    "slug": "the-innkeepers-advice",
+    "content": "# The Innkeeper's Advice\nThis morning the innkeeper's wife pressed a small silver cross into my hand and begged me not to refuse it. She seemed deeply distressed, though I could not understand why such an object should matter to a practical man on business.\n\nI accepted it more out of courtesy than conviction. Yet I admit her expression has followed me all day. There are moments when local customs feel less like superstition and more like warnings handed down from experience.",
+    "createdAt": "2026-04-15T08:42:34.777Z",
+    "updatedAt": "2026-04-15T08:42:34.777Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 4
+  },
+  {
+    "userId": "10",
+    "blogId": 2,
+    "title": "Arrival at the Old Estate",
+    "slug": "arrival-at-the-old-estate",
+    "content": "# Arrival at the Old Estate\nMy destination stands on a height above the valley, ancient and severe against the evening sky. I arrived later than planned, and by the time the heavy gates opened the last of the daylight had already gone.\n\nThe master of the house received me with perfect courtesy. He is an unusual gentleman: formal, pale, and possessed of a manner that suggests both education and long isolation. The house itself is enormous, though I have seen very little of it yet. For now, I am simply relieved to be indoors.",
+    "createdAt": "2026-04-15T22:05:34.777Z",
+    "updatedAt": "2026-04-15T22:05:34.777Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 5
+  },
+  {
+    "userId": "10",
+    "blogId": 2,
+    "title": "A Host Who Never Dines",
+    "slug": "a-host-who-never-dines",
+    "content": "# A Host Who Never Dines\nI have now shared several meals in this house, though \"shared\" is not quite the word. My host sees that I am well served, but never joins me at the table. He stands nearby, speaking in a calm and cultivated way, asking questions about London, property law, and modern city life.\n\nIt is a strange arrangement. I tell myself there are many harmless eccentricities in the world, but I cannot deny that the habit unsettles me. A meal is a social thing, and solitude feels heavier when one is not truly alone.",
+    "createdAt": "2026-04-16T09:18:34.777Z",
+    "updatedAt": "2026-04-16T09:18:34.777Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 6
+  },
+  {
+    "userId": "10",
+    "blogId": 2,
+    "title": "Locked Doors Everywhere",
+    "slug": "locked-doors-everywhere",
+    "content": "# Locked Doors Everywhere\nI spent part of today exploring the corridors nearest my rooms. The architecture is impressive, though the place seems designed less for comfort than for defense. More than once I found a passage ending not in a room but in a locked door, bolted on the outside.\n\nMy host apologized and explained that much of the estate is unsafe or in disrepair. That may well be true, yet the feeling remains that the house is not merely old but secretive. I begin to suspect that curiosity is not encouraged here.",
+    "createdAt": "2026-04-16T18:30:34.777Z",
+    "updatedAt": "2026-04-16T18:30:34.777Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 7
+  },
+  {
+    "userId": "10",
+    "blogId": 2,
+    "title": "The View from the Window",
+    "slug": "the-view-from-the-window",
+    "content": "# The View from the Window\nThe landscape below the estate is beautiful in a stern, almost theatrical way. Dark forests cover the slopes, and narrow roads vanish into mist before one can guess where they lead. At sunrise, the valley looks almost peaceful.\n\nAnd yet the same view at night is entirely different. Sounds travel oddly here. A dog's bark seems miles away and suddenly close again. Last night I heard something like wolves, though perhaps imagination sharpens every noise when one is so far from home.",
+    "createdAt": "2026-04-17T07:55:34.777Z",
+    "updatedAt": "2026-04-17T07:55:34.777Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 8
+  },
+  {
+    "userId": "10",
+    "blogId": 2,
+    "title": "An Uneasy Discovery",
+    "slug": "an-uneasy-discovery",
+    "content": "# An Uneasy Discovery\nToday I attempted to leave the house grounds by a side entrance, only to find it locked as firmly as the rest. It was then, for the first time, that a troubling thought came to me: perhaps I am not merely a guest here.\n\nNothing openly hostile has occurred. I am given food, rooms, and every outward politeness. But comfort is not the same as freedom. I write this partly to steady my own nerves. A man must rely on his reason, especially when the facts become difficult to explain.",
+    "createdAt": "2026-04-17T21:14:34.777Z",
+    "updatedAt": "2026-04-17T21:14:34.777Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 9
   }
 ]
