@@ -87,6 +87,16 @@ class ChatbotService {
     return JSON.parse(JSON.stringify(context));
   }
 
+  _buildPromptContext(context) {
+    if (!context || typeof context !== "object") {
+      return {};
+    }
+
+    return {
+      summary: context.summary || {},
+    };
+  }
+
   _isShortMessage(prompt) {
     // Return true if message is very brief (likely just a greeting or acknowledgment)
     return prompt.trim().length < MIN_PROMPT_LENGTH;
@@ -158,16 +168,20 @@ class ChatbotService {
       // Load and compact context for substantive queries
       const context = await chatbotContextService.getContextForUser(userId);
       const compactedContext = this._compactContext(context);
+      const promptContext = this.connector.providerName === "mock" ? compactedContext : this._buildPromptContext(compactedContext);
 
       // Check context size and log if it's unusually large
-      const contextSize = JSON.stringify(compactedContext).length;
-      if (contextSize > CONTEXT_WARNING_THRESHOLD) {
+      const contextSize = JSON.stringify(promptContext).length;
+
+      // only for non mock providers:
+      if (this.connector.providerName !== "mock" && contextSize > CONTEXT_WARNING_THRESHOLD) {
         logWarning(`LLM context size for user ${userId} is unusually large: ${contextSize} characters`);
       }
 
       const reply = await this.connector.generateResponse({
         prompt,
         context: compactedContext,
+        promptContext,
         userId,
       });
 

@@ -29,6 +29,8 @@ class BaseLlmConnector {
             "You are Porky, Rolnopol's farm assistant.",
             "Answer clearly, briefly, and using only facts from the provided context when possible.",
             "If data is missing, say so directly and suggest what the user can ask next.",
+            "For user-specific farm questions, prefer the get_user_farm_context tool before guessing.",
+            "Request include_summary first, and ask for include_samples only when you need concrete examples or records.",
             "You have access to tools that can fetch additional farm data if needed. Use them wisely when the user's question requires current information like weather, alerts, or market prices.",
           ].join(" "),
         },
@@ -40,12 +42,26 @@ class BaseLlmConnector {
    * Build prompt with context - can be overridden for custom formatting
    */
   _buildPrompt(prompt, context) {
+    const promptLines = ["User question:", prompt].join("\n");
+
+    if (context && typeof context === "object" && Object.keys(context).length > 0) {
+      return [
+        promptLines,
+        "",
+        "User farm context (JSON):",
+        JSON.stringify(context, null, 2),
+        "",
+        "Rules:",
+        "- Keep response concise and practical.",
+        "- Do not invent resources that are not present in context.",
+        "- Respond in the language used by the user if possible.",
+        "- Use available tools to get additional data when needed (weather, alerts, market info, etc.)",
+      ].join("\n");
+    }
+
     return [
       "User question:",
       prompt,
-      "",
-      "User farm context (JSON):",
-      JSON.stringify(context || {}, null, 2),
       "",
       "Rules:",
       "- Keep response concise and practical.",
@@ -144,7 +160,7 @@ class BaseLlmConnector {
    * Generate response from LLM with support for function calling
    * Implements agentic loop: ask → check for tool calls → execute → ask again
    */
-  async generateResponse({ prompt, context, userId }) {
+  async generateResponse({ prompt, context, promptContext, userId }) {
     const contextWithUserId = { ...context, userId };
     const executor = new ToolsExecutor(userId, contextWithUserId);
 
@@ -157,7 +173,7 @@ class BaseLlmConnector {
     let conversationMessages = [
       {
         role: "user",
-        content: this._buildPrompt(prompt, context),
+        content: this._buildPrompt(prompt, promptContext ?? context),
       },
     ];
 
@@ -208,6 +224,10 @@ class BaseLlmConnector {
         toolCallCount++;
 
         const toolNames = response.toolCalls.map((tc) => tc.name);
+
+        logInfo(
+          `[LLM TOOL REQUEST] Provider '${this.providerName}' requested ${response.toolCalls.length} tool(s) for user ${userId}: ${toolNames.join(", ")}`,
+        );
 
         // Count and enforce per-tool limits
         for (const toolName of toolNames) {

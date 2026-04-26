@@ -1,4 +1,5 @@
 const { logInfo, logWarning, logTrace } = require("../../../helpers/logger-api");
+const chatbotContextService = require("../chatbot-context.service");
 const docsService = require("../../docs.service");
 
 /**
@@ -6,9 +7,10 @@ const docsService = require("../../docs.service");
  * Executes function calls made by the LLM and returns results
  */
 class ToolsExecutor {
-  constructor(userId, context) {
+  constructor(userId, context, { contextService = chatbotContextService } = {}) {
     this.userId = userId;
     this.context = context;
+    this.contextService = contextService;
   }
 
   /**
@@ -25,6 +27,10 @@ class ToolsExecutor {
 
     let result;
     switch (toolName) {
+      case "get_user_farm_context":
+        result = await this._getUserFarmContext(toolArgs);
+        break;
+
       case "get_weather_forecast":
         result = this._getWeatherForecast(toolArgs);
         break;
@@ -63,6 +69,31 @@ class ToolsExecutor {
     });
 
     return result;
+  }
+
+  /**
+   * Get the user's farm context from the shared context service.
+   */
+  async _getUserFarmContext(args) {
+    const includeSummary = args?.include_summary !== false;
+    const includeSamples = args?.include_samples === true;
+
+    if (!includeSummary && !includeSamples) {
+      return {
+        error: "At least one of include_summary or include_samples must be true",
+      };
+    }
+
+    try {
+      return await this.contextService.getContextForUser(this.userId, {
+        includeSummary,
+        includeSamples,
+      });
+    } catch (error) {
+      return {
+        error: `User farm context lookup failed: ${error.message || String(error)}`,
+      };
+    }
   }
 
   /**

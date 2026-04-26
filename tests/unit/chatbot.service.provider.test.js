@@ -47,6 +47,10 @@ async function loadChatbotService({ provider = "mock", apiKey = "test-gemini-key
 
   const serviceModule = await import("../../services/chatbot/chatbot.service");
 
+  if (context) {
+    contextServiceMock.getContextForUser.mockResolvedValue(context);
+  }
+
   return {
     chatbotService: serviceModule.default || serviceModule,
     contextServiceMock,
@@ -106,6 +110,61 @@ describe("chatbot.service provider selection", () => {
     const [url, requestInit] = fetchMock.mock.calls[0];
     expect(String(url)).toContain("/models/gemini-2.5-flash:generateContent");
     expect(requestInit.headers["x-goog-api-key"]).toBe("gemini-key");
+  });
+
+  it("sends a trimmed prompt context to gemini while keeping full context for tools", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [
+          {
+            content: {
+              parts: [{ text: "Gemini-generated assistant response." }],
+            },
+          },
+        ],
+      }),
+    });
+
+    const fullContext = {
+      summary: {
+        fieldsCount: 2,
+        totalFieldAreaHa: 12.5,
+        staffCount: 1,
+        animalRecordsCount: 1,
+        totalAnimals: 10,
+      },
+      samples: {
+        fields: [{ name: "North Field", area: 12.5 }],
+        staff: [{ name: "Anna", surname: "Kowalska", position: "Agronomist" }],
+        animals: [{ type: "cow", amount: 10 }],
+      },
+    };
+
+    const { chatbotService } = await loadChatbotService({
+      provider: "gemini",
+      apiKey: "gemini-key",
+      model: "gemini-2.5-flash",
+      context: fullContext,
+      fetchMock,
+    });
+
+    const response = await chatbotService.ask({
+      userId: 1,
+      message: "Give me a short summary",
+    });
+
+    expect(response.provider).toBe("gemini");
+    expect(response.reply).toBe("Gemini-generated assistant response.");
+
+    const [, requestInit] = fetchMock.mock.calls[0];
+    const body = JSON.parse(requestInit.body);
+    const promptText = body.contents?.[0]?.parts?.[0]?.text || "";
+
+    expect(promptText).toContain("User farm context (JSON):");
+    expect(promptText).toContain('"summary":');
+    expect(promptText).not.toContain("North Field");
+    expect(promptText).not.toContain("Agronomist");
   });
 
   it("falls back to mock when gemini is selected but key is missing", async () => {

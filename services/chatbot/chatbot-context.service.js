@@ -104,6 +104,13 @@ class ChatbotContextService {
   }
 
   _toCompactContext(resources) {
+    return this._buildCompactContext(resources, { includeSummary: true, includeSamples: true });
+  }
+
+  _buildCompactContext(resources, options = {}) {
+    const includeSummary = options.includeSummary !== false;
+    const includeSamples = options.includeSamples !== false;
+
     const fields = resources.fields || [];
     const staff = resources.staff || [];
     const animals = resources.animals || [];
@@ -126,8 +133,10 @@ class ChatbotContextService {
     const activeOffers = offers.filter((o) => o.status === "active");
     const marketplaceTransactions = marketplace.transactions || [];
 
-    return {
-      summary: {
+    const compactContext = {};
+
+    if (includeSummary) {
+      compactContext.summary = {
         fieldsCount: fields.length,
         totalFieldAreaHa: Number(totalFieldArea.toFixed(2)),
         staffCount: staff.length,
@@ -141,8 +150,11 @@ class ChatbotContextService {
         transactionCount: transactions.length,
         activeMarketplaceOffers: activeOffers.length,
         marketplaceTransactionCount: marketplaceTransactions.length,
-      },
-      samples: {
+      };
+    }
+
+    if (includeSamples) {
+      compactContext.samples = {
         fields: fields.slice(0, 5).map((field) => ({
           id: field.id,
           name: field.name || null,
@@ -183,13 +195,15 @@ class ChatbotContextService {
           price: Number(offer.price) || 0,
           status: offer.status,
         })),
-      },
-    };
+      };
+    }
+
+    return compactContext;
   }
 
-  async getContextForUser(userId) {
+  async getContextForUser(userId, options = {}) {
     const resources = await this._loadUserResources(userId);
-    return this._toCompactContext(resources);
+    return this._buildCompactContext(resources, options);
   }
 }
 

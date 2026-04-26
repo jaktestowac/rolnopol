@@ -3,7 +3,7 @@ const { getToolsForOpenRouter } = require("../tools/tools-registry");
 const { logWarning } = require("../../../helpers/logger-api");
 
 const DEFAULT_OPENROUTER_API_BASE_URL = "https://openrouter.ai/api/v1";
-const DEFAULT_OPENROUTER_MODEL = "openai/gpt-4-turbo";
+const DEFAULT_OPENROUTER_MODEL = "google/gemma-4-26b-a4b-it:free";
 
 class OpenRouterProvider extends BaseProvider {
   constructor(options = {}) {

@@ -5,6 +5,25 @@
 
 const tools = [
   {
+    name: "get_user_farm_context",
+    description:
+      "Get detailed context about the user's farm including fields, staff, animals, and a summary of key stats. Use this to provide the LLM with up-to-date information about the farm when answering user questions or making recommendations.",
+    parameters: {
+      type: "object",
+      properties: {
+        include_samples: {
+          type: "boolean",
+          description: "Whether to include sample data for fields, staff, and animals (default: false)",
+        },
+        include_summary: {
+          type: "boolean",
+          description: "Whether to include a summary of key farm stats (default: true)",
+        },
+      },
+      required: [],
+    }
+  },
+  {
     name: "get_weather_forecast",
     description:
       "Get current weather forecast and conditions for a specific Polish region. Use this if the user asks about weather, irrigation needs, or farming weather-related decisions.",
