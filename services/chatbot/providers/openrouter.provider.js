@@ -105,6 +105,8 @@ class OpenRouterProvider extends BaseProvider {
     return {
       text: text || "No response from model.",
       toolCalls: toolCalls || null,
+      raw: data,
+      usage: data?.usage ?? null,
     };
   }
 }

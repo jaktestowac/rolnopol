@@ -1,4 +1,5 @@
-const { logInfo, logWarning, logTrace } = require("../../../helpers/logger-api");
+const { logWarning } = require("../../../helpers/logger-api");
+const { logInfo, logTrace } = require("../logger-proxy");
 const chatbotContextService = require("../chatbot-context.service");
 const docsService = require("../../docs.service");
 

@@ -3,10 +3,23 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const ORIGINAL_ENV = { ...process.env };
 const ORIGINAL_FETCH = global.fetch;
 
-async function loadChatbotService({ provider = "mock", apiKey = "test-gemini-key", model = "gemini-2.5-flash", context, fetchMock } = {}) {
+async function loadChatbotService({
+  provider = "mock",
+  apiKey = "test-gemini-key",
+  model = "gemini-2.5-flash",
+  context,
+  fetchMock,
+  llmConsoleLogLevel,
+} = {}) {
   vi.resetModules();
 
   process.env.CHATBOT_LLM_PROVIDER = provider;
+
+  if (llmConsoleLogLevel === undefined) {
+    delete process.env.LLM_CONSOLE_LOG_LEVEL;
+  } else {
+    process.env.LLM_CONSOLE_LOG_LEVEL = String(llmConsoleLogLevel);
+  }
 
   if (apiKey === undefined) {
     delete process.env.GEMINI_API_KEY;
@@ -193,5 +206,128 @@ describe("chatbot.service provider selection", () => {
     expect(evalResult).toHaveProperty("healthy", true);
     expect(Array.isArray(evalResult.results)).toBe(true);
     expect(evalResult.results.every((item) => item.passed)).toBe(true);
+  });
+
+  it("keeps LLM console logging silent at level 0", async () => {
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [
+          {
+            content: {
+              parts: [{ text: "Gemini-generated assistant response." }],
+            },
+          },
+        ],
+      }),
+    });
+
+    const { chatbotService } = await loadChatbotService({
+      provider: "gemini",
+      apiKey: "gemini-key",
+      model: "gemini-2.5-flash",
+      fetchMock,
+      llmConsoleLogLevel: 0,
+    });
+
+    await chatbotService.ask({
+      userId: 1,
+      message: "Give me a short summary",
+    });
+
+    const messages = consoleSpy.mock.calls.map((call) => String(call[0] ?? ""));
+    const llmLogs = messages.filter((message) => message.startsWith("[LLM]"));
+    const infoLogs = messages.filter((message) => message.startsWith("[INFO]"));
+    const traceLogs = messages.filter((message) => message.startsWith("[TRACE]"));
+
+    expect(llmLogs).toHaveLength(0);
+    expect(infoLogs).toHaveLength(0);
+    expect(traceLogs).toHaveLength(0);
+    consoleSpy.mockRestore();
+  });
+
+  it("logs prompt and response text at level 1", async () => {
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [
+          {
+            content: {
+              parts: [{ text: "Gemini-generated assistant response." }],
+            },
+          },
+        ],
+      }),
+    });
+
+    const { chatbotService } = await loadChatbotService({
+      provider: "gemini",
+      apiKey: "gemini-key",
+      model: "gemini-2.5-flash",
+      fetchMock,
+      llmConsoleLogLevel: 1,
+    });
+
+    await chatbotService.ask({
+      userId: 1,
+      message: "Give me a short summary",
+    });
+
+    const messages = consoleSpy.mock.calls.map((call) => String(call[0] ?? ""));
+    const llmLogs = messages.filter((message) => message.startsWith("[LLM]"));
+    const infoLogs = messages.filter((message) => message.startsWith("[INFO]"));
+    const traceLogs = messages.filter((message) => message.startsWith("[TRACE]"));
+
+    expect(llmLogs.some((message) => message.includes("request: Give me a short summary"))).toBe(true);
+    expect(llmLogs.some((message) => message.includes("response: Gemini-generated assistant response."))).toBe(true);
+    expect(llmLogs.every((message) => !message.includes("systemInstruction"))).toBe(true);
+    expect(infoLogs.some((message) => message.includes("Chatbot initialized with 'gemini' provider."))).toBe(true);
+    expect(traceLogs).toHaveLength(0);
+
+    consoleSpy.mockRestore();
+  });
+
+  it("logs the full request and response objects at level 2", async () => {
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [
+          {
+            content: {
+              parts: [{ text: "Gemini-generated assistant response." }],
+            },
+          },
+        ],
+      }),
+    });
+
+    const { chatbotService } = await loadChatbotService({
+      provider: "gemini",
+      apiKey: "gemini-key",
+      model: "gemini-2.5-flash",
+      fetchMock,
+      llmConsoleLogLevel: 2,
+    });
+
+    await chatbotService.ask({
+      userId: 1,
+      message: "Give me a short summary",
+    });
+
+    const messages = consoleSpy.mock.calls.map((call) => String(call[0] ?? ""));
+    const llmLogs = messages.filter((message) => message.startsWith("[LLM]"));
+    const infoLogs = messages.filter((message) => message.startsWith("[INFO]"));
+    const traceLogs = messages.filter((message) => message.startsWith("[TRACE]"));
+
+    expect(llmLogs.some((message) => message.includes("systemInstruction"))).toBe(true);
+    expect(llmLogs.some((message) => message.includes("messages"))).toBe(true);
+    expect(llmLogs.some((message) => message.includes("candidates"))).toBe(true);
+    expect(infoLogs.some((message) => message.includes("Chatbot initialized with 'gemini' provider."))).toBe(true);
+    expect(traceLogs.some((message) => message.includes("Chatbot ask() completed for user 1"))).toBe(true);
+
+    consoleSpy.mockRestore();
   });
 });

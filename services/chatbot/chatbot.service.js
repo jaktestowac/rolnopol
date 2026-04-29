@@ -1,5 +1,6 @@
 const { sanitizeString } = require("../../helpers/validators");
-const { logInfo, logWarning, logTrace } = require("../../helpers/logger-api");
+const { logWarning } = require("../../helpers/logger-api");
+const { logInfo, logTrace } = require("./logger-proxy");
 const MockLlmConnector = require("./connectors/mock-llm.connector");
 const GeminiLlmConnector = require("./connectors/gemini-llm.connector");
 const OpenRouterLlmConnector = require("./connectors/openrouter-llm.connector");

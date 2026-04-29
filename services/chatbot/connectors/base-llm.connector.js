@@ -1,5 +1,6 @@
 const ToolsExecutor = require("../tools/tools-executor");
-const { logInfo, logWarning, logTrace } = require("../../../helpers/logger-api");
+const { logWarning } = require("../../../helpers/logger-api");
+const { logInfo, logTrace, logLlmRequest, logLlmResponse } = require("../logger-proxy");
 
 /**
  * BaseConnector - Abstract parent class for LLM connectors
@@ -196,6 +197,19 @@ class BaseLlmConnector {
       const llmStart = Date.now();
       let response;
 
+      logLlmRequest({
+        provider: this.providerName,
+        userId,
+        iteration: toolCallCount + 1,
+        prompt,
+        context: promptContext ?? context,
+        messages: conversationMessages,
+        systemInstruction: this._buildSystemInstruction(),
+        generationConfig: {
+          temperature: 0.5,
+        },
+      });
+
       try {
         response = await this.provider.askText(null, {
           messages: conversationMessages,
@@ -218,6 +232,16 @@ class BaseLlmConnector {
         const tokenEstimate = this._estimateTokens(response.text);
         this.metrics?.recordChatbotTokenUsage(this.providerName, tokenEstimate);
       }
+
+      logLlmResponse({
+        provider: this.providerName,
+        userId,
+        iteration: toolCallCount + 1,
+        text: response?.text ?? null,
+        toolCalls: response?.toolCalls ?? null,
+        raw: response?.raw ?? null,
+        usage: response?.usage ?? null,
+      });
 
       // Check if model wants to call tools
       if (response.toolCalls && response.toolCalls.length > 0) {
