@@ -48,7 +48,7 @@ describe("Farmlog HTML pages gating", () => {
     const post = await request(app).get("/farmlog-post.html?blog=abc&post=xyz").expect(200);
 
     expect(hub.text).toContain("Farmlog Space");
-    expect(blog.text).toContain("Blog Detail");
+    expect(blog.text).toContain("Farmlog blog detail");
     expect(post.text).toContain("Post Detail");
     expect(hub.text).toContain("/js/pages/farmlog.js");
     expect(blog.text).toContain("/js/pages/farmlog.js");

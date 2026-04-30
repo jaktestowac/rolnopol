@@ -1,23 +1,29 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import request from "supertest";
 
-const app = require("../../api/index.js");
+const fs = require("fs");
+const path = require("path");
 const dbManager = require("../../data/database-manager");
 
+const DATA_DIR = path.resolve(__dirname, "../../data");
+
+function readJsonSnapshot(fileName) {
+  return JSON.parse(fs.readFileSync(path.join(DATA_DIR, fileName), "utf8"));
+}
+
+const initialBlogs = readJsonSnapshot("blogs.json");
+const initialPosts = readJsonSnapshot("posts.json");
+const initialLikes = readJsonSnapshot("farmlog-post-likes.json");
+const initialFavorites = readJsonSnapshot("farmlog-favorites.json");
+const initialUsers = readJsonSnapshot("users.json");
+const initialFinancial = readJsonSnapshot("financial.json");
+const initialFeatureFlags = readJsonSnapshot("feature-flags.json");
+
+const app = require("../../api/index.js");
+
 describe("Farmlog Search API", () => {
-  let originalFlags;
-
-  async function getCurrentFlags() {
-    const res = await request(app).get("/api/v1/feature-flags").expect(200);
-    return res.body?.data?.flags || {};
-  }
-
   async function patchFlags(flags) {
     await request(app).patch("/api/v1/feature-flags").send({ flags }).expect(200);
-  }
-
-  async function replaceFlags(flags) {
-    await request(app).put("/api/v1/feature-flags").send({ flags }).expect(200);
   }
 
   function makeTestUser() {
@@ -36,16 +42,21 @@ describe("Farmlog Search API", () => {
   }
 
   beforeEach(async () => {
-    originalFlags = await getCurrentFlags();
     await dbManager.getBlogsDatabase().replaceAll([]);
     await dbManager.getPostsDatabase().replaceAll([]);
+    await dbManager.getPostLikesDatabase().replaceAll([]);
+    await dbManager.getFarmlogFavoritesDatabase().replaceAll([]);
     await patchFlags({ rolnopolFarmlogEnabled: true });
   });
 
   afterEach(async () => {
-    await replaceFlags(originalFlags);
-    await dbManager.getBlogsDatabase().replaceAll([]);
-    await dbManager.getPostsDatabase().replaceAll([]);
+    await dbManager.getFeatureFlagsDatabase().replaceAll(initialFeatureFlags);
+    await dbManager.getBlogsDatabase().replaceAll(initialBlogs);
+    await dbManager.getPostsDatabase().replaceAll(initialPosts);
+    await dbManager.getPostLikesDatabase().replaceAll(initialLikes);
+    await dbManager.getFarmlogFavoritesDatabase().replaceAll(initialFavorites);
+    await dbManager.getUsersDatabase().replaceAll(initialUsers);
+    await dbManager.getFinancialDatabase().replaceAll(initialFinancial);
   });
 
   it("searches public blogs by title and tag only", async () => {
@@ -257,5 +268,57 @@ describe("Farmlog Search API", () => {
 
     const paged = await request(app).get("/api/v1/blogs/posts/search?limit=1&offset=1").expect(200);
     expect(paged.body.data.length).toBe(1);
+  });
+
+  it("sorts posts by most liked and respects the selected period when engagement flag is enabled", async () => {
+    await patchFlags({ rolnopolFarmlogEngagementEnabled: true });
+
+    const owner = makeTestUser();
+    const token = await createAuthToken(owner);
+    const blogRes = await request(app)
+      .post("/api/v1/blogs")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Most Liked Blog", visibility: "public" })
+      .expect(201);
+
+    const blogSlug = blogRes.body.data.slug;
+
+    const firstRes = await request(app)
+      .post(`/api/v1/blogs/${blogSlug}/posts`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Recent Champion", content: "Recent likes win." })
+      .expect(201);
+
+    const secondRes = await request(app)
+      .post(`/api/v1/blogs/${blogSlug}/posts`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "All-time Champion", content: "Historic likes win." })
+      .expect(201);
+
+    const now = new Date().toISOString();
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    const fortyDaysAgo = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString();
+
+    await dbManager.getPostLikesDatabase().replaceAll([
+      { id: 1, userId: 11, postId: firstRes.body.data.id, blogId: blogRes.body.data.id, createdAt: now, updatedAt: now },
+      { id: 2, userId: 12, postId: firstRes.body.data.id, blogId: blogRes.body.data.id, createdAt: threeDaysAgo, updatedAt: threeDaysAgo },
+      { id: 3, userId: 21, postId: secondRes.body.data.id, blogId: blogRes.body.data.id, createdAt: now, updatedAt: now },
+      { id: 4, userId: 22, postId: secondRes.body.data.id, blogId: blogRes.body.data.id, createdAt: fortyDaysAgo, updatedAt: fortyDaysAgo },
+      { id: 5, userId: 23, postId: secondRes.body.data.id, blogId: blogRes.body.data.id, createdAt: fortyDaysAgo, updatedAt: fortyDaysAgo },
+    ]);
+
+    const recentTop = await request(app).get("/api/v1/blogs/posts/search?sort=most-liked&period=7d").expect(200);
+    expect(recentTop.body.data[0]).toMatchObject({
+      slug: firstRes.body.data.slug,
+      likesCount: 2,
+      periodLikesCount: 2,
+    });
+
+    const allTimeTop = await request(app).get("/api/v1/blogs/posts/search?sort=most-liked&period=all").expect(200);
+    expect(allTimeTop.body.data[0]).toMatchObject({
+      slug: secondRes.body.data.slug,
+      likesCount: 3,
+      periodLikesCount: 3,
+    });
   });
 });

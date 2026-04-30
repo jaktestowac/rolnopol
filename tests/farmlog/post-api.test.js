@@ -1,23 +1,29 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import request from "supertest";
 
-const app = require("../../api/index.js");
+const fs = require("fs");
+const path = require("path");
 const dbManager = require("../../data/database-manager");
 
+const DATA_DIR = path.resolve(__dirname, "../../data");
+
+function readJsonSnapshot(fileName) {
+  return JSON.parse(fs.readFileSync(path.join(DATA_DIR, fileName), "utf8"));
+}
+
+const initialBlogs = readJsonSnapshot("blogs.json");
+const initialPosts = readJsonSnapshot("posts.json");
+const initialLikes = readJsonSnapshot("farmlog-post-likes.json");
+const initialFavorites = readJsonSnapshot("farmlog-favorites.json");
+const initialUsers = readJsonSnapshot("users.json");
+const initialFinancial = readJsonSnapshot("financial.json");
+const initialFeatureFlags = readJsonSnapshot("feature-flags.json");
+
+const app = require("../../api/index.js");
+
 describe("Farmlog Post API", () => {
-  let originalFlags;
-
-  async function getCurrentFlags() {
-    const res = await request(app).get("/api/v1/feature-flags").expect(200);
-    return res.body?.data?.flags || {};
-  }
-
   async function patchFlags(flags) {
     await request(app).patch("/api/v1/feature-flags").send({ flags }).expect(200);
-  }
-
-  async function replaceFlags(flags) {
-    await request(app).put("/api/v1/feature-flags").send({ flags }).expect(200);
   }
 
   function makeTestUser() {
@@ -41,16 +47,21 @@ describe("Farmlog Post API", () => {
   }
 
   beforeEach(async () => {
-    originalFlags = await getCurrentFlags();
     await dbManager.getBlogsDatabase().replaceAll([]);
     await dbManager.getPostsDatabase().replaceAll([]);
+    await dbManager.getPostLikesDatabase().replaceAll([]);
+    await dbManager.getFarmlogFavoritesDatabase().replaceAll([]);
     await patchFlags({ rolnopolFarmlogEnabled: true });
   });
 
   afterEach(async () => {
-    await replaceFlags(originalFlags);
-    await dbManager.getBlogsDatabase().replaceAll([]);
-    await dbManager.getPostsDatabase().replaceAll([]);
+    await dbManager.getFeatureFlagsDatabase().replaceAll(initialFeatureFlags);
+    await dbManager.getBlogsDatabase().replaceAll(initialBlogs);
+    await dbManager.getPostsDatabase().replaceAll(initialPosts);
+    await dbManager.getPostLikesDatabase().replaceAll(initialLikes);
+    await dbManager.getFarmlogFavoritesDatabase().replaceAll(initialFavorites);
+    await dbManager.getUsersDatabase().replaceAll(initialUsers);
+    await dbManager.getFinancialDatabase().replaceAll(initialFinancial);
   });
 
   it("creates, lists, retrieves, updates, and soft deletes a post", async () => {
@@ -255,5 +266,89 @@ describe("Farmlog Post API", () => {
 
     expect(secondPost.body.data.slug).toBe(firstPost.body.data.slug);
     expect(secondPost.body.data.title).toBe("Reused Post");
+  });
+
+  it("allows authenticated users to like, unlike, favorite, and unfavorite posts when engagement flag is enabled", async () => {
+    await patchFlags({ rolnopolFarmlogEngagementEnabled: true });
+
+    const owner = makeTestUser();
+    const ownerToken = await createAuthToken(owner);
+    const reader = makeTestUser();
+    const readerToken = await createAuthToken(reader);
+    const blog = await createBlog(ownerToken, "Engaged Post Blog", "public");
+
+    const createRes = await request(app)
+      .post(`/api/v1/blogs/${blog.slug}/posts`)
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ title: "Likable Post", content: "Please like me." })
+      .expect(201);
+
+    const postSlug = createRes.body.data.slug;
+
+    const likeRes = await request(app)
+      .post(`/api/v1/blogs/${blog.slug}/posts/${postSlug}/like`)
+      .set("Authorization", `Bearer ${readerToken}`)
+      .expect(200);
+
+    expect(likeRes.body.data).toMatchObject({
+      slug: postSlug,
+      likesCount: 1,
+      likedByCurrentUser: true,
+    });
+
+    const favoriteRes = await request(app)
+      .post(`/api/v1/blogs/${blog.slug}/posts/${postSlug}/favorite`)
+      .set("Authorization", `Bearer ${readerToken}`)
+      .expect(200);
+
+    expect(favoriteRes.body.data).toMatchObject({
+      slug: postSlug,
+      favoritedByCurrentUser: true,
+    });
+
+    const detailRes = await request(app)
+      .get(`/api/v1/blogs/${blog.slug}/posts/${postSlug}`)
+      .set("Authorization", `Bearer ${readerToken}`)
+      .expect(200);
+
+    expect(detailRes.body.data).toMatchObject({
+      likesCount: 1,
+      likedByCurrentUser: true,
+      favoritedByCurrentUser: true,
+    });
+
+    const unlikeRes = await request(app)
+      .delete(`/api/v1/blogs/${blog.slug}/posts/${postSlug}/like`)
+      .set("Authorization", `Bearer ${readerToken}`)
+      .expect(200);
+
+    expect(unlikeRes.body.data).toMatchObject({
+      likesCount: 0,
+      likedByCurrentUser: false,
+    });
+
+    const unfavoriteRes = await request(app)
+      .delete(`/api/v1/blogs/${blog.slug}/posts/${postSlug}/favorite`)
+      .set("Authorization", `Bearer ${readerToken}`)
+      .expect(200);
+
+    expect(unfavoriteRes.body.data).toHaveProperty("favoritedByCurrentUser", false);
+  });
+
+  it("returns 404 for engagement post routes when engagement flag is disabled", async () => {
+    const owner = makeTestUser();
+    const ownerToken = await createAuthToken(owner);
+    const blog = await createBlog(ownerToken, "Disabled Engagement Blog", "public");
+
+    const createRes = await request(app)
+      .post(`/api/v1/blogs/${blog.slug}/posts`)
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ title: "Normal Post", content: "Still just a post." })
+      .expect(201);
+
+    await request(app)
+      .post(`/api/v1/blogs/${blog.slug}/posts/${createRes.body.data.slug}/like`)
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .expect(404);
   });
 });

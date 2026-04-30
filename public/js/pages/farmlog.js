@@ -5,6 +5,7 @@ class FarmlogBasePage {
     this.featureFlagsService = null;
     this.currentUser = null;
     this.isAuthenticated = false;
+    this.farmlogEngagementEnabled = false;
   }
 
   requiresAuthentication() {
@@ -32,6 +33,8 @@ class FarmlogBasePage {
       return;
     }
 
+    await this._loadFeatureCapabilities();
+
     try {
       this.currentUser = await this.authService.getCurrentUser();
     } catch (error) {
@@ -52,6 +55,14 @@ class FarmlogBasePage {
     } catch (error) {
       window.location.replace("/404.html");
       return false;
+    }
+  }
+
+  async _loadFeatureCapabilities() {
+    try {
+      this.farmlogEngagementEnabled = await this.featureFlagsService.isEnabled("rolnopolFarmlogEngagementEnabled", false);
+    } catch (error) {
+      this.farmlogEngagementEnabled = false;
     }
   }
 
@@ -121,6 +132,167 @@ class FarmlogBasePage {
 
   _toPostLink(blogSlug, postSlug) {
     return `/farmlog-post.html?blog=${encodeURIComponent(blogSlug)}&post=${encodeURIComponent(postSlug)}`;
+  }
+
+  _getPeriodLabel(period) {
+    const labels = {
+      "1d": "1 day",
+      "7d": "7 days",
+      "14d": "14 days",
+      "30d": "30 days",
+      "1y": "1 year",
+      all: "all time",
+    };
+
+    return labels[String(period || "all").toLowerCase()] || "all time";
+  }
+
+  _renderFavoriteButton({ targetType, blogSlug, postSlug = null, isActive = false, label = null } = {}) {
+    if (!this.farmlogEngagementEnabled) {
+      return "";
+    }
+
+    const normalizedTargetType = targetType === "blog" ? "blog" : "post";
+    const actionLabel =
+      label ||
+      (normalizedTargetType === "blog"
+        ? isActive
+          ? "Favorited blog"
+          : "Favorite blog"
+        : isActive
+          ? "Saved post"
+          : "Save post");
+
+    return `
+      <button
+        type="button"
+        class="farmlog-engagement-btn farmlog-engagement-btn--favorite${isActive ? " is-active" : ""}"
+        data-engagement-action="toggle-favorite"
+        data-target-type="${normalizedTargetType}"
+        data-blog="${this._escapeHtml(blogSlug || "")}"
+        ${postSlug ? `data-post="${this._escapeHtml(postSlug)}"` : ""}
+        data-active="${isActive ? "true" : "false"}"
+        aria-pressed="${isActive ? "true" : "false"}"
+        aria-label="${this._escapeHtml(actionLabel)}"
+        title="${this._escapeHtml(actionLabel)}"
+      >
+        <i class="${isActive ? "fas" : "far"} fa-bookmark"></i>
+        <span>${this._escapeHtml(actionLabel)}</span>
+      </button>
+    `;
+  }
+
+  _renderLikeButton({ blogSlug, postSlug, isActive = false, likesCount = 0 } = {}) {
+    if (!this.farmlogEngagementEnabled) {
+      return "";
+    }
+
+    const label = isActive ? "Liked post" : "Like post";
+    const normalizedLikesCount = Number.isFinite(Number(likesCount)) ? Number(likesCount) : 0;
+
+    return `
+      <button
+        type="button"
+        class="farmlog-engagement-btn farmlog-engagement-btn--like${isActive ? " is-active" : ""}"
+        data-engagement-action="toggle-like"
+        data-blog="${this._escapeHtml(blogSlug || "")}"
+        data-post="${this._escapeHtml(postSlug || "")}"
+        data-active="${isActive ? "true" : "false"}"
+        aria-pressed="${isActive ? "true" : "false"}"
+        aria-label="${this._escapeHtml(label)}"
+        title="${this._escapeHtml(label)}"
+      >
+        <i class="${isActive ? "fas" : "far"} fa-heart"></i>
+        <span>${normalizedLikesCount} like${normalizedLikesCount === 1 ? "" : "s"}</span>
+      </button>
+    `;
+  }
+
+  _renderPostEngagementActions(post, blogSlug, options = {}) {
+    if (!this.farmlogEngagementEnabled) {
+      return "";
+    }
+
+    const resolvedBlogSlug = blogSlug || post?.blogSlug || "";
+    const period = String(options.period || "all").toLowerCase();
+    const periodBadge =
+      options.showPeriodBadge === true && period !== "all"
+        ? `<span class="farmlog-period-chip"><i class="fas fa-fire"></i> ${Number(post?.periodLikesCount || 0)} in ${this._escapeHtml(this._getPeriodLabel(period))}</span>`
+        : "";
+
+    return `
+      <div class="farmlog-engagement-row">
+        ${this._renderLikeButton({
+          blogSlug: resolvedBlogSlug,
+          postSlug: post?.slug,
+          isActive: post?.likedByCurrentUser === true,
+          likesCount: post?.likesCount || 0,
+        })}
+        ${this._renderFavoriteButton({
+          targetType: "post",
+          blogSlug: resolvedBlogSlug,
+          postSlug: post?.slug,
+          isActive: post?.favoritedByCurrentUser === true,
+          label: post?.favoritedByCurrentUser === true ? "Saved post" : "Save post",
+        })}
+        ${periodBadge}
+      </div>
+    `;
+  }
+
+  async _performEngagementRequest(button) {
+    if (!this.farmlogEngagementEnabled || !button) {
+      return null;
+    }
+
+    if (!this._getCurrentUserId()) {
+      this._setStatus("Log in to like posts and save favorites.", true);
+      return null;
+    }
+
+    const action = button.getAttribute("data-engagement-action");
+    const targetType = button.getAttribute("data-target-type");
+    const blogSlug = button.getAttribute("data-blog");
+    const postSlug = button.getAttribute("data-post");
+    const isActive = button.getAttribute("data-active") === "true";
+
+    if (!action || !blogSlug) {
+      return null;
+    }
+
+    let response = null;
+    let successMessage = "Updated successfully.";
+
+    button.disabled = true;
+
+    try {
+      if (action === "toggle-like" && postSlug) {
+        successMessage = isActive ? "Like removed." : "Post liked.";
+        response = isActive
+          ? await this.apiService.delete(`blogs/${blogSlug}/posts/${postSlug}/like`, { requiresAuth: true })
+          : await this.apiService.post(`blogs/${blogSlug}/posts/${postSlug}/like`, {}, { requiresAuth: true });
+      } else if (action === "toggle-favorite" && targetType === "blog") {
+        successMessage = isActive ? "Removed blog from favorites." : "Blog saved to favorites.";
+        response = isActive
+          ? await this.apiService.delete(`blogs/${blogSlug}/favorite`, { requiresAuth: true })
+          : await this.apiService.post(`blogs/${blogSlug}/favorite`, {}, { requiresAuth: true });
+      } else if (action === "toggle-favorite" && postSlug) {
+        successMessage = isActive ? "Removed post from favorites." : "Post saved to favorites.";
+        response = isActive
+          ? await this.apiService.delete(`blogs/${blogSlug}/posts/${postSlug}/favorite`, { requiresAuth: true })
+          : await this.apiService.post(`blogs/${blogSlug}/posts/${postSlug}/favorite`, {}, { requiresAuth: true });
+      }
+    } finally {
+      button.disabled = false;
+    }
+
+    if (!response || !response.success) {
+      this._setStatus(response?.error || "Unable to update Farmlog reactions.", true);
+      return null;
+    }
+
+    this._setStatus(successMessage);
+    return response.data?.data || null;
   }
 
   _renderMarkdown(markdown) {
@@ -213,11 +385,17 @@ class FarmlogHubPage extends FarmlogBasePage {
     super();
     this.blogResults = [];
     this.postResults = [];
+    this.topPostResults = [];
     this.blogSlugById = new Map();
     this.activeTab = "blogs";
+    this.postSort = "newest";
+    this.topPostsPeriod = "7d";
     this.userBlog = null;
     this.userBlogPosts = [];
     this.hasResolvedUserBlog = false;
+    this.userPanelCollapsed = true;
+    this.userPanelCollapseStorageKey = "farmlog:user-panel-collapsed";
+    this.desktopPanelMediaQuery = typeof window !== "undefined" ? window.matchMedia("(min-width: 901px)") : null;
   }
 
   _isBlogActive(blog) {
@@ -233,7 +411,10 @@ class FarmlogHubPage extends FarmlogBasePage {
   }
 
   async onReady() {
+    this._restoreUserPanelCollapsePreference();
     this._bindEvents();
+    this._renderSearchControls();
+    this._applyUserPanelCollapseState();
     await this._loadInitialData();
   }
 
@@ -247,6 +428,10 @@ class FarmlogHubPage extends FarmlogBasePage {
     const createBlogForm = document.getElementById("createBlogForm");
     const createPostForm = document.getElementById("createUserPostForm");
     const userBlogDetails = document.getElementById("userBlogDetails");
+    const publicSearchPanel = document.getElementById("publicSearchPanel");
+    const postSortEl = document.getElementById("farmlogPostsSort");
+    const topPeriodEl = document.getElementById("farmlogTopPeriod");
+    const userBlogPanelToggle = document.getElementById("yourBlogPanelToggle");
 
     if (searchForm) {
       searchForm.addEventListener("submit", (event) => {
@@ -258,9 +443,24 @@ class FarmlogHubPage extends FarmlogBasePage {
     tabs.forEach((button) => {
       button.addEventListener("click", () => {
         this.activeTab = button.getAttribute("data-result-tab") || "blogs";
+        this._renderSearchControls();
         this._renderSearchResults();
       });
     });
+
+    if (postSortEl) {
+      postSortEl.addEventListener("change", () => {
+        this.postSort = postSortEl.value || "newest";
+        this._performSearch();
+      });
+    }
+
+    if (topPeriodEl) {
+      topPeriodEl.addEventListener("change", () => {
+        this.topPostsPeriod = topPeriodEl.value || "7d";
+        this._performSearch();
+      });
+    }
 
     if (createBlogForm) {
       createBlogForm.hidden = true;
@@ -290,7 +490,93 @@ class FarmlogHubPage extends FarmlogBasePage {
       });
     }
 
+    if (publicSearchPanel) {
+      publicSearchPanel.addEventListener("click", (event) => this._handleSearchPanelAction(event));
+    }
+
+    if (userBlogPanelToggle) {
+      userBlogPanelToggle.addEventListener("click", () => this._toggleUserPanelCollapse());
+    }
+
+    if (this.desktopPanelMediaQuery) {
+      const handleViewportChange = () => this._applyUserPanelCollapseState();
+      if (typeof this.desktopPanelMediaQuery.addEventListener === "function") {
+        this.desktopPanelMediaQuery.addEventListener("change", handleViewportChange);
+      } else if (typeof this.desktopPanelMediaQuery.addListener === "function") {
+        this.desktopPanelMediaQuery.addListener(handleViewportChange);
+      }
+    }
+
     this._bindMarkdownPreview("createUserPostContent", "createUserPostPreview");
+  }
+
+  _restoreUserPanelCollapsePreference() {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return;
+    }
+
+    try {
+      const storedValue = window.localStorage.getItem(this.userPanelCollapseStorageKey);
+      this.userPanelCollapsed = storedValue == null ? true : storedValue === "true";
+    } catch (error) {
+      this.userPanelCollapsed = true;
+    }
+  }
+
+  _persistUserPanelCollapsePreference() {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(this.userPanelCollapseStorageKey, this.userPanelCollapsed ? "true" : "false");
+    } catch (error) {
+      // Ignore storage failures and continue with in-memory state only.
+    }
+  }
+
+  _toggleUserPanelCollapse() {
+    if (this.desktopPanelMediaQuery && !this.desktopPanelMediaQuery.matches) {
+      return;
+    }
+
+    this.userPanelCollapsed = !this.userPanelCollapsed;
+    this._persistUserPanelCollapsePreference();
+    this._applyUserPanelCollapseState();
+  }
+
+  _applyUserPanelCollapseState() {
+    const layout = document.getElementById("farmlogLayout");
+    const panel = document.getElementById("yourBlogPanel");
+    const toggle = document.getElementById("yourBlogPanelToggle");
+    const canCollapse = !this.desktopPanelMediaQuery || this.desktopPanelMediaQuery.matches;
+    const isCollapsed = canCollapse && this.userPanelCollapsed;
+
+    if (layout) {
+      layout.classList.toggle("farmlog-layout--user-panel-collapsed", isCollapsed);
+    }
+
+    if (panel) {
+      panel.classList.toggle("is-collapsed", isCollapsed);
+    }
+
+    if (toggle) {
+      const icon = toggle.querySelector("i");
+      const text = toggle.querySelector(".farmlog-panel-toggle__text");
+      const actionLabel = isCollapsed ? "Expand your blog panel" : "Collapse your blog panel";
+
+      toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+      toggle.setAttribute("aria-label", actionLabel);
+      toggle.setAttribute("title", actionLabel);
+
+      if (text) {
+        text.textContent = isCollapsed ? "Your Blog" : "Collapse";
+      }
+
+      if (icon) {
+        icon.className = `fas ${isCollapsed ? "fa-chevron-right" : "fa-chevron-left"}`;
+      }
+    }
   }
 
   async _loadInitialData() {
@@ -333,6 +619,52 @@ class FarmlogHubPage extends FarmlogBasePage {
     this.userBlogPosts = response.success && Array.isArray(response.data?.data) ? response.data.data : [];
   }
 
+  _renderSearchControls() {
+    const controls = document.getElementById("farmlogSearchControls");
+    const postSortWrap = document.getElementById("farmlogPostsSortWrap");
+    const topPeriodWrap = document.getElementById("farmlogTopPeriodWrap");
+    const topTabButton = document.querySelector('[data-result-tab="top-posts"]');
+
+    if (topTabButton) {
+      topTabButton.hidden = !this.farmlogEngagementEnabled;
+    }
+
+    if (!this.farmlogEngagementEnabled && this.activeTab === "top-posts") {
+      this.activeTab = "blogs";
+    }
+
+    if (!controls || !postSortWrap || !topPeriodWrap) {
+      return;
+    }
+
+    controls.hidden = !this.farmlogEngagementEnabled || this.activeTab === "blogs";
+    postSortWrap.hidden = !this.farmlogEngagementEnabled || this.activeTab !== "posts";
+    topPeriodWrap.hidden = !this.farmlogEngagementEnabled || this.activeTab !== "top-posts";
+
+    const postSortEl = document.getElementById("farmlogPostsSort");
+    const topPeriodEl = document.getElementById("farmlogTopPeriod");
+    if (postSortEl) {
+      postSortEl.value = this.postSort;
+    }
+    if (topPeriodEl) {
+      topPeriodEl.value = this.topPostsPeriod;
+    }
+  }
+
+  async _handleSearchPanelAction(event) {
+    const button = event.target.closest("[data-engagement-action]");
+    if (!button) {
+      return;
+    }
+
+    const updatedEntity = await this._performEngagementRequest(button);
+    if (!updatedEntity) {
+      return;
+    }
+
+    await this._loadInitialData();
+  }
+
   async _performSearch() {
     const queryInput = document.getElementById("farmlogSearchInput");
     const query = (queryInput?.value || "").trim();
@@ -341,18 +673,35 @@ class FarmlogHubPage extends FarmlogBasePage {
     this._setStatus("Searching public blogs and posts...");
     this._showSkeletonLoaders();
 
-    const [blogsResponse, postsResponse] = await Promise.all([
-      this.apiService.get("blogs/search", { requiresAuth: isLoggedIn, query: { q: query } }),
-      this.apiService.get("blogs/posts/search", { requiresAuth: isLoggedIn, query: { q: query } }),
-    ]);
+    const postQuery = { q: query };
+    if (this.farmlogEngagementEnabled && this.postSort !== "newest") {
+      postQuery.sort = this.postSort;
+    }
 
-    if (!blogsResponse.success || !postsResponse.success) {
+    const requests = [
+      this.apiService.get("blogs/search", { requiresAuth: isLoggedIn, query: { q: query } }),
+      this.apiService.get("blogs/posts/search", { requiresAuth: isLoggedIn, query: postQuery }),
+    ];
+
+    if (this.farmlogEngagementEnabled) {
+      requests.push(
+        this.apiService.get("blogs/posts/search", {
+          requiresAuth: isLoggedIn,
+          query: { q: query, sort: "most-liked", period: this.topPostsPeriod },
+        }),
+      );
+    }
+
+    const [blogsResponse, postsResponse, topPostsResponse] = await Promise.all(requests);
+
+    if (!blogsResponse.success || !postsResponse.success || (this.farmlogEngagementEnabled && !topPostsResponse?.success)) {
       this._setStatus("Search failed. Please try again.", true);
       return;
     }
 
     this.blogResults = Array.isArray(blogsResponse.data?.data) ? blogsResponse.data.data : [];
     this.postResults = Array.isArray(postsResponse.data?.data) ? postsResponse.data.data : [];
+    this.topPostResults = this.farmlogEngagementEnabled && Array.isArray(topPostsResponse?.data?.data) ? topPostsResponse.data.data : [];
 
     this.blogSlugById = new Map();
     this.blogResults.forEach((blog) => {
@@ -580,6 +929,11 @@ class FarmlogHubPage extends FarmlogBasePage {
             <div class="farmlog-mini-list__content">${snippetHtml}</div>
             <div class="farmlog-mini-list__meta">
               <span>${this._formatDate(post.createdAt)}</span>
+              ${
+                this.farmlogEngagementEnabled
+                  ? `<span><i class="fas fa-heart"></i> ${Number(post.likesCount || 0)}</span>`
+                  : ""
+              }
               <a href="${postLink}" class="btn btn-compact btn-outline">Read more</a>
             </div>
           </li>
@@ -671,8 +1025,10 @@ class FarmlogHubPage extends FarmlogBasePage {
     const tabs = document.querySelectorAll("[data-result-tab]");
     const blogsPanel = document.getElementById("searchBlogsResults");
     const postsPanel = document.getElementById("searchPostsResults");
+    const topPostsPanel = document.getElementById("searchTopPostsResults");
 
     this._hideSkeletonLoaders();
+    this._renderSearchControls();
 
     tabs.forEach((button) => {
       const tab = button.getAttribute("data-result-tab");
@@ -686,12 +1042,22 @@ class FarmlogHubPage extends FarmlogBasePage {
       blogsPanel.innerHTML = this.blogResults.length
         ? this.blogResults
             .map((blog) => {
+              const favoriteMarkup = this.farmlogEngagementEnabled
+                ? `<div class="farmlog-result-card__footer">${this._renderFavoriteButton({
+                    targetType: "blog",
+                    blogSlug: blog.slug,
+                    isActive: blog.favoritedByCurrentUser === true,
+                    label: blog.favoritedByCurrentUser === true ? "Favorited blog" : "Favorite blog",
+                  })}</div>`
+                : "";
+
               return `
                 <article class="farmlog-result-card">
                   <h3><a href="${this._toBlogLink(blog.slug)}">${this._escapeHtml(blog.title)}</a></h3>
                   <p><strong>Author:</strong> ${this._escapeHtml(blog.authorName || "Unknown")}</p>
                   <p><strong>Tags:</strong> ${this._escapeHtml((blog.tags || []).join(", ") || "-")}</p>
                   <p><strong>Created:</strong> ${this._formatDate(blog.createdAt)}</p>
+                  ${favoriteMarkup}
                 </article>
               `;
             })
@@ -706,6 +1072,8 @@ class FarmlogHubPage extends FarmlogBasePage {
             .map((post) => {
               const snippetHtml = this._renderMarkdownWithLimit(post.content || "", 140);
               const resolvedBlogSlug = post.blogSlug || this.blogSlugById.get(post.blogId) || "unknown-blog";
+              const engagementMarkup = this._renderPostEngagementActions(post, resolvedBlogSlug);
+
               return `
                 <article class="farmlog-result-card">
                   <h3><a href="${this._toPostLink(resolvedBlogSlug, post.slug)}">${this._escapeHtml(post.title)}</a></h3>
@@ -713,17 +1081,50 @@ class FarmlogHubPage extends FarmlogBasePage {
                   <p><strong>Blog:</strong> <a href="${this._toBlogLink(resolvedBlogSlug)}">${this._escapeHtml(resolvedBlogSlug)}</a></p>
                   <div class="farmlog-markdown-snippet">${snippetHtml}</div>
                   <p><strong>Created:</strong> ${this._formatDate(post.createdAt)}</p>
+                  ${engagementMarkup}
                 </article>
               `;
             })
             .join("")
         : "<p class='farmlog-empty'>No public posts found.</p>";
     }
+
+    if (topPostsPanel) {
+      topPostsPanel.hidden = !this.farmlogEngagementEnabled || this.activeTab !== "top-posts";
+
+      if (!this.farmlogEngagementEnabled) {
+        topPostsPanel.innerHTML = "";
+      } else {
+        topPostsPanel.innerHTML = this.topPostResults.length
+          ? this.topPostResults
+              .map((post) => {
+                const resolvedBlogSlug = post.blogSlug || this.blogSlugById.get(post.blogId) || "unknown-blog";
+                const snippetHtml = this._renderMarkdownWithLimit(post.content || "", 140);
+
+                return `
+                  <article class="farmlog-result-card">
+                    <h3><a href="${this._toPostLink(resolvedBlogSlug, post.slug)}">${this._escapeHtml(post.title)}</a></h3>
+                    <p><strong>Author:</strong> ${this._escapeHtml(post.authorName || "Unknown")}</p>
+                    <p><strong>Blog:</strong> <a href="${this._toBlogLink(resolvedBlogSlug)}">${this._escapeHtml(post.blogTitle || resolvedBlogSlug)}</a></p>
+                    <div class="farmlog-markdown-snippet">${snippetHtml}</div>
+                    <p><strong>Created:</strong> ${this._formatDate(post.createdAt)}</p>
+                    ${this._renderPostEngagementActions(post, resolvedBlogSlug, {
+                      showPeriodBadge: true,
+                      period: this.topPostsPeriod,
+                    })}
+                  </article>
+                `;
+              })
+              .join("")
+          : `<p class='farmlog-empty'>No most-liked posts found for the last ${this._escapeHtml(this._getPeriodLabel(this.topPostsPeriod))}.</p>`;
+      }
+    }
   }
 
   _showSkeletonLoaders() {
     const blogsPanel = document.getElementById("searchBlogsResults");
     const postsPanel = document.getElementById("searchPostsResults");
+    const topPostsPanel = document.getElementById("searchTopPostsResults");
 
     if (blogsPanel) {
       blogsPanel.classList.add("is-loading");
@@ -734,11 +1135,17 @@ class FarmlogHubPage extends FarmlogBasePage {
       postsPanel.classList.add("is-loading");
       postsPanel.innerHTML = this._generateSkeletonCards(3);
     }
+
+    if (topPostsPanel && this.farmlogEngagementEnabled) {
+      topPostsPanel.classList.add("is-loading");
+      topPostsPanel.innerHTML = this._generateSkeletonCards(3);
+    }
   }
 
   _hideSkeletonLoaders() {
     const blogsPanel = document.getElementById("searchBlogsResults");
     const postsPanel = document.getElementById("searchPostsResults");
+    const topPostsPanel = document.getElementById("searchTopPostsResults");
 
     if (blogsPanel) {
       blogsPanel.classList.remove("is-loading");
@@ -746,6 +1153,10 @@ class FarmlogHubPage extends FarmlogBasePage {
 
     if (postsPanel) {
       postsPanel.classList.remove("is-loading");
+    }
+
+    if (topPostsPanel) {
+      topPostsPanel.classList.remove("is-loading");
     }
   }
 
@@ -800,6 +1211,7 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
     const createForm = document.getElementById("createBlogPostForm");
     const editForm = document.getElementById("editBlogPostForm");
     const cancelEditBtn = document.getElementById("cancelEditBlogPost");
+    const blogHeader = document.getElementById("blogDetailHeader");
 
     tabs.forEach((button) => {
       button.addEventListener("click", () => {
@@ -809,6 +1221,11 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
     });
 
     if (sortEl) {
+      const mostLikedOption = sortEl.querySelector('option[value="most-liked"]');
+      if (mostLikedOption) {
+        mostLikedOption.hidden = !this.farmlogEngagementEnabled;
+      }
+
       sortEl.addEventListener("change", () => {
         this.sortBy = sortEl.value;
         this.postsPage = 1;
@@ -849,6 +1266,10 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
       postList.addEventListener("click", (event) => this._handlePostListAction(event));
     }
 
+    if (blogHeader) {
+      blogHeader.addEventListener("click", (event) => this._handleHeaderAction(event));
+    }
+
     this._bindMarkdownPreview("createBlogPostContent", "createBlogPostPreview");
     this._bindMarkdownPreview("editBlogPostContent", "editBlogPostPreview");
   }
@@ -865,7 +1286,7 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
       }
 
       this.blog = blogResponse.data?.data || null;
-      this.isOwner = !!this.isAuthenticated && !!this.blog && this.blog.userId === this._getCurrentUserId();
+      this.isOwner = !!this.isAuthenticated && !!this.blog && String(this.blog.userId) === String(this._getCurrentUserId());
 
       const postsResponse = await this.apiService.get(`blogs/${this.blogSlug}/posts`, { requiresAuth: true });
       if (!postsResponse.success) {
@@ -900,6 +1321,14 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
     const visibilityLabel = this.blog.visibility === "public" ? "Public blog" : "Private blog";
     const postCount = this.posts.length;
     const updatedAt = this.blog.updatedAt || this.blog.createdAt;
+    const favoriteAction = this.farmlogEngagementEnabled
+      ? this._renderFavoriteButton({
+          targetType: "blog",
+          blogSlug: this.blog.slug,
+          isActive: this.blog.favoritedByCurrentUser === true,
+          label: this.blog.favoritedByCurrentUser === true ? "Favorited blog" : "Favorite blog",
+        })
+      : "";
 
     container.innerHTML = `
       <div class="farmlog-blog-hero__card">
@@ -955,6 +1384,7 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
         <div class="farmlog-blog-hero__actions">
           <a class="btn btn-compact btn-outline" href="/farmlog.html"><i class="fas fa-arrow-left"></i> Back to hub</a>
           <a class="btn btn-compact btn-futuristic" href="#blogPostsPanel"><i class="fas fa-angles-down"></i> Jump to posts</a>
+          ${favoriteAction}
         </div>
       </div>
     `;
@@ -1079,6 +1509,13 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
 
     if (this.sortBy === "oldest") {
       sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    } else if (this.sortBy === "most-liked" && this.farmlogEngagementEnabled) {
+      sorted.sort((a, b) => {
+        const likesDelta = Number(b.likesCount || 0) - Number(a.likesCount || 0);
+        if (likesDelta !== 0) return likesDelta;
+
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
     } else if (this.sortBy === "title-asc") {
       sorted.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
     } else if (this.sortBy === "title-desc") {
@@ -1114,6 +1551,7 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
       ? currentPagePosts
           .map((post) => {
             const preview = this._renderMarkdownWithLimit(post.content || "", 200);
+            const reactionMarkup = this._renderPostEngagementActions(post, this.blog.slug);
             const ownerActions = this.isOwner
               ? `
                 <button class="btn btn-compact btn-outline" data-action="edit" data-post="${this._escapeHtml(post.slug)}">${this.editingPostSlug === post.slug ? "Editing" : "Edit"}</button>
@@ -1127,6 +1565,7 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
                 <div class="farmlog-markdown-snippet">${preview}</div>
                 <p><strong>Author:</strong> ${this._escapeHtml(post.authorName || "Unknown")}</p>
                 <p><strong>Created:</strong> ${this._formatDate(post.createdAt)}</p>
+                ${reactionMarkup}
                 <div class="farmlog-inline-actions">${ownerActions}</div>
                 <a class="btn btn-compact btn-outline" href="${this._toPostLink(this.blog.slug, post.slug)}">Read more</a>
               </article>
@@ -1186,9 +1625,39 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
     this._renderTabs();
   }
 
+  async _handleHeaderAction(event) {
+    const button = event.target.closest("[data-engagement-action]");
+    if (!button) {
+      return;
+    }
+
+    const previousTab = this.activeTab;
+    const updatedEntity = await this._performEngagementRequest(button);
+    if (!updatedEntity) {
+      return;
+    }
+
+    await this._loadData();
+    this.activeTab = previousTab;
+    this._renderTabs();
+  }
+
   async _handlePostListAction(event) {
-    const target = event.target;
+    const target = event.target.closest("button");
     if (!target || !(target instanceof HTMLButtonElement) || !this.blog) {
+      return;
+    }
+
+    if (target.hasAttribute("data-engagement-action")) {
+      const previousTab = this.activeTab;
+      const updatedEntity = await this._performEngagementRequest(target);
+      if (!updatedEntity) {
+        return;
+      }
+
+      await this._loadData();
+      this.activeTab = previousTab;
+      this._renderTabs();
       return;
     }
 
@@ -1328,6 +1797,14 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
 }
 
 class FarmlogPostDetailPage extends FarmlogBasePage {
+  constructor() {
+    super();
+    this.blog = null;
+    this.post = null;
+    this.blogSlug = null;
+    this.postSlug = null;
+  }
+
   requiresAuthentication() {
     return false;
   }
@@ -1341,11 +1818,25 @@ class FarmlogPostDetailPage extends FarmlogBasePage {
       return;
     }
 
+    this.blogSlug = blogSlug;
+    this.postSlug = postSlug;
+    this._bindEvents();
+    await this._loadPostData();
+  }
+
+  _bindEvents() {
+    const actionsEl = document.getElementById("postDetailActions");
+    if (actionsEl) {
+      actionsEl.addEventListener("click", (event) => this._handleActionClick(event));
+    }
+  }
+
+  async _loadPostData() {
     this._setStatus("Loading post...");
 
     const [blogResponse, postResponse] = await Promise.all([
-      this.apiService.get(`blogs/${blogSlug}`, { requiresAuth: true }),
-      this.apiService.get(`blogs/${blogSlug}/posts/${postSlug}`, { requiresAuth: true }),
+      this.apiService.get(`blogs/${this.blogSlug}`, { requiresAuth: true }),
+      this.apiService.get(`blogs/${this.blogSlug}/posts/${this.postSlug}`, { requiresAuth: true }),
     ]);
 
     if (!blogResponse.success || !postResponse.success) {
@@ -1353,35 +1844,59 @@ class FarmlogPostDetailPage extends FarmlogBasePage {
       return;
     }
 
-    const blog = blogResponse.data?.data;
-    const post = postResponse.data?.data;
+    this.blog = blogResponse.data?.data || null;
+    this.post = postResponse.data?.data || null;
+    this._renderPostDetail();
+    this._setStatus("");
+  }
 
+  _renderPostDetail() {
     const titleEl = document.getElementById("postDetailTitle");
     const metaEl = document.getElementById("postDetailMeta");
+    const actionsEl = document.getElementById("postDetailActions");
     const contentEl = document.getElementById("postDetailContent");
     const backEl = document.getElementById("postDetailBackLink");
 
     if (titleEl) {
-      titleEl.textContent = post?.title || "Untitled";
+      titleEl.innerHTML = `<i class="fas fa-file-lines"></i> ${this._escapeHtml(this.post?.title || "Untitled")}`;
     }
 
     if (metaEl) {
       metaEl.innerHTML = `
-        <p><strong>Blog:</strong> ${this._escapeHtml(blog?.title || blogSlug)}</p>
-        <p><strong>Published:</strong> ${this._formatDate(post?.createdAt)}</p>
-        <p><strong>Updated:</strong> ${this._formatDate(post?.updatedAt)}</p>
+        <p><strong>Blog:</strong> ${this._escapeHtml(this.blog?.title || this.blogSlug || "-")}</p>
+        <p><strong>Published:</strong> ${this._formatDate(this.post?.createdAt)}</p>
+        <p><strong>Updated:</strong> ${this._formatDate(this.post?.updatedAt)}</p>
       `;
     }
 
+    if (actionsEl) {
+      actionsEl.innerHTML = this.farmlogEngagementEnabled
+        ? this._renderPostEngagementActions(this.post, this.blog?.slug || this.blogSlug)
+        : "";
+      actionsEl.hidden = !this.farmlogEngagementEnabled;
+    }
+
     if (contentEl) {
-      contentEl.innerHTML = this._renderMarkdown(post?.content || "");
+      contentEl.innerHTML = this._renderMarkdown(this.post?.content || "");
     }
 
-    if (backEl && blog?.slug) {
-      backEl.href = this._toBlogLink(blog.slug);
+    if (backEl && this.blog?.slug) {
+      backEl.href = this._toBlogLink(this.blog.slug);
+    }
+  }
+
+  async _handleActionClick(event) {
+    const button = event.target.closest("[data-engagement-action]");
+    if (!button) {
+      return;
     }
 
-    this._setStatus("");
+    const updatedEntity = await this._performEngagementRequest(button);
+    if (!updatedEntity) {
+      return;
+    }
+
+    await this._loadPostData();
   }
 }
 

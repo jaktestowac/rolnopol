@@ -9,6 +9,7 @@ describe("blog.service", () => {
     await dbManager.getBlogsDatabase().replaceAll([]);
     await dbManager.getPostsDatabase().replaceAll([]);
     await dbManager.getUsersDatabase().replaceAll([]);
+    await dbManager.getFarmlogFavoritesDatabase().replaceAll([]);
   });
 
   it("creates a public blog with generated slug and default values", async () => {

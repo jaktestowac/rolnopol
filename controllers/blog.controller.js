@@ -2,12 +2,16 @@ const { formatResponseBody, sendError } = require("../helpers/response-helper");
 const { isUserLogged, getUserId } = require("../helpers/token.helpers");
 const featureFlagsService = require("../services/feature-flags.service");
 const blogService = require("../services/blog.service");
+const farmlogEngagementService = require("../services/farmlog-engagement.service");
 const { logError } = require("../helpers/logger-api");
 
 class BlogController {
-  async _isFeatureEnabled() {
+  async _getFeatureState() {
     const data = await featureFlagsService.getFeatureFlags();
-    return data?.flags?.rolnopolFarmlogEnabled === true;
+    return {
+      farmlogEnabled: data?.flags?.rolnopolFarmlogEnabled === true,
+      engagementEnabled: data?.flags?.rolnopolFarmlogEngagementEnabled === true,
+    };
   }
 
   _extractUserId(req) {
@@ -31,7 +35,8 @@ class BlogController {
 
   async listBlogs(req, res) {
     try {
-      if (!(await this._isFeatureEnabled())) {
+      const featureState = await this._getFeatureState();
+      if (!featureState.farmlogEnabled) {
         return sendError(req, res, 404, "Farmlog feature not available");
       }
 
@@ -39,7 +44,13 @@ class BlogController {
       const search = req.query.search || req.query.q;
       const limit = req.query.limit;
       const offset = req.query.offset;
-      const blogs = await blogService.listBlogs({ search, currentUserId, limit, offset });
+      const blogs = await blogService.listBlogs({
+        search,
+        currentUserId,
+        limit,
+        offset,
+        includeEngagement: featureState.engagementEnabled,
+      });
 
       return res.status(200).json(formatResponseBody({ data: blogs }));
     } catch (error) {
@@ -50,12 +61,15 @@ class BlogController {
 
   async getBlog(req, res) {
     try {
-      if (!(await this._isFeatureEnabled())) {
+      const featureState = await this._getFeatureState();
+      if (!featureState.farmlogEnabled) {
         return sendError(req, res, 404, "Farmlog feature not available");
       }
 
       const currentUserId = this._extractUserId(req);
-      const blog = await blogService.getBlogBySlug(req.params.blogSlug, currentUserId);
+      const blog = await blogService.getBlogBySlug(req.params.blogSlug, currentUserId, {
+        includeEngagement: featureState.engagementEnabled,
+      });
 
       if (!blog) {
         return sendError(req, res, 404, "Blog not found");
@@ -70,14 +84,22 @@ class BlogController {
 
   async searchBlogs(req, res) {
     try {
-      if (!(await this._isFeatureEnabled())) {
+      const featureState = await this._getFeatureState();
+      if (!featureState.farmlogEnabled) {
         return sendError(req, res, 404, "Farmlog feature not available");
       }
 
+      const currentUserId = this._extractUserId(req);
       const search = req.query.search || req.query.q;
       const limit = req.query.limit;
       const offset = req.query.offset;
-      const blogs = await blogService.searchBlogs({ search, limit, offset });
+      const blogs = await blogService.searchBlogs({
+        search,
+        currentUserId,
+        limit,
+        offset,
+        includeEngagement: featureState.engagementEnabled,
+      });
       return res.status(200).json(formatResponseBody({ data: blogs }));
     } catch (error) {
       logError("Error searching blogs:", error);
@@ -85,9 +107,52 @@ class BlogController {
     }
   }
 
+  async favoriteBlog(req, res) {
+    try {
+      const featureState = await this._getFeatureState();
+      if (!featureState.farmlogEnabled || !featureState.engagementEnabled) {
+        return sendError(req, res, 404, "Farmlog engagement feature not available");
+      }
+
+      const blog = await blogService.getBlogBySlug(req.params.blogSlug, req.user.userId);
+      if (!blog) {
+        return sendError(req, res, 404, "Blog not found");
+      }
+
+      await farmlogEngagementService.favoriteBlog(req.user.userId, blog);
+      const updatedBlog = await blogService.getBlogBySlug(req.params.blogSlug, req.user.userId, { includeEngagement: true });
+      return res.status(200).json(formatResponseBody({ data: updatedBlog }));
+    } catch (error) {
+      logError("Error favoriting blog:", error);
+      return sendError(req, res, 500, "Failed to favorite blog");
+    }
+  }
+
+  async unfavoriteBlog(req, res) {
+    try {
+      const featureState = await this._getFeatureState();
+      if (!featureState.farmlogEnabled || !featureState.engagementEnabled) {
+        return sendError(req, res, 404, "Farmlog engagement feature not available");
+      }
+
+      const blog = await blogService.getBlogBySlug(req.params.blogSlug, req.user.userId);
+      if (!blog) {
+        return sendError(req, res, 404, "Blog not found");
+      }
+
+      await farmlogEngagementService.unfavoriteBlog(req.user.userId, blog);
+      const updatedBlog = await blogService.getBlogBySlug(req.params.blogSlug, req.user.userId, { includeEngagement: true });
+      return res.status(200).json(formatResponseBody({ data: updatedBlog }));
+    } catch (error) {
+      logError("Error unfavoriting blog:", error);
+      return sendError(req, res, 500, "Failed to update blog favorite");
+    }
+  }
+
   async createBlog(req, res) {
     try {
-      if (!(await this._isFeatureEnabled())) {
+      const featureState = await this._getFeatureState();
+      if (!featureState.farmlogEnabled) {
         return sendError(req, res, 404, "Farmlog feature not available");
       }
 
@@ -109,7 +174,8 @@ class BlogController {
 
   async updateBlog(req, res) {
     try {
-      if (!(await this._isFeatureEnabled())) {
+      const featureState = await this._getFeatureState();
+      if (!featureState.farmlogEnabled) {
         return sendError(req, res, 404, "Farmlog feature not available");
       }
 
@@ -134,7 +200,8 @@ class BlogController {
 
   async deleteBlog(req, res) {
     try {
-      if (!(await this._isFeatureEnabled())) {
+      const featureState = await this._getFeatureState();
+      if (!featureState.farmlogEnabled) {
         return sendError(req, res, 404, "Farmlog feature not available");
       }
 

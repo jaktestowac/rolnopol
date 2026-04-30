@@ -9,6 +9,25 @@ describe("post.service", () => {
     await dbManager.getBlogsDatabase().replaceAll([]);
     await dbManager.getPostsDatabase().replaceAll([]);
     await dbManager.getUsersDatabase().replaceAll([]);
+    await dbManager.getPostLikesDatabase().replaceAll([]);
+    await dbManager.getFarmlogFavoritesDatabase().replaceAll([]);
+  });
+
+  it("sorts posts by most liked when engagement enrichment is requested", async () => {
+    const blog = await blogService.createBlog(206, { title: "Liked Sorting Blog", visibility: "public" });
+    const firstPost = await postService.createPost(206, blog.slug, { title: "First", content: "One" });
+    const secondPost = await postService.createPost(206, blog.slug, { title: "Second", content: "Two" });
+
+    const now = new Date().toISOString();
+
+    await dbManager.getPostLikesDatabase().replaceAll([
+      { id: 1, userId: 1, postId: secondPost.id, blogId: blog.id, createdAt: now, updatedAt: now },
+      { id: 2, userId: 2, postId: secondPost.id, blogId: blog.id, createdAt: now, updatedAt: now },
+      { id: 3, userId: 3, postId: firstPost.id, blogId: blog.id, createdAt: now, updatedAt: now },
+    ]);
+
+    const posts = await postService.listPosts(blog.slug, 206, null, null, { sort: "most-liked", includeEngagement: true });
+    expect(posts.map((post) => post.slug)).toEqual([secondPost.slug, firstPost.slug]);
   });
 
   it("creates posts and auto-resolves slug collisions within the same blog", async () => {

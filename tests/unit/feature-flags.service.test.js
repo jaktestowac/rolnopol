@@ -42,6 +42,9 @@ describe("feature-flags.service", () => {
         promoAdvertsAlertsEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
         promoAdvertsBottomBannerEnabled: false,
+        petBuddyEnabled: false,
+        rolnopolFarmlogEnabled: false,
+        rolnopolFarmlogEngagementEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -94,6 +97,9 @@ describe("feature-flags.service", () => {
         promoAdvertsAlertsEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
         promoAdvertsBottomBannerEnabled: false,
+        petBuddyEnabled: false,
+        rolnopolFarmlogEnabled: false,
+        rolnopolFarmlogEngagementEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -151,6 +157,9 @@ describe("feature-flags.service", () => {
         promoAdvertsAlertsEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
         promoAdvertsBottomBannerEnabled: false,
+        petBuddyEnabled: false,
+        rolnopolFarmlogEnabled: false,
+        rolnopolFarmlogEngagementEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -240,6 +249,9 @@ describe("feature-flags.service", () => {
         promoAdvertsAlertsEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
         promoAdvertsBottomBannerEnabled: false,
+        petBuddyEnabled: false,
+        rolnopolFarmlogEnabled: false,
+        rolnopolFarmlogEngagementEnabled: false,
       },
       updatedAt: "2026-02-07T00:00:00.000Z",
     };

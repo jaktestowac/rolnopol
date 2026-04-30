@@ -22,64 +22,106 @@
       </div>
     </header>
 
-    <main class="farmlog-layout">
-      <aside class="farmlog-panel glass" aria-label="Your blog panel" id="yourBlogPanel">
-        <h2><i class="fas fa-seedling"></i> Your Blog</h2>
-        <div id="userBlogEmpty" class="is-loading">
-          <div class="farmlog-skeleton-card" style="margin-bottom: 0.6rem">
-            <div class="farmlog-skeleton farmlog-skeleton-title"></div>
-            <div class="farmlog-skeleton farmlog-skeleton-text"></div>
-            <div class="farmlog-skeleton farmlog-skeleton-text" style="width: 70%"></div>
-          </div>
-          <div class="farmlog-skeleton-card">
-            <div class="farmlog-skeleton farmlog-skeleton-title"></div>
-            <div class="farmlog-skeleton farmlog-skeleton-text"></div>
-            <div class="farmlog-skeleton farmlog-skeleton-text"></div>
-          </div>
-          <p class="farmlog-empty" hidden>You do not have a blog yet.</p>
-          <form id="createBlogForm" class="farmlog-form" hidden>
-            <input id="createBlogTitle" class="form-input-modern" type="text" maxlength="255" placeholder="Blog title" required />
-            <select id="createBlogVisibility" class="form-input-modern">
-              <option value="public">Public</option>
-              <option value="private">Private</option>
-            </select>
-            <input id="createBlogTags" class="form-input-modern" type="text" placeholder="Tags (comma separated, max 5)" />
-            <button type="submit" class="btn btn-futuristic w-full">Create Blog</button>
-          </form>
+    <main class="farmlog-layout farmlog-layout--user-panel-collapsed" id="farmlogLayout">
+      <aside class="farmlog-panel glass is-collapsed" aria-label="Your blog panel" id="yourBlogPanel">
+        <div class="farmlog-panel-header">
+          <h2><i class="fas fa-seedling"></i> Your Blog</h2>
+          <button
+            type="button"
+            class="farmlog-panel-toggle"
+            id="yourBlogPanelToggle"
+            aria-controls="yourBlogPanelContent"
+            aria-expanded="false"
+            aria-label="Expand your blog panel"
+            title="Expand your blog panel"
+          >
+            <span class="farmlog-panel-toggle__text">Your Blog</span>
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+          </button>
         </div>
-        <div id="userBlogDetails" hidden></div>
 
-        <details id="createUserPostPanel" class="farmlog-collapsible" hidden>
-          <summary class="farmlog-collapsible__summary">
-            <span style="font-weight: 600 !important;"><i class="fas fa-plus"></i> Create Post</span>
-            <span class="farmlog-collapsible__hint" aria-hidden="true">
-              <i class="fas fa-chevron-down"></i>
-            </span>
-          </summary>
-          <div class="farmlog-collapsible__content">
-            <form id="createUserPostForm" class="farmlog-form">
-              <input id="createUserPostTitle" class="form-input-modern" type="text" maxlength="255" placeholder="Post title" required />
-              <textarea id="createUserPostContent" class="form-input-modern" rows="4" maxlength="5000" placeholder="Write your post in markdown" required></textarea>
-              <div>
-                <p class="farmlog-preview-label">Live Preview</p>
-                <div id="createUserPostPreview" class="farmlog-markdown-preview"></div>
-              </div>
-              <button type="submit" class="btn btn-futuristic w-full">Publish Post</button>
+        <div class="farmlog-panel-body" id="yourBlogPanelContent">
+          <div id="userBlogEmpty" class="is-loading">
+            <div class="farmlog-skeleton-card" style="margin-bottom: 0.6rem">
+              <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text" style="width: 70%"></div>
+            </div>
+            <div class="farmlog-skeleton-card">
+              <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+            </div>
+            <p class="farmlog-empty" hidden>You do not have a blog yet.</p>
+            <form id="createBlogForm" class="farmlog-form" hidden>
+              <input id="createBlogTitle" class="form-input-modern" type="text" maxlength="255" placeholder="Blog title" required />
+              <select id="createBlogVisibility" class="form-input-modern">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+              <input id="createBlogTags" class="form-input-modern" type="text" placeholder="Tags (comma separated, max 5)" />
+              <button type="submit" class="btn btn-futuristic w-full">Create Blog</button>
             </form>
           </div>
-        </details>
+          <div id="userBlogDetails" hidden></div>
+
+          <details id="createUserPostPanel" class="farmlog-collapsible" hidden>
+            <summary class="farmlog-collapsible__summary">
+              <span style="font-weight: 600 !important;"><i class="fas fa-plus"></i> Create Post</span>
+              <span class="farmlog-collapsible__hint" aria-hidden="true">
+                <i class="fas fa-chevron-down"></i>
+              </span>
+            </summary>
+            <div class="farmlog-collapsible__content">
+              <form id="createUserPostForm" class="farmlog-form">
+                <input id="createUserPostTitle" class="form-input-modern" type="text" maxlength="255" placeholder="Post title" required />
+                <textarea id="createUserPostContent" class="form-input-modern" rows="4" maxlength="5000" placeholder="Write your post in markdown" required></textarea>
+                <div>
+                  <p class="farmlog-preview-label">Live Preview</p>
+                  <div id="createUserPostPreview" class="farmlog-markdown-preview"></div>
+                </div>
+                <button type="submit" class="btn btn-futuristic w-full">Publish Post</button>
+              </form>
+            </div>
+          </details>
+        </div>
       </aside>
 
       <section class="farmlog-panel glass" aria-label="Public search panel" id="publicSearchPanel">
         <h2>Search Public Blogs and Posts</h2>
-        <form id="farmlogSearchForm" class="farmlog-form">
-          <input id="farmlogSearchInput" class="form-input-modern" type="search" maxlength="120" placeholder="Search by keyword" />
-          <button type="submit" class="btn btn-outline">Search</button>
-        </form>
+        <span>
+          <form id="farmlogSearchForm" class="farmlog-form">
+            <input id="farmlogSearchInput" class="form-input-modern" type="search" maxlength="120" placeholder="Search by keyword" />
+            <button type="submit" class="btn btn-outline">Search</button>
+          </form>
+
+          <div id="farmlogSearchControls" class="farmlog-search-controls" hidden>
+            <label id="farmlogPostsSortWrap" class="farmlog-search-controls__group" hidden>
+              <span>Sort posts</span>
+              <select id="farmlogPostsSort" class="form-input-modern">
+                <option value="newest">Newest</option>
+                <option value="most-liked">Most liked</option>
+              </select>
+            </label>
+
+            <label id="farmlogTopPeriodWrap" class="farmlog-search-controls__group" hidden>
+              <span>Top period</span>
+              <select id="farmlogTopPeriod" class="form-input-modern">
+                <option value="1d">1 day</option>
+                <option value="7d" selected>7 days</option>
+                <option value="14d">14 days</option>
+                <option value="30d">30 days</option>
+                <option value="1y">Year</option>
+                <option value="all">All time</option>
+              </select>
+            </label>
+          </div>
+        </span>
 
         <div class="farmlog-tabs" role="tablist" aria-label="Search result tabs">
           <button type="button" class="btn btn-compact btn-outline is-active" data-result-tab="blogs" aria-selected="true">Blogs</button>
           <button type="button" class="btn btn-compact btn-outline" data-result-tab="posts" aria-selected="false">Posts</button>
+          <button type="button" class="btn btn-compact btn-outline" data-result-tab="top-posts" aria-selected="false" hidden>Most liked</button>
         </div>
         <span id="searchResultsContainer">
           <div class="farmlog-results is-loading" id="searchBlogsResults" role="tabpanel">
@@ -103,6 +145,26 @@
             </div>
           </div>
           <div class="farmlog-results is-loading" id="searchPostsResults" role="tabpanel" hidden>
+            <div class="farmlog-skeleton-card">
+              <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+            </div>
+            <div class="farmlog-skeleton-card">
+              <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+            </div>
+            <div class="farmlog-skeleton-card">
+              <div class="farmlog-skeleton farmlog-skeleton-title"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+              <div class="farmlog-skeleton farmlog-skeleton-text"></div>
+            </div>
+          </div>
+          <div class="farmlog-results is-loading" id="searchTopPostsResults" role="tabpanel" hidden>
             <div class="farmlog-skeleton-card">
               <div class="farmlog-skeleton farmlog-skeleton-title"></div>
               <div class="farmlog-skeleton farmlog-skeleton-text"></div>

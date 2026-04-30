@@ -33,6 +33,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   promoAdvertsBottomBannerEnabled: "Enable or disable Rolnopol promotional banner fixed at the bottom of pages",
   petBuddyEnabled: "Enable or disable the pet buddy companion system",
   rolnopolFarmlogEnabled: "Enable or disable the Rolnopol Blog Space (Farmlog) feature",
+  rolnopolFarmlogEngagementEnabled: "Enable or disable Farmlog likes, favorites, and most-liked post ranking",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -56,6 +57,7 @@ const FEATURE_FLAG_GROUPS = {
     "promoAdvertsBottomBannerEnabled",
   ],
   gameplay: ["petBuddyEnabled"],
+  farmlog: ["rolnopolFarmlogEnabled", "rolnopolFarmlogEngagementEnabled"],
 };
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -89,6 +91,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   promoAdvertsBottomBannerEnabled: false,
   petBuddyEnabled: false,
   rolnopolFarmlogEnabled: false,
+  rolnopolFarmlogEngagementEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

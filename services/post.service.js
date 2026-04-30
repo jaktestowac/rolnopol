@@ -1,6 +1,7 @@
 const dbManager = require("../data/database-manager");
 const blogService = require("./blog.service");
 const UserDataSingleton = require("../data/user-data-singleton");
+const farmlogEngagementService = require("./farmlog-engagement.service");
 
 class PostService {
   constructor() {
@@ -17,6 +18,81 @@ class PostService {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
+  }
+
+  _normalizeSort(sort) {
+    const normalized = String(sort || "newest").trim().toLowerCase();
+    return ["newest", "oldest", "title-asc", "title-desc", "most-liked"].includes(normalized) ? normalized : "newest";
+  }
+
+  _sortRawPosts(posts, sort) {
+    const sorted = [...posts];
+    const normalizedSort = this._normalizeSort(sort);
+
+    if (normalizedSort === "oldest") {
+      sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    } else if (normalizedSort === "title-asc") {
+      sorted.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+    } else if (normalizedSort === "title-desc") {
+      sorted.sort((a, b) => String(b.title || "").localeCompare(String(a.title || "")));
+    } else {
+      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    return sorted;
+  }
+
+  _sortEnrichedPosts(posts, sort) {
+    const normalizedSort = this._normalizeSort(sort);
+    if (normalizedSort !== "most-liked") {
+      return this._sortRawPosts(posts, normalizedSort);
+    }
+
+    return [...posts].sort((a, b) => {
+      const periodDelta = (b.periodLikesCount || 0) - (a.periodLikesCount || 0);
+      if (periodDelta !== 0) return periodDelta;
+
+      const totalDelta = (b.likesCount || 0) - (a.likesCount || 0);
+      if (totalDelta !== 0) return totalDelta;
+
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }
+
+  async _enrichPosts(posts, currentUserId = null, options = {}) {
+    const items = Array.isArray(posts) ? posts : [];
+    const userDataInstance = UserDataSingleton.getInstance();
+    const blogs = await dbManager.getBlogsDatabase().getAll();
+    const blogsById = new Map(blogs.map((blog) => [String(blog.id), blog]));
+
+    const enrichedPosts = await Promise.all(
+      items.map(async (post) => {
+        const blog = blogsById.get(String(post.blogId));
+
+        try {
+          const user = await userDataInstance.findUser(post.userId);
+          return {
+            ...post,
+            authorName: user?.displayedName || user?.email || "Anonymous",
+            blogSlug: post.blogSlug || blog?.slug || null,
+            blogTitle: post.blogTitle || blog?.title || null,
+          };
+        } catch {
+          return {
+            ...post,
+            authorName: "Anonymous",
+            blogSlug: post.blogSlug || blog?.slug || null,
+            blogTitle: post.blogTitle || blog?.title || null,
+          };
+        }
+      }),
+    );
+
+    if (options.includeEngagement === true) {
+      return farmlogEngagementService.enrichPosts(enrichedPosts, currentUserId, { period: options.period });
+    }
+
+    return enrichedPosts;
   }
 
   _validatePostData(data, options = {}) {
@@ -83,7 +159,7 @@ class PostService {
     return candidate;
   }
 
-  async listPosts(blogSlug, currentUserId, limit, offset) {
+  async listPosts(blogSlug, currentUserId, limit, offset, options = {}) {
     const blog = await blogService.getBlogBySlug(blogSlug, currentUserId);
     if (!blog) {
       throw new Error("Blog not found");
@@ -91,40 +167,34 @@ class PostService {
 
     const normalizedLimit = Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : null;
     const normalizedOffset = Number.isFinite(Number(offset)) && Number(offset) >= 0 ? Number(offset) : 0;
+    const normalizedSort = this._normalizeSort(options.sort);
     const posts = await this.postsDb.getAll();
-    const results = posts
-      .filter((post) => post.blogId === blog.id && post.deletedAt == null)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const results = posts.filter((post) => post.blogId === blog.id && post.deletedAt == null);
+
+    if (normalizedSort === "most-liked" && options.includeEngagement === true) {
+      const enrichedResults = await this._enrichPosts(results, currentUserId, options);
+      const sortedResults = this._sortEnrichedPosts(enrichedResults, normalizedSort);
+      return normalizedLimit === null
+        ? sortedResults.slice(normalizedOffset)
+        : sortedResults.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+    }
+
+    const sortedResults = this._sortRawPosts(results, normalizedSort);
 
     const paginatedResults =
-      normalizedLimit === null ? results.slice(normalizedOffset) : results.slice(normalizedOffset, normalizedOffset + normalizedLimit);
-    const userDataInstance = UserDataSingleton.getInstance();
+      normalizedLimit === null ? sortedResults.slice(normalizedOffset) : sortedResults.slice(normalizedOffset, normalizedOffset + normalizedLimit);
 
-    return await Promise.all(
-      paginatedResults.map(async (post) => {
-        try {
-          const user = await userDataInstance.findUser(post.userId);
-          return {
-            ...post,
-            authorName: user?.displayedName || user?.email || "Anonymous",
-          };
-        } catch {
-          return {
-            ...post,
-            authorName: "Anonymous",
-          };
-        }
-      }),
-    );
+    return this._enrichPosts(paginatedResults, currentUserId, options);
   }
 
-  async searchPosts({ search, limit, offset } = {}) {
+  async searchPosts({ search, currentUserId = null, limit, offset, sort = "newest", period = "all", includeEngagement = false } = {}) {
     const allBlogs = await dbManager.getBlogsDatabase().getAll();
     const publicBlogIds = new Set(allBlogs.filter((blog) => blog.visibility === "public" && blog.deletedAt == null).map((blog) => blog.id));
 
     const query = typeof search === "string" ? search.trim().toLowerCase() : "";
     const normalizedLimit = Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : null;
     const normalizedOffset = Number.isFinite(Number(offset)) && Number(offset) >= 0 ? Number(offset) : 0;
+    const normalizedSort = this._normalizeSort(sort);
     const posts = await this.postsDb.getAll();
 
     const results = posts
@@ -137,35 +207,25 @@ class PostService {
         const contentMatches = typeof post.content === "string" && post.content.toLowerCase().includes(query);
 
         return titleMatches || contentMatches;
-      })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      });
+
+    if (normalizedSort === "most-liked" && includeEngagement === true) {
+      const enrichedResults = await this._enrichPosts(results, currentUserId, { includeEngagement, period });
+      const sortedResults = this._sortEnrichedPosts(enrichedResults, normalizedSort);
+      return normalizedLimit === null
+        ? sortedResults.slice(normalizedOffset)
+        : sortedResults.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+    }
+
+    const sortedResults = this._sortRawPosts(results, normalizedSort);
 
     const paginatedResults =
-      normalizedLimit === null ? results.slice(normalizedOffset) : results.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+      normalizedLimit === null ? sortedResults.slice(normalizedOffset) : sortedResults.slice(normalizedOffset, normalizedOffset + normalizedLimit);
 
-    // Enrich with author information
-    const userDataInstance = UserDataSingleton.getInstance();
-    const enrichedResults = await Promise.all(
-      paginatedResults.map(async (post) => {
-        try {
-          const user = await userDataInstance.findUser(post.userId);
-          return {
-            ...post,
-            authorName: user?.displayedName || user?.email || "Anonymous",
-          };
-        } catch {
-          return {
-            ...post,
-            authorName: "Anonymous",
-          };
-        }
-      }),
-    );
-
-    return enrichedResults;
+    return this._enrichPosts(paginatedResults, currentUserId, { includeEngagement, period });
   }
 
-  async getPostBySlug(blogSlug, postSlug, currentUserId) {
+  async getPostBySlug(blogSlug, postSlug, currentUserId, options = {}) {
     const blog = await blogService.getBlogBySlug(blogSlug, currentUserId);
     if (!blog) {
       return null;
@@ -178,7 +238,8 @@ class PostService {
       return null;
     }
 
-    return post;
+    const [enrichedPost] = await this._enrichPosts([post], currentUserId, options);
+    return enrichedPost || null;
   }
 
   async createPost(userId, blogSlug, data) {
@@ -187,7 +248,7 @@ class PostService {
       throw new Error("Blog not found");
     }
 
-    if (blog.userId !== userId) {
+    if (String(blog.userId) !== String(userId)) {
       throw new Error("Not authorized to create posts for this blog");
     }
 
@@ -221,7 +282,7 @@ class PostService {
       throw new Error("Blog not found");
     }
 
-    if (blog.userId !== userId) {
+    if (String(blog.userId) !== String(userId)) {
       throw new Error("Not authorized to update posts for this blog");
     }
 
@@ -277,7 +338,7 @@ class PostService {
       throw new Error("Blog not found");
     }
 
-    if (blog.userId !== userId) {
+    if (String(blog.userId) !== String(userId)) {
       throw new Error("Not authorized to delete posts for this blog");
     }
 

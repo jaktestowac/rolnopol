@@ -123,6 +123,20 @@ class DatabaseManager {
   }
 
   /**
+   * Get Farmlog post likes database singleton
+   */
+  getPostLikesDatabase() {
+    return this.getDatabase("farmlog-post-likes", "farmlog-post-likes.json", []);
+  }
+
+  /**
+   * Get Farmlog favorites database singleton
+   */
+  getFarmlogFavoritesDatabase() {
+    return this.getDatabase("farmlog-favorites", "farmlog-favorites.json", []);
+  }
+
+  /**
    * Get users database singleton
    */
   getUsersDatabase() {

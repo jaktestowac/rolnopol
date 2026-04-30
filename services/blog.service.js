@@ -1,5 +1,6 @@
 const dbManager = require("../data/database-manager");
 const UserDataSingleton = require("../data/user-data-singleton");
+const farmlogEngagementService = require("./farmlog-engagement.service");
 
 class BlogService {
   constructor() {
@@ -30,6 +31,31 @@ class BlogService {
     }
 
     return candidate;
+  }
+
+  async _getAuthorName(userId) {
+    try {
+      const user = await UserDataSingleton.getInstance().findUser(userId);
+      return user?.displayedName || user?.email || "Anonymous";
+    } catch {
+      return "Anonymous";
+    }
+  }
+
+  async _enrichBlogs(blogs, currentUserId = null, options = {}) {
+    const items = Array.isArray(blogs) ? blogs : [];
+    const enrichedBlogs = await Promise.all(
+      items.map(async (blog) => ({
+        ...blog,
+        authorName: await this._getAuthorName(blog.userId),
+      })),
+    );
+
+    if (options.includeEngagement === true) {
+      return farmlogEngagementService.enrichBlogs(enrichedBlogs, currentUserId);
+    }
+
+    return enrichedBlogs;
   }
 
   _validateBlogData(data, options = {}) {
@@ -103,7 +129,7 @@ class BlogService {
     };
   }
 
-  async listBlogs({ search, currentUserId, limit, offset } = {}) {
+  async listBlogs({ search, currentUserId, limit, offset, includeEngagement = false } = {}) {
     const blogs = await this.blogsDb.getAll();
     const query = typeof search === "string" ? search.trim().toLowerCase() : "";
     const normalizedLimit = Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : null;
@@ -112,7 +138,7 @@ class BlogService {
     const results = blogs
       .filter((blog) => {
         if (blog.deletedAt != null) return false;
-        const isVisible = blog.visibility === "public" || blog.userId === currentUserId;
+        const isVisible = blog.visibility === "public" || String(blog.userId) === String(currentUserId);
         if (!isVisible) return false;
 
         if (!query) return true;
@@ -125,10 +151,13 @@ class BlogService {
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    return normalizedLimit === null ? results.slice(normalizedOffset) : results.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+    const paginatedResults =
+      normalizedLimit === null ? results.slice(normalizedOffset) : results.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+
+    return this._enrichBlogs(paginatedResults, currentUserId, { includeEngagement });
   }
 
-  async searchBlogs({ search, limit, offset } = {}) {
+  async searchBlogs({ search, currentUserId = null, limit, offset, includeEngagement = false } = {}) {
     const blogs = await this.blogsDb.getAll();
     const posts = await this.postsDb.getAll();
     const query = typeof search === "string" ? search.trim().toLowerCase() : "";
@@ -166,50 +195,21 @@ class BlogService {
     const paginatedResults =
       normalizedLimit === null ? results.slice(normalizedOffset) : results.slice(normalizedOffset, normalizedOffset + normalizedLimit);
 
-    // Enrich with author information
-    const userDataInstance = UserDataSingleton.getInstance();
-    const enrichedResults = await Promise.all(
-      paginatedResults.map(async (blog) => {
-        try {
-          const user = await userDataInstance.findUser(blog.userId);
-          return {
-            ...blog,
-            authorName: user?.displayedName || user?.email || "Anonymous",
-          };
-        } catch {
-          return {
-            ...blog,
-            authorName: "Anonymous",
-          };
-        }
-      }),
-    );
-
-    return enrichedResults;
+    return this._enrichBlogs(paginatedResults, currentUserId, { includeEngagement });
   }
 
-  async getBlogBySlug(slug, currentUserId = null) {
+  async getBlogBySlug(slug, currentUserId = null, options = {}) {
     const normalizedSlug = this._normalizeSlug(slug);
     const blogs = await this.blogsDb.getAll();
     const blog = blogs.find((item) => item.slug === normalizedSlug);
     if (!blog) return null;
     if (blog.deletedAt != null) return null;
-    if (blog.visibility === "private" && blog.userId !== currentUserId) {
+    if (blog.visibility === "private" && String(blog.userId) !== String(currentUserId)) {
       return null;
     }
 
-    try {
-      const user = await UserDataSingleton.getInstance().findUser(blog.userId);
-      return {
-        ...blog,
-        authorName: user?.displayedName || user?.email || "Anonymous",
-      };
-    } catch {
-      return {
-        ...blog,
-        authorName: "Anonymous",
-      };
-    }
+    const [enrichedBlog] = await this._enrichBlogs([blog], currentUserId, options);
+    return enrichedBlog || null;
   }
 
   async createBlog(userId, data) {
@@ -219,7 +219,7 @@ class BlogService {
     }
 
     const existingBlogs = await this.blogsDb.getAll();
-    if (existingBlogs.some((blog) => blog.userId === userId && blog.deletedAt == null)) {
+    if (existingBlogs.some((blog) => String(blog.userId) === String(userId) && blog.deletedAt == null)) {
       throw new Error("Each user may only create one active blog");
     }
 
