@@ -7,6 +7,7 @@ const { getAllEventTypes, getPayloadTemplate } = require("../modules/notificatio
 const ENDPOINTS = {
   health: "/api/v1/notifications/health",
   events: "/api/v1/notifications/events",
+  websocket: "/api/v1/notifications/ws",
   testEvent: {
     get: "/api/v1/notifications/test-event",
     post: "/api/v1/notifications/test-event",

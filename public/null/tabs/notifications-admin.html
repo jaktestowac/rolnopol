@@ -69,6 +69,7 @@
                 Notifications Center (Events)
             </h2>
             <div class="notifications-header-actions">
+                <span id="liveUpdatesStatus" class="badge-enhanced badge-info-enhanced">Live updates: offline</span>
                 <button id="refreshHealthBtn" class="btn-enhanced btn-secondary-enhanced">
                     <span class="spinner-enhanced hidden"></span>
                     <i class="fas fa-heartbeat btn-icon"></i>
@@ -352,6 +353,13 @@
                     },
                 };
                 this.notificationFeatureEnabled = null;
+                this.liveSocket = null;
+                this.liveReconnectTimer = null;
+                this.liveHeartbeatTimer = null;
+                this.liveHealthRefreshTimer = null;
+                this.liveEventsReloadTimer = null;
+                this.liveReconnectAttempts = 0;
+                this.isLiveSocketManuallyClosed = false;
                 this.init();
             }
 
@@ -402,6 +410,8 @@
                 document.querySelectorAll(".sort-btn").forEach((btn) => {
                     btn.addEventListener("click", () => this.handleSort(btn.dataset.sort));
                 });
+
+                window.addEventListener("beforeunload", () => this.disconnectLiveUpdates({ manual: true }));
             }
 
             async initializeData() {
@@ -412,6 +422,7 @@
                 }
 
                 this.setFeatureDisabledUi(false);
+                this.ensureLiveUpdatesConnection();
                 await this.loadHealth();
                 await this.loadEvents({ forceServerReload: true });
             }
@@ -484,6 +495,12 @@
                     "testCorrelationId",
                     "testExtraPayload",
                     "testForceFail",
+                    "eventTypeSelect",
+                    "eventTypeUserId",
+                    "eventTypeCorrelationId",
+                    "eventTypePayloadOverrides",
+                    "eventTypeForceFail",
+                    "triggerEventTypeBtn",
                 ];
 
                 interactiveIds.forEach((id) => {
@@ -494,6 +511,9 @@
                 });
 
                 if (disabled) {
+                    this.disconnectLiveUpdates({ manual: true, silent: true });
+                    this.updateLiveStatus("disabled", "Live updates: disabled");
+
                     const healthSummary = document.getElementById("healthSummary");
                     if (healthSummary) {
                         healthSummary.innerHTML = '<div class="text-center">Notifications feature is disabled. Enable it to view health.</div>';
@@ -506,7 +526,10 @@
 
                     this.renderMeta(0);
                     this.renderPagination(1);
+                    return;
                 }
+
+                this.ensureLiveUpdatesConnection();
             }
 
             applyTestPreset(presetKey) {
@@ -577,6 +600,7 @@
                     this.notificationFeatureEnabled = true;
                     this.setFeatureDisabledUi(false);
                     this.showAlert("Notifications feature enabled", "success");
+                    this.ensureLiveUpdatesConnection();
                     await this.loadHealth();
                     await this.loadEvents({ forceServerReload: true });
                 } catch (error) {
@@ -732,7 +756,7 @@
 
                     if (shouldReload) {
                         this.lastServerFilters = { ...serverFilters };
-                        this.allEvents = await this.fetchAllEvents(serverFilters);
+                        this.allEvents = this.normalizeEventCollection(await this.fetchAllEvents(serverFilters));
                     }
 
                     this.applyClientFiltersAndRender();
@@ -1282,6 +1306,305 @@
                 } catch {
                     console.warn("Failed to parse extra payload JSON");
                     return {};
+                }
+            }
+
+            updateLiveStatus(state, text) {
+                const statusEl = document.getElementById("liveUpdatesStatus");
+                if (!statusEl) {
+                    return;
+                }
+
+                const classMap = {
+                    connected: "badge-success-enhanced",
+                    connecting: "badge-warning-enhanced",
+                    offline: "badge-info-enhanced",
+                    disabled: "badge-info-enhanced",
+                    error: "badge-danger-enhanced",
+                };
+
+                statusEl.className = `badge-enhanced ${classMap[state] || classMap.offline}`;
+                statusEl.textContent = text;
+            }
+
+            buildLiveUpdatesUrl() {
+                const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+                const url = new URL(`${protocol}//${window.location.host}/api/v1/notifications/ws`);
+
+                if (this.token) {
+                    url.searchParams.set("token", this.token);
+                }
+
+                return url.toString();
+            }
+
+            ensureLiveUpdatesConnection() {
+                if (this.notificationFeatureEnabled !== true) {
+                    this.updateLiveStatus("disabled", "Live updates: disabled");
+                    return;
+                }
+
+                if (this.liveSocket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(this.liveSocket.readyState)) {
+                    return;
+                }
+
+                clearTimeout(this.liveReconnectTimer);
+                this.isLiveSocketManuallyClosed = false;
+                this.updateLiveStatus("connecting", "Live updates: connecting...");
+
+                try {
+                    this.liveSocket = new WebSocket(this.buildLiveUpdatesUrl());
+                } catch (error) {
+                    console.error("Failed to initialize notifications WebSocket:", error);
+                    this.updateLiveStatus("error", "Live updates: unavailable");
+                    this.scheduleLiveReconnect();
+                    return;
+                }
+
+                this.liveSocket.addEventListener("open", () => {
+                    this.liveReconnectAttempts = 0;
+                    this.updateLiveStatus("connected", "Live updates: connected");
+                    this.startLiveHeartbeat();
+                });
+
+                this.liveSocket.addEventListener("message", (event) => this.handleLiveSocketMessage(event));
+
+                this.liveSocket.addEventListener("close", async (event) => {
+                    this.stopLiveHeartbeat();
+                    this.liveSocket = null;
+
+                    if (this.isLiveSocketManuallyClosed || this.notificationFeatureEnabled !== true) {
+                        this.updateLiveStatus(
+                            this.notificationFeatureEnabled === true ? "offline" : "disabled",
+                            this.notificationFeatureEnabled === true ? "Live updates: offline" : "Live updates: disabled",
+                        );
+                        return;
+                    }
+
+                    if (event.code === 4404) {
+                        this.notificationFeatureEnabled = false;
+                        this.setFeatureDisabledUi(true);
+                        return;
+                    }
+
+                    this.updateLiveStatus("offline", "Live updates: reconnecting...");
+                    this.scheduleLiveReconnect();
+                });
+
+                this.liveSocket.addEventListener("error", (error) => {
+                    console.error("Notifications WebSocket error:", error);
+                    this.updateLiveStatus("error", "Live updates: connection error");
+                });
+            }
+
+            disconnectLiveUpdates({ manual = false, silent = false } = {}) {
+                this.isLiveSocketManuallyClosed = manual;
+                clearTimeout(this.liveReconnectTimer);
+                this.liveReconnectTimer = null;
+                clearTimeout(this.liveHealthRefreshTimer);
+                this.liveHealthRefreshTimer = null;
+                clearTimeout(this.liveEventsReloadTimer);
+                this.liveEventsReloadTimer = null;
+                this.stopLiveHeartbeat();
+
+                if (this.liveSocket) {
+                    try {
+                        this.liveSocket.close();
+                    } catch {
+                        // ignore close failures
+                    }
+                    this.liveSocket = null;
+                }
+
+                if (!silent) {
+                    this.updateLiveStatus(
+                        this.notificationFeatureEnabled === true ? "offline" : "disabled",
+                        this.notificationFeatureEnabled === true ? "Live updates: offline" : "Live updates: disabled",
+                    );
+                }
+            }
+
+            scheduleLiveReconnect() {
+                if (this.notificationFeatureEnabled !== true || this.isLiveSocketManuallyClosed) {
+                    return;
+                }
+
+                clearTimeout(this.liveReconnectTimer);
+                const backoffMs = Math.min(15000, 1000 * Math.max(1, 2 ** this.liveReconnectAttempts));
+                this.liveReconnectAttempts += 1;
+                this.liveReconnectTimer = setTimeout(() => this.ensureLiveUpdatesConnection(), backoffMs);
+            }
+
+            startLiveHeartbeat() {
+                this.stopLiveHeartbeat();
+                this.liveHeartbeatTimer = setInterval(() => {
+                    if (!this.liveSocket || this.liveSocket.readyState !== WebSocket.OPEN) {
+                        return;
+                    }
+
+                    this.liveSocket.send(JSON.stringify({ type: "ping" }));
+                }, 25000);
+            }
+
+            stopLiveHeartbeat() {
+                clearInterval(this.liveHeartbeatTimer);
+                this.liveHeartbeatTimer = null;
+            }
+
+            async handleLiveSocketMessage(event) {
+                let packet = null;
+
+                try {
+                    packet = JSON.parse(event.data);
+                } catch (error) {
+                    console.warn("Ignoring malformed notifications WebSocket message", error);
+                    return;
+                }
+
+                if (packet?.type === "connected") {
+                    this.updateLiveStatus("connected", "Live updates: connected");
+                    return;
+                }
+
+                if (packet?.type === "pong") {
+                    return;
+                }
+
+                if (packet?.type === "error") {
+                    if (packet.code === 404) {
+                        this.notificationFeatureEnabled = false;
+                        this.setFeatureDisabledUi(true);
+                        return;
+                    }
+
+                    console.warn("Notifications WebSocket reported an error:", packet);
+                    return;
+                }
+
+                if (packet?.type === "notification_center_update") {
+                    this.applyLiveRealtimeUpdate(packet.data || {});
+                }
+            }
+
+            eventMatchesCurrentServerFilters(event, serverFilters = this.lastServerFilters || {}) {
+                if (!event || typeof event !== "object") {
+                    return false;
+                }
+
+                if (serverFilters.status && serverFilters.status !== "all" && event.status !== serverFilters.status) {
+                    return false;
+                }
+
+                if (serverFilters.type && event.type !== serverFilters.type) {
+                    return false;
+                }
+
+                if (serverFilters.correlationId && event.correlationId !== serverFilters.correlationId) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            isEnqueuedPlaceholder(event) {
+                return Boolean(
+                    event &&
+                    typeof event === "object" &&
+                    event.status === "enqueued" &&
+                    typeof event.id === "string" &&
+                    event.id.startsWith("enq-"),
+                );
+            }
+
+            buildLogicalEventKey(event) {
+                if (!event || typeof event !== "object") {
+                    return null;
+                }
+
+                const correlationId = typeof event.correlationId === "string" ? event.correlationId.trim() : "";
+                if (!correlationId) {
+                    return null;
+                }
+
+                return [correlationId, event.type || "", event.source || ""].join("::");
+            }
+
+            normalizeEventCollection(events = []) {
+                if (!Array.isArray(events) || events.length === 0) {
+                    return [];
+                }
+
+                const persistedKeys = new Set(
+                    events
+                        .filter((event) => !this.isEnqueuedPlaceholder(event))
+                        .map((event) => this.buildLogicalEventKey(event))
+                        .filter(Boolean),
+                );
+
+                return events.filter((event) => {
+                    if (!this.isEnqueuedPlaceholder(event)) {
+                        return true;
+                    }
+
+                    const key = this.buildLogicalEventKey(event);
+                    return !(key && persistedKeys.has(key));
+                });
+            }
+
+            applyLiveEventRecord(record) {
+                if (!record || typeof record !== "object" || !record.id) {
+                    return false;
+                }
+
+                const nextRecord = { ...record };
+                const existingIndex = this.allEvents.findIndex((event) => event.id === nextRecord.id);
+                const matchesServerFilters = this.eventMatchesCurrentServerFilters(nextRecord);
+
+                if (existingIndex >= 0) {
+                    if (!matchesServerFilters) {
+                        this.allEvents.splice(existingIndex, 1);
+                    } else {
+                        this.allEvents.splice(existingIndex, 1, {
+                            ...this.allEvents[existingIndex],
+                            ...nextRecord,
+                        });
+                    }
+                } else if (matchesServerFilters) {
+                    this.allEvents.unshift(nextRecord);
+                } else {
+                    return false;
+                }
+
+                this.allEvents = this.normalizeEventCollection(this.allEvents);
+                this.applyClientFiltersAndRender();
+                return true;
+            }
+
+            scheduleLiveHealthRefresh() {
+                clearTimeout(this.liveHealthRefreshTimer);
+                this.liveHealthRefreshTimer = setTimeout(() => {
+                    this.loadHealth();
+                }, 300);
+            }
+
+            scheduleLiveEventsReload() {
+                clearTimeout(this.liveEventsReloadTimer);
+                this.liveEventsReloadTimer = setTimeout(() => {
+                    this.loadEvents({ forceServerReload: true });
+                }, 400);
+            }
+
+            applyLiveRealtimeUpdate(data = {}) {
+                const appliedLocally = data.entity === "event" && this.applyLiveEventRecord(data.record);
+
+                this.scheduleLiveHealthRefresh();
+
+                if (!appliedLocally) {
+                    this.scheduleLiveEventsReload();
+                }
+
+                if (data.entity === "event" && data.action === "updated" && data.record?.status === "failed") {
+                    this.showAlert(`Live update: ${data.record.type || "event"} failed`, "warning");
                 }
             }
 

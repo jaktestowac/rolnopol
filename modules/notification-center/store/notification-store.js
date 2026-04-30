@@ -1,6 +1,14 @@
 const dbManager = require("../../../data/database-manager");
 const { randomUUID } = require("crypto");
 
+const createRealtimePacket = (action, record, extra = {}) => ({
+  entity: "notification",
+  action,
+  record,
+  occurredAt: new Date().toISOString(),
+  ...extra,
+});
+
 const DEFAULT_DATA = {
   notifications: [],
   metadata: {
@@ -11,8 +19,17 @@ const DEFAULT_DATA = {
 };
 
 class NotificationStore {
-  constructor() {
+  constructor(options = {}) {
     this.db = dbManager.getCustomDatabase("notification-notifications", "notifications-store.json", DEFAULT_DATA);
+    this.onChange = typeof options.onChange === "function" ? options.onChange : null;
+  }
+
+  _emitChange(packet) {
+    if (typeof this.onChange !== "function") {
+      return;
+    }
+
+    this.onChange(packet);
   }
 
   async add(notification) {
@@ -43,22 +60,27 @@ class NotificationStore {
       return next;
     });
 
+    this._emitChange(createRealtimePacket("created", item));
+
     return item;
   }
 
   async updateStatus(notificationId, status, extras = {}) {
+    let updatedItem = null;
+
     await this.db.update((current) => {
       const next = current && typeof current === "object" ? { ...current } : { ...DEFAULT_DATA };
       const notifications = Array.isArray(next.notifications) ? [...next.notifications] : [];
 
       next.notifications = notifications.map((n) => {
         if (n.id !== notificationId) return n;
-        return {
+        updatedItem = {
           ...n,
           ...extras,
           status,
           timeline: [...(n.timeline || []), { status, at: new Date().toISOString() }],
         };
+        return updatedItem;
       });
       next.metadata = {
         ...(next.metadata || {}),
@@ -67,9 +89,15 @@ class NotificationStore {
       };
       return next;
     });
+
+    if (updatedItem) {
+      this._emitChange(createRealtimePacket("updated", updatedItem));
+    }
   }
 
   async updateChannelStatus(notificationId, channelName, status, extras = {}) {
+    let updatedItem = null;
+
     await this.db.update((current) => {
       const next = current && typeof current === "object" ? { ...current } : { ...DEFAULT_DATA };
       const notifications = Array.isArray(next.notifications) ? [...next.notifications] : [];
@@ -88,11 +116,12 @@ class NotificationStore {
           channels.push(channel);
         }
 
-        return {
+        updatedItem = {
           ...n,
           channels,
           timeline: [...(n.timeline || []), { status: `channel:${channelName}:${status}`, at: new Date().toISOString() }],
         };
+        return updatedItem;
       });
 
       next.metadata = {
@@ -103,6 +132,15 @@ class NotificationStore {
 
       return next;
     });
+
+    if (updatedItem) {
+      this._emitChange(
+        createRealtimePacket("channel_updated", updatedItem, {
+          channel: channelName,
+          channelStatus: status,
+        }),
+      );
+    }
   }
 
   async stats() {

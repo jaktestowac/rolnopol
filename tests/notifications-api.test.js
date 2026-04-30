@@ -39,6 +39,7 @@ describe("Notifications API", () => {
     expect(res.body.data).toHaveProperty("featureFlags");
     expect(res.body.data.featureFlags).toHaveProperty("notificationCenterEnabled");
     expect(res.body.data).toHaveProperty("endpoints");
+    expect(res.body.data.endpoints.websocket).toBe("/api/v1/notifications/ws");
     expect(res.body.data.endpoints.testEvent.get).toBe("/api/v1/notifications/test-event");
     expect(["healthy", "disabled", "degraded"]).toContain(res.body.data.status);
   });

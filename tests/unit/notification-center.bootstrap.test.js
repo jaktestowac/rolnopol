@@ -40,4 +40,30 @@ describe("notification-center bootstrap", () => {
     const health = await state.getHealth();
     expect(health.status).toBe("disabled");
   });
+
+  it("deduplicates queued placeholder events when a persisted copy already exists", async () => {
+    const { _mergeVisibleEvents } = require("../../modules/notification-center/bootstrap");
+
+    const persistedEvent = {
+      id: "evt-1",
+      type: "notification.test.triggered",
+      status: "received",
+      correlationId: "corr-1",
+      source: "notification-center-api",
+      timestamp: "2026-04-30T16:30:00.000Z",
+    };
+
+    const enqueuedPlaceholder = {
+      id: "enq-1",
+      type: "notification.test.triggered",
+      status: "enqueued",
+      correlationId: "corr-1",
+      source: "notification-center-api",
+      timestamp: "2026-04-30T16:30:00.000Z",
+    };
+
+    const merged = _mergeVisibleEvents([persistedEvent], [enqueuedPlaceholder]);
+
+    expect(merged).toEqual([persistedEvent]);
+  });
 });

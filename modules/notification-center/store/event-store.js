@@ -1,6 +1,13 @@
 const dbManager = require("../../../data/database-manager");
 const { randomUUID } = require("crypto");
 
+const createRealtimePacket = (action, record) => ({
+  entity: "event",
+  action,
+  record,
+  occurredAt: new Date().toISOString(),
+});
+
 const DEFAULT_DATA = {
   events: [],
   metadata: {
@@ -11,8 +18,17 @@ const DEFAULT_DATA = {
 };
 
 class EventStore {
-  constructor() {
+  constructor(options = {}) {
     this.db = dbManager.getCustomDatabase("notification-events", "events-store.json", DEFAULT_DATA);
+    this.onChange = typeof options.onChange === "function" ? options.onChange : null;
+  }
+
+  _emitChange(packet) {
+    if (typeof this.onChange !== "function") {
+      return;
+    }
+
+    this.onChange(packet);
   }
 
   async add(event, status = "received") {
@@ -42,10 +58,14 @@ class EventStore {
       return next;
     });
 
+    this._emitChange(createRealtimePacket("created", item));
+
     return item;
   }
 
   async updateStatus(eventId, status, extras = {}) {
+    let updatedItem = null;
+
     await this.db.update((current) => {
       const next = current && typeof current === "object" ? { ...current } : { ...DEFAULT_DATA };
       const events = Array.isArray(next.events) ? [...next.events] : [];
@@ -53,12 +73,13 @@ class EventStore {
         if (e.id !== eventId) return e;
         const currentTimeline = Array.isArray(e.timeline) ? e.timeline : [];
         const hasStatusChanged = e.status !== status;
-        return {
+        updatedItem = {
           ...e,
           ...extras,
           status,
           timeline: hasStatusChanged ? [...currentTimeline, { status, at: new Date().toISOString() }] : currentTimeline,
         };
+        return updatedItem;
       });
       next.metadata = {
         ...(next.metadata || {}),
@@ -67,6 +88,10 @@ class EventStore {
       };
       return next;
     });
+
+    if (updatedItem) {
+      this._emitChange(createRealtimePacket("updated", updatedItem));
+    }
   }
 
   async stats() {

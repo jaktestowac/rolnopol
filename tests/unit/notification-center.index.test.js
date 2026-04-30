@@ -11,6 +11,7 @@ describe("notification-center index facade", () => {
 
     expect(notificationCenter.isEnabled()).toBe(false);
     expect(notificationCenter.getEventPublisher().isEnabled()).toBe(false);
+    expect(typeof notificationCenter.subscribeRealtime(() => {})).toBe("function");
 
     const health = await notificationCenter.getHealth();
     expect(health.status).toBe("disabled");

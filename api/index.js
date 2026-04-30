@@ -104,6 +104,7 @@ const notFoundStatsModule = require("../helpers/notfound-stats");
 const prometheusMetrics = require("../helpers/prometheus-metrics");
 const featureFlagsService = require("../services/feature-flags.service");
 const messengerWebSocketService = require("../services/messenger-ws.service");
+const notificationWebSocketService = require("../services/notification-ws.service");
 const chaosEngineMiddleware = require("../middleware/chaos-engine.middleware");
 const notificationCenter = require("../modules/notification-center");
 const pluginRuntime = require("../modules/plugin-runtime");
@@ -201,6 +202,8 @@ logDebug("Plugins loaded on startup", {
 process.on("SIGINT", async () => {
   logDebug("Received SIGINT. Graceful shutdown...");
   await pluginRuntime.shutdown();
+  notificationWebSocketService.close();
+  messengerWebSocketService.close();
   await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
@@ -209,6 +212,8 @@ process.on("SIGINT", async () => {
 process.on("SIGTERM", async () => {
   logDebug("Received SIGTERM. Graceful shutdown...");
   await pluginRuntime.shutdown();
+  notificationWebSocketService.close();
+  messengerWebSocketService.close();
   await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
@@ -217,6 +222,8 @@ process.on("SIGTERM", async () => {
 process.on("SIGHUP", async () => {
   logDebug("Received SIGHUP. Graceful shutdown...");
   await pluginRuntime.shutdown();
+  notificationWebSocketService.close();
+  messengerWebSocketService.close();
   await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
@@ -560,6 +567,7 @@ if (require.main === module) {
       const port = PORT;
       const server = http.createServer(app);
       messengerWebSocketService.attach(server);
+      notificationWebSocketService.attach(server);
 
       server.listen(port, () => {
         logInfo(`🚀 Server running on port ${port}`);
@@ -584,7 +592,8 @@ if (require.main === module) {
 }
 
 app.attachWebSockets = function attachWebSockets(server) {
-  return messengerWebSocketService.attach(server);
+  messengerWebSocketService.attach(server);
+  return notificationWebSocketService.attach(server);
 };
 
 module.exports = app;

@@ -24,6 +24,7 @@ let moduleState = {
     },
   }),
   getHealth: async () => ({ status: "disabled", module: { enabled: false, degraded: false, version: "1.0.0" } }),
+  subscribeRealtime: () => () => {},
   stop: async () => {},
 };
 
@@ -123,6 +124,15 @@ async function publishEvent(eventType = "", payload = {}) {
   };
 }
 
+function subscribeRealtime(handler) {
+  const subscribe = moduleState?.subscribeRealtime;
+  if (typeof subscribe !== "function") {
+    return () => {};
+  }
+
+  return subscribe(handler);
+}
+
 async function stop() {
   refreshPromise = null;
   await moduleState.stop();
@@ -151,6 +161,7 @@ function _resetForTests() {
       },
     }),
     getHealth: async () => ({ status: "disabled", module: { enabled: false, degraded: false, version: "1.0.0" } }),
+    subscribeRealtime: () => () => {},
     stop: async () => {},
   };
 }
@@ -162,6 +173,7 @@ module.exports = {
   getEvents,
   triggerTestEvent,
   publishEvent,
+  subscribeRealtime,
   stop,
   isEnabled,
   _resetForTests,

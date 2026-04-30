@@ -1,5 +1,6 @@
 const { logError, logInfo } = require("../../helpers/logger-api");
 const { randomUUID } = require("crypto");
+const { EventEmitter } = require("events");
 const config = require("./config");
 const EventPublisher = require("./ingress/event-publisher");
 const { NotificationEventBus } = require("./ingress/event-bus");
@@ -15,6 +16,53 @@ const createNoopPublisher = () => ({
   isEnabled: () => false,
   publish: () => null,
 });
+
+const createRealtimeBridge = () => {
+  const emitter = new EventEmitter();
+  emitter.setMaxListeners(config.eventBus?.maxListeners || 100);
+
+  return {
+    emit(packet) {
+      emitter.emit("realtime-update", packet);
+    },
+    subscribe(handler) {
+      if (typeof handler !== "function") {
+        return () => {};
+      }
+
+      emitter.on("realtime-update", handler);
+      return () => emitter.off("realtime-update", handler);
+    },
+  };
+};
+
+const buildVisibleEventKey = (event = {}) => {
+  const correlationId = typeof event?.correlationId === "string" ? event.correlationId.trim() : "";
+  if (!correlationId) {
+    return null;
+  }
+
+  return [correlationId, event?.type || "", event?.source || ""].join("::");
+};
+
+const mergeVisibleEvents = (persisted = [], enqueued = []) => {
+  const persistedKeys = new Set(persisted.map((event) => buildVisibleEventKey(event)).filter(Boolean));
+
+  const filteredEnqueued = enqueued.filter((event) => {
+    if (event?.status !== "enqueued") {
+      return true;
+    }
+
+    const key = buildVisibleEventKey(event);
+    return !(key && persistedKeys.has(key));
+  });
+
+  return [...persisted, ...filteredEnqueued].sort((a, b) => {
+    const aTs = new Date(a.timestamp || 0).getTime();
+    const bTs = new Date(b.timestamp || 0).getTime();
+    return bTs - aTs;
+  });
+};
 
 async function shouldEnable(featureFlagsService) {
   const envValue = config.enabledFromEnv;
@@ -81,16 +129,22 @@ async function initializeNotificationCenter({ featureFlagsService } = {}) {
           queue: { length: 0, avgProcessingTime: 0 },
         };
       },
+      subscribeRealtime: () => () => {},
       stop: async () => {},
     };
   }
 
   try {
+    const realtimeBridge = createRealtimeBridge();
     const eventBus = new NotificationEventBus({ enabled: true, ...config.eventBus });
     const eventPublisher = new EventPublisher(eventBus, { enabled: true, asyncMode: true, source: "rolnopol-app" });
     const policyRouter = new PolicyRouter(policies);
-    const eventStore = new EventStore();
-    const notificationStore = new NotificationStore();
+    const eventStore = new EventStore({
+      onChange: (packet) => realtimeBridge.emit(packet),
+    });
+    const notificationStore = new NotificationStore({
+      onChange: (packet) => realtimeBridge.emit(packet),
+    });
     const inAppDispatcher = new InAppDispatcher(config.channels.inApp, { sleep: config.sleep });
     const webhookDispatcher = new WebhookDispatcher(config.channels.webhook, { sleep: config.sleep });
     const dispatcher = new NotificationDispatcher(
@@ -119,11 +173,7 @@ async function initializeNotificationCenter({ featureFlagsService } = {}) {
       listEvents: async (filters = {}) => {
         const persisted = await eventStore.listAll(filters);
         const enqueued = dispatcher.getEnqueuedEvents(filters);
-        const merged = [...persisted, ...enqueued].sort((a, b) => {
-          const aTs = new Date(a.timestamp || 0).getTime();
-          const bTs = new Date(b.timestamp || 0).getTime();
-          return bTs - aTs;
-        });
+        const merged = mergeVisibleEvents(persisted, enqueued);
 
         const offset = Number.isInteger(filters.offset) && filters.offset >= 0 ? filters.offset : 0;
         const limit = Number.isInteger(filters.limit) ? Math.min(Math.max(filters.limit, 1), 200) : 50;
@@ -181,6 +231,7 @@ async function initializeNotificationCenter({ featureFlagsService } = {}) {
           metrics,
         };
       },
+      subscribeRealtime: (handler) => realtimeBridge.subscribe(handler),
       stop: async () => {
         await dispatcher.stop();
       },
@@ -232,6 +283,7 @@ async function initializeNotificationCenter({ featureFlagsService } = {}) {
           error: error.message,
         };
       },
+      subscribeRealtime: () => () => {},
       stop: async () => {},
     };
   }
@@ -239,4 +291,5 @@ async function initializeNotificationCenter({ featureFlagsService } = {}) {
 
 module.exports = {
   initializeNotificationCenter,
+  _mergeVisibleEvents: mergeVisibleEvents,
 };
