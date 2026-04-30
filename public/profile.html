@@ -322,6 +322,87 @@
                 </div>
               </div>
             </div>
+            <!-- Personal Integrations -->
+            <div id="personalApiKeysSection" class="profile-card-modern profile-card-modern--wide futuristic-card" data-feature-flag="personalApiKeysEnabled">
+              <div class="card-header-modern card-header-modern--actions futuristic">
+                <h3>
+                  <i class="fas fa-key"></i>
+                  Personal Integrations
+                </h3>
+                <button id="openPersonalApiKeyHelpModal" class="btn btn-compact btn-outline profile-help-trigger" type="button" aria-label="Learn how personal API keys work" title="Learn how personal API keys work">
+                  <i class="fas fa-circle-question"></i>
+                </button>
+              </div>
+              <div class="card-content-modern">
+                <p style="margin-top: 0; color: #51634a; line-height: 1.6; padding: 1rem;">
+                  Create personal API keys for your own integrations. Keys are shown only once when created or regenerated, so copy them somewhere safe.
+                </p>
+
+                <span class="glass" style="padding: 1rem; border-radius: 1rem; display: flex; flex-direction: column; gap: 0.85rem">
+
+                  <form id="personalApiKeyForm" class="update-form-modern" style="margin-top: 1rem">
+                    <div class="form-group-modern">
+                      <label for="personalApiKeyLabel" class="form-label-modern">
+                        <i class="fas fa-tag"></i>
+                        Key Label
+                      </label>
+                      <input type="text" id="personalApiKeyLabel" class="form-input-modern" maxlength="80" placeholder="e.g. Home Assistant sync" />
+                      <div class="form-help-modern">
+                        <i class="fas fa-info-circle"></i>
+                        Friendly name so future-you knows what this key is for.
+                      </div>
+                    </div>
+
+                    <div class="form-group-modern">
+                      <div class="form-label-modern" style="margin-bottom: 0.75rem">
+                        <i class="fas fa-shield-halved"></i>
+                        Scopes
+                      </div>
+                      <div id="personalApiKeyScopes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem">
+                        <label class="glass" style="padding: 0.75rem 0.9rem; border-radius: 0.85rem; display: flex; align-items: center; gap: 0.65rem">
+                          <input type="checkbox" value="staff" /> Staff
+                        </label>
+                        <label class="glass" style="padding: 0.75rem 0.9rem; border-radius: 0.85rem; display: flex; align-items: center; gap: 0.65rem">
+                          <input type="checkbox" value="animals" /> Animals
+                        </label>
+                        <label class="glass" style="padding: 0.75rem 0.9rem; border-radius: 0.85rem; display: flex; align-items: center; gap: 0.65rem">
+                          <input type="checkbox" value="fields" /> Fields
+                        </label>
+                        <label class="glass" style="padding: 0.75rem 0.9rem; border-radius: 0.85rem; display: flex; align-items: center; gap: 0.65rem">
+                          <input type="checkbox" value="user-account" checked /> User account
+                        </label>
+                        <label class="glass" style="padding: 0.75rem 0.9rem; border-radius: 0.85rem; display: flex; align-items: center; gap: 0.65rem">
+                          <input type="checkbox" value="chatbot" /> Chatbot
+                        </label>
+                        <label class="glass" style="padding: 0.75rem 0.9rem; border-radius: 0.85rem; display: flex; align-items: center; gap: 0.65rem">
+                          <input type="checkbox" value="all" /> All protected APIs
+                        </label>
+                      </div>
+                      <div class="form-help-modern" style="margin-top: 0.5rem">
+                        <i class="fas fa-lock"></i>
+                        Choose only what your integration actually needs. Least privilege makes the security gremlins sad.
+                      </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center">
+                      <button id="createPersonalApiKeyBtn" type="submit" class="btn btn-futuristic btn-compact">
+                        <i class="fas fa-plus"></i>
+                        Create API Key
+                      </button>
+                      <div id="personalApiKeyMessage" class="message-modern" style="display: none"></div>
+                    </div>
+                  </form>
+                </span>
+
+                <div id="personalApiKeyListState" class="loading-card-modern glass" style="margin-top: 1rem; padding: 1rem; display: none">
+                  <p style="margin: 0">Loading API keys...</p>
+                </div>
+
+                <div id="personalApiKeyList" style="margin-top: 1rem; display: grid; gap: 0.85rem"></div>
+              </div>
+            </div>
+
+
           </div>
 
           <!-- Quick Actions -->
@@ -386,6 +467,84 @@
     </div>
   </div>
 
+  <div id="personalApiKeyModal" class="modal modal-centered" style="display: none">
+    <div class="modal-content glass" style="max-width: 640px; width: min(92vw, 640px)">
+      <div class="modal-header">
+        <h3>
+          <i class="fas fa-key"></i> Copy your new API key now
+        </h3>
+        <button class="modal-close" id="closePersonalApiKeyModal" aria-label="Close API key popup">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-top: 0; color: #51634a; line-height: 1.6">
+          For security reasons this key will not be shown again after you close this popup. Copy it now and store it somewhere safe.
+        </p>
+        <pre id="personalApiKeyModalValue" style="margin: 1rem 0 0 0; white-space: pre-wrap; word-break: break-all; background: rgba(255,255,255,0.6); padding: 0.85rem 1rem; border-radius: 0.85rem"></pre>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 1rem; flex-wrap: wrap">
+        <button id="dismissPersonalApiKeyModal" class="btn btn-earth btn-compact" type="button">
+          <i class="fas fa-check"></i> Done
+        </button>
+        <button id="copyPersonalApiKeyBtn" class="btn btn-outline btn-compact btn-futuristic" type="button">
+          <i class="fas fa-copy"></i> Copy key
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="personalApiKeyHelpModal" class="modal modal-centered" style="display: none">
+    <div class="modal-content glass modal-content-wider" style="max-width: 720px; width: min(94vw, 720px)">
+      <div class="modal-header">
+        <h3>
+          <i class="fas fa-circle-question"></i> How to use personal API keys
+        </h3>
+        <button class="modal-close" id="closePersonalApiKeyHelpModal" aria-label="Close personal API key help">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-top: 0; color: #51634a; line-height: 1.7">
+          Personal API keys let your own scripts, dashboards, and automations call protected Rolnopol APIs without borrowing your browser session.
+        </p>
+
+        <ol class="personal-api-key-help-list">
+          <li>
+            <strong>Create a key for one integration.</strong>
+            Give it a clear label like <code>Home Assistant sync</code> so you know what it belongs to later.
+          </li>
+          <li>
+            <strong>Choose the smallest scope set possible.</strong>
+            If your tool only reads profile data, keep it on <code>User account</code> instead of giving it the whole barn.
+          </li>
+          <li>
+            <strong>Copy the raw key immediately.</strong>
+            The full value is shown only once after create or regenerate, so store it in your password manager, secret vault, or environment variables.
+          </li>
+          <li>
+            <strong>Send it with each request.</strong>
+            Your integration should include the header <code>X-API-Key: your_key_here</code> when calling protected endpoints.
+            How to use it?<br />If you're using curl, add <code>-H "X-API-Key: your_key_here"</code> to your command. In JavaScript, include <code>'X-API-Key': 'your_key_here'</code> in your fetch headers.
+          </li>
+          <li>
+            <strong>Rotate or revoke if anything looks suspicious.</strong>
+            Regenerate replaces the old secret with a new one, and revoke shuts the key down completely.
+          </li>
+        </ol>
+
+        <div class="glass personal-api-key-help-callout">
+          <strong>Important:</strong> key-management endpoints still require your normal signed-in session. API keys are meant for using protected APIs, not for creating, listing, or deleting keys themselves.
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 1rem; flex-wrap: wrap">
+        <button id="dismissPersonalApiKeyHelpModal" class="btn btn-earth btn-compact" type="button">
+          <i class="fas fa-check"></i> Got it
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Core Dependencies -->
   <script src="/js/core/event-bus.js"></script>
   <script src="/js/core/storage.js"></script>
@@ -394,6 +553,7 @@
   <!-- Services -->
   <script src="/js/services/api-service.js"></script>
   <script src="/js/services/auth-service.js"></script>
+  <script src="/js/services/feature-flags-service.js"></script>
 
   <!-- Components -->
   <script src="/js/components/notification.js"></script>

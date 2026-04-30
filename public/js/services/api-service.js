@@ -40,7 +40,7 @@ class ApiService {
    * @returns {Promise} API response with success/error handling
    */
   async request(method, endpoint, options = {}) {
-    const { body, headers = {}, requiresAuth = false, timeout = 15000, throwOnError = false, query } = options;
+    const { body, headers = {}, requiresAuth = false, timeout = 15000, throwOnError = false, query, suppressErrorEvents = false } = options;
 
     let url = this.getApiUrl(endpoint);
     if (query && typeof query === "object") {
@@ -95,7 +95,7 @@ class ApiService {
         };
 
         // Emit error event for global error handling (for all error responses)
-        if (this.eventBus) {
+        if (this.eventBus && !suppressErrorEvents) {
           const error = new ApiError(apiError.error, response.status, responseData);
           this.eventBus.emit("api:error", { error, endpoint, method });
         }
@@ -159,7 +159,7 @@ class ApiService {
 
       // Network errors and other exceptions - always throw these
       // Emit error event for global error handling
-      if (this.eventBus) {
+      if (this.eventBus && !suppressErrorEvents) {
         this.eventBus.emit("api:error", { error, endpoint, method });
       }
 

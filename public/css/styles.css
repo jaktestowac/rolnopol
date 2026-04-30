@@ -2917,6 +2917,16 @@ body {
   font-size: 0.7rem;
 }
 
+.status-badge-modern--active {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--agri-green);
+}
+
+.status-badge-modern--revoked {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--error-color);
+}
+
 .profile-header-actions {
   flex-shrink: 0;
 }
@@ -2948,8 +2958,79 @@ body {
   border: 1px solid var(--glass-border);
 }
 
+.profile-card-modern--wide {
+  grid-column: 1 / -1;
+}
+
 .profile-card-modern:hover {
   box-shadow: 0 8px 32px 0 rgba(34, 197, 94, 0.12);
+}
+
+.card-header-modern--actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card-header-modern--actions h3 {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-help-trigger {
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.profile-help-trigger:hover,
+.profile-help-trigger:focus {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.profile-help-trigger i {
+  margin: 0;
+}
+
+.personal-api-key-help-list {
+  margin: 1rem 0;
+  padding-left: 1.25rem;
+  color: var(--text-secondary);
+  display: grid;
+  gap: 0.85rem;
+  line-height: 1.65;
+}
+
+.personal-api-key-help-list strong {
+  color: var(--text-primary);
+}
+
+.personal-api-key-help-list code,
+.personal-api-key-help-callout code {
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 0.4rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.9em;
+  color: var(--primary-color);
+}
+
+.personal-api-key-help-callout {
+  padding: 1rem 1.1rem;
+  border-radius: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.personal-api-key-help-callout strong {
+  color: var(--text-primary);
 }
 
 .card-header-modern {
@@ -3787,6 +3868,10 @@ body {
   padding: 1.2rem 1.2rem 1rem 1.2rem !important;
   border-radius: 1rem !important;
   max-width: 25rem !important;
+}
+.modal-content-wider {
+  max-width: 42rem !important;
+  padding: 0rem !important;
 }
 .modal-form {
   gap: 0.7rem !important;

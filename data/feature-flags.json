@@ -24,6 +24,7 @@
     "weatherWeatherDataExport": false,
     "weatherUserInsightsEnabled": false,
     "weatherTrendChartEnabled": false,
+    "personalApiKeysEnabled": false,
     "promoAdvertsHomeEnabled": false,
     "promoAdvertsAlertsEnabled": false,
     "promoAdvertsGeneralAdEnabled": false,

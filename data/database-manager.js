@@ -144,6 +144,17 @@ class DatabaseManager {
   }
 
   /**
+   * Get personal API keys database singleton
+   */
+  getPersonalApiKeysDatabase() {
+    return this.getDatabase("personal-api-keys", "personal-api-keys.json", {
+      version: 1,
+      keys: [],
+      updatedAt: null,
+    });
+  }
+
+  /**
    * Get messages database singleton
    */
   getMessagesDatabase() {

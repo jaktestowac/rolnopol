@@ -6,6 +6,7 @@ class ProfilePage {
   constructor() {
     this.authService = null;
     this.apiService = null;
+    this.featureFlagsService = null;
     this.notification = null;
     this.eventBus = null;
     this.currentUser = null;
@@ -22,6 +23,7 @@ class ProfilePage {
   async init(app) {
     this.authService = app.getModule("authService");
     this.apiService = app.getModule("apiService");
+    this.featureFlagsService = app.getModule("featureFlagsService");
     this.notification = app.getModule("notification");
     this.eventBus = app.getEventBus();
 
@@ -41,6 +43,7 @@ class ProfilePage {
     await this._loadProfileData();
     this._setupProfileForm();
     this._setupEventListeners();
+    await this._initPersonalApiKeys();
   }
 
   /**
@@ -113,8 +116,7 @@ class ProfilePage {
         requiresAuth: true,
       });
       if (response.success && Array.isArray(response.data)) {
-        fieldsList.innerHTML =
-          response.data.length === 0 ? "<li>No fields found.</li>" : "";
+        fieldsList.innerHTML = response.data.length === 0 ? "<li>No fields found.</li>" : "";
         response.data.forEach((field) => {
           const li = document.createElement("li");
           li.innerHTML = `<strong>${field.name}</strong> (${field.area} ha)`;
@@ -139,11 +141,7 @@ class ProfilePage {
       return;
     }
     try {
-      const response = await this.apiService.post(
-        "fields",
-        { name, area },
-        { requiresAuth: true },
-      );
+      const response = await this.apiService.post("fields", { name, area }, { requiresAuth: true });
       if (response.success) {
         fieldMessage.textContent = "Field added!";
         document.getElementById("addFieldForm").reset();
@@ -183,8 +181,7 @@ class ProfilePage {
         requiresAuth: true,
       });
       if (response.success && Array.isArray(response.data)) {
-        staffList.innerHTML =
-          response.data.length === 0 ? "<li>No staff found.</li>" : "";
+        staffList.innerHTML = response.data.length === 0 ? "<li>No staff found.</li>" : "";
         response.data.forEach((staff) => {
           const li = document.createElement("li");
           li.innerHTML = `<strong>${staff.name} ${staff.surname}</strong> (age: ${staff.age})`;
@@ -210,11 +207,7 @@ class ProfilePage {
       return;
     }
     try {
-      const response = await this.apiService.post(
-        "staff",
-        { name, surname, age },
-        { requiresAuth: true },
-      );
+      const response = await this.apiService.post("staff", { name, surname, age }, { requiresAuth: true });
       if (response.success) {
         staffMessage.textContent = "Staff added!";
         document.getElementById("addStaffForm").reset();
@@ -264,10 +257,7 @@ class ProfilePage {
    */
   _updateProfileDisplay() {
     if (!this.currentUser) {
-      errorLogger.log(
-        "Profile Display",
-        "No current user data available for display",
-      );
+      errorLogger.log("Profile Display", "No current user data available for display");
       return;
     }
 
@@ -285,11 +275,7 @@ class ProfilePage {
 
     // Update profile information display with correct field mapping
     if (elements.userId) {
-      const userIdValue =
-        this.currentUser.userId ||
-        this.currentUser.id ||
-        this.currentUser.internalId ||
-        "N/A";
+      const userIdValue = this.currentUser.userId || this.currentUser.id || this.currentUser.internalId || "N/A";
       elements.userId.textContent = userIdValue;
     }
 
@@ -317,8 +303,7 @@ class ProfilePage {
         const lastLoginValue = this._formatDate(this.currentUser.lastLogin);
         elements.lastLogin.textContent = lastLoginValue;
       } else {
-        const loginTime =
-          this.authService.storage?.cookie.get("rolnopolLoginTime");
+        const loginTime = this.authService.storage?.cookie.get("rolnopolLoginTime");
         if (loginTime) {
           const loginTimeValue = this._formatDate(parseInt(loginTime));
           elements.lastLogin.textContent = loginTimeValue;
@@ -418,14 +403,8 @@ class ProfilePage {
     this.updateForm.setEventBus(this.eventBus);
 
     // Add validation rules
-    this.updateForm.addValidator(
-      "newDisplayedName",
-      window.FormValidators.required("Display name is required"),
-    );
-    this.updateForm.addValidator(
-      "newDisplayedName",
-      window.FormValidators.displayName(),
-    );
+    this.updateForm.addValidator("newDisplayedName", window.FormValidators.required("Display name is required"));
+    this.updateForm.addValidator("newDisplayedName", window.FormValidators.displayName());
 
     // Password validation - only if password is provided
     this.updateForm.addValidator("newPassword", (value) => {
@@ -515,8 +494,7 @@ class ProfilePage {
       // Check maximum length
       if (length > 20) {
         displayedNameInput.classList.add("invalid");
-        errorText.textContent =
-          "Display name must be no more than 20 characters";
+        errorText.textContent = "Display name must be no more than 20 characters";
         errorElement.classList.remove("hide");
         return false;
       }
@@ -525,8 +503,7 @@ class ProfilePage {
       const validPattern = /^[a-zA-Z0-9\s\-_]+$/;
       if (!validPattern.test(value)) {
         displayedNameInput.classList.add("invalid");
-        errorText.textContent =
-          "Display name can only contain letters, numbers, spaces, hyphens, and underscores";
+        errorText.textContent = "Display name can only contain letters, numbers, spaces, hyphens, and underscores";
         errorElement.classList.remove("hide");
         return false;
       }
@@ -563,21 +540,13 @@ class ProfilePage {
     const passwordInput = document.getElementById("newPassword");
     const confirmPasswordInput = document.getElementById("confirmPassword");
     const passwordCharCounter = document.getElementById("passwordCharCount");
-    const confirmPasswordCharCounter = document.getElementById(
-      "confirmPasswordCharCount",
-    );
+    const confirmPasswordCharCounter = document.getElementById("confirmPasswordCharCount");
     const passwordErrorElement = document.getElementById("passwordError");
     const passwordErrorText = document.getElementById("passwordErrorText");
     const passwordSuccessElement = document.getElementById("passwordSuccess");
-    const confirmPasswordErrorElement = document.getElementById(
-      "confirmPasswordError",
-    );
-    const confirmPasswordErrorText = document.getElementById(
-      "confirmPasswordErrorText",
-    );
-    const confirmPasswordSuccessElement = document.getElementById(
-      "confirmPasswordSuccess",
-    );
+    const confirmPasswordErrorElement = document.getElementById("confirmPasswordError");
+    const confirmPasswordErrorText = document.getElementById("confirmPasswordErrorText");
+    const confirmPasswordSuccessElement = document.getElementById("confirmPasswordSuccess");
 
     if (!passwordInput || !confirmPasswordInput) return;
 
@@ -613,8 +582,7 @@ class ProfilePage {
       // Check minimum length
       if (length < 3) {
         passwordInput.classList.add("invalid");
-        passwordErrorText.textContent =
-          "Password must be at least 3 characters";
+        passwordErrorText.textContent = "Password must be at least 3 characters";
         passwordErrorElement.classList.remove("hide");
         return false;
       }
@@ -622,8 +590,7 @@ class ProfilePage {
       // Check maximum length
       if (length > 50) {
         passwordInput.classList.add("invalid");
-        passwordErrorText.textContent =
-          "Password must be no more than 50 characters";
+        passwordErrorText.textContent = "Password must be no more than 50 characters";
         passwordErrorElement.classList.remove("hide");
         return false;
       }
@@ -711,24 +678,18 @@ class ProfilePage {
     if (this.isLoading) return;
 
     // Validate password confirmation
-    if (
-      formData.newPassword &&
-      formData.newPassword !== formData.confirmPassword
-    ) {
+    if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
       this._showUpdateMessage("Passwords do not match", "error");
       return;
     }
 
     this.isLoading = true;
-    const submitButton = document.querySelector(
-      '#updateProfileForm button[type="submit"]',
-    );
+    const submitButton = document.querySelector('#updateProfileForm button[type="submit"]');
     const originalText = submitButton.innerHTML;
 
     try {
       // Show loading state
-      submitButton.innerHTML =
-        '<i class="fas fa-spinner fa-spin"></i> Updating...';
+      submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
       submitButton.disabled = true;
 
       // Prepare update data
@@ -860,6 +821,542 @@ class ProfilePage {
 
     // Inline edit for Profile Information card
     this._setupInlineEditHandlers();
+
+    // Personal API keys panel
+    this._setupPersonalApiKeyHandlers();
+  }
+
+  async _initPersonalApiKeys() {
+    const section = document.getElementById("personalApiKeysSection");
+    if (!section) {
+      return;
+    }
+
+    const isEnabled = await this._isPersonalApiKeysFeatureEnabled();
+    if (!isEnabled) {
+      this._hidePersonalApiKeysSection();
+      return;
+    }
+
+    await this._loadPersonalApiKeys();
+  }
+
+  async _isPersonalApiKeysFeatureEnabled() {
+    if (!this.featureFlagsService || typeof this.featureFlagsService.isEnabled !== "function") {
+      return true;
+    }
+
+    try {
+      return await this.featureFlagsService.isEnabled("personalApiKeysEnabled", false);
+    } catch (error) {
+      return true;
+    }
+  }
+
+  _hidePersonalApiKeysSection() {
+    const section = document.getElementById("personalApiKeysSection");
+    const messageEl = document.getElementById("personalApiKeyMessage");
+    const list = document.getElementById("personalApiKeyList");
+    const state = document.getElementById("personalApiKeyListState");
+
+    if (messageEl) {
+      messageEl.style.display = "none";
+      messageEl.textContent = "";
+    }
+
+    if (list) {
+      list.innerHTML = "";
+    }
+
+    if (state) {
+      state.style.display = "none";
+    }
+
+    this._closePersonalApiKeyModal();
+    this._closePersonalApiKeyHelpModal();
+
+    if (section) {
+      section.style.display = "none";
+    }
+  }
+
+  _isPersonalApiKeysUnavailable(result) {
+    return result?.status === 404 || String(result?.error || "").includes("Personal API keys not found");
+  }
+
+  _setupPersonalApiKeyHandlers() {
+    const form = document.getElementById("personalApiKeyForm");
+    const copyBtn = document.getElementById("copyPersonalApiKeyBtn");
+    const list = document.getElementById("personalApiKeyList");
+    const modal = document.getElementById("personalApiKeyModal");
+    const helpModal = document.getElementById("personalApiKeyHelpModal");
+    const openHelpModalBtn = document.getElementById("openPersonalApiKeyHelpModal");
+    const closeModalBtn = document.getElementById("closePersonalApiKeyModal");
+    const dismissModalBtn = document.getElementById("dismissPersonalApiKeyModal");
+    const closeHelpModalBtn = document.getElementById("closePersonalApiKeyHelpModal");
+    const dismissHelpModalBtn = document.getElementById("dismissPersonalApiKeyHelpModal");
+
+    if (form) {
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        await this._handleCreatePersonalApiKey();
+      });
+    }
+
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        const valueEl = document.getElementById("personalApiKeyModalValue");
+        const rawKey = valueEl ? valueEl.textContent.trim() : "";
+        if (!rawKey) {
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(rawKey);
+          copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied';
+          this._showPersonalApiKeyMessage("API key copied to clipboard.", "success");
+        } catch (error) {
+          this._showPersonalApiKeyMessage("Copy failed. Please copy the key manually.", "error");
+        }
+      });
+    }
+
+    if (openHelpModalBtn) {
+      openHelpModalBtn.addEventListener("click", () => {
+        this._openPersonalApiKeyHelpModal();
+      });
+    }
+
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener("click", () => {
+        this._closePersonalApiKeyModal();
+      });
+    }
+
+    if (dismissModalBtn) {
+      dismissModalBtn.addEventListener("click", () => {
+        this._closePersonalApiKeyModal();
+      });
+    }
+
+    if (closeHelpModalBtn) {
+      closeHelpModalBtn.addEventListener("click", () => {
+        this._closePersonalApiKeyHelpModal();
+      });
+    }
+
+    if (dismissHelpModalBtn) {
+      dismissHelpModalBtn.addEventListener("click", () => {
+        this._closePersonalApiKeyHelpModal();
+      });
+    }
+
+    if (modal) {
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          this._closePersonalApiKeyModal();
+        }
+      });
+    }
+
+    if (helpModal) {
+      helpModal.addEventListener("click", (event) => {
+        if (event.target === helpModal) {
+          this._closePersonalApiKeyHelpModal();
+        }
+      });
+    }
+
+    document.addEventListener("keydown", (event) => {
+      const isModalOpen = modal && modal.style.display === "flex";
+      const isHelpModalOpen = helpModal && helpModal.style.display === "flex";
+
+      if (event.key === "Escape") {
+        if (isModalOpen) {
+          this._closePersonalApiKeyModal();
+        } else if (isHelpModalOpen) {
+          this._closePersonalApiKeyHelpModal();
+        }
+      }
+    });
+
+    if (list) {
+      list.addEventListener("click", async (event) => {
+        const actionButton = event.target.closest("[data-api-key-action]");
+        if (!actionButton) {
+          return;
+        }
+
+        const { apiKeyAction: action, apiKeyId } = actionButton.dataset;
+        if (!apiKeyId) {
+          return;
+        }
+
+        if (action === "regenerate") {
+          await this._handleRegeneratePersonalApiKey(apiKeyId, actionButton);
+        }
+
+        if (action === "revoke") {
+          await this._handleRevokePersonalApiKey(apiKeyId, actionButton);
+        }
+      });
+    }
+  }
+
+  async _loadPersonalApiKeys() {
+    const section = document.getElementById("personalApiKeysSection");
+    const state = document.getElementById("personalApiKeyListState");
+    const list = document.getElementById("personalApiKeyList");
+    if (!section || !state || !list) {
+      return;
+    }
+
+    state.style.display = "block";
+    list.innerHTML = "";
+
+    try {
+      const response = await this.apiService.get("users/profile/api-keys", {
+        requiresAuth: true,
+        suppressErrorEvents: true,
+      });
+
+      if (!response.success) {
+        if (this._isPersonalApiKeysUnavailable(response)) {
+          this._hidePersonalApiKeysSection();
+          return;
+        }
+
+        throw new Error(response.error || "Failed to load API keys");
+      }
+
+      const items = Array.isArray(response.data?.data?.items) ? response.data.data.items : [];
+      this._renderPersonalApiKeys(items);
+    } catch (error) {
+      if (this._isPersonalApiKeysUnavailable(error)) {
+        this._hidePersonalApiKeysSection();
+        return;
+      }
+
+      this._showPersonalApiKeyMessage("Failed to load API keys.", "error");
+      list.innerHTML = `
+        <div class="glass" style="padding: 1rem; border-radius: 1rem; color: #7a2f2f">
+          Failed to load API keys. Please refresh and try again.
+        </div>
+      `;
+    } finally {
+      state.style.display = "none";
+    }
+  }
+
+  _renderPersonalApiKeys(items) {
+    const list = document.getElementById("personalApiKeyList");
+    if (!list) {
+      return;
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      list.innerHTML = `
+        <div class="glass" style="padding: 1rem; border-radius: 1rem; color: #51634a">
+          No personal API keys yet. Create one above when you’re ready to automate the farm.
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = items
+      .map((item) => {
+        const scopes = Array.isArray(item.scopes) ? item.scopes.join(", ") : "all";
+        const revoked = item.isRevoked === true;
+        const statusBadgeClass = revoked
+          ? "status-badge-modern status-badge-modern--revoked"
+          : "status-badge-modern status-badge-modern--active";
+        const statusLabel = revoked ? "Revoked" : "Active";
+        const secondaryMeta = revoked
+          ? `Revoked: ${this._formatOptionalDate(item.revokedAt)}`
+          : `Last used: ${this._formatOptionalDate(item.lastUsedAt)}`;
+
+        return `
+          <article class="glass" style="padding: 1rem; border-radius: 1rem; display: flex; flex-direction: column; gap: 0.85rem">
+            <div style="display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start">
+              <div>
+                <h4 style="margin: 0 0 0.35rem 0">${this._escapeHtml(item.label || "Personal integration key")}</h4>
+                <div style="font-family: monospace; font-size: 0.95rem; color: #51634a">${this._escapeHtml(item.keyPreview || "Hidden")}</div>
+              </div>
+              <span class="${statusBadgeClass}" style="white-space: nowrap">
+                <i class="fas fa-circle"></i>
+                <span>${statusLabel}</span>
+              </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem">
+              <div>
+                <strong>Scopes</strong>
+                <div style="color: #51634a">${this._escapeHtml(scopes)}</div>
+              </div>
+              <div>
+                <strong>Created</strong>
+                <div style="color: #51634a">${this._escapeHtml(this._formatOptionalDate(item.createdAt))}</div>
+              </div>
+              <div>
+                <strong>${revoked ? "Revoked" : "Last used"}</strong>
+                <div style="color: #51634a">${this._escapeHtml(secondaryMeta.replace(/^[^:]+:\s*/, ""))}</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap">
+              <button type="button" class="btn btn-compact btn-outline btn-futuristic" data-api-key-action="regenerate" data-api-key-id="${this._escapeHtml(item.id)}" ${revoked ? "disabled" : ""}>
+                <i class="fas fa-rotate-right"></i>
+                Regenerate
+              </button>
+              <button type="button" class="btn btn-compact btn-danger" data-api-key-action="revoke" data-api-key-id="${this._escapeHtml(item.id)}" ${revoked ? "disabled" : ""}>
+                <i class="fas fa-ban"></i>
+                Revoke
+              </button>
+            </div>
+          </article>
+        `;
+      })
+      .join("");
+  }
+
+  async _handleCreatePersonalApiKey() {
+    const button = document.getElementById("createPersonalApiKeyBtn");
+    const labelInput = document.getElementById("personalApiKeyLabel");
+    const originalText = button ? button.innerHTML : "";
+
+    try {
+      if (button) {
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+      }
+
+      const response = await this.apiService.post(
+        "users/profile/api-keys",
+        {
+          label: labelInput ? labelInput.value.trim() : "",
+          scopes: this._getSelectedPersonalApiKeyScopes(),
+        },
+        { requiresAuth: true, suppressErrorEvents: true },
+      );
+
+      if (!response.success) {
+        if (this._isPersonalApiKeysUnavailable(response)) {
+          this._hidePersonalApiKeysSection();
+          return;
+        }
+
+        throw new Error(response.error || "Failed to create API key");
+      }
+
+      this._revealPersonalApiKey(response.data?.data?.rawKey || "");
+      this._showPersonalApiKeyMessage("API key created successfully.", "success");
+
+      if (labelInput) {
+        labelInput.value = "";
+      }
+
+      this._resetPersonalApiKeyScopes();
+      await this._loadPersonalApiKeys();
+    } catch (error) {
+      if (this._isPersonalApiKeysUnavailable(error)) {
+        this._hidePersonalApiKeysSection();
+        return;
+      }
+
+      this._showPersonalApiKeyMessage(error.message || "Failed to create API key.", "error");
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = originalText;
+      }
+    }
+  }
+
+  async _handleRegeneratePersonalApiKey(apiKeyId, button) {
+    const originalText = button.innerHTML;
+
+    try {
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Regenerating...';
+
+      const response = await this.apiService.post(
+        `users/profile/api-keys/${encodeURIComponent(apiKeyId)}/regenerate`,
+        {},
+        { requiresAuth: true, suppressErrorEvents: true },
+      );
+
+      if (!response.success) {
+        if (this._isPersonalApiKeysUnavailable(response)) {
+          this._hidePersonalApiKeysSection();
+          return;
+        }
+
+        throw new Error(response.error || "Failed to regenerate API key");
+      }
+
+      this._revealPersonalApiKey(response.data?.data?.rawKey || "");
+      this._showPersonalApiKeyMessage("API key regenerated successfully.", "success");
+      await this._loadPersonalApiKeys();
+    } catch (error) {
+      if (this._isPersonalApiKeysUnavailable(error)) {
+        this._hidePersonalApiKeysSection();
+        return;
+      }
+
+      this._showPersonalApiKeyMessage(error.message || "Failed to regenerate API key.", "error");
+    } finally {
+      button.disabled = false;
+      button.innerHTML = originalText;
+    }
+  }
+
+  async _handleRevokePersonalApiKey(apiKeyId, button) {
+    const originalText = button.innerHTML;
+
+    try {
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Revoking...';
+
+      const response = await this.apiService.delete(`users/profile/api-keys/${encodeURIComponent(apiKeyId)}`, {
+        requiresAuth: true,
+        suppressErrorEvents: true,
+      });
+
+      if (!response.success) {
+        if (this._isPersonalApiKeysUnavailable(response)) {
+          this._hidePersonalApiKeysSection();
+          return;
+        }
+
+        throw new Error(response.error || "Failed to revoke API key");
+      }
+
+      this._showPersonalApiKeyMessage("API key revoked successfully.", "success");
+      await this._loadPersonalApiKeys();
+    } catch (error) {
+      if (this._isPersonalApiKeysUnavailable(error)) {
+        this._hidePersonalApiKeysSection();
+        return;
+      }
+
+      this._showPersonalApiKeyMessage(error.message || "Failed to revoke API key.", "error");
+    } finally {
+      button.disabled = false;
+      button.innerHTML = originalText;
+    }
+  }
+
+  _getSelectedPersonalApiKeyScopes() {
+    const scopeInputs = Array.from(document.querySelectorAll("#personalApiKeyScopes input[type='checkbox']"));
+    const selected = scopeInputs.filter((input) => input.checked).map((input) => input.value);
+
+    if (selected.includes("all")) {
+      return ["all"];
+    }
+
+    return selected.length > 0 ? selected : ["user-account"];
+  }
+
+  _resetPersonalApiKeyScopes() {
+    const scopeInputs = Array.from(document.querySelectorAll("#personalApiKeyScopes input[type='checkbox']"));
+    scopeInputs.forEach((input) => {
+      input.checked = input.value === "user-account";
+    });
+  }
+
+  _revealPersonalApiKey(rawKey) {
+    const modal = document.getElementById("personalApiKeyModal");
+    const value = document.getElementById("personalApiKeyModalValue");
+    const copyBtn = document.getElementById("copyPersonalApiKeyBtn");
+
+    if (!modal || !value) {
+      return;
+    }
+
+    value.textContent = rawKey;
+    if (copyBtn) {
+      copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy key';
+    }
+
+    modal.style.display = rawKey ? "flex" : "none";
+
+    if (rawKey && copyBtn && typeof copyBtn.focus === "function") {
+      copyBtn.focus();
+    }
+  }
+
+  _closePersonalApiKeyModal() {
+    const modal = document.getElementById("personalApiKeyModal");
+    const value = document.getElementById("personalApiKeyModalValue");
+    const copyBtn = document.getElementById("copyPersonalApiKeyBtn");
+
+    if (!modal || !value) {
+      return;
+    }
+
+    modal.style.display = "none";
+    value.textContent = "";
+
+    if (copyBtn) {
+      copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy key';
+    }
+  }
+
+  _openPersonalApiKeyHelpModal() {
+    const modal = document.getElementById("personalApiKeyHelpModal");
+    const dismissButton = document.getElementById("dismissPersonalApiKeyHelpModal");
+
+    if (!modal) {
+      return;
+    }
+
+    modal.style.display = "flex";
+
+    if (dismissButton && typeof dismissButton.focus === "function") {
+      dismissButton.focus();
+    }
+  }
+
+  _closePersonalApiKeyHelpModal() {
+    const modal = document.getElementById("personalApiKeyHelpModal");
+
+    if (!modal) {
+      return;
+    }
+
+    modal.style.display = "none";
+  }
+
+  _showPersonalApiKeyMessage(message, type = "info") {
+    const messageEl = document.getElementById("personalApiKeyMessage");
+    if (!messageEl) {
+      return;
+    }
+
+    messageEl.textContent = message;
+    messageEl.className = `message-modern ${type}`;
+    messageEl.style.display = "block";
+
+    if (window.showNotification) {
+      window.showNotification(message, type, 4000);
+    }
+  }
+
+  _formatOptionalDate(value) {
+    if (!value) {
+      return "Never";
+    }
+
+    return this._formatDate(value);
+  }
+
+  _escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   /**
@@ -872,8 +1369,7 @@ class ProfilePage {
     const closeModalBtn = document.getElementById("closeDeleteModal");
     const cancelDeleteBtn = document.getElementById("cancelDelete");
     const confirmDeleteBtn = document.getElementById("confirmDelete");
-    const deleteConfirmationInput =
-      document.getElementById("deleteConfirmation");
+    const deleteConfirmationInput = document.getElementById("deleteConfirmation");
 
     if (!deleteAccountBtn || !deleteModal) return;
 
@@ -996,15 +1492,9 @@ class ProfilePage {
 
     // Associated labels for those values
     const nameItem = nameValue ? nameValue.closest(".info-item-modern") : null;
-    const emailItem = emailValue
-      ? emailValue.closest(".info-item-modern")
-      : null;
-    const nameLabel = nameItem
-      ? nameItem.querySelector(".info-label-modern")
-      : null;
-    const emailLabel = emailItem
-      ? emailItem.querySelector(".info-label-modern")
-      : null;
+    const emailItem = emailValue ? emailValue.closest(".info-item-modern") : null;
+    const nameLabel = nameItem ? nameItem.querySelector(".info-label-modern") : null;
+    const emailLabel = emailItem ? emailItem.querySelector(".info-label-modern") : null;
 
     if (!nameGroup || !emailGroup || !actions || !editBtn) return;
 
@@ -1038,13 +1528,9 @@ class ProfilePage {
 
     // Display name rules
     let nameError = null;
-    if (name.length < 3)
-      nameError = "Display name must be at least 3 characters";
-    else if (name.length > 20)
-      nameError = "Display name must be no more than 20 characters";
-    else if (!/^[a-zA-Z0-9\s\-_]+$/.test(name))
-      nameError =
-        "Only letters, numbers, spaces, hyphens, and underscores allowed";
+    if (name.length < 3) nameError = "Display name must be at least 3 characters";
+    else if (name.length > 20) nameError = "Display name must be no more than 20 characters";
+    else if (!/^[a-zA-Z0-9\s\-_]+$/.test(name)) nameError = "Only letters, numbers, spaces, hyphens, and underscores allowed";
 
     if (nameError) {
       isValid = false;
@@ -1079,10 +1565,7 @@ class ProfilePage {
     if (!this.currentUser || name !== (this.currentUser.displayedName || "")) {
       payload.displayedName = name;
     }
-    if (
-      email.length > 0 &&
-      (!this.currentUser || email !== (this.currentUser.email || ""))
-    ) {
+    if (email.length > 0 && (!this.currentUser || email !== (this.currentUser.email || ""))) {
       payload.email = email;
     }
 
@@ -1114,9 +1597,7 @@ class ProfilePage {
       // If nothing changed, just exit edit mode (avoid setting loading state)
       const noChanges =
         !data ||
-        (typeof data === "object" &&
-          Object.keys(data).length === 0 &&
-          data.constructor === Object) ||
+        (typeof data === "object" && Object.keys(data).length === 0 && data.constructor === Object) ||
         (!data.displayedName && !data.email);
       if (noChanges) {
         this._toggleInlineEdit(false);
@@ -1139,8 +1620,7 @@ class ProfilePage {
       }
 
       // Prefer backend returned data when available
-      const updated =
-        (response.data && (response.data.data || response.data)) || {};
+      const updated = (response.data && (response.data.data || response.data)) || {};
       this.currentUser = { ...this.currentUser, ...updated, ...data };
       this._updateProfileDisplay();
 
@@ -1175,10 +1655,7 @@ class ProfilePage {
    */
   _notifyOnce(message, type = "info", duration = 4000) {
     const now = Date.now();
-    if (
-      this._lastToast.message === message &&
-      now - this._lastToast.at < 1500
-    ) {
+    if (this._lastToast.message === message && now - this._lastToast.at < 1500) {
       return; // skip duplicate
     }
     this._lastToast = { message, at: now };
@@ -1197,8 +1674,7 @@ class ProfilePage {
 
     try {
       // Show loading state
-      confirmDeleteBtn.innerHTML =
-        '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+      confirmDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
       confirmDeleteBtn.disabled = true;
 
       // Make API call to delete account
@@ -1296,17 +1772,11 @@ class ProfilePage {
     const passwordInput = document.getElementById("newPassword");
     const confirmPasswordInput = document.getElementById("confirmPassword");
     const passwordCharCounter = document.getElementById("passwordCharCount");
-    const confirmPasswordCharCounter = document.getElementById(
-      "confirmPasswordCharCount",
-    );
+    const confirmPasswordCharCounter = document.getElementById("confirmPasswordCharCount");
     const passwordErrorElement = document.getElementById("passwordError");
     const passwordSuccessElement = document.getElementById("passwordSuccess");
-    const confirmPasswordErrorElement = document.getElementById(
-      "confirmPasswordError",
-    );
-    const confirmPasswordSuccessElement = document.getElementById(
-      "confirmPasswordSuccess",
-    );
+    const confirmPasswordErrorElement = document.getElementById("confirmPasswordError");
+    const confirmPasswordSuccessElement = document.getElementById("confirmPasswordSuccess");
 
     if (passwordInput) {
       passwordInput.classList.remove("valid", "invalid");

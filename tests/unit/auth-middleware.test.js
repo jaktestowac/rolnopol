@@ -12,9 +12,14 @@ async function loadAuthenticateUser(tokenHelperOverrides = {}) {
   vi.doMock("../../helpers/token.helpers", () => tokenHelperMocks);
 
   const middlewareModule = await import("../../middleware/auth.middleware");
+  const personalApiKeyServiceModule = await import("../../services/personal-api-key.service");
+  const personalApiKeyService = personalApiKeyServiceModule.default || personalApiKeyServiceModule;
+
   return {
     authenticateUser: middlewareModule.authenticateUser,
+    authenticateSessionUser: middlewareModule.authenticateSessionUser,
     tokenHelperMocks,
+    personalApiKeyService,
   };
 }
 
@@ -54,7 +59,7 @@ describe("authenticateUser middleware", () => {
     const req = { headers: {}, cookies: {} };
     const res = mockRes();
     const next = vi.fn();
-    authenticateUser(req, res, next);
+    await authenticateUser(req, res, next);
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
@@ -67,7 +72,7 @@ describe("authenticateUser middleware", () => {
     const req = { headers: { token: "invalid" }, cookies: {} };
     const res = mockRes();
     const next = vi.fn();
-    authenticateUser(req, res, next);
+    await authenticateUser(req, res, next);
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
@@ -82,7 +87,7 @@ describe("authenticateUser middleware", () => {
     const res = mockRes();
     const next = vi.fn();
 
-    authenticateUser(req, res, next);
+    await authenticateUser(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(next).not.toHaveBeenCalled();
@@ -100,7 +105,7 @@ describe("authenticateUser middleware", () => {
     const res = mockRes();
     const next = vi.fn();
 
-    authenticateUser(req, res, next);
+    await authenticateUser(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
@@ -120,7 +125,7 @@ describe("authenticateUser middleware", () => {
     const res = mockRes();
     const next = vi.fn();
 
-    authenticateUser(req, res, next);
+    await authenticateUser(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
@@ -139,10 +144,78 @@ describe("authenticateUser middleware", () => {
     const res = mockRes();
     const next = vi.fn();
 
-    authenticateUser(req, res, next);
+    await authenticateUser(req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should authenticate with X-API-Key when no session token is present", async () => {
+    const { authenticateUser } = await loadAuthenticateUser();
+    const userDataSingleton = require("../../data/user-data-singleton").getInstance();
+    const personalApiKeyServiceModule = await import("../../services/personal-api-key.service");
+    const personalApiKeyService = personalApiKeyServiceModule.default || personalApiKeyServiceModule;
+
+    const user = await userDataSingleton.createUser({
+      displayedName: "API Key Middleware User",
+      email: `middleware-api-key-${Date.now()}@test.com`,
+      password: "testpass123",
+    });
+
+    const createdKey = await personalApiKeyService.createKey(user.id, {
+      label: "Middleware test key",
+      scopes: ["user-account"],
+    });
+
+    const req = {
+      headers: { "x-api-key": createdKey.rawKey },
+      cookies: {},
+      originalUrl: "/api/v1/users/profile",
+    };
+    const res = mockRes();
+    const next = vi.fn();
+
+    await authenticateUser(req, res, next);
+
+    expect(req.user).toEqual({ userId: String(user.id) });
+    expect(req.auth).toEqual({
+      type: "api-key",
+      apiKeyId: createdKey.key.id,
+      scopes: ["user-account"],
+      requiredScope: "user-account",
+    });
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it("should reject X-API-Key when scope is insufficient", async () => {
+    const { authenticateUser, personalApiKeyService } = await loadAuthenticateUser();
+    vi.spyOn(personalApiKeyService, "authenticateApiKey").mockResolvedValue({
+      valid: false,
+      reason: "insufficient_scope",
+    });
+
+    const req = { headers: { "x-api-key": "rpk_live_test" }, cookies: {} };
+    const res = mockRes();
+    const next = vi.fn();
+
+    await authenticateUser(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should reject X-API-Key on session-only middleware", async () => {
+    const { authenticateSessionUser } = await loadAuthenticateUser();
+
+    const req = { headers: { "x-api-key": "rpk_live_test" }, cookies: {} };
+    const res = mockRes();
+    const next = vi.fn();
+
+    await authenticateSessionUser(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
     expect(next).not.toHaveBeenCalled();
   });
 });

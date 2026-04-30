@@ -26,6 +26,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   weatherWeatherDataExport: "Enable or disable anonymous weather data export (CSV and PDF) without personalized user insights",
   weatherUserInsightsEnabled: "Enable or disable personalized weather insights panel for authenticated users",
   weatherTrendChartEnabled: "Enable or disable compact trend chart with temperature, humidity, and wind on weather page",
+  personalApiKeysEnabled: "Enable or disable personal API keys for user-managed integrations",
   cookieConsentBannerEnabled: "Enable or disable cookie consent banner shown at the bottom of pages",
   promoAdvertsHomeEnabled: "Enable or disable Rolnopol promotional popups on home/dashboard pages",
   promoAdvertsAlertsEnabled: "Enable or disable Rolnopol promotional popups on alerts pages",
@@ -49,6 +50,7 @@ const FEATURE_FLAG_GROUPS = {
   communication: ["messengerEnabled", "assistantChatEnabled"],
   notifications: ["notificationCenterEnabled"],
   weather: ["weatherPageEnabled", "weatherWeatherDataExport", "weatherUserInsightsEnabled", "weatherTrendChartEnabled"],
+  integrations: ["personalApiKeysEnabled"],
   privacy: ["cookieConsentBannerEnabled"],
   "marketing (Ads)": [
     "promoAdvertsHomeEnabled",
@@ -85,6 +87,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   weatherWeatherDataExport: false,
   weatherUserInsightsEnabled: false,
   weatherTrendChartEnabled: false,
+  personalApiKeysEnabled: false,
   promoAdvertsHomeEnabled: false,
   promoAdvertsAlertsEnabled: false,
   promoAdvertsGeneralAdEnabled: false,
