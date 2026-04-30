@@ -99,7 +99,6 @@ const { logDebug, logInfo, logError } = require("../helpers/logger-api");
 const { initializeDatabases, cleanupDatabases } = require("../data/database-init");
 const versionMiddleware = require("../middleware/version.middleware");
 const { restoreAllDatabasesFromBaseState } = require("../services/debug-database-restore.service");
-const { clearAllTokens } = require("../helpers/token.helpers");
 const packageJson = require("../package.json");
 const notFoundStatsModule = require("../helpers/notfound-stats");
 const prometheusMetrics = require("../helpers/prometheus-metrics");
@@ -197,10 +196,6 @@ logDebug("Plugins loaded on startup", {
   loaded: startupPlugins.map((plugin) => plugin.name),
   disabled: startupPlugins.filter((plugin) => !plugin.enabled).map((plugin) => plugin.name),
 });
-
-// Clear all tokens on startup for system migration
-const clearedTokens = clearAllTokens();
-logInfo(`System migration: Cleared ${clearedTokens} existing tokens`);
 
 // Graceful shutdown handling
 process.on("SIGINT", async () => {

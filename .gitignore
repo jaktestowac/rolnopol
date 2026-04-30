@@ -73,3 +73,4 @@ Thumbs.db
 _TMP*/
 tmp/
 temp/
+session-tokens.json

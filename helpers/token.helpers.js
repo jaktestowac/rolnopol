@@ -1,11 +1,8 @@
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 const { logDebug, logError } = require("./logger-api");
-const {
-  ADMIN_USERNAME,
-  loginExpiration,
-  loginExpirationAdmin,
-  JWT_SECRET,
-} = require("../data/settings");
+const { ADMIN_USERNAME, loginExpiration, loginExpirationAdmin, JWT_SECRET } = require("../data/settings");
 
 /**
  * Token generation and validation utilities using JWT
@@ -14,6 +11,10 @@ const {
 
 // In-memory token storage for security verification and revocation
 const tokenStorage = new Map();
+const TOKEN_STORAGE_FILE = process.env.TOKEN_STORAGE_FILE
+  ? path.resolve(process.env.TOKEN_STORAGE_FILE)
+  : path.resolve(__dirname, "../data/session-tokens.json");
+const TOKEN_STORAGE_VERSION = 1;
 
 // Ensure JWT_SECRET is available
 if (!JWT_SECRET) {
@@ -24,6 +25,108 @@ function isDateInFuture(isoStringDate) {
   const givenDate = new Date(isoStringDate);
   const currentDate = new Date();
   return givenDate > currentDate;
+}
+
+function getCurrentTimestamp() {
+  return new Date().toISOString();
+}
+
+function ensureTokenStorageDirectoryExists() {
+  fs.mkdirSync(path.dirname(TOKEN_STORAGE_FILE), { recursive: true });
+}
+
+function serializeTokenStorage() {
+  return {
+    version: TOKEN_STORAGE_VERSION,
+    tokens: Object.fromEntries(tokenStorage.entries()),
+  };
+}
+
+function persistTokenStorage() {
+  ensureTokenStorageDirectoryExists();
+  fs.writeFileSync(TOKEN_STORAGE_FILE, JSON.stringify(serializeTokenStorage(), null, 2), "utf8");
+}
+
+function normalizePersistedTokenEntry(userId, tokenData) {
+  if (!tokenData || typeof tokenData !== "object") {
+    return null;
+  }
+
+  if (typeof tokenData.token !== "string" || tokenData.token.length === 0) {
+    return null;
+  }
+
+  if (typeof tokenData.expirationDate !== "string" || tokenData.expirationDate.length === 0) {
+    return null;
+  }
+
+  const createdAt = typeof tokenData.createdAt === "string" ? tokenData.createdAt : getCurrentTimestamp();
+
+  return [
+    String(userId),
+    {
+      token: tokenData.token,
+      expirationDate: tokenData.expirationDate,
+      isAdmin: tokenData.isAdmin === true,
+      createdAt,
+      updatedAt: typeof tokenData.updatedAt === "string" ? tokenData.updatedAt : createdAt,
+      lastAccessAt: typeof tokenData.lastAccessAt === "string" ? tokenData.lastAccessAt : createdAt,
+    },
+  ];
+}
+
+function updateStoredTokenTimestamps(userId, updates) {
+  const tokenData = tokenStorage.get(userId);
+  if (!tokenData) {
+    return false;
+  }
+
+  tokenStorage.set(userId, {
+    ...tokenData,
+    ...updates,
+  });
+  persistTokenStorage();
+  return true;
+}
+
+function loadTokenStorageFromDisk() {
+  if (!fs.existsSync(TOKEN_STORAGE_FILE)) {
+    return;
+  }
+
+  try {
+    const fileContent = fs.readFileSync(TOKEN_STORAGE_FILE, "utf8");
+    if (!fileContent.trim()) {
+      return;
+    }
+
+    const parsedStorage = JSON.parse(fileContent);
+    const persistedTokens = parsedStorage?.tokens && typeof parsedStorage.tokens === "object" ? parsedStorage.tokens : parsedStorage;
+
+    let skippedEntries = 0;
+    for (const [userId, tokenData] of Object.entries(persistedTokens || {})) {
+      const normalizedEntry = normalizePersistedTokenEntry(userId, tokenData);
+      if (!normalizedEntry) {
+        skippedEntries++;
+        continue;
+      }
+
+      tokenStorage.set(normalizedEntry[0], normalizedEntry[1]);
+    }
+
+    cleanupExpiredStoredTokens();
+
+    logDebug("Loaded token registry from disk", {
+      tokenStorageFile: TOKEN_STORAGE_FILE,
+      tokenStorageSize: tokenStorage.size,
+      skippedEntries,
+    });
+  } catch (error) {
+    logError("Failed to load token registry from disk", {
+      tokenStorageFile: TOKEN_STORAGE_FILE,
+      error: error.message,
+    });
+  }
 }
 
 /**
@@ -52,6 +155,7 @@ function cleanupExpiredStoredTokens() {
     }
   }
   if (removedCount > 0) {
+    persistTokenStorage();
     logDebug(`Cleaned up ${removedCount} expired tokens from storage`);
   }
 }
@@ -65,12 +169,16 @@ function storeToken(token, userId, expirationDate, isAdmin = false) {
     logDebug("Replacing existing token for user", { userId });
   }
 
+  const now = getCurrentTimestamp();
   tokenStorage.set(userId, {
     token,
     expirationDate,
     isAdmin,
-    createdAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
+    lastAccessAt: now,
   });
+  persistTokenStorage();
   logDebug("Token stored in backend storage", {
     userId,
     isAdmin,
@@ -93,8 +201,13 @@ function isTokenInStorage(token) {
           expirationDate: tokenData.expirationDate,
         });
         tokenStorage.delete(userId); // Remove expired token
+        persistTokenStorage();
         return false;
       }
+
+      updateStoredTokenTimestamps(userId, {
+        lastAccessAt: getCurrentTimestamp(),
+      });
       return true;
     }
   }
@@ -110,11 +223,7 @@ function removeTokenFromStorage(token) {
   // Find and remove the user with this token
   for (const [userId, tokenData] of tokenStorage.entries()) {
     if (tokenData.token === token) {
-      const removed = tokenStorage.delete(userId);
-      if (removed) {
-        logDebug("Token removed from storage", { token, userId });
-      }
-      return removed;
+      return removeUserTokenFromStorage(userId, { token });
     }
   }
 
@@ -125,10 +234,11 @@ function removeTokenFromStorage(token) {
 /**
  * Remove token from storage by userId
  */
-function removeUserTokenFromStorage(userId) {
+function removeUserTokenFromStorage(userId, meta = {}) {
   const removed = tokenStorage.delete(userId);
   if (removed) {
-    logDebug("User token removed from storage", { userId });
+    persistTokenStorage();
+    logDebug("User token removed from storage", { userId, ...meta });
   }
   return removed;
 }
@@ -157,11 +267,7 @@ function getUserTokenFromStorage(userId) {
  * Generate user JWT token
  */
 function generateToken(userId, expiration = { hours: 24 }) {
-  const expiresIn = expiration.hours
-    ? `${expiration.hours}h`
-    : expiration.minutes
-    ? `${expiration.minutes}m`
-    : "24h";
+  const expiresIn = expiration.hours ? `${expiration.hours}h` : expiration.minutes ? `${expiration.minutes}m` : "24h";
 
   const tokenPayload = {
     userId,
@@ -198,8 +304,8 @@ function generateAdminToken() {
   const expiresIn = loginExpirationAdmin.hours
     ? `${loginExpirationAdmin.hours}h`
     : loginExpirationAdmin.minutes
-    ? `${loginExpirationAdmin.minutes}m`
-    : "1h";
+      ? `${loginExpirationAdmin.minutes}m`
+      : "1h";
 
   const tokenPayload = {
     userId: ADMIN_USERNAME,
@@ -426,7 +532,7 @@ function getTokenStats() {
 function invalidateUserTokens(userId) {
   const tokenData = tokenStorage.get(userId);
   if (tokenData && !tokenData.isAdmin) {
-    const removed = tokenStorage.delete(userId);
+    const removed = removeUserTokenFromStorage(userId);
     if (removed) {
       logDebug(`Invalidated token for user ${userId}`);
       return 1;
@@ -447,10 +553,13 @@ function hasActiveToken(userId) {
 
   // Check if token is expired
   if (!isDateInFuture(tokenData.expirationDate)) {
-    tokenStorage.delete(userId); // Remove expired token
+    removeUserTokenFromStorage(userId); // Remove expired token
     return false;
   }
 
+  updateStoredTokenTimestamps(userId, {
+    lastAccessAt: getCurrentTimestamp(),
+  });
   return true;
 }
 
@@ -465,10 +574,13 @@ function getUserCurrentToken(userId) {
 
   // Check if token is expired
   if (!isDateInFuture(tokenData.expirationDate)) {
-    tokenStorage.delete(userId); // Remove expired token
+    removeUserTokenFromStorage(userId); // Remove expired token
     return null;
   }
 
+  updateStoredTokenTimestamps(userId, {
+    lastAccessAt: getCurrentTimestamp(),
+  });
   return tokenData.token;
 }
 
@@ -478,11 +590,12 @@ function getUserCurrentToken(userId) {
 function clearAllTokens() {
   const tokenCount = tokenStorage.size;
   tokenStorage.clear();
-  logDebug(
-    `Cleared all ${tokenCount} tokens from storage for system migration`,
-  );
+  persistTokenStorage();
+  logDebug(`Cleared all ${tokenCount} tokens from storage`);
   return tokenCount;
 }
+
+loadTokenStorageFromDisk();
 
 module.exports = {
   generateToken,
