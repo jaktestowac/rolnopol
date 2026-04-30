@@ -93,6 +93,71 @@ class FarmlogBasePage {
     });
   }
 
+  async _runWithPreservedScroll(task, options = {}) {
+    if (typeof task !== "function") {
+      return undefined;
+    }
+
+    const hasWindow = typeof window !== "undefined";
+    const left = hasWindow ? window.scrollX ?? window.pageXOffset ?? 0 : 0;
+    const top = hasWindow ? window.scrollY ?? window.pageYOffset ?? 0 : 0;
+    const elementIds = Array.isArray(options.elementIds) ? options.elementIds : [];
+    const elementScrollStates =
+      typeof document !== "undefined"
+        ? elementIds
+            .map((id) => {
+              const element = document.getElementById(id);
+              if (!element) {
+                return null;
+              }
+
+              return {
+                id,
+                left: element.scrollLeft ?? 0,
+                top: element.scrollTop ?? 0,
+              };
+            })
+            .filter(Boolean)
+        : [];
+
+    const result = await task();
+
+    await new Promise((resolve) => {
+      const restoreScroll = () => {
+        if (hasWindow && typeof window.scrollTo === "function") {
+          window.scrollTo(left, top);
+        }
+
+        if (typeof document !== "undefined") {
+          elementScrollStates.forEach((state) => {
+            const element = document.getElementById(state.id);
+            if (!element) {
+              return;
+            }
+
+            if (typeof element.scrollLeft === "number") {
+              element.scrollLeft = state.left;
+            }
+
+            if (typeof element.scrollTop === "number") {
+              element.scrollTop = state.top;
+            }
+          });
+        }
+
+        resolve();
+      };
+
+      if (hasWindow && typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(() => window.requestAnimationFrame(restoreScroll));
+      } else {
+        restoreScroll();
+      }
+    });
+
+    return result;
+  }
+
   _escapeHtml(value) {
     return String(value || "")
       .replace(/&/g, "&amp;")
@@ -657,12 +722,16 @@ class FarmlogHubPage extends FarmlogBasePage {
       return;
     }
 
+    event.preventDefault();
+
     const updatedEntity = await this._performEngagementRequest(button);
     if (!updatedEntity) {
       return;
     }
 
-    await this._loadInitialData();
+    await this._runWithPreservedScroll(() => this._loadInitialData(), {
+      elementIds: ["searchBlogsResults", "searchPostsResults", "searchTopPostsResults"],
+    });
   }
 
   async _performSearch() {
@@ -1631,15 +1700,19 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
       return;
     }
 
+    event.preventDefault();
+
     const previousTab = this.activeTab;
     const updatedEntity = await this._performEngagementRequest(button);
     if (!updatedEntity) {
       return;
     }
 
-    await this._loadData();
-    this.activeTab = previousTab;
-    this._renderTabs();
+    await this._runWithPreservedScroll(async () => {
+      await this._loadData();
+      this.activeTab = previousTab;
+      this._renderTabs();
+    });
   }
 
   async _handlePostListAction(event) {
@@ -1649,15 +1722,19 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
     }
 
     if (target.hasAttribute("data-engagement-action")) {
+      event.preventDefault();
+
       const previousTab = this.activeTab;
       const updatedEntity = await this._performEngagementRequest(target);
       if (!updatedEntity) {
         return;
       }
 
-      await this._loadData();
-      this.activeTab = previousTab;
-      this._renderTabs();
+      await this._runWithPreservedScroll(async () => {
+        await this._loadData();
+        this.activeTab = previousTab;
+        this._renderTabs();
+      });
       return;
     }
 
@@ -1891,12 +1968,14 @@ class FarmlogPostDetailPage extends FarmlogBasePage {
       return;
     }
 
+    event.preventDefault();
+
     const updatedEntity = await this._performEngagementRequest(button);
     if (!updatedEntity) {
       return;
     }
 
-    await this._loadPostData();
+    await this._runWithPreservedScroll(() => this._loadPostData());
   }
 }
 
