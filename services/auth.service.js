@@ -1,5 +1,5 @@
 const UserDataSingleton = require("../data/user-data-singleton");
-const { generateToken } = require("../helpers/token.helpers");
+const { generateToken, revokeToken } = require("../helpers/token.helpers");
 const { validateRegistrationData, validateLoginData } = require("../helpers/validators");
 const { validatePassword } = require("../middleware/auth.middleware");
 const { loginExpiration } = require("../data/settings");
@@ -269,6 +269,26 @@ class AuthService {
     const { password, ...userResponse } = user;
 
     return userResponse;
+  }
+
+  /**
+   * Logout user and revoke active token from backend storage
+   */
+  async logoutUser(token) {
+    if (!token) {
+      return {
+        revoked: false,
+      };
+    }
+
+    const revoked = revokeToken(token);
+    if (revoked) {
+      logDebug("User token revoked from storage during logout", { token });
+    }
+
+    return {
+      revoked,
+    };
   }
 }
 

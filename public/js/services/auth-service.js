@@ -78,6 +78,16 @@ class AuthService {
    */
   async logout() {
     try {
+      const token = this.getToken();
+
+      if (token) {
+        try {
+          await this._notifyBackendLogout(token);
+        } catch (error) {
+          errorLogger.logAuthError("Backend logout", error, { showToUser: false });
+        }
+      }
+
       // Clear all authentication data
       this._clearSession();
 
@@ -91,6 +101,42 @@ class AuthService {
     } catch (error) {
       errorLogger.logAuthError("Logout", error, { showToUser: false });
       throw error;
+    }
+  }
+
+  async _notifyBackendLogout(token) {
+    if (!token) {
+      return;
+    }
+
+    if (this.apiService) {
+      await this.apiService.post(
+        "logout",
+        { token },
+        {
+          requiresAuth: true,
+        },
+      );
+      return;
+    }
+
+    if (typeof fetch !== "function") {
+      throw new Error("Fetch API is not available");
+    }
+
+    const response = await fetch("/api/v1/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        token,
+      },
+      credentials: "same-origin",
+      keepalive: true,
+      body: JSON.stringify({ token }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Logout request failed with status ${response.status}`);
     }
   }
 
@@ -213,10 +259,7 @@ class AuthService {
     if (userData.user) {
       const label = userData.user.displayedName || userData.user.email;
       this.storage.cookie.set("rolnopolUserLabel", label);
-      this.storage.cookie.set(
-        "rolnopolUserId",
-        userData.user.userId || userData.user.id,
-      );
+      this.storage.cookie.set("rolnopolUserId", userData.user.userId || userData.user.id);
     }
 
     this.currentUser = userData.user;

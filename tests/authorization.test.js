@@ -91,6 +91,31 @@ describe("Authorization API", () => {
       expect(res.body.data).toHaveProperty("id", userId);
       expect(res.body.data).toHaveProperty("email", testUser.email);
     });
+
+    it("POST /api/v1/logout should revoke the backend token and invalidate further authorization", async () => {
+      const logoutRes = await request(app).post("/api/v1/logout").set("token", authToken).send({ token: authToken }).expect(200);
+
+      expect(logoutRes.body).toHaveProperty("success", true);
+
+      const authRes = await request(app).get("/api/v1/authorization").set("token", authToken).expect(403);
+
+      expect(authRes.body).toHaveProperty("success", false);
+      expect(authRes.body).toHaveProperty("error");
+    });
+
+    it("POST /api/v1/logout should revoke the backend token when only the auth cookie is present", async () => {
+      const logoutRes = await request(app)
+        .post("/api/v1/logout")
+        .set("Cookie", [`rolnopolToken=${authToken}`])
+        .expect(200);
+
+      expect(logoutRes.body).toHaveProperty("success", true);
+
+      const authRes = await request(app).get("/api/v1/authorization").set("token", authToken).expect(403);
+
+      expect(authRes.body).toHaveProperty("success", false);
+      expect(authRes.body).toHaveProperty("error");
+    });
   });
 
   describe("Token Validation via POST", () => {

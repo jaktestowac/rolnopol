@@ -671,7 +671,7 @@
   <script src="/js/app.js"></script>
   <script>
     // Global logout function
-    function logout() {
+    async function logout() {
       if (window.App && window.App.getModule("authService")) {
         const authService = window.App.getModule("authService");
         authService
@@ -685,6 +685,12 @@
           });
       } else {
         // Fallback logout
+        if (typeof window.tryBackendLogout === "function") {
+          await window.tryBackendLogout(typeof getCookie === "function" ? getCookie("rolnopolToken") : null);
+        }
+        if (typeof clearAuthCookies === "function") {
+          clearAuthCookies();
+        }
         localStorage.removeItem("authToken");
         sessionStorage.removeItem("authToken");
         window.location.reload();

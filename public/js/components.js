@@ -23,7 +23,7 @@ function clearAuthCookies() {
 }
 
 // Global logout function that works with both old and new auth systems
-function logout() {
+async function logout() {
   try {
     // Try to use the modular auth service if available
     if (window.App && window.App.getModule) {
@@ -49,7 +49,12 @@ function logout() {
     }
 
     // Fallback logout
+    if (typeof window.tryBackendLogout === "function") {
+      await window.tryBackendLogout(getCookie("rolnopolToken"));
+    }
     clearAuthCookies();
+    localStorage.removeItem("authToken");
+    sessionStorage.removeItem("authToken");
     updateHeaderNav();
     window.location.href = "/";
   } catch (error) {

@@ -80,11 +80,20 @@ describe("auth.controller", () => {
   });
 
   it("logout should clear auth cookies", async () => {
-    const req = {};
+    const req = {
+      headers: {
+        token: "valid-user-token",
+      },
+      body: {},
+      cookies: {},
+    };
     const res = createMockRes();
+
+    vi.spyOn(authService, "logoutUser").mockResolvedValue({ revoked: true });
 
     await authController.logout(req, res);
 
+    expect(authService.logoutUser).toHaveBeenCalledWith("valid-user-token");
     expect(res.clearCookie).toHaveBeenCalledWith("rolnopolToken");
     expect(res.clearCookie).toHaveBeenCalledWith("rolnopolLoginTime");
     expect(res.status).toHaveBeenCalledWith(200);

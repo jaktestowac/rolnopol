@@ -77,4 +77,27 @@ describe("token.helpers persistent registry", () => {
     tokenHelpers.clearAllTokens();
     fs.rmSync(tokenStorageFile, { force: true });
   });
+
+  it("removes the persisted session entry from disk when a token is revoked", async () => {
+    const tokenStorageFile = buildTokenStoragePath("session-revoke-persistence");
+    fs.rmSync(tokenStorageFile, { force: true });
+    process.env.TOKEN_STORAGE_FILE = tokenStorageFile;
+
+    const tokenHelpers = await import("../../helpers/token.helpers");
+    tokenHelpers.clearAllTokens();
+
+    const userToken = tokenHelpers.generateToken("revoked-user", { hours: 2 });
+    const createdSnapshot = JSON.parse(fs.readFileSync(tokenStorageFile, "utf8"));
+
+    expect(createdSnapshot.tokens["revoked-user"]?.token).toBe(userToken);
+
+    expect(tokenHelpers.revokeToken(userToken)).toBe(true);
+
+    const revokedSnapshot = JSON.parse(fs.readFileSync(tokenStorageFile, "utf8"));
+
+    expect(revokedSnapshot.tokens["revoked-user"]).toBeUndefined();
+
+    tokenHelpers.clearAllTokens();
+    fs.rmSync(tokenStorageFile, { force: true });
+  });
 });

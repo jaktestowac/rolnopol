@@ -4,6 +4,36 @@
  */
 
 /**
+ * Attempt to revoke backend session before clearing browser state.
+ * Uses keepalive to improve odds during navigation/logout transitions.
+ */
+async function tryBackendLogout(token) {
+  if (!token || typeof fetch !== "function") {
+    return false;
+  }
+
+  try {
+    const response = await fetch("/api/v1/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        token,
+      },
+      credentials: "same-origin",
+      keepalive: true,
+      body: JSON.stringify({ token }),
+    });
+
+    return response.ok;
+  } catch (error) {
+    errorLogger.log("Backend Logout Fallback", error, { showToUser: false });
+    return false;
+  }
+}
+
+window.tryBackendLogout = tryBackendLogout;
+
+/**
  * Global logout function
  * Works with the modular authentication system
  */
@@ -15,19 +45,14 @@ window.logout = async function () {
     } else {
       // Fallback for when modular system isn't available
       console.warn("Auth service not available, performing basic logout");
+      await tryBackendLogout(getCookie("rolnopolToken"));
       // Clear cookies manually using standardized naming
-      document.cookie =
-        "rolnopolToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-      document.cookie =
-        "rolnopolIsLogged=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-      document.cookie =
-        "rolnopolLoginTime=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-      document.cookie =
-        "rolnopolUserLabel=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-      document.cookie =
-        "rolnopolUsername=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-      document.cookie =
-        "rolnopolUserId=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      document.cookie = "rolnopolToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      document.cookie = "rolnopolIsLogged=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      document.cookie = "rolnopolLoginTime=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      document.cookie = "rolnopolUserLabel=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      document.cookie = "rolnopolUsername=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+      document.cookie = "rolnopolUserId=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
     }
     window.location.href = "/";
   } catch (error) {

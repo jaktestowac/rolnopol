@@ -103,11 +103,7 @@ class AuthController {
 
       let statusCode = 500;
       if (error.message.includes("Validation failed")) statusCode = 400;
-      else if (
-        error.message.includes("Invalid credentials") ||
-        error.message.includes("deactivated")
-      )
-        statusCode = 401;
+      else if (error.message.includes("Invalid credentials") || error.message.includes("deactivated")) statusCode = 401;
 
       res.status(statusCode).json(
         formatResponseBody({
@@ -121,15 +117,43 @@ class AuthController {
    * Logout user
    */
   async logout(req, res) {
-    // Clear authentication cookies with standardized naming
-    res.clearCookie("rolnopolToken");
-    res.clearCookie("rolnopolLoginTime");
+    try {
+      const authHeader = req.headers.authorization;
+      const tokenFromHeader = req.headers.token;
+      const tokenFromBody = req.body?.token;
+      const tokenFromCookie = req.cookies?.rolnopolToken;
 
-    res.status(200).json(
-      formatResponseBody({
-        message: "Logout successful",
-      }),
-    );
+      let token = null;
+
+      if (typeof tokenFromHeader === "string" && tokenFromHeader.trim().length > 0) {
+        token = tokenFromHeader.trim();
+      } else if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+        token = authHeader.slice("Bearer ".length).trim();
+      } else if (typeof tokenFromBody === "string" && tokenFromBody.trim().length > 0) {
+        token = tokenFromBody.trim();
+      } else if (typeof tokenFromCookie === "string" && tokenFromCookie.trim().length > 0) {
+        token = tokenFromCookie.trim();
+      }
+
+      await authService.logoutUser(token);
+
+      // Clear authentication cookies with standardized naming
+      res.clearCookie("rolnopolToken");
+      res.clearCookie("rolnopolLoginTime");
+
+      res.status(200).json(
+        formatResponseBody({
+          message: "Logout successful",
+        }),
+      );
+    } catch (error) {
+      logError("Error during user logout:", error);
+      res.status(500).json(
+        formatResponseBody({
+          error: "Logout failed",
+        }),
+      );
+    }
   }
 }
 
