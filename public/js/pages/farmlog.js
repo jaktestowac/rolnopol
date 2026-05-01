@@ -60,9 +60,72 @@ class FarmlogBasePage {
 
   async _loadFeatureCapabilities() {
     try {
-      this.farmlogEngagementEnabled = await this.featureFlagsService.isEnabled("rolnopolFarmlogEngagementEnabled", false);
+      // Prefer a fresh server-side value to avoid stale client cache causing UI/server mismatch.
+      // refreshFlags returns the raw flags map when successful.
+      let flags = null;
+      if (this.featureFlagsService && typeof this.featureFlagsService.refreshFlags === "function") {
+        try {
+          flags = await this.featureFlagsService.refreshFlags();
+        } catch (err) {
+          // ignore and fall back to cached retrieval
+          flags = null;
+        }
+      }
+
+      if (!flags && this.featureFlagsService && typeof this.featureFlagsService.getFlagsCached === "function") {
+        try {
+          flags = await this.featureFlagsService.getFlagsCached();
+        } catch (err) {
+          flags = null;
+        }
+      }
+
+      this.farmlogEngagementEnabled = !!(flags && flags.rolnopolFarmlogEngagementEnabled === true);
     } catch (error) {
       this.farmlogEngagementEnabled = false;
+    }
+    // Ensure UI reflects the freshly loaded flag as early as possible
+    try {
+      this._updateTopPostsTabVisibility?.();
+    } catch (e) {
+      // ignore DOM errors during server-side tests
+    }
+  }
+
+  _updateTopPostsTabVisibility() {
+    if (typeof document === "undefined") return;
+
+    try {
+      const topTabButtons = document.querySelectorAll('[data-result-tab="top-posts"]');
+      if (!topTabButtons || topTabButtons.length === 0) return;
+
+      topTabButtons.forEach((btn) => {
+        if (!btn) return;
+        try {
+          if (!this.farmlogEngagementEnabled) {
+            // Hide aggressively to avoid CSS or sequencing issues where [hidden] might be overridden
+            btn.hidden = true;
+            try {
+              btn.style.setProperty("display", "none", "important");
+            } catch (err) {
+              btn.style.display = "none";
+            }
+            btn.setAttribute("aria-hidden", "true");
+          } else {
+            btn.hidden = false;
+            try {
+              btn.style.removeProperty("display");
+            } catch (err) {
+              btn.style.display = "";
+            }
+            btn.removeAttribute("aria-hidden");
+          }
+        } catch (err) {
+          // ignore individual element errors
+        }
+      });
+    } catch (err) {
+      // ignore DOM traversal errors
     }
   }
 
@@ -99,8 +162,8 @@ class FarmlogBasePage {
     }
 
     const hasWindow = typeof window !== "undefined";
-    const left = hasWindow ? window.scrollX ?? window.pageXOffset ?? 0 : 0;
-    const top = hasWindow ? window.scrollY ?? window.pageYOffset ?? 0 : 0;
+    const left = hasWindow ? (window.scrollX ?? window.pageXOffset ?? 0) : 0;
+    const top = hasWindow ? (window.scrollY ?? window.pageYOffset ?? 0) : 0;
     const elementIds = Array.isArray(options.elementIds) ? options.elementIds : [];
     const elementScrollStates =
       typeof document !== "undefined"
@@ -219,14 +282,7 @@ class FarmlogBasePage {
 
     const normalizedTargetType = targetType === "blog" ? "blog" : "post";
     const actionLabel =
-      label ||
-      (normalizedTargetType === "blog"
-        ? isActive
-          ? "Favorited blog"
-          : "Favorite blog"
-        : isActive
-          ? "Saved post"
-          : "Save post");
+      label || (normalizedTargetType === "blog" ? (isActive ? "Favorited blog" : "Favorite blog") : isActive ? "Saved post" : "Save post");
 
     return `
       <button
@@ -688,10 +744,11 @@ class FarmlogHubPage extends FarmlogBasePage {
     const controls = document.getElementById("farmlogSearchControls");
     const postSortWrap = document.getElementById("farmlogPostsSortWrap");
     const topPeriodWrap = document.getElementById("farmlogTopPeriodWrap");
-    const topTabButton = document.querySelector('[data-result-tab="top-posts"]');
-
-    if (topTabButton) {
-      topTabButton.hidden = !this.farmlogEngagementEnabled;
+    // Update visibility for all "most liked" tab buttons (use helper to enforce style)
+    try {
+      this._updateTopPostsTabVisibility?.();
+    } catch (e) {
+      // ignore DOM errors
     }
 
     if (!this.farmlogEngagementEnabled && this.activeTab === "top-posts") {
@@ -998,11 +1055,7 @@ class FarmlogHubPage extends FarmlogBasePage {
             <div class="farmlog-mini-list__content">${snippetHtml}</div>
             <div class="farmlog-mini-list__meta">
               <span>${this._formatDate(post.createdAt)}</span>
-              ${
-                this.farmlogEngagementEnabled
-                  ? `<span><i class="fas fa-heart"></i> ${Number(post.likesCount || 0)}</span>`
-                  : ""
-              }
+              ${this.farmlogEngagementEnabled ? `<span><i class="fas fa-heart"></i> ${Number(post.likesCount || 0)}</span>` : ""}
               <a href="${postLink}" class="btn btn-compact btn-outline">Read more</a>
             </div>
           </li>
@@ -1165,7 +1218,19 @@ class FarmlogHubPage extends FarmlogBasePage {
         topPostsPanel.innerHTML = "";
       } else {
         topPostsPanel.innerHTML = this.topPostResults.length
-          ? this.topPostResults
+          ? // Ensure top posts are displayed sorted by likesCount -> periodLikesCount -> createdAt
+            [...this.topPostResults]
+              .sort((a, b) => {
+                const aTotal = Number.isFinite(Number(a?.likesCount)) ? Number(a.likesCount) : 0;
+                const bTotal = Number.isFinite(Number(b?.likesCount)) ? Number(b.likesCount) : 0;
+                if (bTotal !== aTotal) return bTotal - aTotal;
+
+                const aPeriod = Number.isFinite(Number(a?.periodLikesCount)) ? Number(a.periodLikesCount) : 0;
+                const bPeriod = Number.isFinite(Number(b?.periodLikesCount)) ? Number(b.periodLikesCount) : 0;
+                if (bPeriod !== aPeriod) return bPeriod - aPeriod;
+
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+              })
               .map((post) => {
                 const resolvedBlogSlug = post.blogSlug || this.blogSlugById.get(post.blogId) || "unknown-blog";
                 const snippetHtml = this._renderMarkdownWithLimit(post.content || "", 140);
@@ -1293,6 +1358,15 @@ class FarmlogBlogDetailPage extends FarmlogBasePage {
       const mostLikedOption = sortEl.querySelector('option[value="most-liked"]');
       if (mostLikedOption) {
         mostLikedOption.hidden = !this.farmlogEngagementEnabled;
+        try {
+          if (!this.farmlogEngagementEnabled) {
+            mostLikedOption.style.setProperty("display", "none", "important");
+          } else {
+            mostLikedOption.style.removeProperty("display");
+          }
+        } catch (err) {
+          // ignore style issues
+        }
       }
 
       sortEl.addEventListener("change", () => {
