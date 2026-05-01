@@ -1495,14 +1495,17 @@
         "weatherWeatherDataExport": false,
         "weatherUserInsightsEnabled": false,
         "weatherTrendChartEnabled": false,
+        "personalApiKeysEnabled": false,
+        "integrationsWebhooksEnabled": false,
         "promoAdvertsHomeEnabled": false,
         "promoAdvertsAlertsEnabled": false,
         "promoAdvertsGeneralAdEnabled": false,
         "promoAdvertsBottomBannerEnabled": false,
         "petBuddyEnabled": false,
-        "rolnopolFarmlogEnabled": true
+        "rolnopolFarmlogEnabled": false,
+        "rolnopolFarmlogEngagementEnabled": false
       },
-      "updatedAt": "2026-04-13T21:10:58.796Z"
+      "updatedAt": "2026-04-05T12:23:49.714Z"
     },
     "chaosEngine": {
       "mode": "off",
@@ -1584,11 +1587,35 @@
         "slug": "my-farming-blog",
         "visibility": "public",
         "tags": [],
-        "createdAt": "2026-04-13T21:12:09.916Z",
-        "updatedAt": "2026-04-13T21:12:09.916Z",
+        "createdAt": "2026-04-11T12:12:09.916Z",
+        "updatedAt": "2026-04-11T12:12:09.916Z",
         "deletedAt": null,
         "deletedBy": null,
         "id": 1
+      },
+      {
+        "userId": "10",
+        "title": "My Voyage Blog",
+        "slug": "my-voyage-blog",
+        "visibility": "public",
+        "tags": ["voyage", "travel", "adventure"],
+        "createdAt": "2026-04-11T12:12:09.916Z",
+        "updatedAt": "2026-04-11T12:12:09.916Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 2
+      },
+      {
+        "userId": "16",
+        "title": "Test Automation and AI in Testing",
+        "slug": "test-automation-and-ai-in-testing",
+        "visibility": "public",
+        "tags": ["test automation", "quality", "testers"],
+        "createdAt": "2026-04-12T12:12:09.916Z",
+        "updatedAt": "2026-04-12T12:12:09.916Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 3
       }
     ],
     "posts": [
@@ -1598,8 +1625,8 @@
         "title": "Hello Farm!",
         "slug": "hello-farm",
         "content": "# Hello!\nThis is my first farming post. I will share my experiences and tips about farming here. Stay tuned for more updates!",
-        "createdAt": "2026-04-13T21:39:34.777Z",
-        "updatedAt": "2026-04-13T21:39:34.777Z",
+        "createdAt": "2026-04-12T21:22:34.777Z",
+        "updatedAt": "2026-04-12T21:22:34.777Z",
         "deletedAt": null,
         "deletedBy": null,
         "id": 1
@@ -1615,7 +1642,250 @@
         "deletedAt": null,
         "deletedBy": null,
         "id": 2
+      },
+      {
+        "userId": "10",
+        "blogId": 2,
+        "title": "A Letter from the Eastern Road",
+        "slug": "a-letter-from-the-eastern-road",
+        "content": "# A Letter from the Eastern Road\nI have traveled farther east than ever before, through villages where the roads grow narrow and the evenings strangely silent. The people here are polite, though they watch strangers with a kind of worry they do not explain.\n\nAt supper, my host insisted I keep to the main road after sunset. When I laughed at the warning, nobody joined me. Still, the mountains are magnificent, and I confess there is something exciting in reaching a place that feels untouched by ordinary life.",
+        "createdAt": "2026-04-14T20:10:34.777Z",
+        "updatedAt": "2026-04-14T20:10:34.777Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 3
+      },
+      {
+        "userId": "10",
+        "blogId": 2,
+        "title": "The Innkeeper's Advice",
+        "slug": "the-innkeepers-advice",
+        "content": "# The Innkeeper's Advice\nThis morning the innkeeper's wife pressed a small silver cross into my hand and begged me not to refuse it. She seemed deeply distressed, though I could not understand why such an object should matter to a practical man on business.\n\nI accepted it more out of courtesy than conviction. Yet I admit her expression has followed me all day. There are moments when local customs feel less like superstition and more like warnings handed down from experience.",
+        "createdAt": "2026-04-15T08:42:34.777Z",
+        "updatedAt": "2026-04-15T08:42:34.777Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 4
+      },
+      {
+        "userId": "10",
+        "blogId": 2,
+        "title": "Arrival at the Old Estate",
+        "slug": "arrival-at-the-old-estate",
+        "content": "# Arrival at the Old Estate\nMy destination stands on a height above the valley, ancient and severe against the evening sky. I arrived later than planned, and by the time the heavy gates opened the last of the daylight had already gone.\n\nThe master of the house received me with perfect courtesy. He is an unusual gentleman: formal, pale, and possessed of a manner that suggests both education and long isolation. The house itself is enormous, though I have seen very little of it yet. For now, I am simply relieved to be indoors.",
+        "createdAt": "2026-04-15T22:05:34.777Z",
+        "updatedAt": "2026-04-15T22:05:34.777Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 5
+      },
+      {
+        "userId": "10",
+        "blogId": 2,
+        "title": "A Host Who Never Dines",
+        "slug": "a-host-who-never-dines",
+        "content": "# A Host Who Never Dines\nI have now shared several meals in this house, though \"shared\" is not quite the word. My host sees that I am well served, but never joins me at the table. He stands nearby, speaking in a calm and cultivated way, asking questions about London, property law, and modern city life.\n\nIt is a strange arrangement. I tell myself there are many harmless eccentricities in the world, but I cannot deny that the habit unsettles me. A meal is a social thing, and solitude feels heavier when one is not truly alone.",
+        "createdAt": "2026-04-16T09:18:34.777Z",
+        "updatedAt": "2026-04-16T09:18:34.777Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 6
+      },
+      {
+        "userId": "10",
+        "blogId": 2,
+        "title": "Locked Doors Everywhere",
+        "slug": "locked-doors-everywhere",
+        "content": "# Locked Doors Everywhere\nI spent part of today exploring the corridors nearest my rooms. The architecture is impressive, though the place seems designed less for comfort than for defense. More than once I found a passage ending not in a room but in a locked door, bolted on the outside.\n\nMy host apologized and explained that much of the estate is unsafe or in disrepair. That may well be true, yet the feeling remains that the house is not merely old but secretive. I begin to suspect that curiosity is not encouraged here.",
+        "createdAt": "2026-04-16T18:30:34.777Z",
+        "updatedAt": "2026-04-16T18:30:34.777Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 7
+      },
+      {
+        "userId": "10",
+        "blogId": 2,
+        "title": "The View from the Window",
+        "slug": "the-view-from-the-window",
+        "content": "# The View from the Window\nThe landscape below the estate is beautiful in a stern, almost theatrical way. Dark forests cover the slopes, and narrow roads vanish into mist before one can guess where they lead. At sunrise, the valley looks almost peaceful.\n\nAnd yet the same view at night is entirely different. Sounds travel oddly here. A dog's bark seems miles away and suddenly close again. Last night I heard something like wolves, though perhaps imagination sharpens every noise when one is so far from home.",
+        "createdAt": "2026-04-17T07:55:34.777Z",
+        "updatedAt": "2026-04-17T07:55:34.777Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 8
+      },
+      {
+        "userId": "10",
+        "blogId": 2,
+        "title": "An Uneasy Discovery",
+        "slug": "an-uneasy-discovery",
+        "content": "# An Uneasy Discovery\nToday I attempted to leave the house grounds by a side entrance, only to find it locked as firmly as the rest. It was then, for the first time, that a troubling thought came to me: perhaps I am not merely a guest here.\n\nNothing openly hostile has occurred. I am given food, rooms, and every outward politeness. But comfort is not the same as freedom. I write this partly to steady my own nerves. A man must rely on his reason, especially when the facts become difficult to explain.",
+        "createdAt": "2026-04-17T21:14:34.777Z",
+        "updatedAt": "2026-04-17T21:14:34.777Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 9
+      },
+      {
+        "userId": "16",
+        "blogId": 3,
+        "title": "AI-Assisted Test Automation: From Scripts to Systems",
+        "slug": "ai-assisted-test-automation-from-scripts-to-systems",
+        "content": "# AI-Assisted Test Automation: From Scripts to Systems\n\nAI-assisted testing is not about replacing testers with autonomous machines. A more realistic view is that AI becomes another engineering layer in the quality process.\n\nInstead of thinking only about scripts, teams can start thinking about systems that observe, classify, summarize, and support decision-making.\n\nAI can help with:\n\n- generating initial test scenarios,\n- analyzing logs and traces,\n- detecting repeated failure patterns,\n- summarizing bug reports,\n- creating realistic test data,\n- reviewing test coverage against requirements.\n\nThe important part is control. AI output should be reviewed, validated, and connected with real product risks.\n\n## Practical Perspective\n\nA useful AI testing workflow should answer three questions:\n\n1. What decision does this help us make?\n2. What data was used to generate the result?\n3. How do we verify that the recommendation is correct?\n\nAI is valuable when it improves feedback quality, not when it only produces more artifacts.\n\nUseful links:\n\n- [AI Testers](https://aitesters.pl)\n- [AI in Software Testing](https://www.youtube.com/@AITesterspl)\n",
+        "createdAt": "2026-04-18T08:30:34.777Z",
+        "updatedAt": "2026-04-18T08:30:34.777Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 11
+      },
+      {
+        "userId": "16",
+        "blogId": 3,
+        "title": "Quality Signals in Continuous Delivery",
+        "slug": "quality-signals-in-continuous-delivery",
+        "content": "# Quality Signals in Continuous Delivery\n\nModern software systems change continuously. In this environment, testing is not a single phase. It is a distributed feedback mechanism that helps teams understand release risk.\n\nA mature delivery pipeline should provide multiple quality signals:\n\n- unit-level correctness,\n- API contract stability,\n- end-to-end user flow confidence,\n- performance trends,\n- accessibility feedback,\n- security warnings,\n- production monitoring data.\n\nAI can support this process by correlating information from different sources. For example, it can compare recent commits, failing tests, logs, and incident history to suggest probable risk areas.\n\n## Realistic Use Case\n\nInstead of asking AI, `Is this release safe?`, a better question is:\n\n```text\nBased on recent test failures, changed files, and production incidents, identify the top 5 areas that need human review before release.\n```\n\nThis keeps the final decision with the team while using AI to reduce analysis time.\n\nResources:\n\n- [AI Testers](https://aitesters.pl)\n- [YouTube - Quality Engineering](https://www.youtube.com/results?search_query=quality+engineering+software+testing)\n",
+        "createdAt": "2026-04-18T09:10:12.441Z",
+        "updatedAt": "2026-04-18T09:10:12.441Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 12
+      },
+      {
+        "userId": "16",
+        "blogId": 3,
+        "title": "Exploratory Testing with AI Support",
+        "slug": "exploratory-testing-with-ai-support",
+        "content": "# Exploratory Testing with AI Support\n\nExploratory testing remains a human-centered activity. It depends on curiosity, domain knowledge, intuition, and the ability to notice weak signals.\n\nAI can support exploratory testing, but it should not define the whole process.\n\nPossible AI-assisted activities include:\n\n- generating charters for exploratory sessions,\n- proposing edge cases based on requirements,\n- summarizing notes from a test session,\n- clustering observations into themes,\n- suggesting follow-up questions,\n- converting findings into structured bug reports.\n\n## Example Charter\n\n```text\nExplore the checkout flow for risks related to invalid discounts, interrupted payments, duplicated orders, and unclear error messages.\nFocus on user trust and data consistency.\n```\n\nAfter the session, AI can help transform raw notes into a readable summary. However, the tester is still responsible for judgment, interpretation, and final reporting.\n\nThe best results come from combining human investigation with AI-supported organization.\n\nLinks:\n\n- [AI Testers](https://aitesters.pl)\n- [AI in Software Testing](https://www.youtube.com/@AITesterspl)\n",
+        "createdAt": "2026-04-18T10:45:55.120Z",
+        "updatedAt": "2026-04-18T10:45:55.120Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 13
+      },
+      {
+        "userId": "16",
+        "blogId": 3,
+        "title": "Using AI to Investigate Flaky Tests",
+        "slug": "using-ai-to-investigate-flaky-tests",
+        "content": "# Using AI to Investigate Flaky Tests\n\nFlaky tests are one of the most expensive problems in test automation. They reduce trust in the test suite and make teams slower over time.\n\nAI can help investigate flaky tests when it has access to useful context:\n\n- test history,\n- failure logs,\n- screenshots,\n- traces,\n- changed files,\n- environment data,\n- timing information.\n\nThe goal is not to let AI automatically rewrite tests. The goal is to use it as an analysis assistant.\n\n## Investigation Workflow\n\nA practical workflow may look like this:\n\n1. Collect failures from the last 30 pipeline runs.\n2. Group failures by error type and affected test.\n3. Compare failing runs with successful runs.\n4. Identify likely instability sources.\n5. Ask a human to confirm and fix the root cause.\n\nExample AI prompt:\n\n```text\nAnalyze these Playwright traces and failure logs. Group failures by probable cause: selector issue, timing issue, test data conflict, network instability, or application defect. Explain your reasoning and confidence level.\n```\n\nAI can accelerate investigation, but reliable automation still depends on good architecture, stable test data, and clear ownership.\n\nUseful links:\n\n- [AI Testers](https://aitesters.pl)\n- [AI in Software Testing](https://www.youtube.com/@AITesterspl)\n",
+        "createdAt": "2026-04-18T11:20:44.902Z",
+        "updatedAt": "2026-04-18T11:20:44.902Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 14
+      },
+      {
+        "userId": "16",
+        "blogId": 3,
+        "title": "Prompt Engineering for Testers",
+        "slug": "prompt-engineering-for-testers",
+        "content": "# Prompt Engineering for Testers\n\nPrompt engineering is not magic. For testers, it is a practical communication skill: giving an AI system enough context to produce useful, verifiable output.\n\nA strong testing prompt usually includes:\n\n- product context,\n- user role,\n- feature description,\n- known constraints,\n- risk areas,\n- expected output format,\n- examples of good and bad results.\n\n## Example Prompt\n\n```text\nYou are supporting a QA engineer testing a subscription billing system.\nGenerate high-risk test scenarios for plan upgrades, failed payments, invoice generation, and account cancellation.\nReturn the result as a markdown table with columns: Risk, Scenario, Test Data, Expected Result, Priority.\n```\n\nThe output should not be accepted blindly. Testers should check whether the generated scenarios are realistic, relevant, and connected to business risk.\n\n## Specialist View\n\nThe best AI-assisted testing workflows are based on iteration:\n\n1. Provide context.\n2. Generate ideas.\n3. Review critically.\n4. Refine the prompt.\n5. Convert useful output into tests, notes, or documentation.\n\nAI can increase the speed of thinking, but quality still comes from expert evaluation.\n\nResources:\n\n- [AI Testers](https://aitesters.pl)\n- [AI in Software Testing](https://www.youtube.com/@AITesterspl)\n",
+        "createdAt": "2026-04-18T12:05:03.318Z",
+        "updatedAt": "2026-04-18T12:05:03.318Z",
+        "deletedAt": null,
+        "deletedBy": null,
+        "id": 15
       }
-    ]
+    ],
+    "farmlogPostLikes": [
+      {
+        "userId": "1",
+        "postId": 15,
+        "blogId": 3,
+        "createdAt": "2026-04-18T11:30:58.537Z",
+        "updatedAt": "2026-04-18T11:30:58.537Z",
+        "id": 1
+      },
+      {
+        "userId": "2",
+        "postId": 15,
+        "blogId": 3,
+        "createdAt": "2026-04-19T21:30:58.537Z",
+        "updatedAt": "2026-04-19T21:30:58.537Z",
+        "id": 2
+      },
+      {
+        "userId": "3",
+        "postId": 14,
+        "blogId": 3,
+        "createdAt": "2026-04-20T09:30:58.537Z",
+        "updatedAt": "2026-04-20T09:30:58.537Z",
+        "id": 3
+      },
+      {
+        "userId": "11",
+        "postId": 13,
+        "blogId": 3,
+        "createdAt": "2026-04-21T14:30:58.537Z",
+        "updatedAt": "2026-04-21T14:30:58.537Z",
+        "id": 4
+      },
+      {
+        "userId": "12",
+        "postId": 12,
+        "blogId": 3,
+        "createdAt": "2026-04-22T18:30:58.537Z",
+        "updatedAt": "2026-04-22T18:30:58.537Z",
+        "id": 5
+      },
+      {
+        "userId": "13",
+        "postId": 11,
+        "blogId": 3,
+        "createdAt": "2026-04-23T20:30:58.537Z",
+        "updatedAt": "2026-04-23T20:30:58.537Z",
+        "id": 6
+      },
+      {
+        "userId": "14",
+        "postId": 10,
+        "blogId": 3,
+        "createdAt": "2026-04-24T22:30:58.537Z",
+        "updatedAt": "2026-04-24T22:30:58.537Z",
+        "id": 7
+      },
+      {
+        "userId": "15",
+        "postId": 9,
+        "blogId": 3,
+        "createdAt": "2026-04-25T08:30:58.537Z",
+        "updatedAt": "2026-04-25T08:30:58.537Z",
+        "id": 8
+      },
+      {
+        "userId": "14",
+        "postId": 14,
+        "blogId": 3,
+        "createdAt": "2026-04-26T12:30:58.537Z",
+        "updatedAt": "2026-04-26T12:30:58.537Z",
+        "id": 9
+      },
+      {
+        "userId": "13",
+        "postId": 14,
+        "blogId": 3,
+        "createdAt": "2026-04-27T16:30:58.537Z",
+        "updatedAt": "2026-04-27T16:30:58.537Z",
+        "id": 10
+      },
+      {
+        "userId": "1",
+        "postId": 14,
+        "blogId": 3,
+        "createdAt": "2026-05-01T21:32:57.787Z",
+        "updatedAt": "2026-05-01T21:32:57.787Z",
+        "id": 11
+      }
+    ],
+    "farmlogFavorites": [],
+    "personalApiKeys": {
+      "version": 1,
+      "keys": [],
+      "updatedAt": null
+    },
+    "pets": {
+      "pets": []
+    }
   }
 }

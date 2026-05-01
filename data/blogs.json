@@ -22,5 +22,17 @@
     "deletedAt": null,
     "deletedBy": null,
     "id": 2
+  },
+  {
+    "userId": "16",
+    "title": "Test Automation and AI in Testing",
+    "slug": "test-automation-and-ai-in-testing",
+    "visibility": "public",
+    "tags": ["test automation", "quality", "testers"],
+    "createdAt": "2026-04-12T12:12:09.916Z",
+    "updatedAt": "2026-04-12T12:12:09.916Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 3
   }
 ]

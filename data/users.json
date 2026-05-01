@@ -7,8 +7,8 @@
     "password": "demo123",
     "isActive": true,
     "createdAt": "2025-01-01T00:00:00.000Z",
-    "updatedAt": "2025-09-11T18:06:37.673Z",
-    "lastLogin": "2025-09-11T18:06:37.673Z"
+    "updatedAt": "2026-05-01T21:30:48.781Z",
+    "lastLogin": "2026-05-01T21:30:48.781Z"
   },
   {
     "id": 2,
@@ -109,5 +109,72 @@
     "createdAt": "2026-01-01T00:00:00.000Z",
     "updatedAt": "2025-09-17T10:43:35.335Z",
     "lastLogin": "2025-09-17T10:43:35.334Z"
+  },
+  {
+    "id": 11,
+    "username": "Mina Murray",
+    "displayedName": "Mina Murray",
+    "email": "mina.murray@rolnopol.demo.pl",
+    "password": "minaPass123",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-17T10:43:35.335Z",
+    "lastLogin": "2025-09-17T10:43:35.334Z"
+  },
+  {
+    "id": 12,
+    "username": "Kris Kelvin",
+    "displayedName": "Kris Kelvin",
+    "email": "kris.kelvin@rolnopol.demo.pl",
+    "password": "krisPass123",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-17T10:43:35.335Z",
+    "lastLogin": "2025-09-17T10:43:35.334Z"
+  },
+  {
+    "id": 13,
+    "username": "Adi Cherryson",
+    "displayedName": "Adi Cherryson",
+    "email": "adi.cherryson@rolnopol.demo.pl",
+    "password": "adiPass123",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-17T10:43:35.335Z",
+    "lastLogin": "2025-09-17T10:43:35.334Z"
+  },
+  {
+    "id": 14,
+    "username": "A. Zamoyski",
+    "displayedName": "A. Zamoyski",
+    "email": "a.zamoyski@rolnopol.demo.pl",
+    "password": "zamoyskiPass123",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-17T10:43:35.335Z",
+    "lastLogin": "2025-09-17T10:43:35.334Z"
+  },
+  {
+    "id": 15,
+    "username": "Rinah Devi",
+    "displayedName": "Rinah Devi",
+    "email": "rinah.devi@rolnopol.demo.pl",
+    "password": "rinahPass123",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-17T10:43:35.335Z",
+    "lastLogin": "2025-09-17T10:43:35.334Z"
+  },
+  {
+    "id": 16,
+    "username": "Patrick Gheorg McPherson",
+    "displayedName": "Patrick Gheorg McPherson",
+    "email": "patrick.mcpherson@rolnopol.demo.pl",
+    "password": "patrickPass123",
+    "isActive": true,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2025-09-17T10:43:35.335Z",
+    "lastLogin": "2025-09-17T10:43:35.334Z",
+    "protected": true
   }
 ]

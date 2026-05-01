@@ -31,8 +31,8 @@
     "promoAdvertsGeneralAdEnabled": false,
     "promoAdvertsBottomBannerEnabled": false,
     "petBuddyEnabled": false,
-    "rolnopolFarmlogEnabled": false,
-    "rolnopolFarmlogEngagementEnabled": false
+    "rolnopolFarmlogEnabled": true,
+    "rolnopolFarmlogEngagementEnabled": true
   },
-  "updatedAt": "2026-04-05T12:23:49.714Z"
+  "updatedAt": "2026-05-01T21:29:23.901Z"
 }

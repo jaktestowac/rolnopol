@@ -22,7 +22,7 @@ const getVisualWidth = (str) => {
 };
 
 const checkAllDependencies = () => {
-  console.log("Checking for required dependencies...");
+  console.log("Checking for required dependencies... Please wait.");
   try {
     const pkg = JSON.parse(readFileSync(resolve(__dirname, "../package.json"), "utf-8"));
     const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
@@ -138,6 +138,10 @@ const initializeAllDatabases = async () => {
       dbManager.getStaffDatabase(),
       dbManager.getAnimalsDatabase(),
       dbManager.getAssignmentsDatabase(),
+      dbManager.getPostLikesDatabase(),
+      dbManager.getFarmlogFavoritesDatabase(),
+      dbManager.getPersonalApiKeysDatabase(),
+      dbManager.getPetsDatabase(),
       dbManager.getWebhooksDatabase(),
       dbManager.getWebhookDeliveriesDatabase(),
     ];

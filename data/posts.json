@@ -106,5 +106,65 @@
     "deletedAt": null,
     "deletedBy": null,
     "id": 9
+  },
+  {
+    "userId": "16",
+    "blogId": 3,
+    "title": "AI-Assisted Test Automation: From Scripts to Systems",
+    "slug": "ai-assisted-test-automation-from-scripts-to-systems",
+    "content": "# AI-Assisted Test Automation: From Scripts to Systems\n\nAI-assisted testing is not about replacing testers with autonomous machines. A more realistic view is that AI becomes another engineering layer in the quality process.\n\nInstead of thinking only about scripts, teams can start thinking about systems that observe, classify, summarize, and support decision-making.\n\nAI can help with:\n\n- generating initial test scenarios,\n- analyzing logs and traces,\n- detecting repeated failure patterns,\n- summarizing bug reports,\n- creating realistic test data,\n- reviewing test coverage against requirements.\n\nThe important part is control. AI output should be reviewed, validated, and connected with real product risks.\n\n## Practical Perspective\n\nA useful AI testing workflow should answer three questions:\n\n1. What decision does this help us make?\n2. What data was used to generate the result?\n3. How do we verify that the recommendation is correct?\n\nAI is valuable when it improves feedback quality, not when it only produces more artifacts.\n\nUseful links:\n\n- [AI Testers](https://aitesters.pl)\n- [AI in Software Testing](https://www.youtube.com/@AITesterspl)\n",
+    "createdAt": "2026-04-18T08:30:34.777Z",
+    "updatedAt": "2026-04-18T08:30:34.777Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 11
+  },
+  {
+    "userId": "16",
+    "blogId": 3,
+    "title": "Quality Signals in Continuous Delivery",
+    "slug": "quality-signals-in-continuous-delivery",
+    "content": "# Quality Signals in Continuous Delivery\n\nModern software systems change continuously. In this environment, testing is not a single phase. It is a distributed feedback mechanism that helps teams understand release risk.\n\nA mature delivery pipeline should provide multiple quality signals:\n\n- unit-level correctness,\n- API contract stability,\n- end-to-end user flow confidence,\n- performance trends,\n- accessibility feedback,\n- security warnings,\n- production monitoring data.\n\nAI can support this process by correlating information from different sources. For example, it can compare recent commits, failing tests, logs, and incident history to suggest probable risk areas.\n\n## Realistic Use Case\n\nInstead of asking AI, `Is this release safe?`, a better question is:\n\n```text\nBased on recent test failures, changed files, and production incidents, identify the top 5 areas that need human review before release.\n```\n\nThis keeps the final decision with the team while using AI to reduce analysis time.\n\nResources:\n\n- [AI Testers](https://aitesters.pl)\n- [YouTube - Quality Engineering](https://www.youtube.com/results?search_query=quality+engineering+software+testing)\n",
+    "createdAt": "2026-04-18T09:10:12.441Z",
+    "updatedAt": "2026-04-18T09:10:12.441Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 12
+  },
+  {
+    "userId": "16",
+    "blogId": 3,
+    "title": "Exploratory Testing with AI Support",
+    "slug": "exploratory-testing-with-ai-support",
+    "content": "# Exploratory Testing with AI Support\n\nExploratory testing remains a human-centered activity. It depends on curiosity, domain knowledge, intuition, and the ability to notice weak signals.\n\nAI can support exploratory testing, but it should not define the whole process.\n\nPossible AI-assisted activities include:\n\n- generating charters for exploratory sessions,\n- proposing edge cases based on requirements,\n- summarizing notes from a test session,\n- clustering observations into themes,\n- suggesting follow-up questions,\n- converting findings into structured bug reports.\n\n## Example Charter\n\n```text\nExplore the checkout flow for risks related to invalid discounts, interrupted payments, duplicated orders, and unclear error messages.\nFocus on user trust and data consistency.\n```\n\nAfter the session, AI can help transform raw notes into a readable summary. However, the tester is still responsible for judgment, interpretation, and final reporting.\n\nThe best results come from combining human investigation with AI-supported organization.\n\nLinks:\n\n- [AI Testers](https://aitesters.pl)\n- [AI in Software Testing](https://www.youtube.com/@AITesterspl)\n",
+    "createdAt": "2026-04-18T10:45:55.120Z",
+    "updatedAt": "2026-04-18T10:45:55.120Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 13
+  },
+  {
+    "userId": "16",
+    "blogId": 3,
+    "title": "Using AI to Investigate Flaky Tests",
+    "slug": "using-ai-to-investigate-flaky-tests",
+    "content": "# Using AI to Investigate Flaky Tests\n\nFlaky tests are one of the most expensive problems in test automation. They reduce trust in the test suite and make teams slower over time.\n\nAI can help investigate flaky tests when it has access to useful context:\n\n- test history,\n- failure logs,\n- screenshots,\n- traces,\n- changed files,\n- environment data,\n- timing information.\n\nThe goal is not to let AI automatically rewrite tests. The goal is to use it as an analysis assistant.\n\n## Investigation Workflow\n\nA practical workflow may look like this:\n\n1. Collect failures from the last 30 pipeline runs.\n2. Group failures by error type and affected test.\n3. Compare failing runs with successful runs.\n4. Identify likely instability sources.\n5. Ask a human to confirm and fix the root cause.\n\nExample AI prompt:\n\n```text\nAnalyze these Playwright traces and failure logs. Group failures by probable cause: selector issue, timing issue, test data conflict, network instability, or application defect. Explain your reasoning and confidence level.\n```\n\nAI can accelerate investigation, but reliable automation still depends on good architecture, stable test data, and clear ownership.\n\nUseful links:\n\n- [AI Testers](https://aitesters.pl)\n- [AI in Software Testing](https://www.youtube.com/@AITesterspl)\n",
+    "createdAt": "2026-04-18T11:20:44.902Z",
+    "updatedAt": "2026-04-18T11:20:44.902Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 14
+  },
+  {
+    "userId": "16",
+    "blogId": 3,
+    "title": "Prompt Engineering for Testers",
+    "slug": "prompt-engineering-for-testers",
+    "content": "# Prompt Engineering for Testers\n\nPrompt engineering is not magic. For testers, it is a practical communication skill: giving an AI system enough context to produce useful, verifiable output.\n\nA strong testing prompt usually includes:\n\n- product context,\n- user role,\n- feature description,\n- known constraints,\n- risk areas,\n- expected output format,\n- examples of good and bad results.\n\n## Example Prompt\n\n```text\nYou are supporting a QA engineer testing a subscription billing system.\nGenerate high-risk test scenarios for plan upgrades, failed payments, invoice generation, and account cancellation.\nReturn the result as a markdown table with columns: Risk, Scenario, Test Data, Expected Result, Priority.\n```\n\nThe output should not be accepted blindly. Testers should check whether the generated scenarios are realistic, relevant, and connected to business risk.\n\n## Specialist View\n\nThe best AI-assisted testing workflows are based on iteration:\n\n1. Provide context.\n2. Generate ideas.\n3. Review critically.\n4. Refine the prompt.\n5. Convert useful output into tests, notes, or documentation.\n\nAI can increase the speed of thinking, but quality still comes from expert evaluation.\n\nResources:\n\n- [AI Testers](https://aitesters.pl)\n- [AI in Software Testing](https://www.youtube.com/@AITesterspl)\n",
+    "createdAt": "2026-04-18T12:05:03.318Z",
+    "updatedAt": "2026-04-18T12:05:03.318Z",
+    "deletedAt": null,
+    "deletedBy": null,
+    "id": 15
   }
 ]

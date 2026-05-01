@@ -17,10 +17,14 @@ const DATABASE_ACCESSORS = {
   chaosEngine: () => dbManager.getChaosEngineDatabase(),
   commodities: () => dbManager.getCommoditiesDatabase(),
   messages: () => dbManager.getMessagesDatabase(),
+  farmlogPostLikes: () => dbManager.getPostLikesDatabase(),
+  farmlogFavorites: () => dbManager.getFarmlogFavoritesDatabase(),
   webhooks: () => dbManager.getWebhooksDatabase(),
   webhookDeliveries: () => dbManager.getWebhookDeliveriesDatabase(),
   blogs: () => dbManager.getBlogsDatabase(),
   posts: () => dbManager.getPostsDatabase(),
+  personalApiKeys: () => dbManager.getPersonalApiKeysDatabase(),
+  pets: () => dbManager.getPetsDatabase(),
 };
 
 function deepClone(value) {
