@@ -155,6 +155,34 @@ class DatabaseManager {
   }
 
   /**
+   * Get webhooks database singleton
+   */
+  getWebhooksDatabase() {
+    return this.getDatabase("webhooks", "webhooks.json", {
+      version: 1,
+      webhooks: [],
+      counters: {
+        lastWebhookId: 0,
+      },
+      updatedAt: null,
+    });
+  }
+
+  /**
+   * Get webhook deliveries database singleton
+   */
+  getWebhookDeliveriesDatabase() {
+    return this.getDatabase("webhook-deliveries", "webhook-deliveries.json", {
+      version: 1,
+      deliveries: [],
+      counters: {
+        lastDeliveryId: 0,
+      },
+      updatedAt: null,
+    });
+  }
+
+  /**
    * Get messages database singleton
    */
   getMessagesDatabase() {

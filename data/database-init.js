@@ -36,6 +36,14 @@ async function initializeDatabases() {
     await postsDb.getAll();
     logDebug("Posts database initialized");
 
+    const webhooksDb = dbManager.getWebhooksDatabase();
+    await webhooksDb.getAll();
+    logDebug("Webhooks database initialized");
+
+    const webhookDeliveriesDb = dbManager.getWebhookDeliveriesDatabase();
+    await webhookDeliveriesDb.getAll();
+    logDebug("Webhook deliveries database initialized");
+
     logDebug("Databases initialized successfully");
   } catch (error) {
     logError("Failed to initialize databases:", error);

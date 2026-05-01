@@ -51,6 +51,26 @@ describe("IntegrationsPage personal API key feature gating", () => {
     const integrationsPanelWebhooks = createElement();
     integrationsPanelWebhooks.dataset = { integrationsPanel: "webhooks" };
 
+    const webhookSubTabList = createElement();
+    webhookSubTabList.dataset = { webhookSubtab: "list" };
+
+    const webhookSubTabDeliveries = createElement();
+    webhookSubTabDeliveries.dataset = { webhookSubtab: "deliveries" };
+
+    const webhookSubPanelList = createElement();
+    webhookSubPanelList.dataset = { webhookSubtabPanel: "list" };
+
+    const webhookSubPanelDeliveries = createElement();
+    webhookSubPanelDeliveries.dataset = { webhookSubtabPanel: "deliveries" };
+
+    const webhookEventCheckboxOne = createElement();
+    webhookEventCheckboxOne.value = "field.created";
+    webhookEventCheckboxOne.checked = true;
+
+    const webhookEventCheckboxTwo = createElement();
+    webhookEventCheckboxTwo.value = "transaction.created";
+    webhookEventCheckboxTwo.checked = false;
+
     const elementMap = new Map([
       ["loadingMessage", createElement()],
       ["errorMessage", createElement()],
@@ -77,10 +97,29 @@ describe("IntegrationsPage personal API key feature gating", () => {
       ["integrationsTabWebhooks", integrationsTabWebhooks],
       ["integrationsPanelPersonalApiKeys", integrationsPanelPersonalApiKeys],
       ["integrationsPanelWebhooks", integrationsPanelWebhooks],
+      ["webhookSubTabList", webhookSubTabList],
+      ["webhookSubTabDeliveries", webhookSubTabDeliveries],
+      ["webhookSubPanelList", webhookSubPanelList],
+      ["webhookSubPanelDeliveries", webhookSubPanelDeliveries],
+      ["webhooksSection", createElement()],
+      ["webhookForm", createElement()],
+      ["webhookName", createElement()],
+      ["webhookUrl", createElement()],
+      ["webhookEnabled", Object.assign(createElement(), { checked: true })],
+      ["createWebhookBtn", createElement()],
+      ["webhookMessage", createElement()],
+      ["webhookEventsState", createElement()],
+      ["webhookEventsOptions", createElement()],
+      ["webhookListState", createElement()],
+      ["webhookList", createElement()],
+      ["webhookDeliveryListState", createElement()],
+      ["webhookDeliveryList", createElement()],
     ]);
 
     const tabButtons = [integrationsTabPersonalApiKeys, integrationsTabWebhooks];
     const tabPanels = [integrationsPanelPersonalApiKeys, integrationsPanelWebhooks];
+    const webhookSubTabButtons = [webhookSubTabList, webhookSubTabDeliveries];
+    const webhookSubTabPanels = [webhookSubPanelList, webhookSubPanelDeliveries];
 
     global.window = {
       showNotification: vi.fn(),
@@ -101,6 +140,18 @@ describe("IntegrationsPage personal API key feature gating", () => {
 
         if (selector === "[data-integrations-panel]") {
           return tabPanels;
+        }
+
+        if (selector === "[data-webhook-subtab]") {
+          return webhookSubTabButtons;
+        }
+
+        if (selector === "[data-webhook-subtab-panel]") {
+          return webhookSubTabPanels;
+        }
+
+        if (selector === "#webhookEventsOptions input[type='checkbox']") {
+          return [webhookEventCheckboxOne, webhookEventCheckboxTwo];
         }
 
         return [];
@@ -183,7 +234,24 @@ describe("IntegrationsPage personal API key feature gating", () => {
   });
 
   it("opens the integrations page when only webhooks are enabled", async () => {
-    const getSpy = vi.fn();
+    const getSpy = vi.fn(async (url) => {
+      if (url === "users/profile/webhooks/events") {
+        return {
+          success: true,
+          data: { data: { items: [{ type: "field.created", label: "Field Created", description: "A field was created." }] } },
+        };
+      }
+
+      if (url === "users/profile/webhooks") {
+        return { success: true, data: { data: { items: [] } } };
+      }
+
+      if (url === "users/profile/webhooks/deliveries?limit=10") {
+        return { success: true, data: { data: { items: [] } } };
+      }
+
+      return { success: true, data: { data: { items: [] } } };
+    });
     const flagSpy = vi.fn(async (flagKey) => flagKey !== "personalApiKeysEnabled");
     const page = new global.__IntegrationsPage();
     const app = {
@@ -209,10 +277,59 @@ describe("IntegrationsPage personal API key feature gating", () => {
     expect(flagSpy).toHaveBeenCalledWith("personalApiKeysEnabled", false);
     expect(flagSpy).toHaveBeenCalledWith("integrationsWebhooksEnabled", false);
     expect(window.location.replace).not.toHaveBeenCalled();
-    expect(getSpy).not.toHaveBeenCalled();
+    expect(getSpy).toHaveBeenCalledWith("users/profile/webhooks/events", {
+      requiresAuth: true,
+      suppressErrorEvents: true,
+    });
+    expect(getSpy).toHaveBeenCalledWith("users/profile/webhooks", {
+      requiresAuth: true,
+      suppressErrorEvents: true,
+    });
+    expect(getSpy).toHaveBeenCalledWith("users/profile/webhooks/deliveries?limit=10", {
+      requiresAuth: true,
+      suppressErrorEvents: true,
+    });
     expect(global.__integrationsTestElements.get("integrationsContent").style.display).toBe("block");
     expect(global.__integrationsTestElements.get("integrationsPanelWebhooks").style.display).toBe("block");
     expect(global.__integrationsTestElements.get("integrationsPanelPersonalApiKeys").style.display).toBe("none");
+    expect(global.__integrationsTestElements.get("webhookSubPanelList").style.display).toBe("block");
+    expect(global.__integrationsTestElements.get("webhookSubPanelDeliveries").style.display).toBe("none");
+  });
+
+  it("submits the selected webhook configuration when creating a webhook", async () => {
+    const page = new global.__IntegrationsPage();
+    const nameInput = global.__integrationsTestElements.get("webhookName");
+    const urlInput = global.__integrationsTestElements.get("webhookUrl");
+    const enabledInput = global.__integrationsTestElements.get("webhookEnabled");
+    const button = global.__integrationsTestElements.get("createWebhookBtn");
+
+    nameInput.value = "Field sync";
+    urlInput.value = "https://example.com/hooks/field-sync";
+    enabledInput.checked = true;
+    button.innerHTML = '<i class="fas fa-plus"></i> Create Webhook';
+
+    page.apiService = {
+      post: vi.fn(async () => ({ success: true, data: { data: { webhook: { id: 1 } } } })),
+    };
+    page._showWebhookMessage = vi.fn();
+    page._loadWebhooks = vi.fn();
+    page._loadWebhookDeliveries = vi.fn();
+
+    await page._handleCreateWebhook();
+
+    expect(page.apiService.post).toHaveBeenCalledWith(
+      "users/profile/webhooks",
+      {
+        name: "Field sync",
+        url: "https://example.com/hooks/field-sync",
+        eventTypes: ["field.created"],
+        enabled: true,
+      },
+      { requiresAuth: true, suppressErrorEvents: true },
+    );
+    expect(nameInput.value).toBe("");
+    expect(urlInput.value).toBe("");
+    expect(enabledInput.checked).toBe(true);
   });
 
   it("submits the selected personal API key expiration when creating a key", async () => {
@@ -259,9 +376,34 @@ describe("IntegrationsPage personal API key feature gating", () => {
     expect(global.__integrationsTestElements.get("integrationsPanelWebhooks").style.display).toBe("none");
   });
 
-  it("switches to the webhooks placeholder tab", () => {
+  it("renders disabled webhooks with a distinct badge", () => {
+    const page = new global.__IntegrationsPage();
+    const list = global.__integrationsTestElements.get("webhookList");
+
+    page._formatOptionalDate = vi.fn(() => "Never");
+
+    page._renderWebhooks([
+      {
+        id: 1,
+        name: "Disabled sink",
+        url: "https://example.com/webhook",
+        eventTypes: ["field.created"],
+        enabled: false,
+        createdAt: new Date().toISOString(),
+        lastTriggeredAt: null,
+        lastDeliveredAt: null,
+        lastFailureAt: null,
+      },
+    ]);
+
+    expect(list.innerHTML).toContain("status-badge-modern--disabled");
+    expect(list.innerHTML).toContain("Disabled");
+  });
+
+  it("switches to the webhooks tab", () => {
     const page = new global.__IntegrationsPage();
     page.webhooksEnabled = true;
+    page._ensureWebhookDataLoaded = vi.fn();
 
     page._activateIntegrationsTab("webhooks");
 
@@ -270,5 +412,18 @@ describe("IntegrationsPage personal API key feature gating", () => {
     expect(global.__integrationsTestElements.get("integrationsPanelWebhooks").hidden).toBe(false);
     expect(global.__integrationsTestElements.get("integrationsPanelWebhooks").style.display).toBe("block");
     expect(global.__integrationsTestElements.get("integrationsTabWebhooks").setAttribute).toHaveBeenCalledWith("aria-selected", "true");
+    expect(page._ensureWebhookDataLoaded).toHaveBeenCalled();
+  });
+
+  it("switches between webhook list and deliveries subtabs", () => {
+    const page = new global.__IntegrationsPage();
+
+    page._activateWebhookSubTab("deliveries");
+
+    expect(global.__integrationsTestElements.get("webhookSubPanelList").hidden).toBe(true);
+    expect(global.__integrationsTestElements.get("webhookSubPanelList").style.display).toBe("none");
+    expect(global.__integrationsTestElements.get("webhookSubPanelDeliveries").hidden).toBe(false);
+    expect(global.__integrationsTestElements.get("webhookSubPanelDeliveries").style.display).toBe("block");
+    expect(global.__integrationsTestElements.get("webhookSubTabDeliveries").setAttribute).toHaveBeenCalledWith("aria-selected", "true");
   });
 });

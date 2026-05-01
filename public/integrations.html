@@ -29,7 +29,90 @@
             color: #264017;
         }
 
+        .status-badge-modern--disabled {
+            background: rgba(122, 122, 122, 0.14);
+            border-color: rgba(122, 122, 122, 0.22);
+            color: #5c5c5c;
+        }
+
         .integrations-tab-panel[hidden] {
+            display: none !important;
+        }
+
+        .integration-option-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .integration-option-card {
+            padding: 0.85rem 0.95rem;
+            border-radius: 0.9rem;
+            display: flex;
+            gap: 0.7rem;
+            align-items: flex-start;
+        }
+
+        .integration-option-card input {
+            margin-top: 0.25rem;
+        }
+
+        .integration-option-card strong {
+            display: block;
+            color: #264017;
+            margin-bottom: 0.2rem;
+        }
+
+        .integration-option-card small {
+            display: block;
+            color: #5d7050;
+            line-height: 1.45;
+        }
+
+        .integration-badge-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .integration-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.65rem;
+            border-radius: 999px;
+            background: rgba(126, 156, 104, 0.14);
+            color: #355023;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .integration-muted {
+            color: #5d7050;
+            line-height: 1.65;
+        }
+
+        .integration-subtab-list {
+            display: flex;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .integration-subtab-button {
+            border: 1px solid rgba(126, 156, 104, 0.22);
+            background: rgba(255, 255, 255, 0.45);
+            color: #355023;
+        }
+
+        .integration-subtab-button.is-active {
+            background: linear-gradient(135deg, rgba(126, 156, 104, 0.2), rgba(89, 124, 72, 0.28));
+            border-color: rgba(89, 124, 72, 0.4);
+            color: #264017;
+            box-shadow: 0 8px 20px rgba(89, 124, 72, 0.14);
+        }
+
+        .integration-subtab-panel[hidden] {
             display: none !important;
         }
     </style>
@@ -109,7 +192,7 @@
                             </button>
                         </div>
                         <p style="margin: 0.85rem 0 0 0; color: #51634a; line-height: 1.6">
-                            Manage your personal API access today. Additional integrations will appear here as they become available.
+                            Manage your personal API access and outbound automation hooks in one place.
                         </p>
                     </section>
 
@@ -216,7 +299,7 @@
 
                     <section id="integrationsPanelWebhooks" class="integrations-tab-panel" role="tabpanel" aria-labelledby="integrationsTabWebhooks" aria-hidden="true" data-integrations-panel="webhooks" data-feature-flag="integrationsWebhooksEnabled" data-feature-flag-default="false" data-testid="integrations-panel-webhooks" hidden style="display: none; padding: 10px !important;">
                         <div class="profile-grid-modern">
-                            <div class="profile-card-modern profile-card-modern--wide futuristic-card" data-testid="webhooks-placeholder">
+                            <div id="webhooksSection" class="profile-card-modern profile-card-modern--wide futuristic-card" data-testid="webhooks-manager">
                                 <div class="card-header-modern futuristic">
                                     <h3>
                                         <i class="fas fa-link"></i>
@@ -225,30 +308,115 @@
                                 </div>
                                 <div class="card-content-modern">
                                     <div class="glass" style="padding: 1.25rem; border-radius: 1rem; display: grid; gap: 1rem">
-                                        <p style="margin: 0; color: #51634a; line-height: 1.7">
-                                            This tab is a placeholder for future webhook integrations. Once webhooks are available, this is where you’ll configure outbound event deliveries and inspect their status.
+                                        <p style="margin: 0" class="integration-muted">
+                                            Create outbound webhooks for supported backend events. Rolnopol will deliver matching notifications to your integration and keep a delivery history so debugging does not require tea leaves.
                                         </p>
+
+                                        <form id="webhookForm" class="update-form-modern" style="display: grid; gap: 1rem">
+                                            <div class="form-group-modern">
+                                                <label for="webhookName" class="form-label-modern">
+                                                    <i class="fas fa-tag"></i>
+                                                    Webhook name
+                                                </label>
+                                                <input type="text" id="webhookName" class="form-input-modern" maxlength="80" placeholder="e.g. Farm operations sync" />
+                                                <div class="form-help-modern">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    Optional, but recommended. If you leave it blank Rolnopol will pick a sensible default.
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group-modern">
+                                                <label for="webhookUrl" class="form-label-modern">
+                                                    <i class="fas fa-globe"></i>
+                                                    Destination URL
+                                                </label>
+                                                <input type="url" id="webhookUrl" class="form-input-modern" placeholder="http://localhost:3000/api/v1/testing/webhooks/sink" />
+                                                <div class="form-help-modern">
+                                                    <i class="fas fa-lock"></i>
+                                                    Use an absolute <code>http</code> or <code>https</code> URL that can accept JSON POST requests.
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group-modern">
+                                                <div class="form-label-modern" style="margin-bottom: 0.75rem">
+                                                    <i class="fas fa-bolt"></i>
+                                                    Events
+                                                </div>
+                                                <div id="webhookEventsState" class="glass" style="padding: 0.9rem 1rem; border-radius: 0.9rem; color: #51634a">
+                                                    Loading supported webhook events...
+                                                </div>
+                                                <div id="webhookEventsOptions" class="integration-option-grid" style="display: none"></div>
+                                                <div class="form-help-modern" style="margin-top: 0.5rem">
+                                                    <i class="fas fa-circle-info"></i>
+                                                    You can subscribe one endpoint to multiple backend events and expand later without changing the page structure.
+                                                </div>
+                                            </div>
+
+                                            <label class="glass integration-option-card" style="grid-template-columns: auto 1fr; display: grid;">
+                                                <input type="checkbox" id="webhookEnabled" checked />
+                                                <span>
+                                                    <strong>Enable immediately</strong>
+                                                    <small>Turn it on as soon as it is created. You can disable it later without deleting the configuration.</small>
+                                                </span>
+                                            </label>
+
+                                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center">
+                                                <button id="createWebhookBtn" type="submit" class="btn btn-futuristic btn-compact">
+                                                    <i class="fas fa-plus"></i>
+                                                    Create Webhook
+                                                </button>
+                                                <div id="webhookMessage" class="message-modern" style="display: none"></div>
+                                            </div>
+                                        </form>
                                     </div>
+
+                                    <div id="webhookListState" class="loading-card-modern glass" style="margin-top: 1rem; padding: 1rem; display: none">
+                                        <p style="margin: 0">Loading webhooks...</p>
+                                    </div>
+
+                                    <div id="webhookDeliveryListState" class="loading-card-modern glass" style="margin-top: 1rem; padding: 1rem; display: none">
+                                        <p style="margin: 0">Loading recent delivery activity...</p>
+                                    </div>
+
+                                    <div class="integration-subtab-list" role="tablist" aria-label="Webhook details sections">
+                                        <button id="webhookSubTabList" class="btn btn-compact btn-futuristic integration-subtab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="webhookSubPanelList" data-webhook-subtab="list">
+                                            <i class="fas fa-list"></i>
+                                            Webhooks
+                                        </button>
+                                        <button id="webhookSubTabDeliveries" class="btn btn-compact btn-outline btn-futuristic integration-subtab-button" type="button" role="tab" aria-selected="false" aria-controls="webhookSubPanelDeliveries" data-webhook-subtab="deliveries">
+                                            <i class="fas fa-paper-plane"></i>
+                                            Deliveries
+                                        </button>
+                                    </div>
+
+                                    <section id="webhookSubPanelList" class="integration-subtab-panel" role="tabpanel" aria-labelledby="webhookSubTabList" aria-hidden="false" data-webhook-subtab-panel="list" style="margin-top: 1rem">
+                                        <div id="webhookList" style="display: grid; gap: 0.85rem"></div>
+                                    </section>
+
+                                    <section id="webhookSubPanelDeliveries" class="integration-subtab-panel" role="tabpanel" aria-labelledby="webhookSubTabDeliveries" aria-hidden="true" data-webhook-subtab-panel="deliveries" hidden style="margin-top: 1rem">
+                                        <div id="webhookDeliveryList" style="display: grid; gap: 0.85rem"></div>
+                                    </section>
                                 </div>
                             </div>
                         </div>
-                    </section>
+                </div>
+                </section>
 
-                </div>
-                <div class="quick-actions-modern">
-                    <a href="/profile.html" class="btn btn-compact btn-futuristic">
-                        <i class="fas fa-user"></i>
-                        Back to Profile
-                    </a>
-                    <a href="/" class="btn btn-compact btn-earth">
-                        <i class="fas fa-home"></i>
-                        Home
-                    </a>
-                </div>
             </div>
-        </main>
+            <div class="quick-actions-modern">
+                <a href="/profile.html" class="btn btn-compact btn-futuristic">
+                    <i class="fas fa-user"></i>
+                    Back to Profile
+                </a>
+                <a href="/" class="btn btn-compact btn-earth">
+                    <i class="fas fa-home"></i>
+                    Home
+                </a>
+            </div>
+    </div>
+    </main>
 
-        <div id="footer-component"></div>
+    <div id="footer-component"></div>
     </div>
 
     <div id="personalApiKeyModal" class="modal modal-centered" style="display: none">

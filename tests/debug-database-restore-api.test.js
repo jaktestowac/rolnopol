@@ -16,6 +16,8 @@ const ACCESSORS = {
   chaosEngine: () => dbManager.getChaosEngineDatabase(),
   commodities: () => dbManager.getCommoditiesDatabase(),
   messages: () => dbManager.getMessagesDatabase(),
+  webhooks: () => dbManager.getWebhooksDatabase(),
+  webhookDeliveries: () => dbManager.getWebhookDeliveriesDatabase(),
   blogs: () => dbManager.getBlogsDatabase(),
   posts: () => dbManager.getPostsDatabase(),
 };
@@ -63,6 +65,8 @@ describe("Debug database restore API", () => {
       "posts",
       "staff",
       "users",
+      "webhookDeliveries",
+      "webhooks",
     ]);
   });
 
@@ -84,6 +88,49 @@ describe("Debug database restore API", () => {
     });
     await ACCESSORS.messages().replaceAll({
       messages: [{ id: 1, fromUserId: 1, toUserId: 2, content: "temp", createdAt: new Date().toISOString() }],
+    });
+    await ACCESSORS.webhooks().replaceAll({
+      version: 1,
+      webhooks: [
+        {
+          id: 1,
+          userId: 1,
+          name: "temp",
+          url: "https://example.test/webhook",
+          eventTypes: ["field.created"],
+          enabled: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lastTriggeredAt: null,
+          lastDeliveredAt: null,
+          lastFailureAt: null,
+        },
+      ],
+      counters: { lastWebhookId: 1 },
+      updatedAt: new Date().toISOString(),
+    });
+    await ACCESSORS.webhookDeliveries().replaceAll({
+      version: 1,
+      deliveries: [
+        {
+          id: 1,
+          webhookId: 1,
+          userId: 1,
+          eventType: "field.created",
+          status: "failed",
+          attempts: 1,
+          targetUrl: "https://example.test/webhook",
+          requestPayload: { hello: "world" },
+          response: { statusCode: 500, body: "temp" },
+          reason: "temp",
+          correlationId: "temp-correlation",
+          notificationId: "notif-temp",
+          durationMs: 10,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      counters: { lastDeliveryId: 1 },
+      updatedAt: new Date().toISOString(),
     });
     await ACCESSORS.blogs().replaceAll([
       {

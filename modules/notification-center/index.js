@@ -5,6 +5,19 @@ const NOOP_PUBLISHER = {
   publish: () => null,
 };
 
+function _normalizeEvent(event = {}, defaults = {}) {
+  const safeEvent = event && typeof event === "object" ? event : {};
+  const fallbackSource =
+    typeof defaults.source === "string" && defaults.source.trim().length > 0 ? defaults.source : "notification-center-api";
+
+  return {
+    ...safeEvent,
+    type: typeof safeEvent.type === "string" ? safeEvent.type : "",
+    source: typeof safeEvent.source === "string" && safeEvent.source.trim().length > 0 ? safeEvent.source : fallbackSource,
+    payload: safeEvent.payload && typeof safeEvent.payload === "object" ? safeEvent.payload : {},
+  };
+}
+
 let featureFlagsServiceRef = null;
 let refreshPromise = null;
 
@@ -90,38 +103,44 @@ async function triggerTestEvent(payload = {}) {
   return moduleState.triggerTestEvent(payload);
 }
 
-async function publishEvent(eventType = "", payload = {}) {
+async function publish(event = {}, options = {}) {
   await _refreshStateFromFeatureFlagIfNeeded();
+  const normalizedEvent = _normalizeEvent(event, options);
   const eventPublisher = getEventPublisher();
+
+  if (!normalizedEvent.type) {
+    return {
+      accepted: false,
+      correlationId: null,
+      reason: "invalid_event_type",
+      event: normalizedEvent,
+    };
+  }
 
   if (!eventPublisher.isEnabled()) {
     return {
       accepted: false,
       correlationId: null,
       reason: "notification_center_disabled",
-      event: {
-        type: eventType,
-        source: "notification-center-api",
-        payload: payload && typeof payload === "object" ? payload : {},
-      },
+      event: normalizedEvent,
     };
   }
 
-  const correlationId = eventPublisher.publish({
-    type: eventType,
-    source: "notification-center-api",
-    payload: payload && typeof payload === "object" ? payload : {},
-  });
+  const correlationId = eventPublisher.publish(normalizedEvent);
 
   return {
     accepted: Boolean(correlationId),
     correlationId,
-    event: {
-      type: eventType,
-      source: "notification-center-api",
-      payload: payload && typeof payload === "object" ? payload : {},
-    },
+    event: normalizedEvent,
   };
+}
+
+async function publishEvent(eventType = "", payload = {}) {
+  return publish({
+    type: eventType,
+    source: "notification-center-api",
+    payload: payload && typeof payload === "object" ? payload : {},
+  });
 }
 
 function subscribeRealtime(handler) {
@@ -172,6 +191,7 @@ module.exports = {
   getHealth,
   getEvents,
   triggerTestEvent,
+  publish,
   publishEvent,
   subscribeRealtime,
   stop,

@@ -11,6 +11,10 @@ const toFloat = (value, fallback = 1) => {
 const speedFactor = Math.max(0.1, toFloat(process.env.PROCESSING_SPEED_FACTOR, 1));
 const globalDelay = Math.max(0, toInt(process.env.GLOBAL_PROCESSING_DELAY_MS, 0));
 
+// Allow tests to reduce the minimum processing delay via env var.
+// By default keep backward-compatible minimum of 1500ms.
+const minDefaultProcessingDelayMs = toInt(process.env.MIN_PROCESSING_DELAY_MS, 1500);
+
 const applyDelayFactor = (base) => Math.max(0, Math.round((globalDelay + Math.max(0, base)) * speedFactor));
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms)));
@@ -28,7 +32,7 @@ module.exports = {
     batchDelayMs: applyDelayFactor(toInt(process.env.BATCH_DELAY_MS, 500)),
     batchSize: Math.max(1, toInt(process.env.NOTIFICATION_BATCH_SIZE, 5)),
     tickMs: Math.max(100, toInt(process.env.NOTIFICATION_TICK_MS, 5000)),
-    defaultProcessingDelayMs: Math.max(1500, applyDelayFactor(toInt(process.env.DEFAULT_PROCESSING_DELAY_MS, 1000))),
+    defaultProcessingDelayMs: Math.max(minDefaultProcessingDelayMs, applyDelayFactor(toInt(process.env.DEFAULT_PROCESSING_DELAY_MS, 1000))),
     receivedToProcessingGlobalDelayMs: Math.max(0, applyDelayFactor(toInt(process.env.RECEIVED_TO_PROCESSING_GLOBAL_DELAY_MS, 250))),
   },
   channels: {

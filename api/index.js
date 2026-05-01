@@ -138,6 +138,8 @@ const initializeAllDatabases = async () => {
       dbManager.getStaffDatabase(),
       dbManager.getAnimalsDatabase(),
       dbManager.getAssignmentsDatabase(),
+      dbManager.getWebhooksDatabase(),
+      dbManager.getWebhookDeliveriesDatabase(),
     ];
 
     for (const db of databases) {

@@ -17,6 +17,8 @@ const DATABASE_ACCESSORS = {
   chaosEngine: () => dbManager.getChaosEngineDatabase(),
   commodities: () => dbManager.getCommoditiesDatabase(),
   messages: () => dbManager.getMessagesDatabase(),
+  webhooks: () => dbManager.getWebhooksDatabase(),
+  webhookDeliveries: () => dbManager.getWebhookDeliveriesDatabase(),
   blogs: () => dbManager.getBlogsDatabase(),
   posts: () => dbManager.getPostsDatabase(),
 };
@@ -38,6 +40,8 @@ function getResourceCount(value) {
   if (Array.isArray(value.offers)) return value.offers.length;
   if (Array.isArray(value.holdings)) return value.holdings.length;
   if (Array.isArray(value.messages)) return value.messages.length;
+  if (Array.isArray(value.webhooks)) return value.webhooks.length;
+  if (Array.isArray(value.deliveries)) return value.deliveries.length;
   if (value.flags && typeof value.flags === "object") return Object.keys(value.flags).length;
 
   return Object.keys(value).length;

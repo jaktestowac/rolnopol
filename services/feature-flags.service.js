@@ -27,7 +27,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   weatherUserInsightsEnabled: "Enable or disable personalized weather insights panel for authenticated users",
   weatherTrendChartEnabled: "Enable or disable compact trend chart with temperature, humidity, and wind on weather page",
   personalApiKeysEnabled: "Enable or disable personal API keys for user-managed integrations",
-  integrationsWebhooksEnabled: "Enable or disable the webhooks placeholder tab on the integrations page",
+  integrationsWebhooksEnabled: "Enable or disable user-managed webhook integrations and delivery activity logs",
   cookieConsentBannerEnabled: "Enable or disable cookie consent banner shown at the bottom of pages",
   promoAdvertsHomeEnabled: "Enable or disable Rolnopol promotional popups on home/dashboard pages",
   promoAdvertsAlertsEnabled: "Enable or disable Rolnopol promotional popups on alerts pages",

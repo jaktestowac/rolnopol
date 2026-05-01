@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "webhooks": [],
+  "counters": {
+    "lastWebhookId": 0
+  },
+  "updatedAt": null
+}
