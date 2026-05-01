@@ -90,9 +90,17 @@ function initNavigation(activeNavKey) {
 
           const defaultAttr = node.getAttribute("data-feature-flag-default");
           const defaultValue = defaultAttr === "true" ? true : defaultAttr === "false" ? false : false;
+          const logicAttr = node.getAttribute("data-feature-flag-logic");
+          const logic = typeof logicAttr === "string" && logicAttr.trim().toLowerCase() === "any" ? "any" : "all";
+          const flagKeys = flagKey
+            .split(",")
+            .map((key) => key.trim())
+            .filter(Boolean);
 
           try {
-            const enabled = await featureFlagsService.isEnabled(flagKey, defaultValue);
+            const flagStates = await Promise.all(flagKeys.map((key) => featureFlagsService.isEnabled(key, defaultValue)));
+            const enabled = flagStates.length > 0 ? (logic === "any" ? flagStates.some(Boolean) : flagStates.every(Boolean)) : false;
+
             if (!enabled) {
               node.style.display = "none";
               node.setAttribute("data-feature-flag-hidden", "true");

@@ -206,6 +206,58 @@ describe("authenticateUser middleware", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  it("should reject expired X-API-Key with an expiration-specific error", async () => {
+    const { authenticateUser } = await loadAuthenticateUser();
+    const userDataSingleton = require("../../data/user-data-singleton").getInstance();
+    const personalApiKeyServiceModule = await import("../../services/personal-api-key.service");
+    const personalApiKeyService = personalApiKeyServiceModule.default || personalApiKeyServiceModule;
+
+    const user = await userDataSingleton.createUser({
+      displayedName: "Expired API Key User",
+      email: `middleware-expired-api-key-${Date.now()}@test.com`,
+      password: "testpass123",
+    });
+
+    const createdKey = await personalApiKeyService.createKey(user.id, {
+      label: "Expiring middleware key",
+      scopes: ["user-account"],
+      expiration: "1d",
+    });
+
+    await personalApiKeyService.db.update((current) => ({
+      ...current,
+      keys: current.keys.map((item) => {
+        if (item.id !== createdKey.key.id) {
+          return item;
+        }
+
+        return {
+          ...item,
+          expiration: "1d",
+          expiresAt: new Date(Date.now() - 60 * 1000).toISOString(),
+        };
+      }),
+    }));
+
+    const req = {
+      headers: { "x-api-key": createdKey.rawKey },
+      cookies: {},
+      originalUrl: "/api/v1/users/profile",
+    };
+    const res = mockRes();
+    const next = vi.fn();
+
+    await authenticateUser(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: "Expired API key",
+      }),
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it("should reject X-API-Key on session-only middleware", async () => {
     const { authenticateSessionUser } = await loadAuthenticateUser();
 

@@ -257,6 +257,9 @@
       case "profile":
         setupProfilePage();
         break;
+      case "integrations":
+        setupIntegrationsPage();
+        break;
       case "dashboard":
         setupDashboardPage();
         break;
@@ -454,6 +457,23 @@
     } else {
       // Fallback to original profile loading
       loadProfileData();
+    }
+  }
+
+  function setupIntegrationsPage() {
+    const authService = window.App.getModule("authService");
+
+    if (!authService || !authService.requireAuth("/login.html")) {
+      return;
+    }
+
+    const IntegrationsPageClass = window.IntegrationsPage || globalThis.IntegrationsPage;
+
+    if (IntegrationsPageClass) {
+      const integrationsPage = new IntegrationsPageClass();
+      window.App.registerModule("integrationsPage", integrationsPage);
+    } else {
+      console.error("IntegrationsPage class not found");
     }
   }
 

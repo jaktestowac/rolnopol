@@ -3,6 +3,7 @@ import request from "supertest";
 
 const app = require("../api/index.js");
 const featureFlagsService = require("../services/feature-flags.service");
+const personalApiKeyService = require("../services/personal-api-key.service");
 
 const DEFAULT_PERSONAL_API_KEY_LABEL = "Personal integration key";
 
@@ -88,6 +89,41 @@ describe("Personal API keys API", () => {
     expect(Array.isArray(listRes.body.data.items)).toBe(true);
     expect(listRes.body.data.items.length).toBeGreaterThanOrEqual(1);
     expect(listRes.body.data.items[0]).not.toHaveProperty("rawKey");
+  });
+
+  it("creates personal API keys with configurable expiration metadata", async () => {
+    const session = await registerUser();
+    await enablePersonalApiKeysFeature();
+
+    const createRes = await createPersonalApiKey(session, {
+      label: "Biweekly sync",
+      expiration: "14d",
+    });
+
+    expect(createRes.body.success).toBe(true);
+    expect(createRes.body.data.key.expiration).toBe("14d");
+    expect(createRes.body.data.key.expiresAt).toEqual(expect.any(String));
+    expect(createRes.body.data.key.isExpired).toBe(false);
+    expect(createRes.body.data.allowedExpirations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ value: "1d", label: "1 day" }),
+        expect.objectContaining({ value: "never", label: "No expiration date" }),
+      ]),
+    );
+
+    const listRes = await request(app).get("/api/v1/users/profile/api-keys").set("token", session.token).expect(200);
+    const createdKey = listRes.body.data.items.find((item) => item.id === createRes.body.data.key.id);
+
+    expect(createdKey).toEqual(
+      expect.objectContaining({
+        expiration: "14d",
+        expiresAt: expect.any(String),
+        isExpired: false,
+      }),
+    );
+    expect(listRes.body.data.allowedExpirations).toEqual(
+      expect.arrayContaining([expect.objectContaining({ value: "30d" }), expect.objectContaining({ value: "365d" })]),
+    );
   });
 
   it("authenticates user-account scoped API keys on protected profile endpoints", async () => {
@@ -415,6 +451,39 @@ describe("Personal API keys API", () => {
     expect(profileRes.body.data.id).toBe(session.userId);
   });
 
+  it("rejects expired API keys on protected endpoints", async () => {
+    const session = await registerUser();
+    await enablePersonalApiKeysFeature();
+
+    const createRes = await createPersonalApiKey(session, {
+      label: "Short lease",
+      expiration: "1d",
+    });
+
+    const keyId = createRes.body.data.key.id;
+    const rawKey = createRes.body.data.rawKey;
+
+    await personalApiKeyService.db.update((current) => ({
+      ...current,
+      keys: current.keys.map((item) => {
+        if (item.id !== keyId) {
+          return item;
+        }
+
+        return {
+          ...item,
+          expiration: "1d",
+          expiresAt: new Date(Date.now() - 60 * 1000).toISOString(),
+        };
+      }),
+    }));
+
+    const profileRes = await request(app).get("/api/v1/users/profile").set("X-API-Key", rawKey).expect(403);
+
+    expect(profileRes.body.success).toBe(false);
+    expect(String(profileRes.body.error || "")).toContain("Expired API key");
+  });
+
   it("revokes API keys and requires session auth for key lifecycle endpoints", async () => {
     const session = await registerUser();
     await enablePersonalApiKeysFeature();
@@ -526,6 +595,19 @@ describe("Personal API keys API", () => {
 
     expect(unsupportedScopeRes.body.success).toBe(false);
     expect(unsupportedScopeRes.body.error).toContain("unsupported scope");
+
+    const unsupportedExpirationRes = await request(app)
+      .post("/api/v1/users/profile/api-keys")
+      .set("token", session.token)
+      .send({
+        label: "Bad expiration",
+        scopes: ["user-account"],
+        expiration: "2h",
+      })
+      .expect(400);
+
+    expect(unsupportedExpirationRes.body.success).toBe(false);
+    expect(unsupportedExpirationRes.body.error).toContain("unsupported expiration");
   });
 
   it("returns not found when the personal API keys feature flag is disabled", async () => {
@@ -556,5 +638,74 @@ describe("Personal API keys API", () => {
 
     expect(profileRes.body.success).toBe(false);
     expect(String(profileRes.body.error || "")).toContain("Invalid or revoked API key");
+  });
+
+  it("marks expired API keys as expired in the owner's key list", async () => {
+    const session = await registerUser();
+    await enablePersonalApiKeysFeature();
+
+    const createRes = await createPersonalApiKey(session, {
+      label: "Lease marker",
+      expiration: "1d",
+    });
+
+    const keyId = createRes.body.data.key.id;
+
+    // Fast-forward the store so the key looks expired
+    await personalApiKeyService.db.update((current) => ({
+      ...current,
+      keys: current.keys.map((item) => {
+        if (item.id !== keyId) return item;
+
+        return {
+          ...item,
+          expiration: "1d",
+          expiresAt: new Date(Date.now() - 60 * 1000).toISOString(),
+        };
+      }),
+    }));
+
+    const listRes = await request(app).get("/api/v1/users/profile/api-keys").set("token", session.token).expect(200);
+
+    const found = listRes.body.data.items.find((i) => i.id === keyId);
+    expect(found).toBeTruthy();
+    expect(found.isExpired).toBe(true);
+    expect(found.expiresAt).toEqual(expect.any(String));
+  });
+
+  it("does not update lastUsedAt when an expired API key is used", async () => {
+    const session = await registerUser();
+    await enablePersonalApiKeysFeature();
+
+    const createRes = await createPersonalApiKey(session, {
+      label: "Expiry no-usage",
+      expiration: "1d",
+    });
+
+    const keyId = createRes.body.data.key.id;
+    const rawKey = createRes.body.data.rawKey;
+
+    // Expire the key in the store
+    await personalApiKeyService.db.update((current) => ({
+      ...current,
+      keys: current.keys.map((item) => {
+        if (item.id !== keyId) return item;
+
+        return {
+          ...item,
+          expiration: "1d",
+          expiresAt: new Date(Date.now() - 60 * 1000).toISOString(),
+        };
+      }),
+    }));
+
+    // Attempt to use the expired key — should be rejected
+    await request(app).get("/api/v1/users/profile").set("X-API-Key", rawKey).expect(403);
+
+    // Ensure lastUsedAt was not updated for the expired key
+    const listRes = await request(app).get("/api/v1/users/profile/api-keys").set("token", session.token).expect(200);
+    const found = listRes.body.data.items.find((i) => i.id === keyId);
+    expect(found).toBeTruthy();
+    expect(found.lastUsedAt).toBeNull();
   });
 });

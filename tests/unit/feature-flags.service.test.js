@@ -37,6 +37,7 @@ describe("feature-flags.service", () => {
         weatherWeatherDataExport: false,
         weatherUserInsightsEnabled: false,
         weatherTrendChartEnabled: false,
+        personalApiKeysEnabled: false,
         cookieConsentBannerEnabled: false,
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
@@ -45,6 +46,7 @@ describe("feature-flags.service", () => {
         petBuddyEnabled: false,
         rolnopolFarmlogEnabled: false,
         rolnopolFarmlogEngagementEnabled: false,
+        integrationsWebhooksEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -92,6 +94,7 @@ describe("feature-flags.service", () => {
         weatherWeatherDataExport: false,
         weatherUserInsightsEnabled: false,
         weatherTrendChartEnabled: false,
+        personalApiKeysEnabled: false,
         cookieConsentBannerEnabled: false,
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
@@ -100,6 +103,7 @@ describe("feature-flags.service", () => {
         petBuddyEnabled: false,
         rolnopolFarmlogEnabled: false,
         rolnopolFarmlogEngagementEnabled: false,
+        integrationsWebhooksEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -152,6 +156,7 @@ describe("feature-flags.service", () => {
         weatherWeatherDataExport: false,
         weatherUserInsightsEnabled: false,
         weatherTrendChartEnabled: false,
+        personalApiKeysEnabled: false,
         cookieConsentBannerEnabled: false,
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
@@ -160,6 +165,7 @@ describe("feature-flags.service", () => {
         petBuddyEnabled: false,
         rolnopolFarmlogEnabled: false,
         rolnopolFarmlogEngagementEnabled: false,
+        integrationsWebhooksEnabled: false,
       },
       updatedAt: now.toISOString(),
     });
@@ -199,6 +205,7 @@ describe("feature-flags.service", () => {
       flags: expect.objectContaining({
         alertsEnabled: false,
         customPilotFlag: true,
+        personalApiKeysEnabled: false,
         cookieConsentBannerEnabled: false,
         messengerEnabled: false,
         assistantChatEnabled: false,
@@ -209,6 +216,7 @@ describe("feature-flags.service", () => {
         weatherTrendChartEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
         promoAdvertsBottomBannerEnabled: false,
+        integrationsWebhooksEnabled: false,
       }),
       updatedAt: now.toISOString(),
     });
@@ -245,6 +253,7 @@ describe("feature-flags.service", () => {
         weatherWeatherDataExport: false,
         weatherUserInsightsEnabled: false,
         weatherTrendChartEnabled: false,
+        personalApiKeysEnabled: false,
         promoAdvertsHomeEnabled: false,
         promoAdvertsAlertsEnabled: false,
         promoAdvertsGeneralAdEnabled: false,
@@ -252,6 +261,7 @@ describe("feature-flags.service", () => {
         petBuddyEnabled: false,
         rolnopolFarmlogEnabled: false,
         rolnopolFarmlogEngagementEnabled: false,
+        integrationsWebhooksEnabled: false,
       },
       updatedAt: "2026-02-07T00:00:00.000Z",
     };
@@ -261,6 +271,7 @@ describe("feature-flags.service", () => {
     const result = await featureFlagsService.getFeatureFlags();
 
     expect(result).toEqual(payload);
+    expect(result.flags).toHaveProperty("integrationsWebhooksEnabled", false);
     expect(getSpy).toHaveBeenCalled();
     expect(replaceSpy).not.toHaveBeenCalled();
 

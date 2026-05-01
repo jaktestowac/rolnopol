@@ -346,6 +346,28 @@ app.get(["/weather", "/weather.html"], async (req, res, next) => {
   }
 });
 
+// Feature-gate personal integrations page before static serving
+app.get(["/integrations", "/integrations.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.personalApiKeysEnabled === true || data?.flags?.integrationsWebhooksEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/integrations") {
+      return res.redirect(302, "/integrations.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Personal integrations feature gate check failed", { error });
+    return next();
+  }
+});
+
 // Feature-gate pet buddy page before static serving
 app.get(["/buddy", "/buddy.html"], async (req, res, next) => {
   try {

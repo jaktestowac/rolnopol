@@ -12,6 +12,10 @@ function createElement() {
     style: { display: "" },
     textContent: "",
     innerHTML: "",
+    value: "",
+    disabled: false,
+    className: "",
+    focus: vi.fn(),
   };
 }
 
@@ -25,6 +29,9 @@ describe("ProfilePage personal API key feature gating", () => {
       ["personalApiKeyModal", createElement()],
       ["personalApiKeyModalValue", createElement()],
       ["personalApiKeyHelpModal", createElement()],
+      ["personalApiKeyLabel", createElement()],
+      ["personalApiKeyExpiration", createElement()],
+      ["createPersonalApiKeyBtn", createElement()],
     ]);
 
     global.window = {
@@ -78,5 +85,37 @@ describe("ProfilePage personal API key feature gating", () => {
       requiresAuth: true,
       suppressErrorEvents: true,
     });
+  });
+
+  it("submits the selected personal API key expiration when creating a key", async () => {
+    const page = new global.__ProfilePage();
+    const labelInput = global.__profileTestElements.get("personalApiKeyLabel");
+    const expirationSelect = global.__profileTestElements.get("personalApiKeyExpiration");
+    const button = global.__profileTestElements.get("createPersonalApiKeyBtn");
+
+    labelInput.value = "Weather sync";
+    expirationSelect.value = "30d";
+    button.innerHTML = '<i class="fas fa-plus"></i> Create API Key';
+
+    page.apiService = {
+      post: vi.fn(async () => ({ success: true, data: { data: { rawKey: "rpk_live_test" } } })),
+    };
+    page._getSelectedPersonalApiKeyScopes = vi.fn(() => ["user-account"]);
+    page._revealPersonalApiKey = vi.fn();
+    page._showPersonalApiKeyMessage = vi.fn();
+    page._loadPersonalApiKeys = vi.fn();
+
+    await page._handleCreatePersonalApiKey();
+
+    expect(page.apiService.post).toHaveBeenCalledWith(
+      "users/profile/api-keys",
+      {
+        label: "Weather sync",
+        scopes: ["user-account"],
+        expiration: "30d",
+      },
+      { requiresAuth: true, suppressErrorEvents: true },
+    );
+    expect(expirationSelect.value).toBe("never");
   });
 });

@@ -65,8 +65,13 @@ function createAuthenticateUser(options = {}) {
         const result = await personalApiKeyService.authenticateApiKey(apiKey, req);
 
         if (!result?.valid) {
-          const errorMessage =
-            result?.reason === "insufficient_scope" ? "API key does not grant access to this resource" : "Invalid or revoked API key";
+          let errorMessage = "Invalid or revoked API key";
+
+          if (result?.reason === "insufficient_scope") {
+            errorMessage = "API key does not grant access to this resource";
+          } else if (result?.reason === "expired") {
+            errorMessage = "Expired API key";
+          }
 
           return res.status(403).json(
             formatResponseBody({

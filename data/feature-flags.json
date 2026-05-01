@@ -25,6 +25,7 @@
     "weatherUserInsightsEnabled": false,
     "weatherTrendChartEnabled": false,
     "personalApiKeysEnabled": false,
+    "integrationsWebhooksEnabled": false,
     "promoAdvertsHomeEnabled": false,
     "promoAdvertsAlertsEnabled": false,
     "promoAdvertsGeneralAdEnabled": false,

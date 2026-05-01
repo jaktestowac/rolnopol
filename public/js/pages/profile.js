@@ -43,7 +43,6 @@ class ProfilePage {
     await this._loadProfileData();
     this._setupProfileForm();
     this._setupEventListeners();
-    await this._initPersonalApiKeys();
   }
 
   /**
@@ -821,9 +820,6 @@ class ProfilePage {
 
     // Inline edit for Profile Information card
     this._setupInlineEditHandlers();
-
-    // Personal API keys panel
-    this._setupPersonalApiKeyHandlers();
   }
 
   async _initPersonalApiKeys() {
@@ -1067,13 +1063,17 @@ class ProfilePage {
       .map((item) => {
         const scopes = Array.isArray(item.scopes) ? item.scopes.join(", ") : "all";
         const revoked = item.isRevoked === true;
+        const expired = item.isExpired === true && !revoked;
         const statusBadgeClass = revoked
           ? "status-badge-modern status-badge-modern--revoked"
-          : "status-badge-modern status-badge-modern--active";
-        const statusLabel = revoked ? "Revoked" : "Active";
-        const secondaryMeta = revoked
-          ? `Revoked: ${this._formatOptionalDate(item.revokedAt)}`
-          : `Last used: ${this._formatOptionalDate(item.lastUsedAt)}`;
+          : expired
+            ? "status-badge-modern"
+            : "status-badge-modern status-badge-modern--active";
+        const statusLabel = revoked ? "Revoked" : expired ? "Expired" : "Active";
+        const activityLabel = revoked ? "Revoked" : "Last used";
+        const activityValue = revoked ? this._formatOptionalDate(item.revokedAt) : this._formatOptionalDate(item.lastUsedAt);
+        const expirationValue = this._formatPersonalApiKeyExpirationDate(item);
+        const lifetimeLabel = this._describePersonalApiKeyExpiration(item.expiration);
 
         return `
           <article class="glass" style="padding: 1rem; border-radius: 1rem; display: flex; flex-direction: column; gap: 0.85rem">
@@ -1098,8 +1098,16 @@ class ProfilePage {
                 <div style="color: #51634a">${this._escapeHtml(this._formatOptionalDate(item.createdAt))}</div>
               </div>
               <div>
-                <strong>${revoked ? "Revoked" : "Last used"}</strong>
-                <div style="color: #51634a">${this._escapeHtml(secondaryMeta.replace(/^[^:]+:\s*/, ""))}</div>
+                <strong>Lifetime</strong>
+                <div style="color: #51634a">${this._escapeHtml(lifetimeLabel)}</div>
+              </div>
+              <div>
+                <strong>Expires</strong>
+                <div style="color: #51634a">${this._escapeHtml(expirationValue)}</div>
+              </div>
+              <div>
+                <strong>${activityLabel}</strong>
+                <div style="color: #51634a">${this._escapeHtml(activityValue)}</div>
               </div>
             </div>
 
@@ -1135,6 +1143,7 @@ class ProfilePage {
         {
           label: labelInput ? labelInput.value.trim() : "",
           scopes: this._getSelectedPersonalApiKeyScopes(),
+          expiration: this._getSelectedPersonalApiKeyExpiration(),
         },
         { requiresAuth: true, suppressErrorEvents: true },
       );
@@ -1156,6 +1165,7 @@ class ProfilePage {
       }
 
       this._resetPersonalApiKeyScopes();
+      this._resetPersonalApiKeyExpiration();
       await this._loadPersonalApiKeys();
     } catch (error) {
       if (this._isPersonalApiKeysUnavailable(error)) {
@@ -1257,11 +1267,25 @@ class ProfilePage {
     return selected.length > 0 ? selected : ["user-account"];
   }
 
+  _getSelectedPersonalApiKeyExpiration() {
+    const expirationSelect = document.getElementById("personalApiKeyExpiration");
+    const normalized = expirationSelect && typeof expirationSelect.value === "string" ? expirationSelect.value.trim().toLowerCase() : "";
+
+    return normalized || "never";
+  }
+
   _resetPersonalApiKeyScopes() {
     const scopeInputs = Array.from(document.querySelectorAll("#personalApiKeyScopes input[type='checkbox']"));
     scopeInputs.forEach((input) => {
       input.checked = input.value === "user-account";
     });
+  }
+
+  _resetPersonalApiKeyExpiration() {
+    const expirationSelect = document.getElementById("personalApiKeyExpiration");
+    if (expirationSelect) {
+      expirationSelect.value = "never";
+    }
   }
 
   _revealPersonalApiKey(rawKey) {
@@ -1348,6 +1372,28 @@ class ProfilePage {
     }
 
     return this._formatDate(value);
+  }
+
+  _formatPersonalApiKeyExpirationDate(item) {
+    if (!item || !item.expiresAt || item.expiration === "never") {
+      return "No expiration date";
+    }
+
+    return this._formatOptionalDate(item.expiresAt);
+  }
+
+  _describePersonalApiKeyExpiration(expiration) {
+    const labels = {
+      "1d": "1 day",
+      "7d": "7 days",
+      "14d": "14 days",
+      "30d": "30 days",
+      "365d": "1 year",
+      never: "No expiration date",
+    };
+
+    const normalized = typeof expiration === "string" ? expiration.trim().toLowerCase() : "never";
+    return labels[normalized] || labels.never;
   }
 
   _escapeHtml(value) {

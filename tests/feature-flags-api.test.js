@@ -26,6 +26,10 @@ describe("Feature Flags API", () => {
     expect(res.body.data.groups).toHaveProperty("communication");
     expect(Array.isArray(res.body.data.groups.communication)).toBe(true);
     expect(res.body.data.groups.communication).toContain("assistantChatEnabled");
+    expect(res.body.data.groups).toHaveProperty("integrations");
+    expect(Array.isArray(res.body.data.groups.integrations)).toBe(true);
+    expect(res.body.data.groups.integrations).toContain("personalApiKeysEnabled");
+    expect(res.body.data.groups.integrations).toContain("integrationsWebhooksEnabled");
     expect(res.body.data.flags).toHaveProperty("cookieConsentBannerEnabled");
     expect(res.body.data.flags).toHaveProperty("notificationCenterEnabled");
     expect(res.body.data.groups).toHaveProperty("privacy");

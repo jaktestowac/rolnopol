@@ -26,6 +26,22 @@ const SCOPE_ALIASES = Object.freeze({
 
 const MAX_ACTIVE_KEYS_PER_USER = 20;
 const DEFAULT_LABEL = "Personal integration key";
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_EXPIRATION = "never";
+const API_KEY_EXPIRATION_OPTIONS = Object.freeze([
+  Object.freeze({ value: "1d", label: "1 day", days: 1 }),
+  Object.freeze({ value: "7d", label: "7 days", days: 7 }),
+  Object.freeze({ value: "14d", label: "14 days", days: 14 }),
+  Object.freeze({ value: "30d", label: "30 days", days: 30 }),
+  Object.freeze({ value: "365d", label: "1 year", days: 365 }),
+  Object.freeze({ value: "never", label: "No expiration date", days: null }),
+]);
+const API_KEY_EXPIRATION_LOOKUP = Object.freeze(
+  API_KEY_EXPIRATION_OPTIONS.reduce((lookup, option) => {
+    lookup[option.value] = option;
+    return lookup;
+  }, {}),
+);
 
 class PersonalApiKeyService {
   constructor() {
@@ -41,9 +57,11 @@ class PersonalApiKeyService {
     return store.keys
       .filter((record) => Number(record.userId) === Number(user.id))
       .sort((left, right) => {
-        if (!!left.revokedAt !== !!right.revokedAt) {
-          return left.revokedAt ? 1 : -1;
+        const statusWeight = this._getStatusSortWeight(left) - this._getStatusSortWeight(right);
+        if (statusWeight !== 0) {
+          return statusWeight;
         }
+
         return String(right.createdAt || "").localeCompare(String(left.createdAt || ""));
       })
       .map((record) => this._toPublicRecord(record));
@@ -53,24 +71,34 @@ class PersonalApiKeyService {
     return [...API_KEY_SCOPES];
   }
 
+  listAvailableExpirationOptions() {
+    return API_KEY_EXPIRATION_OPTIONS.map((option) => ({ ...option }));
+  }
+
   async createKey(userId, input = {}) {
     const user = await this._ensureActiveUser(userId);
     const label = this._sanitizeLabel(input.label);
     const scopes = this._normalizeScopes(input.scopes);
+    const expiration = this._normalizeExpiration(input.expiration);
     const store = await this._getStore();
 
-    const activeCount = store.keys.filter((record) => Number(record.userId) === Number(user.id) && !record.revokedAt).length;
+    const activeCount = store.keys.filter(
+      (record) => Number(record.userId) === Number(user.id) && !record.revokedAt && !this._isExpired(record),
+    ).length;
     if (activeCount >= MAX_ACTIVE_KEYS_PER_USER) {
       throw new Error(`Validation failed: maximum of ${MAX_ACTIVE_KEYS_PER_USER} active API keys reached`);
     }
 
     const rawKey = this._generateRawKey();
-    const now = new Date().toISOString();
+    const nowDate = new Date();
+    const now = nowDate.toISOString();
     const record = {
       id: randomUUID(),
       userId: Number(user.id),
       label,
       scopes,
+      expiration,
+      expiresAt: this._calculateExpiresAt(expiration, nowDate),
       keyHash: this._hashKey(rawKey),
       keyPreview: this._buildPreview(rawKey),
       keyPrefix: this._buildPrefix(rawKey),
@@ -94,6 +122,8 @@ class PersonalApiKeyService {
       userId: user.id,
       apiKeyId: record.id,
       scopes,
+      expiration,
+      expiresAt: record.expiresAt,
     });
 
     return {
@@ -124,7 +154,7 @@ class PersonalApiKeyService {
     return this._toPublicRecord(record);
   }
 
-  async regenerateKey(userId, keyId) {
+  async regenerateKey(userId, keyId, input = {}) {
     const user = await this._ensureActiveUser(userId);
     const rawKey = this._generateRawKey();
 
@@ -133,8 +163,15 @@ class PersonalApiKeyService {
         throw new Error("Cannot regenerate a revoked API key");
       }
 
+      const expiration = this._normalizeExpiration(
+        Object.prototype.hasOwnProperty.call(input, "expiration") ? input.expiration : existing.expiration,
+        { allowDefault: true },
+      );
+
       return {
         ...existing,
+        expiration,
+        expiresAt: this._calculateExpiresAt(expiration, now),
         keyHash: this._hashKey(rawKey),
         keyPreview: this._buildPreview(rawKey),
         keyPrefix: this._buildPrefix(rawKey),
@@ -147,6 +184,8 @@ class PersonalApiKeyService {
     logDebug("Regenerated personal API key", {
       userId: user.id,
       apiKeyId: record.id,
+      expiration: record.expiration,
+      expiresAt: record.expiresAt,
     });
 
     return {
@@ -172,6 +211,14 @@ class PersonalApiKeyService {
 
     if (!record) {
       return { valid: false, reason: "invalid" };
+    }
+
+    if (this._isExpired(record)) {
+      return {
+        valid: false,
+        reason: "expired",
+        apiKey: this._toPublicRecord(record),
+      };
     }
 
     const user = await this.userDataInstance.findUser(record.userId);
@@ -288,6 +335,8 @@ class PersonalApiKeyService {
             userId: Number(record.userId),
             label: this._sanitizeLabel(record.label, { allowDefault: true }),
             scopes: this._normalizeScopes(record.scopes, { allowDefault: true }),
+            expiration: this._normalizeExpiration(record.expiration, { allowDefault: true, allowInvalidAsDefault: true }),
+            expiresAt: typeof record.expiresAt === "string" ? record.expiresAt : null,
             keyHash: String(record.keyHash),
             keyPreview: typeof record.keyPreview === "string" ? record.keyPreview : null,
             keyPrefix: typeof record.keyPrefix === "string" ? record.keyPrefix : null,
@@ -364,6 +413,73 @@ class PersonalApiKeyService {
     return normalizedScopes;
   }
 
+  _normalizeExpiration(expiration, options = {}) {
+    const allowDefault = options.allowDefault !== false;
+    const allowInvalidAsDefault = options.allowInvalidAsDefault === true;
+    const normalized = typeof expiration === "string" ? expiration.trim().toLowerCase() : "";
+
+    if (!normalized) {
+      if (allowDefault) {
+        return DEFAULT_EXPIRATION;
+      }
+
+      throw new Error("Validation failed: expiration is required");
+    }
+
+    if (!API_KEY_EXPIRATION_LOOKUP[normalized]) {
+      if (allowDefault && allowInvalidAsDefault) {
+        return DEFAULT_EXPIRATION;
+      }
+
+      throw new Error(`Validation failed: unsupported expiration \"${expiration}\"`);
+    }
+
+    return normalized;
+  }
+
+  _calculateExpiresAt(expiration, referenceTime = Date.now()) {
+    const normalizedExpiration = this._normalizeExpiration(expiration, { allowDefault: true, allowInvalidAsDefault: true });
+    const option = API_KEY_EXPIRATION_LOOKUP[normalizedExpiration] || API_KEY_EXPIRATION_LOOKUP[DEFAULT_EXPIRATION];
+
+    if (!option || option.days == null) {
+      return null;
+    }
+
+    const baseTime = referenceTime instanceof Date ? referenceTime.getTime() : new Date(referenceTime).getTime();
+    if (!Number.isFinite(baseTime)) {
+      return null;
+    }
+
+    return new Date(baseTime + option.days * DAY_IN_MS).toISOString();
+  }
+
+  _isExpired(record, referenceTime = Date.now()) {
+    if (!record || typeof record.expiresAt !== "string" || record.expiresAt.trim().length === 0) {
+      return false;
+    }
+
+    const expiresAtMs = new Date(record.expiresAt).getTime();
+    const referenceMs = referenceTime instanceof Date ? referenceTime.getTime() : new Date(referenceTime).getTime();
+
+    if (!Number.isFinite(expiresAtMs) || !Number.isFinite(referenceMs)) {
+      return false;
+    }
+
+    return expiresAtMs <= referenceMs;
+  }
+
+  _getStatusSortWeight(record) {
+    if (record?.revokedAt) {
+      return 2;
+    }
+
+    if (this._isExpired(record)) {
+      return 1;
+    }
+
+    return 0;
+  }
+
   _generateRawKey() {
     return `rpk_live_${randomBytes(24).toString("base64url")}`;
   }
@@ -405,11 +521,16 @@ class PersonalApiKeyService {
   }
 
   _toPublicRecord(record) {
+    const expiration = this._normalizeExpiration(record?.expiration, { allowDefault: true, allowInvalidAsDefault: true });
+    const isExpired = this._isExpired(record);
+
     return {
       id: record.id,
       userId: Number(record.userId),
       label: record.label,
       scopes: this._normalizeScopes(record.scopes, { allowDefault: true }),
+      expiration,
+      expiresAt: typeof record.expiresAt === "string" ? record.expiresAt : null,
       keyPreview: record.keyPreview,
       keyPrefix: record.keyPrefix,
       createdAt: record.createdAt,
@@ -417,6 +538,7 @@ class PersonalApiKeyService {
       lastUsedAt: record.lastUsedAt,
       regeneratedAt: record.regeneratedAt,
       revokedAt: record.revokedAt,
+      isExpired,
       isRevoked: !!record.revokedAt,
     };
   }
@@ -482,3 +604,4 @@ class PersonalApiKeyService {
 
 module.exports = new PersonalApiKeyService();
 module.exports.API_KEY_SCOPES = API_KEY_SCOPES;
+module.exports.API_KEY_EXPIRATION_OPTIONS = API_KEY_EXPIRATION_OPTIONS;

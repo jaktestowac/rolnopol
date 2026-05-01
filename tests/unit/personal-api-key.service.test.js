@@ -24,6 +24,7 @@ function buildActiveKeyRecord(userId, index) {
 
 describe("personal-api-key.service", () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -75,6 +76,68 @@ describe("personal-api-key.service", () => {
         scopes: ["user-account", "chatbot"],
       }),
     );
+  });
+
+  it("creates keys with the selected expiration window", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-30T12:00:00.000Z"));
+
+    vi.spyOn(personalApiKeyService.userDataInstance, "findUser").mockResolvedValue({
+      id: 77,
+      isActive: true,
+    });
+    vi.spyOn(personalApiKeyService.db, "getAll").mockResolvedValue({
+      version: 1,
+      keys: [],
+      updatedAt: null,
+    });
+
+    let persistedStore = null;
+    vi.spyOn(personalApiKeyService.db, "update").mockImplementation(async (updater) => {
+      persistedStore = updater({
+        version: 1,
+        keys: [],
+        updatedAt: null,
+      });
+
+      return persistedStore;
+    });
+
+    const result = await personalApiKeyService.createKey(77, {
+      label: "Short-lived integration",
+      scopes: ["user-account"],
+      expiration: "14d",
+    });
+
+    expect(result.key.expiration).toBe("14d");
+    expect(result.key.expiresAt).toBe("2026-05-14T12:00:00.000Z");
+    expect(result.key.isExpired).toBe(false);
+    expect(persistedStore.keys[0]).toEqual(
+      expect.objectContaining({
+        expiration: "14d",
+        expiresAt: "2026-05-14T12:00:00.000Z",
+      }),
+    );
+  });
+
+  it("rejects unsupported expiration options", async () => {
+    vi.spyOn(personalApiKeyService.userDataInstance, "findUser").mockResolvedValue({
+      id: 55,
+      isActive: true,
+    });
+    vi.spyOn(personalApiKeyService.db, "getAll").mockResolvedValue({
+      version: 1,
+      keys: [],
+      updatedAt: null,
+    });
+
+    await expect(
+      personalApiKeyService.createKey(55, {
+        label: "Bad expiry",
+        scopes: ["user-account"],
+        expiration: "2h",
+      }),
+    ).rejects.toThrow("unsupported expiration");
   });
 
   it("rejects creation when the user already has the maximum number of active keys", async () => {
@@ -132,6 +195,59 @@ describe("personal-api-key.service", () => {
     });
 
     expect(result).toEqual({ valid: false, reason: "feature_disabled" });
+    expect(updateSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects authentication for expired API keys", async () => {
+    const rawKey = personalApiKeyService._generateRawKey();
+    const keyHash = personalApiKeyService._hashKey(rawKey);
+
+    vi.spyOn(featureFlagsService, "getFeatureFlags").mockResolvedValue({
+      flags: { personalApiKeysEnabled: true },
+      updatedAt: null,
+    });
+    vi.spyOn(personalApiKeyService.db, "getAll").mockResolvedValue({
+      version: 1,
+      keys: [
+        {
+          id: "expired-key",
+          userId: 44,
+          label: "Expired key",
+          scopes: ["user-account"],
+          expiration: "1d",
+          expiresAt: "2026-04-29T09:00:00.000Z",
+          keyHash,
+          keyPreview: "rpk_live_exp...ired",
+          keyPrefix: "rpk_live_exp",
+          createdAt: "2026-04-28T09:00:00.000Z",
+          updatedAt: "2026-04-28T09:00:00.000Z",
+          lastUsedAt: null,
+          regeneratedAt: null,
+          revokedAt: null,
+        },
+      ],
+      updatedAt: null,
+    });
+
+    const updateSpy = vi.spyOn(personalApiKeyService.db, "update");
+    const findUserSpy = vi.spyOn(personalApiKeyService.userDataInstance, "findUser");
+
+    const result = await personalApiKeyService.authenticateApiKey(rawKey, {
+      originalUrl: "/api/v1/users/profile",
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        valid: false,
+        reason: "expired",
+        apiKey: expect.objectContaining({
+          id: "expired-key",
+          isExpired: true,
+          expiresAt: "2026-04-29T09:00:00.000Z",
+        }),
+      }),
+    );
+    expect(findUserSpy).not.toHaveBeenCalled();
     expect(updateSpy).not.toHaveBeenCalled();
   });
 });

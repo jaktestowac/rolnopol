@@ -12,6 +12,7 @@ class PersonalApiKeyController {
           data: {
             items,
             allowedScopes: personalApiKeyService.listAvailableScopes(),
+            allowedExpirations: personalApiKeyService.listAvailableExpirationOptions(),
           },
         }),
       );
@@ -30,6 +31,7 @@ class PersonalApiKeyController {
           data: {
             ...result,
             allowedScopes: personalApiKeyService.listAvailableScopes(),
+            allowedExpirations: personalApiKeyService.listAvailableExpirationOptions(),
           },
         }),
       );
@@ -40,7 +42,7 @@ class PersonalApiKeyController {
 
   async regenerate(req, res) {
     try {
-      const result = await personalApiKeyService.regenerateKey(req.user.userId, req.params.keyId);
+      const result = await personalApiKeyService.regenerateKey(req.user.userId, req.params.keyId, req.body || {});
 
       return res.status(200).json(
         formatResponseBody({
@@ -48,6 +50,7 @@ class PersonalApiKeyController {
           data: {
             ...result,
             allowedScopes: personalApiKeyService.listAvailableScopes(),
+            allowedExpirations: personalApiKeyService.listAvailableExpirationOptions(),
           },
         }),
       );
