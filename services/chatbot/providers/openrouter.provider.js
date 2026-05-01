@@ -21,6 +21,10 @@ class OpenRouterProvider extends BaseProvider {
     return `${this.apiBaseUrl}/chat/completions`;
   }
 
+  _buildKeyInfoUrl() {
+    return `${this.apiBaseUrl}/key`;
+  }
+
   _buildHeaders() {
     return {
       "Content-Type": "application/json",
@@ -107,6 +111,25 @@ class OpenRouterProvider extends BaseProvider {
       toolCalls: toolCalls || null,
       raw: data,
       usage: data?.usage ?? null,
+    };
+  }
+
+  async getRateLimits() {
+    const raw = await this._callJsonEndpointWithRetry({
+      url: this._buildKeyInfoUrl(),
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "HTTP-Referer": "http://localhost",
+        "X-Title": "Rolnopol Farm Assistant",
+      },
+      requireModel: false,
+    });
+
+    return {
+      provider: this.providerName,
+      supported: true,
+      raw,
     };
   }
 }

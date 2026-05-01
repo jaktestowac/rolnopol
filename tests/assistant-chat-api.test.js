@@ -150,4 +150,21 @@ describe("Assistant chat API", () => {
     expect(res.body.data.reply).toContain("Rolnopol is a comprehensive agricultural management system");
     expect(res.body.data.contextSummary).toBe("docs-search");
   });
+
+  it("returns mocked limits info for /limits", async () => {
+    await setAssistantChatEnabled(true);
+    const user = await registerUser("limits-query");
+
+    const res = await request(app)
+      .post("/api/v1/assistant-chat/messages")
+      .set("token", user.token)
+      .send({ message: "/limits" })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.provider).toBe("mock");
+    expect(res.body.data.reply).toContain('"supported": false');
+    expect(res.body.data.reply).toContain("mock provider");
+    expect(res.body.data.contextSummary).toBeNull();
+  });
 });

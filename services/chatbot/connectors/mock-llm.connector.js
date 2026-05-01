@@ -3,6 +3,18 @@ class MockLlmConnector {
     this.providerName = "mock";
   }
 
+  async getRateLimits() {
+    return {
+      provider: this.providerName,
+      supported: false,
+      raw: {
+        provider: this.providerName,
+        supported: false,
+        message: "Rate limits are mocked for the mock provider.",
+      },
+    };
+  }
+
   _getSummary(context) {
     return context?.summary || {};
   }

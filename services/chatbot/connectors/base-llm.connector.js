@@ -14,7 +14,7 @@ class BaseLlmConnector {
     this.provider.ensureConfigured();
     this.maxToolCalls = 5; // Prevent infinite loops
     this.maxToolCallsPerTool = 2; // Prevent one tool dominating behavior
-    this.maxConversationTokens = 8000; // Prevent token overflow (rough estimate)
+    this.maxConversationTokens = 24000; // Prevent token overflow (rough estimate)
     this.approximateTokensPerMessage = 200; // Rough estimate for pruning
   }
 
@@ -321,6 +321,10 @@ class BaseLlmConnector {
     }
 
     return finalResponse;
+  }
+
+  async getRateLimits() {
+    return this.provider.getRateLimits();
   }
 }
 

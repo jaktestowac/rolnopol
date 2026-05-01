@@ -36,6 +36,22 @@ class ToolsExecutor {
         result = this._getWeatherForecast(toolArgs);
         break;
 
+      case "get_weather_all_regions":
+        result = this._getAllWeatherData(toolArgs);
+        break;
+
+      case "get_farmlog_blogs":
+        result = await this._getFarmlogBlogs(toolArgs);
+        break;
+
+      case "get_farmlog_posts":
+        result = await this._getFarmlogPosts(toolArgs);
+        break;
+
+      case "get_weather_regions":
+        result = this._getWeatherRegions(toolArgs);
+        break;
+
       case "get_recent_alerts":
         result = this._getRecentAlerts(toolArgs);
         break;
@@ -124,54 +140,270 @@ class ToolsExecutor {
    * Get weather forecast for a specific region
    */
   _getWeatherForecast(args) {
-    const { region = "all" } = args;
+    const { region = "all" } = args || {};
 
-    // Extract weather data from context
-    const weather = this.context?.samples?.weather;
-    if (!weather) {
-      return { error: "No weather data available" };
+    // Prefer weather samples from context when available
+    const weatherSamples = this.context?.samples?.weather;
+
+    // Helper: normalize region input
+    const regionInput = String(region || "all").trim();
+
+    // If context contains weather samples, use them (legacy behaviour)
+    if (Array.isArray(weatherSamples) && weatherSamples.length > 0) {
+      if (regionInput.toLowerCase() === "all") {
+        return {
+          regions: weatherSamples.map((w) => ({
+            name: w.regionName,
+            temperature: w.temperature,
+            humidity: w.humidity,
+            precipitation: w.precipitation,
+            windSpeed: w.windSpeed,
+            condition: w.condition,
+            eto: w.eto,
+          })),
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      const weatherData = weatherSamples.find((w) => (w.regionName || "").toLowerCase().includes(regionInput.toLowerCase()));
+      if (!weatherData) {
+        return {
+          error: `Region '${regionInput}' not found. Available regions: ${weatherSamples.map((w) => w.regionName).join(", ")}`,
+        };
+      }
+
+      return {
+        region: weatherData.regionName,
+        temperature: weatherData.temperature,
+        humidity: weatherData.humidity,
+        precipitation: weatherData.precipitation,
+        windSpeed: weatherData.windSpeed,
+        condition: weatherData.condition,
+        eto: weatherData.eto,
+        recommendation:
+          weatherData.precipitation > 5
+            ? "Irrigation may not be needed due to recent rainfall."
+            : weatherData.temperature > 25
+              ? "Consider irrigation due to high temperature and low precipitation."
+              : "Monitor soil moisture levels.",
+      };
     }
 
-    if (region.toLowerCase() === "all") {
-      // Return summary for all regions
+    // If no weather samples in context, fetch from WeatherService directly so tools work standalone
+    try {
+      const WeatherServiceFactory = require("../../weather.service");
+      const weatherService = WeatherServiceFactory();
+
+      // If user asked for all regions, provide a compact summary per region
+      if (regionInput.toLowerCase() === "all") {
+        const regions = weatherService.getSupportedRegions().map((r) => {
+          const day = weatherService.getDaily(new Date().toISOString().slice(0, 10), { region: r.code });
+          return {
+            code: r.code,
+            name: r.name,
+            temperatureMinC: day.temperatureMinC,
+            temperatureMaxC: day.temperatureMaxC,
+            precipitationMm: day.precipitationMm,
+            humidityPct: day.humidityPct,
+            windKmh: day.windKmh,
+            condition: day.condition,
+          };
+        });
+
+        return { regions, timestamp: new Date().toISOString() };
+      }
+
+      // Normalize region using weather service helper (accepts names or codes)
+      const regionCode = weatherService.normalizeRegion(regionInput);
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const today = weatherService.getDaily(todayStr, { region: regionCode });
+
+      // Build a friendly recommendation using advisory and simple heuristics
+      const recommendation =
+        today.precipitationMm >= 5
+          ? "Irrigation may not be needed due to recent rainfall."
+          : today.temperatureMaxC > 25
+            ? "Consider irrigation due to high temperature and low precipitation."
+            : "Monitor soil moisture levels.";
+
       return {
-        regions: weather.map((w) => ({
-          name: w.regionName,
-          temperature: w.temperature,
-          humidity: w.humidity,
-          precipitation: w.precipitation,
-          windSpeed: w.windSpeed,
-          condition: w.condition,
-          eto: w.eto,
-        })),
+        region: regionCode,
+        name: (weatherService.getSupportedRegions().find((r) => r.code === regionCode) || {}).name || regionCode,
+        temperatureMinC: today.temperatureMinC,
+        temperatureMaxC: today.temperatureMaxC,
+        precipitationMm: today.precipitationMm,
+        humidityPct: today.humidityPct,
+        windKmh: today.windKmh,
+        condition: today.condition,
+        advisory: today.advisory,
+        recommendation,
         timestamp: new Date().toISOString(),
       };
+    } catch (err) {
+      return { error: `Weather lookup failed: ${err.message || String(err)}` };
     }
+  }
 
-    // Find specific region (case-insensitive)
-    const weatherData = weather.find((w) => w.regionName.toLowerCase().includes(region.toLowerCase()));
+  /**
+   * Return list of supported weather regions (code + name)
+   */
+  _getWeatherRegions() {
+    try {
+      const WeatherServiceFactory = require("../../weather.service");
+      const weatherService = WeatherServiceFactory();
+      const regions = weatherService.getSupportedRegions().map((r) => ({ code: r.code, name: r.name }));
+      return { regions, timestamp: new Date().toISOString() };
+    } catch (err) {
+      return { error: `Weather regions lookup failed: ${err.message || String(err)}` };
+    }
+  }
 
-    if (!weatherData) {
-      return {
-        error: `Region '${region}' not found. Available regions: ${weather.map((w) => w.regionName).join(", ")}`,
+  /**
+   * Return detailed weather (today + forecast) for all supported regions
+   */
+  _getAllWeatherData(args) {
+    const { base_date, days } = args || {};
+
+    try {
+      const WeatherServiceFactory = require("../../weather.service");
+      const weatherService = WeatherServiceFactory();
+
+      // Determine baseDate: default to tomorrow
+      const now = new Date();
+      const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+      const baseDateStr =
+        typeof base_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(base_date) ? base_date : tomorrow.toISOString().slice(0, 10);
+
+      // Days: clamp to 1..7
+      const daysNum = Number.isFinite(Number(days)) ? Math.max(1, Math.min(7, Number(days))) : 3;
+
+      const regions = weatherService.getSupportedRegions();
+
+      const payload = regions.map((r) => {
+        // Today's data
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const today = weatherService.getDaily(todayStr, { region: r.code });
+
+        // Forecast starting from baseDateStr
+        const forecastObj = weatherService.getForecast({ baseDate: baseDateStr, days: daysNum, region: r.code });
+
+        return {
+          code: r.code,
+          name: r.name,
+          today,
+          forecast: forecastObj.forecast || [],
+          constraints: forecastObj.constraints || null,
+        };
+      });
+
+      return { regions: payload, baseDate: baseDateStr, days: daysNum, timestamp: new Date().toISOString() };
+    } catch (err) {
+      return { error: `Weather all-region lookup failed: ${err.message || String(err)}` };
+    }
+  }
+
+  /**
+   * Retrieve public Farmlog blogs (list/search)
+   */
+  async _getFarmlogBlogs(args) {
+    const { search, limit, offset, include_engagement } = args || {};
+
+    try {
+      const blogService = require("../../blog.service");
+
+      const opts = {
+        search,
+        currentUserId: this.userId,
+        limit: Number.isFinite(Number(limit)) ? Number(limit) : undefined,
+        offset: Number.isFinite(Number(offset)) ? Number(offset) : undefined,
+        includeEngagement: include_engagement === true,
       };
-    }
 
-    return {
-      region: weatherData.regionName,
-      temperature: weatherData.temperature,
-      humidity: weatherData.humidity,
-      precipitation: weatherData.precipitation,
-      windSpeed: weatherData.windSpeed,
-      condition: weatherData.condition,
-      eto: weatherData.eto,
-      recommendation:
-        weatherData.precipitation > 5
-          ? "Irrigation may not be needed due to recent rainfall."
-          : weatherData.temperature > 25
-            ? "Consider irrigation due to high temperature and low precipitation."
-            : "Monitor soil moisture levels.",
-    };
+      // Use searchBlogs when a search term is provided, otherwise listBlogs
+      const blogs = search
+        ? await blogService.searchBlogs({
+            search,
+            currentUserId: this.userId,
+            limit: opts.limit,
+            offset: opts.offset,
+            includeEngagement: opts.includeEngagement,
+          })
+        : await blogService.listBlogs({
+            search: undefined,
+            currentUserId: this.userId,
+            limit: opts.limit,
+            offset: opts.offset,
+            includeEngagement: opts.includeEngagement,
+          });
+
+      // Add convenient URL for frontend to open the blog directly
+      const blogsWithUrl = Array.isArray(blogs)
+        ? blogs.map((b) => ({
+            ...b,
+            url: b && b.slug ? `/farmlog-blog.html?blog=${encodeURIComponent(b.slug)}` : undefined,
+          }))
+        : blogs;
+
+      return { blogs: blogsWithUrl, timestamp: new Date().toISOString() };
+    } catch (err) {
+      return { error: `Farmlog blogs lookup failed: ${err.message || String(err)}` };
+    }
+  }
+
+  /**
+   * Retrieve public Farmlog posts (either for a blog slug or global search)
+   */
+  async _getFarmlogPosts(args) {
+    const { blog_slug, search, limit, offset, sort, period, include_engagement } = args || {};
+
+    try {
+      const postService = require("../../post.service");
+
+      const opts = {
+        search: typeof search === "string" && search.trim().length > 0 ? search.trim() : undefined,
+        limit: Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : undefined,
+        offset: Number.isFinite(Number(offset)) && Number(offset) >= 0 ? Number(offset) : undefined,
+        sort: typeof sort === "string" ? sort : undefined,
+        period: typeof period === "string" ? period : undefined,
+        includeEngagement: include_engagement === true,
+      };
+
+      let posts;
+      if (typeof blog_slug === "string" && blog_slug.trim().length > 0) {
+        // list posts for a specific blog
+        posts = await postService.listPosts(blog_slug, this.userId, opts.limit, opts.offset, {
+          sort: opts.sort,
+          includeEngagement: opts.includeEngagement,
+          period: opts.period,
+        });
+      } else {
+        // global search across public posts
+        posts = await postService.searchPosts({
+          search: opts.search,
+          currentUserId: this.userId,
+          limit: opts.limit,
+          offset: opts.offset,
+          sort: opts.sort,
+          period: opts.period,
+          includeEngagement: opts.includeEngagement,
+        });
+      }
+
+      // Add convenient URL for frontend to open the post directly
+      const postsWithUrl = Array.isArray(posts)
+        ? posts.map((p) => ({
+            ...p,
+            url:
+              p && p.blogSlug && p.slug
+                ? `/farmlog-post.html?blog=${encodeURIComponent(p.blogSlug)}&post=${encodeURIComponent(p.slug)}`
+                : undefined,
+          }))
+        : posts;
+
+      return { posts: postsWithUrl, timestamp: new Date().toISOString() };
+    } catch (err) {
+      return { error: `Farmlog posts lookup failed: ${err.message || String(err)}` };
+    }
   }
 
   /**

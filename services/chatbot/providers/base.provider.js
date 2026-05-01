@@ -35,6 +35,12 @@ class BaseProvider {
     return process.env[envKey];
   }
 
+  ensureApiKeyConfigured() {
+    if (!this.apiKey || !String(this.apiKey).trim()) {
+      throw new Error(`Missing ${this.envKeyPrefix}_API_KEY. Add it to .env (you can copy from .env.example).`);
+    }
+  }
+
   _getRetryDelay(attempt) {
     const base = 300 * (attempt + 1);
     const jitter = Math.random() * base * 0.4; // +/-20%
@@ -56,9 +62,7 @@ class BaseProvider {
   }
 
   ensureConfigured() {
-    if (!this.apiKey || !String(this.apiKey).trim()) {
-      throw new Error(`Missing ${this.envKeyPrefix}_API_KEY. Add it to .env (you can copy from .env.example).`);
-    }
+    this.ensureApiKeyConfigured();
 
     if (!this.model || !String(this.model).trim()) {
       throw new Error(`Missing ${this.envKeyPrefix}_MODEL. Add it to .env (you can copy from .env.example).`);
@@ -125,6 +129,20 @@ class BaseProvider {
     }
   }
 
+  async _requestRawWithTimeout(url, init = {}) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      return await this.fetchImpl(url, {
+        ...init,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   /**
    * Make API call with retry logic
    */
@@ -139,6 +157,71 @@ class BaseProvider {
       try {
         const payload = buildPayloadFn();
         const response = await this._requestWithTimeout(url, payload);
+        const data = await response.json();
+
+        if (!response.ok) {
+          const message = data?.error?.message || `${this.providerName} request failed (${response.status})`;
+          const error = new Error(message);
+          error.status = response.status;
+
+          if (attempt < this.retries && this._isRetryableStatus(response.status)) {
+            const delay = this._getRetryDelay(attempt);
+            await sleep(delay);
+            continue;
+          }
+
+          throw error;
+        }
+
+        return data;
+      } catch (error) {
+        lastError = error;
+        const isAbort = error?.name === "AbortError";
+
+        if (attempt < this.retries && (isAbort || !error?.status)) {
+          const delay = this._getRetryDelay(attempt);
+          await sleep(delay);
+          continue;
+        }
+
+        this.failureCount += 1;
+        if (this.failureCount >= this.failureThreshold) {
+          this.circuitOpen = true;
+          this.nextAttemptAt = Date.now() + this.cooldownMs;
+          logWarning(`${this.providerName} circuit opened due to repeated failures. Cooling down for ${this.cooldownMs}ms.`);
+        }
+
+        throw lastError;
+      }
+    }
+
+    this.failureCount = 0;
+    if (lastError) {
+      throw lastError;
+    }
+
+    throw new Error(`${this.providerName} request failed after ${this.retries + 1} attempts`);
+  }
+
+  async _callJsonEndpointWithRetry({ url, method = "GET", headers, body, requireModel = false }) {
+    if (requireModel) {
+      this.ensureConfigured();
+    } else {
+      this.ensureApiKeyConfigured();
+    }
+
+    let lastError;
+
+    this._checkCircuit();
+
+    for (let attempt = 0; attempt <= this.retries; attempt += 1) {
+      try {
+        const response = await this._requestRawWithTimeout(url, {
+          method,
+          headers: headers ?? this._buildHeaders(),
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+
         const data = await response.json();
 
         if (!response.ok) {
@@ -218,6 +301,18 @@ class BaseProvider {
 
   async askText(userMessage, options = {}) {
     throw new Error("askText() must be implemented by subclass");
+  }
+
+  async getRateLimits() {
+    return {
+      provider: this.providerName,
+      supported: false,
+      raw: {
+        provider: this.providerName,
+        supported: false,
+        message: `Rate limits are not available for '${this.providerName}' yet.`,
+      },
+    };
   }
 }
 

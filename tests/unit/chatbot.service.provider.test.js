@@ -23,14 +23,18 @@ async function loadChatbotService({
 
   if (apiKey === undefined) {
     delete process.env.GEMINI_API_KEY;
+    delete process.env.OPENROUTER_API_KEY;
   } else {
     process.env.GEMINI_API_KEY = apiKey;
+    process.env.OPENROUTER_API_KEY = apiKey;
   }
 
   if (model === undefined) {
     delete process.env.GEMINI_MODEL;
+    delete process.env.OPENROUTER_MODEL;
   } else {
     process.env.GEMINI_MODEL = model;
+    process.env.OPENROUTER_MODEL = model;
   }
 
   const contextServiceMock = {
@@ -194,6 +198,63 @@ describe("chatbot.service provider selection", () => {
 
     expect(response.provider).toBe("mock");
     expect(response.reply).toContain("Here is a quick summary of your farm data");
+  });
+
+  it("returns raw OpenRouter key info for /ratelimits without loading context", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          label: "primary-key",
+          usage: 12.34,
+          limit: 50,
+          limit_remaining: 37.66,
+          rate_limit: {
+            requests: 60,
+            interval: "1m",
+          },
+        },
+      }),
+    });
+
+    const { chatbotService, contextServiceMock } = await loadChatbotService({
+      provider: "openrouter",
+      apiKey: "openrouter-key",
+      model: "openrouter/model",
+      fetchMock,
+    });
+
+    const response = await chatbotService.ask({
+      userId: 1,
+      message: "/ratelimits",
+    });
+
+    expect(response.provider).toBe("openrouter");
+    expect(response.contextSummary).toBeNull();
+    expect(response.reply).toContain('"limit_remaining": 37.66');
+    expect(response.reply).toContain('"rate_limit"');
+    expect(contextServiceMock.getContextForUser).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const [url, requestInit] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain("/key");
+    expect(requestInit.method).toBe("GET");
+    expect(requestInit.headers.Authorization).toBe("Bearer openrouter-key");
+  });
+
+  it("returns mocked limits info for /limits on non-OpenRouter providers", async () => {
+    const { chatbotService, contextServiceMock } = await loadChatbotService({ provider: "mock" });
+
+    const response = await chatbotService.ask({
+      userId: 1,
+      message: "/limits",
+    });
+
+    expect(response.provider).toBe("mock");
+    expect(response.contextSummary).toBeNull();
+    expect(response.reply).toContain('"supported": false');
+    expect(response.reply).toContain("mock provider");
+    expect(contextServiceMock.getContextForUser).not.toHaveBeenCalled();
   });
 
   it("runs chatbot smoke evals for core intents", async () => {

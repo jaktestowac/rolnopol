@@ -834,6 +834,8 @@
         { name: "/clear", description: "Clear all messages" },
         { name: "/status", description: "Get Porky's info and status" },
         { name: "/help", description: "Show available commands" },
+        { name: "/ratelimits", description: "Show raw provider rate limits and remaining credits" },
+        { name: "/limits", description: "Alias for /ratelimits" },
         { name: "/alerts", description: "Get active farm alerts" },
         { name: "/docs <query>", description: "Ask Porky about app documentation" },
       ];
@@ -929,6 +931,89 @@
         resolve(accepted === true);
       };
 
+      // Create DOM nodes for message text, converting markdown links and bare URLs to anchors safely
+      const createMessageFragment = (text) => {
+        const frag = document.createDocumentFragment();
+        if (typeof text !== "string" || text.length === 0) {
+          frag.appendChild(document.createTextNode(String(text || "")));
+          return frag;
+        }
+
+        // Match markdown links [label](href) where href can be absolute or relative,
+        // or bare http(s) URLs. We resolve relative paths against the app origin so
+        // user-visible links become full app URLs.
+        const combinedRegex = /\[([^\]]+)\]\(([^)\s]+)\)|(https?:\/\/[^\s]+)/g;
+        let lastIndex = 0;
+        let match;
+
+        while ((match = combinedRegex.exec(text)) !== null) {
+          const idx = match.index;
+          if (idx > lastIndex) {
+            frag.appendChild(document.createTextNode(text.slice(lastIndex, idx)));
+          }
+
+          if (match[1] && match[2]) {
+            // Markdown link (href may be relative)
+            const label = match[1];
+            const rawHref = match[2];
+            try {
+              let resolvedHref = rawHref;
+
+              // Preserve protocol links (mailto:, tel:, data:, etc.) and anchors
+              if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(rawHref) && !rawHref.startsWith("#")) {
+                // Resolve relative hrefs against the application origin
+                resolvedHref = new URL(rawHref, window.location.origin).href;
+              }
+
+              const a = document.createElement("a");
+              a.href = resolvedHref;
+              a.textContent = label;
+
+              // Only open truly external links in a new tab for safety
+              const isExternal =
+                /^https?:\/\//i.test(resolvedHref) &&
+                (() => {
+                  try {
+                    return new URL(resolvedHref).origin !== window.location.origin;
+                  } catch (e) {
+                    return true;
+                  }
+                })();
+
+              if (isExternal) {
+                a.target = "_blank";
+                a.rel = "noopener noreferrer";
+              }
+
+              frag.appendChild(a);
+            } catch (e) {
+              frag.appendChild(document.createTextNode(`${label} (${rawHref})`));
+            }
+          } else if (match[3]) {
+            // Bare absolute URL (http/https)
+            const url = match[3];
+            try {
+              const a = document.createElement("a");
+              a.href = url;
+              a.textContent = url;
+              a.target = "_blank";
+              a.rel = "noopener noreferrer";
+              frag.appendChild(a);
+            } catch (e) {
+              frag.appendChild(document.createTextNode(url));
+            }
+          }
+
+          lastIndex = combinedRegex.lastIndex;
+        }
+
+        if (lastIndex < text.length) {
+          frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+
+        return frag;
+      };
+
       const appendMessage = (role, text) => {
         if (!messagesContainer) return;
         const timestamp = new Date().toISOString();
@@ -936,7 +1021,8 @@
         item.className = `assistant-chat-widget__message assistant-chat-widget__message--${role}`;
 
         const textSpan = document.createElement("span");
-        textSpan.textContent = text;
+        // Insert formatted content (anchors for links) instead of raw text
+        textSpan.appendChild(createMessageFragment(text));
 
         const timeSpan = document.createElement("span");
         timeSpan.className = "assistant-chat-widget__message-time";
@@ -960,7 +1046,7 @@
           item.className = `assistant-chat-widget__message assistant-chat-widget__message--${message.role}`;
 
           const textSpan = document.createElement("span");
-          textSpan.textContent = message.text;
+          textSpan.appendChild(createMessageFragment(message.text));
 
           const timeSpan = document.createElement("span");
           timeSpan.className = "assistant-chat-widget__message-time";

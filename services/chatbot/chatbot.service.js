@@ -139,6 +139,24 @@ class ChatbotService {
     }
   }
 
+  _formatRawReply(data) {
+    if (typeof data === "string") {
+      return data;
+    }
+
+    return JSON.stringify(data, null, 2);
+  }
+
+  async _answerRateLimitsQuery() {
+    const limitsInfo = await this.connector.getRateLimits();
+
+    return {
+      provider: this.connector.providerName,
+      reply: this._formatRawReply(limitsInfo?.raw ?? limitsInfo),
+      contextSummary: null,
+    };
+  }
+
   async ask({ userId, message }) {
     const startTime = process.hrtime.bigint();
     let resultStatus = "success";
@@ -151,6 +169,13 @@ class ChatbotService {
         this.metrics?.recordChatbotRequest(this.connector.providerName, "docs");
         this.metrics?.recordChatbotTokenUsage(this.connector.providerName, this._estimateTokens(docsResponse.reply));
         return docsResponse;
+      }
+
+      if (/^\/(ratelimits|limits)(\s|$)/i.test(prompt)) {
+        const limitsResponse = await this._answerRateLimitsQuery();
+        this.metrics?.recordChatbotRequest(this.connector.providerName, "limits");
+        this.metrics?.recordChatbotTokenUsage(this.connector.providerName, this._estimateTokens(limitsResponse.reply));
+        return limitsResponse;
       }
 
       // For very short messages, skip context loading and return a brief response

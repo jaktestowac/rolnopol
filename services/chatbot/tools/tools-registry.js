@@ -21,7 +21,39 @@ const tools = [
         },
       },
       required: [],
-    }
+    },
+  },
+  {
+    name: "get_farmlog_blogs",
+    description: "Retrieve public Farmlog blogs. Use search, pagination, and optionally include engagement stats (likes/favorites).",
+    parameters: {
+      type: "object",
+      properties: {
+        search: { type: "string", description: "Search term to filter blogs by title, slug, or tags" },
+        limit: { type: "number", description: "Maximum number of blogs to return" },
+        offset: { type: "number", description: "Offset for pagination" },
+        include_engagement: { type: "boolean", description: "Include engagement metrics (likes/favorites) where available" },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "get_farmlog_posts",
+    description:
+      "Retrieve public Farmlog posts. Can target a specific blog via blog_slug or search across all public posts. Supports pagination, sorting, and optional engagement metrics.",
+    parameters: {
+      type: "object",
+      properties: {
+        blog_slug: { type: "string", description: "Slug of the blog to list posts for (optional)" },
+        search: { type: "string", description: "Search term to filter posts by title or content (optional)" },
+        limit: { type: "number", description: "Maximum number of posts to return" },
+        offset: { type: "number", description: "Offset for pagination" },
+        sort: { type: "string", description: "Sort order: newest, oldest, title-asc, title-desc, most-liked" },
+        period: { type: "string", description: "Time period to consider for engagement (e.g., '7d', '30d', 'all')" },
+        include_engagement: { type: "boolean", description: "Include engagement metrics (likes counts) where available" },
+      },
+      required: [],
+    },
   },
   {
     name: "get_weather_forecast",
@@ -36,6 +68,35 @@ const tools = [
         },
       },
       required: ["region"],
+    },
+  },
+  {
+    name: "get_weather_regions",
+    description:
+      "Get the list of supported Polish regions (codes and names) that Rolnopol can provide weather for. Use this when the LLM needs to show region options or validate user-specified regions.",
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: "get_weather_all_regions",
+    description:
+      "Get detailed weather data (today + short forecast) for all supported Polish regions. Use this when the LLM needs weather for the whole country and the user did not specify a region.",
+    parameters: {
+      type: "object",
+      properties: {
+        base_date: {
+          type: "string",
+          description: "Base date for the forecast in YYYY-MM-DD format. Defaults to tomorrow.",
+        },
+        days: {
+          type: "number",
+          description: "Number of forecast days (1-7). Defaults to 3.",
+        },
+      },
+      required: [],
     },
   },
   {
