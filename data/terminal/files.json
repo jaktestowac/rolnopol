@@ -1,0 +1,16 @@
+{
+  "logs/system.log": {
+    "path": "logs/system.log",
+    "title": "System Log",
+    "type": "file",
+    "contentType": "text/plain",
+    "content": "[00:00] boot sequence initiated\n[00:01] registry synced\n[00:02] terminal ready\n"
+  },
+  "reports/status.json": {
+    "path": "reports/status.json",
+    "title": "Status Report",
+    "type": "file",
+    "contentType": "application/json",
+    "content": { "system": { "uptime": 3600, "status": "nominal" }, "metrics": { "latencyMs": 12 } }
+  }
+}

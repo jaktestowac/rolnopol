@@ -134,6 +134,59 @@
     return normalized;
   }
 
+  function getResultDelayMs(result) {
+    const directDelay = Number(result?.delayMs);
+    if (Number.isFinite(directDelay) && directDelay > 0) {
+      return directDelay;
+    }
+
+    const metadataDelay = Number(result?.metadata?.delayMs);
+    if (Number.isFinite(metadataDelay) && metadataDelay > 0) {
+      return metadataDelay;
+    }
+
+    return 0;
+  }
+
+  function hasTypingEffect(result, config) {
+    return (
+      result?.type === "typing" ||
+      result?.typingEffect === true ||
+      result?.metadata?.typingEffect === true ||
+      result?.metadata?.typewriter === true ||
+      result?.options?.typingEffect === true ||
+      config?.typingEffect === true
+    );
+  }
+
+  function getPresentationType(result) {
+    if (!result || typeof result !== "object") {
+      return "text";
+    }
+
+    if (result.type === "text") {
+      if (result.metadata?.warn === true) return "warning";
+      if (result.metadata?.success === true) return "success";
+      if (result.metadata?.error === true) return "error";
+    }
+
+    return result.type || "text";
+  }
+
+  function isParallelScript(result) {
+    const mode = toStringValue(result?.mode || result?.metadata?.mode)
+      .trim()
+      .toLowerCase();
+    return mode === "parallel" || result?.metadata?.startTogether === true || result?.metadata?.parallel === true;
+  }
+
+  function shouldUseTypingEffect(result, config) {
+    const presentationType = getPresentationType(result);
+    const canType = ["text", "warning", "success", "error"].includes(presentationType);
+
+    return canType && hasTypingEffect(result, config);
+  }
+
   function formatJson(content) {
     if (typeof content === "string") {
       try {
@@ -479,17 +532,31 @@
     function renderResult(result, renderOptions = {}) {
       const normalized = normalizeResult(result);
       const signal = renderOptions.signal || config.signal || null;
+      const shouldType = shouldUseTypingEffect(normalized, config);
 
       if (signal?.aborted) {
         return Promise.reject(createCancellationError());
       }
 
-      if (normalized.delayMs) {
-        return waitWithSignal(normalized.delayMs, signal).then(() => renderResult({ ...normalized, delayMs: 0 }, renderOptions));
+      const delayMs = getResultDelayMs(normalized);
+      if (delayMs) {
+        return waitWithSignal(delayMs, signal).then(() => {
+          const delayedResult = { ...normalized, delayMs: 0, metadata: { ...(normalized.metadata || {}), delayMs: 0 } };
+
+          if (shouldType) {
+            return renderTypingText(delayedResult, getPresentationType(normalized), signal);
+          }
+
+          return renderResult(delayedResult, renderOptions);
+        });
       }
 
       if (normalized.type === "composite" || normalized.type === "script") {
         const items = Array.isArray(normalized.items) ? normalized.items : Array.isArray(normalized.steps) ? normalized.steps : [];
+        if (isParallelScript(normalized)) {
+          return Promise.all(items.map((item) => renderResult(item, renderOptions))).then(() => undefined);
+        }
+
         return items.reduce(
           (promise, item) =>
             promise.then(() => {
@@ -511,17 +578,19 @@
         return Promise.resolve();
       }
 
-      if (normalized.type === "typing" || normalized.metadata?.typingEffect === true || config.typingEffect) {
-        return renderTypingText(normalized, normalized.outputType || "text", signal);
+      if (shouldType) {
+        return renderTypingText(normalized, getPresentationType(normalized), signal);
       }
 
-      switch (normalized.type) {
+      const presentationType = getPresentationType(normalized);
+
+      switch (presentationType) {
         case "text":
         case "error":
         case "warning":
         case "success":
-          return Promise.resolve(renderTextLike(normalized, normalized.type)).then((element) => {
-            if (normalized.type === "error" && normalized.metadata?.hint) {
+          return Promise.resolve(renderTextLike(normalized, presentationType)).then((element) => {
+            if (presentationType === "error" && normalized.metadata?.hint) {
               const doc = config.documentRef;
               const hint = doc.createElement("div");
               hint.className = "terminal-entry terminal-entry--response terminal-entry--muted terminal-output-item__hint";
@@ -558,6 +627,8 @@
       normalizeResult,
       sanitizeHtml,
       formatJson,
+      getPresentationType,
+      shouldUseTypingEffect,
     };
   }
 
@@ -567,5 +638,10 @@
     sanitizeHtml,
     formatJson,
     formatTableContent,
+    getResultDelayMs,
+    hasTypingEffect,
+    isParallelScript,
+    getPresentationType,
+    shouldUseTypingEffect,
   };
 });

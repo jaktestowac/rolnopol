@@ -1,0 +1,182 @@
+{
+  "name": "/",
+  "children": {
+    "configs": {
+      "children": {
+        "terminal.json": {
+          "title": "Terminal Config",
+          "type": "json",
+          "content": {
+            "prompt": "guest@archive:~$",
+            "theme": "green",
+            "effects": true,
+            "autoScroll": true
+          }
+        },
+        "themes": {
+          "children": {
+            "green.json": {
+              "title": "Green Theme",
+              "type": "json",
+              "content": {
+                "name": "green",
+                "foreground": "#66ff99",
+                "background": "#04110a"
+              }
+            },
+            "amber.json": {
+              "title": "Amber Theme",
+              "type": "json",
+              "content": {
+                "name": "amber",
+                "foreground": "#ffcc66",
+                "background": "#120d04"
+              }
+            }
+          }
+        }
+      }
+    },
+    "docs": {
+      "children": {
+        "readme.md": {
+          "title": "Terminal README",
+          "type": "text",
+          "content": "This is a sample virtual filesystem used by the terminal API. Edit JSON files under data/terminal to modify content."
+        },
+        "guide": {
+          "children": {
+            "filesystem.md": {
+              "title": "Filesystem Guide",
+              "type": "text",
+              "content": "Use ls to inspect directories, cd to move, pwd to show the current path, and tree to print nested folders."
+            },
+            "commands.md": {
+              "title": "Command Guide",
+              "type": "text",
+              "content": "Terminal commands are served by the backend and can be synced from disk with /terminal/sync."
+            },
+            "release-notes.md": {
+              "title": "Release Notes",
+              "type": "text",
+              "content": "- Added disk-backed scripts\n- Added nested VFS samples\n- Added sync endpoint"
+            }
+          }
+        }
+      }
+    },
+    "logs": {
+      "children": {
+        "system.log": {
+          "title": "System Log",
+          "type": "text",
+          "content": "[00:00] boot sequence initiated\n[00:01] registry synced\n[00:02] terminal ready\n"
+        },
+        "boot.log": {
+          "title": "Boot Log",
+          "type": "text",
+          "content": "[00:00] init\n[00:00] load scripts\n[00:01] mount vfs\n[00:02] shell online\n"
+        },
+        "api": {
+          "children": {
+            "requests.log": {
+              "title": "API Requests",
+              "type": "text",
+              "content": "GET /api/v1/terminal/commands 200\nPOST /api/v1/terminal/execute 200\nPOST /api/v1/terminal/sync 200\n"
+            }
+          }
+        }
+      }
+    },
+    "media": {
+      "children": {
+        "banners": {
+          "children": {
+            "welcome.svg": {
+              "title": "Welcome Banner",
+              "type": "image",
+              "contentType": "image/svg+xml",
+              "src": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 120\"><rect width=\"360\" height=\"120\" fill=\"#07110f\"/><text x=\"24\" y=\"74\" fill=\"#7dffb2\" font-family=\"monospace\" font-size=\"28\">WELCOME TO THE ARCHIVE</text></svg>"
+            }
+          }
+        },
+        "icons": {
+          "children": {
+            "terminal.svg": {
+              "title": "Terminal Icon",
+              "type": "image",
+              "contentType": "image/svg+xml",
+              "src": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"8\" fill=\"#0b120f\"/><path d=\"M14 20h36v24H14z\" fill=\"none\" stroke=\"#66ff99\" stroke-width=\"3\"/><path d=\"M20 28l8 4-8 4\" fill=\"none\" stroke=\"#66ff99\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M32 36h12\" stroke=\"#66ff99\" stroke-width=\"3\" stroke-linecap=\"round\"/></svg>"
+            }
+          }
+        }
+      }
+    },
+    "projects": {
+      "children": {
+        "rolnopol-jt": {
+          "children": {
+            "notes.md": {
+              "title": "Project Notes",
+              "type": "text",
+              "content": "Terminal scripts are loaded from the backend and can be refreshed with sync."
+            },
+            "demo.txt": {
+              "title": "Demo File",
+              "type": "text",
+              "content": "Sample content for ls/cat demos."
+            },
+            "scripts": {
+              "children": {
+                "runbook.md": {
+                  "title": "Runbook",
+                  "type": "text",
+                  "content": "1. list scripts\n2. sync terminal data\n3. cd docs\n4. tree --depth 2"
+                }
+              }
+            }
+          }
+        },
+        "sandbox": {
+          "children": {
+            "notes.txt": {
+              "title": "Sandbox Notes",
+              "type": "text",
+              "content": "This folder is safe to experiment in."
+            }
+          }
+        }
+      }
+    },
+    "tmp": {
+      "children": {
+        "cache": {
+          "children": {}
+        },
+        "uploads": {
+          "children": {
+            "sample.txt": {
+              "title": "Uploaded Sample",
+              "type": "text",
+              "content": "Temporary upload placeholder."
+            }
+          }
+        }
+      }
+    },
+    "assets": {
+      "children": {
+        "signal-image": {
+          "title": "Signal Frame",
+          "type": "image",
+          "src": "data:image/svg+xml;charset=UTF-8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 480 240\"><rect width=\"480\" height=\"240\" fill=\"#0b120f\"/><circle cx=\"240\" cy=\"120\" r=\"64\" fill=\"none\" stroke=\"#66ff99\" stroke-width=\"8\"/><path d=\"M40 120h110M330 120h110\" stroke=\"#66ff99\" stroke-width=\"6\" stroke-linecap=\"round\"/><path d=\"M240 56v128M208 88l64 64M304 88l-64 64\" stroke=\"#66ff99\" stroke-width=\"6\" stroke-linecap=\"round\"/></svg>"
+        },
+        "archive-banner": {
+          "title": "Archive Banner",
+          "type": "text",
+          "content": "ARCHIVE NODE ONLINE"
+        }
+      }
+    }
+  }
+}

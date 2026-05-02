@@ -842,6 +842,60 @@
     });
 
     tryRegister({
+      name: "ls",
+      description: "List directory contents (virtual filesystem)",
+      usage: "ls [path]",
+      category: "system",
+      requiresBackend: true,
+      handler: (context) => {
+        const target = splitCommandTarget(context?.args) || ".";
+        return handleBackendCommand(context, "ls", async (apiClient) =>
+          apiClient.executeCommand(`ls ${target}`, { terminalState: context.terminalState }),
+        );
+      },
+    });
+
+    tryRegister({
+      name: "cd",
+      description: "Change current directory",
+      usage: "cd <path>",
+      category: "system",
+      requiresBackend: true,
+      handler: (context) => {
+        const target = splitCommandTarget(context?.args) || "/";
+        return handleBackendCommand(context, "cd", async (apiClient) =>
+          apiClient.executeCommand(`cd ${target}`, { terminalState: context.terminalState }),
+        );
+      },
+    });
+
+    tryRegister({
+      name: "pwd",
+      description: "Show current directory",
+      usage: "pwd",
+      category: "system",
+      requiresBackend: true,
+      handler: (context) =>
+        handleBackendCommand(context, "pwd", async (apiClient) =>
+          apiClient.executeCommand("pwd", { terminalState: context.terminalState }),
+        ),
+    });
+
+    tryRegister({
+      name: "tree",
+      description: "Show directory tree",
+      usage: "tree [path]",
+      category: "system",
+      requiresBackend: true,
+      handler: (context) => {
+        const target = splitCommandTarget(context?.args) || ".";
+        return handleBackendCommand(context, "tree", async (apiClient) =>
+          apiClient.executeCommand(`tree ${target}`, { terminalState: context.terminalState }),
+        );
+      },
+    });
+
+    tryRegister({
       name: "mission",
       description: "Start a predefined scenario",
       usage: "mission <name>",

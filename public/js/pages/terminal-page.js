@@ -50,6 +50,7 @@
     cancelRequested: false,
     autocompleteState: null,
     availableScripts: [],
+    currentPath: "/",
   };
   let bootSequenceRendered = false;
 
@@ -91,7 +92,7 @@
       theme: themeState.themeName || "green",
       effectsEnabled: themeState.effectsEnabled !== false,
       reducedMotion: themeState.reducedMotion === true,
-      currentPath: "/operator/terminal.html",
+      currentPath: state.currentPath || "/operator/terminal.html",
       recentCommands: state.history.slice(-6),
       availableCommands: commandSystem.registry.list().map((command) => ({
         name: command.name,
@@ -511,6 +512,11 @@
       await outputRenderer.render(result, {
         signal: renderController?.signal,
       });
+
+      // If backend command returned a new path, update client-side cwd
+      if (result?.metadata?.path) {
+        state.currentPath = String(result.metadata.path || state.currentPath || "/");
+      }
 
       if (result?.metadata?.porky) {
         applyPorkyMetadata(result.metadata, command);

@@ -1,0 +1,145 @@
+{
+  "boot-sequence": {
+    "id": "boot-sequence",
+    "title": "Boot Sequence",
+    "description": "Operator startup sequence",
+    "type": "script",
+    "tags": ["bootstrap", "demo"],
+    "author": { "name": "system", "contact": "ops@archive.local" },
+    "version": "1.1",
+    "visibility": "public",
+    "options": { "repeatable": true, "showInList": true, "estimatedDurationMs": 1200 },
+    "steps": [
+      {
+        "id": "boot-1",
+        "type": "text",
+        "content": "> Initializing operator shell...",
+        "delayMs": 150,
+        "metadata": { "typingEffect": true }
+      },
+      { "id": "boot-2", "type": "text", "content": "> Loading internal maps...", "delayMs": 120 },
+      { "id": "boot-3", "type": "text", "content": "> Reading terminal bootstrap data...", "delayMs": 100 },
+      {
+        "id": "boot-art",
+        "type": "ascii",
+        "content": "  _   _ _____  ____  \n | | | |_   _|/ __ \\n | |_| | | | | |  | |\n |  _  | | | | |  | |\n | | | |_| |_| |__| |\n |_| |_|_____|\\____/",
+        "delayMs": 300,
+        "metadata": { "preserveWhitespace": true }
+      }
+    ]
+  },
+  "diagnostics": {
+    "id": "diagnostics",
+    "title": "Diagnostics",
+    "description": "Basic health summary",
+    "type": "script",
+    "tags": ["diagnostic", "health"],
+    "version": "1.0",
+    "options": { "repeatable": true, "showInList": true },
+    "steps": [
+      {
+        "id": "diag-collect",
+        "type": "text",
+        "content": "> Collecting system diagnostics...",
+        "delayMs": 200,
+        "metadata": { "typingEffect": true }
+      },
+      {
+        "id": "diag-json",
+        "type": "json",
+        "content": { "cpu": "OK", "memory": "OK", "disk": "OK", "network": "OK" },
+        "delayMs": 400,
+        "metadata": { "pretty": true }
+      },
+      { "id": "diag-complete", "type": "text", "content": "> Diagnostics complete.", "delayMs": 80 }
+    ]
+  },
+  "login-sequence": {
+    "id": "login-sequence",
+    "title": "Login Sequence",
+    "description": "Secure operator sign-in flow",
+    "type": "script",
+    "tags": ["auth", "script"],
+    "version": "1.0",
+    "options": { "repeatable": false, "requiresAuth": false },
+    "steps": [
+      {
+        "id": "login-verify",
+        "type": "text",
+        "content": "> Verifying operator token...",
+        "delayMs": 200,
+        "metadata": { "typingEffect": true }
+      },
+      { "id": "login-channel", "type": "text", "content": "> Establishing secure channel...", "delayMs": 180 },
+      { "id": "login-granted", "type": "text", "content": "Access granted.", "delayMs": 100 }
+    ]
+  },
+  "intro": {
+    "id": "intro",
+    "title": "Field Introduction",
+    "description": "Short mission introduction",
+    "type": "script",
+    "tags": ["intro", "mission"],
+    "version": "1.0",
+    "options": { "repeatable": true },
+    "steps": [
+      { "id": "intro-1", "type": "text", "content": "> Mission control online.", "delayMs": 120 },
+      { "id": "intro-2", "type": "text", "content": "> Follow terminal prompts carefully.", "delayMs": 140 }
+    ]
+  },
+  "redroom": {
+    "id": "redroom",
+    "title": "Red Room Scenario",
+    "description": "High-security simulation environment",
+    "type": "script",
+    "tags": ["scenario", "security"],
+    "version": "2.0",
+    "options": { "repeatable": false, "experimental": true, "showInList": false },
+    "steps": [
+      { "id": "r-1", "type": "text", "content": "> Entering R3D R00M scenario...", "delayMs": 160 },
+      { "id": "r-2", "type": "text", "content": "> d00r.status = ȺJȺR", "delayMs": 90 },
+      { "id": "r-3", "type": "text", "content": "> l̷i̷g̷h̷t̷ leakage detected...", "delayMs": 120 },
+      { "id": "r-4", "type": "text", "content": "> Initializing security protocols...", "delayMs": 120 },
+      { "id": "r-5", "type": "text", "content": "> Protocol layer 01: S̷E̷A̷L̷E̷D̷", "delayMs": 120 },
+      { "id": "r-6", "type": "text", "content": "> Protocol layer 02: ᛋᛠᛋᛚᛖᛞ", "delayMs": 120 },
+      { "id": "r-7", "type": "text", "content": "> Protocol layer 03: bl33ding", "delayMs": 120 },
+      { "id": "r-8", "type": "text", "content": "> Checking room integrity...", "delayMs": 120 },
+      { "id": "r-9", "type": "text", "content": "> Integrity: 98%", "delayMs": 80 },
+      { "id": "r-10", "type": "text", "content": "> Integrity: 74%", "delayMs": 80 },
+      { "id": "r-11", "type": "text", "content": "> Integrity: 113%", "delayMs": 80, "metadata": { "warn": true } },
+      { "id": "r-12", "type": "text", "content": "> !ERR: VALUE_OUTSIDE_ROOM", "delayMs": 120, "onError": { "action": "abort" } },
+      { "id": "r-13", "type": "text", "content": "> Recalculating... r̵e̶c̷a̸l̵c̶u̵l̶a̴t̷i̸n̶g̵...", "delayMs": 200 },
+      { "id": "r-14", "type": "text", "content": "> [SIGNAL] ██░░██░░██░░██░░██", "delayMs": 80 },
+      { "id": "r-15", "type": "text", "content": "> 0bserver detected behind glass.", "delayMs": 80 },
+      { "id": "r-16", "type": "text", "content": "> 0bserver detected in glass.", "delayMs": 80 },
+      { "id": "r-17", "type": "text", "content": "> 0bserver detected as glass.", "delayMs": 80 },
+      { "id": "r-18", "type": "text", "content": "> m̷i̶r̵r̸o̵r̴.process returned: MISMATCH", "delayMs": 120 },
+      { "id": "r-19", "type": "text", "content": "> Silence threshold exceeded: ███████", "delayMs": 120 },
+      { "id": "r-20", "type": "text", "content": "> Red Room active.", "delayMs": 120 },
+      { "id": "r-21", "type": "text", "content": "> D̸O̴ ̵N̵O̸T̶ ̴T̸O̸U̶C̶H̷ ̴T̸H̸E̷ ̴W̵A̷L̴L̴S̵.", "delayMs": 200 }
+    ]
+  },
+  "composite-demo": {
+    "id": "composite-demo",
+    "title": "Composite Demo",
+    "description": "Demonstrates composite and parallel step groups",
+    "type": "script",
+    "tags": ["demo", "composite"],
+    "version": "1.0",
+    "options": { "repeatable": false },
+    "steps": [
+      {
+        "id": "group-parallel",
+        "type": "composite",
+        "mode": "parallel",
+        "metadata": { "startTogether": true },
+        "items": [
+          { "id": "p-a", "type": "text", "content": "Parallel task A", "delayMs": 80 },
+          { "id": "p-b", "type": "text", "content": "Parallel task B", "delayMs": 160 },
+          { "id": "p-c", "type": "image", "assetId": "signal-image", "alt": "signal frame", "delayMs": 0 }
+        ]
+      },
+      { "id": "post-parallel", "type": "text", "content": "> Parallel group complete.", "delayMs": 120 }
+    ]
+  }
+}
