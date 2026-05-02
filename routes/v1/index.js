@@ -29,6 +29,7 @@ const testingRoute = require("./testing.route");
 const notificationsRoute = require("./notifications.route");
 const weatherRoute = require("./weather.route");
 const blogRoute = require("./blogs.route");
+const terminalRoute = require("./terminal.route");
 const contactRoute = require("../contact.route");
 const { logInfo, logError } = require("../../helpers/logger-api");
 
@@ -177,6 +178,7 @@ router.use("/", webhooksRoute);
 router.use("/", testingRoute);
 router.use("/", notificationsRoute);
 router.use("/", weatherRoute);
+router.use("/", terminalRoute);
 router.use("/contact", contactRoute);
 router.use("/", blogRoute);
 

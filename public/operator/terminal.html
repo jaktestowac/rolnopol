@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Archive Terminal - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="/css/pages/terminal.css" />
+</head>
+
+<body class="terminal-page">
+    <main class="terminal-shell" id="terminalShell" tabindex="0" aria-label="Archive terminal prototype">
+        <header class="terminal-header">
+            <div class="terminal-header__lights" aria-hidden="true">
+                <span class="terminal-light terminal-light--red"></span>
+                <span class="terminal-light terminal-light--amber"></span>
+                <span class="terminal-light terminal-light--green"></span>
+            </div>
+            <div class="terminal-header__title">
+                <span class="terminal-header__eyebrow">rolnopol / operator</span>
+                <h1>Archive Terminal</h1>
+            </div>
+            <div class="terminal-header__meta">
+                <span class="terminal-badge">v0.1 static</span>
+                <span class="terminal-badge terminal-badge--muted" id="terminalStatus">ready</span>
+            </div>
+        </header>
+
+        <section class="terminal-screen" aria-label="Terminal output area">
+            <div class="terminal-noise" aria-hidden="true"></div>
+
+            <div class="terminal-output" id="terminalOutput" role="log" aria-live="polite" aria-relevant="additions text"></div>
+
+            <div class="terminal-input-row">
+                <label class="sr-only" for="terminalInput">Terminal command</label>
+                <span class="terminal-prompt" aria-hidden="true">guest@archive:~$</span>
+                <input id="terminalInput" class="terminal-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" />
+                <span class="terminal-cursor" aria-hidden="true"></span>
+            </div>
+
+            <div class="terminal-suggestions" id="terminalSuggestions" aria-live="polite"></div>
+
+            <p class="terminal-hint">Enter submits • ArrowUp/ArrowDown browses history • Click anywhere to focus</p>
+        </section>
+    </main>
+
+    <script src="/js/pages/terminal-api-client.js"></script>
+    <script src="/js/pages/terminal-theme-manager.js"></script>
+    <script src="/js/pages/terminal-command-system.js"></script>
+    <script src="/js/pages/terminal-output-renderer.js"></script>
+    <script src="/js/pages/terminal-page.js"></script>
+</body>
+
+</html>

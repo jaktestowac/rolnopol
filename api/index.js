@@ -303,6 +303,8 @@ app.get("/api", (req, res) => {
         "GET /api/v1/financial/transactions - Get transaction history (requires auth)",
         "GET /api/v1/financial/stats - Get financial statistics (requires auth)",
         "POST /api/v1/financial/transfer - Transfer funds (requires auth)",
+        "GET /api/v1/terminal - Get terminal prototype metadata",
+        "GET /api/v1/terminal/bootstrap - Get static terminal boot sequence",
       ],
     }),
   );
@@ -444,6 +446,15 @@ app.get(["/health", "/health.html"], (req, res, next) => {
 app.get(["/status", "/status.html"], (req, res, next) => {
   if (req.path === "/status") {
     return res.redirect(302, "/status.html");
+  }
+
+  return next();
+});
+
+// Public terminal prototype entry point
+app.get(["/operator/terminal", "/operator/terminal.html"], (req, res, next) => {
+  if (req.path === "/operator/terminal") {
+    return res.redirect(302, "/operator/terminal.html");
   }
 
   return next();
