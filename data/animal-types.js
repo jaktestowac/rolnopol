@@ -121,6 +121,34 @@ const ALLOWED_ANIMAL_TYPES = {
     icon: "🦾",
     hidden: true,
   },
+  dinosaur: {
+    key: "dinosaur",
+    fullName: "Dinosaur T-Rex",
+    description:
+      "AI_Testers mascot and farm guardian for brave farmers... Not recommended for small farms or those with delicate crops or livestock. Use with caution!",
+    icon: "🦖",
+  },
+  diplodocus: {
+    key: "diplodocus",
+    fullName: "Diplodocus",
+    description: "Long-necked herbivorous dinosaur. A gentle giant of the Mesozoic era. Perfect for farm work and companionship.",
+    icon: "🦕",
+  },
+  unicorn: {
+    key: "unicorn",
+    fullName: "Unicorn",
+    description:
+      "Mythical horse with a single horn. Symbol of purity and grace. A magical addition to any farm, bringing good fortune and beauty.",
+    icon: "🦄",
+    hidden: true,
+  },
+  ent: {
+    key: "ent",
+    fullName: "Ent",
+    description:
+      "Sentient tree-like creature from fantasy lore. Guardians of the forest and nature. A wise and powerful ally for sustainable farming and environmental stewardship.",
+    icon: "🌳",
+  },
 };
 
 module.exports = {
