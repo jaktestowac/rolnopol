@@ -137,6 +137,87 @@ describe("terminal backend integration", () => {
     expect(res.body.data.result.content).toContain("tmp/");
   });
 
+  it("shows long-format details for ls -al", async () => {
+    const res = await request(app)
+      .post("/api/v1/terminal/execute")
+      .send({ input: "ls -al projects/rolnopol-jt", sessionId: "fs-session-long-format" })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.result.type).toBe("text");
+    expect(res.body.data.result.content).toContain("notes.md | name=notes.md | type=text | path=/projects/rolnopol-jt/notes.md");
+    expect(res.body.data.result.content).toContain("scripts/ | name=scripts/ | type=dir | path=/projects/rolnopol-jt/scripts");
+    expect(res.body.data.result.content).toContain("access=");
+    expect(res.body.data.result.content).toContain("locked=");
+    expect(res.body.data.result.content).toContain("resourceType=");
+  });
+
+  it("glitches the terminal when accessing special glitch resources", async () => {
+    const sessionId = "glitch-session-1";
+
+    const lsRes = await request(app).post("/api/v1/terminal/execute").send({ input: "ls tmp", sessionId }).expect(200);
+
+    expect(lsRes.body.success).toBe(true);
+    expect(lsRes.body.data.result.content).toContain("glitch-lab/ [glitch]");
+
+    const cdRes = await request(app).post("/api/v1/terminal/execute").send({ input: "cd tmp/glitch-lab", sessionId }).expect(200);
+
+    expect(cdRes.body.success).toBe(true);
+    expect(cdRes.body.data.result.metadata.path).toBe("/tmp/glitch-lab");
+    expect(cdRes.body.data.result.metadata.effect).toMatchObject({
+      kind: "glitch",
+      durationMs: expect.any(Number),
+    });
+
+    const openRes = await request(app)
+      .post("/api/v1/terminal/execute")
+      .send({ input: "open tmp/glitch-lab/static.txt", sessionId })
+      .expect(200);
+
+    expect(openRes.body.success).toBe(true);
+    expect(openRes.body.data.result.type).toBe("text");
+    expect(openRes.body.data.result.content).toContain("This text glitches the terminal for a few seconds.");
+    expect(openRes.body.data.result.effect).toMatchObject({
+      kind: "glitch",
+      durationMs: expect.any(Number),
+    });
+  });
+
+  it("reboots the terminal when accessing special reboot resources", async () => {
+    const sessionId = "reboot-session-1";
+
+    const lsRes = await request(app).post("/api/v1/terminal/execute").send({ input: "ls tmp", sessionId }).expect(200);
+
+    expect(lsRes.body.success).toBe(true);
+    expect(lsRes.body.data.result.content).toContain("reboot-core/ [reboot]");
+
+    const cdRes = await request(app).post("/api/v1/terminal/execute").send({ input: "cd tmp/reboot-core", sessionId }).expect(200);
+
+    expect(cdRes.body.success).toBe(true);
+    expect(cdRes.body.data.result.metadata.path).toBe("/tmp/reboot-core");
+    expect(cdRes.body.data.result.metadata.effect).toMatchObject({
+      kind: "reboot",
+      durationMs: expect.any(Number),
+      glitchDurationMs: expect.any(Number),
+      rebootDurationMs: expect.any(Number),
+    });
+
+    const openRes = await request(app)
+      .post("/api/v1/terminal/execute")
+      .send({ input: "open tmp/reboot-core/handoff.txt", sessionId })
+      .expect(200);
+
+    expect(openRes.body.success).toBe(true);
+    expect(openRes.body.data.result.type).toBe("text");
+    expect(openRes.body.data.result.content).toContain("INIT REBOOT CORE");
+    expect(openRes.body.data.result.effect).toMatchObject({
+      kind: "reboot",
+      durationMs: expect.any(Number),
+      glitchDurationMs: expect.any(Number),
+      rebootDurationMs: expect.any(Number),
+    });
+  });
+
   it("supports cd, pwd, and tree navigation", async () => {
     const sessionId = "fs-session-2";
 
@@ -155,6 +236,74 @@ describe("terminal backend integration", () => {
     expect(treeRes.body.success).toBe(true);
     expect(treeRes.body.data.result.content).toContain("docs/readme.md");
     expect(treeRes.body.data.result.content).toContain("docs/guide/filesystem.md");
+  });
+
+  it("shows locked directory entries and unlocks protected directories with a password", async () => {
+    const sessionId = "protected-fs-session-1";
+
+    const rootRes = await request(app).post("/api/v1/terminal/execute").send({ input: "ls", sessionId }).expect(200);
+
+    expect(rootRes.body.success).toBe(true);
+    expect(rootRes.body.data.result.content).toContain("vault/ [locked]");
+
+    const deniedRes = await request(app).post("/api/v1/terminal/execute").send({ input: "cd vault", sessionId }).expect(401);
+
+    expect(deniedRes.body.success).toBe(false);
+    expect(deniedRes.body.error.code).toBe("PASSWORD_REQUIRED");
+
+    const unlockRes = await request(app)
+      .post("/api/v1/terminal/execute")
+      .send({ input: "cd vault --password ember", sessionId })
+      .expect(200);
+
+    expect(unlockRes.body.success).toBe(true);
+    expect(unlockRes.body.data.result.metadata.path).toBe("/vault");
+
+    const pwdRes = await request(app).post("/api/v1/terminal/execute").send({ input: "pwd", sessionId }).expect(200);
+
+    expect(pwdRes.body.success).toBe(true);
+    expect(pwdRes.body.data.result.content).toBe("/vault");
+
+    const lsVaultRes = await request(app).post("/api/v1/terminal/execute").send({ input: "ls", sessionId }).expect(200);
+
+    expect(lsVaultRes.body.success).toBe(true);
+    expect(lsVaultRes.body.data.result.content).toContain("manifest.txt");
+    expect(lsVaultRes.body.data.result.content).toContain("sealed-notes.txt");
+    expect(lsVaultRes.body.data.result.content).not.toContain("[locked]");
+  });
+
+  it("shows locked files and unlocks protected files with a password", async () => {
+    const sessionId = "protected-fs-session-2";
+
+    const guideRes = await request(app).post("/api/v1/terminal/execute").send({ input: "ls docs/guide", sessionId }).expect(200);
+
+    expect(guideRes.body.success).toBe(true);
+    expect(guideRes.body.data.result.content).toContain("restricted.md [locked]");
+
+    const deniedRes = await request(app)
+      .post("/api/v1/terminal/execute")
+      .send({ input: "open docs/guide/restricted.md", sessionId })
+      .expect(401);
+
+    expect(deniedRes.body.success).toBe(false);
+    expect(deniedRes.body.error.code).toBe("PASSWORD_REQUIRED");
+
+    const unlockRes = await request(app)
+      .post("/api/v1/terminal/execute")
+      .send({ input: "open docs/guide/restricted.md --password amber", sessionId })
+      .expect(200);
+
+    expect(unlockRes.body.success).toBe(true);
+    expect(unlockRes.body.data.result.type).toBe("text");
+    expect(unlockRes.body.data.result.content).toContain("protected and can only be opened");
+
+    const reopenRes = await request(app)
+      .post("/api/v1/terminal/execute")
+      .send({ input: "open docs/guide/restricted.md", sessionId })
+      .expect(200);
+
+    expect(reopenRes.body.success).toBe(true);
+    expect(reopenRes.body.data.result.content).toContain("protected and can only be opened");
   });
 
   it("rejects cd into a file path", async () => {

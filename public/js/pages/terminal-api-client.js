@@ -40,6 +40,8 @@
     }
 
     toCommandResult(fallbackHint) {
+      const responseMetadata = this.responseData?.error?.metadata || this.responseData?.details?.metadata || null;
+
       return {
         type: "error",
         content: this.message || "Terminal backend request failed.",
@@ -47,6 +49,7 @@
           code: this.code,
           status: this.status,
           hint: this.hint || fallbackHint || 'Type "help" to see available commands.',
+          ...(responseMetadata && typeof responseMetadata === "object" ? responseMetadata : {}),
         },
       };
     }

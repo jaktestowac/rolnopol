@@ -56,6 +56,14 @@
               "type": "text",
               "content": "Terminal commands are served by the backend and can be synced from disk with /terminal/sync."
             },
+            "restricted.md": {
+              "title": "Restricted Guide",
+              "type": "text",
+              "access": "password",
+              "password": "amber",
+              "passwordHint": "Look for the warmer archive light.",
+              "content": "This guide is protected and can only be opened with the correct password."
+            },
             "release-notes.md": {
               "title": "Release Notes",
               "type": "text",
@@ -85,6 +93,23 @@
               "content": "GET /api/v1/terminal/commands 200\nPOST /api/v1/terminal/execute 200\nPOST /api/v1/terminal/sync 200\n"
             }
           }
+        }
+      }
+    },
+    "vault": {
+      "access": "password",
+      "password": "ember",
+      "passwordHint": "The archive remembers the color of fire.",
+      "children": {
+        "manifest.txt": {
+          "title": "Vault Manifest",
+          "type": "text",
+          "content": "Entry 01: sealed records\nEntry 02: restricted references\nEntry 03: archival keys"
+        },
+        "sealed-notes.txt": {
+          "title": "Sealed Notes",
+          "type": "text",
+          "content": "These notes are only readable after the vault has been unlocked."
         }
       }
     },
@@ -152,6 +177,61 @@
       "children": {
         "cache": {
           "children": {}
+        },
+        "glitch-lab": {
+          "title": "Glitch Lab",
+          "effect": {
+            "kind": "glitch",
+            "durationMs": 3600,
+            "label": "glitch"
+          },
+          "children": {
+            "static.txt": {
+              "title": "Static Burst",
+              "type": "text",
+              "effect": {
+                "kind": "glitch",
+                "durationMs": 2400,
+                "label": "glitch"
+              },
+              "content": "████ ░░▒▒▒▒▒▒ ░░░░████"
+            },
+            "echoes.md": {
+              "title": "Echoes",
+              "type": "text",
+              "effect": "glitch",
+              "content": "The archive flickers."
+            }
+          }
+        },
+        "reboot-core": {
+          "title": "Reboot Core",
+          "effect": {
+            "kind": "reboot",
+            "durationMs": 5400,
+            "glitchDurationMs": 1600,
+            "rebootDurationMs": 3800,
+            "label": "reboot"
+          },
+          "children": {
+            "handoff.txt": {
+              "title": "Handoff Sequence",
+              "type": "text",
+              "effect": {
+                "kind": "reboot",
+                "durationMs": 4400,
+                "glitchDurationMs": 1300,
+                "rebootDurationMs": 3100,
+                "label": "reboot"
+              },
+              "content": ">>> INIT REBOOT CORE\n>>> STABILIZING SIGNAL LATTICE\n>>> RESTORING THE SHELL FROM ORBITAL MEMORY"
+            },
+            "status.md": {
+              "title": "Reboot Status",
+              "type": "text",
+              "content": "This node glows, glitches, and then returns as if it was freshly booted from the future."
+            }
+          }
         },
         "uploads": {
           "children": {

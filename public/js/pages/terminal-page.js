@@ -8,15 +8,28 @@
     { type: "text", content: "Retro display....... ACTIVE" },
     { type: "text", content: "Type a command and press Enter." },
   ];
+  const REBOOT_VISUAL_SEQUENCE = [
+    {
+      type: "ascii",
+      content: "╔════════════════════════════════════╗\n║   SYSTEM REBOOT // INITIALIZING    ║\n╚════════════════════════════════════╝",
+    },
+    { type: "text", content: "Purging console buffer... done" },
+    { type: "text", content: "Rebuilding renderer lattice... done" },
+    { type: "text", content: "Reseeding prompt and session rails... done" },
+    { type: "ascii", content: "[████████████░░░░░░░░] 60% · boot image warming" },
+    { type: "text", content: "Spawning a fresh shell surface..." },
+  ];
 
   // Scripts are provided by the backend API. We'll fetch them on startup.
 
   const terminalShell = document.getElementById("terminalShell");
   const terminalOutput = document.getElementById("terminalOutput");
   const terminalInput = document.getElementById("terminalInput");
+  const terminalPrompt = document.querySelector(".terminal-input-row .terminal-prompt");
   const terminalInputRow = document.querySelector(".terminal-input-row");
   const terminalSuggestions = document.getElementById("terminalSuggestions");
   const terminalStatus = document.getElementById("terminalStatus");
+  const terminalHeaderLights = document.getElementById("terminalCloseLights");
   const terminalThemeManager = window.TerminalThemeManager?.createTerminalThemeManager({
     documentRef: document,
     storageKey: "rolnopol-terminal-theme-settings",
@@ -50,7 +63,15 @@
     cancelRequested: false,
     autocompleteState: null,
     availableScripts: [],
+    availableFiles: [],
+    availableAssets: [],
     currentPath: "/",
+    activePrompt: null,
+    rebootInProgress: false,
+    glitchResetTimer: null,
+    rebootPhaseTimer: null,
+    rebootResetTimer: null,
+    rebootSequenceId: 0,
   };
   let bootSequenceRendered = false;
 
@@ -84,6 +105,420 @@
     state.autocompleteState = null;
   }
 
+  function syncInputRowMode() {
+    const promptState = state.activePrompt;
+    const isPrompting = !!promptState;
+    const isPasswordPrompt = promptState?.kind === "password";
+
+    if (terminalInputRow) {
+      terminalInputRow.classList.toggle("is-prompting", isPrompting);
+    }
+
+    if (terminalPrompt) {
+      terminalPrompt.textContent = promptState?.label || PROMPT;
+      terminalPrompt.classList.toggle("terminal-prompt--active", isPrompting);
+    }
+
+    terminalInput.classList.toggle("is-password-prompt", isPasswordPrompt);
+    terminalInput.type = "text";
+    terminalInput.inputMode = "text";
+    terminalInput.autocomplete = "off";
+    terminalInput.setAttribute("autocomplete", "off");
+    terminalInput.setAttribute("autocapitalize", "off");
+    terminalInput.setAttribute("autocorrect", "off");
+    terminalInput.setAttribute("spellcheck", "false");
+    terminalInput.placeholder = promptState?.placeholder || "";
+    terminalInput.disabled = (state.isBusy || state.rebootInProgress) && !isPrompting;
+  }
+
+  function appendTerminalNotice(
+    text,
+    className = "terminal-entry terminal-entry--response terminal-entry--muted terminal-entry--prompt-message",
+  ) {
+    const content = String(text || "").trim();
+    if (!content) {
+      return;
+    }
+
+    const entry = document.createElement("div");
+    entry.className = className;
+    entry.textContent = content;
+    terminalOutput.appendChild(entry);
+    scrollToBottom();
+  }
+
+  function clearActivePrompt() {
+    state.activePrompt = null;
+    syncInputRowMode();
+    terminalInput.value = "";
+    updateInputWidth();
+    renderSuggestions();
+    focusTerminalInput();
+  }
+
+  function beginTerminalPrompt(options = {}) {
+    if (state.activePrompt) {
+      return Promise.resolve({ submitted: false, cancelled: true });
+    }
+
+    return new Promise((resolve) => {
+      const promptState = {
+        kind: options.kind || "text",
+        label: options.label || "input:",
+        message: options.message || "",
+        placeholder: options.placeholder || "",
+        defaultValue: options.defaultValue || "",
+        echoResponse: options.echoResponse !== false,
+        formatResponse: typeof options.formatResponse === "function" ? options.formatResponse : null,
+        normalizeResponse: typeof options.normalizeResponse === "function" ? options.normalizeResponse : null,
+        resolve,
+      };
+
+      state.activePrompt = promptState;
+      syncInputRowMode();
+
+      if (promptState.message) {
+        appendTerminalNotice(promptState.message);
+      }
+
+      terminalInput.value = promptState.defaultValue;
+      updateInputWidth();
+      renderSuggestions();
+      focusTerminalInput();
+    });
+  }
+
+  function submitActivePrompt(cancelled = false) {
+    const promptState = state.activePrompt;
+    if (!promptState) {
+      return Promise.resolve({ submitted: false, cancelled: false });
+    }
+
+    const rawValue = String(terminalInput.value || "");
+    const normalizedValue = promptState.normalizeResponse ? promptState.normalizeResponse(rawValue) : rawValue.trim();
+    const displayValue =
+      cancelled || !promptState.echoResponse
+        ? promptState.formatResponse
+          ? promptState.formatResponse(rawValue, normalizedValue)
+          : promptState.kind === "password"
+            ? "[hidden]"
+            : normalizedValue
+        : normalizedValue;
+
+    if (!cancelled) {
+      const responseText = String(displayValue == null ? "" : displayValue).trim();
+      if (responseText) {
+        appendTerminalNotice(
+          `${promptState.label} ${responseText}`,
+          "terminal-entry terminal-entry--response terminal-entry--prompt-response",
+        );
+      }
+    }
+
+    state.activePrompt = null;
+    syncInputRowMode();
+    terminalInput.value = "";
+    updateInputWidth();
+    renderSuggestions();
+    focusTerminalInput();
+
+    promptState.resolve({
+      submitted: !cancelled,
+      cancelled,
+      value: normalizedValue,
+      rawValue,
+    });
+
+    return Promise.resolve({
+      submitted: !cancelled,
+      cancelled,
+      value: normalizedValue,
+      rawValue,
+    });
+  }
+
+  function requestTerminalTextPrompt(options = {}) {
+    return beginTerminalPrompt({
+      ...options,
+      kind: "text",
+      echoResponse: options.echoResponse !== false,
+    });
+  }
+
+  function requestTerminalPasswordPrompt(options = {}) {
+    return beginTerminalPrompt({
+      ...options,
+      kind: "password",
+      label: options.label || "password:",
+      placeholder: options.placeholder || "Enter password",
+      echoResponse: false,
+      formatResponse: () => "[hidden]",
+    });
+  }
+
+  function requestTerminalConfirmation(options = {}) {
+    const defaultAffirmative = options.defaultValue === true;
+    return beginTerminalPrompt({
+      ...options,
+      kind: "confirm",
+      label: options.label || "confirm [y/N]:",
+      placeholder: options.placeholder || "y / n",
+      defaultValue: defaultAffirmative ? "y" : "n",
+      normalizeResponse: (value) => {
+        const normalized = String(value || "")
+          .trim()
+          .toLowerCase();
+        if (!normalized) {
+          return defaultAffirmative;
+        }
+
+        if (["y", "yes", "true", "1"].includes(normalized)) {
+          return true;
+        }
+
+        if (["n", "no", "false", "0"].includes(normalized)) {
+          return false;
+        }
+
+        return defaultAffirmative;
+      },
+      formatResponse: (_, normalizedValue) => (normalizedValue ? "yes" : "no"),
+    });
+  }
+
+  function isProtectedResourceError(result) {
+    return (
+      String(result?.metadata?.code || "")
+        .trim()
+        .toUpperCase() === "PASSWORD_REQUIRED"
+    );
+  }
+
+  function appendPromptLine(promptText) {
+    const text = String(promptText || "").trim();
+    if (!text) {
+      return;
+    }
+
+    appendTerminalNotice(text, "terminal-entry terminal-entry--response terminal-entry--muted terminal-entry--prompt-line");
+  }
+
+  function hasPasswordFlag(parsedCommand) {
+    return parsedCommand && Object.prototype.hasOwnProperty.call(parsedCommand.flags || {}, "password");
+  }
+
+  function buildPasswordRetryCommand(rawCommand, password) {
+    const baseCommand = String(rawCommand || "").trim();
+    const secret = String(password || "").trim();
+
+    if (!baseCommand || !secret) {
+      return "";
+    }
+
+    return `${baseCommand} --password ${JSON.stringify(secret)}`;
+  }
+
+  function promptForProtectedResource(result) {
+    return requestTerminalPasswordPrompt({
+      label: "password:",
+      message: result?.metadata?.hint || "Access requires a password.",
+      placeholder: "Enter password",
+      defaultValue: "",
+    });
+  }
+
+  function normalizeTerminalEffect(effect) {
+    if (!effect) {
+      return null;
+    }
+
+    if (typeof effect === "string") {
+      const normalizedKind = effect.trim().toLowerCase();
+      if (normalizedKind === "glitch") {
+        return { kind: "glitch", durationMs: 3200, label: "glitch" };
+      }
+
+      if (normalizedKind === "reboot") {
+        return { kind: "reboot", durationMs: 5200, glitchDurationMs: 1800, rebootDurationMs: 3400, label: "reboot" };
+      }
+
+      return null;
+    }
+
+    if (typeof effect === "boolean") {
+      return effect ? { kind: "glitch", durationMs: 3200 } : null;
+    }
+
+    if (typeof effect !== "object") {
+      return null;
+    }
+
+    const kind = String(effect.kind || effect.type || effect.name || "")
+      .trim()
+      .toLowerCase();
+    if (kind !== "glitch" && kind !== "reboot") {
+      return null;
+    }
+
+    const rawDuration = Number(effect.durationMs ?? effect.duration ?? 3200);
+    const durationMs = Number.isFinite(rawDuration) && rawDuration > 0 ? Math.max(500, Math.floor(rawDuration)) : 3200;
+
+    if (kind === "reboot") {
+      const rawRebootDuration = Number(effect.rebootDurationMs ?? effect.outroDurationMs);
+      const rawGlitchDuration = Number(
+        effect.glitchDurationMs ??
+          effect.introDurationMs ??
+          (Number.isFinite(rawRebootDuration) && rawRebootDuration > 0 ? durationMs - rawRebootDuration : Math.round(durationMs * 0.35)),
+      );
+      const glitchDurationMs =
+        Number.isFinite(rawGlitchDuration) && rawGlitchDuration > 0
+          ? Math.max(500, Math.min(Math.floor(rawGlitchDuration), Math.max(500, durationMs - 800)))
+          : Math.max(500, Math.min(Math.round(durationMs * 0.35), Math.max(500, durationMs - 800)));
+
+      return {
+        kind: "reboot",
+        durationMs,
+        glitchDurationMs,
+        rebootDurationMs:
+          Number.isFinite(rawRebootDuration) && rawRebootDuration > 0
+            ? Math.max(500, Math.floor(rawRebootDuration))
+            : Math.max(500, durationMs - glitchDurationMs),
+        label: String(effect.label || effect.message || "reboot").trim() || "reboot",
+      };
+    }
+
+    return {
+      kind: "glitch",
+      durationMs,
+      label: String(effect.label || effect.message || "glitch").trim() || "glitch",
+    };
+  }
+
+  function getTerminalEffectFromResult(result) {
+    const candidates = [result, result?.metadata, result?.metadata?.file, result?.metadata?.asset, result?.metadata?.resource];
+
+    for (const candidate of candidates) {
+      const effect = normalizeTerminalEffect(candidate?.effect);
+      if (effect) {
+        return effect;
+      }
+    }
+
+    return null;
+  }
+
+  function clearTerminalEffect() {
+    if (state.glitchResetTimer) {
+      window.clearTimeout(state.glitchResetTimer);
+      state.glitchResetTimer = null;
+    }
+
+    if (state.rebootPhaseTimer) {
+      window.clearTimeout(state.rebootPhaseTimer);
+      state.rebootPhaseTimer = null;
+    }
+
+    if (state.rebootResetTimer) {
+      window.clearTimeout(state.rebootResetTimer);
+      state.rebootResetTimer = null;
+    }
+
+    state.rebootInProgress = false;
+    terminalShell.classList.remove("is-glitching");
+    terminalShell.classList.remove("is-rebooting");
+    document.documentElement.classList.remove("terminal-glitch-active");
+    document.documentElement.classList.remove("terminal-reboot-active");
+  }
+
+  function clearTerminalGlitch() {
+    clearTerminalEffect();
+  }
+
+  function triggerTerminalGlitch(effect = {}) {
+    const normalized = normalizeTerminalEffect(effect) || { kind: "glitch", durationMs: 3200 };
+
+    clearTerminalEffect();
+    terminalShell.classList.add("is-glitching");
+    document.documentElement.classList.add("terminal-glitch-active");
+
+    const durationMs = Number.isFinite(normalized.durationMs) ? Math.max(500, Math.floor(normalized.durationMs)) : 3200;
+    state.glitchResetTimer = window.setTimeout(() => {
+      clearTerminalEffect();
+    }, durationMs);
+  }
+
+  function triggerTerminalReboot(effect = {}) {
+    const normalized = normalizeTerminalEffect(effect) || {
+      kind: "reboot",
+      durationMs: 5200,
+      glitchDurationMs: 1800,
+      rebootDurationMs: 3400,
+      label: "reboot",
+    };
+
+    clearTerminalEffect();
+    state.rebootInProgress = true;
+    state.rebootSequenceId += 1;
+    const sequenceId = state.rebootSequenceId;
+    setBusy(true);
+    terminalShell.classList.add("is-glitching");
+    document.documentElement.classList.add("terminal-glitch-active");
+    setStatus("rebooting");
+
+    const totalDurationMs = Number.isFinite(normalized.durationMs) ? Math.max(500, Math.floor(normalized.durationMs)) : 5200;
+    const glitchDurationMs = Number.isFinite(normalized.glitchDurationMs)
+      ? Math.max(500, Math.min(Math.floor(normalized.glitchDurationMs), Math.max(500, totalDurationMs - 800)))
+      : Math.max(500, Math.min(Math.round(totalDurationMs * 0.35), Math.max(500, totalDurationMs - 800)));
+
+    state.rebootPhaseTimer = window.setTimeout(() => {
+      terminalShell.classList.remove("is-glitching");
+      document.documentElement.classList.remove("terminal-glitch-active");
+      terminalShell.classList.add("is-rebooting");
+      document.documentElement.classList.add("terminal-reboot-active");
+      if (sequenceId === state.rebootSequenceId && state.rebootInProgress) {
+        void renderRebootVisualSequence(sequenceId, normalized);
+      }
+      setStatus("rebooting");
+      state.rebootPhaseTimer = null;
+    }, glitchDurationMs);
+
+    state.rebootResetTimer = window.setTimeout(() => {
+      state.rebootSequenceId += 1;
+      void (async () => {
+        resetTerminalState();
+        outputRenderer.clear();
+        bootSequenceRendered = false;
+        await renderBootSequence({ force: true });
+        await refreshAutocompleteResources();
+        setBusy(false);
+        setStatus("ready");
+        state.rebootResetTimer = null;
+      })();
+    }, totalDurationMs);
+  }
+
+  function applyResultSideEffects(result, originalCommand, commandName = "") {
+    if (
+      result?.metadata?.path &&
+      String(commandName || "")
+        .trim()
+        .toLowerCase() === "cd"
+    ) {
+      state.currentPath = String(result.metadata.path || state.currentPath || "/");
+    }
+
+    if (result?.metadata?.porky) {
+      applyPorkyMetadata(result.metadata, originalCommand);
+    }
+
+    const terminalEffect = getTerminalEffectFromResult(result);
+    if (terminalEffect?.kind === "reboot") {
+      triggerTerminalReboot(terminalEffect);
+    } else if (terminalEffect) {
+      triggerTerminalGlitch(terminalEffect);
+    }
+  }
+
   function getTerminalContextSummary() {
     const themeState = terminalThemeManager?.getState?.() || {};
 
@@ -101,7 +536,8 @@
         category: command.category,
       })),
       availableScripts: Array.isArray(state.availableScripts) ? state.availableScripts : [],
-      availableFiles: [],
+      availableFiles: Array.isArray(state.availableFiles) ? state.availableFiles : [],
+      availableAssets: Array.isArray(state.availableAssets) ? state.availableAssets : [],
       unlockedScripts: [],
       unlockedFiles: [],
       mission: "",
@@ -122,6 +558,51 @@
     }
 
     renderSuggestions();
+  }
+
+  function normalizeCurrentLevelEntries(rows) {
+    return Array.isArray(rows)
+      ? rows
+          .map((row) => ({
+            path: String(row?.path || "").trim(),
+            title: String(row?.title || row?.name || row?.path || "").trim(),
+            type: String(row?.type || "file").trim() || "file",
+            locked: row?.locked === true,
+            access: row?.access || "public",
+          }))
+          .filter((entry) => !!entry.path)
+      : [];
+  }
+
+  async function fetchCurrentLevelResources() {
+    if (!terminalApiClient || typeof terminalApiClient.executeCommand !== "function") {
+      state.availableFiles = [];
+      state.availableAssets = [];
+      return;
+    }
+
+    try {
+      const data = await terminalApiClient.executeCommand("ls", {
+        sessionId: state.sessionId,
+        context: {
+          currentPath: state.currentPath,
+        },
+      });
+
+      const rows = Array.isArray(data?.result?.metadata?.rows) ? data.result.metadata.rows : [];
+      const entries = normalizeCurrentLevelEntries(rows);
+      state.availableFiles = entries;
+      state.availableAssets = entries.filter((entry) => entry.type === "asset");
+    } catch (err) {
+      state.availableFiles = [];
+      state.availableAssets = [];
+    }
+
+    renderSuggestions();
+  }
+
+  async function refreshAutocompleteResources() {
+    await Promise.all([fetchAvailableScripts(), fetchCurrentLevelResources()]);
   }
 
   function getPorkyConversationWindow() {
@@ -230,6 +711,22 @@
       return;
     }
 
+    if (state.activePrompt) {
+      const promptState = state.activePrompt;
+      terminalSuggestions.textContent =
+        promptState.kind === "password"
+          ? `${promptState.message || "Password required."} • Type the password and press Enter • Ctrl+C cancels`
+          : promptState.kind === "confirm"
+            ? `${promptState.message || "Confirmation required."} • Type y or n and press Enter • Ctrl+C cancels`
+            : `${promptState.message || "Enter a response."} • Press Enter to continue • Ctrl+C cancels`;
+      return;
+    }
+
+    if (state.rebootInProgress) {
+      terminalSuggestions.textContent = "Rebooting terminal core… please wait for the fresh shell to return.";
+      return;
+    }
+
     if (state.isBusy) {
       terminalSuggestions.textContent = "Running command… Press Ctrl+C to cancel.";
       return;
@@ -243,6 +740,7 @@
     const suggestion = commandSystem.suggest?.(terminalInput.value, {
       cursorIndex: getCursorIndex(),
       themeManager: terminalThemeManager,
+      terminalState: state,
     });
 
     if (!suggestion) {
@@ -295,6 +793,7 @@
     const suggestion = commandSystem.suggest?.(currentValue, {
       cursorIndex: getCursorIndex(),
       themeManager: terminalThemeManager,
+      terminalState: state,
     });
 
     if (!suggestion || !Array.isArray(suggestion.matches) || suggestion.matches.length === 0) {
@@ -313,12 +812,13 @@
     const before = currentValue.slice(0, suggestion.range.start);
     const after = currentValue.slice(suggestion.range.end);
     const completion = match.value;
-    const shouldAppendSpace = after.length === 0;
+    const shouldAppendSpace = after.length === 0 && match.appendSpace !== false;
 
     state.autocompleteState = {
       prefix: before,
       suffix: after,
       trailingSpace: shouldAppendSpace ? " " : "",
+      appendSpace: shouldAppendSpace,
       matches: suggestion.matches,
       index: 0,
       kind: suggestion.kind,
@@ -350,7 +850,7 @@
 
     if (key === "l") {
       event.preventDefault();
-      if (!state.isBusy) {
+      if (!state.isBusy && !state.rebootInProgress) {
         outputRenderer.clear();
       }
       resetAutocompleteState();
@@ -403,10 +903,10 @@
 
   function setBusy(isBusy) {
     state.isBusy = isBusy;
-    terminalInput.disabled = isBusy;
+    syncInputRowMode();
     terminalShell?.setAttribute("aria-busy", isBusy ? "true" : "false");
     terminalShell?.classList.toggle("is-busy", isBusy);
-    setStatus(isBusy ? "busy" : "ready");
+    setStatus(isBusy ? "busy" : state.rebootInProgress ? "rebooting" : "ready");
     renderSuggestions();
   }
 
@@ -427,19 +927,78 @@
     scrollToBottom();
   }
 
-  async function renderBootSequence() {
-    if (bootSequenceRendered) {
+  async function renderBootSequence({ force = false, sequence = STATIC_BOOT_SEQUENCE } = {}) {
+    if (bootSequenceRendered && !force) {
       return;
     }
 
     bootSequenceRendered = true;
     outputRenderer.clear();
-    for (const entry of STATIC_BOOT_SEQUENCE) {
+    for (const entry of sequence) {
       // eslint-disable-next-line no-await-in-loop
       await outputRenderer.render(entry);
     }
     setStatus("ready");
     updateInputWidth();
+  }
+
+  const waitForMs = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+  function resetTerminalState() {
+    state.history.length = 0;
+    state.historyIndex = -1;
+    state.mode = "shell";
+    state.porkySessionId = "";
+    state.porkyConversation = [];
+    state.cancelRequested = false;
+    state.autocompleteState = null;
+    state.availableScripts = [];
+    state.availableFiles = [];
+    state.availableAssets = [];
+    state.currentPath = "/";
+    state.activePrompt = null;
+    state.activeRenderController?.abort?.();
+    state.activeRenderController = null;
+    resetPorkyState();
+    clearTerminalEffect();
+    terminalInput.value = "";
+    updateInputWidth();
+    syncInputRowMode();
+    renderSuggestions();
+  }
+
+  async function renderRebootVisualSequence(sequenceId, effect = {}) {
+    outputRenderer.clear();
+    bootSequenceRendered = false;
+    terminalInput.value = "";
+    updateInputWidth();
+    renderSuggestions();
+
+    const label = String(effect?.label || "reboot").trim() || "reboot";
+    const title = label.toUpperCase();
+    const visuals = [
+      {
+        type: "ascii",
+        content: `╔════════════════════════════════════╗\n║   ${title.padEnd(30)}║\n╚════════════════════════════════════╝`,
+      },
+      ...REBOOT_VISUAL_SEQUENCE,
+      { type: "ascii", content: "[████████████████████] 100% · terminal shell ready" },
+    ];
+
+    for (const entry of visuals) {
+      if (sequenceId !== state.rebootSequenceId || !state.rebootInProgress) {
+        return;
+      }
+
+      // eslint-disable-next-line no-await-in-loop
+      await outputRenderer.render(entry);
+      if (sequenceId !== state.rebootSequenceId || !state.rebootInProgress) {
+        return;
+      }
+
+      // eslint-disable-next-line no-await-in-loop
+      await waitForMs(180);
+    }
   }
 
   function recordHistory(command) {
@@ -475,6 +1034,10 @@
   }
 
   async function submitCommand(rawCommand = terminalInput.value) {
+    if (state.activePrompt) {
+      return submitActivePrompt(false);
+    }
+
     const command = String(rawCommand || "").trim();
     if (!command) {
       terminalInput.value = "";
@@ -498,28 +1061,53 @@
 
     try {
       const isPorkyCommand = /^porky\b/i.test(effectiveCommand) || state.mode === "porky";
+      const parsedCommand = commandSystem.parse?.(effectiveCommand) || { flags: {} };
+      const parsedCommandName = String(parsedCommand.commandName || "")
+        .trim()
+        .toLowerCase();
+      const previousPath = state.currentPath;
 
       if (isPorkyCommand) {
         await appendPorkyThinkingLine();
       }
 
-      const result = await commandSystem.execute(effectiveCommand, {
+      let result = await commandSystem.execute(effectiveCommand, {
         terminalState: state,
         apiClient: terminalApiClient,
         themeManager: terminalThemeManager,
       });
 
+      if (isProtectedResourceError(result) && !hasPasswordFlag(parsedCommand)) {
+        const promptResponse = await promptForProtectedResource(result);
+
+        if (promptResponse?.cancelled) {
+          await outputRenderer.render({
+            type: "text",
+            content: "^C",
+          });
+          return;
+        }
+
+        if (promptResponse?.submitted && promptResponse.value) {
+          const retryCommand = buildPasswordRetryCommand(effectiveCommand, promptResponse.value);
+          if (retryCommand) {
+            result = await commandSystem.execute(retryCommand, {
+              terminalState: state,
+              apiClient: terminalApiClient,
+              themeManager: terminalThemeManager,
+            });
+          }
+        }
+      }
+
       await outputRenderer.render(result, {
         signal: renderController?.signal,
       });
 
-      // If backend command returned a new path, update client-side cwd
-      if (result?.metadata?.path) {
-        state.currentPath = String(result.metadata.path || state.currentPath || "/");
-      }
+      applyResultSideEffects(result, command, parsedCommandName);
 
-      if (result?.metadata?.porky) {
-        applyPorkyMetadata(result.metadata, command);
+      if (parsedCommandName === "cd" || parsedCommandName === "sync" || previousPath !== state.currentPath) {
+        void refreshAutocompleteResources();
       }
 
       recordHistory(command);
@@ -554,6 +1142,28 @@
   }
 
   terminalInput.addEventListener("keydown", async (event) => {
+    if (state.activePrompt) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        await submitActivePrompt(false);
+        return;
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        await submitActivePrompt(true);
+        return;
+      }
+
+      if ((event.ctrlKey || event.metaKey) && String(event.key || "").toLowerCase() === "c") {
+        event.preventDefault();
+        await submitActivePrompt(true);
+        return;
+      }
+
+      return;
+    }
+
     if (handleTerminalShortcut(event)) {
       return;
     }
@@ -612,6 +1222,27 @@
     });
   }
 
+  // Header lights act as a close button to return to the main page
+  if (terminalHeaderLights) {
+    terminalHeaderLights.addEventListener("click", (event) => {
+      event.preventDefault();
+      // Don't navigate away while rebooting or a busy command is running
+      if (state.rebootInProgress || state.isBusy) {
+        return;
+      }
+
+      try {
+        clearTerminalEffect();
+        resetTerminalState();
+        outputRenderer.clear();
+        bootSequenceRendered = false;
+      } finally {
+        // Navigate back to the main page
+        window.location.href = "/";
+      }
+    });
+  }
+
   window.addEventListener("keydown", (event) => {
     if (state.isBusy || terminalShell.contains(document.activeElement) || document.activeElement === terminalInput) {
       handleTerminalShortcut(event);
@@ -625,7 +1256,7 @@
   });
 
   window.addEventListener("load", () => {
-    void fetchAvailableScripts();
+    void refreshAutocompleteResources();
     void renderBootSequence();
     updateInputWidth();
     setBusy(false);
@@ -637,7 +1268,7 @@
   if (terminalThemeManager?.apply) {
     terminalThemeManager.apply();
   }
-  void fetchAvailableScripts();
+  void refreshAutocompleteResources();
   void renderBootSequence();
   renderSuggestions();
 })();

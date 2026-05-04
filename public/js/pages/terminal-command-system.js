@@ -179,6 +179,7 @@
 
   function formatHelpText(commands) {
     const list = Array.isArray(commands) ? commands : [];
+    list.sort(compareCommands);
 
     if (list.length === 0) {
       return "No commands are available.";
@@ -187,7 +188,17 @@
     const nameWidth = Math.max(...list.map((command) => command.name.length), 7) + 2;
     const lines = ["Available commands:", ""];
 
+    let lastCategory = null;
     list.forEach((command) => {
+      // add category label if we encounter a new category
+      if (command.category !== lastCategory) {
+        if (lastCategory !== null) {
+          lines.push("");
+        }
+        lines.push(`> Category: ${command.category}`);
+        lastCategory = command.category;
+      }
+
       lines.push(`${command.name.padEnd(nameWidth)}${command.description}`);
     });
 
@@ -236,6 +247,285 @@
   }
 
   const AUTOCOMPLETE_SUGGESTION_LIMIT = 6;
+  const PATH_AUTOCOMPLETE_SUGGESTION_LIMIT = 24;
+
+  function normalizeAutocompletePath(pathValue, options = {}) {
+    const preserveLeadingSlash = options.preserveLeadingSlash !== false;
+    const raw = toStringValue(pathValue).replace(/\\/g, "/").trim();
+
+    if (!raw) {
+      return "";
+    }
+
+    const absolute = raw.startsWith("/");
+    const segments = raw.split("/");
+    const normalizedSegments = [];
+
+    segments.forEach((segment) => {
+      const trimmed = toStringValue(segment).trim();
+
+      if (!trimmed || trimmed === ".") {
+        return;
+      }
+
+      if (trimmed === "..") {
+        normalizedSegments.pop();
+        return;
+      }
+
+      normalizedSegments.push(trimmed);
+    });
+
+    const joined = normalizedSegments.join("/");
+    if (absolute || preserveLeadingSlash) {
+      return `/${joined}`.replace(/\/+/g, "/") || "/";
+    }
+
+    return joined;
+  }
+
+  function stripTrailingSlash(pathValue) {
+    const text = normalizeAutocompletePath(pathValue);
+    if (text === "/") {
+      return "/";
+    }
+
+    return text.replace(/\/+$/, "");
+  }
+
+  function getPathBasename(pathValue) {
+    const normalized = stripTrailingSlash(pathValue);
+    if (!normalized || normalized === "/") {
+      return normalized || "";
+    }
+
+    const segments = normalized.split("/").filter(Boolean);
+    return segments[segments.length - 1] || "";
+  }
+
+  function getRelativeAutocompletePath(candidatePath, currentPath) {
+    const normalizedCandidate = stripTrailingSlash(candidatePath);
+    const normalizedCurrent = stripTrailingSlash(currentPath || "/") || "/";
+
+    if (!normalizedCandidate) {
+      return "";
+    }
+
+    if (normalizedCurrent === "/") {
+      return normalizedCandidate.replace(/^\/+/, "");
+    }
+
+    const currentPrefix = normalizedCurrent.endsWith("/") ? normalizedCurrent.slice(0, -1) : normalizedCurrent;
+    if (normalizedCandidate.toLowerCase() === currentPrefix.toLowerCase()) {
+      return getPathBasename(normalizedCandidate);
+    }
+
+    if (normalizedCandidate.toLowerCase().startsWith(`${currentPrefix.toLowerCase()}/`)) {
+      return normalizedCandidate.slice(currentPrefix.length + 1);
+    }
+
+    return normalizedCandidate.replace(/^\/+/, "");
+  }
+
+  function formatAutocompletePath(candidatePath, terminalState = {}, rawQuery = "") {
+    const normalizedCandidate = stripTrailingSlash(candidatePath);
+    if (!normalizedCandidate) {
+      return "";
+    }
+
+    if (!normalizedCandidate.startsWith("/")) {
+      return normalizedCandidate;
+    }
+
+    const query = toStringValue(rawQuery).trim();
+    if (query.startsWith("/")) {
+      return normalizedCandidate;
+    }
+
+    return getRelativeAutocompletePath(normalizedCandidate, terminalState?.currentPath || "/");
+  }
+
+  function dedupeSuggestionEntries(entries) {
+    const seen = new Set();
+
+    return entries.filter((entry) => {
+      const key = `${toStringValue(entry?.value)}::${entry?.appendSpace === false ? "nospace" : "space"}`.toLowerCase();
+      if (!entry || !entry.value || seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function buildVirtualResourceCatalog(terminalState = {}) {
+    const currentPath = stripTrailingSlash(terminalState?.currentPath || "/") || "/";
+    const files = Array.isArray(terminalState?.availableFiles) ? terminalState.availableFiles : [];
+    const assets = Array.isArray(terminalState?.availableAssets) ? terminalState.availableAssets : [];
+    const directories = new Map();
+    const fileEntries = [];
+    const assetEntries = [];
+
+    files.forEach((file) => {
+      const normalizedPath = normalizeAutocompletePath(file?.path || "", { preserveLeadingSlash: true });
+      if (!normalizedPath || normalizedPath === "/") {
+        return;
+      }
+
+      const resourceType = String(file?.type || file?.resourceType || "file")
+        .trim()
+        .toLowerCase();
+      const segments = normalizedPath.split("/").filter(Boolean);
+      if (resourceType === "dir" || resourceType === "directory") {
+        const key = normalizedPath.toLowerCase();
+        if (!directories.has(key)) {
+          directories.set(key, {
+            path: normalizedPath,
+            title: file?.title || getPathBasename(normalizedPath) || normalizedPath,
+            locked: file?.locked === true,
+            resourceType: "directory",
+          });
+        }
+      } else {
+        for (let index = 1; index < segments.length; index += 1) {
+          const dirPath = `/${segments.slice(0, index).join("/")}`;
+          const key = dirPath.toLowerCase();
+          if (!directories.has(key)) {
+            directories.set(key, {
+              path: dirPath,
+              title: segments[index - 1],
+              locked: file?.locked === true,
+              resourceType: "directory",
+            });
+          }
+        }
+      }
+
+      if (resourceType === "asset") {
+        assetEntries.push({
+          path: normalizedPath,
+          title: file?.title || getPathBasename(normalizedPath),
+          locked: file?.locked === true,
+          resourceType: "asset",
+        });
+      } else if (resourceType !== "dir" && resourceType !== "directory") {
+        fileEntries.push({
+          path: normalizedPath,
+          title: file?.title || getPathBasename(normalizedPath),
+          locked: file?.locked === true,
+          resourceType: "file",
+        });
+      }
+    });
+
+    assets.forEach((asset) => {
+      const assetId = toStringValue(asset?.id).trim();
+      if (!assetId) {
+        return;
+      }
+
+      assetEntries.push({
+        path: assetId,
+        title: asset?.title || assetId,
+        locked: asset?.locked === true,
+        resourceType: "asset",
+      });
+    });
+
+    const directoryEntries = [...directories.values()].sort((a, b) => a.path.localeCompare(b.path));
+
+    return {
+      currentPath,
+      directories: directoryEntries,
+      files: fileEntries,
+      assets: assetEntries,
+    };
+  }
+
+  function buildVirtualPathSuggestions(terminalState, rawQuery, options = {}) {
+    const catalog = buildVirtualResourceCatalog(terminalState || {});
+    const query = toStringValue(rawQuery).trim().toLowerCase();
+    const normalizedQuery = query.replace(/\\/g, "/");
+    const queryStartsAbsolute = normalizedQuery.startsWith("/");
+    const includeDirectories = options.includeDirectories !== false;
+    const includeFiles = options.includeFiles !== false;
+    const includeAssets = options.includeAssets === true;
+    const maxResults = Number.isFinite(options.maxResults) ? Math.max(1, options.maxResults) : PATH_AUTOCOMPLETE_SUGGESTION_LIMIT;
+    const matches = [];
+
+    function addEntry(candidatePath, description, extra = {}) {
+      const resourceType = extra.resourceType || "file";
+      const normalizedCandidate =
+        resourceType === "asset" && !String(candidatePath || "").includes("/")
+          ? toStringValue(candidatePath).trim()
+          : normalizeAutocompletePath(candidatePath, { preserveLeadingSlash: true });
+      if (!normalizedCandidate) {
+        return;
+      }
+
+      let displayValue = formatAutocompletePath(normalizedCandidate, terminalState, rawQuery) || normalizedCandidate.replace(/^\/+/, "");
+      if (resourceType === "directory" && displayValue && !displayValue.endsWith("/")) {
+        displayValue = `${displayValue}/`;
+      }
+
+      const comparisonValue = displayValue.toLowerCase();
+      const basename = getPathBasename(displayValue).toLowerCase();
+      const label = toStringValue(description || displayValue);
+
+      if (
+        query &&
+        !comparisonValue.startsWith(normalizedQuery) &&
+        !basename.startsWith(normalizedQuery) &&
+        !label.toLowerCase().startsWith(normalizedQuery)
+      ) {
+        return;
+      }
+
+      matches.push(
+        createSuggestionEntry(displayValue, description, {
+          kind: "path",
+          appendSpace: extra.appendSpace !== false,
+          resourceType,
+          absolutePath: normalizedCandidate,
+          locked: extra.locked === true,
+        }),
+      );
+    }
+
+    if (includeDirectories) {
+      catalog.directories.forEach((directory) => {
+        const candidate = `${directory.path.replace(/\/+$/, "")}/`;
+        addEntry(candidate, directory.title || getPathBasename(directory.path) || candidate, {
+          appendSpace: false,
+          resourceType: "directory",
+          locked: directory.locked === true,
+        });
+      });
+    }
+
+    if (includeFiles) {
+      catalog.files.forEach((file) => {
+        addEntry(file.path, file.title || getPathBasename(file.path) || file.path, {
+          appendSpace: true,
+          resourceType: file.resourceType || "file",
+          locked: file.locked === true,
+        });
+      });
+    }
+
+    if (includeAssets) {
+      catalog.assets.forEach((asset) => {
+        addEntry(asset.path, asset.title || asset.path, {
+          appendSpace: true,
+          resourceType: "asset",
+          locked: asset.locked === true,
+        });
+      });
+    }
+
+    return dedupeSuggestionEntries(matches).slice(0, maxResults);
+  }
 
   function clampCursorIndex(cursorIndex, inputLength) {
     const numericIndex = Number(cursorIndex);
@@ -306,14 +596,18 @@
     return description;
   }
 
-  function getArgumentSuggestions(command, themeManager, query = "") {
-    const normalizedQuery = toStringValue(query).trim().toLowerCase();
+  function getArgumentSuggestions(command, options = {}) {
+    const themeManager = options.themeManager || null;
+    const terminalState = options.terminalState || {};
+    const query = toStringValue(options.query).trim();
+    const normalizedQuery = query.toLowerCase();
+    const commandName = toStringValue(command?.name).trim();
 
     if (!command) {
       return [];
     }
 
-    if (command.name === "theme") {
+    if (commandName === "theme") {
       const themes = typeof themeManager?.listThemes === "function" ? themeManager.listThemes() : [];
 
       return themes
@@ -322,7 +616,7 @@
         .map((theme) => createSuggestionEntry(theme.name, theme.description || theme.label || theme.name, { kind: "theme" }));
     }
 
-    if (command.name === "effects") {
+    if (commandName === "effects") {
       return ["on", "off", "toggle"]
         .filter((value) => !normalizedQuery || value.startsWith(normalizedQuery))
         .slice(0, AUTOCOMPLETE_SUGGESTION_LIMIT)
@@ -333,6 +627,113 @@
             { kind: "effect" },
           ),
         );
+    }
+
+    if (commandName === "list") {
+      return ["scripts", "files", "assets"]
+        .filter((value) => !normalizedQuery || value.startsWith(normalizedQuery))
+        .slice(0, AUTOCOMPLETE_SUGGESTION_LIMIT)
+        .map((value) =>
+          createSuggestionEntry(value, `${value.charAt(0).toUpperCase()}${value.slice(1)} available`, {
+            kind: "list-target",
+            appendSpace: true,
+          }),
+        );
+    }
+
+    if (commandName === "run" || commandName === "mission") {
+      const scripts = Array.isArray(terminalState?.availableScripts) ? terminalState.availableScripts : [];
+      return scripts
+        .map((script) => ({
+          value: toStringValue(script?.id || script?.name).trim(),
+          description: script?.title || script?.description || script?.id || script?.name || "Script",
+        }))
+        .filter(
+          (entry) =>
+            entry.value &&
+            (!normalizedQuery ||
+              entry.value.toLowerCase().startsWith(normalizedQuery) ||
+              entry.description.toLowerCase().startsWith(normalizedQuery)),
+        )
+        .slice(0, AUTOCOMPLETE_SUGGESTION_LIMIT)
+        .map((entry) =>
+          createSuggestionEntry(entry.value, entry.description, {
+            kind: "script",
+            appendSpace: true,
+          }),
+        );
+    }
+
+    if (commandName === "cd") {
+      return buildVirtualPathSuggestions(terminalState, query, {
+        includeDirectories: true,
+        includeFiles: false,
+        includeAssets: false,
+      }).map((entry) => ({
+        ...entry,
+        appendSpace: false,
+      }));
+    }
+
+    if (commandName === "ls" || commandName === "tree") {
+      return buildVirtualPathSuggestions(terminalState, query, {
+        includeDirectories: true,
+        includeFiles: true,
+        includeAssets: false,
+      }).map((entry) => ({
+        ...entry,
+        appendSpace: false,
+      }));
+    }
+
+    if (commandName === "open" || commandName === "cat") {
+      return buildVirtualPathSuggestions(terminalState, query, {
+        includeDirectories: false,
+        includeFiles: true,
+        includeAssets: true,
+      }).map((entry) => ({
+        ...entry,
+        appendSpace: true,
+      }));
+    }
+
+    if (commandName === "inspect") {
+      const scriptMatches = buildVirtualPathSuggestions(terminalState, query, {
+        includeDirectories: false,
+        includeFiles: true,
+        includeAssets: true,
+      });
+
+      const scriptIds = Array.isArray(terminalState?.availableScripts) ? terminalState.availableScripts : [];
+      const scriptEntries = scriptIds
+        .map((script) => ({
+          value: toStringValue(script?.id || script?.name).trim(),
+          description: script?.title || script?.description || script?.id || script?.name || "Script",
+        }))
+        .filter(
+          (entry) =>
+            entry.value &&
+            (!normalizedQuery ||
+              entry.value.toLowerCase().startsWith(normalizedQuery) ||
+              entry.description.toLowerCase().startsWith(normalizedQuery)),
+        )
+        .slice(0, AUTOCOMPLETE_SUGGESTION_LIMIT)
+        .map((entry) =>
+          createSuggestionEntry(entry.value, entry.description, {
+            kind: "script",
+            appendSpace: true,
+            resourceType: "script",
+          }),
+        );
+
+      return dedupeSuggestionEntries([...scriptEntries, ...scriptMatches.map((entry) => ({ ...entry, appendSpace: true }))]).slice(
+        0,
+        PATH_AUTOCOMPLETE_SUGGESTION_LIMIT,
+      );
+    }
+
+    if (commandName === "search") {
+      return [];
     }
 
     return [];
@@ -350,6 +751,7 @@
     const bounds = getTokenBounds(input, cursorIndex);
     const includeHidden = options.includeHidden === true;
     const themeManager = options.themeManager || null;
+    const terminalState = options.terminalState || {};
     const commandPrefix = input.slice(0, bounds.start);
     const commandTokens = tokenizeCommandInput(commandPrefix);
     const commandName = toStringValue(commandTokens[0] || "").trim();
@@ -390,7 +792,11 @@
       };
     }
 
-    const matches = getArgumentSuggestions(command, themeManager, bounds.token);
+    const matches = getArgumentSuggestions(command, {
+      themeManager,
+      terminalState,
+      query: bounds.token,
+    });
 
     return {
       kind: matches.length > 0 ? "argument" : "hint",
@@ -744,10 +1150,9 @@
           return buildCommandError("Usage: run <script-name>", 'Try "list scripts" to see available scripts.');
         }
 
-        return handleBackendCommand(context, "run", async (apiClient) => {
-          const script = await apiClient.getScript(scriptId);
-          return resourceToResult(script, scriptId);
-        });
+        return handleBackendCommand(context, "run", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
+        );
       },
     });
 
@@ -765,17 +1170,9 @@
           return buildCommandError("Usage: open <asset-or-file>", 'Try "list assets" or "list files" to find something to open.');
         }
 
-        return handleBackendCommand(context, "open", async (apiClient) => {
-          try {
-            return await apiClient.getAsset(target);
-          } catch (assetError) {
-            try {
-              return await apiClient.getVirtualFile(target);
-            } catch (fileError) {
-              throw fileError?.status === 404 ? assetError : fileError;
-            }
-          }
-        });
+        return handleBackendCommand(context, "open", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
+        );
       },
     });
 
@@ -793,13 +1190,9 @@
           return buildCommandError("Usage: list <scripts|files|assets>", "Example: list scripts");
         }
 
-        return handleBackendCommand(context, "list", async (apiClient) => {
-          if (subject === "scripts") return apiClient.listScripts();
-          if (subject === "files") return apiClient.listFiles();
-          if (subject === "assets") return apiClient.listAssets();
-
-          return buildCommandError(`Unknown list target: ${subject}`, 'Try "list scripts", "list files", or "list assets".');
-        });
+        return handleBackendCommand(context, "list", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
+        );
       },
     });
 
@@ -816,8 +1209,8 @@
           return buildCommandError("Usage: inspect <id>", 'Try "search <query>" or "list scripts" first.');
         }
 
-        return handleBackendCommand(context, "inspect", async (apiClient) =>
-          apiClient.executeCommand(`inspect ${target}`, { terminalState: context.terminalState }),
+        return handleBackendCommand(context, "inspect", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
         );
       },
     });
@@ -835,8 +1228,8 @@
           return buildCommandError("Usage: search <query>", "Try searching for a script, file, or asset name.");
         }
 
-        return handleBackendCommand(context, "search", async (apiClient) =>
-          apiClient.executeCommand(`search ${query}`, { terminalState: context.terminalState }),
+        return handleBackendCommand(context, "search", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
         );
       },
     });
@@ -848,9 +1241,8 @@
       category: "system",
       requiresBackend: true,
       handler: (context) => {
-        const target = splitCommandTarget(context?.args) || ".";
-        return handleBackendCommand(context, "ls", async (apiClient) =>
-          apiClient.executeCommand(`ls ${target}`, { terminalState: context.terminalState }),
+        return handleBackendCommand(context, "ls", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
         );
       },
     });
@@ -862,9 +1254,8 @@
       category: "system",
       requiresBackend: true,
       handler: (context) => {
-        const target = splitCommandTarget(context?.args) || "/";
-        return handleBackendCommand(context, "cd", async (apiClient) =>
-          apiClient.executeCommand(`cd ${target}`, { terminalState: context.terminalState }),
+        return handleBackendCommand(context, "cd", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
         );
       },
     });
@@ -876,24 +1267,23 @@
       category: "system",
       requiresBackend: true,
       handler: (context) =>
-        handleBackendCommand(context, "pwd", async (apiClient) =>
-          apiClient.executeCommand("pwd", { terminalState: context.terminalState }),
+        handleBackendCommand(context, "pwd", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
         ),
     });
 
-    tryRegister({
-      name: "tree",
-      description: "Show directory tree",
-      usage: "tree [path]",
-      category: "system",
-      requiresBackend: true,
-      handler: (context) => {
-        const target = splitCommandTarget(context?.args) || ".";
-        return handleBackendCommand(context, "tree", async (apiClient) =>
-          apiClient.executeCommand(`tree ${target}`, { terminalState: context.terminalState }),
-        );
-      },
-    });
+    // tryRegister({
+    //   name: "tree",
+    //   description: "Show directory tree",
+    //   usage: "tree [path]",
+    //   category: "system",
+    //   requiresBackend: true,
+    //   handler: (context) => {
+    //     return handleBackendCommand(context, "tree", (apiClient) =>
+    //       apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
+    //     );
+    //   },
+    // });
 
     tryRegister({
       name: "mission",
@@ -908,8 +1298,8 @@
           return buildCommandError("Usage: mission <name>", 'Try "list scripts" to see available missions.');
         }
 
-        return handleBackendCommand(context, "mission", async (apiClient) =>
-          apiClient.executeCommand(`mission ${missionName}`, { terminalState: context.terminalState }),
+        return handleBackendCommand(context, "mission", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
         );
       },
     });
@@ -922,8 +1312,8 @@
       requiresBackend: true,
       examples: ["login"],
       handler: (context) =>
-        handleBackendCommand(context, "login", async (apiClient) =>
-          apiClient.executeCommand("login", { terminalState: context.terminalState }),
+        handleBackendCommand(context, "login", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
         ),
     });
 
@@ -1392,6 +1782,7 @@
           cursorIndex: context.cursorIndex,
           includeHidden: context.includeHidden,
           themeManager: context.themeManager || options.themeManager || null,
+          terminalState: context.terminalState || options.terminalState || null,
         }),
       execute: (rawInput, context = {}) =>
         executeRegisteredCommand({

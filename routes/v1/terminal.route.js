@@ -319,9 +319,11 @@ let TERMINAL_FILES = {
 };
 
 let TERMINAL_DIRECTORIES = new Set([""]);
+let TERMINAL_DIRECTORY_METADATA = new Map();
 
 // Simple per-session working directory map for the virtual file system
 const SESSION_PATHS = new Map();
+const SESSION_UNLOCKS = new Map();
 
 function ensureLeadingSlash(p) {
   if (!p) return "/";
@@ -343,6 +345,380 @@ function registerVirtualDirectory(directorySet, directoryPath) {
   const normalized = normalizeVirtualDirectoryPath(directoryPath);
   directorySet.add(normalized);
   return normalized;
+}
+
+function normalizeVirtualPathKey(p) {
+  return stripLeadingSlash(posix.normalize(ensureLeadingSlash(String(p || "")))).replace(/\/$/, "");
+}
+
+function getSessionUnlockSet(sessionId) {
+  const raw = String(sessionId || "").trim() || "anonymous-session";
+  if (!SESSION_UNLOCKS.has(raw)) {
+    SESSION_UNLOCKS.set(raw, new Set());
+  }
+
+  return SESSION_UNLOCKS.get(raw);
+}
+
+function hasSessionUnlock(sessionId, resourcePath) {
+  const normalized = normalizeVirtualPathKey(resourcePath);
+  if (!normalized) return false;
+
+  const unlocks = getSessionUnlockSet(sessionId);
+  return unlocks.has(normalized);
+}
+
+function grantSessionUnlock(sessionId, resourcePath) {
+  const normalized = normalizeVirtualPathKey(resourcePath);
+  if (!normalized) return false;
+
+  getSessionUnlockSet(sessionId).add(normalized);
+  return true;
+}
+
+function isPlainObject(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizeAccessMode(rawAccess) {
+  const access = String(rawAccess || "public")
+    .trim()
+    .toLowerCase();
+  if (access === "password" || access === "permission") return access;
+  return "public";
+}
+
+function extractAccessMetadata(node = {}) {
+  const rawAccess = isPlainObject(node.access) ? node.access : {};
+  const access = normalizeAccessMode(isPlainObject(node.access) ? rawAccess.mode || rawAccess.access : node.access);
+  const requiredPermissions = Array.isArray(rawAccess.requiredPermissions)
+    ? rawAccess.requiredPermissions.map((entry) => String(entry || "").trim()).filter(Boolean)
+    : Array.isArray(node.requiredPermissions)
+      ? node.requiredPermissions.map((entry) => String(entry || "").trim()).filter(Boolean)
+      : [];
+
+  const password =
+    (isPlainObject(node.access) && (rawAccess.password || rawAccess.unlockPassword)) || node.password || node.unlockPassword || null;
+
+  const passwordHint = (isPlainObject(node.access) && (rawAccess.passwordHint || rawAccess.hint)) || node.passwordHint || node.hint || "";
+
+  return {
+    access,
+    requiredPermissions,
+    password: password == null ? null : String(password),
+    passwordHint: passwordHint == null ? "" : String(passwordHint),
+  };
+}
+
+function normalizeTerminalEffect(effectValue, fallbackDurationMs = 3200) {
+  if (!effectValue) {
+    return null;
+  }
+
+  const normalizedObject = isPlainObject(effectValue) ? effectValue : null;
+  const rawKind = normalizedObject ? normalizedObject.kind || normalizedObject.type || normalizedObject.name : effectValue;
+  const kind = String(rawKind || "")
+    .trim()
+    .toLowerCase();
+
+  if (kind !== "glitch" && kind !== "reboot") {
+    return null;
+  }
+
+  const rawDuration = Number(normalizedObject?.durationMs ?? normalizedObject?.duration ?? fallbackDurationMs);
+  const durationMs = Number.isFinite(rawDuration) && rawDuration > 0 ? Math.max(500, Math.floor(rawDuration)) : fallbackDurationMs;
+
+  if (kind === "reboot") {
+    const rawRebootDuration = Number(normalizedObject?.rebootDurationMs ?? normalizedObject?.outroDurationMs);
+    const rawGlitchDuration = Number(
+      normalizedObject?.glitchDurationMs ??
+        normalizedObject?.introDurationMs ??
+        (Number.isFinite(rawRebootDuration) && rawRebootDuration > 0 ? durationMs - rawRebootDuration : Math.round(durationMs * 0.35)),
+    );
+    const glitchDurationMs =
+      Number.isFinite(rawGlitchDuration) && rawGlitchDuration > 0
+        ? Math.max(500, Math.min(Math.floor(rawGlitchDuration), Math.max(500, durationMs - 800)))
+        : Math.max(500, Math.min(Math.round(durationMs * 0.35), Math.max(500, durationMs - 800)));
+    const rebootDurationMs =
+      Number.isFinite(rawRebootDuration) && rawRebootDuration > 0
+        ? Math.max(500, Math.floor(rawRebootDuration))
+        : Math.max(500, durationMs - glitchDurationMs);
+
+    return {
+      kind: "reboot",
+      durationMs,
+      glitchDurationMs,
+      rebootDurationMs,
+      label: String(normalizedObject?.label || normalizedObject?.message || "reboot").trim() || "reboot",
+    };
+  }
+
+  return {
+    kind: "glitch",
+    durationMs,
+    label: String(normalizedObject?.label || normalizedObject?.message || "glitch").trim() || "glitch",
+  };
+}
+
+function extractTerminalEffectMetadata(node = {}) {
+  return normalizeTerminalEffect(
+    node.effect || node.terminalEffect || (node.reboot === true ? "reboot" : null) || (node.glitch === true ? "glitch" : null),
+  );
+}
+
+function sanitizeTerminalEffectMetadata(effect = null) {
+  if (!effect || typeof effect !== "object" || (effect.kind !== "glitch" && effect.kind !== "reboot")) {
+    return null;
+  }
+
+  const durationMs = Number.isFinite(effect.durationMs) ? Math.max(500, Math.floor(effect.durationMs)) : 3200;
+
+  if (effect.kind === "reboot") {
+    return {
+      kind: effect.kind,
+      durationMs,
+      glitchDurationMs: Number.isFinite(effect.glitchDurationMs)
+        ? Math.max(500, Math.floor(effect.glitchDurationMs))
+        : Math.max(500, Math.round(durationMs * 0.35)),
+      rebootDurationMs: Number.isFinite(effect.rebootDurationMs)
+        ? Math.max(500, Math.floor(effect.rebootDurationMs))
+        : Math.max(500, durationMs - Math.max(500, Math.round(durationMs * 0.35))),
+      label: String(effect.label || effect.kind || "reboot"),
+    };
+  }
+
+  return {
+    kind: effect.kind,
+    durationMs,
+    label: String(effect.label || effect.kind || "glitch"),
+  };
+}
+
+function sanitizeAccessMetadata(access = {}) {
+  return {
+    access: access.access || "public",
+    requiredPermissions: Array.isArray(access.requiredPermissions) ? clone(access.requiredPermissions) : [],
+    passwordHint: access.passwordHint || "",
+  };
+}
+
+function isProtectedAccess(access = {}) {
+  return normalizeAccessMode(access.access) === "password" || normalizeAccessMode(access.access) === "permission";
+}
+
+function buildAccessError({ code, message, hint, resourceType, access, statusCode = 403 }) {
+  return {
+    code,
+    message,
+    hint,
+    metadata: {
+      resourceType,
+      access,
+    },
+    statusCode,
+  };
+}
+
+function getAncestorDirectoryPaths(resourcePath) {
+  const normalized = normalizeVirtualPathKey(resourcePath);
+  const segments = normalized.split("/").filter(Boolean);
+  const ancestors = [];
+
+  for (let index = 1; index < segments.length; index += 1) {
+    ancestors.push(segments.slice(0, index).join("/"));
+  }
+
+  return ancestors;
+}
+
+function canAccessDirectoryAncestors({ sessionId, resourcePath, providedPassword, permissions = [] }) {
+  const ancestors = getAncestorDirectoryPaths(resourcePath);
+
+  for (const ancestorPath of ancestors) {
+    const ancestorMeta = getDirectoryMetadata(ancestorPath);
+    if (!ancestorMeta) continue;
+
+    const accessCheck = canAccessResource({
+      sessionId,
+      resourcePath: ancestorPath,
+      resourceType: "directory",
+      access: ancestorMeta,
+      providedPassword,
+      permissions,
+    });
+
+    if (!accessCheck.allowed) {
+      return accessCheck;
+    }
+  }
+
+  return { allowed: true };
+}
+
+function canAccessResource({ sessionId, resourcePath, resourceType, access, providedPassword, permissions = [], includeAncestors = true }) {
+  const normalizedAccess = extractAccessMetadata(access);
+
+  if (includeAncestors && normalizeVirtualPathKey(resourcePath)) {
+    const ancestorCheck = canAccessDirectoryAncestors({
+      sessionId,
+      resourcePath,
+      providedPassword,
+      permissions,
+    });
+
+    if (!ancestorCheck.allowed) {
+      return ancestorCheck;
+    }
+  }
+
+  if (!isProtectedAccess(normalizedAccess)) {
+    return { allowed: true, access: sanitizeAccessMetadata(normalizedAccess) };
+  }
+
+  const normalizedPath = normalizeVirtualPathKey(resourcePath);
+
+  if (normalizedAccess.access === "password") {
+    if (hasSessionUnlock(sessionId, normalizedPath)) {
+      return { allowed: true, access: sanitizeAccessMetadata(normalizedAccess), unlocked: true };
+    }
+
+    if (normalizedAccess.password && String(providedPassword || "") === normalizedAccess.password) {
+      grantSessionUnlock(sessionId, normalizedPath);
+      return { allowed: true, access: sanitizeAccessMetadata(normalizedAccess), unlocked: true };
+    }
+
+    return {
+      allowed: false,
+      error: buildAccessError({
+        code: "PASSWORD_REQUIRED",
+        message: "Access requires a password.",
+        hint: normalizedAccess.passwordHint || "Try again with the correct password.",
+        resourceType,
+        access: normalizedAccess.access,
+        statusCode: 401,
+      }),
+    };
+  }
+
+  const required = Array.isArray(normalizedAccess.requiredPermissions) ? normalizedAccess.requiredPermissions : [];
+  const availablePermissions = Array.isArray(permissions) ? permissions.map((entry) => String(entry || "").trim()).filter(Boolean) : [];
+
+  if (required.length === 0 || required.every((permission) => availablePermissions.includes(permission))) {
+    return { allowed: true, access: sanitizeAccessMetadata(normalizedAccess) };
+  }
+
+  return {
+    allowed: false,
+    error: buildAccessError({
+      code: "PERMISSION_DENIED",
+      message: "Access denied.",
+      hint: "You do not have permission to access this resource.",
+      resourceType,
+      access: normalizedAccess.access,
+      statusCode: 403,
+    }),
+  };
+}
+
+function summarizeAccessForListing(resourcePath, resourceType, access = {}, sessionId, options = {}) {
+  const normalizedAccess = extractAccessMetadata(access);
+  const normalizedPath = normalizeVirtualPathKey(resourcePath);
+  const providedPassword = options.providedPassword ?? options.password ?? "";
+  const permissions = Array.isArray(options.permissions) ? options.permissions : [];
+  const exactCheck = canAccessResource({
+    sessionId,
+    resourcePath: normalizedPath,
+    resourceType,
+    access: normalizedAccess,
+    providedPassword,
+    permissions,
+    includeAncestors: false,
+  });
+  const ancestorCheck = canAccessDirectoryAncestors({
+    sessionId,
+    resourcePath: normalizedPath,
+    providedPassword,
+    permissions,
+  });
+  const locked = !exactCheck.allowed || !ancestorCheck.allowed;
+
+  return {
+    access: normalizedAccess.access,
+    locked,
+    resourceType,
+    requiredPermissions: Array.isArray(normalizedAccess.requiredPermissions) ? clone(normalizedAccess.requiredPermissions) : [],
+  };
+}
+
+function isDirectoryLikeNode(node) {
+  if (!node || typeof node !== "object") return false;
+  if (Array.isArray(node)) return false;
+  if (node.children && typeof node.children === "object") return true;
+
+  const kind = String(node.kind || node.type || "")
+    .trim()
+    .toLowerCase();
+  if (kind === "directory" || kind === "dir" || kind === "folder") return true;
+
+  return false;
+}
+
+function registerDirectoryMetadata(directoryPath, metadata = {}) {
+  const normalized = normalizeVirtualPathKey(directoryPath);
+  const access = extractAccessMetadata(metadata);
+  const effect = sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(metadata));
+  TERMINAL_DIRECTORY_METADATA.set(normalized, {
+    title: metadata.title || metadata.name || metadata.label || normalized.split("/").pop() || normalized || "/",
+    type: "dir",
+    access: access.access,
+    requiredPermissions: clone(access.requiredPermissions || []),
+    passwordHint: access.passwordHint || "",
+    password: access.password,
+    effect,
+  });
+
+  return TERMINAL_DIRECTORY_METADATA.get(normalized);
+}
+
+function getDirectoryMetadata(directoryPath) {
+  return TERMINAL_DIRECTORY_METADATA.get(normalizeVirtualPathKey(directoryPath)) || null;
+}
+
+function getFileRecord(filePath) {
+  return TERMINAL_FILES[normalizeVirtualPathKey(filePath)] || null;
+}
+
+function getAssetRecord(assetId) {
+  return (
+    TERMINAL_ASSETS[
+      String(assetId || "")
+        .trim()
+        .toLowerCase()
+    ] || null
+  );
+}
+
+function buildVisibleDirectoryEntry(sessionId, directoryPath, name, metadata = {}) {
+  return {
+    name,
+    type: "dir",
+    path: `/${normalizeVirtualPathKey(directoryPath)}`.replace(/\/+/g, "/"),
+    title: metadata.title || name,
+    effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(metadata)),
+    ...summarizeAccessForListing(directoryPath, "directory", metadata, sessionId),
+  };
+}
+
+function buildVisibleFileEntry(sessionId, filePath, name, file = {}) {
+  return {
+    name,
+    type: file?.type || "file",
+    path: `/${normalizeVirtualPathKey(filePath)}`.replace(/\/+/g, "/"),
+    title: file?.title || file?.path || name,
+    contentType: file?.contentType || null,
+    effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(file)),
+    ...summarizeAccessForListing(filePath, file?.type === "asset" ? "asset" : "file", file, sessionId),
+  };
 }
 
 function getSessionPath(sessionId) {
@@ -373,63 +749,148 @@ function resolvePathForSession(sessionId, requestedPath) {
   return posix.normalize(posix.join(base, req));
 }
 
-function listDirectoryEntries(sessionId, requestedPath) {
+function listDirectoryEntries(sessionId, requestedPath, options = {}) {
   const resolved = resolvePathForSession(sessionId, requestedPath);
-  const prefix = stripLeadingSlash(resolved).replace(/\/$/, "");
+  const prefix = normalizeVirtualPathKey(resolved);
+  const providedPassword = options.providedPassword ?? options.password ?? "";
+  const permissions = Array.isArray(options.permissions) ? options.permissions : [];
   const entries = new Map();
 
-  function addDir(name, fullPath) {
-    if (!name || entries.has(name)) return;
-    entries.set(name, { name, type: "dir", path: fullPath });
+  const exactDirectoryMetadata = getDirectoryMetadata(prefix);
+  const exactFile = getFileRecord(prefix);
+  const exactAsset = prefix.startsWith("assets/") ? getAssetRecord(prefix.slice("assets/".length)) : null;
+
+  if (exactDirectoryMetadata) {
+    const accessCheck = canAccessResource({
+      sessionId,
+      resourcePath: prefix,
+      resourceType: "directory",
+      access: exactDirectoryMetadata,
+      providedPassword,
+      permissions,
+    });
+
+    if (!accessCheck.allowed) {
+      return {
+        path: resolved,
+        entries: [],
+        error: accessCheck.error,
+      };
+    }
   }
 
-  function addFile(name, fullPath, file) {
+  if (exactFile) {
+    const accessCheck = canAccessResource({
+      sessionId,
+      resourcePath: prefix,
+      resourceType: "file",
+      access: exactFile,
+      providedPassword,
+      permissions,
+    });
+
+    if (!accessCheck.allowed) {
+      return {
+        path: resolved,
+        entries: [],
+        error: accessCheck.error,
+      };
+    }
+  }
+
+  if (exactAsset) {
+    const accessCheck = canAccessResource({
+      sessionId,
+      resourcePath: prefix,
+      resourceType: "asset",
+      access: exactAsset,
+      providedPassword,
+      permissions,
+    });
+
+    if (!accessCheck.allowed) {
+      return {
+        path: resolved,
+        entries: [],
+        error: accessCheck.error,
+      };
+    }
+  }
+
+  function addDir(name, fullPath, metadata = {}) {
     if (!name || entries.has(name)) return;
     entries.set(name, {
       name,
-      type: file?.type || "file",
-      path: fullPath,
+      type: "dir",
+      path: `/${normalizeVirtualPathKey(fullPath)}`.replace(/\/+/g, "/"),
+      title: metadata.title || name,
+      effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(metadata)),
+      ...summarizeAccessForListing(fullPath, "directory", metadata, sessionId, {
+        providedPassword,
+        permissions,
+      }),
+    });
+  }
+
+  function addFile(name, fullPath, file, resourceType = "file") {
+    if (!name || entries.has(name)) return;
+    entries.set(name, {
+      name,
+      type: file?.type || resourceType || "file",
+      path: `/${normalizeVirtualPathKey(fullPath)}`.replace(/\/+/g, "/"),
       title: file?.title || file?.path || name,
+      contentType: file?.contentType || null,
+      effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(file)),
+      ...summarizeAccessForListing(fullPath, resourceType, file, sessionId, {
+        providedPassword,
+        permissions,
+      }),
     });
   }
 
   // Explicit directories (including empty ones)
   Array.from(TERMINAL_DIRECTORIES).forEach((dirPath) => {
-    const normalizedDir = String(dirPath || "")
-      .replace(/^\/+/, "")
-      .replace(/\/$/, "");
+    const normalizedDir = normalizeVirtualPathKey(dirPath);
     if (!normalizedDir || normalizedDir === prefix) return;
 
     if (!prefix) {
       const firstSegment = normalizedDir.split("/")[0];
-      if (firstSegment) addDir(firstSegment, `/${firstSegment}`);
+      if (firstSegment) {
+        const dirFullPath = `/${firstSegment}`;
+        addDir(firstSegment, dirFullPath, getDirectoryMetadata(dirFullPath) || { title: firstSegment, access: "public" });
+      }
       return;
     }
 
     if (normalizedDir.startsWith(prefix + "/")) {
       const remainder = normalizedDir.slice(prefix.length + 1);
       const firstSegment = remainder.split("/")[0];
-      if (firstSegment) addDir(firstSegment, `/${prefix}/${firstSegment}`);
+      if (firstSegment) {
+        const dirFullPath = `/${prefix}/${firstSegment}`;
+        addDir(firstSegment, dirFullPath, getDirectoryMetadata(dirFullPath) || { title: firstSegment, access: "public" });
+      }
     }
   });
 
   // File entries
   Object.keys(TERMINAL_FILES).forEach((fileKey) => {
     const file = TERMINAL_FILES[fileKey];
-    const key = String(fileKey).replace(/^\/+/, "");
+    const key = normalizeVirtualPathKey(fileKey);
 
     if (!prefix) {
       const idx = key.indexOf("/");
       if (idx >= 0) {
-        addDir(key.slice(0, idx), `/${key.slice(0, idx)}`);
+        const dirName = key.slice(0, idx);
+        const dirFullPath = `/${dirName}`;
+        addDir(dirName, dirFullPath, getDirectoryMetadata(dirFullPath) || { title: dirName, access: "public" });
       } else {
-        addFile(key, `/${key}`, file);
+        addFile(key, `/${key}`, file, file?.type === "asset" ? "asset" : "file");
       }
       return;
     }
 
     if (key === prefix) {
-      addFile(key.split("/").pop(), `/${key}`, file);
+      addFile(key.split("/").pop(), `/${key}`, file, file?.type === "asset" ? "asset" : "file");
       return;
     }
 
@@ -438,41 +899,76 @@ function listDirectoryEntries(sessionId, requestedPath) {
       const parts = remainder.split("/");
       const name = parts[0];
       if (parts.length > 1) {
-        addDir(name, `/${prefix}/${name}`);
+        const dirFullPath = `/${prefix}/${name}`;
+        addDir(name, dirFullPath, getDirectoryMetadata(dirFullPath) || { title: name, access: "public" });
       } else {
-        addFile(name, `/${prefix}/${name}`, file);
+        addFile(name, `/${prefix}/${name}`, file, file?.type === "asset" ? "asset" : "file");
       }
     }
   });
 
   // Top-level synthetic directories
   if (!prefix) {
-    if (Object.keys(TERMINAL_ASSETS).length > 0) addDir("assets", "/assets");
-    if (Object.keys(TERMINAL_SCRIPTS).length > 0) addDir("scripts", "/scripts");
+    if (Object.keys(TERMINAL_ASSETS).length > 0)
+      addDir("assets", "/assets", getDirectoryMetadata("/assets") || { title: "assets", access: "public" });
+    if (Object.keys(TERMINAL_SCRIPTS).length > 0)
+      addDir("scripts", "/scripts", getDirectoryMetadata("/scripts") || { title: "scripts", access: "public" });
   } else if (prefix === "assets") {
     Object.keys(TERMINAL_ASSETS).forEach((assetId) => {
-      if (!entries.has(assetId))
-        entries.set(assetId, { name: assetId, type: "asset", path: `/assets/${assetId}`, title: TERMINAL_ASSETS[assetId].title });
+      if (!entries.has(assetId)) {
+        const asset = TERMINAL_ASSETS[assetId];
+        entries.set(assetId, {
+          name: assetId,
+          type: asset.type || "asset",
+          path: `/assets/${assetId}`,
+          title: asset.title,
+          alt: asset.alt,
+          access: sanitizeAccessMetadata(asset).access,
+          locked: isProtectedAccess(asset),
+          resourceType: "asset",
+          effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(asset)),
+        });
+      }
     });
   } else if (prefix.startsWith("assets/")) {
     const assetId = prefix.slice("assets/".length);
     const asset = TERMINAL_ASSETS[assetId];
     if (asset) {
       const name = assetId.split("/").pop();
-      addFile(name, `/${prefix}`, asset);
-      entries.get(name).type = "asset";
+      addFile(name, `/${prefix}`, asset, "asset");
     }
   } else if (prefix === "scripts") {
     listScripts().forEach((script) => {
-      if (!entries.has(script.id))
-        entries.set(script.id, { name: script.id, type: "script", path: `/scripts/${script.id}`, title: script.title });
+      if (!entries.has(script.id)) {
+        entries.set(script.id, {
+          name: script.id,
+          type: "script",
+          path: `/scripts/${script.id}`,
+          title: script.title,
+          access: "public",
+          locked: false,
+          resourceType: "script",
+          effect: null,
+        });
+      }
     });
   } else if (prefix.startsWith("scripts/")) {
     const scriptId = prefix.slice("scripts/".length);
     const script = getScript(scriptId);
     if (script) {
       const name = scriptId.split("/").pop();
-      if (!entries.has(name)) entries.set(name, { name, type: "script", path: `/${prefix}`, title: script.title });
+      if (!entries.has(name)) {
+        entries.set(name, {
+          name,
+          type: "script",
+          path: `/${prefix}`,
+          title: script.title,
+          access: "public",
+          locked: false,
+          resourceType: "script",
+          effect: null,
+        });
+      }
     }
   }
 
@@ -490,10 +986,14 @@ function listDirectoryEntries(sessionId, requestedPath) {
   };
 }
 
-function flattenVfsNode(node, currentPath, filesMap, assetsMap, directoriesSet) {
+function flattenVfsNode(node, currentPath, filesMap, assetsMap, directoriesSet, directoryMetaMap) {
   if (!node) return;
 
   registerVirtualDirectory(directoriesSet, currentPath || "/");
+  registerDirectoryMetadata(currentPath || "/", node);
+  if (directoryMetaMap) {
+    directoryMetaMap.set(normalizeVirtualPathKey(currentPath || "/"), getDirectoryMetadata(currentPath || "/"));
+  }
 
   // node may be an object with 'children' or directly a map of children
   const children = node.children && typeof node.children === "object" ? node.children : node;
@@ -501,31 +1001,28 @@ function flattenVfsNode(node, currentPath, filesMap, assetsMap, directoriesSet) 
   Object.keys(children).forEach((name) => {
     const child = children[name];
     const childPath = posix.join(currentPath || "/", name);
+    const childNormalizedPath = normalizeVirtualPathKey(childPath);
+    const childAccess = extractAccessMetadata(child || {});
 
-    if (
-      child &&
-      typeof child === "object" &&
-      (child.children ||
-        child.kind === "directory" ||
-        child.type === "directory" ||
-        child.type === "dir" ||
-        Object.keys(child).some(
-          (k) => k !== "title" && k !== "type" && k !== "content" && k !== "src" && k !== "contentType" && k !== "alt",
-        ))
-    ) {
-      // treat as directory-ish
-      flattenVfsNode(child, childPath, filesMap, assetsMap, directoriesSet);
+    if (isDirectoryLikeNode(child)) {
+      registerVirtualDirectory(directoriesSet, childPath);
+      registerDirectoryMetadata(childPath, child);
+      if (directoryMetaMap) {
+        directoryMetaMap.set(childNormalizedPath, getDirectoryMetadata(childPath));
+      }
+      flattenVfsNode(child, childPath, filesMap, assetsMap, directoriesSet, directoryMetaMap);
       return;
     }
 
     // Determine whether this is an asset or a file
-    const rel = String(childPath).replace(/^\/+/, "");
+    const rel = childNormalizedPath;
     const pathParts = rel.split("/");
     const top = pathParts[0] || "";
     const isAsset = top === "assets" || child.type === "asset" || child.type === "image";
 
     if (isAsset) {
       const assetId = name.replace(/\.[^/.]+$/, "").toLowerCase();
+      const effect = sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(child));
       assetsMap[assetId] = {
         id: assetId,
         title: child.title || name,
@@ -534,8 +1031,14 @@ function flattenVfsNode(node, currentPath, filesMap, assetsMap, directoriesSet) 
         src: child.src || (typeof child.content === "string" ? child.content : undefined),
         content: child.content,
         contentType: child.contentType || null,
+        access: childAccess.access,
+        requiredPermissions: clone(childAccess.requiredPermissions || []),
+        passwordHint: childAccess.passwordHint || "",
+        password: childAccess.password,
+        effect,
       };
     } else {
+      const effect = sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(child));
       filesMap[rel] = {
         path: rel,
         title: child.title || name,
@@ -544,6 +1047,11 @@ function flattenVfsNode(node, currentPath, filesMap, assetsMap, directoriesSet) 
         content: child.content || child.src || null,
         alt: child.alt || null,
         src: child.src || null,
+        access: childAccess.access,
+        requiredPermissions: clone(childAccess.requiredPermissions || []),
+        passwordHint: childAccess.passwordHint || "",
+        password: childAccess.password,
+        effect,
       };
     }
   });
@@ -553,6 +1061,8 @@ function loadPersistedTerminalData() {
   try {
     const dataDir = path.resolve(__dirname, "../../data/terminal");
     if (!fs.existsSync(dataDir)) return;
+
+    TERMINAL_DIRECTORY_METADATA = new Map();
 
     // Scripts (backwards-compatible format)
     const scriptsFile = path.join(dataDir, "scripts.json");
@@ -581,17 +1091,20 @@ function loadPersistedTerminalData() {
     const newFiles = {};
     const newAssets = {};
     const newDirectories = new Set([""]);
+    const newDirectoryMetadata = new Map();
 
     if (fs.existsSync(vfsFile)) {
       const raw = fs.readFileSync(vfsFile, "utf8");
       const parsed = JSON.parse(raw);
       if (parsed) {
-        flattenVfsNode(parsed, "/", newFiles, newAssets, newDirectories);
+        flattenVfsNode(parsed, "/", newFiles, newAssets, newDirectories, newDirectoryMetadata);
       }
       TERMINAL_FILES = newFiles;
       TERMINAL_DIRECTORIES = newDirectories;
-      registerVirtualDirectory(TERMINAL_DIRECTORIES, "assets");
+      TERMINAL_DIRECTORY_METADATA = newDirectoryMetadata;
       registerVirtualDirectory(TERMINAL_DIRECTORIES, "scripts");
+      registerDirectoryMetadata("assets", { title: "assets", access: "public" });
+      registerDirectoryMetadata("scripts", { title: "scripts", access: "public" });
       TERMINAL_ASSETS = Object.keys(newAssets).length ? newAssets : TERMINAL_ASSETS;
       console.info(`[terminal.route] Loaded virtual FS from ${vfsFile}`);
     } else {
@@ -608,6 +1121,7 @@ function loadPersistedTerminalData() {
           }
         }
         TERMINAL_DIRECTORIES = new Set([""]);
+        TERMINAL_DIRECTORY_METADATA = new Map();
         Object.keys(TERMINAL_FILES).forEach((fileKey) => {
           const filePath = String(fileKey).replace(/^\/+/, "");
           const segments = filePath.split("/");
@@ -616,10 +1130,13 @@ function loadPersistedTerminalData() {
           segments.forEach((segment) => {
             current = current ? `${current}/${segment}` : segment;
             registerVirtualDirectory(TERMINAL_DIRECTORIES, current);
+            registerDirectoryMetadata(current, { title: segment, access: "public" });
           });
         });
         registerVirtualDirectory(TERMINAL_DIRECTORIES, "assets");
         registerVirtualDirectory(TERMINAL_DIRECTORIES, "scripts");
+        registerDirectoryMetadata("assets", { title: "assets", access: "public" });
+        registerDirectoryMetadata("scripts", { title: "scripts", access: "public" });
         console.info(`[terminal.route] Loaded files from ${filesFile}`);
       }
     }
@@ -636,14 +1153,21 @@ function clone(value) {
 }
 
 function buildErrorResponse(res, statusCode, code, message, hint, details = {}) {
+  const errorMetadata = details && typeof details === "object" ? details.metadata : undefined;
+  const responseDetails = details && typeof details === "object" ? { ...details } : details;
+  if (responseDetails && typeof responseDetails === "object" && Object.prototype.hasOwnProperty.call(responseDetails, "metadata")) {
+    delete responseDetails.metadata;
+  }
+
   return res.status(statusCode).json(
     formatResponseBody({
       error: {
         code,
         message,
         hint,
+        ...(errorMetadata ? { metadata: errorMetadata } : {}),
       },
-      details,
+      details: responseDetails,
     }),
   );
 }
@@ -687,13 +1211,7 @@ function getAsset(assetId) {
 }
 
 function getFile(filePath) {
-  return (
-    TERMINAL_FILES[
-      String(filePath || "")
-        .trim()
-        .replace(/^\/+/, "")
-    ] || null
-  );
+  return TERMINAL_FILES[normalizeVirtualPathKey(String(filePath || "")).trim()] || null;
 }
 
 function listScripts() {
@@ -714,6 +1232,9 @@ function listAssets() {
     title: asset.title,
     type: asset.type,
     alt: asset.alt,
+    access: summarizeAccessForListing(`assets/${asset.id}`, asset.type || "asset", asset, null, {}).access,
+    locked: summarizeAccessForListing(`assets/${asset.id}`, asset.type || "asset", asset, null, {}).locked,
+    effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(asset)),
   }));
 }
 
@@ -723,6 +1244,9 @@ function listFiles() {
     title: file.title,
     type: file.type,
     contentType: file.contentType,
+    access: summarizeAccessForListing(file.path, file.type || "file", file, null, {}).access,
+    locked: summarizeAccessForListing(file.path, file.type || "file", file, null, {}).locked,
+    effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(file)),
   }));
 }
 
@@ -743,11 +1267,15 @@ function buildScriptResponse(script) {
 }
 
 function buildAssetResponse(asset) {
-  return clone(asset);
+  const sanitized = clone(asset);
+  delete sanitized.password;
+  return sanitized;
 }
 
 function buildFileResponse(file) {
-  return clone(file);
+  const sanitized = clone(file);
+  delete sanitized.password;
+  return sanitized;
 }
 
 function searchCatalog(query) {
@@ -779,8 +1307,117 @@ function searchCatalog(query) {
   return matches;
 }
 
-function buildExecuteResult(commandName, args, flags, sessionId) {
+function formatVirtualListingEntry(entry, options = {}) {
+  const suffix = entry?.type === "dir" ? "/" : "";
+  const lockSuffix = entry?.locked ? " [locked]" : "";
+  const effectSuffix = entry?.effect?.kind === "glitch" ? ` [${entry.effect.label || "glitch"}]` : "";
+  const rebootSuffix = entry?.effect?.kind === "reboot" ? ` [${entry.effect.label || "reboot"}]` : "";
+  const compactName = `${entry?.name || ""}${suffix}${lockSuffix}${effectSuffix}${rebootSuffix}`.trim();
+
+  if (!options.longFormat) {
+    return compactName;
+  }
+
+  const details = [
+    `name=${entry?.name || ""}${suffix}`,
+    `type=${entry?.type || "file"}`,
+    `path=${entry?.path || ""}`,
+    `access=${entry?.access || "public"}`,
+    `locked=${entry?.locked ? "true" : "false"}`,
+    `resourceType=${entry?.resourceType || (entry?.type === "dir" ? "directory" : "file")}`,
+  ];
+
+  if (entry?.effect?.kind === "glitch") {
+    details.push(`effect=${entry.effect.kind}`);
+    details.push(`effectDurationMs=${entry.effect.durationMs}`);
+  }
+
+  if (entry?.effect?.kind === "reboot") {
+    details.push(`effect=${entry.effect.kind}`);
+    details.push(`effectDurationMs=${entry.effect.durationMs}`);
+    details.push(`glitchDurationMs=${entry.effect.glitchDurationMs}`);
+    details.push(`rebootDurationMs=${entry.effect.rebootDurationMs}`);
+  }
+
+  if (entry?.contentType) {
+    details.push(`contentType=${entry.contentType}`);
+  }
+
+  if (Array.isArray(entry?.requiredPermissions) && entry.requiredPermissions.length > 0) {
+    details.push(`requiredPermissions=${entry.requiredPermissions.join(",")}`);
+  }
+
+  if (entry?.alt) {
+    details.push(`alt=${entry.alt}`);
+  }
+
+  return `${compactName} | ${details.join(" | ")}`;
+}
+
+function resolveFileLikeResource(sessionId, target) {
+  const rawTarget = String(target || "").trim();
+  if (!rawTarget) return null;
+
+  const directAsset = getAssetRecord(rawTarget) || getAsset(rawTarget);
+  if (directAsset) {
+    return {
+      kind: "asset",
+      path: `assets/${directAsset.id}`,
+      resource: directAsset,
+    };
+  }
+
+  const normalizedTarget = normalizeVirtualPathKey(rawTarget);
+  const directFile = getFileRecord(normalizedTarget) || getFile(rawTarget);
+  if (directFile) {
+    return {
+      kind: "file",
+      path: normalizedTarget,
+      resource: directFile,
+    };
+  }
+
+  const resolved = normalizeVirtualPathKey(resolvePathForSession(sessionId, rawTarget));
+  const resolvedFile = getFileRecord(resolved);
+  if (resolvedFile) {
+    return {
+      kind: "file",
+      path: resolved,
+      resource: resolvedFile,
+    };
+  }
+
+  if (resolved.startsWith("assets/")) {
+    const assetId = resolved.slice("assets/".length).split("/").pop();
+    const resolvedAsset = getAssetRecord(assetId) || getAsset(assetId);
+    if (resolvedAsset) {
+      return {
+        kind: "asset",
+        path: `assets/${resolvedAsset.id}`,
+        resource: resolvedAsset,
+      };
+    }
+  }
+
+  return null;
+}
+
+function getExecutePermissions(terminalContext = {}) {
+  if (Array.isArray(terminalContext?.permissions)) {
+    return terminalContext.permissions;
+  }
+
+  if (Array.isArray(terminalContext?.featureFlags?.permissions)) {
+    return terminalContext.featureFlags.permissions;
+  }
+
+  return [];
+}
+
+function buildExecuteResult(commandName, args, flags, sessionId, terminalContext = {}) {
   const target = args.join(" ").trim();
+  const providedPassword = String(flags?.password || flags?.pass || "").trim();
+  const permissions = getExecutePermissions(terminalContext);
 
   switch (commandName) {
     case "pwd": {
@@ -795,6 +1432,24 @@ function buildExecuteResult(commandName, args, flags, sessionId) {
       const prefix = stripLeadingSlash(resolved).replace(/\/$/, "");
       const existsAsFile = !!TERMINAL_FILES[prefix] || !!TERMINAL_ASSETS[prefix] || !!TERMINAL_SCRIPTS[prefix];
       const existsAsDir = prefix === "" || TERMINAL_DIRECTORIES.has(prefix) || prefix === "assets" || prefix === "scripts";
+
+      if (existsAsDir) {
+        const dirMeta = getDirectoryMetadata(prefix) || { access: "public", requiredPermissions: [] };
+        const accessCheck = canAccessResource({
+          sessionId,
+          resourcePath: prefix || "/",
+          resourceType: "directory",
+          access: dirMeta,
+          providedPassword,
+          permissions,
+        });
+
+        if (!accessCheck.allowed) {
+          return {
+            error: accessCheck.error,
+          };
+        }
+      }
 
       if (existsAsFile && !existsAsDir) {
         return {
@@ -817,22 +1472,34 @@ function buildExecuteResult(commandName, args, flags, sessionId) {
       }
 
       const newPath = setSessionPath(sessionId, resolved);
+      const directoryMeta = getDirectoryMetadata(newPath) || getDirectoryMetadata(prefix) || null;
       return buildCommandResult(
-        { type: "text", content: `Changed directory to ${newPath}`, metadata: { path: newPath } },
+        {
+          type: "text",
+          content: `Changed directory to ${newPath}`,
+          metadata: {
+            path: newPath,
+            effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(directoryMeta || {})),
+          },
+        },
         `Changed directory to ${newPath}`,
       );
     }
 
     case "ls": {
       const listTarget = target || ".";
-      const listing = listDirectoryEntries(sessionId, listTarget);
+      const listing = listDirectoryEntries(sessionId, listTarget, {
+        providedPassword,
+        permissions,
+      });
+      const longFormat = flags.l === true;
+
+      if (listing.error) {
+        return { error: listing.error };
+      }
+
       const lines = listing.entries.length
-        ? listing.entries
-            .map((entry) => {
-              const suffix = entry.type === "dir" ? "/" : "";
-              return `${entry.name}${suffix}`;
-            })
-            .join("\n")
+        ? listing.entries.map((entry) => formatVirtualListingEntry(entry, { longFormat })).join("\n")
         : "(empty)";
 
       return buildCommandResult(
@@ -851,15 +1518,29 @@ function buildExecuteResult(commandName, args, flags, sessionId) {
 
     case "tree": {
       const treeTarget = target || ".";
+      const startListing = listDirectoryEntries(sessionId, treeTarget, {
+        providedPassword,
+        permissions,
+      });
+
+      if (startListing.error) {
+        return { error: startListing.error };
+      }
+
       const start = resolvePathForSession(sessionId, treeTarget);
 
       function buildNode(p, depth) {
         if (depth < 0) return [];
-        const listing = listDirectoryEntries(sessionId, p);
+        const listing = listDirectoryEntries(sessionId, p, {
+          providedPassword,
+          permissions,
+        });
+
         const lines = [];
         listing.entries.forEach((entry) => {
-          lines.push(`${p}/${entry.name}`.replace(/\/+/g, "/"));
-          if (entry.type === "dir" || entry.type === "scripts" || entry.type === "assets") {
+          const effectSuffix = entry?.effect?.kind === "glitch" ? ` [${entry.effect.label || "glitch"}]` : "";
+          lines.push(`${p}/${entry.name}`.replace(/\/+/g, "/") + (entry.locked ? " [locked]" : "") + effectSuffix);
+          if (entry.type === "dir" && !entry.locked) {
             lines.push(...buildNode(posix.join(p, entry.name), depth - 1));
           }
         });
@@ -886,14 +1567,26 @@ function buildExecuteResult(commandName, args, flags, sessionId) {
 
     case "open":
     case "cat": {
-      const asset = getAsset(target);
-      if (asset) {
-        return buildCommandResult(buildAssetResponse(asset), `Asset ${asset.id} loaded`);
-      }
+      const resource = resolveFileLikeResource(sessionId, target);
+      if (resource) {
+        const accessCheck = canAccessResource({
+          sessionId,
+          resourcePath: resource.path,
+          resourceType: resource.kind,
+          access: resource.resource,
+          providedPassword,
+          permissions,
+        });
 
-      const file = getFile(target);
-      if (file) {
-        return buildCommandResult(buildFileResponse(file), `File ${file.path} loaded`);
+        if (!accessCheck.allowed) {
+          return { error: accessCheck.error };
+        }
+
+        if (resource.kind === "asset") {
+          return buildCommandResult(buildAssetResponse(resource.resource), `Asset ${resource.resource.id} loaded`);
+        }
+
+        return buildCommandResult(buildFileResponse(resource.resource), `File ${resource.resource.path} loaded`);
       }
 
       return {
@@ -1079,6 +1772,7 @@ router.post("/terminal/sync", apiLimiter, express.json(), (req, res) => {
 router.post("/terminal/execute", express.json(), (req, res) => {
   const input = String(req.body?.input || "").trim();
   const sessionId = String(req.body?.sessionId || "").trim() || "anonymous-session";
+  const terminalContext = req.body?.context?.terminalState || req.body?.context || {};
 
   if (!input) {
     return buildErrorResponse(res, 400, "EMPTY_INPUT", "Command input is required.", 'Type a command like "help" or "list scripts".');
@@ -1095,18 +1789,27 @@ router.post("/terminal/execute", express.json(), (req, res) => {
     );
   }
 
-  const execution = buildExecuteResult(parsed.commandName, parsed.args, parsed.flags, sessionId);
+  const execution = buildExecuteResult(parsed.commandName, parsed.args, parsed.flags, sessionId, terminalContext);
 
   if (execution.error) {
+    const statusCode = Number.isFinite(execution.error.statusCode)
+      ? execution.error.statusCode
+      : execution.error.code === "PASSWORD_REQUIRED"
+        ? 401
+        : execution.error.code === "PERMISSION_DENIED"
+          ? 403
+          : 404;
+
     return buildErrorResponse(
       res,
-      404,
+      statusCode,
       execution.error.code || "COMMAND_FAILED",
       execution.error.message || "Command failed",
       execution.error.hint || 'Type "help" to see available commands.',
       {
         input,
         commandName: parsed.commandName,
+        metadata: execution.error.metadata || undefined,
       },
     );
   }
@@ -1240,6 +1943,31 @@ router.get("/terminal/assets/:assetId", (req, res) => {
     );
   }
 
+  const sessionId = String(req.query?.sessionId || "").trim();
+  const providedPassword = String(req.query?.password || "").trim();
+  const permissions = typeof req.query?.permissions === "string" ? req.query.permissions.split(",") : [];
+  const accessCheck = canAccessResource({
+    sessionId,
+    resourcePath: `assets/${asset.id}`,
+    resourceType: "asset",
+    access: asset,
+    providedPassword,
+    permissions,
+  });
+
+  if (!accessCheck.allowed) {
+    return buildErrorResponse(
+      res,
+      accessCheck.error.statusCode || 403,
+      accessCheck.error.code,
+      accessCheck.error.message,
+      accessCheck.error.hint,
+      {
+        metadata: accessCheck.error.metadata,
+      },
+    );
+  }
+
   return sendSuccess(req, res, buildAssetResponse(asset));
 });
 
@@ -1255,6 +1983,31 @@ router.get("/terminal/files/*", (req, res) => {
 
   if (!file) {
     return buildErrorResponse(res, 404, "FILE_NOT_FOUND", `Unknown file: ${requestedPath}`, 'Try "list files" to see available files.');
+  }
+
+  const sessionId = String(req.query?.sessionId || "").trim();
+  const providedPassword = String(req.query?.password || "").trim();
+  const permissions = typeof req.query?.permissions === "string" ? req.query.permissions.split(",") : [];
+  const accessCheck = canAccessResource({
+    sessionId,
+    resourcePath: file.path,
+    resourceType: "file",
+    access: file,
+    providedPassword,
+    permissions,
+  });
+
+  if (!accessCheck.allowed) {
+    return buildErrorResponse(
+      res,
+      accessCheck.error.statusCode || 403,
+      accessCheck.error.code,
+      accessCheck.error.message,
+      accessCheck.error.hint,
+      {
+        metadata: accessCheck.error.metadata,
+      },
+    );
   }
 
   return sendSuccess(req, res, buildFileResponse(file));

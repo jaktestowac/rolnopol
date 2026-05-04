@@ -13,11 +13,11 @@
 <body class="terminal-page">
     <main class="terminal-shell" id="terminalShell" tabindex="0" aria-label="Archive terminal prototype">
         <header class="terminal-header">
-            <div class="terminal-header__lights" aria-hidden="true">
-                <span class="terminal-light terminal-light--red"></span>
-                <span class="terminal-light terminal-light--amber"></span>
-                <span class="terminal-light terminal-light--green"></span>
-            </div>
+            <button class="terminal-header__lights" id="terminalCloseLights" aria-label="Close terminal and return to main page" title="Close terminal">
+                <span class="terminal-light terminal-light--red" aria-hidden="true"></span>
+                <span class="terminal-light terminal-light--amber" aria-hidden="true"></span>
+                <span class="terminal-light terminal-light--green" aria-hidden="true"></span>
+            </button>
             <div class="terminal-header__title">
                 <span class="terminal-header__eyebrow">rolnopol / operator</span>
                 <h1>Archive Terminal</h1>
@@ -50,7 +50,7 @@
     <script src="/js/pages/terminal-theme-manager.js"></script>
     <script src="/js/pages/terminal-command-system.js"></script>
     <script src="/js/pages/terminal-output-renderer.js"></script>
-    <script src="/js/pages/terminal-page.js"></script>
+    <script src="/js/pages/terminal-page.js?v=20260503-2"></script>
 </body>
 
 </html>

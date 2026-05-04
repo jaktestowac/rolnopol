@@ -124,13 +124,42 @@ describe("terminal command system", () => {
       listFiles: async () => ({ files: [{ path: "logs/system.log" }] }),
       listAssets: async () => ({ assets: [{ id: "signal-image" }] }),
       getCommands: async () => ({ commands: [{ name: "run" }] }),
-      executeCommand: async (input) => ({
-        ok: true,
-        result: {
-          type: "text",
-          content: `executed:${input}`,
-        },
-      }),
+      executeCommand: async (input) => {
+        const normalized = String(input || "").trim();
+
+        if (/^run\b/i.test(normalized)) {
+          return {
+            ok: true,
+            result: {
+              type: "script",
+              title: "Boot Sequence",
+              items: [{ type: "text", content: "booting" }],
+            },
+          };
+        }
+
+        if (/^list\b/i.test(normalized)) {
+          return {
+            ok: true,
+            result: {
+              type: "json",
+              content: {
+                scripts: [{ id: "boot-sequence" }],
+                files: [{ path: "logs/system.log" }],
+                assets: [{ id: "signal-image" }],
+              },
+            },
+          };
+        }
+
+        return {
+          ok: true,
+          result: {
+            type: "text",
+            content: `executed:${normalized}`,
+          },
+        };
+      },
       startPorkyConversation: async () => ({
         sessionId: "porky-session",
         active: true,
@@ -222,6 +251,46 @@ describe("terminal command system", () => {
     expect(porkyStatus.content).toContain("Porky status:");
     expect(porkyStatus.content).toContain("estimated tokens: 12/2400");
     expect(porkyStatus.metadata.porky.transition).toBe("status");
+  });
+
+  it("suggests rotating virtual filesystem paths for cd and open commands", async () => {
+    const system = createTerminalCommandSystem({
+      version: "0.1.0",
+      versionLabel: "Archive Terminal",
+      nowProvider: () => new Date("2026-05-02T12:34:56.000Z"),
+    });
+
+    const terminalState = {
+      currentPath: "/docs/guide",
+      availableFiles: [
+        { path: "docs/guide/secrets.txt", title: "Secrets", type: "file" },
+        { path: "docs/guide/forms", title: "Forms", type: "directory" },
+        { path: "docs/guide/fixtures", title: "Fixtures", type: "directory" },
+      ],
+      availableAssets: [{ id: "signal-image", title: "Signal Frame" }],
+      availableScripts: [{ id: "boot-sequence", title: "Boot Sequence" }],
+    };
+
+    const cdSuggestion = system.suggest("cd f", {
+      terminalState,
+      cursorIndex: 4,
+    });
+
+    expect(cdSuggestion.kind).toBe("argument");
+    expect(cdSuggestion.commandName).toBe("cd");
+    expect(cdSuggestion.matches.map((match) => match.value)).toEqual(expect.arrayContaining(["fixtures/", "forms/"]));
+    expect(cdSuggestion.matches.map((match) => match.value)).not.toContain("summaries/");
+    expect(cdSuggestion.matches.every((match) => match.appendSpace === false)).toBe(true);
+
+    const openSuggestion = system.suggest("open s", {
+      terminalState,
+      cursorIndex: 6,
+    });
+
+    expect(openSuggestion.kind).toBe("argument");
+    expect(openSuggestion.commandName).toBe("open");
+    expect(openSuggestion.matches.map((match) => match.value)).toEqual(expect.arrayContaining(["secrets.txt", "signal-image"]));
+    expect(openSuggestion.matches.every((match) => match.appendSpace === true)).toBe(true);
   });
 
   it("supports theme and effects commands when a theme manager is available", async () => {
