@@ -545,6 +545,12 @@
         "email": "john.doe@example.com",
         "password": "johndoe123",
         "description": "Basic farmer with access to personal farm management."
+      },
+      {
+        "role": "Demo Farmer",
+        "email": "emptyuser@rolnopol.demo.pl",
+        "password": "demoPass123",
+        "description": "Empty user with no resources."
       }
     ]
   },

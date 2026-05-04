@@ -170,9 +170,7 @@
       },
       {
         "flow": "System Health Check",
-        "steps": [
-          "Users and admins can check system health and database status via dedicated endpoints."
-        ]
+        "steps": ["Users and admins can check system health and database status via dedicated endpoints."]
       }
     ]
   },
@@ -220,6 +218,12 @@
         "email": "john.doe@example.com",
         "password": "johndoe123",
         "description": "Basic farmer with access to personal farm management."
+      },
+      {
+        "role": "Demo Farmer",
+        "email": "emptyuser@rolnopol.demo.pl",
+        "password": "demoPass123",
+        "description": "Empty user with no resources."
       }
     ]
   },
@@ -344,14 +348,7 @@
         "content": [
           {
             "type": "table",
-            "columns": [
-              "Step",
-              "Check for Assignment",
-              "Check Funds",
-              "Ownership Transfer",
-              "Offer Status",
-              "Financial Txn"
-            ],
+            "columns": ["Step", "Check for Assignment", "Check Funds", "Ownership Transfer", "Offer Status", "Financial Txn"],
             "rows": [
               ["Create Offer", "Yes", "N/A", "No", "active/unavailable", "No"],
               ["Buy Offer", "Yes", "Yes", "Yes", "sold", "Yes"],

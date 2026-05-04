@@ -15,7 +15,7 @@ const ALLOWED_ANIMAL_TYPES = {
   pig: {
     key: "pig",
     fullName: "Pig",
-    description: "Domestic swine raised for meat",
+    description: "Domestic swine - best known for involvement in the invention of bacon",
     icon: "🐖",
   },
   sheep: {
@@ -148,6 +148,14 @@ const ALLOWED_ANIMAL_TYPES = {
     description:
       "Sentient tree-like creature from fantasy lore. Guardians of the forest and nature. A wise and powerful ally for sustainable farming and environmental stewardship.",
     icon: "🌳",
+  },
+  voidBeast: {
+    key: "voidBeast",
+    fullName: "Void Beast",
+    description:
+      "Mysterious creature from the void. Shrouded in darkness and enigma. A formidable presence on the farm, with unknown abilities and potential.",
+    icon: "👾",
+    hidden: true,
   },
 };
 
