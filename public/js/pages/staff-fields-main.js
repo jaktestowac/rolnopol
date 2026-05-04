@@ -608,6 +608,8 @@ class StaffFieldsMainPage {
     const animalsList = document.getElementById("animalsList");
     if (!animalsList) return;
     const filteredAnimals = this._getFilteredAnimals();
+    const totalPages = Math.max(1, Math.ceil(filteredAnimals.length / this.itemsPerPage));
+    if (this.animalsPage > totalPages) this.animalsPage = totalPages;
     const start = (this.animalsPage - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
     const pageAnimals = filteredAnimals.slice(start, end);
@@ -698,19 +700,26 @@ class StaffFieldsMainPage {
     pagination = document.createElement("div");
     pagination.id = "animalsPagination";
     pagination.className = "pagination";
-    const animalsStats = document.getElementById("animalsStats");
-    if (animalsStats) animalsStats.after(pagination);
-    const totalPages = Math.ceil((filteredCount !== undefined ? filteredCount : this.animals.length) / this.itemsPerPage);
+
+    const animalsList = document.getElementById("animalsList");
+    const searchInput = document.getElementById("animalsSearch");
+    // If the search input exists but isn't in the same container, move it next to the list
+    if (searchInput && animalsList && searchInput.parentNode !== animalsList.parentNode) {
+      animalsList.parentNode.insertBefore(searchInput, animalsList);
+    }
+    if (searchInput) {
+      searchInput.before(pagination);
+    } else if (animalsList) {
+      animalsList.before(pagination);
+    }
+
+    const totalPages = Math.max(1, Math.ceil((filteredCount !== undefined ? filteredCount : this.animals.length) / this.itemsPerPage));
     let html = "";
-    html += `<button class='pagination-btn' data-page='prev' ${
-      this.animalsPage === 1 ? "disabled" : ""
-    } title='Previous page' aria-label='Previous page'>&laquo;</button>`;
+    html += `<button class='pagination-btn' data-page='prev' ${this.animalsPage === 1 ? "disabled" : ""} title='Previous page' aria-label='Previous page'>&laquo;</button>`;
     for (let i = 1; i <= totalPages; i++) {
       html += `<button class="pagination-btn${i === this.animalsPage ? " active" : ""}" data-page="${i}">${i}</button>`;
     }
-    html += `<button class='pagination-btn' data-page='next' ${
-      this.animalsPage === totalPages ? "disabled" : ""
-    } title='Next page' aria-label='Next page'>&raquo;</button>`;
+    html += `<button class='pagination-btn' data-page='next' ${this.animalsPage === totalPages ? "disabled" : ""} title='Next page' aria-label='Next page'>&raquo;</button>`;
     html += `<span class='pagination-info pagination-info-compact'>${this.animalsPage}/${totalPages}</span>`;
     pagination.innerHTML = html;
     Array.from(pagination.querySelectorAll(".pagination-btn")).forEach((btn) => {
