@@ -271,7 +271,7 @@ class FeatureFlagsPage {
         const description = typeof flag === "object" ? flag.description : "";
         const isExperimental = this.experimentalFlags.has(safeKey);
         const experimentalBadge = isExperimental
-          ? '<span class="flags-badge flags-badge--experimental" title="Experimental feature">Experimental</span>'
+          ? '<span class="flags-badge flags-badge--experimental" title="Experimental feature - may change or be removed in future releases">Experimental</span>'
           : "";
 
         html += `
@@ -306,7 +306,7 @@ class FeatureFlagsPage {
         const description = typeof flag === "object" ? flag.description : "";
         const isExperimental = this.experimentalFlags.has(safeKey);
         const experimentalBadge = isExperimental
-          ? '<span class="flags-badge flags-badge--experimental" title="Experimental feature">Experimental</span>'
+          ? '<span class="flags-badge flags-badge--experimental" title="Experimental feature - may change or be removed in future releases">Experimental</span>'
           : "";
 
         html += `

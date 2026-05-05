@@ -622,8 +622,8 @@ async function initFooter() {
           <i class="fa-solid fa-code-branch"></i><span class="sr-only">GitHub</span>
         </a>
         <span aria-hidden="true">|</span>
-        <a href="https://github.com/jaktestowac" target="_blank" rel="noopener" aria-label="GitHub" data-testid="footer-github" class="footer-github-link" style="margin-left: 4px; margin-right: 4px; ">
-          <i class="fab fa-github" aria-hidden="true"></i><span class="sr-only">GitHub</span>
+        <a href="https://github.com/jaktestowac" target="_blank" rel="noopener" aria-label="GitHub jaktestowac.pl" data-testid="footer-github" class="footer-github-link" style="margin-left: 4px; margin-right: 4px; ">
+          <i class="fab fa-github" aria-hidden="true"></i><span class="sr-only">GitHub jaktestowac.pl</span>
         </a>
         <span aria-hidden="true">|</span>
         <a href="https://www.youtube.com/@jaktestowac?sub_confirmation=1" target="_blank" rel="noopener" aria-label="YouTube jaktestowac.pl" data-testid="footer-youtube" class="footer-youtube-link" style="margin-left: 4px; margin-right: 4px; ">
@@ -635,6 +635,10 @@ async function initFooter() {
         </a>        
         <br />
         <a href="https://aitesters.pl" target="_blank" rel="noopener" style="margin-left: 4px; margin-right: 4px; ">AI_Testers</a> 
+        <span aria-hidden="true">|</span>
+        <a href="https://github.com/AI-Testers-pl" target="_blank" rel="noopener" aria-label="GitHub AI_Testers" data-testid="footer-github" class="footer-github-link" style="margin-left: 4px; margin-right: 4px; ">
+          <i class="fab fa-github" aria-hidden="true"></i><span class="sr-only">GitHub AI_Testers</span>
+        </a>
         <span aria-hidden="true">|</span>
         <a href="https://www.youtube.com/@AITesterspl?sub_confirmation=1" target="_blank" rel="noopener" aria-label="YouTube AI_Testers" data-testid="footer-youtube" class="footer-youtube-link" style="margin-left: 4px; margin-right: 4px; ">
           <i class="fab fa-youtube" aria-hidden="true"></i><span class="sr-only">YouTube AI_Testers</span>
