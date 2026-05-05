@@ -4,6 +4,7 @@ class FeatureFlagsPage {
     this.flags = {};
     this.allFlags = {};
     this.groups = {};
+    this.experimentalFlags = new Set();
     this.updatedAt = null;
     this.listEl = null;
     this.statusEl = null;
@@ -143,6 +144,7 @@ class FeatureFlagsPage {
       this.flags = payload.flags || {};
       this.allFlags = JSON.parse(JSON.stringify(this.flags));
       this.groups = payload.groups || {};
+      this.experimentalFlags = new Set(Array.isArray(payload.experimentalFlags) ? payload.experimentalFlags.filter((key) => typeof key === "string") : []);
       this.updatedAt = payload.updatedAt || null;
 
       if (this.searchInput && this.searchInput.value !== this.searchQuery) {
@@ -267,6 +269,10 @@ class FeatureFlagsPage {
         const safeKey = String(flagKey);
         const isEnabled = typeof flag === "object" ? flag.value : flag;
         const description = typeof flag === "object" ? flag.description : "";
+        const isExperimental = this.experimentalFlags.has(safeKey);
+        const experimentalBadge = isExperimental
+          ? '<span class="flags-badge flags-badge--experimental" title="Experimental feature">Experimental</span>'
+          : "";
 
         html += `
           <div class="flags-card">
@@ -277,6 +283,7 @@ class FeatureFlagsPage {
             <label class="flags-toggle">
               <input class="flag-toggle-input" type="checkbox" data-flag="${safeKey}" ${isEnabled ? "checked" : ""} />
               <span>${isEnabled ? "On" : "Off"}</span>
+              ${experimentalBadge}
             </label>
           </div>
         `;
@@ -297,6 +304,10 @@ class FeatureFlagsPage {
         const safeKey = String(flagKey);
         const isEnabled = typeof flag === "object" ? flag.value : flag;
         const description = typeof flag === "object" ? flag.description : "";
+        const isExperimental = this.experimentalFlags.has(safeKey);
+        const experimentalBadge = isExperimental
+          ? '<span class="flags-badge flags-badge--experimental" title="Experimental feature">Experimental</span>'
+          : "";
 
         html += `
           <div class="flags-card">
@@ -307,6 +318,7 @@ class FeatureFlagsPage {
             <label class="flags-toggle">
               <input class="flag-toggle-input" type="checkbox" data-flag="${safeKey}" ${isEnabled ? "checked" : ""} />
               <span>${isEnabled ? "On" : "Off"}</span>
+              ${experimentalBadge}
             </label>
           </div>
         `;

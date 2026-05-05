@@ -63,6 +63,38 @@ const FEATURE_FLAG_GROUPS = {
   farmlog: ["rolnopolFarmlogEnabled", "rolnopolFarmlogEngagementEnabled"],
 };
 
+const EXPERIMENTAL_FEATURE_FLAGS = [
+  "homeWelcomeVideoEnabled",
+  "homeStatsSectionEnabled",
+  "homeModernRestyleEnabled",
+  "docsSearchEnabled",
+  "docsAdvancedSearchEnabled",
+  "registrationStrongPasswordEnabled",
+  "staffFieldsExportEnabled",
+  "financialReportsEnabled",
+  "financialCsvExportEnabled",
+  "financialCommoditiesEnabled",
+  "financialCommoditiesTradingEnabled",
+  "prometheusMetricsEnabled",
+  "messengerEnabled",
+  "assistantChatEnabled",
+  "notificationCenterEnabled",
+  "weatherPageEnabled",
+  "weatherWeatherDataExport",
+  "weatherUserInsightsEnabled",
+  "weatherTrendChartEnabled",
+  "personalApiKeysEnabled",
+  "integrationsWebhooksEnabled",
+  "cookieConsentBannerEnabled",
+  "promoAdvertsHomeEnabled",
+  "promoAdvertsAlertsEnabled",
+  "promoAdvertsGeneralAdEnabled",
+  "promoAdvertsBottomBannerEnabled",
+  "petBuddyEnabled",
+  "rolnopolFarmlogEnabled",
+  "rolnopolFarmlogEngagementEnabled",
+];
+
 const PREDEFINED_FEATURE_FLAGS = {
   alertsEnabled: true,
   alertsSeverityFilterEnabled: true,
@@ -204,6 +236,7 @@ class FeatureFlagsService {
 
     return {
       flags: flagsWithDescriptions,
+      experimentalFlags: normalized.experimentalFlags || [],
       groups: FEATURE_FLAG_GROUPS,
       updatedAt: normalized.updatedAt,
     };
@@ -218,13 +251,17 @@ class FeatureFlagsService {
     const defaultFlags = { ...PREDEFINED_FEATURE_FLAGS };
     const existingFlags = this._isPlainObject(normalized.flags) ? normalized.flags : {};
 
+    const experimentalFlags = EXPERIMENTAL_FEATURE_FLAGS.filter((flag) => flag in defaultFlags);
+    normalized.experimentalFlags = experimentalFlags;
+
     // Determine if any predefined key is missing or if there are no flags at all
     const missingKeys = Object.keys(defaultFlags).filter((k) => !(k in existingFlags));
 
     if (Object.keys(existingFlags).length === 0 || missingKeys.length > 0) {
       // Merge defaults with existing values (existing values take precedence)
       const merged = { ...defaultFlags, ...existingFlags };
-      const next = { flags: merged, updatedAt: new Date().toISOString() };
+
+      const next = { flags: merged, experimentalFlags: experimentalFlags, updatedAt: new Date().toISOString() };
 
       await this.db.replaceAll(next);
       const normalizedNext = this._normalize(next);
