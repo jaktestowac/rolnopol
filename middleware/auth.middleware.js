@@ -69,6 +69,8 @@ function createAuthenticateUser(options = {}) {
 
           if (result?.reason === "insufficient_scope") {
             errorMessage = "API key does not grant access to this resource";
+          } else if (result?.reason === "insufficient_mode") {
+            errorMessage = "API key does not grant write access to this resource";
           } else if (result?.reason === "expired") {
             errorMessage = "Expired API key";
           }

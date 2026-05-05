@@ -34,6 +34,7 @@ async function createPersonalApiKey(session, payload = {}) {
     .send({
       label: "Profile sync",
       scopes: ["user-account"],
+      mode: "write",
       ...payload,
     })
     .expect(201);
@@ -81,6 +82,7 @@ describe("Personal API keys API", () => {
     expect(createRes.body.data).toHaveProperty("rawKey");
     expect(createRes.body.data.key.label).toBe("Weather sync");
     expect(createRes.body.data.key.scopes).toEqual(["user-account", "fields"]);
+    expect(createRes.body.data.key.mode).toBe("write");
     expect(createRes.body.data.key).not.toHaveProperty("keyHash");
 
     const listRes = await request(app).get("/api/v1/users/profile/api-keys").set("token", session.token).expect(200);
@@ -89,6 +91,7 @@ describe("Personal API keys API", () => {
     expect(Array.isArray(listRes.body.data.items)).toBe(true);
     expect(listRes.body.data.items.length).toBeGreaterThanOrEqual(1);
     expect(listRes.body.data.items[0]).not.toHaveProperty("rawKey");
+    expect(listRes.body.data.allowedModes).toEqual(expect.arrayContaining(["read", "write"]));
   });
 
   it("creates personal API keys with configurable expiration metadata", async () => {
@@ -148,6 +151,7 @@ describe("Personal API keys API", () => {
     const createRes = await createPersonalApiKey(session, {
       label: "Profile editor",
       scopes: ["user-account"],
+      mode: "write",
     });
 
     const rawKey = createRes.body.data.rawKey;
@@ -185,6 +189,7 @@ describe("Personal API keys API", () => {
       .send({
         label: "Profile only",
         scopes: ["user-account"],
+        mode: "write",
       })
       .expect(201);
 
@@ -514,7 +519,34 @@ describe("Personal API keys API", () => {
     expect(createRes.body.success).toBe(true);
     expect(createRes.body.data.key.label).toBe(DEFAULT_PERSONAL_API_KEY_LABEL);
     expect(createRes.body.data.key.scopes).toEqual(["user-account", "chatbot"]);
+    expect(createRes.body.data.key.mode).toBe("write");
     expect(createRes.body.data.allowedScopes).toEqual(expect.arrayContaining(["all", "chatbot", "user-account"]));
+  });
+
+  it("allows read-only mode to read but blocks write operations", async () => {
+    const session = await registerUser();
+    await enablePersonalApiKeysFeature();
+
+    const createRes = await createPersonalApiKey(session, {
+      label: "Read dashboard",
+      scopes: ["user-account"],
+      mode: "read",
+    });
+
+    const rawKey = createRes.body.data.rawKey;
+
+    const profileReadRes = await request(app).get("/api/v1/users/profile").set("X-API-Key", rawKey).expect(200);
+    expect(profileReadRes.body.success).toBe(true);
+    expect(profileReadRes.body.data.id).toBe(session.userId);
+
+    const updateRes = await request(app)
+      .put("/api/v1/users/profile")
+      .set("X-API-Key", rawKey)
+      .send({ displayedName: `ReadOnly${String(Date.now()).slice(-5)}` })
+      .expect(403);
+
+    expect(updateRes.body.success).toBe(false);
+    expect(String(updateRes.body.error || "")).toContain("does not grant write access");
   });
 
   it("updates lastUsedAt after a successful API key authentication", async () => {

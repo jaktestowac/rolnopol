@@ -26,6 +26,8 @@ const SCOPE_ALIASES = Object.freeze({
 
 const MAX_ACTIVE_KEYS_PER_USER = 20;
 const DEFAULT_LABEL = "Personal integration key";
+const API_KEY_MODES = Object.freeze(["read", "write"]);
+const DEFAULT_API_KEY_MODE = "write";
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_EXPIRATION = "never";
 const API_KEY_EXPIRATION_OPTIONS = Object.freeze([
@@ -71,6 +73,10 @@ class PersonalApiKeyService {
     return [...API_KEY_SCOPES];
   }
 
+  listAvailableModes() {
+    return [...API_KEY_MODES];
+  }
+
   listAvailableExpirationOptions() {
     return API_KEY_EXPIRATION_OPTIONS.map((option) => ({ ...option }));
   }
@@ -79,6 +85,7 @@ class PersonalApiKeyService {
     const user = await this._ensureActiveUser(userId);
     const label = this._sanitizeLabel(input.label);
     const scopes = this._normalizeScopes(input.scopes);
+    const mode = this._normalizeMode(input.mode);
     const expiration = this._normalizeExpiration(input.expiration);
     const store = await this._getStore();
 
@@ -97,6 +104,7 @@ class PersonalApiKeyService {
       userId: Number(user.id),
       label,
       scopes,
+      mode,
       expiration,
       expiresAt: this._calculateExpiresAt(expiration, nowDate),
       keyHash: this._hashKey(rawKey),
@@ -122,6 +130,7 @@ class PersonalApiKeyService {
       userId: user.id,
       apiKeyId: record.id,
       scopes,
+      mode,
       expiration,
       expiresAt: record.expiresAt,
     });
@@ -167,9 +176,13 @@ class PersonalApiKeyService {
         Object.prototype.hasOwnProperty.call(input, "expiration") ? input.expiration : existing.expiration,
         { allowDefault: true },
       );
+      const mode = this._normalizeMode(Object.prototype.hasOwnProperty.call(input, "mode") ? input.mode : existing.mode, {
+        allowDefault: true,
+      });
 
       return {
         ...existing,
+        mode,
         expiration,
         expiresAt: this._calculateExpiresAt(expiration, now),
         keyHash: this._hashKey(rawKey),
@@ -184,6 +197,7 @@ class PersonalApiKeyService {
     logDebug("Regenerated personal API key", {
       userId: user.id,
       apiKeyId: record.id,
+      mode: record.mode,
       expiration: record.expiration,
       expiresAt: record.expiresAt,
     });
@@ -228,12 +242,23 @@ class PersonalApiKeyService {
 
     const requiredScope = this.resolveRequiredScope(req);
     const grantedScopes = this._normalizeScopes(record.scopes, { allowDefault: true });
+    const requiredAccess = this.resolveRequiredAccess(req);
+    const grantedMode = this._normalizeMode(record.mode, { allowDefault: true, allowInvalidAsDefault: true });
 
     if (!this.isScopeAllowed(grantedScopes, requiredScope)) {
       return {
         valid: false,
         reason: "insufficient_scope",
         requiredScope,
+        apiKey: this._toPublicRecord(record),
+      };
+    }
+
+    if (!this.isModeAllowed(grantedMode, requiredAccess)) {
+      return {
+        valid: false,
+        reason: "insufficient_mode",
+        requiredAccess,
         apiKey: this._toPublicRecord(record),
       };
     }
@@ -245,11 +270,22 @@ class PersonalApiKeyService {
       valid: true,
       userId: String(user.id),
       requiredScope,
+      requiredAccess,
       apiKey: this._toPublicRecord({
         ...record,
         lastUsedAt,
       }),
     };
+  }
+
+  resolveRequiredAccess(req) {
+    const method = typeof req?.method === "string" ? req.method.trim().toUpperCase() : "";
+
+    if (method === "GET" || method === "HEAD" || method === "OPTIONS") {
+      return "read";
+    }
+
+    return "write";
   }
 
   resolveRequiredScope(req) {
@@ -300,6 +336,16 @@ class PersonalApiKeyService {
     return normalizedScopes.includes(requiredScope);
   }
 
+  isModeAllowed(mode, requiredAccess) {
+    const normalizedMode = this._normalizeMode(mode, { allowDefault: true, allowInvalidAsDefault: true });
+
+    if (normalizedMode === "write") {
+      return true;
+    }
+
+    return requiredAccess === "read";
+  }
+
   async _ensureActiveUser(userId) {
     const user = await this.userDataInstance.findUser(userId);
 
@@ -335,6 +381,7 @@ class PersonalApiKeyService {
             userId: Number(record.userId),
             label: this._sanitizeLabel(record.label, { allowDefault: true }),
             scopes: this._normalizeScopes(record.scopes, { allowDefault: true }),
+            mode: this._normalizeMode(record.mode, { allowDefault: true, allowInvalidAsDefault: true }),
             expiration: this._normalizeExpiration(record.expiration, { allowDefault: true, allowInvalidAsDefault: true }),
             expiresAt: typeof record.expiresAt === "string" ? record.expiresAt : null,
             keyHash: String(record.keyHash),
@@ -411,6 +458,30 @@ class PersonalApiKeyService {
     }
 
     return normalizedScopes;
+  }
+
+  _normalizeMode(mode, options = {}) {
+    const allowDefault = options.allowDefault !== false;
+    const allowInvalidAsDefault = options.allowInvalidAsDefault === true;
+    const normalized = typeof mode === "string" ? mode.trim().toLowerCase() : "";
+
+    if (!normalized) {
+      if (allowDefault) {
+        return DEFAULT_API_KEY_MODE;
+      }
+
+      throw new Error("Validation failed: mode is required");
+    }
+
+    if (!API_KEY_MODES.includes(normalized)) {
+      if (allowDefault && allowInvalidAsDefault) {
+        return DEFAULT_API_KEY_MODE;
+      }
+
+      throw new Error(`Validation failed: unsupported mode \"${mode}\"`);
+    }
+
+    return normalized;
   }
 
   _normalizeExpiration(expiration, options = {}) {
@@ -522,6 +593,7 @@ class PersonalApiKeyService {
 
   _toPublicRecord(record) {
     const expiration = this._normalizeExpiration(record?.expiration, { allowDefault: true, allowInvalidAsDefault: true });
+    const mode = this._normalizeMode(record?.mode, { allowDefault: true, allowInvalidAsDefault: true });
     const isExpired = this._isExpired(record);
 
     return {
@@ -529,6 +601,7 @@ class PersonalApiKeyService {
       userId: Number(record.userId),
       label: record.label,
       scopes: this._normalizeScopes(record.scopes, { allowDefault: true }),
+      mode,
       expiration,
       expiresAt: typeof record.expiresAt === "string" ? record.expiresAt : null,
       keyPreview: record.keyPreview,
@@ -604,4 +677,5 @@ class PersonalApiKeyService {
 
 module.exports = new PersonalApiKeyService();
 module.exports.API_KEY_SCOPES = API_KEY_SCOPES;
+module.exports.API_KEY_MODES = API_KEY_MODES;
 module.exports.API_KEY_EXPIRATION_OPTIONS = API_KEY_EXPIRATION_OPTIONS;

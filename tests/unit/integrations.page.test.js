@@ -84,6 +84,7 @@ describe("IntegrationsPage personal API key feature gating", () => {
       ["personalApiKeyModalValue", createElement()],
       ["personalApiKeyHelpModal", createElement()],
       ["personalApiKeyLabel", createElement()],
+      ["personalApiKeyMode", createElement()],
       ["personalApiKeyExpiration", createElement()],
       ["personalApiKeyForm", createElement()],
       ["copyPersonalApiKeyBtn", createElement()],
@@ -335,10 +336,12 @@ describe("IntegrationsPage personal API key feature gating", () => {
   it("submits the selected personal API key expiration when creating a key", async () => {
     const page = new global.__IntegrationsPage();
     const labelInput = global.__integrationsTestElements.get("personalApiKeyLabel");
+    const modeSelect = global.__integrationsTestElements.get("personalApiKeyMode");
     const expirationSelect = global.__integrationsTestElements.get("personalApiKeyExpiration");
     const button = global.__integrationsTestElements.get("createPersonalApiKeyBtn");
 
     labelInput.value = "Weather sync";
+    modeSelect.value = "read";
     expirationSelect.value = "30d";
     button.innerHTML = '<i class="fas fa-plus"></i> Create API Key';
 
@@ -346,6 +349,7 @@ describe("IntegrationsPage personal API key feature gating", () => {
       post: vi.fn(async () => ({ success: true, data: { data: { rawKey: "rpk_live_test" } } })),
     };
     page._getSelectedPersonalApiKeyScopes = vi.fn(() => ["user-account"]);
+    page._getSelectedPersonalApiKeyMode = vi.fn(() => "read");
     page._revealPersonalApiKey = vi.fn();
     page._showPersonalApiKeyMessage = vi.fn();
     page._loadPersonalApiKeys = vi.fn();
@@ -357,11 +361,13 @@ describe("IntegrationsPage personal API key feature gating", () => {
       {
         label: "Weather sync",
         scopes: ["user-account"],
+        mode: "read",
         expiration: "30d",
       },
       { requiresAuth: true, suppressErrorEvents: true },
     );
     expect(expirationSelect.value).toBe("never");
+    expect(modeSelect.value).toBe("write");
   });
 
   it("keeps the webhooks tab hidden when its feature flag is disabled", () => {

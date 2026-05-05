@@ -64,7 +64,6 @@ const FEATURE_FLAG_GROUPS = {
 };
 
 const EXPERIMENTAL_FEATURE_FLAGS = [
-  "homeWelcomeVideoEnabled",
   "homeStatsSectionEnabled",
   "homeModernRestyleEnabled",
   "docsSearchEnabled",
@@ -85,7 +84,6 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "weatherTrendChartEnabled",
   "personalApiKeysEnabled",
   "integrationsWebhooksEnabled",
-  "cookieConsentBannerEnabled",
   "promoAdvertsHomeEnabled",
   "promoAdvertsAlertsEnabled",
   "promoAdvertsGeneralAdEnabled",

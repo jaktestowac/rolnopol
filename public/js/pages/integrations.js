@@ -993,6 +993,7 @@ class IntegrationsPage {
         const activityValue = revoked ? this._formatOptionalDate(item.revokedAt) : this._formatOptionalDate(item.lastUsedAt);
         const expirationValue = this._formatPersonalApiKeyExpirationDate(item);
         const lifetimeLabel = this._describePersonalApiKeyExpiration(item.expiration);
+        const modeLabel = this._describePersonalApiKeyMode(item.mode);
 
         return `
           <article class="glass" style="padding: 1rem; border-radius: 1rem; display: flex; flex-direction: column; gap: 0.85rem">
@@ -1011,6 +1012,10 @@ class IntegrationsPage {
               <div>
                 <strong>Scopes</strong>
                 <div style="color: #51634a">${this._escapeHtml(scopes)}</div>
+              </div>
+              <div>
+                <strong>Mode</strong>
+                <div style="color: #51634a">${this._escapeHtml(modeLabel)}</div>
               </div>
               <div>
                 <strong>Created</strong>
@@ -1062,6 +1067,7 @@ class IntegrationsPage {
         {
           label: labelInput ? labelInput.value.trim() : "",
           scopes: this._getSelectedPersonalApiKeyScopes(),
+          mode: this._getSelectedPersonalApiKeyMode(),
           expiration: this._getSelectedPersonalApiKeyExpiration(),
         },
         { requiresAuth: true, suppressErrorEvents: true },
@@ -1084,6 +1090,7 @@ class IntegrationsPage {
       }
 
       this._resetPersonalApiKeyScopes();
+      this._resetPersonalApiKeyMode();
       this._resetPersonalApiKeyExpiration();
       await this._loadPersonalApiKeys();
     } catch (error) {
@@ -1193,6 +1200,13 @@ class IntegrationsPage {
     return normalized || "never";
   }
 
+  _getSelectedPersonalApiKeyMode() {
+    const modeSelect = document.getElementById("personalApiKeyMode");
+    const normalized = modeSelect && typeof modeSelect.value === "string" ? modeSelect.value.trim().toLowerCase() : "";
+
+    return normalized === "read" ? "read" : "write";
+  }
+
   _resetPersonalApiKeyScopes() {
     const scopeInputs = Array.from(document.querySelectorAll("#personalApiKeyScopes input[type='checkbox']"));
     scopeInputs.forEach((input) => {
@@ -1204,6 +1218,13 @@ class IntegrationsPage {
     const expirationSelect = document.getElementById("personalApiKeyExpiration");
     if (expirationSelect) {
       expirationSelect.value = "never";
+    }
+  }
+
+  _resetPersonalApiKeyMode() {
+    const modeSelect = document.getElementById("personalApiKeyMode");
+    if (modeSelect) {
+      modeSelect.value = "write";
     }
   }
 
@@ -1328,6 +1349,16 @@ class IntegrationsPage {
 
     const normalized = typeof expiration === "string" ? expiration.trim().toLowerCase() : "never";
     return labels[normalized] || labels.never;
+  }
+
+  _describePersonalApiKeyMode(mode) {
+    const normalized = typeof mode === "string" ? mode.trim().toLowerCase() : "write";
+
+    if (normalized === "read") {
+      return "Read-only";
+    }
+
+    return "Read & write";
   }
 
   _escapeHtml(value) {

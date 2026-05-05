@@ -12,6 +12,7 @@ class PersonalApiKeyController {
           data: {
             items,
             allowedScopes: personalApiKeyService.listAvailableScopes(),
+            allowedModes: personalApiKeyService.listAvailableModes(),
             allowedExpirations: personalApiKeyService.listAvailableExpirationOptions(),
           },
         }),
@@ -31,6 +32,7 @@ class PersonalApiKeyController {
           data: {
             ...result,
             allowedScopes: personalApiKeyService.listAvailableScopes(),
+            allowedModes: personalApiKeyService.listAvailableModes(),
             allowedExpirations: personalApiKeyService.listAvailableExpirationOptions(),
           },
         }),
@@ -50,6 +52,7 @@ class PersonalApiKeyController {
           data: {
             ...result,
             allowedScopes: personalApiKeyService.listAvailableScopes(),
+            allowedModes: personalApiKeyService.listAvailableModes(),
             allowedExpirations: personalApiKeyService.listAvailableExpirationOptions(),
           },
         }),

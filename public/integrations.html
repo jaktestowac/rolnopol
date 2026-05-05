@@ -259,6 +259,21 @@
                                             </div>
 
                                             <div class="form-group-modern">
+                                                <label for="personalApiKeyMode" class="form-label-modern">
+                                                    <i class="fas fa-keyboard"></i>
+                                                    Access mode
+                                                </label>
+                                                <select id="personalApiKeyMode" class="form-input-modern">
+                                                    <option value="read">Read-only</option>
+                                                    <option value="write" selected>Read & write</option>
+                                                </select>
+                                                <div class="form-help-modern">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    <strong>Read-only</strong> can fetch data. <strong>Read & write</strong> can fetch and modify data.
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group-modern">
                                                 <label for="personalApiKeyExpiration" class="form-label-modern">
                                                     <i class="fas fa-hourglass-half"></i>
                                                     Key lifetime
@@ -469,6 +484,10 @@
                     <li>
                         <strong>Choose the smallest scope set possible.</strong>
                         If your tool only reads profile data, keep it on <code>User account</code> instead of giving it the whole barn.
+                    </li>
+                    <li>
+                        <strong>Pick an access mode that matches the integration.</strong>
+                        Use <code>Read-only</code> for dashboards and reporting jobs, and only use <code>Read &amp; write</code> for automations that need to create or update data.
                     </li>
                     <li>
                         <strong>Copy the raw key immediately.</strong>

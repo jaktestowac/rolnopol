@@ -11,6 +11,7 @@ function buildActiveKeyRecord(userId, index) {
     userId,
     label: `Key ${index}`,
     scopes: ["user-account"],
+    mode: "write",
     keyHash: `hash-${index}`,
     keyPreview: `rpk_live_pre...${index}`,
     keyPrefix: "rpk_live_pre",
@@ -34,7 +35,12 @@ describe("personal-api-key.service", () => {
     expect(personalApiKeyService.resolveRequiredScope({ originalUrl: "/api/v1/staff?limit=10" })).toBe("staff");
     expect(personalApiKeyService.resolveRequiredScope({ baseUrl: "/api/v1", path: "/assistant-chat" })).toBe("chatbot");
     expect(personalApiKeyService.resolveRequiredScope({ baseUrl: "/api/v1", path: "/custom-resource" })).toBe("all");
+    expect(personalApiKeyService.resolveRequiredAccess({ method: "GET" })).toBe("read");
+    expect(personalApiKeyService.resolveRequiredAccess({ method: "put" })).toBe("write");
     expect(personalApiKeyService.isScopeAllowed(["all"], "session-only")).toBe(false);
+    expect(personalApiKeyService.isModeAllowed("read", "read")).toBe(true);
+    expect(personalApiKeyService.isModeAllowed("read", "write")).toBe(false);
+    expect(personalApiKeyService.isModeAllowed("write", "write")).toBe(true);
   });
 
   it("creates keys with a default label and normalized aliased scopes", async () => {
@@ -62,11 +68,13 @@ describe("personal-api-key.service", () => {
     const result = await personalApiKeyService.createKey(77, {
       label: "   ",
       scopes: [" user ", "assistant", "user_account", "   "],
+      mode: " READ ",
     });
 
     expect(result.rawKey).toMatch(/^rpk_live_/);
     expect(result.key.label).toBe("Personal integration key");
     expect(result.key.scopes).toEqual(["user-account", "chatbot"]);
+    expect(result.key.mode).toBe("read");
     expect(result.key).not.toHaveProperty("keyHash");
     expect(persistedStore.keys).toHaveLength(1);
     expect(persistedStore.keys[0]).toEqual(
@@ -74,8 +82,29 @@ describe("personal-api-key.service", () => {
         userId: 77,
         label: "Personal integration key",
         scopes: ["user-account", "chatbot"],
+        mode: "read",
       }),
     );
+  });
+
+  it("rejects unsupported key modes", async () => {
+    vi.spyOn(personalApiKeyService.userDataInstance, "findUser").mockResolvedValue({
+      id: 55,
+      isActive: true,
+    });
+    vi.spyOn(personalApiKeyService.db, "getAll").mockResolvedValue({
+      version: 1,
+      keys: [],
+      updatedAt: null,
+    });
+
+    await expect(
+      personalApiKeyService.createKey(55, {
+        label: "Bad mode",
+        scopes: ["user-account"],
+        mode: "execute",
+      }),
+    ).rejects.toThrow("unsupported mode");
   });
 
   it("creates keys with the selected expiration window", async () => {
@@ -214,6 +243,7 @@ describe("personal-api-key.service", () => {
           userId: 44,
           label: "Expired key",
           scopes: ["user-account"],
+          mode: "write",
           expiration: "1d",
           expiresAt: "2026-04-29T09:00:00.000Z",
           keyHash,
@@ -248,6 +278,63 @@ describe("personal-api-key.service", () => {
       }),
     );
     expect(findUserSpy).not.toHaveBeenCalled();
+    expect(updateSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects write requests for read-only API keys", async () => {
+    const rawKey = personalApiKeyService._generateRawKey();
+    const keyHash = personalApiKeyService._hashKey(rawKey);
+
+    vi.spyOn(featureFlagsService, "getFeatureFlags").mockResolvedValue({
+      flags: { personalApiKeysEnabled: true },
+      updatedAt: null,
+    });
+    vi.spyOn(personalApiKeyService.db, "getAll").mockResolvedValue({
+      version: 1,
+      keys: [
+        {
+          id: "read-only-key",
+          userId: 44,
+          label: "Read only",
+          scopes: ["user-account"],
+          mode: "read",
+          expiration: "never",
+          expiresAt: null,
+          keyHash,
+          keyPreview: "rpk_live_rea...only",
+          keyPrefix: "rpk_live_rea",
+          createdAt: "2026-04-30T10:00:00.000Z",
+          updatedAt: "2026-04-30T10:00:00.000Z",
+          lastUsedAt: null,
+          regeneratedAt: null,
+          revokedAt: null,
+        },
+      ],
+      updatedAt: null,
+    });
+    vi.spyOn(personalApiKeyService.userDataInstance, "findUser").mockResolvedValue({
+      id: 44,
+      isActive: true,
+    });
+
+    const updateSpy = vi.spyOn(personalApiKeyService.db, "update");
+
+    const result = await personalApiKeyService.authenticateApiKey(rawKey, {
+      originalUrl: "/api/v1/users/profile",
+      method: "PUT",
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        valid: false,
+        reason: "insufficient_mode",
+        requiredAccess: "write",
+        apiKey: expect.objectContaining({
+          id: "read-only-key",
+          mode: "read",
+        }),
+      }),
+    );
     expect(updateSpy).not.toHaveBeenCalled();
   });
 });
