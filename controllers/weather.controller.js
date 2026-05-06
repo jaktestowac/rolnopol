@@ -17,27 +17,97 @@ class WeatherController {
 
   _escapePdfText(value) {
     return String(value || "")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[–—]/g, "-")
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'")
+      .replace(/\r?\n|\r/g, " ")
       .replace(/\\/g, "\\\\")
       .replace(/\(/g, "\\(")
-      .replace(/\)/g, "\\)");
+      .replace(/\)/g, "\\)")
+      .replace(/[^\x20-\x7E]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
-  _buildSimplePdf(lines) {
-    const contentLines = [
-      "BT",
-      "/F1 10 Tf",
-      "50 780 Td",
-      "14 TL",
-      ...lines.map((line, index) => `${index === 0 ? "" : "T* "}(${this._escapePdfText(line)}) Tj`),
-      "ET",
-    ].join("\n");
+  _truncatePdfText(value, maxLength = 48) {
+    const text = this._escapePdfText(value);
+    if (text.length <= maxLength) {
+      return text;
+    }
+
+    return `${text.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+  }
+
+  _hexToRgb(hex) {
+    const normalized = String(hex || "#000000").replace(/^#/, "");
+    const expanded =
+      normalized.length === 3
+        ? normalized
+            .split("")
+            .map((char) => `${char}${char}`)
+            .join("")
+        : normalized.padEnd(6, "0").slice(0, 6);
+    const channels = [0, 2, 4].map((start) => Number.parseInt(expanded.slice(start, start + 2), 16));
+    return channels.map((channel) => (Number.isFinite(channel) ? channel / 255 : 0));
+  }
+
+  _pdfColor(hex, stroke = false) {
+    const [r, g, b] = this._hexToRgb(hex).map((value) => value.toFixed(3));
+    return `${r} ${g} ${b} ${stroke ? "RG" : "rg"}`;
+  }
+
+  _pdfRect({ x, y, w, h, fill, stroke, strokeWidth = 1 }) {
+    const commands = ["q"];
+
+    if (stroke) {
+      commands.push(this._pdfColor(stroke, true));
+      commands.push(`${strokeWidth} w`);
+    }
+
+    if (fill) {
+      commands.push(this._pdfColor(fill));
+    }
+
+    commands.push(`${x} ${y} ${w} ${h} re`);
+    if (fill && stroke) {
+      commands.push("B");
+    } else if (fill) {
+      commands.push("f");
+    } else {
+      commands.push("S");
+    }
+
+    commands.push("Q");
+    return commands.join("\n");
+  }
+
+  _pdfText({ x, y, text, size = 12, font = "F1", color = "#111827" }) {
+    return ["BT", `/${font} ${size} Tf`, this._pdfColor(color), `${x} ${y} Td`, `(${this._escapePdfText(text)}) Tj`, "ET"].join("\n");
+  }
+
+  _conditionAccentColor(condition) {
+    const label = String(condition || "").toLowerCase();
+
+    if (label.includes("storm")) return "#7C3AED";
+    if (label.includes("heavy rain") || label.includes("rain")) return "#2563EB";
+    if (label.includes("sleet") || label.includes("snow")) return "#0EA5E9";
+    if (label.includes("wind")) return "#0F766E";
+    if (label.includes("cloud")) return "#64748B";
+    return "#16A34A";
+  }
+
+  _buildPdfBuffer(commands) {
+    const content = commands.join("\n");
 
     const objects = [
       "<< /Type /Catalog /Pages 2 0 R >>",
       "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>",
       "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-      `<< /Length ${Buffer.byteLength(contentLines, "utf8")} >>\nstream\n${contentLines}\nendstream`,
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+      `<< /Length ${Buffer.byteLength(content, "utf8")} >>\nstream\n${content}\nendstream`,
     ];
 
     let pdf = "%PDF-1.4\n";
@@ -59,6 +129,162 @@ class WeatherController {
 
     pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
     return Buffer.from(pdf, "utf8");
+  }
+
+  _buildSimplePdf(lines) {
+    const commands = [
+      this._pdfRect({ x: 0, y: 0, w: 595, h: 842, fill: "#FFFFFF" }),
+      this._pdfText({
+        x: 50,
+        y: 782,
+        text: this._truncatePdfText(lines[0] || "Weather export", 44),
+        size: 20,
+        font: "F2",
+        color: "#0F172A",
+      }),
+    ];
+
+    lines.slice(1).forEach((line, index) => {
+      const y = 758 - index * 16;
+      commands.push(this._pdfText({ x: 50, y, text: this._truncatePdfText(line, 74), size: 10, font: "F1", color: "#334155" }));
+    });
+
+    return this._buildPdfBuffer(commands);
+  }
+
+  _buildWeatherExportPdf(payload) {
+    const pageWidth = 595;
+    const pageHeight = 842;
+    const margin = 40;
+    const contentWidth = pageWidth - margin * 2;
+    const headerHeight = 132;
+    const cardGap = 12;
+    const cardWidth = (contentWidth - cardGap * 3) / 4;
+    const cardY = 596;
+    const cardHeight = 76;
+    const tableTop = 506;
+    const tableHeaderHeight = 26;
+    const rowHeight = 30;
+    const tableColumns = [
+      { key: "date", label: "Date", width: 64 },
+      { key: "condition", label: "Condition", width: 78 },
+      { key: "temperature", label: "Temp", width: 92 },
+      { key: "weatherLoad", label: "Rain / wind", width: 94 },
+      { key: "humidity", label: "Humidity", width: 58 },
+      { key: "advisory", label: "Advisory", width: 129 },
+    ];
+
+    const commands = [
+      this._pdfRect({ x: 0, y: 0, w: pageWidth, h: pageHeight, fill: "#F5F7FB" }),
+      this._pdfRect({ x: 0, y: pageHeight - headerHeight, w: pageWidth, h: headerHeight, fill: "#0F172A" }),
+      this._pdfRect({ x: 0, y: pageHeight - headerHeight - 6, w: pageWidth, h: 6, fill: "#38BDF8" }),
+      this._pdfText({ x: margin, y: 792, text: "Weather Data Export", size: 24, font: "F2", color: "#FFFFFF" }),
+      this._pdfText({ x: margin, y: 770, text: "Rolnopol weather snapshot", size: 10, font: "F1", color: "#D6E4FF" }),
+      this._pdfRect({ x: margin, y: 728, w: 168, h: 24, fill: "#14B8A6" }),
+      this._pdfText({ x: margin + 11, y: 736, text: "Warning:", size: 9, font: "F2", color: "#FFFFFF" }),
+      this._pdfText({
+        x: margin + 184,
+        y: 736,
+        text: this._truncatePdfText(payload?.constraints?.message || "", 64),
+        size: 8,
+        font: "F1",
+        color: "#E2E8F0",
+      }),
+    ];
+
+    const cards = [
+      { label: "Seed date", value: payload.seed, note: "snapshot anchor", accent: "#2563EB" },
+      { label: "Region", value: payload.region, note: "normalized code", accent: "#0F766E" },
+      { label: "Forecast days", value: String(payload.forecastDays + 1), note: "days in export", accent: "#7C3AED" },
+      { label: "Rows", value: String(payload.rows.length), note: "daily + forecast", accent: "#F59E0B" },
+    ];
+
+    cards.forEach((card, index) => {
+      const x = margin + index * (cardWidth + cardGap);
+      commands.push(this._pdfRect({ x, y: cardY, w: cardWidth, h: cardHeight, fill: "#FFFFFF", stroke: "#D8E1EE" }));
+      commands.push(this._pdfRect({ x, y: cardY + cardHeight - 5, w: cardWidth, h: 5, fill: card.accent }));
+      commands.push(this._pdfText({ x: x + 10, y: cardY + 50, text: card.label.toUpperCase(), size: 7, font: "F2", color: "#64748B" }));
+      commands.push(
+        this._pdfText({ x: x + 10, y: cardY + 30, text: this._truncatePdfText(card.value, 22), size: 14, font: "F2", color: "#0F172A" }),
+      );
+      commands.push(this._pdfText({ x: x + 10, y: cardY + 14, text: card.note, size: 7, font: "F1", color: "#64748B" }));
+    });
+
+    commands.push(this._pdfText({ x: margin, y: 558, text: "Forecast details", size: 14, font: "F2", color: "#0F172A" }));
+    commands.push(
+      this._pdfText({
+        x: margin,
+        y: 542,
+        text: "Weather forecast for the selected region and period.",
+        size: 9,
+        font: "F1",
+        color: "#64748B",
+      }),
+    );
+    commands.push(this._pdfRect({ x: margin, y: 534, w: contentWidth, h: 1, fill: "#D8E1EE" }));
+
+    commands.push(this._pdfRect({ x: margin, y: tableTop, w: contentWidth, h: tableHeaderHeight, fill: "#1E293B" }));
+
+    let columnX = margin;
+    tableColumns.forEach((column) => {
+      commands.push(
+        this._pdfText({ x: columnX + 8, y: tableTop + 8, text: column.label.toUpperCase(), size: 7, font: "F2", color: "#FFFFFF" }),
+      );
+      columnX += column.width;
+    });
+
+    const rows = Array.isArray(payload.rows) ? payload.rows.slice(0, 8) : [];
+    const tableStartY = tableTop - tableHeaderHeight;
+
+    rows.forEach((day, index) => {
+      const rowTop = tableStartY - index * rowHeight;
+      const rowBottom = rowTop - rowHeight;
+      const rowFill = index % 2 === 0 ? "#FFFFFF" : "#F8FAFF";
+      const accent = this._conditionAccentColor(day?.condition);
+      commands.push(this._pdfRect({ x: margin, y: rowBottom, w: contentWidth, h: rowHeight, fill: rowFill, stroke: "#E5ECF6" }));
+      commands.push(this._pdfRect({ x: margin, y: rowBottom, w: 4, h: rowHeight, fill: accent }));
+
+      const dateText = this._truncatePdfText(day?.date || "-", 12);
+      const conditionText = this._truncatePdfText(day?.condition || "-", 18);
+      const temperatureText = `${Number(day?.temperatureMinC || 0).toFixed(1)} / ${Number(day?.temperatureMaxC || 0).toFixed(1)} C`;
+      const loadText = `${Number(day?.precipitationMm || 0).toFixed(1)} mm / ${Number(day?.windKmh || 0)} km/h`;
+      const humidityText = `${Number(day?.humidityPct || 0)}%`;
+      const advisoryText = this._truncatePdfText(day?.advisory || "", 42);
+
+      let cellX = margin;
+      commands.push(this._pdfText({ x: cellX + 10, y: rowBottom + 18, text: dateText, size: 8, font: "F2", color: "#0F172A" }));
+      cellX += tableColumns[0].width;
+
+      commands.push(this._pdfRect({ x: cellX + 8, y: rowBottom + 8, w: 68, h: 14, fill: accent }));
+      commands.push(this._pdfText({ x: cellX + 12, y: rowBottom + 12, text: conditionText, size: 7, font: "F2", color: "#FFFFFF" }));
+      cellX += tableColumns[1].width;
+
+      commands.push(this._pdfText({ x: cellX + 8, y: rowBottom + 18, text: temperatureText, size: 8, font: "F1", color: "#334155" }));
+      cellX += tableColumns[2].width;
+
+      commands.push(this._pdfText({ x: cellX + 8, y: rowBottom + 18, text: loadText, size: 8, font: "F1", color: "#334155" }));
+      cellX += tableColumns[3].width;
+
+      commands.push(this._pdfText({ x: cellX + 8, y: rowBottom + 18, text: humidityText, size: 8, font: "F2", color: "#0F172A" }));
+      cellX += tableColumns[4].width;
+
+      commands.push(this._pdfText({ x: cellX + 8, y: rowBottom + 18, text: advisoryText || "-", size: 7, font: "F1", color: "#475569" }));
+    });
+
+    const footerY = 34;
+    commands.push(this._pdfRect({ x: margin, y: footerY + 10, w: contentWidth, h: 1, fill: "#D8E1EE" }));
+    commands.push(
+      this._pdfText({
+        x: margin,
+        y: footerY - 2,
+        text: "Prepared for offline sharing and quick agricultural planning.",
+        size: 8,
+        font: "F1",
+        color: "#64748B",
+      }),
+    );
+
+    return this._buildPdfBuffer(commands);
   }
 
   _collectWeatherExportData(req) {
@@ -313,26 +539,7 @@ class WeatherController {
     try {
       const payload = this._collectWeatherExportData(req);
 
-      const lines = [
-        "Rolnopol - Weather Data Export",
-        `Seed date: ${payload.seed}`,
-        `Region: ${payload.region}`,
-        `Forecast days included: ${payload.forecastDays}`,
-        "",
-      ];
-
-      for (const day of payload.rows) {
-        lines.push(
-          `${day?.date || "-"} | ${day?.condition || "-"} | Tmin ${Number(day?.temperatureMinC || 0).toFixed(1)}C | Tmax ${Number(day?.temperatureMaxC || 0).toFixed(1)}C | Rain ${Number(day?.precipitationMm || 0).toFixed(1)}mm | Hum ${Number(day?.humidityPct || 0)}% | Wind ${Number(day?.windKmh || 0)}km/h`,
-        );
-      }
-
-      if (payload?.constraints?.message) {
-        lines.push("");
-        lines.push(`Note: ${payload.constraints.message}`);
-      }
-
-      const pdfBuffer = this._buildSimplePdf(lines.slice(0, 45));
+      const pdfBuffer = this._buildWeatherExportPdf(payload);
       const regionSafe = String(payload.region || "PL-14").replace(/[^A-Za-z0-9-]/g, "-");
       const filename = `weather-data-${regionSafe}-${payload.seed}.pdf`;
 

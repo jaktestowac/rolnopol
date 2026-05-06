@@ -136,11 +136,14 @@ describe("Weather API", () => {
     const date = "2026-08-13";
 
     const res = await request(app).get(`/api/v1/weather/export/pdf?date=${date}&region=PL-14&days=3`).buffer(true).expect(200);
+    const pdfText = res.body.toString("latin1");
 
     expect(res.headers["content-type"]).toContain("application/pdf");
     expect(res.headers["content-disposition"]).toContain("attachment;");
     expect(res.body).toBeTruthy();
     expect(res.body.length).toBeGreaterThan(100);
+    expect(pdfText).toContain("Weather Data Export");
+    expect(pdfText).toContain("Forecast details");
   });
 
   it("GET /api/v1/weather/export/csv returns 404 when weather export feature flag is disabled", async () => {
