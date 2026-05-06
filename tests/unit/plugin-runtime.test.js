@@ -139,4 +139,93 @@ describe("plugin-runtime local manifests", () => {
       shared: "global",
     });
   });
+
+  it("subscribes plugins to matching notification-center events", async () => {
+    const pluginsDir = path.join(tempRoot, "plugins");
+    const pluginName = "event-listener-plugin";
+    const pluginDir = path.join(pluginsDir, pluginName);
+    const activeHandlers = [];
+
+    await writePlugin(
+      pluginDir,
+      `module.exports = {
+  name: "${pluginName}",
+  enabled: true,
+  config: {
+    eventTypes: ["field.created"]
+  },
+  onEvent({ event, eventType, pluginContext }) {
+    pluginContext.seen = pluginContext.seen || [];
+    pluginContext.seen.push(eventType);
+    global.__pluginRuntimeEventCapture = {
+      eventType,
+      payload: event.payload,
+      seen: pluginContext.seen.slice(),
+    };
+  }
+};
+`,
+    );
+
+    await writeJson(path.join(pluginsDir, "plugins.manifest.json"), {
+      plugins: {
+        [pluginName]: {
+          enabled: true,
+          config: {
+            eventTypes: ["field.created"],
+          },
+        },
+      },
+    });
+
+    const notificationCenter = {
+      subscribeEvents: vi.fn((handler) => {
+        activeHandlers.push(handler);
+        return () => {
+          const index = activeHandlers.indexOf(handler);
+          if (index >= 0) {
+            activeHandlers.splice(index, 1);
+          }
+        };
+      }),
+    };
+
+    const pluginRuntime = require(runtimeModulePath);
+    pluginRuntime.initialize({
+      pluginsDir,
+      services: {
+        notificationCenter,
+      },
+    });
+
+    expect(notificationCenter.subscribeEvents).toHaveBeenCalledTimes(1);
+    expect(activeHandlers).toHaveLength(1);
+
+    activeHandlers[0]({
+      type: "user.account.created",
+      timestamp: new Date().toISOString(),
+      correlationId: "corr-user",
+      source: "notification-center-api",
+      payload: { userId: 7 },
+    });
+
+    expect(global.__pluginRuntimeEventCapture).toBeUndefined();
+
+    activeHandlers[0]({
+      type: "field.created",
+      timestamp: new Date().toISOString(),
+      correlationId: "corr-field",
+      source: "notification-center-api",
+      payload: { fieldId: 55 },
+    });
+
+    expect(global.__pluginRuntimeEventCapture).toEqual({
+      eventType: "field.created",
+      payload: { fieldId: 55 },
+      seen: ["field.created"],
+    });
+
+    await pluginRuntime.shutdown();
+    expect(activeHandlers).toHaveLength(0);
+  });
 });

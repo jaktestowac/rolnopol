@@ -23,6 +23,7 @@ const state = {
   pluginsDir: null,
   manifestPath: null,
   services: {},
+  eventSubscriptions: [],
 };
 
 function _safeRequire(modulePath) {
@@ -116,6 +117,92 @@ function _isAutoDiscoverable(pluginDef, localPluginConfig) {
   return false;
 }
 
+function _normalizeEventTypeList(value) {
+  const rawValues = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+
+  const normalized = rawValues.map((item) => (typeof item === "string" ? item.trim() : "")).filter((item) => item.length > 0);
+
+  if (normalized.includes("*")) {
+    return [];
+  }
+
+  return normalized;
+}
+
+function _getPluginEventTypes(plugin) {
+  const config = _isObject(plugin?.config) ? plugin.config : {};
+  const eventTypeValue =
+    config.eventTypes ?? config.eventType ?? config.events ?? plugin?.eventTypes ?? plugin?.eventType ?? plugin?.events;
+
+  return _normalizeEventTypeList(eventTypeValue);
+}
+
+function _clearEventSubscriptions() {
+  for (const subscription of state.eventSubscriptions) {
+    if (typeof subscription?.unsubscribe !== "function") {
+      continue;
+    }
+
+    try {
+      subscription.unsubscribe();
+    } catch (error) {
+      logError("Plugin runtime: failed to unsubscribe event listener", {
+        plugin: subscription?.pluginName,
+        error: error.message,
+      });
+    }
+  }
+
+  state.eventSubscriptions = [];
+}
+
+function _registerPluginEventListener(plugin, services) {
+  if (!plugin || typeof plugin.onEvent !== "function") {
+    return;
+  }
+
+  const notificationCenter = services?.notificationCenter;
+  if (!notificationCenter || typeof notificationCenter.subscribeEvents !== "function") {
+    return;
+  }
+
+  const eventTypes = _getPluginEventTypes(plugin);
+  const eventTypeFilter = eventTypes.length > 0 ? new Set(eventTypes) : null;
+
+  const unsubscribe = notificationCenter.subscribeEvents((event) => {
+    if (!event || typeof event.type !== "string") {
+      return;
+    }
+
+    if (eventTypeFilter && !eventTypeFilter.has(event.type)) {
+      return;
+    }
+
+    try {
+      plugin.onEvent({
+        event,
+        eventType: event.type,
+        pluginContext: plugin.eventContext,
+        config: plugin.config,
+        services,
+        logInfo,
+        logError,
+        logDebug,
+      });
+    } catch (error) {
+      logError("Plugin runtime: onEvent failed", {
+        plugin: plugin.name,
+        eventType: event.type,
+        error: error.message,
+      });
+    }
+  });
+
+  if (typeof unsubscribe === "function") {
+    state.eventSubscriptions.push({ pluginName: plugin.name, unsubscribe });
+  }
+}
+
 function _discoverPluginEntryFiles(pluginsDir) {
   if (!pluginsDir || !existsSync(pluginsDir)) {
     return [];
@@ -142,6 +229,8 @@ function initialize(options = {}) {
   const pluginsDir = options.pluginsDir || path.resolve(__dirname, "../../plugins");
   const manifestPath = options.manifestPath || path.join(pluginsDir, DEFAULT_MANIFEST_FILE);
   const services = _isObject(options.services) ? options.services : {};
+
+  _clearEventSubscriptions();
 
   const manifest = _loadManifest(manifestPath);
   const pluginFiles = _discoverPluginEntryFiles(pluginsDir);
@@ -183,6 +272,7 @@ function initialize(options = {}) {
         ...pluginDef,
         enabled,
         config,
+        eventContext: {},
       });
     } catch (error) {
       logError("Plugin runtime: failed loading plugin", { pluginFile, error: error.message });
@@ -214,21 +304,25 @@ function initialize(options = {}) {
   });
 
   for (const plugin of loaded) {
-    if (!plugin.enabled || typeof plugin.init !== "function") {
+    if (!plugin.enabled) {
       continue;
     }
 
     try {
-      plugin.init({
-        logInfo,
-        logError,
-        logDebug,
-        config: plugin.config,
-        services,
-      });
+      if (typeof plugin.init === "function") {
+        plugin.init({
+          logInfo,
+          logError,
+          logDebug,
+          config: plugin.config,
+          services,
+        });
+      }
     } catch (error) {
       logError("Plugin runtime: plugin init failed", { plugin: plugin.name, error: error.message });
     }
+
+    _registerPluginEventListener(plugin, services);
   }
 }
 
@@ -328,6 +422,8 @@ function attach(app) {
 }
 
 async function shutdown() {
+  _clearEventSubscriptions();
+
   const activePlugins = state.plugins.filter((plugin) => plugin.enabled);
 
   for (const plugin of activePlugins) {

@@ -63,4 +63,37 @@ describe("notification-center index facade", () => {
     expect(notificationCenter.isEnabled()).toBe(true);
     expect(featureFlagsService.getFeatureFlags.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
+
+  it("subscribes to published notification events across initialization", async () => {
+    const featureFlagsService = {
+      getFeatureFlags: vi.fn().mockResolvedValue({ flags: { notificationCenterEnabled: true } }),
+    };
+
+    const notificationCenter = require("../../modules/notification-center");
+    const received = [];
+
+    const unsubscribe = notificationCenter.subscribeEvents((event) => {
+      received.push(event.type);
+    });
+
+    await notificationCenter.initialize({ featureFlagsService });
+
+    const result = await notificationCenter.publish({
+      type: "field.created",
+      source: "resource.service",
+      correlationId: "event-subscribe-1",
+      payload: {
+        userId: 1,
+        fieldId: 123,
+        name: "Subscribed field",
+      },
+    });
+
+    expect(result.accepted).toBe(true);
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(received).toContain("field.created");
+
+    unsubscribe();
+    await notificationCenter.stop();
+  });
 });

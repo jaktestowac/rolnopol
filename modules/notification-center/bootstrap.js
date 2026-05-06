@@ -131,6 +131,7 @@ async function initializeNotificationCenter({ featureFlagsService } = {}) {
         };
       },
       subscribeRealtime: () => () => {},
+      subscribeEvents: () => () => {},
       stop: async () => {},
     };
   }
@@ -237,6 +238,7 @@ async function initializeNotificationCenter({ featureFlagsService } = {}) {
         };
       },
       subscribeRealtime: (handler) => realtimeBridge.subscribe(handler),
+      subscribeEvents: (handler) => eventBus.subscribe(handler),
       stop: async () => {
         await dispatcher.stop();
       },
@@ -289,6 +291,7 @@ async function initializeNotificationCenter({ featureFlagsService } = {}) {
         };
       },
       subscribeRealtime: () => () => {},
+      subscribeEvents: () => () => {},
       stop: async () => {},
     };
   }

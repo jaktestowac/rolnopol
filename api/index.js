@@ -192,6 +192,7 @@ pluginRuntime.initialize({
   pluginsDir: path.join(__dirname, "../plugins"),
   services: {
     featureFlagsService,
+    notificationCenter,
   },
 });
 

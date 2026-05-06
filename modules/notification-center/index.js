@@ -5,6 +5,8 @@ const NOOP_PUBLISHER = {
   publish: () => null,
 };
 
+const NOOP_SUBSCRIBE = () => () => {};
+
 function _normalizeEvent(event = {}, defaults = {}) {
   const safeEvent = event && typeof event === "object" ? event : {};
   const fallbackSource =
@@ -20,6 +22,62 @@ function _normalizeEvent(event = {}, defaults = {}) {
 
 let featureFlagsServiceRef = null;
 let refreshPromise = null;
+const eventSubscriptions = [];
+
+function _unbindEventSubscription(record) {
+  if (!record) {
+    return;
+  }
+
+  if (typeof record.unsubscribe === "function") {
+    try {
+      record.unsubscribe();
+    } catch {
+      // best-effort cleanup
+    }
+  }
+
+  record.unsubscribe = null;
+  record.boundState = null;
+}
+
+function _bindEventSubscription(record) {
+  if (!record || typeof record.handler !== "function") {
+    return;
+  }
+
+  const subscribe = moduleState?.subscribeEvents;
+  if (typeof subscribe !== "function") {
+    return;
+  }
+
+  if (record.boundState === moduleState && typeof record.unsubscribe === "function") {
+    return;
+  }
+
+  _unbindEventSubscription(record);
+
+  try {
+    const unsubscribe = subscribe(record.handler);
+    record.unsubscribe = typeof unsubscribe === "function" ? unsubscribe : NOOP_SUBSCRIBE();
+    record.boundState = moduleState;
+  } catch {
+    record.unsubscribe = null;
+    record.boundState = null;
+  }
+}
+
+function _syncEventSubscriptions() {
+  for (const record of eventSubscriptions) {
+    _bindEventSubscription(record);
+  }
+}
+
+function _clearEventSubscriptions() {
+  for (const record of eventSubscriptions) {
+    _unbindEventSubscription(record);
+  }
+}
 
 let moduleState = {
   enabled: false,
@@ -38,12 +96,14 @@ let moduleState = {
   }),
   getHealth: async () => ({ status: "disabled", module: { enabled: false, degraded: false, version: "1.0.0" } }),
   subscribeRealtime: () => () => {},
+  subscribeEvents: NOOP_SUBSCRIBE,
   stop: async () => {},
 };
 
 async function initialize(options = {}) {
   featureFlagsServiceRef = options.featureFlagsService || featureFlagsServiceRef;
   moduleState = await initializeNotificationCenter(options);
+  _syncEventSubscriptions();
   return moduleState;
 }
 
@@ -75,6 +135,7 @@ async function _refreshStateFromFeatureFlagIfNeeded() {
 
     await moduleState.stop();
     moduleState = await initializeNotificationCenter({ featureFlagsService: featureFlagsServiceRef });
+    _syncEventSubscriptions();
   })();
 
   try {
@@ -152,8 +213,33 @@ function subscribeRealtime(handler) {
   return subscribe(handler);
 }
 
+function subscribeEvents(handler) {
+  if (typeof handler !== "function") {
+    return () => {};
+  }
+
+  const record = {
+    handler,
+    unsubscribe: null,
+    boundState: null,
+  };
+
+  eventSubscriptions.push(record);
+  _bindEventSubscription(record);
+
+  return () => {
+    const index = eventSubscriptions.indexOf(record);
+    if (index >= 0) {
+      eventSubscriptions.splice(index, 1);
+    }
+
+    _unbindEventSubscription(record);
+  };
+}
+
 async function stop() {
   refreshPromise = null;
+  _clearEventSubscriptions();
   await moduleState.stop();
 }
 
@@ -164,6 +250,7 @@ function isEnabled() {
 function _resetForTests() {
   featureFlagsServiceRef = null;
   refreshPromise = null;
+  _clearEventSubscriptions();
   moduleState = {
     enabled: false,
     degraded: false,
@@ -181,6 +268,7 @@ function _resetForTests() {
     }),
     getHealth: async () => ({ status: "disabled", module: { enabled: false, degraded: false, version: "1.0.0" } }),
     subscribeRealtime: () => () => {},
+    subscribeEvents: NOOP_SUBSCRIBE,
     stop: async () => {},
   };
 }
@@ -194,6 +282,7 @@ module.exports = {
   publish,
   publishEvent,
   subscribeRealtime,
+  subscribeEvents,
   stop,
   isEnabled,
   _resetForTests,
