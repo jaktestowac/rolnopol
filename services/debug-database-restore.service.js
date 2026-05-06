@@ -24,6 +24,7 @@ const DATABASE_ACCESSORS = {
   blogs: () => dbManager.getBlogsDatabase(),
   posts: () => dbManager.getPostsDatabase(),
   personalApiKeys: () => dbManager.getPersonalApiKeysDatabase(),
+  userAvatars: () => dbManager.getUserAvatarsDatabase(),
   pets: () => dbManager.getPetsDatabase(),
 };
 
@@ -44,6 +45,7 @@ function getResourceCount(value) {
   if (Array.isArray(value.offers)) return value.offers.length;
   if (Array.isArray(value.holdings)) return value.holdings.length;
   if (Array.isArray(value.messages)) return value.messages.length;
+  if (Array.isArray(value.avatars)) return value.avatars.length;
   if (Array.isArray(value.webhooks)) return value.webhooks.length;
   if (Array.isArray(value.deliveries)) return value.deliveries.length;
   if (value.flags && typeof value.flags === "object") return Object.keys(value.flags).length;

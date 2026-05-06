@@ -39,6 +39,10 @@ Each plugin should export an object with at least:
 Plugins can optionally implement:
 
 - `onRequest({ req, res, pluginContext, config, logInfo, logError, logDebug })` to hook into HTTP request processing.
+- `onResponse({ req, res, responseBody, responseType, pluginContext, config, logInfo, logError, logDebug })` to inspect or modify outgoing responses.
+- `onEvent({ event, eventType, pluginContext, config, services, logInfo, logError, logDebug })` to listen for notification-center events.
+
+To scope event listeners, set `config.eventTypes` to a string or array of notification event types. If omitted, the plugin will receive all notification-center events.
 
 ## Examples
 

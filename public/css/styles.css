@@ -2867,6 +2867,13 @@ body {
 
 .profile-avatar-modern {
   flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .avatar-circle-modern {
@@ -2880,6 +2887,108 @@ body {
   color: white;
   font-size: 1.25rem;
   box-shadow: 0 0 12px 2px rgba(34, 197, 94, 0.15);
+  overflow: hidden;
+  position: relative;
+}
+
+.profile-avatar-modern--interactive {
+  cursor: pointer;
+}
+
+.profile-avatar-modern--interactive .avatar-circle-modern {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+.profile-avatar-modern--interactive:hover .avatar-circle-modern,
+.profile-avatar-modern--interactive:focus-visible .avatar-circle-modern {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 0 18px 3px rgba(34, 197, 94, 0.22);
+  filter: saturate(1.08);
+}
+
+.profile-avatar-modern:focus-visible {
+  outline: none;
+}
+
+.profile-avatar-modern:disabled {
+  cursor: default;
+}
+
+.profile-avatar-modern__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-avatar-modern__hint {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.avatar-upload-modal {
+  width: min(92vw, 32rem);
+}
+
+.avatar-upload-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.avatar-upload-preview__frame {
+  width: 5.5rem;
+  height: 5.5rem;
+  min-width: 5.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--futuristic-gradient);
+  color: #fff;
+  box-shadow: 0 0 16px 2px rgba(34, 197, 94, 0.18);
+}
+
+.avatar-upload-preview__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatar-upload-preview__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.avatar-upload-preview__meta h4 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.avatar-upload-preview__meta p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .avatar-upload-preview {
+    flex-direction: column;
+    text-align: center;
+  }
 }
 
 .profile-header-info {

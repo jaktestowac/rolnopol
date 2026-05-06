@@ -3,12 +3,35 @@ const { createRateLimiter } = require("../../middleware/rate-limit.middleware");
 const { authenticateUser } = require("../../middleware/auth.middleware");
 const { requireFeatureFlag } = require("../../middleware/feature-flag.middleware");
 const { validateIdParam } = require("../../middleware/id-validation.middleware");
+const { formatResponseBody } = require("../../helpers/response-helper");
+const { AVATAR_MAX_SIZE_BYTES, ALLOWED_AVATAR_MIME_TYPES } = require("../../helpers/avatar-image");
 const userController = require("../../controllers/user.controller");
 
 const usersRoute = express.Router();
 
 // Apply rate limiting
 const apiLimiter = createRateLimiter("api");
+const avatarUploadRawParser = (req, res, next) => {
+  express.raw({ type: ALLOWED_AVATAR_MIME_TYPES, limit: AVATAR_MAX_SIZE_BYTES })(req, res, (error) => {
+    if (!error) {
+      return next();
+    }
+
+    if (error.type === "entity.too.large") {
+      return res.status(413).json(
+        formatResponseBody({
+          error: "Validation failed: Avatar image must be 100 KB or smaller",
+        }),
+      );
+    }
+
+    return res.status(400).json(
+      formatResponseBody({
+        error: "Validation failed: Unable to process avatar image",
+      }),
+    );
+  });
+};
 
 /**
  * Get user profile
@@ -21,6 +44,19 @@ usersRoute.get("/users/profile", apiLimiter, authenticateUser, userController.ge
  * PUT /api/users/profile
  */
 usersRoute.put("/users/profile", apiLimiter, authenticateUser, userController.updateProfile.bind(userController));
+
+/**
+ * Update user avatar
+ * PUT /api/users/profile/avatar
+ */
+usersRoute.put(
+  "/users/profile/avatar",
+  apiLimiter,
+  authenticateUser,
+  requireFeatureFlag("profileAvatarUploadEnabled", { resourceName: "Profile avatar upload" }),
+  avatarUploadRawParser,
+  userController.updateProfileAvatar.bind(userController),
+);
 
 /**
  * Delete user profile

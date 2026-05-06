@@ -8,6 +8,7 @@ function loadProfilePageModule() {
 }
 
 function createElement() {
+  const classes = new Set();
   return {
     style: { display: "" },
     textContent: "",
@@ -15,7 +16,33 @@ function createElement() {
     value: "",
     disabled: false,
     className: "",
+    src: "",
+    files: [],
     focus: vi.fn(),
+    addEventListener: vi.fn(),
+    setAttribute: vi.fn(),
+    removeAttribute: vi.fn(),
+    classList: {
+      add: vi.fn((...tokens) => tokens.forEach((token) => classes.add(token))),
+      remove: vi.fn((...tokens) => tokens.forEach((token) => classes.delete(token))),
+      toggle: vi.fn((token, force) => {
+        if (force === true) {
+          classes.add(token);
+          return true;
+        }
+        if (force === false) {
+          classes.delete(token);
+          return false;
+        }
+        if (classes.has(token)) {
+          classes.delete(token);
+          return false;
+        }
+        classes.add(token);
+        return true;
+      }),
+      contains: vi.fn((token) => classes.has(token)),
+    },
   };
 }
 
@@ -33,6 +60,10 @@ describe("ProfilePage personal API key feature gating", () => {
       ["personalApiKeyMode", createElement()],
       ["personalApiKeyExpiration", createElement()],
       ["createPersonalApiKeyBtn", createElement()],
+      ["confirmAvatarUpload", createElement()],
+      ["avatarUploadPreviewImage", createElement()],
+      ["avatarUploadPreviewFallback", createElement()],
+      ["avatarUploadPreviewTitle", createElement()],
     ]);
 
     global.window = {
@@ -123,5 +154,35 @@ describe("ProfilePage personal API key feature gating", () => {
     );
     expect(expirationSelect.value).toBe("never");
     expect(modeSelect.value).toBe("write");
+  });
+
+  it("rejects avatar files larger than 100 KB before upload", async () => {
+    const page = new global.__ProfilePage();
+
+    const result = await page._validateAvatarFile({
+      name: "too-big.png",
+      type: "image/png",
+      size: 100 * 1024 + 1,
+    });
+
+    expect(result.isValid).toBe(false);
+    expect(result.error).toContain("100 KB");
+  });
+
+  it("accepts avatar files that pass size and dimension validation", async () => {
+    const page = new global.__ProfilePage();
+    page._measureAvatarFile = vi.fn(async () => ({ width: 256, height: 128 }));
+
+    const result = await page._validateAvatarFile({
+      name: "avatar.png",
+      type: "image/png",
+      size: 64 * 1024,
+    });
+
+    expect(result).toMatchObject({
+      isValid: true,
+      width: 256,
+      height: 128,
+    });
   });
 });

@@ -44,6 +44,10 @@ async function initializeDatabases() {
     await webhookDeliveriesDb.getAll();
     logDebug("Webhook deliveries database initialized");
 
+    const userAvatarsDb = dbManager.getUserAvatarsDatabase();
+    await userAvatarsDb.getAll();
+    logDebug("User avatars database initialized");
+
     logDebug("Databases initialized successfully");
   } catch (error) {
     logError("Failed to initialize databases:", error);

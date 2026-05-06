@@ -16,10 +16,13 @@ const ACCESSORS = {
   chaosEngine: () => dbManager.getChaosEngineDatabase(),
   commodities: () => dbManager.getCommoditiesDatabase(),
   messages: () => dbManager.getMessagesDatabase(),
+  personalApiKeys: () => dbManager.getPersonalApiKeysDatabase(),
+  userAvatars: () => dbManager.getUserAvatarsDatabase(),
   webhooks: () => dbManager.getWebhooksDatabase(),
   webhookDeliveries: () => dbManager.getWebhookDeliveriesDatabase(),
   blogs: () => dbManager.getBlogsDatabase(),
   posts: () => dbManager.getPostsDatabase(),
+  pets: () => dbManager.getPetsDatabase(),
 };
 
 function clone(value) {
@@ -57,13 +60,18 @@ describe("Debug database restore API", () => {
       "blogs",
       "chaosEngine",
       "commodities",
+      "farmlogFavorites",
+      "farmlogPostLikes",
       "featureFlags",
       "fields",
       "financial",
       "marketplace",
       "messages",
+      "personalApiKeys",
+      "pets",
       "posts",
       "staff",
+      "userAvatars",
       "users",
       "webhookDeliveries",
       "webhooks",
@@ -88,6 +96,16 @@ describe("Debug database restore API", () => {
     });
     await ACCESSORS.messages().replaceAll({
       messages: [{ id: 1, fromUserId: 1, toUserId: 2, content: "temp", createdAt: new Date().toISOString() }],
+    });
+    await ACCESSORS.personalApiKeys().replaceAll({
+      version: 1,
+      keys: [{ id: 1, userId: 1, keyPreview: "temp", scopes: ["user-account"], createdAt: new Date().toISOString() }],
+      updatedAt: new Date().toISOString(),
+    });
+    await ACCESSORS.userAvatars().replaceAll({
+      version: 1,
+      avatars: [{ userId: 1, avatarDataUrl: "data:image/png;base64,temp", avatarUpdatedAt: new Date().toISOString() }],
+      updatedAt: new Date().toISOString(),
     });
     await ACCESSORS.webhooks().replaceAll({
       version: 1,
@@ -160,6 +178,7 @@ describe("Debug database restore API", () => {
         deletedBy: null,
       },
     ]);
+    await ACCESSORS.pets().replaceAll({ pets: [{ id: 1, userId: 1, name: "temp-pet" }] });
 
     await request(app).post("/api/debug/database/restore-base").expect(200);
 

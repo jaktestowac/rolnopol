@@ -1,9 +1,6 @@
 const dbManager = require("./database-manager");
 const { logDebug, logError } = require("../helpers/logger-api");
-const {
-  createEntity,
-  updateEntityTimestamp,
-} = require("../helpers/entity.helpers");
+const { createEntity, updateEntityTimestamp } = require("../helpers/entity.helpers");
 const ResourceService = require("../services/resource.service");
 
 /**

@@ -262,6 +262,7 @@ class ResourceService {
     const staffDb = dbManager.getStaffDatabase();
     const animalsDb = dbManager.getAnimalsDatabase();
     const assignmentsDb = dbManager.getAssignmentsDatabase();
+    const userAvatarsDb = dbManager.getUserAvatarsDatabase();
 
     if (type === "user") {
       // Convert userId to number for comparison
@@ -274,6 +275,18 @@ class ResourceService {
       await staffDb.update((data) => (Array.isArray(data) ? data.filter((s) => s.userId !== numericUserId) : data));
       await animalsDb.update((data) => (Array.isArray(data) ? data.filter((a) => a.userId !== numericUserId) : data));
       await assignmentsDb.update((data) => (Array.isArray(data) ? data.filter((a) => a.userId !== numericUserId) : data));
+      await userAvatarsDb.update((data) => {
+        const normalized = data && typeof data === "object" && !Array.isArray(data) ? data : { version: 1, avatars: [], updatedAt: null };
+        const avatars = Array.isArray(normalized.avatars)
+          ? normalized.avatars.filter((avatar) => Number(avatar.userId) !== numericUserId)
+          : [];
+
+        return {
+          ...normalized,
+          avatars,
+          updatedAt: new Date().toISOString(),
+        };
+      });
     } else if (type === "field") {
       // Convert field ID to number for comparison
       const numericId = Number(id);

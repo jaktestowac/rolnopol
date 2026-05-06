@@ -272,6 +272,38 @@ class UserController {
   }
 
   /**
+   * Update user avatar
+   */
+  async updateProfileAvatar(req, res) {
+    try {
+      const avatarBuffer = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+      const contentType = req.headers["content-type"];
+
+      const updatedUser = await userService.updateUserAvatar(req.user.userId, avatarBuffer, contentType);
+
+      res.status(200).json(
+        formatResponseBody({
+          message: "Avatar updated successfully",
+          data: updatedUser,
+        }),
+      );
+    } catch (error) {
+      logError("Error updating user avatar:", error);
+
+      let statusCode = 500;
+      if (error.message.includes("Validation failed")) statusCode = 400;
+      else if (error.message.includes("not found")) statusCode = 404;
+      else if (error.message.includes("deactivated")) statusCode = 401;
+
+      res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message,
+        }),
+      );
+    }
+  }
+
+  /**
    * Update user by ID
    */
   async updateUserById(req, res) {

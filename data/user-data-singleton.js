@@ -33,9 +33,7 @@ class UserDataSingleton {
    * Check if cache is valid
    */
   isCacheValid() {
-    return (
-      this.cache !== null && this.cacheExpiry && Date.now() < this.cacheExpiry
-    );
+    return this.cache !== null && this.cacheExpiry && Date.now() < this.cacheExpiry;
   }
 
   /**

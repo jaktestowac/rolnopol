@@ -61,11 +61,16 @@
         <!-- Compact Profile Header -->
         <div class="profile-header-modern glass fade-in" data-testid="profile-header">
           <div class="profile-header-left">
-            <div class="profile-avatar-modern">
-              <div class="avatar-circle-modern futuristic">
-                <i class="fas fa-user-astronaut"></i>
+            <button id="profileAvatarTrigger" type="button" class="profile-avatar-modern" data-testid="profile-avatar-modern" aria-label="Open avatar manager" title="Avatar upload unavailable" disabled>
+              <div id="profileAvatarCircle" class="avatar-circle-modern futuristic">
+                <img id="profileAvatarImage" class="profile-avatar-modern__image" alt="Your avatar" style="display: none" />
+                <i id="profileAvatarFallback" class="fas fa-user-astronaut"></i>
               </div>
-            </div>
+              <span id="profileAvatarHint" class="profile-avatar-modern__hint" style="display: none">
+                <i class="fas fa-camera"></i>
+                Update avatar
+              </span>
+            </button>
             <div class="profile-header-info">
               <h2 id="profileName" class="profile-name-modern">Loading...</h2>
               <p id="profileEmail" class="profile-email-modern">Loading...</p>
@@ -342,6 +347,56 @@
     <!-- Dynamic Footer Component -->
     <div id="footer-component"></div>
   </div>
+  <!-- Avatar Upload Modal -->
+  <div id="avatarUploadModal" class="modal modal-centered" style="display: none">
+    <div class="modal-content glass compact avatar-upload-modal">
+      <div class="modal-header">
+        <h3>
+          <i class="fas fa-image"></i> Update Avatar
+        </h3>
+        <button class="modal-close" id="closeAvatarUploadModal" aria-label="Close avatar dialog" data-testid="close-avatar-upload-modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="avatarUploadForm" class="modal-form" novalidate>
+        <div class="modal-body">
+          <div class="avatar-upload-preview glass">
+            <div class="avatar-upload-preview__frame">
+              <img id="avatarUploadPreviewImage" class="avatar-upload-preview__image" alt="Avatar preview" style="display: none" />
+              <i id="avatarUploadPreviewFallback" class="fas fa-user-astronaut"></i>
+            </div>
+            <div class="avatar-upload-preview__meta">
+              <h4 id="avatarUploadPreviewTitle">Current avatar</h4>
+              <p>Choose a PNG or JPG up to 100 KB and no larger than 256×256 pixels.</p>
+            </div>
+          </div>
+
+          <div class="form-group-modern">
+            <label for="avatarFileInput" class="form-label-modern">
+              <i class="fas fa-upload"></i>
+              Upload new avatar
+            </label>
+            <input type="file" id="avatarFileInput" class="form-input-modern" accept="image/png,image/jpeg" />
+            <div class="form-help-modern">
+              <i class="fas fa-info-circle"></i>
+              PNG or JPG only.
+            </div>
+          </div>
+
+          <div id="avatarUploadMessage" class="message-modern" style="display: none"></div>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 1rem">
+          <button class="btn btn-earth btn-compact" id="cancelAvatarUpload" type="button" data-testid="cancel-avatar-upload-btn">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+          <button class="btn btn-futuristic btn-compact" id="confirmAvatarUpload" type="submit" disabled data-testid="confirm-avatar-upload-btn">
+            <i class="fas fa-save"></i> Upload Avatar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Delete Account Modal -->
   <div id="deleteAccountModal" class="modal modal-centered" style="display: none">
     <div class="modal-content glass">

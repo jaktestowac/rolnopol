@@ -1,7 +1,9 @@
 const UserDataSingleton = require("../data/user-data-singleton");
 const { validateProfileUpdateData } = require("../helpers/validators");
+const { createAvatarDataUrl, validateAvatarUpload } = require("../helpers/avatar-image");
 const { logDebug, logError } = require("../helpers/logger-api");
 const messengerEventsService = require("./messenger-events.service");
+const userAvatarStorageService = require("./user-avatar-storage.service");
 
 class UserService {
   constructor() {
@@ -30,8 +32,15 @@ class UserService {
       throw new Error("Account is deactivated");
     }
 
+    const avatarRecord = await userAvatarStorageService.getAvatarByUserId(user.id);
+
     // Remove password from response
     const { password, ...userResponse } = user;
+
+    if (avatarRecord) {
+      userResponse.avatarDataUrl = avatarRecord.avatarDataUrl;
+      userResponse.avatarUpdatedAt = avatarRecord.avatarUpdatedAt;
+    }
 
     return userResponse;
   }
@@ -105,6 +114,52 @@ class UserService {
     const { password: _, ...userResponse } = updatedUser;
 
     logDebug("User profile updated successfully", { userId });
+
+    return userResponse;
+  }
+
+  /**
+   * Update user avatar
+   */
+  async updateUserAvatar(userId, avatarBuffer, mimeType) {
+    const validation = validateAvatarUpload(avatarBuffer, mimeType);
+    if (!validation.isValid) {
+      logError("User avatar update failed", {
+        userId,
+        reason: "Validation failed",
+        errors: validation.errors,
+      });
+      throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+    }
+
+    const user = await this.userDataInstance.findUser(userId);
+    if (!user) {
+      logError("User avatar update failed", {
+        userId,
+        reason: "User not found",
+      });
+      throw new Error("User not found");
+    }
+
+    if (!user.isActive) {
+      logError("User avatar update failed", {
+        userId,
+        reason: "Account is deactivated",
+      });
+      throw new Error("Account is deactivated");
+    }
+
+    const avatarRecord = await userAvatarStorageService.upsertAvatar(
+      userId,
+      createAvatarDataUrl(avatarBuffer, validation.mimeType),
+      new Date().toISOString(),
+    );
+
+    const { password, ...userResponse } = user;
+    userResponse.avatarDataUrl = avatarRecord.avatarDataUrl;
+    userResponse.avatarUpdatedAt = avatarRecord.avatarUpdatedAt;
+
+    logDebug("User avatar updated successfully", { userId });
 
     return userResponse;
   }

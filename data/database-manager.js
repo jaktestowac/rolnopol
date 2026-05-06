@@ -144,6 +144,17 @@ class DatabaseManager {
   }
 
   /**
+   * Get user avatars database singleton
+   */
+  getUserAvatarsDatabase() {
+    return this.getDatabase("user-avatars", "user-avatars.json", {
+      version: 1,
+      avatars: [],
+      updatedAt: null,
+    });
+  }
+
+  /**
    * Get personal API keys database singleton
    */
   getPersonalApiKeysDatabase() {

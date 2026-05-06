@@ -1884,6 +1884,11 @@
       "keys": [],
       "updatedAt": null
     },
+    "userAvatars": {
+      "version": 1,
+      "avatars": [],
+      "updatedAt": null
+    },
     "pets": {
       "pets": []
     }

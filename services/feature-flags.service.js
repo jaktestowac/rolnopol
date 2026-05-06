@@ -4,6 +4,7 @@ const prometheusMetrics = require("../helpers/prometheus-metrics");
 const FEATURE_FLAG_DESCRIPTIONS = {
   alertsEnabled: "Enable or disable the alerts system for animals and operations",
   alertsSeverityFilterEnabled: "Enable or disable severity filter controls on the alerts page",
+  profileAvatarUploadEnabled: "Enable or disable custom avatar uploads on the profile page",
   rolnopolMapEnabled: "Enable or disable the interactive map feature",
   docsSearchEnabled: "Enable or disable documentation search",
   docsAdvancedSearchEnabled: "Enable or disable advanced search filters on the documentation page",
@@ -41,6 +42,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
 const FEATURE_FLAG_GROUPS = {
   homepage: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled", "homeModernRestyleEnabled"],
   alert: ["alertsEnabled", "alertsSeverityFilterEnabled"],
+  profile: ["profileAvatarUploadEnabled"],
   map: ["rolnopolMapEnabled"],
   documentation: ["docsSearchEnabled", "docsAdvancedSearchEnabled"],
   registration: ["registrationStrongPasswordEnabled"],
@@ -66,6 +68,7 @@ const FEATURE_FLAG_GROUPS = {
 const EXPERIMENTAL_FEATURE_FLAGS = [
   "homeStatsSectionEnabled",
   "homeModernRestyleEnabled",
+  "profileAvatarUploadEnabled",
   "docsSearchEnabled",
   "docsAdvancedSearchEnabled",
   "registrationStrongPasswordEnabled",
@@ -91,6 +94,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
 const PREDEFINED_FEATURE_FLAGS = {
   alertsEnabled: true,
   alertsSeverityFilterEnabled: true,
+  profileAvatarUploadEnabled: false,
   rolnopolMapEnabled: true,
   docsSearchEnabled: false,
   docsAdvancedSearchEnabled: false,
