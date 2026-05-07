@@ -18,9 +18,13 @@ async function setAssistantChatEnabled(enabled) {
 }
 
 async function registerUser(suffix) {
+  const safeSuffix = String(suffix || "user")
+    .replace(/[^a-z0-9_-]/gi, "")
+    .slice(0, 8);
+
   const credentials = {
-    email: `assistant-chat-${suffix}-${Date.now()}@test.com`,
-    displayedName: `assistant_${suffix}`,
+    email: `assistant-chat-${safeSuffix}-${Date.now()}@test.com`,
+    displayedName: `ast_${safeSuffix}`,
     password: "testpass123",
   };
 
@@ -102,6 +106,7 @@ describe("Assistant chat API", () => {
 
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveProperty("provider", "mock");
+    expect(res.body.data).toHaveProperty("botId", "farm-assistant");
     expect(res.body.data).toHaveProperty("reply");
     expect(res.body.data.contextSummary).toMatchObject({
       fieldsCount: 1,
@@ -166,5 +171,19 @@ describe("Assistant chat API", () => {
     expect(res.body.data.reply).toContain('"supported": false');
     expect(res.body.data.reply).toContain("mock provider");
     expect(res.body.data.contextSummary).toBeNull();
+  });
+
+  it("returns 400 for an unknown botId", async () => {
+    await setAssistantChatEnabled(true);
+    const user = await registerUser("bad-bot");
+
+    const res = await request(app)
+      .post("/api/v1/assistant-chat/messages?botId=unknown-bot")
+      .set("token", user.token)
+      .send({ message: "summary" })
+      .expect(400);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toContain("unknown botId");
   });
 });

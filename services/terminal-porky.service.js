@@ -3,6 +3,7 @@ const { logWarning } = require("../helpers/logger-api");
 const { logInfo, logTrace } = require("./chatbot/logger-proxy");
 const GeminiProvider = require("./chatbot/providers/gemini.provider");
 const OpenRouterProvider = require("./chatbot/providers/openrouter.provider");
+const { getBotProfile, TERMINAL_PORKY_BOT_ID } = require("./chatbot/bots/bot-registry");
 
 const MAX_MESSAGE_LENGTH = 1024;
 const MAX_SESSION_MESSAGES = 10;
@@ -75,8 +76,8 @@ function previewText(text, maxLength = 120) {
 class TerminalPorkyService {
   constructor() {
     this.sessions = new Map();
-    this.provider = this._resolveProvider();
-    logInfo(`Terminal Porky initialized with '${this.provider.providerName}' provider.`);
+    this.providerCache = new Map();
+    logInfo("Terminal Porky service initialized with bot registry support.");
   }
 
   _logConversationEvent(eventName, data = null, traceData = null) {
@@ -87,13 +88,26 @@ class TerminalPorkyService {
     }
   }
 
-  _resolveProvider() {
-    const provider = String(process.env.CHATBOT_LLM_PROVIDER || "mock")
+  _getBotProfile(botId) {
+    return getBotProfile(botId, TERMINAL_PORKY_BOT_ID);
+  }
+
+  _buildProviderCacheKey(botProfile) {
+    return JSON.stringify({
+      botId: botProfile?.id || TERMINAL_PORKY_BOT_ID,
+      provider: botProfile?.provider || process.env.CHATBOT_LLM_PROVIDER || "mock",
+      providerOptions: botProfile?.providerOptions || {},
+    });
+  }
+
+  _resolveProvider(botProfile = null) {
+    const provider = String(botProfile?.provider || process.env.CHATBOT_LLM_PROVIDER || "mock")
       .trim()
       .toLowerCase();
+    const providerOptions = botProfile?.providerOptions || {};
 
     if (provider === "gemini") {
-      const instance = new GeminiProvider();
+      const instance = new GeminiProvider(providerOptions);
       if (!instance.isConfigured()) {
         logWarning("Porky is configured for Gemini but the environment is incomplete. Falling back to mock reply engine.");
         return this._createMockProvider();
@@ -103,7 +117,7 @@ class TerminalPorkyService {
     }
 
     if (provider === "openrouter") {
-      const instance = new OpenRouterProvider();
+      const instance = new OpenRouterProvider(providerOptions);
       if (!instance.isConfigured()) {
         logWarning("Porky is configured for OpenRouter but the environment is incomplete. Falling back to mock reply engine.");
         return this._createMockProvider();
@@ -117,6 +131,18 @@ class TerminalPorkyService {
     }
 
     return this._createMockProvider();
+  }
+
+  _getProvider(botProfile) {
+    const cacheKey = this._buildProviderCacheKey(botProfile);
+    if (this.providerCache.has(cacheKey)) {
+      return this.providerCache.get(cacheKey);
+    }
+
+    const provider = this._resolveProvider(botProfile);
+    this.providerCache.set(cacheKey, provider);
+    logInfo(`Terminal bot '${botProfile.id}' is using '${provider.providerName}' provider.`);
+    return provider;
   }
 
   _createMockProvider() {
@@ -218,7 +244,7 @@ class TerminalPorkyService {
     }));
   }
 
-  _buildStatusSnapshot(session, contextSummary = null) {
+  _buildStatusSnapshot(session, provider, contextSummary = null, botProfile = null) {
     const conversationSnapshot = this._buildConversationSnapshot(session);
     const context = contextSummary || session.lastContext || this._normalizeTerminalContext({});
     const estimatedConversationTokens = estimateConversationTokens(conversationSnapshot);
@@ -227,8 +253,9 @@ class TerminalPorkyService {
     const estimatedTokenLimit = ESTIMATED_CONTEXT_TOKEN_LIMIT;
 
     return {
-      provider: this.provider.providerName,
-      model: toStringValue(this.provider?.model || "mock").trim() || "mock",
+      botId: botProfile?.id || TERMINAL_PORKY_BOT_ID,
+      provider: provider.providerName,
+      model: toStringValue(provider?.model || "mock").trim() || "mock",
       active: session.active === true,
       sessionId: session.id,
       mode: context.mode || "shell",
@@ -268,14 +295,15 @@ class TerminalPorkyService {
     ].join("\n");
   }
 
-  _buildConversationLogData(session, contextSummary, extras = {}) {
+  _buildConversationLogData(session, provider, contextSummary, extras = {}, botProfile = null) {
     const estimatedConversationTokens = estimateConversationTokens(session.messages);
     const estimatedContextTokens = estimateTokensFromText(JSON.stringify(contextSummary));
 
     return {
+      botId: botProfile?.id || TERMINAL_PORKY_BOT_ID,
       sessionId: session.id,
-      provider: this.provider.providerName,
-      model: toStringValue(this.provider?.model || "mock").trim() || "mock",
+      provider: provider.providerName,
+      model: toStringValue(provider?.model || "mock").trim() || "mock",
       active: session.active === true,
       mode: contextSummary.mode,
       theme: contextSummary.theme,
@@ -291,9 +319,9 @@ class TerminalPorkyService {
     };
   }
 
-  _buildSystemPrompt(contextSummary, conversationSnapshot) {
+  _buildSystemPrompt(contextSummary, conversationSnapshot, botProfile = null) {
     return [
-      this._buildDefaultSystemPrompt(),
+      botProfile?.systemPrompt || this._buildDefaultSystemPrompt(),
       "",
       "Safe terminal context (JSON):",
       JSON.stringify(
@@ -401,11 +429,11 @@ class TerminalPorkyService {
     return hash;
   }
 
-  async _runProviderReply({ prompt, contextSummary, conversationSnapshot }) {
+  async _runProviderReply({ prompt, contextSummary, conversationSnapshot, provider, botProfile }) {
     const systemInstruction = {
       parts: [
         {
-          text: this._buildSystemPrompt(contextSummary, conversationSnapshot),
+          text: this._buildSystemPrompt(contextSummary, conversationSnapshot, botProfile),
         },
       ],
     };
@@ -418,7 +446,7 @@ class TerminalPorkyService {
       },
     ];
 
-    const response = await this.provider.askText(null, {
+    const response = await provider.askText(null, {
       messages,
       systemInstruction,
       useTools: false,
@@ -431,7 +459,9 @@ class TerminalPorkyService {
     return toStringValue(response?.text || "Porky keeps quiet.").trim() || "Porky keeps quiet.";
   }
 
-  async _sendChatMessage({ sessionId, message, context = {} }) {
+  async _sendChatMessage({ sessionId, message, context = {}, botId }) {
+    const botProfile = this._getBotProfile(botId);
+    const provider = this._getProvider(botProfile);
     const session = this._getSession(sessionId);
     const contextSummary = this._normalizeTerminalContext(context);
     const conversationSnapshot = this._buildConversationSnapshot(session);
@@ -445,10 +475,10 @@ class TerminalPorkyService {
 
     let reply;
     try {
-      if (this.provider.providerName === "mock") {
+      if (provider.providerName === "mock") {
         reply = this._buildMockReply({ prompt, contextSummary, conversationSnapshot: session.messages });
       } else {
-        reply = await this._runProviderReply({ prompt, contextSummary, conversationSnapshot });
+        reply = await this._runProviderReply({ prompt, contextSummary, conversationSnapshot, provider, botProfile });
       }
     } catch (error) {
       logWarning("Porky message generation failed", { error: error.message || error });
@@ -459,14 +489,19 @@ class TerminalPorkyService {
     session.messages = trimMessages(session.messages);
     this._touchSession(session);
 
-    this._logConversationEvent("message processed", this._buildConversationLogData(session, contextSummary, { prompt, reply }), {
-      contextSummary,
-      conversation: this._buildConversationLogSnapshot(session),
-    });
+    this._logConversationEvent(
+      "message processed",
+      this._buildConversationLogData(session, provider, contextSummary, { prompt, reply }, botProfile),
+      {
+        contextSummary,
+        conversation: this._buildConversationLogSnapshot(session),
+      },
+    );
 
     return {
+      botId: botProfile.id,
       sessionId: session.id,
-      provider: this.provider.providerName,
+      provider: provider.providerName,
       active: session.active,
       reply,
       contextSummary: {
@@ -480,7 +515,9 @@ class TerminalPorkyService {
     };
   }
 
-  async startConversation({ sessionId, context = {} } = {}) {
+  async startConversation({ sessionId, context = {}, botId } = {}) {
+    const botProfile = this._getBotProfile(botId);
+    const provider = this._getProvider(botProfile);
     const session = this._getSession(sessionId);
     const contextSummary = this._normalizeTerminalContext(context);
 
@@ -495,14 +532,19 @@ class TerminalPorkyService {
     session.messages = trimMessages(session.messages);
     this._touchSession(session);
 
-    this._logConversationEvent("conversation started", this._buildConversationLogData(session, contextSummary, { reply }), {
-      contextSummary,
-      conversation: this._buildConversationLogSnapshot(session),
-    });
+    this._logConversationEvent(
+      "conversation started",
+      this._buildConversationLogData(session, provider, contextSummary, { reply }, botProfile),
+      {
+        contextSummary,
+        conversation: this._buildConversationLogSnapshot(session),
+      },
+    );
 
     return {
+      botId: botProfile.id,
       sessionId: session.id,
-      provider: this.provider.providerName,
+      provider: provider.providerName,
       active: true,
       reply,
       contextSummary: {
@@ -514,7 +556,9 @@ class TerminalPorkyService {
     };
   }
 
-  async getStatus({ sessionId, context = {} } = {}) {
+  async getStatus({ sessionId, context = {}, botId } = {}) {
+    const botProfile = this._getBotProfile(botId);
+    const provider = this._getProvider(botProfile);
     const normalizedSessionId = normalizeSessionId(sessionId);
     const session = this.sessions.get(normalizedSessionId) || {
       id: normalizedSessionId,
@@ -526,13 +570,14 @@ class TerminalPorkyService {
     };
     const contextSummary = this._normalizeTerminalContext(context);
 
-    const status = this._buildStatusSnapshot(session, contextSummary);
+    const status = this._buildStatusSnapshot(session, provider, contextSummary, botProfile);
 
     this._logConversationEvent(
       "status requested",
       {
+        botId: botProfile.id,
         sessionId: session.id,
-        provider: this.provider.providerName,
+        provider: provider.providerName,
         active: status.active,
         mode: status.mode,
         theme: status.theme,
@@ -547,19 +592,22 @@ class TerminalPorkyService {
     );
 
     return {
+      botId: botProfile.id,
       sessionId: session.id,
-      provider: this.provider.providerName,
+      provider: provider.providerName,
       active: status.active,
       reply: this._buildStatusReply(status),
       status,
     };
   }
 
-  async sendMessage({ sessionId, message, context = {} } = {}) {
-    return this._sendChatMessage({ sessionId, message, context });
+  async sendMessage({ sessionId, message, context = {}, botId } = {}) {
+    return this._sendChatMessage({ sessionId, message, context, botId });
   }
 
-  async endConversation({ sessionId, context = {} } = {}) {
+  async endConversation({ sessionId, context = {}, botId } = {}) {
+    const botProfile = this._getBotProfile(botId);
+    const provider = this._getProvider(botProfile);
     const normalizedSessionId = normalizeSessionId(sessionId);
     const session = this.sessions.get(normalizedSessionId);
     const contextSummary = this._normalizeTerminalContext(context);
@@ -571,8 +619,9 @@ class TerminalPorkyService {
     this._logConversationEvent(
       "conversation ended",
       {
+        botId: botProfile.id,
         sessionId: normalizedSessionId,
-        provider: this.provider.providerName,
+        provider: provider.providerName,
         active: false,
         mode: contextSummary.mode,
         theme: contextSummary.theme,
@@ -583,8 +632,9 @@ class TerminalPorkyService {
     );
 
     return {
+      botId: botProfile.id,
       sessionId: normalizedSessionId,
-      provider: this.provider.providerName,
+      provider: provider.providerName,
       active: false,
       reply: this._buildFarewell(),
       contextSummary: {

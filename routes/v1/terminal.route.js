@@ -10,6 +10,7 @@ const posix = path.posix;
 
 const router = express.Router();
 const apiLimiter = createRateLimiter("high");
+const { TERMINAL_PORKY_BOT_ID } = require("../../services/chatbot/bots/bot-registry");
 
 const BOOT_SEQUENCE = ["Booting operator terminal...", "Loading archive index...", "Synchronizing command registry...", "Terminal online."];
 
@@ -1833,6 +1834,7 @@ router.post("/terminal/porky/start", apiLimiter, express.json(), async (req, res
   try {
     const sessionId = String(req.body?.sessionId || req.body?.context?.sessionId || "").trim();
     const data = await porkyService.startConversation({
+      botId: TERMINAL_PORKY_BOT_ID,
       sessionId,
       context: req.body?.context || {},
     });
@@ -1853,6 +1855,7 @@ router.post("/terminal/porky/message", apiLimiter, express.json(), async (req, r
   try {
     const sessionId = String(req.body?.sessionId || req.body?.context?.sessionId || "").trim();
     const data = await porkyService.sendMessage({
+      botId: TERMINAL_PORKY_BOT_ID,
       sessionId,
       message: req.body?.message,
       context: req.body?.context || {},
@@ -1874,6 +1877,7 @@ router.post("/terminal/porky/status", apiLimiter, express.json(), async (req, re
   try {
     const sessionId = String(req.body?.sessionId || req.body?.context?.sessionId || "").trim();
     const data = await porkyService.getStatus({
+      botId: TERMINAL_PORKY_BOT_ID,
       sessionId,
       context: req.body?.context || {},
     });
@@ -1894,6 +1898,7 @@ router.post("/terminal/porky/end", apiLimiter, express.json(), async (req, res) 
   try {
     const sessionId = String(req.body?.sessionId || req.body?.context?.sessionId || "").trim();
     const data = await porkyService.endConversation({
+      botId: TERMINAL_PORKY_BOT_ID,
       sessionId,
       context: req.body?.context || {},
     });

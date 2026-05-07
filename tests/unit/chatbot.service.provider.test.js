@@ -91,7 +91,20 @@ describe("chatbot.service provider selection", () => {
     });
 
     expect(response.provider).toBe("mock");
+    expect(response.botId).toBe("farm-assistant");
     expect(response.reply).toContain("Here is a quick summary of your farm data");
+  });
+
+  it("rejects unknown bot ids", async () => {
+    const { chatbotService } = await loadChatbotService({ provider: "mock" });
+
+    await expect(
+      chatbotService.ask({
+        userId: 1,
+        message: "summary",
+        botId: "unknown-bot",
+      }),
+    ).rejects.toThrow(/unknown botId/i);
   });
 
   it("uses gemini connector when configured", async () => {
@@ -344,7 +357,8 @@ describe("chatbot.service provider selection", () => {
     expect(llmLogs.some((message) => message.includes("request: Give me a short summary"))).toBe(true);
     expect(llmLogs.some((message) => message.includes("response: Gemini-generated assistant response."))).toBe(true);
     expect(llmLogs.every((message) => !message.includes("systemInstruction"))).toBe(true);
-    expect(infoLogs.some((message) => message.includes("Chatbot initialized with 'gemini' provider."))).toBe(true);
+    expect(infoLogs.some((message) => message.includes("Chatbot service initialized with bot registry support."))).toBe(true);
+    expect(infoLogs.some((message) => message.includes("Chatbot bot 'farm-assistant' is using 'gemini' provider."))).toBe(true);
     expect(traceLogs).toHaveLength(0);
 
     consoleSpy.mockRestore();
@@ -386,7 +400,8 @@ describe("chatbot.service provider selection", () => {
     expect(llmLogs.some((message) => message.includes("systemInstruction"))).toBe(true);
     expect(llmLogs.some((message) => message.includes("messages"))).toBe(true);
     expect(llmLogs.some((message) => message.includes("candidates"))).toBe(true);
-    expect(infoLogs.some((message) => message.includes("Chatbot initialized with 'gemini' provider."))).toBe(true);
+    expect(infoLogs.some((message) => message.includes("Chatbot service initialized with bot registry support."))).toBe(true);
+    expect(infoLogs.some((message) => message.includes("Chatbot bot 'farm-assistant' is using 'gemini' provider."))).toBe(true);
     expect(traceLogs.some((message) => message.includes("Chatbot ask() completed for user 1"))).toBe(true);
 
     consoleSpy.mockRestore();

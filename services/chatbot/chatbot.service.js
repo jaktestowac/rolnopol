@@ -6,6 +6,9 @@ const GeminiLlmConnector = require("./connectors/gemini-llm.connector");
 const OpenRouterLlmConnector = require("./connectors/openrouter-llm.connector");
 const chatbotContextService = require("./chatbot-context.service");
 const docsService = require("../docs.service");
+const OpenRouterProvider = require("./providers/openrouter.provider");
+const GeminiProvider = require("./providers/gemini.provider");
+const { getBotProfile, DEFAULT_BOT_ID } = require("./bots/bot-registry");
 
 const MAX_PROMPT_LENGTH = 1024;
 const MIN_PROMPT_LENGTH = 6; // Skip context loading for very short messages
@@ -14,18 +17,35 @@ const CONTEXT_WARNING_THRESHOLD = 2048; // warn only when context is unusually l
 class ChatbotService {
   constructor({ prometheusMetrics = null } = {}) {
     this.metrics = prometheusMetrics;
-    this.connector = this._resolveConnector();
-    logInfo(`Chatbot initialized with '${this.connector.providerName}' provider.`);
+    this.connectorCache = new Map();
+    logInfo("Chatbot service initialized with bot registry support.");
   }
 
-  _resolveConnector() {
-    const provider = String(process.env.CHATBOT_LLM_PROVIDER || "mock")
+  _resolveProviderName(botProfile = null) {
+    return String(botProfile?.provider || process.env.CHATBOT_LLM_PROVIDER || "mock")
       .trim()
       .toLowerCase();
+  }
+
+  _buildConnectorCacheKey(botProfile) {
+    const providerName = this._resolveProviderName(botProfile);
+    const providerOptions = botProfile?.providerOptions || {};
+    return JSON.stringify({
+      botId: botProfile?.id || DEFAULT_BOT_ID,
+      providerName,
+      providerOptions,
+    });
+  }
+
+  _resolveConnector(botProfile = null) {
+    const provider = this._resolveProviderName(botProfile);
+    const providerOptions = botProfile?.providerOptions || {};
 
     if (provider === "gemini") {
-      const hasGeminiApiKey = Boolean(process.env.GEMINI_API_KEY && String(process.env.GEMINI_API_KEY).trim());
-      const hasGeminiModel = Boolean(process.env.GEMINI_MODEL && String(process.env.GEMINI_MODEL).trim());
+      const apiKey = providerOptions.apiKey ?? process.env.GEMINI_API_KEY;
+      const model = providerOptions.model ?? process.env.GEMINI_MODEL;
+      const hasGeminiApiKey = Boolean(apiKey && String(apiKey).trim());
+      const hasGeminiModel = Boolean(model && String(model).trim());
 
       if (!hasGeminiApiKey || !hasGeminiModel) {
         const missing = [!hasGeminiApiKey ? "GEMINI_API_KEY" : null, !hasGeminiModel ? "GEMINI_MODEL" : null].filter(Boolean).join(", ");
@@ -34,16 +54,19 @@ class ChatbotService {
       }
 
       try {
-        return new GeminiLlmConnector(undefined, undefined, this.metrics);
+        const geminiProvider = new GeminiProvider(providerOptions);
+        return new GeminiLlmConnector(geminiProvider, { prometheusMetrics: this.metrics, botProfile });
       } catch (error) {
         logWarning("Gemini connector could not be initialized. Falling back to mock connector.", error);
-        return new MockLlmConnector(undefined, undefined, this.metrics);
+        return new MockLlmConnector();
       }
     }
 
     if (provider === "openrouter") {
-      const hasOpenRouterApiKey = Boolean(process.env.OPENROUTER_API_KEY && String(process.env.OPENROUTER_API_KEY).trim());
-      const hasOpenRouterModel = Boolean(process.env.OPENROUTER_MODEL && String(process.env.OPENROUTER_MODEL).trim());
+      const apiKey = providerOptions.apiKey ?? process.env.OPENROUTER_API_KEY;
+      const model = providerOptions.model ?? process.env.OPENROUTER_MODEL;
+      const hasOpenRouterApiKey = Boolean(apiKey && String(apiKey).trim());
+      const hasOpenRouterModel = Boolean(model && String(model).trim());
 
       if (!hasOpenRouterApiKey || !hasOpenRouterModel) {
         const missing = [!hasOpenRouterApiKey ? "OPENROUTER_API_KEY" : null, !hasOpenRouterModel ? "OPENROUTER_MODEL" : null]
@@ -54,10 +77,11 @@ class ChatbotService {
       }
 
       try {
-        return new OpenRouterLlmConnector(undefined, undefined, this.metrics);
+        const openRouterProvider = new OpenRouterProvider(providerOptions);
+        return new OpenRouterLlmConnector(openRouterProvider, { prometheusMetrics: this.metrics, botProfile });
       } catch (error) {
         logWarning("OpenRouter connector could not be initialized. Falling back to mock connector.", error);
-        return new MockLlmConnector(undefined, undefined, this.metrics);
+        return new MockLlmConnector();
       }
     }
 
@@ -65,7 +89,23 @@ class ChatbotService {
       logWarning(`Unsupported LLM provider '${provider}'. Falling back to mock connector.`);
     }
 
-    return new MockLlmConnector(undefined, undefined, this.metrics);
+    return new MockLlmConnector();
+  }
+
+  _getBotProfile(botId) {
+    return getBotProfile(botId, DEFAULT_BOT_ID);
+  }
+
+  _getConnector(botProfile) {
+    const cacheKey = this._buildConnectorCacheKey(botProfile);
+    if (this.connectorCache.has(cacheKey)) {
+      return this.connectorCache.get(cacheKey);
+    }
+
+    const connector = this._resolveConnector(botProfile);
+    this.connectorCache.set(cacheKey, connector);
+    logInfo(`Chatbot bot '${botProfile.id}' is using '${connector.providerName}' provider.`);
+    return connector;
   }
 
   _sanitizePrompt(prompt) {
@@ -103,9 +143,11 @@ class ChatbotService {
     return prompt.trim().length < MIN_PROMPT_LENGTH;
   }
 
-  _buildMinimalReply() {
+  _buildMinimalReply(botProfile = null) {
     // Hardcoded response for very short messages (no context loading needed)
-    return "Ask me about your fields, staff, animals, or financial summary. I'm here to help with your farm data.";
+    return (
+      botProfile?.shortReply || "Ask me about your fields, staff, animals, or financial summary. I'm here to help with your farm data."
+    );
   }
 
   _estimateTokens(text) {
@@ -113,11 +155,11 @@ class ChatbotService {
     return Math.ceil((String(text || "").length || 0) / 4);
   }
 
-  async _answerDocsQuery(query) {
+  async _answerDocsQuery(query, connector) {
     const text = query.replace(/^\/docs\s*/i, "").trim();
     if (!text) {
       return {
-        provider: this.connector.providerName,
+        provider: connector.providerName,
         reply: "Usage: /docs <question>. Example: /docs system overview, /docs how to use marketplace, /docs user roles",
         contextSummary: null,
       };
@@ -126,13 +168,13 @@ class ChatbotService {
     try {
       const result = await docsService.search(text, 3);
       return {
-        provider: this.connector.providerName,
+        provider: connector.providerName,
         reply: result.answer,
         contextSummary: "docs-search",
       };
     } catch (err) {
       return {
-        provider: this.connector.providerName,
+        provider: connector.providerName,
         reply: `Sorry, I couldn't search docs: ${err.message}`,
         contextSummary: "docs-search-error",
       };
@@ -147,45 +189,49 @@ class ChatbotService {
     return JSON.stringify(data, null, 2);
   }
 
-  async _answerRateLimitsQuery() {
-    const limitsInfo = await this.connector.getRateLimits();
+  async _answerRateLimitsQuery(connector) {
+    const limitsInfo = await connector.getRateLimits();
 
     return {
-      provider: this.connector.providerName,
+      provider: connector.providerName,
       reply: this._formatRawReply(limitsInfo?.raw ?? limitsInfo),
       contextSummary: null,
     };
   }
 
-  async ask({ userId, message }) {
+  async ask({ userId, message, botId }) {
     const startTime = process.hrtime.bigint();
     let resultStatus = "success";
+    const botProfile = this._getBotProfile(botId);
+    const connector = this._getConnector(botProfile);
 
     try {
       const prompt = this._sanitizePrompt(message);
 
       if (/^\/docs(\s|$)/i.test(prompt)) {
-        const docsResponse = await this._answerDocsQuery(prompt);
-        this.metrics?.recordChatbotRequest(this.connector.providerName, "docs");
-        this.metrics?.recordChatbotTokenUsage(this.connector.providerName, this._estimateTokens(docsResponse.reply));
-        return docsResponse;
+        const docsResponse = await this._answerDocsQuery(prompt, connector);
+        this.metrics?.recordChatbotRequest(connector.providerName, "docs");
+        this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(docsResponse.reply));
+        return { ...docsResponse, botId: botProfile.id, botName: botProfile.name };
       }
 
       if (/^\/(ratelimits|limits)(\s|$)/i.test(prompt)) {
-        const limitsResponse = await this._answerRateLimitsQuery();
-        this.metrics?.recordChatbotRequest(this.connector.providerName, "limits");
-        this.metrics?.recordChatbotTokenUsage(this.connector.providerName, this._estimateTokens(limitsResponse.reply));
-        return limitsResponse;
+        const limitsResponse = await this._answerRateLimitsQuery(connector);
+        this.metrics?.recordChatbotRequest(connector.providerName, "limits");
+        this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(limitsResponse.reply));
+        return { ...limitsResponse, botId: botProfile.id, botName: botProfile.name };
       }
 
       // For very short messages, skip context loading and return a brief response
       if (this._isShortMessage(prompt)) {
-        const shortReply = this._buildMinimalReply();
-        this.metrics?.recordChatbotRequest(this.connector.providerName, "short");
-        this.metrics?.recordChatbotTokenUsage(this.connector.providerName, this._estimateTokens(shortReply));
+        const shortReply = this._buildMinimalReply(botProfile);
+        this.metrics?.recordChatbotRequest(connector.providerName, "short");
+        this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(shortReply));
 
         return {
-          provider: this.connector.providerName,
+          provider: connector.providerName,
+          botId: botProfile.id,
+          botName: botProfile.name,
           reply: shortReply,
           contextSummary: null, // No context loaded for short messages
         };
@@ -194,44 +240,47 @@ class ChatbotService {
       // Load and compact context for substantive queries
       const context = await chatbotContextService.getContextForUser(userId);
       const compactedContext = this._compactContext(context);
-      const promptContext = this.connector.providerName === "mock" ? compactedContext : this._buildPromptContext(compactedContext);
+      const promptContext = connector.providerName === "mock" ? compactedContext : this._buildPromptContext(compactedContext);
 
       // Check context size and log if it's unusually large
       const contextSize = JSON.stringify(promptContext).length;
 
       // only for non mock providers:
-      if (this.connector.providerName !== "mock" && contextSize > CONTEXT_WARNING_THRESHOLD) {
+      if (connector.providerName !== "mock" && contextSize > CONTEXT_WARNING_THRESHOLD) {
         logWarning(`LLM context size for user ${userId} is unusually large: ${contextSize} characters`);
       }
 
-      const reply = await this.connector.generateResponse({
+      const reply = await connector.generateResponse({
         prompt,
         context: compactedContext,
         promptContext,
         userId,
       });
 
-      this.metrics?.recordChatbotRequest(this.connector.providerName, "success");
+      this.metrics?.recordChatbotRequest(connector.providerName, "success");
 
       const estimate = this._estimateTokens(prompt + " " + reply);
-      this.metrics?.recordChatbotTokenUsage(this.connector.providerName, estimate);
+      this.metrics?.recordChatbotTokenUsage(connector.providerName, estimate);
 
       return {
-        provider: this.connector.providerName,
+        provider: connector.providerName,
+        botId: botProfile.id,
+        botName: botProfile.name,
         reply,
         contextSummary: compactedContext.summary,
       };
     } catch (error) {
       resultStatus = "failure";
-      logWarning(`Chatbot ask() failed for user ${userId}`, { error: error.message || error });
-      this.metrics?.recordChatbotRequest(this.connector.providerName, "failure");
+      logWarning(`Chatbot ask() failed for user ${userId}`, { error: error.message || error, botId: botProfile.id });
+      this.metrics?.recordChatbotRequest(connector.providerName, "failure");
       throw error;
     } finally {
       const endTime = process.hrtime.bigint();
       const durationSeconds = Number(endTime - startTime) / 1e9;
-      this.metrics?.recordChatbotDuration(this.connector.providerName, durationSeconds);
+      this.metrics?.recordChatbotDuration(connector.providerName, durationSeconds);
       logTrace(`Chatbot ask() completed for user ${userId}`, {
-        provider: this.connector.providerName,
+        provider: connector.providerName,
+        botId: botProfile.id,
         resultStatus,
         durationSeconds,
       });

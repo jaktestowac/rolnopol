@@ -3,6 +3,12 @@ const { logError } = require("../helpers/logger-api");
 const chatbotService = require("../services/chatbot/chatbot.service");
 
 class ChatbotController {
+  _resolveBotId(req) {
+    const queryBotId = typeof req.query?.botId === "string" ? req.query.botId : "";
+    const bodyBotId = typeof req.body?.botId === "string" ? req.body.botId : "";
+    return bodyBotId.trim() || queryBotId.trim() || undefined;
+  }
+
   _resolveStatusCode(error) {
     if (!error || !error.message) {
       return 500;
@@ -20,6 +26,7 @@ class ChatbotController {
       const data = await chatbotService.ask({
         userId: req.user.userId,
         message: req.body?.message,
+        botId: this._resolveBotId(req),
       });
 
       return res.status(200).json(

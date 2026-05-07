@@ -7,10 +7,11 @@ const { logInfo, logTrace, logLlmRequest, logLlmResponse } = require("../logger-
  * Handles common prompt building, generation logic, and function calling
  */
 class BaseLlmConnector {
-  constructor(provider, providerName, prometheusMetrics = null) {
+  constructor(provider, providerName, options = {}) {
     this.providerName = providerName;
     this.provider = provider;
-    this.metrics = prometheusMetrics;
+    this.metrics = options.prometheusMetrics ?? null;
+    this.botProfile = options.botProfile || null;
     this.provider.ensureConfigured();
     this.maxToolCalls = 5; // Prevent infinite loops
     this.maxToolCallsPerTool = 2; // Prevent one tool dominating behavior
@@ -23,6 +24,16 @@ class BaseLlmConnector {
    * Can be overridden for custom system prompts
    */
   _buildSystemInstruction() {
+    if (this.botProfile?.systemPrompt) {
+      return {
+        parts: [
+          {
+            text: this.botProfile.systemPrompt,
+          },
+        ],
+      };
+    }
+
     return {
       parts: [
         {
@@ -163,12 +174,15 @@ class BaseLlmConnector {
    */
   async generateResponse({ prompt, context, promptContext, userId }) {
     const contextWithUserId = { ...context, userId };
-    const executor = new ToolsExecutor(userId, contextWithUserId);
+    const systemInstruction = this._buildSystemInstruction();
+    const useTools = this.botProfile?.supportsTools !== false;
 
     logTrace(`[LLM GENERATION START] User ID: ${userId}, Function calls enabled`, {
       userId,
       maxToolCalls: this.maxToolCalls,
       provider: this.providerName,
+      botId: this.botProfile?.id || null,
+      useTools,
     });
 
     let conversationMessages = [
@@ -204,7 +218,7 @@ class BaseLlmConnector {
         prompt,
         context: promptContext ?? context,
         messages: conversationMessages,
-        systemInstruction: this._buildSystemInstruction(),
+        systemInstruction,
         generationConfig: {
           temperature: 0.5,
         },
@@ -213,7 +227,8 @@ class BaseLlmConnector {
       try {
         response = await this.provider.askText(null, {
           messages: conversationMessages,
-          systemInstruction: this._buildSystemInstruction(),
+          systemInstruction,
+          useTools,
           generationConfig: {
             temperature: 0.5,
           },
@@ -244,7 +259,7 @@ class BaseLlmConnector {
       });
 
       // Check if model wants to call tools
-      if (response.toolCalls && response.toolCalls.length > 0) {
+      if (useTools && response.toolCalls && response.toolCalls.length > 0) {
         toolCallCount++;
 
         const toolNames = response.toolCalls.map((tc) => tc.name);

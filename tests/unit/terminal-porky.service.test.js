@@ -42,9 +42,12 @@ describe("terminal porky service logging", () => {
     };
 
     await porkyService.startConversation({ sessionId: "porky-log-session", context });
-    await porkyService.sendMessage({ sessionId: "porky-log-session", message: "what is this place?", context });
-    await porkyService.getStatus({ sessionId: "porky-log-session", context });
+    const reply = await porkyService.sendMessage({ sessionId: "porky-log-session", message: "what is this place?", context });
+    const status = await porkyService.getStatus({ sessionId: "porky-log-session", context });
     await porkyService.endConversation({ sessionId: "porky-log-session", context });
+
+    expect(reply.botId).toBe("terminal-porky");
+    expect(status.botId).toBe("terminal-porky");
 
     const joinedLogs = consoleLogSpy.mock.calls.flat().join("\n");
 
