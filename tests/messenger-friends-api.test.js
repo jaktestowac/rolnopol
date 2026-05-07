@@ -3,6 +3,16 @@ import request from "supertest";
 
 const app = require("../api/index.js");
 
+function createPngBuffer(width = 1, height = 1) {
+  const buffer = Buffer.alloc(24);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(buffer, 0);
+  buffer.writeUInt32BE(13, 8);
+  buffer.write("IHDR", 12, 4, "ascii");
+  buffer.writeUInt32BE(width, 16);
+  buffer.writeUInt32BE(height, 20);
+  return buffer;
+}
+
 async function getCurrentFlags() {
   const res = await request(app).get("/api/v1/feature-flags").expect(200);
   return res.body?.data?.flags || {};
@@ -135,6 +145,32 @@ describe("Messenger Friends API", () => {
     const listAfterRemove = await request(app).get("/api/v1/users/friends").set("token", token).expect(200);
 
     expect(listAfterRemove.body.data.some((item) => item.id === friendId)).toBe(false);
+  });
+
+  it("includes friend avatar data when the friend uploaded one", async () => {
+    await request(app)
+      .patch("/api/v1/feature-flags")
+      .send({ flags: { messengerEnabled: true, profileAvatarUploadEnabled: true } })
+      .expect(200);
+
+    const { token: ownerToken } = await createAndLoginUser();
+    const { token: friendToken, user: friendUser } = await createAndLoginUser();
+
+    await request(app)
+      .put("/api/v1/users/profile/avatar")
+      .set("token", friendToken)
+      .set("Content-Type", "image/png")
+      .send(createPngBuffer(64, 64))
+      .expect(200);
+
+    await request(app).post("/api/v1/users/friends").set("token", ownerToken).send({ identifier: friendUser.email }).expect(201);
+
+    const listRes = await request(app).get("/api/v1/users/friends").set("token", ownerToken).expect(200);
+    const listedFriend = listRes.body.data.find((item) => item.id === friendUser.id);
+
+    expect(listedFriend).toBeTruthy();
+    expect(String(listedFriend.avatarDataUrl || "")).toContain("data:image/png;base64,");
+    expect(typeof listedFriend.avatarUpdatedAt).toBe("string");
   });
 
   it("returns 400 for invalid friendUserId format when deleting friend", async () => {

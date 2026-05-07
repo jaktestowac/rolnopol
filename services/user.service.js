@@ -321,26 +321,30 @@ class UserService {
     const friendIds = this._normalizeIdList(user.friends);
     const blockedByCurrentUser = this._normalizeIdList(user.blockedUsers);
 
-    const friends = [];
-    for (const friendId of friendIds) {
-      const friend = await this.userDataInstance.findUser(friendId);
-      if (!friend || !friend.isActive) {
-        continue;
-      }
+    const friends = await Promise.all(
+      friendIds.map(async (friendId) => {
+        const friend = await this.userDataInstance.findUser(friendId);
+        if (!friend || !friend.isActive) {
+          return null;
+        }
 
-      const blockedByFriend = this._normalizeIdList(friend.blockedUsers);
-      const blockedByYou = blockedByCurrentUser.includes(friend.id);
-      const blockedByThem = blockedByFriend.includes(user.id);
+        const blockedByFriend = this._normalizeIdList(friend.blockedUsers);
+        const blockedByYou = blockedByCurrentUser.includes(friend.id);
+        const blockedByThem = blockedByFriend.includes(user.id);
+        const avatarRecord = await userAvatarStorageService.getAvatarByUserId(friend.id);
 
-      friends.push({
-        ...this._toPublicUserSummary(friend),
-        blockedByYou,
-        blockedByThem,
-        isBlocked: blockedByYou || blockedByThem,
-      });
-    }
+        return {
+          ...this._toPublicUserSummary(friend),
+          avatarDataUrl: avatarRecord?.avatarDataUrl || null,
+          avatarUpdatedAt: avatarRecord?.avatarUpdatedAt || null,
+          blockedByYou,
+          blockedByThem,
+          isBlocked: blockedByYou || blockedByThem,
+        };
+      }),
+    );
 
-    return friends;
+    return friends.filter(Boolean);
   }
 
   async removeFriend(userId, friendUserId) {

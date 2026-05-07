@@ -171,6 +171,7 @@ class MessengerPage {
     this.authService = null;
     this.apiService = null;
     this.featureFlagsService = null;
+    this.avatarUploadEnabled = false;
     this.currentUser = null;
     this.friends = [];
     this.activeConversation = null;
@@ -225,6 +226,7 @@ class MessengerPage {
       return;
     }
 
+    this.avatarUploadEnabled = await this._isAvatarUploadFeatureEnabled();
     await this._resolveCurrentUser();
     this._bindEvents();
     await this._loadFriends();
@@ -241,6 +243,18 @@ class MessengerPage {
       return true;
     } catch (error) {
       window.location.replace("/404.html");
+      return false;
+    }
+  }
+
+  async _isAvatarUploadFeatureEnabled() {
+    if (!this.featureFlagsService || typeof this.featureFlagsService.isEnabled !== "function") {
+      return false;
+    }
+
+    try {
+      return await this.featureFlagsService.isEnabled("profileAvatarUploadEnabled", false);
+    } catch (error) {
       return false;
     }
   }
@@ -419,16 +433,51 @@ class MessengerPage {
       button.className = `messenger-list__item${isActive ? " messenger-list__item--active" : ""}`;
       button.setAttribute("aria-label", `Open chat with ${displayName}`);
       button.innerHTML = `
-        <strong>${this._escapeHtml(displayName)}</strong>
-        <span class="messenger-list__meta">${this._escapeHtml(subtitle)}</span>
-        ${unreadCount > 0 ? `<span class="messenger-list__badge">${unreadCount} unread</span>` : ""}
-        ${isBlocked ? '<span class="messenger-list__badge">Blocked</span>' : ""}
+        ${this._renderFriendAvatarMarkup(friend, displayName)}
+        <span class="messenger-list__content">
+          <strong>${this._escapeHtml(displayName)}</strong>
+          <span class="messenger-list__meta">${this._escapeHtml(subtitle)}</span>
+          <span class="messenger-list__badges">
+            ${unreadCount > 0 ? `<span class="messenger-list__badge">${unreadCount} unread</span>` : ""}
+            ${isBlocked ? '<span class="messenger-list__badge">Blocked</span>' : ""}
+          </span>
+        </span>
       `;
       button.addEventListener("click", () => this._selectConversation(friend));
 
       item.appendChild(button);
       listEl.appendChild(item);
     });
+  }
+
+  _renderFriendAvatarMarkup(friend, displayName) {
+    const avatarDataUrl = this.avatarUploadEnabled ? String(friend?.avatarDataUrl || "") : "";
+    const fallbackLabel = this._getFriendAvatarFallbackLabel(friend, displayName);
+
+    return `
+      <span class="avatar-circle-modern messenger-list__avatar">
+        ${
+          avatarDataUrl
+            ? `<img class="profile-avatar-modern__image messenger-list__avatar-image" src="${this._escapeHtml(avatarDataUrl)}" alt="" />`
+            : `<span class="messenger-list__avatar-fallback">${this._escapeHtml(fallbackLabel)}</span>`
+        }
+      </span>
+    `;
+  }
+
+  _getFriendAvatarFallbackLabel(friend, displayName) {
+    const candidate = String(displayName || friend?.displayedName || friend?.username || friend?.email || "").trim();
+    if (!candidate) {
+      return "?";
+    }
+
+    const normalized = candidate.includes("@") ? candidate.split("@")[0] : candidate;
+    const parts = normalized.split(/[\s._-]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+    }
+
+    return normalized.slice(0, 2).toUpperCase();
   }
 
   async _selectConversation(friend) {
