@@ -372,10 +372,200 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      position: relative;
+      overflow: visible;
       padding: 1.2rem 0 1.2rem 0;
       margin-bottom: 1.5rem;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
       border-radius: 1.2rem 1.2rem 0 0;
+    }
+
+    .docs-ai-widget {
+      position: fixed;
+      top: calc(var(--navbar-height, 4rem) + 1rem);
+      right: max(1rem, calc((100vw - 1200px) / 2 + 1rem));
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.75rem;
+      z-index: 950;
+    }
+
+    .docs-ai-widget[hidden] {
+      display: none !important;
+    }
+
+    .docs-ai-widget__toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      border: 1px solid rgba(106, 123, 94, 0.24);
+      border-radius: 999px;
+      background: linear-gradient(135deg, #fffef6 0%, #eef8eb 100%);
+      color: #26462d;
+      box-shadow: 0 14px 30px rgba(51, 98, 60, 0.18);
+      padding: 0.7rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .docs-ai-widget__toggle:focus-visible,
+    .docs-ai-widget__close:focus-visible,
+    .docs-ai-widget__send:focus-visible,
+    .docs-ai-widget__input:focus-visible {
+      outline: 3px solid rgba(106, 123, 94, 0.24);
+      outline-offset: 2px;
+    }
+
+    .docs-ai-widget__panel {
+      width: min(360px, calc(100vw - 2rem));
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid rgba(106, 123, 94, 0.18);
+      border-radius: 1rem;
+      box-shadow: 0 24px 50px rgba(34, 51, 39, 0.22);
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+    }
+
+    .docs-ai-widget__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.95rem 1rem 0.75rem;
+      border-bottom: 1px solid rgba(106, 123, 94, 0.12);
+      background: linear-gradient(135deg, rgba(244, 251, 245, 0.95) 0%, rgba(235, 245, 233, 0.96) 100%);
+    }
+
+    .docs-ai-widget__title {
+      color: #2d3a2d;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .docs-ai-widget__status {
+      color: #6a7b5e;
+      font-size: 0.8rem;
+      margin-top: 0.2rem;
+    }
+
+    .docs-ai-widget__thinking {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-top: 0.35rem;
+      color: #4f6446;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .docs-ai-widget__thinking[hidden] {
+      display: none;
+    }
+
+    .docs-ai-widget__spinner {
+      width: 0.85rem;
+      height: 0.85rem;
+      border-radius: 999px;
+      border: 2px solid rgba(106, 123, 94, 0.2);
+      border-top-color: #4f6446;
+      animation: docs-ai-spin 0.8s linear infinite;
+      flex: 0 0 auto;
+    }
+
+    @keyframes docs-ai-spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .docs-ai-widget__close {
+      border: none;
+      background: transparent;
+      color: #466046;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .docs-ai-widget__messages {
+      max-height: 240px;
+      overflow-y: auto;
+      padding: 0.9rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      background: rgba(249, 251, 248, 0.95);
+    }
+
+    .docs-ai-widget__message {
+      display: flex;
+    }
+
+    .docs-ai-widget__message--assistant {
+      justify-content: flex-start;
+    }
+
+    .docs-ai-widget__message--user {
+      justify-content: flex-end;
+    }
+
+    .docs-ai-widget__bubble {
+      max-width: 88%;
+      border-radius: 0.95rem;
+      padding: 0.7rem 0.85rem;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      box-shadow: 0 8px 18px rgba(34, 51, 39, 0.08);
+    }
+
+    .docs-ai-widget__message--assistant .docs-ai-widget__bubble {
+      background: white;
+      color: #2d3a2d;
+      border: 1px solid rgba(106, 123, 94, 0.12);
+    }
+
+    .docs-ai-widget__message--user .docs-ai-widget__bubble {
+      background: linear-gradient(135deg, #dff1d8 0%, #cde7c6 100%);
+      color: #1f3726;
+    }
+
+    .docs-ai-widget__form {
+      display: flex;
+      gap: 0.6rem;
+      padding: 0.85rem 1rem 1rem;
+      border-top: 1px solid rgba(106, 123, 94, 0.12);
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .docs-ai-widget__input {
+      flex: 1;
+      border: 1px solid rgba(106, 123, 94, 0.18);
+      border-radius: 0.8rem;
+      padding: 0.7rem 0.85rem;
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.94);
+      color: #2d3a2d;
+    }
+
+    .docs-ai-widget__send {
+      border: none;
+      border-radius: 0.8rem;
+      padding: 0.7rem 0.9rem;
+      background: linear-gradient(135deg, #6a7b5e 0%, #4f6446 100%);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .docs-ai-widget__send:disabled,
+    .docs-ai-widget__input:disabled {
+      cursor: wait;
+      opacity: 0.72;
     }
 
     .docs-header-row {
@@ -764,12 +954,53 @@
       font-weight: bold;
       margin-right: 0.5rem;
     }
+
+    @media (max-width: 768px) {
+      .docs-ai-widget {
+        position: static;
+        width: 100%;
+        margin-top: 1rem;
+        align-items: stretch;
+      }
+
+      .docs-ai-widget__toggle,
+      .docs-ai-widget__panel {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 
 <body class="bg-agri-pattern">
   <!-- Dynamic Header Component -->
   <div id="header-component" data-testid="header-component"></div>
+
+  <div id="docs-ai-widget" class="docs-ai-widget" hidden>
+    <button type="button" id="docs-ai-toggle" class="docs-ai-widget__toggle" aria-expanded="false" aria-controls="docs-ai-panel">
+      <i class="fas fa-feather-pointed" aria-hidden="true"></i>
+      <span>Ask Docsy</span>
+    </button>
+    <section id="docs-ai-panel" class="docs-ai-widget__panel" hidden aria-hidden="true">
+      <div class="docs-ai-widget__header">
+        <div>
+          <div id="docs-ai-title" class="docs-ai-widget__title">✨ Docsy</div>
+          <div id="docs-ai-status" class="docs-ai-widget__status">Answers grounded in Rolnopol docs</div>
+          <div id="docs-ai-thinking" class="docs-ai-widget__thinking" hidden aria-live="polite">
+            <span class="docs-ai-widget__spinner" aria-hidden="true"></span>
+            <span>Docsy is thinking…</span>
+          </div>
+        </div>
+        <button type="button" id="docs-ai-close" class="docs-ai-widget__close" aria-label="Close documentation assistant">
+          <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div id="docs-ai-messages" class="docs-ai-widget__messages" aria-live="polite"></div>
+      <form id="docs-ai-form" class="docs-ai-widget__form">
+        <input id="docs-ai-input" class="docs-ai-widget__input" type="text" maxlength="1024" placeholder="Ask about docs, API, roles, or features" autocomplete="off" required />
+        <button id="docs-ai-send" class="docs-ai-widget__send" type="submit">Send</button>
+      </form>
+    </section>
+  </div>
 
   <div class="container" style="margin-top: 1rem" data-testid="main-container">
     <header class="header glass docs-header" data-testid="docs-header">
@@ -782,6 +1013,7 @@
           <span class="docs-header-subtitle">Rolnopol System Guide & API Reference</span>
         </div>
       </div>
+
     </header>
 
     <div class="docs-container" data-testid="docs-container">
@@ -889,6 +1121,7 @@
   <script src="/js/utils/utils.js"></script>
   <script src="/js/utils/router.js"></script>
   <script src="/js/utils/global-compat.js"></script>
+  <script src="/js/pages/docs-ai-widget.js"></script>
 
   <!-- Main Application -->
   <script src="/js/app.js"></script>
@@ -1659,6 +1892,12 @@
             setupDocsAdvancedSearch();
           } else if (docsSearchEnabled) {
             setupDocsSearch();
+          }
+
+          if (typeof window.setupDocsAiWidget === "function") {
+            await window.setupDocsAiWidget({
+              getFeatureFlagValue,
+            });
           }
         })
         .catch((err) => {

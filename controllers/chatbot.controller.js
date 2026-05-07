@@ -1,6 +1,7 @@
 const { formatResponseBody } = require("../helpers/response-helper");
 const { logError } = require("../helpers/logger-api");
 const chatbotService = require("../services/chatbot/chatbot.service");
+const { DOCS_GUIDE_BOT_ID } = require("../services/chatbot/bots/bot-registry");
 
 class ChatbotController {
   _resolveBotId(req) {
@@ -36,6 +37,29 @@ class ChatbotController {
       );
     } catch (error) {
       logError("Error while generating chatbot response:", error);
+      return res.status(this._resolveStatusCode(error)).json(
+        formatResponseBody({
+          error: error.message,
+        }),
+      );
+    }
+  }
+
+  async sendDocsMessage(req, res) {
+    try {
+      const data = await chatbotService.ask({
+        userId: null,
+        message: req.body?.message,
+        botId: DOCS_GUIDE_BOT_ID,
+      });
+
+      return res.status(200).json(
+        formatResponseBody({
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error while generating docs chatbot response:", error);
       return res.status(this._resolveStatusCode(error)).json(
         formatResponseBody({
           error: error.message,

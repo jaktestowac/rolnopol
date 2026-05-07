@@ -5,6 +5,38 @@ class DocsService {
   constructor() {
     this.docsPath = path.join(__dirname, "../data/docs.json");
     this.cache = null;
+    this.stopWords = new Set([
+      "a",
+      "an",
+      "and",
+      "are",
+      "can",
+      "do",
+      "does",
+      "for",
+      "get",
+      "how",
+      "i",
+      "is",
+      "it",
+      "me",
+      "of",
+      "on",
+      "or",
+      "please",
+      "show",
+      "tell",
+      "the",
+      "to",
+      "what",
+      "when",
+      "where",
+      "who",
+      "why",
+      "with",
+      "would",
+      "you",
+    ]);
   }
 
   async _loadDocs() {
@@ -47,6 +79,43 @@ class DocsService {
     return chunks.join(" ");
   }
 
+  _normalizeQueryTerms(query) {
+    const normalized = String(query || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, " ");
+
+    return [
+      ...new Set(
+        normalized
+          .split(/\s+/)
+          .map((term) => term.trim())
+          .filter(Boolean)
+          .flatMap((term) => term.split("-"))
+          .map((term) => term.trim())
+          .filter(Boolean)
+          .filter((term) => !this.stopWords.has(term)),
+      ),
+    ];
+  }
+
+  _scoreTermMatches(text, terms, { titleBoost = 0, sectionBoost = 0, contentBoost = 0 } = {}) {
+    const lowerText = String(text || "").toLowerCase();
+    let score = 0;
+
+    for (const term of terms) {
+      if (!term) continue;
+      if (lowerText.includes(term)) {
+        score += contentBoost;
+      }
+    }
+
+    if (terms.length > 0 && terms.every((term) => lowerText.includes(term))) {
+      score += titleBoost + sectionBoost;
+    }
+
+    return score;
+  }
+
   async search(query, maxResults = 3) {
     const normalized = String(query || "").trim();
     if (!normalized) {
@@ -55,6 +124,8 @@ class DocsService {
 
     const docs = await this._loadDocs();
     const queryLower = normalized.toLowerCase();
+    const queryTerms = this._normalizeQueryTerms(normalized);
+    const exactSearchTerms = queryTerms.length > 0 ? queryTerms : [queryLower];
 
     const items = docs.map((section) => {
       const sectionText = this._extractTextFromSection(section);
@@ -68,13 +139,26 @@ class DocsService {
         score += 40;
       }
 
-      const hits = [...lowerText.matchAll(new RegExp(queryLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"))].length;
+      if (queryTerms.length > 0) {
+        const titleText = `${section.section || ""} ${section.title || ""}`.toLowerCase();
+
+        if (queryTerms.every((term) => titleText.includes(term))) {
+          score += 35;
+        }
+
+        score += this._scoreTermMatches(section.section || "", queryTerms, { sectionBoost: 8 });
+        score += this._scoreTermMatches(section.title || "", queryTerms, { titleBoost: 12 });
+        score += this._scoreTermMatches(sectionText, queryTerms, { contentBoost: 4 });
+      }
+
+      const exactPattern = queryLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const hits = [...lowerText.matchAll(new RegExp(exactPattern, "g"))].length;
       score += hits * 5;
 
       // fallback: match synonyms with words
       if (score === 0) {
-        const keyword = queryLower.split(" ")[0];
-        if (sectionText.toLowerCase().includes(keyword)) {
+        const keyword = exactSearchTerms.find((term) => term && term.length > 1);
+        if (keyword && sectionText.toLowerCase().includes(keyword)) {
           score += 2;
         }
       }

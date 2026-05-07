@@ -15,4 +15,11 @@ chatbotRoute.post(
   chatbotController.sendMessage.bind(chatbotController),
 );
 
+chatbotRoute.post(
+  "/docs-chat/messages",
+  apiLimiter,
+  requireFeatureFlag("docsAiAssistantEnabled", { resourceName: "Documentation Assistant" }),
+  chatbotController.sendDocsMessage.bind(chatbotController),
+);
+
 module.exports = chatbotRoute;

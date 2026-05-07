@@ -150,6 +150,76 @@ class ChatbotService {
     );
   }
 
+  _isDocsOnlyBot(botProfile = null) {
+    return botProfile?.metadata?.mode === "docs-only";
+  }
+
+  _buildDocsPromptContext(docsResult) {
+    const matches = Array.isArray(docsResult?.matches) ? docsResult.matches : [];
+
+    return {
+      query: docsResult?.query || "",
+      totalMatches: Number(docsResult?.totalMatches) || 0,
+      matches: matches.map((item) => ({
+        section: item.section || "",
+        title: item.title || "",
+        score: Number(item.score) || 0,
+        content: typeof item.content === "string" ? item.content : JSON.stringify(item.content, null, 2),
+      })),
+    };
+  }
+
+  async _answerDocsOnlyBot({ prompt, connector, botProfile }) {
+    if (this._isShortMessage(prompt)) {
+      const shortReply = this._buildMinimalReply(botProfile);
+      this.metrics?.recordChatbotRequest(connector.providerName, "short");
+      this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(shortReply));
+
+      return {
+        provider: connector.providerName,
+        botId: botProfile.id,
+        botName: botProfile.name,
+        reply: shortReply,
+        contextSummary: "docs-search",
+      };
+    }
+
+    const docsResult = await docsService.search(prompt, 3);
+    const docsPromptContext = this._buildDocsPromptContext(docsResult);
+
+    if (connector.providerName === "mock" || docsPromptContext.totalMatches === 0) {
+      const reply = docsResult.answer;
+      this.metrics?.recordChatbotRequest(connector.providerName, "docs-bot");
+      this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(reply));
+
+      return {
+        provider: connector.providerName,
+        botId: botProfile.id,
+        botName: botProfile.name,
+        reply,
+        contextSummary: "docs-search",
+      };
+    }
+
+    const reply = await connector.generateResponse({
+      prompt,
+      context: docsPromptContext,
+      promptContext: docsPromptContext,
+      userId: 0,
+    });
+
+    this.metrics?.recordChatbotRequest(connector.providerName, "docs-bot");
+    this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(prompt + " " + reply));
+
+    return {
+      provider: connector.providerName,
+      botId: botProfile.id,
+      botName: botProfile.name,
+      reply,
+      contextSummary: "docs-search",
+    };
+  }
+
   _estimateTokens(text) {
     // Consistent with connector token estimator: ~4 chars per token
     return Math.ceil((String(text || "").length || 0) / 4);
@@ -207,6 +277,10 @@ class ChatbotService {
 
     try {
       const prompt = this._sanitizePrompt(message);
+
+      if (this._isDocsOnlyBot(botProfile)) {
+        return await this._answerDocsOnlyBot({ prompt, connector, botProfile });
+      }
 
       if (/^\/docs(\s|$)/i.test(prompt)) {
         const docsResponse = await this._answerDocsQuery(prompt, connector);

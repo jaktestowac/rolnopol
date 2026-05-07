@@ -2,9 +2,11 @@
   "flags": {
     "alertsEnabled": true,
     "alertsSeverityFilterEnabled": true,
+    "profileAvatarUploadEnabled": false,
     "rolnopolMapEnabled": true,
     "docsSearchEnabled": false,
     "docsAdvancedSearchEnabled": false,
+    "docsAiAssistantEnabled": false,
     "registrationStrongPasswordEnabled": false,
     "contactFormEnabled": true,
     "staffFieldsExportEnabled": false,

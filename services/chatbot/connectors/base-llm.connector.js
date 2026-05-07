@@ -50,37 +50,48 @@ class BaseLlmConnector {
     };
   }
 
+  _getPromptLabel() {
+    return this.botProfile?.metadata?.userPromptLabel || "User question:";
+  }
+
+  _getPromptContextLabel() {
+    return this.botProfile?.metadata?.promptContextLabel || "User farm context (JSON):";
+  }
+
+  _getPromptRules() {
+    const customRules = this.botProfile?.metadata?.promptRules;
+    if (Array.isArray(customRules) && customRules.length > 0) {
+      return customRules;
+    }
+
+    return [
+      "Keep response concise and practical.",
+      "Do not invent resources that are not present in context.",
+      "Respond in the language used by the user if possible.",
+      "Use available tools to get additional data when needed (weather, alerts, market info, etc.)",
+    ];
+  }
+
   /**
    * Build prompt with context - can be overridden for custom formatting
    */
   _buildPrompt(prompt, context) {
-    const promptLines = ["User question:", prompt].join("\n");
+    const promptLines = [this._getPromptLabel(), prompt].join("\n");
+    const rules = this._getPromptRules();
 
     if (context && typeof context === "object" && Object.keys(context).length > 0) {
       return [
         promptLines,
         "",
-        "User farm context (JSON):",
+        this._getPromptContextLabel(),
         JSON.stringify(context, null, 2),
         "",
         "Rules:",
-        "- Keep response concise and practical.",
-        "- Do not invent resources that are not present in context.",
-        "- Respond in the language used by the user if possible.",
-        "- Use available tools to get additional data when needed (weather, alerts, market info, etc.)",
+        ...rules.map((rule) => `- ${rule}`),
       ].join("\n");
     }
 
-    return [
-      "User question:",
-      prompt,
-      "",
-      "Rules:",
-      "- Keep response concise and practical.",
-      "- Do not invent resources that are not present in context.",
-      "- Respond in the language used by the user if possible.",
-      "- Use available tools to get additional data when needed (weather, alerts, market info, etc.)",
-    ].join("\n");
+    return [this._getPromptLabel(), prompt, "", "Rules:", ...rules.map((rule) => `- ${rule}`)].join("\n");
   }
 
   /**

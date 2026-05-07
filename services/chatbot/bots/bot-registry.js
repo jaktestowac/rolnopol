@@ -1,11 +1,14 @@
 const farmAssistantBot = require("./farm-assistant.bot");
+const docsGuideBot = require("./docs-guide.bot");
 const terminalPorkyBot = require("./terminal-porky.bot");
 
 const DEFAULT_BOT_ID = "farm-assistant";
+const DOCS_GUIDE_BOT_ID = "docs-guide";
 const TERMINAL_PORKY_BOT_ID = "terminal-porky";
 
 const BOT_PROFILES = Object.freeze({
   [farmAssistantBot.id]: farmAssistantBot,
+  [docsGuideBot.id]: docsGuideBot,
   [terminalPorkyBot.id]: terminalPorkyBot,
 });
 
@@ -36,6 +39,7 @@ function getBotProfile(botId, fallbackId = DEFAULT_BOT_ID) {
 module.exports = {
   BOT_PROFILES,
   DEFAULT_BOT_ID,
+  DOCS_GUIDE_BOT_ID,
   TERMINAL_PORKY_BOT_ID,
   normalizeBotId,
   listBotProfiles,
