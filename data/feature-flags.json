@@ -2,6 +2,7 @@
   "flags": {
     "alertsEnabled": true,
     "alertsSeverityFilterEnabled": true,
+    "alertsAiAssistantEnabled": false,
     "profileAvatarUploadEnabled": false,
     "rolnopolMapEnabled": true,
     "docsSearchEnabled": false,
@@ -36,5 +37,5 @@
     "rolnopolFarmlogEnabled": false,
     "rolnopolFarmlogEngagementEnabled": false
   },
-  "updatedAt": "2026-05-01T22:39:42.619Z"
+  "updatedAt": "2026-05-08T09:15:09.100Z"
 }

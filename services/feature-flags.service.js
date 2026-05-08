@@ -4,6 +4,7 @@ const prometheusMetrics = require("../helpers/prometheus-metrics");
 const FEATURE_FLAG_DESCRIPTIONS = {
   alertsEnabled: "Enable or disable the alerts system for animals and operations",
   alertsSeverityFilterEnabled: "Enable or disable severity filter controls on the alerts page",
+  alertsAiAssistantEnabled: "Enable or disable the AI alerts assistant widget on the alerts page and its public API",
   profileAvatarUploadEnabled: "Enable or disable custom avatar uploads on the profile page",
   rolnopolMapEnabled: "Enable or disable the interactive map feature",
   docsSearchEnabled: "Enable or disable documentation search",
@@ -42,7 +43,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
 
 const FEATURE_FLAG_GROUPS = {
   homepage: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled", "homeModernRestyleEnabled"],
-  alert: ["alertsEnabled", "alertsSeverityFilterEnabled"],
+  alert: ["alertsEnabled", "alertsSeverityFilterEnabled", "alertsAiAssistantEnabled"],
   profile: ["profileAvatarUploadEnabled"],
   map: ["rolnopolMapEnabled"],
   documentation: ["docsSearchEnabled", "docsAdvancedSearchEnabled", "docsAiAssistantEnabled"],
@@ -73,6 +74,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "docsSearchEnabled",
   "docsAdvancedSearchEnabled",
   "docsAiAssistantEnabled",
+  "alertsAiAssistantEnabled",
   "registrationStrongPasswordEnabled",
   "financialCommoditiesEnabled",
   "financialCommoditiesTradingEnabled",
@@ -96,6 +98,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
 const PREDEFINED_FEATURE_FLAGS = {
   alertsEnabled: true,
   alertsSeverityFilterEnabled: true,
+  alertsAiAssistantEnabled: false,
   profileAvatarUploadEnabled: false,
   rolnopolMapEnabled: true,
   docsSearchEnabled: false,

@@ -1,6 +1,6 @@
 const BaseProvider = require("./base.provider");
 const { getToolsForOpenRouter } = require("../tools/tools-registry");
-const { logWarning } = require("../../../helpers/logger-api");
+const { logWarning, logInfo } = require("../../../helpers/logger-api");
 
 const DEFAULT_OPENROUTER_API_BASE_URL = "https://openrouter.ai/api/v1";
 const DEFAULT_OPENROUTER_MODEL = "google/gemma-4-26b-a4b-it:free";
@@ -15,6 +15,10 @@ class OpenRouterProvider extends BaseProvider {
       defaultTimeoutMs: 30_000,
       defaultRetries: 2,
     });
+
+    if (typeof this.model === "string" && !this.model.endsWith(":free")) {
+      logWarning(`🟥 OpenRouter model '${this.model}' is not a free model. Handle with care.`);
+    } 
   }
 
   _buildUrl() {

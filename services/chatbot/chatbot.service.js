@@ -5,6 +5,7 @@ const MockLlmConnector = require("./connectors/mock-llm.connector");
 const GeminiLlmConnector = require("./connectors/gemini-llm.connector");
 const OpenRouterLlmConnector = require("./connectors/openrouter-llm.connector");
 const chatbotContextService = require("./chatbot-context.service");
+const createAlertsService = require("../alerts.service");
 const docsService = require("../docs.service");
 const OpenRouterProvider = require("./providers/openrouter.provider");
 const GeminiProvider = require("./providers/gemini.provider");
@@ -154,6 +155,10 @@ class ChatbotService {
     return botProfile?.metadata?.mode === "docs-only";
   }
 
+  _isAlertsOnlyBot(botProfile = null) {
+    return botProfile?.metadata?.mode === "alerts-only";
+  }
+
   _buildDocsPromptContext(docsResult) {
     const matches = Array.isArray(docsResult?.matches) ? docsResult.matches : [];
 
@@ -166,6 +171,170 @@ class ChatbotService {
         score: Number(item.score) || 0,
         content: typeof item.content === "string" ? item.content : JSON.stringify(item.content, null, 2),
       })),
+    };
+  }
+
+  _normalizeAlertsRequestContext(requestContext = {}) {
+    const defaultDate = new Date().toISOString().slice(0, 10);
+    const normalizedDate = sanitizeString(requestContext?.date);
+    const normalizedRegion = sanitizeString(requestContext?.region).toUpperCase();
+
+    return {
+      date: /^\d{4}-\d{2}-\d{2}$/.test(normalizedDate) ? normalizedDate : defaultDate,
+      region: /^[A-Z]{2}-\d{2}$/.test(normalizedRegion) ? normalizedRegion : "PL-14",
+    };
+  }
+
+  _summarizeAlertSeverities(alerts = []) {
+    return alerts.reduce(
+      (acc, alert) => {
+        const severity = typeof alert?.severity === "string" ? alert.severity.toLowerCase() : "unknown";
+        acc[severity] = (acc[severity] || 0) + 1;
+        return acc;
+      },
+      { critical: 0, high: 0, medium: 0, low: 0 },
+    );
+  }
+
+  _toAlertSnapshot(alert = {}) {
+    return {
+      title: alert.title || "Untitled alert",
+      severity: alert.severity || "unknown",
+      category: alert.category || "general",
+      date: alert.date || "",
+      message: alert.message || "",
+      timestamp: alert.timestamp || "",
+    };
+  }
+
+  _buildAlertsPromptContext({ date, region, todayAlerts, upcoming, history }) {
+    return {
+      seedDate: date,
+      region,
+      todayCount: todayAlerts.length,
+      upcomingDate: upcoming.date,
+      upcomingCount: Array.isArray(upcoming.alerts) ? upcoming.alerts.length : 0,
+      todaySeveritySummary: this._summarizeAlertSeverities(todayAlerts),
+      upcomingSeveritySummary: this._summarizeAlertSeverities(upcoming.alerts || []),
+      todayAlerts: todayAlerts.slice(0, 6).map((alert) => this._toAlertSnapshot(alert)),
+      upcomingAlerts: (upcoming.alerts || []).slice(0, 6).map((alert) => this._toAlertSnapshot(alert)),
+      recentHistory: (history || []).slice(0, 3).map((entry) => ({
+        date: entry.date,
+        count: Array.isArray(entry.alerts) ? entry.alerts.length : 0,
+        severitySummary: this._summarizeAlertSeverities(entry.alerts || []),
+        topAlerts: (entry.alerts || []).slice(0, 3).map((alert) => this._toAlertSnapshot(alert)),
+      })),
+    };
+  }
+
+  _formatAlertHeadlineList(alerts = []) {
+    if (!alerts.length) {
+      return "nothing especially dramatic at the moment";
+    }
+
+    return alerts
+      .slice(0, 3)
+      .map((alert) => `${alert.title} (${alert.severity})`)
+      .join(", ");
+  }
+
+  _buildAlertsMockReply(prompt, alertsContext) {
+    const normalizedPrompt = String(prompt || "").toLowerCase();
+    const todayAlerts = alertsContext.todayAlerts || [];
+    const upcomingAlerts = alertsContext.upcomingAlerts || [];
+    const history = alertsContext.recentHistory || [];
+    const severityRank = { critical: 4, high: 3, medium: 2, low: 1, unknown: 0 };
+
+    const standoutAlerts = [...todayAlerts, ...upcomingAlerts]
+      .sort((left, right) => (severityRank[right.severity] || 0) - (severityRank[left.severity] || 0))
+      .slice(0, 3);
+
+    if (/(tomorrow|upcoming|next)/.test(normalizedPrompt)) {
+      return upcomingAlerts.length
+        ? `For ${alertsContext.region}, I see ${upcomingAlerts.length} alert(s) lined up for ${alertsContext.upcomingDate}. The standout signals are ${this._formatAlertHeadlineList(upcomingAlerts)}.`
+        : `For ${alertsContext.region}, tomorrow (${alertsContext.upcomingDate}) looks calm — no upcoming alerts are queued right now.`;
+    }
+
+    if (/(history|recent|last\s+\d|last week|previous)/.test(normalizedPrompt)) {
+      const historyLines = history.map((entry) => {
+        const headline = this._formatAlertHeadlineList(entry.topAlerts || []);
+        return `- ${entry.date}: ${entry.count} alert(s), top items: ${headline}`;
+      });
+
+      return historyLines.length
+        ? [`For ${alertsContext.region}, here is the recent alert trail:`, ...historyLines].join("\n")
+        : `I do not have recent history snapshots to compare for ${alertsContext.region}.`;
+    }
+
+    if (/(critical|urgent|severe|high|watch|risk|danger)/.test(normalizedPrompt)) {
+      const urgentAlerts = standoutAlerts.filter((alert) => ["critical", "high"].includes(alert.severity));
+
+      return urgentAlerts.length
+        ? `The sharpest signals for ${alertsContext.region} are ${this._formatAlertHeadlineList(urgentAlerts)}. Today shows ${alertsContext.todaySeveritySummary.critical} critical and ${alertsContext.todaySeveritySummary.high} high-severity alert(s).`
+        : `Nothing is flashing red for ${alertsContext.region} right now — I do not see any critical or high alerts in today's snapshot.`;
+    }
+
+    return `For ${alertsContext.region} on ${alertsContext.seedDate}, I see ${todayAlerts.length} alert(s) today and ${upcomingAlerts.length} more for ${alertsContext.upcomingDate}. The biggest signals are ${this._formatAlertHeadlineList(standoutAlerts)}.`;
+  }
+
+  async _answerAlertsOnlyBot({ prompt, connector, botProfile, requestContext }) {
+    if (this._isShortMessage(prompt)) {
+      const shortReply = this._buildMinimalReply(botProfile);
+      this.metrics?.recordChatbotRequest(connector.providerName, "short");
+      this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(shortReply));
+
+      return {
+        provider: connector.providerName,
+        botId: botProfile.id,
+        botName: botProfile.name,
+        reply: shortReply,
+        contextSummary: "alerts-overview",
+      };
+    }
+
+    const { date, region } = this._normalizeAlertsRequestContext(requestContext);
+    const alertsService = createAlertsService(region);
+    const todayAlerts = alertsService.generateAlertsForDate(date);
+    const upcoming = alertsService.getUpcoming(date);
+    const history = alertsService.getHistory(date, 3);
+    const alertsPromptContext = this._buildAlertsPromptContext({
+      date,
+      region,
+      todayAlerts,
+      upcoming,
+      history,
+    });
+
+    if (connector.providerName === "mock") {
+      const reply = this._buildAlertsMockReply(prompt, alertsPromptContext);
+      this.metrics?.recordChatbotRequest(connector.providerName, "alerts-bot");
+      this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(reply));
+
+      return {
+        provider: connector.providerName,
+        botId: botProfile.id,
+        botName: botProfile.name,
+        reply,
+        contextSummary: "alerts-overview",
+      };
+    }
+
+    const reply = await connector.generateResponse({
+      prompt,
+      context: alertsPromptContext,
+      promptContext: alertsPromptContext,
+      userId: 0,
+    });
+
+    this.metrics?.recordChatbotRequest(connector.providerName, "alerts-bot");
+    this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(prompt + " " + reply));
+
+    return {
+      provider: connector.providerName,
+      botId: botProfile.id,
+      botName: botProfile.name,
+      reply,
+      contextSummary: "alerts-overview",
     };
   }
 
@@ -269,7 +438,7 @@ class ChatbotService {
     };
   }
 
-  async ask({ userId, message, botId }) {
+  async ask({ userId, message, botId, requestContext }) {
     const startTime = process.hrtime.bigint();
     let resultStatus = "success";
     const botProfile = this._getBotProfile(botId);
@@ -280,6 +449,10 @@ class ChatbotService {
 
       if (this._isDocsOnlyBot(botProfile)) {
         return await this._answerDocsOnlyBot({ prompt, connector, botProfile });
+      }
+
+      if (this._isAlertsOnlyBot(botProfile)) {
+        return await this._answerAlertsOnlyBot({ prompt, connector, botProfile, requestContext });
       }
 
       if (/^\/docs(\s|$)/i.test(prompt)) {

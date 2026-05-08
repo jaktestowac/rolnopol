@@ -13,6 +13,32 @@
 
 <body class="bg-agri-pattern">
   <div id="header-component"></div>
+  <div id="alerts-ai-widget" class="alerts-ai-widget" hidden>
+    <button type="button" id="alerts-ai-toggle" class="alerts-ai-widget__toggle" aria-expanded="false" aria-controls="alerts-ai-panel">
+      <i class="fas fa-satellite-dish" aria-hidden="true"></i>
+      <span>Ask Alerticus</span>
+    </button>
+    <section id="alerts-ai-panel" class="alerts-ai-widget__panel" hidden aria-hidden="true">
+      <div class="alerts-ai-widget__header">
+        <div>
+          <div id="alerts-ai-title" class="alerts-ai-widget__title">🚨 Alerticus</div>
+          <div id="alerts-ai-status" class="alerts-ai-widget__status">Interprets today's and upcoming alerts for your selected region</div>
+          <div id="alerts-ai-thinking" class="alerts-ai-widget__thinking" hidden aria-live="polite">
+            <span class="alerts-ai-widget__spinner" aria-hidden="true"></span>
+            <span>Alerticus is thinking…</span>
+          </div>
+        </div>
+        <button type="button" id="alerts-ai-close" class="alerts-ai-widget__close" aria-label="Close alerts assistant">
+          <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div id="alerts-ai-messages" class="alerts-ai-widget__messages" aria-live="polite"></div>
+      <form id="alerts-ai-form" class="alerts-ai-widget__form">
+        <input id="alerts-ai-input" class="alerts-ai-widget__input" type="text" maxlength="1024" placeholder="Ask what matters most in these alerts" autocomplete="off" required />
+        <button id="alerts-ai-send" class="alerts-ai-widget__send" type="submit">Send</button>
+      </form>
+    </section>
+  </div>
   <div class="container alerts-page">
     <header class="header glass" style="
           display: flex;
@@ -253,6 +279,24 @@
         return true;
       }
 
+      async function getFeatureFlagValue(flagKey, defaultValue) {
+        const appReady = await waitForAppInit();
+        if (!appReady) {
+          return defaultValue;
+        }
+
+        const featureFlagsService = window.App?.getModule?.("featureFlagsService");
+        if (!featureFlagsService || typeof featureFlagsService.isEnabled !== "function") {
+          return defaultValue;
+        }
+
+        try {
+          return await featureFlagsService.isEnabled(flagKey, defaultValue);
+        } catch (error) {
+          return defaultValue;
+        }
+      }
+
       async function loadAlerts() {
         // if (!ensureAuth()) return;
         const todayDate = new Date().toLocaleDateString("en-CA"); // Format as YYYY-MM-DD based on system locale
@@ -358,6 +402,10 @@
         const canLoad = await gateAlertsFeature();
         if (!canLoad) return;
 
+        if (typeof window.setupAlertsAiWidget === "function") {
+          await window.setupAlertsAiWidget({ getFeatureFlagValue });
+        }
+
         try {
           const featureFlagsService = window.App?.getModule?.("featureFlagsService");
           if (featureFlagsService && typeof featureFlagsService.isEnabled === "function") {
@@ -417,6 +465,7 @@
   <script src="/js/utils/utils.js"></script>
   <script src="/js/utils/router.js"></script>
   <script src="/js/utils/global-compat.js"></script>
+  <script src="/js/pages/alerts-ai-widget.js"></script>
 
   <!-- Main Application -->
   <script src="/js/app.js"></script>

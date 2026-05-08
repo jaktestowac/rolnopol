@@ -1,7 +1,7 @@
 const { formatResponseBody } = require("../helpers/response-helper");
 const { logError } = require("../helpers/logger-api");
 const chatbotService = require("../services/chatbot/chatbot.service");
-const { DOCS_GUIDE_BOT_ID } = require("../services/chatbot/bots/bot-registry");
+const { ALERTS_GUIDE_BOT_ID, DOCS_GUIDE_BOT_ID } = require("../services/chatbot/bots/bot-registry");
 
 class ChatbotController {
   _resolveBotId(req) {
@@ -20,6 +20,16 @@ class ChatbotController {
     }
 
     return 500;
+  }
+
+  _resolveAlertsRequestContext(req) {
+    const region = typeof req.body?.region === "string" ? req.body.region.trim() : "";
+    const date = typeof req.body?.date === "string" ? req.body.date.trim() : "";
+
+    return {
+      region,
+      date,
+    };
   }
 
   async sendMessage(req, res) {
@@ -60,6 +70,30 @@ class ChatbotController {
       );
     } catch (error) {
       logError("Error while generating docs chatbot response:", error);
+      return res.status(this._resolveStatusCode(error)).json(
+        formatResponseBody({
+          error: error.message,
+        }),
+      );
+    }
+  }
+
+  async sendAlertsMessage(req, res) {
+    try {
+      const data = await chatbotService.ask({
+        userId: null,
+        message: req.body?.message,
+        botId: ALERTS_GUIDE_BOT_ID,
+        requestContext: this._resolveAlertsRequestContext(req),
+      });
+
+      return res.status(200).json(
+        formatResponseBody({
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error while generating alerts chatbot response:", error);
       return res.status(this._resolveStatusCode(error)).json(
         formatResponseBody({
           error: error.message,

@@ -22,4 +22,12 @@ chatbotRoute.post(
   chatbotController.sendDocsMessage.bind(chatbotController),
 );
 
+chatbotRoute.post(
+  "/alerts-chat/messages",
+  apiLimiter,
+  requireFeatureFlag("alertsEnabled", { resourceName: "Alerts" }),
+  requireFeatureFlag("alertsAiAssistantEnabled", { resourceName: "Alerts Assistant" }),
+  chatbotController.sendAlertsMessage.bind(chatbotController),
+);
+
 module.exports = chatbotRoute;
