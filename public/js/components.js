@@ -129,41 +129,68 @@ function setActiveNavLink(explicitPage = null) {
 }
 
 async function getNavFeatureFlagState() {
-  const featureFlagsService = window.App?.getModule?.("featureFlagsService");
+  // Default fallback when no feature-flags service is available at all
+  const DEFAULT_IF_NO_SERVICE = {
+    alertsEnabled: true,
+    rolnopolMapEnabled: true,
+    messengerEnabled: false,
+    financialCommoditiesEnabled: false,
+    weatherPageEnabled: false,
+    rolnopolFarmlogEnabled: false,
+  };
+
+  // Conservative fallback when feature checks fail
+  const DEFAULT_ON_ERROR = {
+    alertsEnabled: true,
+    rolnopolMapEnabled: true,
+    messengerEnabled: false,
+    financialCommoditiesEnabled: false,
+    weatherPageEnabled: false,
+    petBuddyEnabled: true,
+    rolnopolFarmlogEnabled: false,
+  };
+
+  // Try to get the registered service
+  let featureFlagsService = window.App?.getModule?.("featureFlagsService");
+
+  // If App exists but service isn't registered yet, wait a short while for it to appear
+  if (window.App && (!featureFlagsService || typeof featureFlagsService.isEnabled !== "function")) {
+    const timeoutMs = 1200;
+    const intervalMs = 60;
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      featureFlagsService = window.App?.getModule?.("featureFlagsService");
+      if (featureFlagsService && typeof featureFlagsService.isEnabled === "function") break;
+      await new Promise((r) => setTimeout(r, intervalMs));
+    }
+  }
+
+  // If still no usable service, fall back to the permissive defaults
   if (!featureFlagsService || typeof featureFlagsService.isEnabled !== "function") {
-    return {
-      alertsEnabled: true,
-      rolnopolMapEnabled: true,
-      messengerEnabled: false,
-      financialCommoditiesEnabled: false,
-      weatherPageEnabled: false,
-      rolnopolFarmlogEnabled: false,
-    };
+    return DEFAULT_IF_NO_SERVICE;
   }
 
-  if (window.App && window.App.isInitialized === false) {
-    return {
-      alertsEnabled: false,
-      rolnopolMapEnabled: false,
-      messengerEnabled: false,
-      financialCommoditiesEnabled: false,
-      weatherPageEnabled: false,
-      rolnopolFarmlogEnabled: false,
-    };
+  // If the service exists but isn't fully initialised (no apiService) or App isn't ready,
+  // give it a short window to initialise instead of immediately returning all-false.
+  if (!featureFlagsService.apiService || (window.App && window.App.isInitialized === false)) {
+    const timeoutMs = 1200;
+    const intervalMs = 60;
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      // Re-read references which may be wired up after init
+      if (window.App && window.App.isInitialized) break;
+      featureFlagsService = window.App?.getModule?.("featureFlagsService");
+      if (featureFlagsService && featureFlagsService.apiService) break;
+      await new Promise((r) => setTimeout(r, intervalMs));
+    }
   }
 
-  if (!featureFlagsService.apiService) {
-    return {
-      alertsEnabled: false,
-      rolnopolMapEnabled: false,
-      messengerEnabled: false,
-      financialCommoditiesEnabled: false,
-      weatherPageEnabled: false,
-      petBuddyEnabled: false,
-      rolnopolFarmlogEnabled: false,
-    };
+  // If after waiting service still isn't ready, fall back permissively to avoid hiding enabled features
+  if (!featureFlagsService.apiService && window.App && window.App.isInitialized === false) {
+    return DEFAULT_IF_NO_SERVICE;
   }
 
+  // Finally query feature flags
   try {
     const [
       alertsEnabled,
@@ -192,15 +219,7 @@ async function getNavFeatureFlagState() {
       rolnopolFarmlogEnabled,
     };
   } catch (error) {
-    return {
-      alertsEnabled: true,
-      rolnopolMapEnabled: true,
-      messengerEnabled: false,
-      financialCommoditiesEnabled: false,
-      weatherPageEnabled: false,
-      petBuddyEnabled: true,
-      rolnopolFarmlogEnabled: false,
-    };
+    return DEFAULT_ON_ERROR;
   }
 }
 
