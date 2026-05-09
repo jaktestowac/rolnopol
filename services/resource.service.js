@@ -2,6 +2,7 @@ const dbManager = require("../data/database-manager");
 const { ALLOWED_ANIMAL_TYPES } = require("../data/animal-types");
 const { logDebug, logInfo } = require("../helpers/logger-api");
 const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 const publishEvent = (event) => {
   publishNotificationEvent(event, {
@@ -176,7 +177,7 @@ class ResourceService {
 
     if (this.resourceType === "fields") {
       publishEvent({
-        type: "field.created",
+        type: EVENT_TYPES.FIELD_CREATED,
         payload: {
           userId: numericUserId,
           fieldId: created.id,
@@ -190,7 +191,7 @@ class ResourceService {
 
     if (this.resourceType === "staff") {
       publishEvent({
-        type: "staff.created",
+        type: EVENT_TYPES.STAFF_CREATED,
         payload: {
           userId: numericUserId,
           staffId: created.id,
@@ -226,6 +227,22 @@ class ResourceService {
     } else if (this.resourceType === "animals") {
       await ResourceService.cascadeDelete({ type: "animal", id: numericId });
     }
+    try {
+      if (this.resourceType === "fields") {
+        publishEvent({
+          type: EVENT_TYPES.FIELD_DELETED,
+          payload: {
+            userId: numericUserId,
+            fieldId: numericId,
+          },
+          correlationId: `field-deleted-${numericId}`,
+          source: "resource.service",
+        });
+      }
+    } catch {
+      // best-effort
+    }
+
     return true;
   }
 
@@ -246,7 +263,28 @@ class ResourceService {
       (item) => ({ ...item, ...updateData }),
     );
     // Return the updated item (if found)
-    return Array.isArray(updatedArr) ? updatedArr.find((item) => item.userId === numericUserId && item.id === numericId) : null;
+    const updated = Array.isArray(updatedArr) ? updatedArr.find((item) => item.userId === numericUserId && item.id === numericId) : null;
+
+    if (updated) {
+      try {
+        if (this.resourceType === "fields") {
+          publishEvent({
+            type: EVENT_TYPES.FIELD_UPDATED,
+            payload: {
+              userId: numericUserId,
+              fieldId: updated.id,
+              changes: updateData,
+            },
+            correlationId: `field-update-${updated.id}`,
+            source: "resource.service",
+          });
+        }
+      } catch {
+        // best-effort
+      }
+    }
+
+    return updated;
   }
 
   // --- Cascading delete logic ---
@@ -349,7 +387,25 @@ ResourceService.prototype.assignStaffToField = async function (userId, fieldId, 
   const assignments = await assignmentsDb.find(
     (a) => a.userId === numericUserId && a.fieldId === numericFieldId && a.staffId === numericStaffId,
   );
-  return assignments[assignments.length - 1];
+  const created = assignments[assignments.length - 1];
+
+  try {
+    publishEvent({
+      type: EVENT_TYPES.ASSIGNMENT_CREATED,
+      payload: {
+        userId: numericUserId,
+        assignmentId: created?.id,
+        staffId: numericStaffId,
+        fieldId: numericFieldId,
+      },
+      correlationId: `assignment-${created?.id}`,
+      source: "resource.service",
+    });
+  } catch {
+    // best-effort
+  }
+
+  return created;
 };
 
 ResourceService.prototype.listAssignments = async function (userId) {
@@ -371,6 +427,20 @@ ResourceService.prototype.removeAssignment = async function (userId, assignmentI
   }
 
   await assignmentsDb.remove((a) => a.userId === numericUserId && a.id === numericAssignmentId);
+  try {
+    publishEvent({
+      type: EVENT_TYPES.ASSIGNMENT_REMOVED,
+      payload: {
+        userId: numericUserId,
+        assignmentId: numericAssignmentId,
+      },
+      correlationId: `assignment-removed-${numericAssignmentId}`,
+      source: "resource.service",
+    });
+  } catch {
+    // best-effort
+  }
+
   return true;
 };
 
@@ -414,7 +484,7 @@ ResourceService.prototype.createAnimal = async function (userId, data) {
   const created = items[items.length - 1];
 
   publishEvent({
-    type: "animal.created",
+    type: EVENT_TYPES.ANIMAL_CREATED,
     payload: {
       userId: numericUserId,
       animalId: created.id,
@@ -428,7 +498,7 @@ ResourceService.prototype.createAnimal = async function (userId, data) {
 
   if (created.fieldId !== undefined && created.fieldId !== null) {
     publishEvent({
-      type: "animal.assigned",
+      type: EVENT_TYPES.ANIMAL_ASSIGNED,
       payload: {
         userId: numericUserId,
         animalId: created.id,
@@ -495,7 +565,7 @@ ResourceService.prototype.updateAnimal = async function (userId, id, updateData)
 
   if (updated && updateData.fieldId !== undefined && updateData.fieldId !== null && existing?.fieldId !== updated.fieldId) {
     publishEvent({
-      type: "animal.assigned",
+      type: EVENT_TYPES.ANIMAL_ASSIGNED,
       payload: {
         userId: numericUserId,
         animalId: updated.id,

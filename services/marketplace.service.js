@@ -1,6 +1,7 @@
 const dbManager = require("../data/database-manager");
 const logger = require("../helpers/logger-api");
 const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 const publishEvent = (event) => {
   publishNotificationEvent(event, {
@@ -148,7 +149,7 @@ class MarketplaceService {
     await this.marketplaceDb.write(marketplaceData);
 
     publishEvent({
-      type: "marketplace.offer.created",
+      type: EVENT_TYPES.MARKETPLACE_OFFER_CREATED,
       payload: {
         userId: Number(userId),
         offerId: newOffer.id,
@@ -202,6 +203,20 @@ class MarketplaceService {
     offer.status = "cancelled";
     offer.updatedAt = new Date().toISOString();
     await this.marketplaceDb.write(marketplaceData);
+    try {
+      publishEvent({
+        type: EVENT_TYPES.MARKETPLACE_OFFER_CANCELLED,
+        payload: {
+          sellerId: Number(userId),
+          offerId: offer.id,
+        },
+        correlationId: `market-offer-cancelled-${offer.id}`,
+        source: "marketplace.service",
+      });
+    } catch {
+      // best-effort
+    }
+
     return { success: true };
   }
 
@@ -374,7 +389,7 @@ class MarketplaceService {
     await this.marketplaceDb.write(marketplaceData);
 
     publishEvent({
-      type: "marketplace.purchase.completed",
+      type: EVENT_TYPES.MARKETPLACE_PURCHASE_COMPLETED,
       payload: {
         userId: Number(buyerId),
         transactionId: transaction.id,

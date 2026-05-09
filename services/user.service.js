@@ -4,6 +4,8 @@ const { createAvatarDataUrl, validateAvatarUpload } = require("../helpers/avatar
 const { logDebug, logError } = require("../helpers/logger-api");
 const messengerEventsService = require("./messenger-events.service");
 const userAvatarStorageService = require("./user-avatar-storage.service");
+const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 class UserService {
   constructor() {
@@ -115,6 +117,32 @@ class UserService {
 
     logDebug("User profile updated successfully", { userId });
 
+    try {
+      const changes = {};
+      for (const key of Object.keys(dataToUpdate || {})) {
+        changes[key] = { before: user[key], after: updatedUser[key] };
+      }
+
+      publishNotificationEvent(
+        {
+          type: EVENT_TYPES.USER_ACCOUNT_UPDATED,
+          payload: {
+            userId: updatedUser.id,
+            changes,
+            updatedAt: updatedUser.updatedAt || new Date().toISOString(),
+          },
+          correlationId: `user-update-${updatedUser.id}-${Date.now()}`,
+          source: "user.service",
+        },
+        {
+          action: "user_account_updated_notification",
+          meta: { userId: updatedUser.id },
+        },
+      );
+    } catch {
+      // best-effort, never fail main flow
+    }
+
     return userResponse;
   }
 
@@ -210,6 +238,26 @@ class UserService {
     const { password, ...userResponse } = deletedUser;
 
     logDebug("User profile deleted successfully", { userId });
+
+    try {
+      publishNotificationEvent(
+        {
+          type: EVENT_TYPES.USER_ACCOUNT_DELETED,
+          payload: {
+            userId: deletedUser.id,
+            deletedAt: deletedUser.deletedAt || new Date().toISOString(),
+          },
+          correlationId: `user-deleted-${deletedUser.id}-${Date.now()}`,
+          source: "user.service",
+        },
+        {
+          action: "user_account_deleted",
+          meta: { userId: deletedUser.id },
+        },
+      );
+    } catch {
+      // best-effort
+    }
 
     return userResponse;
   }

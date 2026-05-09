@@ -3,6 +3,7 @@ const { logError, logInfo, logDebug } = require("../helpers/logger-api");
 const { FINANCE_INTEGRITY_CALCULATION } = require("../data/settings");
 const JSONDatabase = require("../data/json-database");
 const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 class FinancialService {
   constructor() {
@@ -274,7 +275,7 @@ class FinancialService {
 
       publishNotificationEvent(
         {
-          type: "transaction.created",
+          type: EVENT_TYPES.TRANSACTION_CREATED,
           payload: {
             transactionId: transaction.id,
             userId: numericUserId,
@@ -298,6 +299,28 @@ class FinancialService {
       return transaction;
     } catch (error) {
       logError("Error adding transaction:", error);
+      try {
+        publishNotificationEvent(
+          {
+            type: EVENT_TYPES.TRANSACTION_FAILED,
+            payload: {
+              userId: userId,
+              attemptedAmount: transactionData?.amount ?? null,
+              transactionType: transactionData?.type ?? null,
+              reason: error?.message ?? null,
+            },
+            correlationId: `tx-failed-${Date.now()}`,
+            source: "financial.service",
+          },
+          {
+            action: "transaction_failed_notification",
+            meta: { userId },
+          },
+        );
+      } catch {
+        // best-effort
+      }
+
       throw error;
     }
   }
@@ -534,7 +557,7 @@ class FinancialService {
 
       publishNotificationEvent(
         {
-          type: "transfer.completed",
+          type: EVENT_TYPES.TRANSFER_COMPLETED,
           payload: {
             userId: numericFromUserId,
             fromUserId: numericFromUserId,

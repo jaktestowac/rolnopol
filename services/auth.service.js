@@ -7,6 +7,7 @@ const { logDebug, logError } = require("../helpers/logger-api");
 const financialService = require("./financial.service");
 const featureFlagsService = require("./feature-flags.service");
 const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 class AuthService {
   constructor() {
@@ -74,7 +75,7 @@ class AuthService {
 
       publishNotificationEvent(
         {
-          type: "user.registration.failed.user_exists",
+          type: EVENT_TYPES.USER_REGISTRATION_FAILED_USER_EXISTS,
           payload: {
             existingUserId: existingUserByEmail.id,
             attemptedEmail: this._maskEmail(email),
@@ -133,7 +134,7 @@ class AuthService {
 
     publishNotificationEvent(
       {
-        type: "user.account.created",
+        type: EVENT_TYPES.USER_ACCOUNT_CREATED,
         payload: {
           userId: newUser.id,
           email: newUser.email,
@@ -225,7 +226,7 @@ class AuthService {
             ? "validation_failed"
             : "unknown_error";
 
-      const eventType = reason === "invalid_credentials" ? "user.login.invalid_credentials" : "user.login.failed";
+      const eventType = reason === "invalid_credentials" ? EVENT_TYPES.USER_LOGIN_INVALID_CREDENTIALS : EVENT_TYPES.USER_LOGIN_FAILED;
 
       publishNotificationEvent(
         {
@@ -239,7 +240,10 @@ class AuthService {
           source: "auth.service",
         },
         {
-          action: eventType === "user.login.invalid_credentials" ? "login_invalid_credentials_notification" : "login_failed_notification",
+          action:
+            eventType === EVENT_TYPES.USER_LOGIN_INVALID_CREDENTIALS
+              ? "login_invalid_credentials_notification"
+              : "login_failed_notification",
           meta: {
             userId: resolvedUserId,
             reason,

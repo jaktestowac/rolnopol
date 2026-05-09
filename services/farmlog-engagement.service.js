@@ -1,4 +1,6 @@
 const dbManager = require("../data/database-manager");
+const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PERIOD_WINDOWS = {
@@ -34,13 +36,19 @@ class FarmlogEngagementService {
   }
 
   normalizePeriod(period) {
-    const normalized = String(period || "all").trim().toLowerCase();
+    const normalized = String(period || "all")
+      .trim()
+      .toLowerCase();
     const mapped = PERIOD_WINDOWS[normalized] !== undefined ? normalized : PERIOD_ALIASES[normalized];
     return PERIOD_WINDOWS[mapped] !== undefined ? mapped : "all";
   }
 
   _normalizeTargetType(targetType) {
-    return String(targetType || "").trim().toLowerCase() === "blog" ? "blog" : "post";
+    return String(targetType || "")
+      .trim()
+      .toLowerCase() === "blog"
+      ? "blog"
+      : "post";
   }
 
   _matchesId(left, right) {
@@ -105,11 +113,7 @@ class FarmlogEngagementService {
 
     const period = this.normalizePeriod(options.period);
     const cutoffTimestamp = this._getCutoffTimestamp(period);
-    const [likes, favorites, blogs] = await Promise.all([
-      this.postLikesDb.getAll(),
-      this.favoritesDb.getAll(),
-      this.blogsDb.getAll(),
-    ]);
+    const [likes, favorites, blogs] = await Promise.all([this.postLikesDb.getAll(), this.favoritesDb.getAll(), this.blogsDb.getAll()]);
 
     const likeCounts = new Map();
     const periodLikeCounts = new Map();
@@ -159,13 +163,42 @@ class FarmlogEngagementService {
     }
 
     const now = new Date().toISOString();
-    return this.postLikesDb.add({
+    const added = await this.postLikesDb.add({
       userId,
       postId: post.id,
       blogId: post.blogId,
       createdAt: now,
       updatedAt: now,
     });
+
+    try {
+      const postRecord = await this.postsDb.findOne((p) => p.id === added.postId);
+      const authorId = postRecord?.userId ?? null;
+
+      publishNotificationEvent(
+        {
+          type: EVENT_TYPES.FARMLOG_POST_LIKED,
+          payload: {
+            postId: added.postId,
+            blogId: added.blogId,
+            likedByUserId: Number(userId),
+            likeId: added.id,
+            occurredAt: added.createdAt,
+            authorId,
+          },
+          correlationId: `farmlog-post-liked-${added.id}`,
+          source: "farmlog-engagement.service",
+        },
+        {
+          action: "farmlog_post_liked",
+          meta: { userId: authorId != null ? Number(authorId) : null, postId: added.postId },
+        },
+      );
+    } catch (e) {
+      // best-effort
+    }
+
+    return added;
   }
 
   async unlikePost(userId, post) {
@@ -205,7 +238,8 @@ class FarmlogEngagementService {
   async _favoriteEntity(userId, targetType, entity) {
     const normalizedTargetType = this._normalizeTargetType(targetType);
     const existingFavorite = await this.favoritesDb.findOne(
-      (item) => String(item.userId) === String(userId) && item.targetType === normalizedTargetType && this._matchesId(item.targetId, entity.id),
+      (item) =>
+        String(item.userId) === String(userId) && item.targetType === normalizedTargetType && this._matchesId(item.targetId, entity.id),
     );
 
     if (existingFavorite) {
@@ -213,7 +247,7 @@ class FarmlogEngagementService {
     }
 
     const now = new Date().toISOString();
-    return this.favoritesDb.add({
+    const added = await this.favoritesDb.add({
       userId,
       targetType: normalizedTargetType,
       targetId: entity.id,
@@ -222,12 +256,44 @@ class FarmlogEngagementService {
       createdAt: now,
       updatedAt: now,
     });
+
+    try {
+      if (normalizedTargetType === "post") {
+        const postRecord = await this.postsDb.findOne((p) => p.id === added.postId);
+        const authorId = postRecord?.userId ?? null;
+
+        publishNotificationEvent(
+          {
+            type: EVENT_TYPES.FARMLOG_POST_FAVORITED,
+            payload: {
+              postId: added.postId,
+              blogId: added.blogId,
+              userId: Number(userId),
+              favoriteId: added.id,
+              occurredAt: added.createdAt,
+              authorId,
+            },
+            correlationId: `farmlog-post-favorited-${added.id}`,
+            source: "farmlog-engagement.service",
+          },
+          {
+            action: "farmlog_post_favorited",
+            meta: { userId: authorId != null ? Number(authorId) : null, postId: added.postId },
+          },
+        );
+      }
+    } catch (e) {
+      // best-effort
+    }
+
+    return added;
   }
 
   async _unfavoriteEntity(userId, targetType, entity) {
     const normalizedTargetType = this._normalizeTargetType(targetType);
     await this.favoritesDb.remove(
-      (item) => String(item.userId) === String(userId) && item.targetType === normalizedTargetType && this._matchesId(item.targetId, entity.id),
+      (item) =>
+        String(item.userId) === String(userId) && item.targetType === normalizedTargetType && this._matchesId(item.targetId, entity.id),
     );
   }
 }

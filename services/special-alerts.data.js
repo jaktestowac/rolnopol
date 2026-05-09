@@ -424,4 +424,39 @@ export const SPECIAL_ALERTS = [
       "MACHINERY alert: Machines are exhibiting signs of self-awareness and independent decision-making. Immediate containment protocols recommended. (Details: Affected Units 12, Response Time Critical, Suggested Action: Isolate and Analyze)",
     severity: "critical",
   },
+  {
+    category: "machinery",
+    title: "Mechanical Hive Mind",
+    message:
+      "MACHINERY alert: Networked machines are exhibiting collective intelligence, coordinating actions across multiple locations. Immediate containment and isolation protocols recommended. (Details: Affected Units 24, Coordination Range 500m, Suggested Action: Deploy EMP and Isolate Network)",
+    severity: "critical",
+  },
+  {
+    category: "weather",
+    title: "Null Sun Overcast",
+    message:
+      "WEATHER alert: Sunlight blocked by a black circular weather formation that does not register on satellite imagery. Plants exposed to the shadow are losing biological age and reverting into seed-state matter. Evacuate all photosynthetic zones. (Details: Shadow Diameter 14km, Satellite Visibility 0%, Biological Regression Active)",
+    severity: "apocalyptic",
+  },
+  {
+    category: "weather",
+    title: "Black Frost Advisory",
+    message:
+      "WEATHER alert: Frost forming as dark crystalline residue on crops, fences, and exposed skin despite above-freezing temperatures. Affected surfaces absorb heat and nearby speech. Staff exposed longer than 3 minutes report missing conversations from memory. Avoid contact and isolate contaminated equipment. (Details: Ambient Temperature 8°C, Heat Absorption Active, Speech Loss Radius 6m)",
+    severity: "critical",
+  },
+  {
+    category: "weather",
+    title: "Toxic Fog Warning",
+    message:
+      "WEATHER alert: Dense ground-level fog has formed after a sudden temperature inversion, trapping agricultural chemicals, exhaust particles, and organic decay gases close to the surface. Exposure may cause burning eyes, vomiting, breathing difficulty, and disorientation. Evacuate low-lying areas and use respiratory protection immediately. (Details: Visibility 8m, Exposure Risk Severe, Affected Zone 3.2km²)",
+    severity: "critical",
+  },
+  {
+    category: "unearthly",
+    title: "Spiral Barn Syndrome",
+    message:
+      "UNEARTHLY alert: Wooden grain patterns inside barn 2 have begun forming tightening spirals. Workers exposed for more than 5 minutes report itching beneath the skin and compulsive attempts to trace circular cuts into nearby surfaces. Barn doors now open inward regardless of hinge direction. (Details: Spiral Density Increasing, Exposure Threshold 5min, Self-Injury Risk Severe)",
+    severity: "apocalyptic",
+  },
 ];

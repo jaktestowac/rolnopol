@@ -2,6 +2,8 @@ const dbManager = require("../data/database-manager");
 const blogService = require("./blog.service");
 const UserDataSingleton = require("../data/user-data-singleton");
 const farmlogEngagementService = require("./farmlog-engagement.service");
+const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 class PostService {
   constructor() {
@@ -21,7 +23,9 @@ class PostService {
   }
 
   _normalizeSort(sort) {
-    const normalized = String(sort || "newest").trim().toLowerCase();
+    const normalized = String(sort || "newest")
+      .trim()
+      .toLowerCase();
     return ["newest", "oldest", "title-asc", "title-desc", "most-liked"].includes(normalized) ? normalized : "newest";
   }
 
@@ -182,7 +186,9 @@ class PostService {
     const sortedResults = this._sortRawPosts(results, normalizedSort);
 
     const paginatedResults =
-      normalizedLimit === null ? sortedResults.slice(normalizedOffset) : sortedResults.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+      normalizedLimit === null
+        ? sortedResults.slice(normalizedOffset)
+        : sortedResults.slice(normalizedOffset, normalizedOffset + normalizedLimit);
 
     return this._enrichPosts(paginatedResults, currentUserId, options);
   }
@@ -197,17 +203,16 @@ class PostService {
     const normalizedSort = this._normalizeSort(sort);
     const posts = await this.postsDb.getAll();
 
-    const results = posts
-      .filter((post) => {
-        if (post.deletedAt != null) return false;
-        if (!publicBlogIds.has(post.blogId)) return false;
-        if (!query) return true;
+    const results = posts.filter((post) => {
+      if (post.deletedAt != null) return false;
+      if (!publicBlogIds.has(post.blogId)) return false;
+      if (!query) return true;
 
-        const titleMatches = typeof post.title === "string" && post.title.toLowerCase().includes(query);
-        const contentMatches = typeof post.content === "string" && post.content.toLowerCase().includes(query);
+      const titleMatches = typeof post.title === "string" && post.title.toLowerCase().includes(query);
+      const contentMatches = typeof post.content === "string" && post.content.toLowerCase().includes(query);
 
-        return titleMatches || contentMatches;
-      });
+      return titleMatches || contentMatches;
+    });
 
     if (normalizedSort === "most-liked" && includeEngagement === true) {
       const enrichedResults = await this._enrichPosts(results, currentUserId, { includeEngagement, period });
@@ -220,7 +225,9 @@ class PostService {
     const sortedResults = this._sortRawPosts(results, normalizedSort);
 
     const paginatedResults =
-      normalizedLimit === null ? sortedResults.slice(normalizedOffset) : sortedResults.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+      normalizedLimit === null
+        ? sortedResults.slice(normalizedOffset)
+        : sortedResults.slice(normalizedOffset, normalizedOffset + normalizedLimit);
 
     return this._enrichPosts(paginatedResults, currentUserId, { includeEngagement, period });
   }
@@ -272,6 +279,30 @@ class PostService {
       deletedAt: null,
       deletedBy: null,
     });
+
+    try {
+      publishNotificationEvent(
+        {
+          type: EVENT_TYPES.FARMLOG_POST_CREATED,
+          payload: {
+            postId: createdPost.id,
+            blogId: createdPost.blogId,
+            authorId: Number(userId),
+            title: createdPost.title,
+            slug: createdPost.slug,
+            createdAt: createdPost.createdAt,
+          },
+          correlationId: `farmlog-post-${createdPost.id}`,
+          source: "post.service",
+        },
+        {
+          action: "farmlog_post_created",
+          meta: { userId: Number(userId), postId: createdPost.id, blogId: createdPost.blogId },
+        },
+      );
+    } catch (e) {
+      // best-effort
+    }
 
     return createdPost;
   }
@@ -329,7 +360,32 @@ class PostService {
       }),
     );
 
-    return await this.getPostBySlug(blogSlug, newSlug, userId);
+    const updatedPost = await this.getPostBySlug(blogSlug, newSlug, userId);
+    try {
+      publishNotificationEvent(
+        {
+          type: EVENT_TYPES.FARMLOG_POST_UPDATED,
+          payload: {
+            postId: updatedPost.id,
+            blogId: updatedPost.blogId,
+            authorId: Number(userId),
+            changes: updatedFields,
+            updatedAt: updatedPost.updatedAt,
+            title: updatedPost.title,
+          },
+          correlationId: `farmlog-post-update-${updatedPost.id}`,
+          source: "post.service",
+        },
+        {
+          action: "farmlog_post_updated",
+          meta: { userId: Number(userId), postId: updatedPost.id, blogId: updatedPost.blogId },
+        },
+      );
+    } catch (e) {
+      // best-effort
+    }
+
+    return updatedPost;
   }
 
   async deletePost(userId, blogSlug, postSlug) {
@@ -357,6 +413,29 @@ class PostService {
         updatedAt: deletedAt,
       }),
     );
+
+    try {
+      publishNotificationEvent(
+        {
+          type: EVENT_TYPES.FARMLOG_POST_DELETED,
+          payload: {
+            postId: post.id,
+            blogId: post.blogId,
+            authorId: Number(userId),
+            deletedAt,
+            title: post.title,
+          },
+          correlationId: `farmlog-post-deleted-${post.id}`,
+          source: "post.service",
+        },
+        {
+          action: "farmlog_post_deleted",
+          meta: { userId: Number(userId), postId: post.id, blogId: post.blogId },
+        },
+      );
+    } catch (e) {
+      // best-effort
+    }
 
     return { id: post.id, slug: post.slug, deletedAt };
   }

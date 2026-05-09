@@ -15,6 +15,8 @@ const dbManager = require("../data/database-manager");
 const pricingService = require("./commodities-pricing.service");
 const commoditiesAdminControlsService = require("./commodities-admin-controls.service");
 const packageJson = require("../package.json");
+const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 class AdminService {
   constructor() {
@@ -196,6 +198,27 @@ class AdminService {
     });
     const { password, ...userResponse } = updatedUser;
 
+    try {
+      publishNotificationEvent(
+        {
+          type: isActive ? EVENT_TYPES.USER_ACCOUNT_REACTIVATED : EVENT_TYPES.USER_ACCOUNT_DEACTIVATED,
+          payload: {
+            userId: updatedUser.id,
+            isActive,
+            changedAt: new Date().toISOString(),
+          },
+          correlationId: `admin-user-status-${updatedUser.id}-${Date.now()}`,
+          source: "admin.service",
+        },
+        {
+          action: isActive ? "user_account_reactivated" : "user_account_deactivated",
+          meta: { userId: updatedUser.id, isActive },
+        },
+      );
+    } catch {
+      // best-effort
+    }
+
     return userResponse;
   }
 
@@ -209,6 +232,23 @@ class AdminService {
     }
 
     await this.userDataInstance.deleteUser(userId);
+    try {
+      publishNotificationEvent(
+        {
+          type: EVENT_TYPES.USER_ACCOUNT_DELETED,
+          payload: { userId: user.id, deletedAt: new Date().toISOString() },
+          correlationId: `admin-user-deleted-${user.id}-${Date.now()}`,
+          source: "admin.service",
+        },
+        {
+          action: "user_account_deleted",
+          meta: { userId: user.id },
+        },
+      );
+    } catch {
+      // best-effort
+    }
+
     return { message: "User deleted successfully" };
   }
 

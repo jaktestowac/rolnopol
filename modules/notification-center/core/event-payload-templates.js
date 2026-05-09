@@ -3,8 +3,10 @@
  * Each template function generates realistic payload examples for testing.
  */
 
+const { EVENT_TYPES } = require("./contracts");
+
 const PAYLOAD_TEMPLATES = {
-  "transaction.created": {
+  [EVENT_TYPES.TRANSACTION_CREATED]: {
     label: "Transaction Created",
     description: "A financial transaction has been created in the system",
     template: (overrides = {}) => ({
@@ -15,7 +17,7 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "user.account.created": {
+  [EVENT_TYPES.USER_ACCOUNT_CREATED]: {
     label: "User Account Created",
     description: "A new user account has been registered",
     template: (overrides = {}) => ({
@@ -25,7 +27,7 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "field.created": {
+  [EVENT_TYPES.FIELD_CREATED]: {
     label: "Field Created",
     description: "A new agricultural field has been registered",
     template: (overrides = {}) => ({
@@ -36,7 +38,7 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "staff.created": {
+  [EVENT_TYPES.STAFF_CREATED]: {
     label: "Staff Created",
     description: "A new staff member has been added",
     template: (overrides = {}) => ({
@@ -47,7 +49,7 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "animal.created": {
+  [EVENT_TYPES.ANIMAL_CREATED]: {
     label: "Animal Created",
     description: "A new animal has been added to inventory",
     template: (overrides = {}) => ({
@@ -58,7 +60,7 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "animal.assigned": {
+  [EVENT_TYPES.ANIMAL_ASSIGNED]: {
     label: "Animal Assigned",
     description: "An animal has been assigned to a field",
     template: (overrides = {}) => ({
@@ -69,7 +71,7 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "marketplace.offer.created": {
+  [EVENT_TYPES.MARKETPLACE_OFFER_CREATED]: {
     label: "Marketplace Offer Created",
     description: "A new offer has been listed in the marketplace",
     template: (overrides = {}) => ({
@@ -81,7 +83,7 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "marketplace.purchase.completed": {
+  [EVENT_TYPES.MARKETPLACE_PURCHASE_COMPLETED]: {
     label: "Marketplace Purchase Completed",
     description: "A purchase transaction has been completed",
     template: (overrides = {}) => ({
@@ -93,7 +95,7 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "transfer.completed": {
+  [EVENT_TYPES.TRANSFER_COMPLETED]: {
     label: "Transfer Completed",
     description: "A funds transfer has been successfully completed",
     template: (overrides = {}) => ({
@@ -105,9 +107,9 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "user.login.failed": {
+  [EVENT_TYPES.USER_LOGIN_FAILED]: {
     label: "User Login Failed",
-    description: "A login attempt has failed",
+    description: "A login attempt has been failed",
     template: (overrides = {}) => ({
       userId: overrides.userId || `user-${Date.now()}`,
       email: overrides.email || `user-${Date.now()}@example.com`,
@@ -117,7 +119,7 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "user.login.invalid_credentials": {
+  [EVENT_TYPES.USER_LOGIN_INVALID_CREDENTIALS]: {
     label: "Invalid Login Credentials",
     description: "A login attempt failed due to invalid credentials",
     template: (overrides = {}) => ({
@@ -129,7 +131,7 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
-  "user.registration.failed.user_exists": {
+  [EVENT_TYPES.USER_REGISTRATION_FAILED_USER_EXISTS]: {
     label: "Registration Failed: User Exists",
     description: "A registration attempt failed because the user already exists",
     template: (overrides = {}) => ({
@@ -140,67 +142,152 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
+  [EVENT_TYPES.FARMLOG_POST_CREATED]: {
+    label: "Farmlog Post Created",
+    description: "A new post was created in the Farmlog",
+    template: (overrides = {}) => ({
+      postId: overrides.postId || `post-${Date.now()}`,
+      blogId: overrides.blogId || `blog-${Date.now()}`,
+      authorId: overrides.authorId || `user-${Date.now()}`,
+      title: overrides.title || "New Farmlog Post",
+      slug: overrides.slug || "new-farmlog-post",
+      createdAt: overrides.createdAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.FARMLOG_POST_UPDATED]: {
+    label: "Farmlog Post Updated",
+    description: "A post in the Farmlog was updated",
+    template: (overrides = {}) => ({
+      postId: overrides.postId || `post-${Date.now()}`,
+      blogId: overrides.blogId || `blog-${Date.now()}`,
+      authorId: overrides.authorId || `user-${Date.now()}`,
+      changes: overrides.changes || { title: "Updated title" },
+      updatedAt: overrides.updatedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.FARMLOG_POST_DELETED]: {
+    label: "Farmlog Post Deleted",
+    description: "A post in the Farmlog was deleted",
+    template: (overrides = {}) => ({
+      postId: overrides.postId || `post-${Date.now()}`,
+      blogId: overrides.blogId || `blog-${Date.now()}`,
+      authorId: overrides.authorId || `user-${Date.now()}`,
+      deletedAt: overrides.deletedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.FARMLOG_POST_LIKED]: {
+    label: "Farmlog Post Liked",
+    description: "A Farmlog post was liked by a user",
+    template: (overrides = {}) => ({
+      postId: overrides.postId || `post-${Date.now()}`,
+      blogId: overrides.blogId || `blog-${Date.now()}`,
+      likedByUserId: overrides.likedByUserId || `user-${Date.now()}`,
+      likeId: overrides.likeId || `like-${Date.now()}`,
+      occurredAt: overrides.occurredAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.FARMLOG_POST_FAVORITED]: {
+    label: "Farmlog Post Favorited",
+    description: "A Farmlog post was added to favorites",
+    template: (overrides = {}) => ({
+      postId: overrides.postId || `post-${Date.now()}`,
+      blogId: overrides.blogId || `blog-${Date.now()}`,
+      userId: overrides.userId || `user-${Date.now()}`,
+      favoriteId: overrides.favoriteId || `fav-${Date.now()}`,
+      occurredAt: overrides.occurredAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
 };
 
 const EVENT_TYPE_METADATA = {
-  "transaction.created": {
+  [EVENT_TYPES.TRANSACTION_CREATED]: {
     icon: "fa-money-bill",
     color: "#4CAF50",
     priority: "high",
   },
-  "user.account.created": {
+  [EVENT_TYPES.USER_ACCOUNT_CREATED]: {
     icon: "fa-user-plus",
     color: "#2196F3",
     priority: "high",
   },
-  "field.created": {
+  [EVENT_TYPES.FIELD_CREATED]: {
     icon: "fa-leaf",
     color: "#8BC34A",
     priority: "normal",
   },
-  "staff.created": {
+  [EVENT_TYPES.STAFF_CREATED]: {
     icon: "fa-users",
     color: "#FF9800",
     priority: "normal",
   },
-  "animal.created": {
+  [EVENT_TYPES.ANIMAL_CREATED]: {
     icon: "fa-paw",
     color: "#9C27B0",
     priority: "normal",
   },
-  "animal.assigned": {
+  [EVENT_TYPES.ANIMAL_ASSIGNED]: {
     icon: "fa-link",
     color: "#E91E63",
     priority: "normal",
   },
-  "marketplace.offer.created": {
+  [EVENT_TYPES.MARKETPLACE_OFFER_CREATED]: {
     icon: "fa-tag",
     color: "#00BCD4",
     priority: "normal",
   },
-  "marketplace.purchase.completed": {
+  [EVENT_TYPES.MARKETPLACE_PURCHASE_COMPLETED]: {
     icon: "fa-shopping-cart",
     color: "#4CAF50",
     priority: "high",
   },
-  "transfer.completed": {
+  [EVENT_TYPES.TRANSFER_COMPLETED]: {
     icon: "fa-exchange-alt",
     color: "#4CAF50",
     priority: "high",
   },
-  "user.login.failed": {
+  [EVENT_TYPES.USER_LOGIN_FAILED]: {
     icon: "fa-lock",
     color: "#F44336",
     priority: "high",
   },
-  "user.login.invalid_credentials": {
+  [EVENT_TYPES.USER_LOGIN_INVALID_CREDENTIALS]: {
     icon: "fa-user-lock",
     color: "#E53935",
     priority: "high",
   },
-  "user.registration.failed.user_exists": {
+  [EVENT_TYPES.USER_REGISTRATION_FAILED_USER_EXISTS]: {
     icon: "fa-user-xmark",
     color: "#EF6C00",
+    priority: "normal",
+  },
+  [EVENT_TYPES.FARMLOG_POST_CREATED]: {
+    icon: "fa-pen",
+    color: "#3F51B5",
+    priority: "normal",
+  },
+  [EVENT_TYPES.FARMLOG_POST_UPDATED]: {
+    icon: "fa-edit",
+    color: "#2196F3",
+    priority: "low",
+  },
+  [EVENT_TYPES.FARMLOG_POST_DELETED]: {
+    icon: "fa-trash",
+    color: "#F44336",
+    priority: "normal",
+  },
+  [EVENT_TYPES.FARMLOG_POST_LIKED]: {
+    icon: "fa-heart",
+    color: "#E91E63",
+    priority: "normal",
+  },
+  [EVENT_TYPES.FARMLOG_POST_FAVORITED]: {
+    icon: "fa-star",
+    color: "#FFEB3B",
     priority: "normal",
   },
 };

@@ -1,7 +1,9 @@
+const { EVENT_TYPES } = require("./contracts");
+
 const policies = {
-  "transaction.created": {
+  [EVENT_TYPES.TRANSACTION_CREATED]: {
     id: "policy.transaction.default",
-    eventType: "transaction.created",
+    eventType: EVENT_TYPES.TRANSACTION_CREATED,
     priority: "high",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 60 },
@@ -12,9 +14,9 @@ const policies = {
       message: `Transaction #${event.payload?.transactionId || "n/a"} created with amount ${event.payload?.amount ?? "?"}.`,
     }),
   },
-  "user.account.created": {
+  [EVENT_TYPES.USER_ACCOUNT_CREATED]: {
     id: "policy.user.account.created",
-    eventType: "user.account.created",
+    eventType: EVENT_TYPES.USER_ACCOUNT_CREATED,
     priority: "high",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 86400 },
@@ -25,9 +27,9 @@ const policies = {
       message: `User account ${event.payload?.email || event.payload?.userId || "new user"} has been created.`,
     }),
   },
-  "field.created": {
+  [EVENT_TYPES.FIELD_CREATED]: {
     id: "policy.field.created",
-    eventType: "field.created",
+    eventType: EVENT_TYPES.FIELD_CREATED,
     priority: "normal",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 0 },
@@ -38,9 +40,9 @@ const policies = {
       message: `Field ${event.payload?.name || `#${event.payload?.fieldId || "n/a"}`} has been created.`,
     }),
   },
-  "staff.created": {
+  [EVENT_TYPES.STAFF_CREATED]: {
     id: "policy.staff.created",
-    eventType: "staff.created",
+    eventType: EVENT_TYPES.STAFF_CREATED,
     priority: "normal",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 0 },
@@ -51,9 +53,9 @@ const policies = {
       message: `New staff member ${event.payload?.name || event.payload?.staffId || "(no name)"} has been added.`,
     }),
   },
-  "animal.created": {
+  [EVENT_TYPES.ANIMAL_CREATED]: {
     id: "policy.animal.created",
-    eventType: "animal.created",
+    eventType: EVENT_TYPES.ANIMAL_CREATED,
     priority: "normal",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 0 },
@@ -64,9 +66,9 @@ const policies = {
       message: `New animal of type ${event.payload?.type || "n/a"} added (quantity: ${event.payload?.amount ?? "?"}).`,
     }),
   },
-  "animal.assigned": {
+  [EVENT_TYPES.ANIMAL_ASSIGNED]: {
     id: "policy.animal.assigned",
-    eventType: "animal.assigned",
+    eventType: EVENT_TYPES.ANIMAL_ASSIGNED,
     priority: "normal",
     channels: ["in-app"],
     dedupe: { seconds: 0 },
@@ -77,9 +79,9 @@ const policies = {
       message: `Animal #${event.payload?.animalId || "n/a"} assigned to field #${event.payload?.fieldId || "n/a"}.`,
     }),
   },
-  "marketplace.offer.created": {
+  [EVENT_TYPES.MARKETPLACE_OFFER_CREATED]: {
     id: "policy.marketplace.offer.created",
-    eventType: "marketplace.offer.created",
+    eventType: EVENT_TYPES.MARKETPLACE_OFFER_CREATED,
     priority: "normal",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 0 },
@@ -90,9 +92,9 @@ const policies = {
       message: `Offer #${event.payload?.offerId || "n/a"} (${event.payload?.itemType || "item"}) listed for ${event.payload?.price ?? "?"} ROL.`,
     }),
   },
-  "marketplace.purchase.completed": {
+  [EVENT_TYPES.MARKETPLACE_PURCHASE_COMPLETED]: {
     id: "policy.marketplace.purchase.completed",
-    eventType: "marketplace.purchase.completed",
+    eventType: EVENT_TYPES.MARKETPLACE_PURCHASE_COMPLETED,
     priority: "high",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 30 },
@@ -103,9 +105,9 @@ const policies = {
       message: `Purchased ${event.payload?.itemType || "item"} from offer #${event.payload?.offerId || "n/a"} for ${event.payload?.price ?? "?"} ROL.`,
     }),
   },
-  "transfer.completed": {
+  [EVENT_TYPES.TRANSFER_COMPLETED]: {
     id: "policy.transfer.completed",
-    eventType: "transfer.completed",
+    eventType: EVENT_TYPES.TRANSFER_COMPLETED,
     priority: "high",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 10 },
@@ -116,9 +118,9 @@ const policies = {
       message: `Transferred ${event.payload?.amount ?? "?"} ROL to user #${event.payload?.toUserId || "n/a"}.`,
     }),
   },
-  "user.login.failed": {
+  [EVENT_TYPES.USER_LOGIN_FAILED]: {
     id: "policy.user.login.failed",
-    eventType: "user.login.failed",
+    eventType: EVENT_TYPES.USER_LOGIN_FAILED,
     priority: "high",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 30 },
@@ -129,9 +131,9 @@ const policies = {
       message: `Detected failed login attempt (${event.payload?.reason || "unknown_reason"}).`,
     }),
   },
-  "user.login.invalid_credentials": {
+  [EVENT_TYPES.USER_LOGIN_INVALID_CREDENTIALS]: {
     id: "policy.user.login.invalid_credentials",
-    eventType: "user.login.invalid_credentials",
+    eventType: EVENT_TYPES.USER_LOGIN_INVALID_CREDENTIALS,
     priority: "high",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 30 },
@@ -142,9 +144,9 @@ const policies = {
       message: `Invalid credentials used for login (${event.payload?.attemptedEmail || "unknown_user"}).`,
     }),
   },
-  "user.registration.failed.user_exists": {
+  [EVENT_TYPES.USER_REGISTRATION_FAILED_USER_EXISTS]: {
     id: "policy.user.registration.failed.user_exists",
-    eventType: "user.registration.failed.user_exists",
+    eventType: EVENT_TYPES.USER_REGISTRATION_FAILED_USER_EXISTS,
     priority: "normal",
     channels: ["in-app", "webhook"],
     dedupe: { seconds: 60 },
@@ -153,6 +155,201 @@ const policies = {
     template: (event) => ({
       title: "Registration Failed: User Exists",
       message: `Registration was rejected because account ${event.payload?.attemptedEmail || "unknown_user"} already exists.`,
+    }),
+  },
+  [EVENT_TYPES.USER_ACCOUNT_UPDATED]: {
+    id: "policy.user.account.updated",
+    eventType: EVENT_TYPES.USER_ACCOUNT_UPDATED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 3600 },
+    rateLimit: { max: 100, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Account Updated",
+      message: `Account #${event.payload?.userId || "n/a"} has been updated.`,
+    }),
+  },
+  [EVENT_TYPES.USER_ACCOUNT_DEACTIVATED]: {
+    id: "policy.user.account.deactivated",
+    eventType: EVENT_TYPES.USER_ACCOUNT_DEACTIVATED,
+    priority: "high",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 100, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Account Deactivated",
+      message: `Account #${event.payload?.userId || "n/a"} was deactivated.`,
+    }),
+  },
+  [EVENT_TYPES.USER_ACCOUNT_REACTIVATED]: {
+    id: "policy.user.account.reactivated",
+    eventType: EVENT_TYPES.USER_ACCOUNT_REACTIVATED,
+    priority: "high",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 100, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Account Reactivated",
+      message: `Account #${event.payload?.userId || "n/a"} was reactivated.`,
+    }),
+  },
+  [EVENT_TYPES.USER_ACCOUNT_DELETED]: {
+    id: "policy.user.account.deleted",
+    eventType: EVENT_TYPES.USER_ACCOUNT_DELETED,
+    priority: "high",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 50, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Account Deleted",
+      message: `Account #${event.payload?.userId || "n/a"} was deleted.`,
+    }),
+  },
+  [EVENT_TYPES.FIELD_UPDATED]: {
+    id: "policy.field.updated",
+    eventType: EVENT_TYPES.FIELD_UPDATED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 20, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Field Updated",
+      message: `Field #${event.payload?.fieldId || "n/a"} was updated.`,
+    }),
+  },
+  [EVENT_TYPES.FIELD_DELETED]: {
+    id: "policy.field.deleted",
+    eventType: EVENT_TYPES.FIELD_DELETED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 20, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Field Deleted",
+      message: `Field #${event.payload?.fieldId || "n/a"} was deleted.`,
+    }),
+  },
+  [EVENT_TYPES.FARMLOG_POST_CREATED]: {
+    id: "policy.farmlog.post.created",
+    eventType: EVENT_TYPES.FARMLOG_POST_CREATED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 50, windowSeconds: 86400 },
+    processingDelayMs: 1200,
+    template: (event) => ({
+      title: "New Farmlog Post",
+      message: `${event.payload?.title || "New post"} published by user #${event.payload?.authorId || "?"}.`,
+    }),
+  },
+  [EVENT_TYPES.FARMLOG_POST_UPDATED]: {
+    id: "policy.farmlog.post.updated",
+    eventType: EVENT_TYPES.FARMLOG_POST_UPDATED,
+    priority: "low",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 40, windowSeconds: 86400 },
+    processingDelayMs: 1200,
+    template: (event) => ({
+      title: "Post Updated",
+      message: `${event.payload?.title || "A post"} was updated by user #${event.payload?.authorId || "?"}.`,
+    }),
+  },
+  [EVENT_TYPES.FARMLOG_POST_DELETED]: {
+    id: "policy.farmlog.post.deleted",
+    eventType: EVENT_TYPES.FARMLOG_POST_DELETED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 40, windowSeconds: 86400 },
+    processingDelayMs: 1200,
+    template: (event) => ({
+      title: "Post Deleted",
+      message: `${event.payload?.title || "A post"} was deleted.`,
+    }),
+  },
+  [EVENT_TYPES.FARMLOG_POST_LIKED]: {
+    id: "policy.farmlog.post.liked",
+    eventType: EVENT_TYPES.FARMLOG_POST_LIKED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 60 },
+    rateLimit: { max: 200, windowSeconds: 3600 },
+    processingDelayMs: 800,
+    template: (event) => ({
+      title: "Post Liked",
+      message: `Your post #${event.payload?.postId || "n/a"} was liked by user #${event.payload?.likedByUserId || "?"}.`,
+    }),
+  },
+  [EVENT_TYPES.FARMLOG_POST_FAVORITED]: {
+    id: "policy.farmlog.post.favorited",
+    eventType: EVENT_TYPES.FARMLOG_POST_FAVORITED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 60 },
+    rateLimit: { max: 200, windowSeconds: 3600 },
+    processingDelayMs: 800,
+    template: (event) => ({
+      title: "Post Favorited",
+      message: `Your post #${event.payload?.postId || "n/a"} was added to favorites by user #${event.payload?.userId || "?"}.`,
+    }),
+  },
+  [EVENT_TYPES.TRANSACTION_FAILED]: {
+    id: "policy.transaction.failed",
+    eventType: EVENT_TYPES.TRANSACTION_FAILED,
+    priority: "high",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 30 },
+    rateLimit: { max: 100, windowSeconds: 3600 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Transaction Failed",
+      message: `A transaction attempt for user #${event.payload?.userId || "n/a"} failed: ${event.payload?.reason || "unknown"}.`,
+    }),
+  },
+  [EVENT_TYPES.MARKETPLACE_OFFER_CANCELLED]: {
+    id: "policy.marketplace.offer.cancelled",
+    eventType: EVENT_TYPES.MARKETPLACE_OFFER_CANCELLED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 30, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Marketplace Offer Cancelled",
+      message: `Offer #${event.payload?.offerId || "n/a"} was cancelled.`,
+    }),
+  },
+  [EVENT_TYPES.ASSIGNMENT_CREATED]: {
+    id: "policy.assignment.created",
+    eventType: EVENT_TYPES.ASSIGNMENT_CREATED,
+    priority: "normal",
+    channels: ["in-app"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 50, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Assignment Created",
+      message: `Assignment #${event.payload?.assignmentId || "n/a"} created (staff: ${event.payload?.staffId || "?"}).`,
+    }),
+  },
+  [EVENT_TYPES.ASSIGNMENT_REMOVED]: {
+    id: "policy.assignment.removed",
+    eventType: EVENT_TYPES.ASSIGNMENT_REMOVED,
+    priority: "normal",
+    channels: ["in-app"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 50, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Assignment Removed",
+      message: `Assignment #${event.payload?.assignmentId || "n/a"} was removed.`,
     }),
   },
 };
