@@ -1,5 +1,6 @@
 const { formatResponseBody } = require("../helpers/response-helper");
 const { logError } = require("../helpers/logger-api");
+const featureFlagsService = require("../services/feature-flags.service");
 
 class AlertsController {
   _buildRedEventDecoder(seedDate) {
@@ -38,6 +39,8 @@ class AlertsController {
       const region = req.query.region || "PL-MA";
       const redEventDecodeEnabled = req.query?.redDecode === "1" || req.query?.redDecode === "true";
       const alertsService = require("../services/alerts.service")(region);
+      const featureFlags = await featureFlagsService.getFeatureFlags();
+      const celebrationEventsEnabled = featureFlags?.flags?.celebrationEventsEnabled === true;
 
       // Get today's and tomorrow's dates in UTC
       const now = new Date();
@@ -54,6 +57,7 @@ class AlertsController {
       let history = alertsService.getHistory(date, 7);
       const upcoming = alertsService.getUpcoming(date);
       const today = { date, alerts: alertsService.generateAlertsForDate(date) };
+      const celebrationEvents = celebrationEventsEnabled ? alertsService.getCelebrationEventsForDate(date) : [];
 
       // check each date (in history, upcoming, today) - if date is greater than tomorrow then replace alerts with empty array
       if (today.date > tomorrowISO) {
@@ -84,8 +88,16 @@ class AlertsController {
           today,
           upcoming,
           history,
+          celebrationEvents,
         },
       };
+
+      if (celebrationEvents.length > 0) {
+        body.meta = {
+          ...(body.meta || {}),
+          celebrationTheme: celebrationEvents[0].themeKey,
+        };
+      }
 
       if (redEventDecodeEnabled) {
         body.data.today.alerts = this._applyRedEventDecoder(body.data.today.alerts, date);
@@ -227,6 +239,44 @@ class AlertsController {
       res.status(200).json(formatResponseBody(responsePayload));
     } catch (error) {
       logError("Error getting upcoming alerts:", error);
+      res.status(400).json(formatResponseBody({ error: error.message }));
+    }
+  }
+
+  async getCelebrationEvents(req, res) {
+    try {
+      const date = req.query.date || new Date().toISOString().slice(0, 10);
+      const region = req.query.region || "PL-MA";
+      const alertsService = require("../services/alerts.service")(region);
+      const featureFlags = await featureFlagsService.getFeatureFlags();
+
+      if (featureFlags?.flags?.celebrationEventsEnabled !== true) {
+        res.status(404).json(
+          formatResponseBody({
+            error: "Celebration events not found",
+          }),
+        );
+        return;
+      }
+
+      const celebrationEvents = alertsService.getCelebrationEventsForDate(date);
+
+      const responsePayload = {
+        data: {
+          seed: date,
+          celebrationEvents,
+        },
+      };
+
+      if (celebrationEvents.length > 0) {
+        responsePayload.meta = {
+          celebrationTheme: celebrationEvents[0].themeKey,
+        };
+      }
+
+      res.status(200).json(formatResponseBody(responsePayload));
+    } catch (error) {
+      logError("Error getting celebration events:", error);
       res.status(400).json(formatResponseBody({ error: error.message }));
     }
   }

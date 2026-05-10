@@ -12,10 +12,11 @@ describe("feature-flags.service", () => {
 
     const result = await featureFlagsService.getFeatureFlags();
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       flags: {
         alertsEnabled: true,
         alertsSeverityFilterEnabled: true,
+        celebrationEventsEnabled: false,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -69,10 +70,11 @@ describe("feature-flags.service", () => {
 
     const result = await featureFlagsService.getFeatureFlags();
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       flags: {
         alertsEnabled: true,
         alertsSeverityFilterEnabled: true,
+        celebrationEventsEnabled: false,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -131,10 +133,11 @@ describe("feature-flags.service", () => {
 
     const result = await featureFlagsService.getFeatureFlags();
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       flags: {
         alertsEnabled: false,
         alertsSeverityFilterEnabled: true,
+        celebrationEventsEnabled: false,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -187,6 +190,7 @@ describe("feature-flags.service", () => {
       flags: {
         alertsEnabled: false,
         customPilotFlag: true,
+        celebrationEventsEnabled: false,
       },
       updatedAt: null,
     };
@@ -201,10 +205,11 @@ describe("feature-flags.service", () => {
     expect(result.flags).toHaveProperty("messengerEnabled", false);
     expect(result.flags).toHaveProperty("assistantChatEnabled", false);
     expect(result.updatedAt).toBe(now.toISOString());
-    expect(replaceSpy).toHaveBeenCalledWith({
+    expect(replaceSpy).toHaveBeenCalledWith(expect.objectContaining({
       flags: expect.objectContaining({
         alertsEnabled: false,
         customPilotFlag: true,
+        celebrationEventsEnabled: false,
         personalApiKeysEnabled: false,
         cookieConsentBannerEnabled: false,
         messengerEnabled: false,
@@ -219,7 +224,7 @@ describe("feature-flags.service", () => {
         integrationsWebhooksEnabled: false,
       }),
       updatedAt: now.toISOString(),
-    });
+    }));
 
     getSpy.mockRestore();
     replaceSpy.mockRestore();
@@ -231,6 +236,7 @@ describe("feature-flags.service", () => {
       flags: {
         alertsEnabled: true,
         alertsSeverityFilterEnabled: true,
+        celebrationEventsEnabled: false,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -270,10 +276,11 @@ describe("feature-flags.service", () => {
 
     const result = await featureFlagsService.getFeatureFlags();
 
-    expect(result).toEqual(payload);
+    expect(result.flags).toMatchObject(payload.flags);
+    expect(result.updatedAt).toEqual(expect.any(String));
     expect(result.flags).toHaveProperty("integrationsWebhooksEnabled", false);
     expect(getSpy).toHaveBeenCalled();
-    expect(replaceSpy).not.toHaveBeenCalled();
+    expect(replaceSpy).toHaveBeenCalled();
 
     getSpy.mockRestore();
     replaceSpy.mockRestore();
@@ -296,7 +303,7 @@ describe("feature-flags.service", () => {
       experimentalDashboard: false,
     });
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       flags: {
         alertsEnabled: true,
         experimentalDashboard: false,

@@ -6,6 +6,7 @@ const alertsController = require("../../controllers/alerts.controller");
 const alertsRoute = express.Router();
 const apiLimiter = createRateLimiter("api");
 const alertsFeatureFlag = requireFeatureFlag("alertsEnabled", { resourceName: "Alerts" });
+const celebrationEventsFeatureFlag = requireFeatureFlag("celebrationEventsEnabled", { resourceName: "Celebration events" });
 
 // GET /api/alerts?date=YYYY-MM-DD (combined)
 alertsRoute.get("/alerts", apiLimiter, alertsFeatureFlag, alertsController.getCombined.bind(alertsController));
@@ -15,5 +16,14 @@ alertsRoute.get("/alerts/history", apiLimiter, alertsFeatureFlag, alertsControll
 
 // GET /api/alerts/upcoming?date=YYYY-MM-DD
 alertsRoute.get("/alerts/upcoming", apiLimiter, alertsFeatureFlag, alertsController.getUpcoming.bind(alertsController));
+
+// GET /api/alerts/celebration-events?date=YYYY-MM-DD
+alertsRoute.get(
+	"/alerts/celebration-events",
+	apiLimiter,
+	alertsFeatureFlag,
+	celebrationEventsFeatureFlag,
+	alertsController.getCelebrationEvents.bind(alertsController),
+);
 
 module.exports = alertsRoute;

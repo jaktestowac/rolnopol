@@ -5,6 +5,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   alertsEnabled: "Enable or disable the alerts system for animals and operations",
   alertsSeverityFilterEnabled: "Enable or disable severity filter controls on the alerts page",
   alertsAiAssistantEnabled: "Enable or disable the AI alerts assistant widget on the alerts page and its public API",
+  celebrationEventsEnabled: "Enable or disable celebration events on the alerts page and its public API",
   profileAvatarUploadEnabled: "Enable or disable custom avatar uploads on the profile page",
   rolnopolMapEnabled: "Enable or disable the interactive map feature",
   docsSearchEnabled: "Enable or disable documentation search",
@@ -43,7 +44,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
 
 const FEATURE_FLAG_GROUPS = {
   homepage: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled", "homeModernRestyleEnabled"],
-  alert: ["alertsEnabled", "alertsSeverityFilterEnabled", "alertsAiAssistantEnabled"],
+  alert: ["alertsEnabled", "alertsSeverityFilterEnabled", "alertsAiAssistantEnabled", "celebrationEventsEnabled"],
   profile: ["profileAvatarUploadEnabled"],
   map: ["rolnopolMapEnabled"],
   documentation: ["docsSearchEnabled", "docsAdvancedSearchEnabled", "docsAiAssistantEnabled"],
@@ -75,6 +76,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "docsAdvancedSearchEnabled",
   "docsAiAssistantEnabled",
   "alertsAiAssistantEnabled",
+  "celebrationEventsEnabled",
   "profileAvatarUploadEnabled",
   "registrationStrongPasswordEnabled",
   "financialCommoditiesEnabled",
@@ -100,6 +102,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   alertsEnabled: true,
   alertsSeverityFilterEnabled: true,
   alertsAiAssistantEnabled: false,
+  celebrationEventsEnabled: false,
   profileAvatarUploadEnabled: false,
   rolnopolMapEnabled: true,
   docsSearchEnabled: false,

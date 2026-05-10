@@ -20,6 +20,13 @@ async function setAlertsEnabled(enabled) {
     .expect(200);
 }
 
+async function setCelebrationEventsEnabled(enabled) {
+  await request(app)
+    .patch("/api/v1/feature-flags")
+    .send({ flags: { celebrationEventsEnabled: enabled } })
+    .expect(200);
+}
+
 describe("Alerts API", () => {
   let token;
   let originalFlags;
@@ -30,6 +37,7 @@ describe("Alerts API", () => {
     const flagsRes = await request(app).get("/api/v1/feature-flags").expect(200);
     originalFlags = flagsRes.body?.data?.flags || {};
     await setAlertsEnabled(true);
+    await setCelebrationEventsEnabled(false);
   });
 
   afterAll(async () => {
@@ -44,7 +52,30 @@ describe("Alerts API", () => {
     expect(res.body.data).toHaveProperty("upcoming");
     expect(res.body.data).toHaveProperty("history");
     expect(res.body.data).toHaveProperty("today");
+    expect(res.body.data).toHaveProperty("celebrationEvents");
+    expect(res.body.data.celebrationEvents).toEqual([]);
     expect(Array.isArray(res.body.data.today.alerts)).toBe(true);
+  });
+
+  it("GET /api/v1/alerts/celebration-events returns the active celebration event list", async () => {
+    const celebrationSeed = "2026-04-23";
+    await setCelebrationEventsEnabled(true);
+    const res = await request(app).get(`/api/v1/alerts/celebration-events?date=${celebrationSeed}`).set("token", token).expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.seed).toBe(celebrationSeed);
+    expect(Array.isArray(res.body.data.celebrationEvents)).toBe(true);
+    expect(res.body.data.celebrationEvents.length).toBeGreaterThan(0);
+    expect(res.body.data.celebrationEvents[0]).toHaveProperty("themeKey");
+
+    await setCelebrationEventsEnabled(false);
+  });
+
+  it("GET /api/v1/alerts/celebration-events returns 404 when the feature is disabled", async () => {
+    const res = await request(app).get(`/api/v1/alerts/celebration-events?date=${seed}`).set("token", token).expect(404);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toBe("Celebration events not found");
   });
 
   it("GET /api/v1/alerts/history returns history", async () => {
@@ -132,9 +163,14 @@ describe("Alerts API", () => {
     });
 
     it("returns 404 when alertsEnabled key is absent after full flag replacement, and recovers after re-enable", async () => {
-      await request(app).put("/api/v1/feature-flags").send({ flags: { 
-        alertsEnabled: false,
-      } }).expect(200);
+      await request(app)
+        .put("/api/v1/feature-flags")
+        .send({
+          flags: {
+            alertsEnabled: false,
+          },
+        })
+        .expect(200);
 
       const disabledRes = await request(app).get(`/api/v1/alerts?date=${seed}`).set("token", token).expect(404);
       expect(disabledRes.body.success).toBe(false);

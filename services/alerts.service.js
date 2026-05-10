@@ -1,5 +1,6 @@
 const { logError, logDebug, logInfo } = require("../helpers/logger-api");
 const { SPECIAL_ALERTS } = require("./special-alerts.data");
+const { getCelebrationEventsForDate } = require("./celebration-events.service");
 
 const DEFAULT_CONFIG = {
   // Probability distribution for how many alerts to generate per day.
@@ -494,8 +495,8 @@ class AlertsService {
       moisture > 80
         ? "Avoid heavy traffic; keep to headlands; delay tillage."
         : compaction === "elevated"
-        ? "Use lower tire pressure or duals; shallow pass only."
-        : "Conditions acceptable.";
+          ? "Use lower tire pressure or duals; shallow pass only."
+          : "Conditions acceptable.";
     return {
       title,
       message: this._finalizeMsg("soil", { soil, moisturePct: moisture, compaction }, action),
@@ -656,18 +657,18 @@ class AlertsService {
           cat === "weather"
             ? 0.6
             : cat === "disease" || cat === "pest"
-            ? 0.5
-            : cat === "irrigation"
-            ? 0.45
-            : cat === "livestock"
-            ? 0.4
-            : cat === "soil"
-            ? 0.35
-            : cat === "logistics"
-            ? 0.3
-            : cat === "machinery"
-            ? 0.25
-            : 0.2;
+              ? 0.5
+              : cat === "irrigation"
+                ? 0.45
+                : cat === "livestock"
+                  ? 0.4
+                  : cat === "soil"
+                    ? 0.35
+                    : cat === "logistics"
+                      ? 0.3
+                      : cat === "machinery"
+                        ? 0.25
+                        : 0.2;
         const sev = this._severityFromRisk(rnd, baseRisk);
 
         const hour = this._weighted(rnd, [
@@ -758,6 +759,10 @@ class AlertsService {
     d.setUTCDate(d.getUTCDate() + 1);
     const ds = this._toISODate(d);
     return { date: ds, alerts: this.generateAlertsForDate(ds) };
+  }
+
+  getCelebrationEventsForDate(dateStr) {
+    return getCelebrationEventsForDate(dateStr);
   }
 }
 

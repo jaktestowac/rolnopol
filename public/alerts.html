@@ -97,6 +97,14 @@
       </div>
     </div>
 
+    <section id="celebrationSection" class="alerts-section alerts-celebration-section" hidden>
+      <div class="section-title">
+        <span id="celebrationTitle">Celebration events</span>
+        <span class="count-pill" id="celebrationCount">0</span>
+      </div>
+      <div id="celebrationList" class="celebration-list" aria-live="polite"></div>
+    </section>
+
     <section id="upcomingSection" class="alerts-section">
       <span class="section-title">Tomorrow <span class="count-pill" id="upcomingCount">0</span></span>
       <div class="history-day">
@@ -140,9 +148,21 @@
       const todayCountEl = document.getElementById("todayCount");
       const upcomingCountEl = document.getElementById("upcomingCount");
       const historyCountEl = document.getElementById("historyCount");
+      const celebrationSection = document.getElementById("celebrationSection");
+      const celebrationList = document.getElementById("celebrationList");
+      const celebrationCountEl = document.getElementById("celebrationCount");
       let severityFilterEnabled = true;
 
       let lastData = null; // cache for client-side filtering
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
 
       function getCookie(name) {
         const value = `; ${document.cookie}`;
@@ -182,6 +202,56 @@
                 </div>`;
       }
 
+      function celebrationCard(event) {
+        return `
+          <article class="celebration-event" data-theme="${escapeHtml(event.themeKey || "")}">
+            <div class="celebration-event__head">
+              <div>
+                <div class="celebration-event__eyebrow">${escapeHtml(event.emoji || "✨")} Celebration event</div>
+                <h3 class="celebration-event__title">${escapeHtml(event.bannerTitle || event.name || "Themed alert")}</h3>
+              </div>
+              <span class="badge sev-low">${escapeHtml(event.dateLabel || event.startDate || "")}</span>
+            </div>
+            <div class="celebration-event__subtitle">${escapeHtml(event.bannerSubtitle || "")}</div>
+          </article>
+        `;
+      }
+
+      function applyCelebrationTheme(events = []) {
+        const page = document.querySelector(".alerts-page");
+        const themeKey = events?.[0]?.themeKey || "";
+
+        if (page) {
+          if (themeKey) {
+            page.dataset.celebrationTheme = themeKey;
+          } else {
+            delete page.dataset.celebrationTheme;
+          }
+        }
+      }
+
+      function renderCelebrationEvents(events = []) {
+        const list = Array.isArray(events) ? events : [];
+        if (celebrationCountEl) {
+          celebrationCountEl.textContent = list.length;
+        }
+
+        if (!celebrationSection || !celebrationList) {
+          return;
+        }
+
+        if (!list.length) {
+          celebrationSection.hidden = true;
+          celebrationList.innerHTML = "";
+          applyCelebrationTheme([]);
+          return;
+        }
+
+        celebrationSection.hidden = false;
+        celebrationList.innerHTML = list.map((event) => celebrationCard(event)).join("");
+        applyCelebrationTheme(list);
+      }
+
       function showSkeletons(container, n = 3) {
         container.innerHTML = "";
         for (let i = 0; i < n; i++) container.insertAdjacentHTML("beforeend", '<div class="skeleton" aria-hidden="true"></div>');
@@ -201,6 +271,7 @@
         };
         const filt = (arr = []) => arr.filter(match);
         return {
+          celebrationEvents: Array.isArray(data?.celebrationEvents) ? data.celebrationEvents : [],
           today: { alerts: filt(data?.today?.alerts || []) },
           upcoming: { alerts: filt(data?.upcoming?.alerts || []) },
           history: (data?.history || []).map((day) => ({
@@ -308,15 +379,23 @@
         try {
           const token = getCookie("rolnopolToken");
           const region = regionSelect.value;
+          const celebrationEventsEnabled = await getFeatureFlagValue("celebrationEventsEnabled", false);
           // skeletons while loading
           showSkeletons(todayListEl());
           showSkeletons(upcomingEl);
           showSkeletons(historyEl, 2);
-          const res = await fetch(`/api/v1/alerts?date=${encodeURIComponent(todayDate)}&region=${encodeURIComponent(region)}`, {
+          const requestInit = {
             headers: { "Content-Type": "application/json", ...(token ? { token: token } : {}) },
             credentials: "include",
-          });
-          const json = await res.json();
+          };
+          const alertsPromise = fetch(`/api/v1/alerts?date=${encodeURIComponent(todayDate)}&region=${encodeURIComponent(region)}`, requestInit);
+          const celebrationPromise = celebrationEventsEnabled
+            ? fetch(`/api/v1/alerts/celebration-events?date=${encodeURIComponent(todayDate)}&region=${encodeURIComponent(region)}`, requestInit)
+            : Promise.resolve(null);
+
+          const [alertsRes, celebrationRes] = await Promise.all([alertsPromise, celebrationPromise]);
+          const json = await alertsRes.json();
+          const celebrationJson = celebrationRes ? await celebrationRes.json() : null;
           // If unauthorized/forbidden -> clear session and redirect
           // if (res.status === 401 || res.status === 403) {
           //     try { if (window.App && window.App.getModule) { const s = window.App.getModule('authService'); if (s) await s.logout(); } } catch (_) { }
@@ -324,8 +403,22 @@
           //     window.location.href = '/login.html';
           //     return;
           // }
-          if (!res.ok || !json.success) throw new Error(json.error || "Failed to load alerts");
-          lastData = json.data;
+          if (!alertsRes.ok || !json.success) throw new Error(json.error || "Failed to load alerts");
+          if (celebrationRes?.ok && celebrationJson?.success) {
+            lastData = {
+              ...json.data,
+              celebrationEvents: Array.isArray(celebrationJson?.data?.celebrationEvents)
+                ? celebrationJson.data.celebrationEvents
+                : Array.isArray(json.data?.celebrationEvents)
+                  ? json.data.celebrationEvents
+                  : [],
+            };
+          } else {
+            lastData = {
+              ...json.data,
+              celebrationEvents: Array.isArray(json.data?.celebrationEvents) ? json.data.celebrationEvents : [],
+            };
+          }
           render();
         } catch (e) {
           // if (String(e.message || e).toLowerCase().includes('unauthorized') || String(e.message || e).toLowerCase().includes('forbidden')) {
@@ -347,6 +440,8 @@
 
       function render() {
         const data = applyFilters(lastData) || { today: { alerts: [] }, upcoming: { alerts: [] }, history: [] };
+
+        renderCelebrationEvents(data.celebrationEvents || []);
 
         // Today
         const tEl = todayListEl();
