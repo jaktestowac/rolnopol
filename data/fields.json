@@ -240,5 +240,19 @@
     "area": 500,
     "protected": true,
     "district": "powiat brzeziński"
+  },
+  {
+    "id": 37,
+    "userId": 6,
+    "name": "B104-GS12",
+    "area": 2305,
+    "protected": true
+  },
+  {
+    "id": 38,
+    "userId": 6,
+    "name": "B104-GS13",
+    "area": 2301,
+    "protected": true
   }
 ]

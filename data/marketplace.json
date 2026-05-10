@@ -307,7 +307,7 @@
     },
     {
       "id": 28,
-      "sellerId": 6,
+      "sellerId": 7,
       "itemType": "animal",
       "itemId": 28,
       "price": 149.99,
@@ -315,6 +315,28 @@
       "status": "active",
       "createdAt": "2025-07-28T10:15:00.000Z",
       "updatedAt": "2025-07-28T10:15:00.000Z"
+    },
+    {
+      "id": 29,
+      "sellerId": 6,
+      "itemType": "field",
+      "itemId": 37,
+      "price": 155500,
+      "description": "B104-GS12",
+      "status": "active",
+      "createdAt": "2025-08-26T12:00:00.000Z",
+      "updatedAt": "2025-08-26T12:00:00.000Z"
+    },
+    {
+      "id": 30,
+      "sellerId": 6,
+      "itemType": "field",
+      "itemId": 38,
+      "price": 155500,
+      "description": "B104-GS13",
+      "status": "active",
+      "createdAt": "2025-08-26T12:00:00.000Z",
+      "updatedAt": "2025-08-26T12:00:00.000Z"
     }
   ],
   "transactions": [

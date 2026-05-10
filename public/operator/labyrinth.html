@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Labyrinth - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css?v=20260509-5" />
+    <link rel="stylesheet" href="/css/pages/labyrinth.css?v=20260510-1" />
+</head>
+
+<body class="labyrinth-page labyrinth-size-modal-open">
+    <main class="labyrinth-shell">
+        <header class="glass labyrinth-header">
+            <span class="labyrinth-title"><i class="fas fa-compass-drafting"></i> Labyrinth</span>
+            <div class="labyrinth-header__actions">
+                <select id="themeSelect" class="labyrinth-select"></select>
+                <button id="newMazeBtn" class="labyrinth-btn" type="button" title="Reset maze and pick a size">
+                    <i class="fas fa-shuffle"></i>
+                    <span>New maze</span>
+                </button>
+                <button id="refreshBtn" class="labyrinth-btn-icon" type="button" title="Refresh"><i class="fas fa-rotate"></i></button>
+                <button id="resetBtn" class="labyrinth-btn-icon" type="button" title="Reset"><i class="fas fa-undo"></i></button>
+            </div>
+        </header>
+
+        <section class="labyrinth-layout">
+            <section class="glass labyrinth-board">
+                <div id="statusPill" class="labyrinth-status">Loading…</div>
+                <p id="statusHint" hidden></p>
+
+                <div class="labyrinth-grid-wrap">
+                    <div id="mazeGrid" class="labyrinth-grid" role="grid" aria-label="Maze map"></div>
+                </div>
+
+                <div class="labyrinth-controls">
+                    <div class="labyrinth-dpad" aria-label="Movement controls">
+                        <span></span>
+                        <button class="labyrinth-arrow" type="button" data-move="up" aria-label="Move up"><i class="fas fa-chevron-up"></i></button>
+                        <span></span>
+                        <button class="labyrinth-arrow" type="button" data-move="left" aria-label="Move left"><i class="fas fa-chevron-left"></i></button>
+                        <button class="labyrinth-arrow labyrinth-arrow--center" type="button" id="revealBtn" aria-label="Reveal around player"><i class="fas fa-bullseye"></i></button>
+                        <button class="labyrinth-arrow" type="button" data-move="right" aria-label="Move right"><i class="fas fa-chevron-right"></i></button>
+                        <span></span>
+                        <button class="labyrinth-arrow" type="button" data-move="down" aria-label="Move down"><i class="fas fa-chevron-down"></i></button>
+                        <span></span>
+                    </div>
+                    <span id="revisionBadge" class="labyrinth-rev">rev 0</span>
+                </div>
+            </section>
+
+            <aside class="labyrinth-sidebar">
+                <section class="glass labyrinth-panel">
+                    <div class="labyrinth-stats">
+                        <div class="labyrinth-stat"><span>Moves</span><strong id="movesStat">0</strong></div>
+                        <div class="labyrinth-stat"><span>Reveals</span><strong id="revealsStat">0</strong></div>
+                        <div class="labyrinth-stat"><span>Explored</span><strong id="coverageStat">0%</strong></div>
+                        <div class="labyrinth-stat"><span>Status</span><strong id="solvedStat">Searching</strong></div>
+                    </div>
+                    <div class="labyrinth-meta-list">
+                        <div><span>Player</span><strong id="playerStat">1,1</strong></div>
+                        <div><span>Exit</span><strong id="exitStat">-</strong></div>
+                        <div><span>Updated</span><strong id="updatedStat">-</strong></div>
+                    </div>
+                    <ol id="eventList" class="labyrinth-events"></ol>
+                </section>
+            </aside>
+        </section>
+    </main>
+
+    <div id="mazeSizeModal" class="labyrinth-size-modal is-open" role="dialog" aria-modal="true" aria-labelledby="mazeSizeTitle" aria-hidden="false">
+        <div class="labyrinth-size-modal__dialog glass">
+            <h2 id="mazeSizeTitle" class="labyrinth-size-modal__title">Pick labyrinth size</h2>
+            <div class="labyrinth-size-options">
+                <button class="labyrinth-size-option" type="button" data-maze-size="tiny">
+                    <strong>Tiny</strong>
+                    <span>15×15</span>
+                </button>
+                <button class="labyrinth-size-option" type="button" data-maze-size="small">
+                    <strong>Small</strong>
+                    <span>21×21</span>
+                </button>
+                <button class="labyrinth-size-option" type="button" data-maze-size="medium">
+                    <strong>Medium</strong>
+                    <span>31×31</span>
+                </button>
+                <button class="labyrinth-size-option" type="button" data-maze-size="big">
+                    <strong>Big</strong>
+                    <span>45×45</span>
+                </button>
+                <button class="labyrinth-size-option" type="button" data-maze-size="huge">
+                    <strong>Huge</strong>
+                    <span>61×61</span>
+                </button>
+                <button class="labyrinth-size-option" type="button" data-maze-size="advanced">
+                    <strong>Advanced</strong>
+                    <span>31×31 • key, door, monster</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mazeExitModal" class="labyrinth-exit-modal" role="dialog" aria-modal="true" aria-labelledby="mazeExitTitle" aria-describedby="mazeExitMessage" aria-hidden="true">
+        <div class="labyrinth-exit-modal__overlay" data-exit-modal-close></div>
+        <div class="labyrinth-exit-modal__dialog glass" role="document">
+            <button id="mazeExitCloseBtn" class="labyrinth-exit-modal__close" type="button" aria-label="Close victory modal" data-exit-modal-close>&times;</button>
+            <div class="labyrinth-exit-modal__icon">
+                <i class="fas fa-flag-checkered"></i>
+            </div>
+            <h2 id="mazeExitTitle" class="labyrinth-exit-modal__title">You found the exit</h2>
+            <p id="mazeExitMessage" class="labyrinth-exit-modal__message">The maze is conquered. Ready for a fresh challenge?</p>
+            <div class="labyrinth-exit-modal__actions">
+                <button id="mazeExitCancelBtn" class="labyrinth-btn labyrinth-exit-modal__secondary" type="button">Stay here</button>
+                <button id="mazeExitNewMazeBtn" class="labyrinth-btn labyrinth-exit-modal__primary" type="button">New maze</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mazeGameOverModal" class="labyrinth-gameover-modal" role="dialog" aria-modal="true" aria-labelledby="mazeGameOverTitle" aria-describedby="mazeGameOverMessage" aria-hidden="true">
+        <div class="labyrinth-gameover-modal__overlay"></div>
+        <div class="labyrinth-gameover-modal__dialog glass" role="document">
+            <div class="labyrinth-gameover-modal__icon">
+                <i class="fas fa-skull-crossbones"></i>
+            </div>
+            <h2 id="mazeGameOverTitle" class="labyrinth-gameover-modal__title">Game over</h2>
+            <p id="mazeGameOverMessage" class="labyrinth-gameover-modal__message">The monster caught you. Game over.</p>
+            <div class="labyrinth-gameover-modal__actions">
+                <button id="mazeGameOverRestartBtn" class="labyrinth-btn labyrinth-gameover-modal__primary" type="button">Restart maze</button>
+                <button id="mazeGameOverMenuBtn" class="labyrinth-btn labyrinth-gameover-modal__secondary" type="button">Return to menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/pages/labyrinth.js?v=20260510-1"></script>
+</body>
+
+</html>

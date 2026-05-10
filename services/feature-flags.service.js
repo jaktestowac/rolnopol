@@ -75,6 +75,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "docsAdvancedSearchEnabled",
   "docsAiAssistantEnabled",
   "alertsAiAssistantEnabled",
+  "profileAvatarUploadEnabled",
   "registrationStrongPasswordEnabled",
   "financialCommoditiesEnabled",
   "financialCommoditiesTradingEnabled",
