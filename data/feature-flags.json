@@ -3,6 +3,7 @@
     "alertsEnabled": true,
     "alertsSeverityFilterEnabled": true,
     "alertsAiAssistantEnabled": false,
+    "celebrationEventsEnabled": false,
     "profileAvatarUploadEnabled": false,
     "rolnopolMapEnabled": true,
     "docsSearchEnabled": false,
