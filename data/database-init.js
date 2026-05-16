@@ -48,6 +48,10 @@ async function initializeDatabases() {
     await userAvatarsDb.getAll();
     logDebug("User avatars database initialized");
 
+    const tasksDb = dbManager.getTasksDatabase();
+    await tasksDb.getAll();
+    logDebug("Tasks database initialized");
+
     logDebug("Databases initialized successfully");
   } catch (error) {
     logError("Failed to initialize databases:", error);

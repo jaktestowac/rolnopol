@@ -36,7 +36,8 @@
     "promoAdvertsBottomBannerEnabled": false,
     "petBuddyEnabled": false,
     "rolnopolFarmlogEnabled": false,
-    "rolnopolFarmlogEngagementEnabled": false
+    "rolnopolFarmlogEngagementEnabled": false,
+    "taskManagerEnabled": false
   },
-  "updatedAt": "2026-05-08T09:15:09.100Z"
+  "updatedAt": "2026-05-16T18:57:48.767Z"
 }

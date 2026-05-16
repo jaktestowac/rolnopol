@@ -367,6 +367,15 @@ describe("Farmlog Blog API", () => {
     expect(res.body.success).toBe(false);
   });
 
+  it("still serves Farmlog blogs when the task manager is disabled", async () => {
+    await patchFlags({ rolnopolFarmlogEnabled: true, taskManagerEnabled: false });
+
+    const res = await request(app).get("/api/v1/blogs").expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+
   it("allows users to favorite and unfavorite blogs when engagement flag is enabled", async () => {
     await patchFlags({ rolnopolFarmlogEngagementEnabled: true });
 
@@ -414,9 +423,6 @@ describe("Farmlog Blog API", () => {
       .send({ title: "Non-favorite Blog", visibility: "public" })
       .expect(201);
 
-    await request(app)
-      .post(`/api/v1/blogs/${createRes.body.data.slug}/favorite`)
-      .set("Authorization", `Bearer ${ownerToken}`)
-      .expect(404);
+    await request(app).post(`/api/v1/blogs/${createRes.body.data.slug}/favorite`).set("Authorization", `Bearer ${ownerToken}`).expect(404);
   });
 });

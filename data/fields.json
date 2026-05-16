@@ -254,5 +254,19 @@
     "name": "B104-GS13",
     "area": 2301,
     "protected": true
+  },
+  {
+    "id": 39,
+    "userId": 11,
+    "name": "Helix Foundry",
+    "area": 7200,
+    "protected": true
+  },
+  {
+    "id": 40,
+    "userId": 12,
+    "name": "Eidolon Heavy Works",
+    "area": 9600,
+    "protected": true
   }
 ]

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "tasks": [],
+  "labels": [],
+  "statuses": [
+    {
+      "id": "status-1-backlog",
+      "userId": 1,
+      "name": "Backlog",
+      "type": "default",
+      "position": 1,
+      "archivedAt": null,
+      "createdAt": "2026-05-16T18:40:48.352Z",
+      "updatedAt": "2026-05-16T18:40:48.352Z"
+    },
+    {
+      "id": "status-1-inprogress",
+      "userId": 1,
+      "name": "In progress",
+      "type": "default",
+      "position": 2,
+      "archivedAt": null,
+      "createdAt": "2026-05-16T18:40:48.352Z",
+      "updatedAt": "2026-05-16T18:40:48.352Z"
+    },
+    {
+      "id": "status-1-done",
+      "userId": 1,
+      "name": "Done",
+      "type": "default",
+      "position": 3,
+      "archivedAt": null,
+      "createdAt": "2026-05-16T18:40:48.352Z",
+      "updatedAt": "2026-05-16T18:40:48.352Z"
+    },
+    {
+      "id": "status-1-archive",
+      "userId": 1,
+      "name": "Archive",
+      "type": "default",
+      "position": 4,
+      "archivedAt": null,
+      "createdAt": "2026-05-16T18:40:48.352Z",
+      "updatedAt": "2026-05-16T18:40:48.352Z"
+    }
+  ],
+  "counters": {
+    "lastTaskId": 0,
+    "lastLabelId": 0,
+    "lastStatusId": 0,
+    "lastChecklistItemId": 0
+  },
+  "updatedAt": "2026-05-16T18:40:48.352Z"
+}

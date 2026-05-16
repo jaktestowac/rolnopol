@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tasks - Rolnopol</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/pages/tasks.css">
+</head>
+
+<body class="bg-agri-pattern">
+  <div id="header-component"></div>
+
+  <main class="container tasks-page">
+    <header class="header glass tasks-header">
+      <div class="tasks-header__title">
+        <span class="tasks-header__icon"><i class="fas fa-list-check" aria-hidden="true"></i></span>
+        <div>
+          <h1>Tasks</h1>
+          <p id="tasksSubtitle">Plan field work, follow assignments, and close the loop.</p>
+        </div>
+      </div>
+      <div class="tasks-header__actions">
+        <div class="tasks-view-toggle" role="group" aria-label="Task view">
+          <button type="button" class="tasks-icon-btn" data-view="list" title="List view" aria-label="List view"><i class="fas fa-list" aria-hidden="true"></i></button>
+          <button type="button" class="tasks-icon-btn" data-view="compact" title="Compact view" aria-label="Compact view"><i class="fas fa-bars" aria-hidden="true"></i></button>
+          <button type="button" class="tasks-icon-btn" data-view="table" title="Table view" aria-label="Table view"><i class="fas fa-table" aria-hidden="true"></i></button>
+          <button type="button" class="tasks-icon-btn" data-view="calendar" title="Calendar view" aria-label="Calendar view"><i class="fas fa-calendar-days" aria-hidden="true"></i></button>
+          <button type="button" class="tasks-icon-btn" data-view="swimlane" title="Swimlane view" aria-label="Swimlane view"><i class="fas fa-columns" aria-hidden="true"></i></button>
+        </div>
+        <button type="button" id="newTaskBtn" class="btn"><i class="fas fa-plus" aria-hidden="true"></i>Task</button>
+      </div>
+    </header>
+
+    <section id="tasksGate" class="glass tasks-gate" hidden>
+      <h2>Tasks are unavailable</h2>
+      <p>This module is currently hidden behind a feature flag.</p>
+    </section>
+
+    <section id="tasksApp" class="tasks-shell" hidden>
+      <section class="glass tasks-toolbar" aria-label="Task filters">
+        <div class="tasks-search">
+          <i class="fas fa-search" aria-hidden="true"></i>
+          <input type="search" id="taskSearchInput" placeholder="Search tasks" maxlength="100" aria-label="Search tasks">
+        </div>
+        <select id="taskStatusFilter" aria-label="Filter by status"></select>
+        <select id="taskLabelFilter" aria-label="Filter by label"></select>
+        <select id="taskAssigneeFilter" aria-label="Filter by assignee"></select>
+        <label class="tasks-check-filter"><input type="checkbox" id="taskArchivedFilter"> Archived</label>
+        <button type="button" id="resetTaskFiltersBtn" class="btn btn-outline" title="Reset filters" aria-label="Reset filters"><i class="fas fa-filter-circle-xmark" aria-hidden="true"></i></button>
+        <button type="button" id="refreshTasksBtn" class="btn btn-outline" title="Refresh" aria-label="Refresh"><i class="fas fa-rotate" aria-hidden="true"></i></button>
+      </section>
+
+      <section id="taskEditor" class="glass tasks-editor" hidden>
+        <form id="taskForm">
+          <div class="tasks-editor__topline">
+            <h2 id="taskFormTitle">New task</h2>
+            <button type="button" id="cancelTaskEditBtn" class="tasks-icon-btn" title="Close editor" aria-label="Close editor"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+          </div>
+          <input type="hidden" id="taskIdInput">
+          <div class="tasks-form-grid">
+            <label>Title<input id="taskTitleInput" type="text" maxlength="120" required></label>
+            <label>Status<select id="taskStatusInput"></select></label>
+            <label class="tasks-form-wide">Description<textarea id="taskDescriptionInput" maxlength="2000" required></textarea></label>
+            <label>Due date<input id="taskDueDateInput" type="date"></label>
+            <label>Assignee<select id="taskAssigneeInput"></select></label>
+            <label>Color<input id="taskColorInput" type="color" value="#2F855A"></label>
+            <label>Labels<select id="taskLabelsInput" multiple size="4"></select></label>
+            <fieldset class="tasks-recurring">
+              <legend>Recurring</legend>
+              <label><input type="checkbox" id="taskRecurringEnabledInput"> Enabled</label>
+              <select id="taskRecurringFrequencyInput" aria-label="Recurring frequency">
+                <option value="weekly">Weekly</option>
+                <option value="daily">Daily</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+              <input id="taskRecurringIntervalInput" type="number" min="1" max="24" value="1" aria-label="Recurring interval">
+              <input id="taskRecurringEndsAtInput" type="date" aria-label="Recurring end date">
+            </fieldset>
+            <label class="tasks-form-wide">Checklist<textarea id="taskChecklistInput" maxlength="5000" placeholder="One item per line"></textarea></label>
+          </div>
+          <p id="taskFormError" class="tasks-error" role="alert"></p>
+          <div class="tasks-editor__actions">
+            <button type="submit" class="btn"><i class="fas fa-floppy-disk" aria-hidden="true"></i>&nbsp;Save</button>
+            <button type="button" id="archiveTaskBtn" class="btn btn-outline" hidden><i class="fas fa-box-archive" aria-hidden="true"></i>&nbsp;Archive</button>
+            <button type="button" id="deleteTaskBtn" class="btn btn-outline" hidden><i class="fas fa-trash" aria-hidden="true"></i>&nbsp;Delete</button>
+          </div>
+        </form>
+      </section>
+
+      <div class="tasks-layout">
+        <section class="tasks-main">
+          <div class="tasks-meta">
+            <span id="tasksCount">0 tasks</span>
+            <span id="tasksStatusMessage" aria-live="polite"></span>
+          </div>
+          <div id="tasksView" class="tasks-view" aria-live="polite"></div>
+        </section>
+
+        <aside class="tasks-side">
+          <section class="glass tasks-manager">
+            <h2>Labels</h2>
+            <form id="labelForm" class="tasks-mini-form">
+              <input id="labelNameInput" type="text" maxlength="40" placeholder="Label name" required>
+              <input id="labelColorInput" type="color" value="#C53030" aria-label="Label color">
+              <button type="submit" class="tasks-icon-btn" title="Add label" aria-label="Add label"><i class="fas fa-plus" aria-hidden="true"></i></button>
+            </form>
+            <div id="labelsList" class="tasks-chip-list"></div>
+          </section>
+
+          <section class="glass tasks-manager">
+            <h2>Statuses</h2>
+            <form id="statusForm" class="tasks-mini-form">
+              <input id="statusNameInput" type="text" maxlength="40" placeholder="Status name" required>
+              <button type="submit" class="tasks-icon-btn" title="Add status" aria-label="Add status"><i class="fas fa-plus" aria-hidden="true"></i></button>
+            </form>
+            <div id="statusesList" class="tasks-status-list"></div>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-component"></div>
+  <script src="/js/core/event-bus.js"></script>
+  <script src="/js/core/storage.js"></script>
+  <script src="/js/core/app.js"></script>
+  <script src="/js/services/api-service.js"></script>
+  <script src="/js/services/auth-service.js"></script>
+  <script src="/js/services/feature-flags-service.js"></script>
+  <script src="/js/components/notification.js"></script>
+  <script src="/js/components/navigation.js"></script>
+  <script src="/js/components/form.js"></script>
+  <script src="/js/components.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils/error-logger.js"></script>
+  <script src="/js/utils/utils.js"></script>
+  <script src="/js/utils/router.js"></script>
+  <script src="/js/utils/global-compat.js"></script>
+  <script src="/js/utils/init-navigation.js"></script>
+  <script src="/js/pages/tasks.js"></script>
+  <script src="/js/app.js"></script>
+  <script>initNavigation("tasks")</script>
+</body>
+
+</html>

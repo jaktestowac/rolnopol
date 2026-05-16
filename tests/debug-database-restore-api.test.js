@@ -23,6 +23,7 @@ const ACCESSORS = {
   blogs: () => dbManager.getBlogsDatabase(),
   posts: () => dbManager.getPostsDatabase(),
   pets: () => dbManager.getPetsDatabase(),
+  tasks: () => dbManager.getTasksDatabase(),
 };
 
 function clone(value) {
@@ -71,6 +72,7 @@ describe("Debug database restore API", () => {
       "pets",
       "posts",
       "staff",
+      "tasks",
       "userAvatars",
       "users",
       "webhookDeliveries",
@@ -179,6 +181,14 @@ describe("Debug database restore API", () => {
       },
     ]);
     await ACCESSORS.pets().replaceAll({ pets: [{ id: 1, userId: 1, name: "temp-pet" }] });
+    await ACCESSORS.tasks().replaceAll({
+      version: 1,
+      tasks: [{ id: "task-1", userId: 1, title: "temp", description: "temp", statusId: "status-1" }],
+      labels: [],
+      statuses: [],
+      counters: { lastTaskId: 1, lastLabelId: 0, lastStatusId: 0, lastChecklistItemId: 0 },
+      updatedAt: new Date().toISOString(),
+    });
 
     await request(app).post("/api/debug/database/restore-base").expect(200);
 

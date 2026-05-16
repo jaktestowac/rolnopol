@@ -365,10 +365,28 @@
       "createdAt": "2025-09-17T10:37:32.265Z",
       "updatedAt": "2025-09-17T10:37:32.265Z",
       "transactions": []
+    },
+    {
+      "id": 8,
+      "userId": 11,
+      "balance": 999999999999,
+      "currency": "ROL",
+      "createdAt": "2025-09-17T10:37:32.265Z",
+      "updatedAt": "2025-09-17T10:37:32.265Z",
+      "transactions": []
+    },
+    {
+      "id": 9,
+      "userId": 12,
+      "balance": 999999999999,
+      "currency": "ROL",
+      "createdAt": "2025-09-17T10:37:32.265Z",
+      "updatedAt": "2025-09-17T10:37:32.265Z",
+      "transactions": []
     }
   ],
   "counters": {
-    "lastAccountId": 7,
+    "lastAccountId": 9,
     "lastTransactionId": 28
   }
 }

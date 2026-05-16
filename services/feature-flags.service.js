@@ -40,6 +40,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   petBuddyEnabled: "Enable or disable the pet buddy companion system",
   rolnopolFarmlogEnabled: "Enable or disable the Rolnopol Blog Space (Farmlog) feature",
   rolnopolFarmlogEngagementEnabled: "Enable or disable Farmlog likes, favorites, and most-liked post ranking",
+  taskManagerEnabled: "Enable or disable the user task manager module",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -66,6 +67,7 @@ const FEATURE_FLAG_GROUPS = {
   ],
   gameplay: ["petBuddyEnabled"],
   farmlog: ["rolnopolFarmlogEnabled", "rolnopolFarmlogEngagementEnabled"],
+  productivity: ["taskManagerEnabled"],
 };
 
 const EXPERIMENTAL_FEATURE_FLAGS = [
@@ -96,6 +98,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "petBuddyEnabled",
   "rolnopolFarmlogEnabled",
   "rolnopolFarmlogEngagementEnabled",
+  "taskManagerEnabled",
 ];
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -136,6 +139,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   petBuddyEnabled: false,
   rolnopolFarmlogEnabled: false,
   rolnopolFarmlogEngagementEnabled: false,
+  taskManagerEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

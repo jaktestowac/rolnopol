@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const FARmlog_PAGE_PATH = "../../public/js/pages/farmlog.js";
 
@@ -8,7 +8,15 @@ function loadFarmlogPageModule() {
 }
 
 describe("Farmlog page engagement refresh behavior", () => {
+  let previousWindow;
+  let previousDocument;
+  let previousTestElements;
+
   beforeEach(() => {
+    previousWindow = global.window;
+    previousDocument = global.document;
+    previousTestElements = global.__farmlogTestElements;
+
     const matchMediaStub = {
       matches: true,
       addEventListener: vi.fn(),
@@ -24,6 +32,9 @@ describe("Farmlog page engagement refresh behavior", () => {
       pageXOffset: 18,
       pageYOffset: 420,
       scrollTo: vi.fn(),
+      location: {
+        replace: vi.fn(),
+      },
       requestAnimationFrame: vi.fn((callback) => {
         callback();
         return 1;
@@ -43,6 +54,17 @@ describe("Farmlog page engagement refresh behavior", () => {
     global.__farmlogTestElements = elementMap;
 
     loadFarmlogPageModule();
+  });
+
+  afterEach(() => {
+    global.window = previousWindow;
+    global.document = previousDocument;
+
+    if (previousTestElements === undefined) {
+      delete global.__farmlogTestElements;
+    } else {
+      global.__farmlogTestElements = previousTestElements;
+    }
   });
 
   it("restores the previous scroll position after an async refresh", async () => {

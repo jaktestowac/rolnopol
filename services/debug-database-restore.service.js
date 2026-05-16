@@ -26,6 +26,7 @@ const DATABASE_ACCESSORS = {
   personalApiKeys: () => dbManager.getPersonalApiKeysDatabase(),
   userAvatars: () => dbManager.getUserAvatarsDatabase(),
   pets: () => dbManager.getPetsDatabase(),
+  tasks: () => dbManager.getTasksDatabase(),
 };
 
 function deepClone(value) {
@@ -48,6 +49,7 @@ function getResourceCount(value) {
   if (Array.isArray(value.avatars)) return value.avatars.length;
   if (Array.isArray(value.webhooks)) return value.webhooks.length;
   if (Array.isArray(value.deliveries)) return value.deliveries.length;
+  if (Array.isArray(value.tasks)) return value.tasks.length;
   if (value.flags && typeof value.flags === "object") return Object.keys(value.flags).length;
 
   return Object.keys(value).length;

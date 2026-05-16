@@ -299,6 +299,9 @@
       case "farmlog-post":
         setupFarmlogPostPage();
         break;
+      case "tasks":
+        setupTasksPage();
+        break;
       default:
         setupDefaultPage();
     }
@@ -638,6 +641,21 @@
       window.App.registerModule("farmlogPostPage", farmlogPostPage);
     } else {
       console.error("FarmlogPostDetailPage class not found");
+    }
+  }
+
+  function setupTasksPage() {
+    const authService = window.App.getModule("authService");
+
+    if (!authService || !authService.requireAuth("/login.html")) {
+      return;
+    }
+
+    if (window.TasksPage) {
+      const tasksPage = new TasksPage();
+      window.App.registerModule("tasksPage", tasksPage);
+    } else {
+      console.error("TasksPage class not found");
     }
   }
 

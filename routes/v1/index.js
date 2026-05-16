@@ -31,6 +31,7 @@ const weatherRoute = require("./weather.route");
 const blogRoute = require("./blogs.route");
 const terminalRoute = require("./terminal.route");
 const labyrinthRoute = require("./labyrinth.route");
+const tasksRoute = require("./tasks.route");
 const contactRoute = require("../contact.route");
 const { logInfo, logError } = require("../../helpers/logger-api");
 
@@ -181,6 +182,7 @@ router.use("/", notificationsRoute);
 router.use("/", weatherRoute);
 router.use("/", terminalRoute);
 router.use("/", labyrinthRoute);
+router.use("/", tasksRoute);
 router.use("/contact", contactRoute);
 router.use("/", blogRoute);
 

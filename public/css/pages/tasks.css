@@ -1,0 +1,579 @@
+.tasks-page {
+  padding-bottom: 2rem;
+}
+
+.tasks-header {
+  /* keep layout but adopt visual language from financial header */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1.2rem; /* slightly tighter spacing */
+  padding: 1.05rem 1rem; /* match more compact, card-like header */
+  border-radius: 1.2rem; /* rounded card look */
+}
+
+.tasks-header__title,
+.tasks-header__actions,
+.tasks-editor__topline,
+.tasks-editor__actions,
+.tasks-card__meta,
+.tasks-card__actions,
+.tasks-mini-form,
+.tasks-status-row,
+.tasks-toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.tasks-header__title {
+  gap: 0.85rem;
+}
+
+.tasks-header__title h1,
+.tasks-manager h2,
+.tasks-editor h2,
+.tasks-lane h2,
+.tasks-date-group h2 {
+  margin: 0;
+}
+
+.tasks-header__title p,
+.tasks-empty p,
+.tasks-lane__empty {
+  margin: 0.25rem 0 0;
+  color: #4a5568;
+}
+
+.tasks-header__icon {
+  width: 48px;
+  height: 48px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 8px;
+  /* use the project's agri/futuristic gradient for a richer icon */
+  background: var(--agri-gradient);
+  color: #fff;
+  font-size: 1.35rem;
+  box-shadow: 0 4px 18px rgba(45, 55, 72, 0.06);
+}
+
+/* Override the generic glass glow for the tasks header to a softer shadow like financial.html */
+.header.glass.tasks-header {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07) !important;
+  border: 1px solid rgba(106, 123, 94, 0.08) !important;
+  border-radius: 1.2rem 1.2rem 0 0 !important;
+}
+
+.tasks-header__title p {
+  color: #6a7b5e; /* match subtitle tone used in financial header */
+}
+
+.tasks-header__title h1 {
+  /* subtle gradient heading similar to financial page */
+  font-size: 1.65rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.tasks-header__actions {
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tasks-view-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(45, 55, 72, 0.14);
+  border-radius: 8px;
+}
+
+.tasks-icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(45, 55, 72, 0.16);
+  border-radius: 8px;
+  background: #fff;
+  color: #2d3748;
+  cursor: pointer;
+}
+
+.tasks-icon-btn:hover,
+.tasks-icon-btn.is-active {
+  background: #2f855a;
+  color: #fff;
+}
+
+.tasks-icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tasks-icon-btn:focus-visible,
+.tasks-toolbar select:focus-visible,
+.tasks-toolbar input:focus-visible,
+.tasks-editor input:focus-visible,
+.tasks-editor select:focus-visible,
+.tasks-editor textarea:focus-visible,
+.tasks-mini-form input:focus-visible,
+.tasks-card__actions select:focus-visible {
+  outline: 3px solid rgba(47, 133, 90, 0.35);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(47, 133, 90, 0.18);
+}
+
+.tasks-gate,
+.tasks-toolbar,
+.tasks-editor,
+.tasks-manager {
+  padding: 1rem;
+}
+
+.tasks-shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.tasks-toolbar {
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tasks-toolbar select,
+.tasks-toolbar input,
+.tasks-editor input,
+.tasks-editor select,
+.tasks-editor textarea,
+.tasks-mini-form input {
+  min-height: 40px;
+  border: 1px solid rgba(45, 55, 72, 0.18);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  background: #fff;
+  color: #1a202c;
+}
+
+.tasks-search {
+  min-width: min(320px, 100%);
+  flex: 1 1 240px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.7rem;
+  border: 1px solid rgba(45, 55, 72, 0.18);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.tasks-search input {
+  width: 100%;
+  border: 0;
+  padding-left: 0;
+}
+
+.tasks-check-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 40px;
+}
+
+.tasks-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.tasks-main,
+.tasks-side {
+  display: grid;
+  gap: 1rem;
+}
+
+.tasks-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #4a5568;
+}
+
+.tasks-meta .is-error,
+.tasks-error {
+  color: #c53030;
+}
+
+.tasks-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.tasks-form-grid label,
+.tasks-recurring {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.tasks-form-wide {
+  grid-column: 1 / -1;
+}
+
+.tasks-editor textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.tasks-recurring {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: center;
+  border: 1px solid rgba(45, 55, 72, 0.14);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.tasks-recurring legend {
+  padding: 0 0.3rem;
+}
+
+.tasks-editor__topline {
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+
+.tasks-editor__actions {
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tasks-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tasks-list--compact {
+  gap: 0.45rem;
+}
+
+.tasks-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-left: 5px solid var(--task-color, #2f855a);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 20px rgba(26, 32, 44, 0.08);
+}
+
+.tasks-card--compact {
+  padding: 0.7rem;
+}
+
+.tasks-card header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.tasks-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.tasks-card p {
+  margin: 0.45rem 0;
+  color: #4a5568;
+  overflow-wrap: anywhere;
+}
+
+.tasks-card header span,
+.tasks-label,
+.tasks-chip small {
+  font-size: 0.78rem;
+}
+
+.tasks-card header span {
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #edf2f7;
+  color: #2d3748;
+  white-space: nowrap;
+}
+
+.tasks-card__meta {
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  color: #4a5568;
+  font-size: 0.88rem;
+}
+
+.tasks-card__meta span {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.tasks-card__labels {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.tasks-label,
+.tasks-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+}
+
+.tasks-label {
+  padding: 0.15rem 0.45rem;
+  background: color-mix(in srgb, var(--label-color, #718096) 16%, white);
+  color: #1a202c;
+}
+
+.tasks-card__actions {
+  gap: 0.4rem;
+}
+
+.tasks-card__actions select {
+  max-width: 132px;
+  border-radius: 8px;
+  border: 1px solid rgba(45, 55, 72, 0.18);
+  padding: 0.45rem;
+}
+
+.tasks-swimlane {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(260px, 1fr);
+  gap: 0.85rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+}
+
+.tasks-lane {
+  min-height: 280px;
+  border: 1px solid rgba(45, 55, 72, 0.12);
+  border-radius: 8px;
+  background: rgba(247, 250, 252, 0.88);
+}
+
+.tasks-lane header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(45, 55, 72, 0.1);
+}
+
+.tasks-lane__body {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.75rem;
+}
+
+.tasks-lane__empty {
+  padding: 0.75rem;
+}
+
+.tasks-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tasks-table th,
+.tasks-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(45, 55, 72, 0.12);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tasks-calendar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.85rem;
+}
+
+@media (max-width: 992px) {
+  .tasks-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-recurring {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .tasks-header,
+  .tasks-toolbar,
+  .tasks-editor,
+  .tasks-manager,
+  .tasks-gate {
+    padding: 0.85rem;
+  }
+
+  .tasks-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-recurring {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-view-toggle {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .tasks-header__actions {
+    width: 100%;
+  }
+
+  .tasks-header {
+    align-items: flex-start;
+  }
+
+  .tasks-card {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-card__actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+.tasks-date-group {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.tasks-side {
+  position: sticky;
+  top: 1rem;
+}
+
+.tasks-manager {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tasks-mini-form {
+  gap: 0.5rem;
+}
+
+.tasks-mini-form input[type="text"] {
+  min-width: 0;
+  flex: 1;
+}
+
+.tasks-chip-list,
+.tasks-status-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.tasks-chip {
+  justify-content: space-between;
+  padding: 0.35rem 0.45rem 0.35rem 0.65rem;
+  background: color-mix(in srgb, var(--chip-color, #718096) 14%, white);
+}
+
+.tasks-chip button,
+.tasks-status-row button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.tasks-status-row {
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid rgba(45, 55, 72, 0.12);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.tasks-status-row > span {
+  overflow-wrap: anywhere;
+}
+
+.tasks-empty {
+  display: grid;
+  place-items: center;
+  min-height: 260px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.tasks-empty i {
+  font-size: 2rem;
+  color: #2f855a;
+}
+
+@media (max-width: 980px) {
+  .tasks-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-side {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .tasks-header,
+  .tasks-card {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tasks-header__actions,
+  .tasks-card__actions {
+    justify-content: flex-start;
+  }
+
+  .tasks-form-grid,
+  .tasks-recurring {
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-toolbar > select,
+  .tasks-toolbar .btn,
+  .tasks-check-filter {
+    flex: 1 1 150px;
+  }
+}

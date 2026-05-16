@@ -137,6 +137,7 @@ async function getNavFeatureFlagState() {
     financialCommoditiesEnabled: false,
     weatherPageEnabled: false,
     rolnopolFarmlogEnabled: false,
+    taskManagerEnabled: false,
   };
 
   // Conservative fallback when feature checks fail
@@ -148,6 +149,7 @@ async function getNavFeatureFlagState() {
     weatherPageEnabled: false,
     petBuddyEnabled: true,
     rolnopolFarmlogEnabled: false,
+    taskManagerEnabled: false,
   };
 
   // Try to get the registered service
@@ -200,6 +202,7 @@ async function getNavFeatureFlagState() {
       weatherPageEnabled,
       petBuddyEnabled,
       rolnopolFarmlogEnabled,
+      taskManagerEnabled,
     ] = await Promise.all([
       featureFlagsService.isEnabled("alertsEnabled", true),
       featureFlagsService.isEnabled("rolnopolMapEnabled", true),
@@ -208,6 +211,7 @@ async function getNavFeatureFlagState() {
       featureFlagsService.isEnabled("weatherPageEnabled", false),
       featureFlagsService.isEnabled("petBuddyEnabled", true),
       featureFlagsService.isEnabled("rolnopolFarmlogEnabled", false),
+      featureFlagsService.isEnabled("taskManagerEnabled", false),
     ]);
     return {
       alertsEnabled,
@@ -217,6 +221,7 @@ async function getNavFeatureFlagState() {
       weatherPageEnabled,
       petBuddyEnabled,
       rolnopolFarmlogEnabled,
+      taskManagerEnabled,
     };
   } catch (error) {
     return DEFAULT_ON_ERROR;
@@ -431,6 +436,7 @@ async function updateHeaderNav(username = "") {
     weatherPageEnabled,
     petBuddyEnabled,
     rolnopolFarmlogEnabled,
+    taskManagerEnabled,
   } = await getNavFeatureFlagState();
   const mapLink = rolnopolMapEnabled
     ? '<li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>'
@@ -453,6 +459,9 @@ async function updateHeaderNav(username = "") {
   const farmlogLink = rolnopolFarmlogEnabled
     ? '<li><a href="/farmlog.html" class="nav-link" title="Farmlog" aria-label="Farmlog" data-testid="nav-farmlog"><i class="fas fa-feather-pointed"></i><span class="nav-text">Farmlog</span></a></li>'
     : "";
+  const tasksLink = taskManagerEnabled
+    ? '<li><a href="/tasks.html" class="nav-link" title="Tasks" aria-label="Tasks" data-testid="nav-tasks"><i class="fas fa-list-check"></i><span class="nav-text">Tasks</span></a></li>'
+    : "";
 
   // Check authentication using standardized cookie names
   const token = getCookie("rolnopolToken");
@@ -469,6 +478,7 @@ async function updateHeaderNav(username = "") {
       ${mapLink}
       ${alertsLink}
       ${farmlogLink}
+      ${tasksLink}
       ${weatherLink}
       ${messengerLink}
       ${buddyLink}

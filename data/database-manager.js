@@ -225,6 +225,25 @@ class DatabaseManager {
   }
 
   /**
+   * Get task manager database singleton
+   */
+  getTasksDatabase() {
+    return this.getDatabase("tasks", "tasks.json", {
+      version: 1,
+      tasks: [],
+      labels: [],
+      statuses: [],
+      counters: {
+        lastTaskId: 0,
+        lastLabelId: 0,
+        lastStatusId: 0,
+        lastChecklistItemId: 0,
+      },
+      updatedAt: null,
+    });
+  }
+
+  /**
    * Get a custom database singleton
    */
   getCustomDatabase(resourceName, fileName, defaultData = []) {
