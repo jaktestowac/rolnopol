@@ -34,6 +34,12 @@ const SPECIES_METADATA = {
     rarity: "common",
     weight: 45,
   },
+  duck: {
+    name: "Duck",
+    description: "A pond philosopher with a waterproof attitude and a talent for delightful chaos",
+    rarity: "common",
+    weight: 45,
+  },
   otter: {
     name: "Otter",
     description: "Playful and mischievous, always ready for adventure",

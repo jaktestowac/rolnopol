@@ -12,7 +12,7 @@ class Pet {
     name,
     species,
     rarity,
-    customization = { eyes: "◉" },
+    customization = { eyes: "◉", hat: null },
     personality,
     totalPets = 0,
     totalTalks = 0,
@@ -27,7 +27,11 @@ class Pet {
     this.name = name;
     this.species = species;
     this.rarity = rarity;
-    this.customization = customization;
+    this.customization = {
+      eyes: "◉",
+      hat: null,
+      ...(customization || {}),
+    };
     // Convert plain object to Personality instance if needed
     this.personality = personality instanceof Personality ? personality : new Personality(personality);
     this.totalPets = totalPets;

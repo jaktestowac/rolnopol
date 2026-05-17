@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const webhookService = require("../../services/webhook.service");
 
@@ -20,10 +20,46 @@ const EMPTY_DELIVERY_STORE = {
   updatedAt: null,
 };
 
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 describe("webhook.service", () => {
+  let webhookStore;
+  let deliveryStore;
+
   beforeEach(async () => {
-    await webhookService.db.replaceAll({ ...EMPTY_WEBHOOK_STORE });
-    await webhookService.deliveryDb.replaceAll({ ...EMPTY_DELIVERY_STORE });
+    webhookStore = clone(EMPTY_WEBHOOK_STORE);
+    deliveryStore = clone(EMPTY_DELIVERY_STORE);
+
+    webhookService.userDataInstance = {
+      findUser: async () => ({ id: 1, isActive: true }),
+    };
+
+    vi.spyOn(webhookService.db, "getAll").mockImplementation(async () => clone(webhookStore));
+    vi.spyOn(webhookService.db, "replaceAll").mockImplementation(async (next) => {
+      webhookStore = clone(next);
+      return clone(webhookStore);
+    });
+    vi.spyOn(webhookService.db, "update").mockImplementation(async (updater) => {
+      webhookStore = clone(updater(clone(webhookStore)));
+      return clone(webhookStore);
+    });
+
+    vi.spyOn(webhookService.deliveryDb, "getAll").mockImplementation(async () => clone(deliveryStore));
+    vi.spyOn(webhookService.deliveryDb, "replaceAll").mockImplementation(async (next) => {
+      deliveryStore = clone(next);
+      return clone(deliveryStore);
+    });
+    vi.spyOn(webhookService.deliveryDb, "update").mockImplementation(async (updater) => {
+      deliveryStore = clone(updater(clone(deliveryStore)));
+      return clone(deliveryStore);
+    });
+  });
+
+  afterEach(() => {
+    webhookService.userDataInstance = null;
+    vi.restoreAllMocks();
   });
 
   it("lists only webhook-compatible backend events", async () => {

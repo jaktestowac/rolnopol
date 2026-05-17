@@ -49,6 +49,13 @@ const PETS_ASCII = {
       \\_/
   `,
 
+  duck: `
+      __
+    __(o )>
+    \__/
+     ^^
+    `,
+
   otter: `
       /o o\
      (  ~  )

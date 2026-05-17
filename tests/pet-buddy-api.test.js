@@ -4,6 +4,7 @@ import request from "supertest";
 // Import the app
 const app = require("../api/index.js");
 const databaseManager = require("../data/database-manager.js");
+const featureFlagsService = require("../services/feature-flags.service");
 
 describe("Pet Buddy API Integration Tests", () => {
   let authToken;
@@ -11,6 +12,11 @@ describe("Pet Buddy API Integration Tests", () => {
   let petId;
 
   beforeEach(async () => {
+    vi.spyOn(featureFlagsService, "getFeatureFlags").mockResolvedValue({
+      flags: { petBuddyEnabled: true },
+      updatedAt: new Date().toISOString(),
+    });
+
     // Create a test user and get auth token
     const registerRes = await request(app)
       .post("/api/v1/register")
@@ -29,6 +35,8 @@ describe("Pet Buddy API Integration Tests", () => {
   });
 
   afterEach(async () => {
+    vi.restoreAllMocks();
+
     // Cleanup - clear pets database for next test
     try {
       const petsDb = databaseManager.getPetsDatabase();

@@ -184,6 +184,41 @@ describe("Task manager API", () => {
     expect(updated.body.data.task.labelIds).toEqual([]);
   });
 
+  it("lists and updates labels through the label endpoints", async () => {
+    await enableTaskManager();
+    const session = await registerUser("task-label-update");
+    await createLabel(session, { name: "Beta", color: "#2F855A" });
+    const label = await createLabel(session, { name: "Alpha", color: "#C53030" });
+
+    const list = await request(app).get("/api/v1/tasks/labels").set("token", session.token).expect(200);
+    expect(list.body.data.items.map((item) => item.name)).toEqual(["Alpha", "Beta"]);
+
+    const updated = await request(app)
+      .put(`/api/v1/tasks/labels/${label.id}`)
+      .set("token", session.token)
+      .send({ name: "Admin", color: "#1a365d" })
+      .expect(200);
+
+    expect(updated.body.data.label).toMatchObject({
+      id: label.id,
+      name: "Admin",
+      color: "#1A365D",
+    });
+
+    const duplicate = await request(app)
+      .put(`/api/v1/tasks/labels/${label.id}`)
+      .set("token", session.token)
+      .send({ name: "Beta", color: "#1A365D" })
+      .expect(400);
+    expect(duplicate.body.error).toContain("label name must be unique");
+
+    await request(app)
+      .put("/api/v1/tasks/labels/label-missing")
+      .set("token", session.token)
+      .send({ name: "Missing", color: "#1A365D" })
+      .expect(404);
+  });
+
   it("creates custom statuses, moves tasks, reorders statuses, and prevents archiving defaults", async () => {
     await enableTaskManager();
     const session = await registerUser("task-statuses");
@@ -205,6 +240,151 @@ describe("Task manager API", () => {
 
     const archiveDefault = await request(app).post(`/api/v1/tasks/statuses/${backlog.id}/archive`).set("token", session.token).expect(400);
     expect(archiveDefault.body.error).toContain("default statuses cannot be archived");
+  });
+
+  it("updates custom statuses and archives them only when no active tasks use them", async () => {
+    await enableTaskManager();
+    const session = await registerUser("task-status-update");
+    const customStatus = await createStatus(session, { name: "Queued" });
+    const task = await createTask(session, { statusId: customStatus.id });
+
+    const updated = await request(app)
+      .put(`/api/v1/tasks/statuses/${customStatus.id}`)
+      .set("token", session.token)
+      .send({ name: "Waiting", position: 7 })
+      .expect(200);
+    expect(updated.body.data.status).toMatchObject({
+      id: customStatus.id,
+      name: "Waiting",
+      position: 7,
+    });
+
+    const duplicate = await request(app)
+      .put(`/api/v1/tasks/statuses/${customStatus.id}`)
+      .set("token", session.token)
+      .send({ name: "Backlog" })
+      .expect(400);
+    expect(duplicate.body.error).toContain("status name must be unique");
+
+    const activeTask = await request(app)
+      .post(`/api/v1/tasks/statuses/${customStatus.id}/archive`)
+      .set("token", session.token)
+      .expect(400);
+    expect(activeTask.body.error).toContain("status has active tasks");
+
+    await request(app).delete(`/api/v1/tasks/${task.id}`).set("token", session.token).expect(200);
+    const archived = await request(app).post(`/api/v1/tasks/statuses/${customStatus.id}/archive`).set("token", session.token).expect(200);
+    expect(archived.body.data.status.archivedAt).toEqual(expect.any(String));
+
+    const createInArchivedStatus = await request(app)
+      .post("/api/v1/tasks")
+      .set("token", session.token)
+      .send({
+        title: "Cannot enter archived status",
+        description: "Archived statuses are closed.",
+        statusId: customStatus.id,
+      })
+      .expect(400);
+    expect(createInArchivedStatus.body.error).toContain("statusId cannot reference an archived status");
+  });
+
+  it("rejects invalid status reorder and task move payloads", async () => {
+    await enableTaskManager();
+    const session = await registerUser("task-move-validation");
+    const task = await createTask(session);
+
+    const missingOrder = await request(app).patch("/api/v1/tasks/statuses/reorder").set("token", session.token).send({ order: [] }).expect(400);
+    expect(missingOrder.body.error).toContain("order must contain at least one status id");
+
+    const unknownStatus = await request(app)
+      .patch("/api/v1/tasks/statuses/reorder")
+      .set("token", session.token)
+      .send({ order: ["status-missing"] })
+      .expect(400);
+    expect(unknownStatus.body.error).toContain("status status-missing not found");
+
+    const missingStatusId = await request(app).patch(`/api/v1/tasks/${task.id}/move`).set("token", session.token).send({}).expect(400);
+    expect(missingStatusId.body.error).toContain("statusId is required");
+
+    const invalidPosition = await request(app)
+      .patch(`/api/v1/tasks/${task.id}/move`)
+      .set("token", session.token)
+      .send({ statusId: "status-missing", position: 0 })
+      .expect(400);
+    expect(invalidPosition.body.error).toContain("position must be an integer from 1 to 100000");
+
+    await request(app)
+      .patch(`/api/v1/tasks/${task.id}/move`)
+      .set("token", session.token)
+      .send({ statusId: "status-missing", position: 1 })
+      .expect(404);
+  });
+
+  it("replaces, patches, retrieves, and deletes tasks through task item endpoints", async () => {
+    await enableTaskManager();
+    const session = await registerUser("task-crud-paths");
+    const label = await createLabel(session, { name: "Follow-up", color: "#2F855A" });
+    const staff = await createStaff(session);
+    const task = await createTask(session, {
+      labelIds: [label.id],
+      assigneeStaffId: staff.id,
+      dueDate: "2026-05-20",
+      color: "#C53030",
+      checklist: [{ text: "Read meter", checked: true }],
+    });
+
+    const replaced = await request(app)
+      .put(`/api/v1/tasks/${task.id}`)
+      .set("token", session.token)
+      .send({
+        title: "Replace the plan",
+        description: "Reset optional fields.",
+      })
+      .expect(200);
+
+    expect(replaced.body.data.task).toMatchObject({
+      id: task.id,
+      title: "Replace the plan",
+      description: "Reset optional fields.",
+      dueDate: null,
+      labelIds: [],
+      assigneeStaffId: null,
+      color: null,
+    });
+    expect(replaced.body.data.task.checklist).toEqual([]);
+
+    const patched = await request(app)
+      .patch(`/api/v1/tasks/${task.id}`)
+      .set("token", session.token)
+      .send({
+        title: "Patch the plan",
+        labelIds: [label.id],
+        checklist: [
+          { text: "Read meter", checked: true },
+          { text: "Send photo" },
+        ],
+        selfAssigned: true,
+      })
+      .expect(200);
+
+    expect(patched.body.data.task).toMatchObject({
+      id: task.id,
+      title: "Patch the plan",
+      description: "Reset optional fields.",
+      labelIds: [label.id],
+      selfAssigned: true,
+      assigneeStaffId: session.userId,
+    });
+    expect(patched.body.data.task.checklistProgress).toEqual({ total: 2, checked: 1 });
+
+    const retrieved = await request(app).get(`/api/v1/tasks/${task.id}`).set("token", session.token).expect(200);
+    expect(retrieved.body.data.task.id).toBe(task.id);
+
+    const deleted = await request(app).delete(`/api/v1/tasks/${task.id}`).set("token", session.token).expect(200);
+    expect(deleted.body.data.deleted).toBe(true);
+
+    await request(app).get(`/api/v1/tasks/${task.id}`).set("token", session.token).expect(404);
+    await request(app).delete(`/api/v1/tasks/${task.id}`).set("token", session.token).expect(404);
   });
 
   it("searches and filters tasks by status, assignee, recurrence, due date, and archived state", async () => {
@@ -243,6 +423,34 @@ describe("Task manager API", () => {
     expect(archived.body.data.items.find((item) => item.id === task.id)).toBeTruthy();
   });
 
+  it("validates task list query parameters", async () => {
+    await enableTaskManager();
+    const session = await registerUser("task-query-validation");
+
+    const response = await request(app)
+      .get(
+        `/api/v1/tasks?limit=101&offset=-1&sort=priority&order=sideways&view=grid&search=${"x".repeat(
+          101,
+        )}&selfAssigned=maybe&assigneeStaffId=zero&dueFrom=2026-02-31&dueTo=2026-01-01&recurring=sometimes&archived=nope&color=red`,
+      )
+      .set("token", session.token)
+      .expect(400);
+
+    expect(response.body.error).toContain("limit must be an integer from 1 to 100");
+    expect(response.body.error).toContain("offset must be a non-negative integer");
+    expect(response.body.error).toContain("sort must be one of");
+    expect(response.body.error).toContain("order must be asc or desc");
+    expect(response.body.error).toContain("view must be one of");
+    expect(response.body.error).toContain("search must be at most 100 characters");
+    expect(response.body.error).toContain("selfAssigned must be true or false");
+    expect(response.body.error).toContain("assigneeStaffId must be a positive integer");
+    expect(response.body.error).toContain("dueFrom must be a valid YYYY-MM-DD date");
+    expect(response.body.error).toContain("dueTo must be on or after dueFrom");
+    expect(response.body.error).toContain("recurring must be true or false");
+    expect(response.body.error).toContain("archived must be true or false");
+    expect(response.body.error).toContain("color must be a valid #RRGGBB color");
+  });
+
   it("restores archived tasks to Backlog by default", async () => {
     await enableTaskManager();
     const session = await registerUser("task-restore");
@@ -253,6 +461,24 @@ describe("Task manager API", () => {
 
     expect(restored.body.data.task.archivedAt).toBeNull();
     expect(restored.body.data.task.status.name).toBe("Backlog");
+  });
+
+  it("rejects restoring archived tasks directly into Archive", async () => {
+    await enableTaskManager();
+    const session = await registerUser("task-restore-validation");
+    const task = await createTask(session);
+    const statuses = await request(app).get("/api/v1/tasks/statuses").set("token", session.token).expect(200);
+    const archiveStatus = statuses.body.data.items.find((status) => status.name === "Archive");
+
+    await request(app).post(`/api/v1/tasks/${task.id}/archive`).set("token", session.token).expect(200);
+
+    const response = await request(app)
+      .post(`/api/v1/tasks/${task.id}/restore`)
+      .set("token", session.token)
+      .send({ statusId: archiveStatus.id })
+      .expect(400);
+
+    expect(response.body.error).toContain("restored task status cannot be Archive");
   });
 
   it("isolates tasks, labels, statuses, and staff assignees per user", async () => {

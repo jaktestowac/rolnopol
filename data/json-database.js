@@ -103,6 +103,30 @@ class JSONDatabase {
     return Math.max(0, Math.floor(parsed));
   }
 
+  static isTransientWriteError(error) {
+    return ["EBUSY", "EPERM", "EACCES", "UNKNOWN"].includes(error?.code);
+  }
+
+  static async writeFileWithRetry(filePath, content, options = {}) {
+    const attempts = Number.isInteger(options.attempts) ? options.attempts : 5;
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        await fs.writeFile(filePath, content, "utf8");
+        return;
+      } catch (error) {
+        lastError = error;
+        if (!JSONDatabase.isTransientWriteError(error) || attempt === attempts) {
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 20 * attempt));
+      }
+    }
+
+    throw lastError;
+  }
+
   /**
    * Ensure the directory exists
    */
@@ -185,7 +209,7 @@ class JSONDatabase {
         }
 
         // Direct write (safe since only one thread can write)
-        await fs.writeFile(this.filePath, jsonString, "utf8");
+        await JSONDatabase.writeFileWithRetry(this.filePath, jsonString);
         logDebug(`Persisted data to ${this.filePath}`);
       }
 
@@ -408,13 +432,13 @@ class JSONDatabase {
   /**
    * Replace all data atomically
    */
-  async replaceAll(newData) {
+  async replaceAll(newData, options = {}) {
     await this.ensureInitialized();
     // Update in-memory data
     this.data = newData;
 
     // Persist to file
-    await this.persist();
+    await this.persist(options);
   }
 
   /**
@@ -439,8 +463,8 @@ class JSONDatabase {
   /**
    * Write data (backward compatibility method)
    */
-  async write(newData) {
-    return await this.replaceAll(newData);
+  async write(newData, options = {}) {
+    return await this.replaceAll(newData, options);
   }
 
   /**

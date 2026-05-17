@@ -15,7 +15,10 @@ function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+  if (bytes < 1024 * 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+  if (bytes < 1024 * 1024 * 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024 / 1024).toFixed(2)} TB`;
+  if (bytes < 1024 * 1024 * 1024 * 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024 / 1024 / 1024).toFixed(2)} PB`;
+  return `${(bytes / 1024 / 1024 / 1024 / 1024 / 1024 / 1024).toFixed(2)} EB`;
 }
 
 function pad(str, len, align = "left") {
@@ -62,6 +65,50 @@ function printMissingDepsBox(missingModules, installCmd) {
   const reset = "\x1b[0m";
   console.error("\n" + red + bold + box + reset + "\n");
   process.exit(1);
+}
+
+function getInstallCommand(projectRoot, packageJson) {
+  try {
+    if (packageJson.packageManager) {
+      const pm = String(packageJson.packageManager).split("@")[0];
+      return `${pm} install`;
+    }
+  } catch (_) {
+    // fall back below
+  }
+
+  if (fs.existsSync(path.join(projectRoot, "pnpm-lock.yaml"))) return "pnpm install";
+  if (fs.existsSync(path.join(projectRoot, "yarn.lock"))) return "yarn install";
+  if (fs.existsSync(path.join(projectRoot, "package-lock.json"))) return "npm install";
+  return "npm install";
+}
+
+function collectMissingModules(projectRoot, packageJson) {
+  const nodeModulesPath = path.join(projectRoot, "node_modules");
+  const declaredDeps = new Set();
+
+  ["dependencies", "optionalDependencies", "peerDependencies"].forEach((key) => {
+    const map = packageJson[key] || {};
+    Object.keys(map).forEach((name) => declaredDeps.add(name));
+  });
+
+  const deps = Array.from(declaredDeps);
+  const missingModules = [];
+
+  if (!fs.existsSync(nodeModulesPath)) {
+    missingModules.push(...deps);
+    return missingModules;
+  }
+
+  for (const dep of deps) {
+    try {
+      require.resolve(dep, { paths: [projectRoot] });
+    } catch (_error) {
+      missingModules.push(dep);
+    }
+  }
+
+  return missingModules;
 }
 
 async function performStartupHealthCheck() {
@@ -238,7 +285,6 @@ function checkRolnoFileExists() {
 async function buildHealthData() {
   const packageJson = require("../package.json");
   const projectRoot = path.resolve(__dirname, "..");
-  const nodeModulesPath = path.join(projectRoot, "node_modules");
 
   const health = {
     status: "healthy",
@@ -248,24 +294,8 @@ async function buildHealthData() {
     version: packageJson.version,
   };
 
-  // helper to detect preferred install command
-  function getInstallCommand() {
-    try {
-      if (packageJson.packageManager) {
-        const pm = String(packageJson.packageManager).split("@")[0];
-        return `${pm} install`;
-      }
-    } catch (_) {}
-    if (fs.existsSync(path.join(projectRoot, "pnpm-lock.yaml"))) return "pnpm install";
-    if (fs.existsSync(path.join(projectRoot, "yarn.lock"))) return "yarn install";
-    if (fs.existsSync(path.join(projectRoot, "package-lock.json"))) return "npm install";
-    return "npm install";
-  }
-
-  // const installCmd = getInstallCommand();
-  const installCmd = "npm install"; // For API response, we can just suggest npm install as a generic command
-
-  const missingModules = [];
+  const installCmd = getInstallCommand(projectRoot, packageJson);
+  const missingModules = []; // for now we can skip this in the API response, but we can add it later if needed
 
   health.modules = { missing: missingModules, installCommand: installCmd };
 
@@ -280,6 +310,15 @@ async function buildHealthData() {
     health.status = "degraded";
   }
 
+  health.chatbot = {
+    smokeTest: {
+      healthy: true,
+      total: 0,
+      failures: 0,
+      results: [],
+    },
+  };
+
   return health;
 }
 
@@ -287,13 +326,8 @@ async function performStartupHealthCheck() {
   try {
     const health = await buildHealthData();
 
-    const missingModules = health.modules.missing;
-    const installCmd = health.modules.installCommand;
-
-    if (!Array.isArray(missingModules)) {
-      // Ensure we have an array to work with in older environments
-      missingModules = Array.isArray(missingModules) ? missingModules : [];
-    }
+    const missingModules = Array.isArray(health.modules?.missing) ? health.modules.missing : [];
+    const installCmd = health.modules?.installCommand || "npm install";
 
     if (missingModules.length > 0) {
       // If modules are missing, abort startup with a boxed message

@@ -8,18 +8,34 @@ async function loadAuthenticateUser(tokenHelperOverrides = {}) {
     getUserId: vi.fn().mockReturnValue(undefined),
     ...tokenHelperOverrides,
   };
+  const featureFlagsServiceMock = {
+    getFeatureFlags: vi.fn().mockResolvedValue({
+      flags: { personalApiKeysEnabled: true },
+      updatedAt: new Date().toISOString(),
+    }),
+  };
+  const personalApiKeyServiceMock = {
+    authenticateApiKey: vi.fn(),
+  };
 
   vi.doMock("../../helpers/token.helpers", () => tokenHelperMocks);
+  vi.doMock("../../services/feature-flags.service", () => featureFlagsServiceMock);
+
+  const personalApiKeyServicePath = require.resolve("../../services/personal-api-key.service");
+  require.cache[personalApiKeyServicePath] = {
+    id: personalApiKeyServicePath,
+    filename: personalApiKeyServicePath,
+    loaded: true,
+    exports: personalApiKeyServiceMock,
+  };
 
   const middlewareModule = await import("../../middleware/auth.middleware");
-  const personalApiKeyServiceModule = await import("../../services/personal-api-key.service");
-  const personalApiKeyService = personalApiKeyServiceModule.default || personalApiKeyServiceModule;
 
   return {
     authenticateUser: middlewareModule.authenticateUser,
     authenticateSessionUser: middlewareModule.authenticateSessionUser,
     tokenHelperMocks,
-    personalApiKeyService,
+    personalApiKeyService: personalApiKeyServiceMock,
   };
 }
 
@@ -152,24 +168,21 @@ describe("authenticateUser middleware", () => {
   });
 
   it("should authenticate with X-API-Key when no session token is present", async () => {
-    const { authenticateUser } = await loadAuthenticateUser();
-    const userDataSingleton = require("../../data/user-data-singleton").getInstance();
-    const personalApiKeyServiceModule = await import("../../services/personal-api-key.service");
-    const personalApiKeyService = personalApiKeyServiceModule.default || personalApiKeyServiceModule;
+    const { authenticateUser, personalApiKeyService } = await loadAuthenticateUser();
 
-    const user = await userDataSingleton.createUser({
-      displayedName: "API Key Middleware User",
-      email: `middleware-api-key-${Date.now()}@test.com`,
-      password: "testpass123",
-    });
-
-    const createdKey = await personalApiKeyService.createKey(user.id, {
-      label: "Middleware test key",
-      scopes: ["user-account"],
+    personalApiKeyService.authenticateApiKey.mockResolvedValue({
+      valid: true,
+      userId: "13",
+      requiredScope: "user-account",
+      requiredAccess: "write",
+      apiKey: {
+        id: "key-1",
+        scopes: ["user-account"],
+      },
     });
 
     const req = {
-      headers: { "x-api-key": createdKey.rawKey },
+      headers: { "x-api-key": "rpk_live_test_key" },
       cookies: {},
       originalUrl: "/api/v1/users/profile",
     };
@@ -178,10 +191,10 @@ describe("authenticateUser middleware", () => {
 
     await authenticateUser(req, res, next);
 
-    expect(req.user).toEqual({ userId: String(user.id) });
+    expect(req.user).toEqual({ userId: "13" });
     expect(req.auth).toEqual({
       type: "api-key",
-      apiKeyId: createdKey.key.id,
+      apiKeyId: "key-1",
       scopes: ["user-account"],
       requiredScope: "user-account",
     });
@@ -207,40 +220,18 @@ describe("authenticateUser middleware", () => {
   });
 
   it("should reject expired X-API-Key with an expiration-specific error", async () => {
-    const { authenticateUser } = await loadAuthenticateUser();
-    const userDataSingleton = require("../../data/user-data-singleton").getInstance();
-    const personalApiKeyServiceModule = await import("../../services/personal-api-key.service");
-    const personalApiKeyService = personalApiKeyServiceModule.default || personalApiKeyServiceModule;
+    const { authenticateUser, personalApiKeyService } = await loadAuthenticateUser();
 
-    const user = await userDataSingleton.createUser({
-      displayedName: "Expired API Key User",
-      email: `middleware-expired-api-key-${Date.now()}@test.com`,
-      password: "testpass123",
+    personalApiKeyService.authenticateApiKey.mockResolvedValue({
+      valid: false,
+      reason: "expired",
+      apiKey: {
+        id: "key-expired",
+      },
     });
-
-    const createdKey = await personalApiKeyService.createKey(user.id, {
-      label: "Expiring middleware key",
-      scopes: ["user-account"],
-      expiration: "1d",
-    });
-
-    await personalApiKeyService.db.update((current) => ({
-      ...current,
-      keys: current.keys.map((item) => {
-        if (item.id !== createdKey.key.id) {
-          return item;
-        }
-
-        return {
-          ...item,
-          expiration: "1d",
-          expiresAt: new Date(Date.now() - 60 * 1000).toISOString(),
-        };
-      }),
-    }));
 
     const req = {
-      headers: { "x-api-key": createdKey.rawKey },
+      headers: { "x-api-key": "rpk_live_expired_key" },
       cookies: {},
       originalUrl: "/api/v1/users/profile",
     };

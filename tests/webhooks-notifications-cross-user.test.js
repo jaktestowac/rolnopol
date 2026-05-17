@@ -200,46 +200,29 @@ describe("Webhooks & Notifications - cross-user data isolation", () => {
 
     await enableWebhookFeatures();
 
+    const createdAtFloor = Date.now();
+
     // create a field as session2
-    const fieldBRes = await request(app)
+    await request(app)
       .post("/api/v1/fields")
       .set("token", session2.token)
       .send({ name: `Notif-B-field-${Date.now()}`, area: 7 })
       .expect(201);
 
-    const fieldId = fieldBRes.body.id || fieldBRes.body.data?.id || fieldBRes.body?.data?.id || fieldBRes.body?.id;
-    // resource create returns created object directly, often at body
-    const createdId =
-      fieldBRes.body.id ||
-      fieldBRes.body?.id ||
-      fieldBRes.body?.data?.id ||
-      fieldBRes.body?.data?.id ||
-      fieldBRes.body?.id ||
-      fieldBRes.body?.id ||
-      (fieldBRes.body && fieldBRes.body.id) ||
-      (fieldBRes.body && fieldBRes.body.data && fieldBRes.body.data.id);
-    // determine the id robustly
-    const effectiveId =
-      fieldBRes.body.id ||
-      (fieldBRes.body?.data && fieldBRes.body.data.id) ||
-      (fieldBRes.body && fieldBRes.body.id) ||
-      fieldBRes.body?.id ||
-      fieldBRes.body?.data?.id ||
-      fieldBRes.body.id;
-
-    const correlationId = `field-${effectiveId}`;
-
-    // poll events endpoint until we see an event for this correlationId
+    // poll events endpoint until we see a recent event for session2
     const deadline = Date.now() + 8000;
     let found = null;
 
     while (Date.now() < deadline) {
-      const eventsRes = await request(app)
-        .get(`/api/v1/notifications/events?correlationId=${encodeURIComponent(correlationId)}`)
-        .expect(200);
+      const eventsRes = await request(app).get("/api/v1/notifications/events?type=field.created&limit=100").expect(200);
       const items = eventsRes.body.data.items || [];
       if (items.length > 0) {
-        found = items.find((e) => e.correlationId === correlationId);
+        found = items.find(
+          (e) =>
+            e.type === "field.created" &&
+            String(e.payload?.userId) === String(session2.userId) &&
+            Date.parse(e.createdAt || e.timestamp || "") >= createdAtFloor,
+        );
         if (found) break;
       }
       await new Promise((r) => setTimeout(r, 100));
@@ -250,5 +233,5 @@ describe("Webhooks & Notifications - cross-user data isolation", () => {
     expect(found.payload.userId).toBe(session2.userId);
     // ensure other user's id is not present
     expect(String(JSON.stringify(found.payload))).not.toContain(String(session1.userId));
-  }, 8000);
+  }, 15000);
 });

@@ -35,6 +35,16 @@ function ensureTokenStorageDirectoryExists() {
   fs.mkdirSync(path.dirname(TOKEN_STORAGE_FILE), { recursive: true });
 }
 
+function sleepSync(ms) {
+  const buffer = new SharedArrayBuffer(4);
+  const view = new Int32Array(buffer);
+  Atomics.wait(view, 0, 0, ms);
+}
+
+function isTransientTokenStorageError(error) {
+  return ["EBUSY", "EPERM", "EACCES", "UNKNOWN"].includes(error?.code);
+}
+
 function serializeTokenStorage() {
   return {
     version: TOKEN_STORAGE_VERSION,
@@ -42,9 +52,36 @@ function serializeTokenStorage() {
   };
 }
 
-function persistTokenStorage() {
-  ensureTokenStorageDirectoryExists();
-  fs.writeFileSync(TOKEN_STORAGE_FILE, JSON.stringify(serializeTokenStorage(), null, 2), "utf8");
+function persistTokenStorage(options = {}) {
+  const serialized = JSON.stringify(serializeTokenStorage(), null, 2);
+  const attempts = Number.isInteger(options.attempts) ? options.attempts : 3;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      ensureTokenStorageDirectoryExists();
+      fs.writeFileSync(TOKEN_STORAGE_FILE, serialized, "utf8");
+      return true;
+    } catch (error) {
+      lastError = error;
+      if (!isTransientTokenStorageError(error) || attempt === attempts) {
+        break;
+      }
+      sleepSync(10 * attempt);
+    }
+  }
+
+  logError("Failed to persist token registry", {
+    tokenStorageFile: TOKEN_STORAGE_FILE,
+    error: lastError?.message || "unknown error",
+    code: lastError?.code,
+  });
+
+  if (options.throwOnError === true) {
+    throw lastError;
+  }
+
+  return false;
 }
 
 function normalizePersistedTokenEntry(userId, tokenData) {

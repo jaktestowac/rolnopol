@@ -4,6 +4,7 @@ const dbManager = require("../data/database-manager");
 const UserDataSingleton = require("../data/user-data-singleton");
 
 const BASE_STATE_FILE = path.join(__dirname, "../data/database-base-state.json");
+let restoreQueue = Promise.resolve();
 
 const DATABASE_ACCESSORS = {
   users: () => dbManager.getUsersDatabase(),
@@ -72,14 +73,14 @@ function readBaseState() {
   return parsed;
 }
 
-async function restoreAllDatabasesFromBaseState() {
+async function performRestoreAllDatabasesFromBaseState() {
   const snapshot = readBaseState();
   const restored = {};
 
   for (const [resourceName, getDb] of Object.entries(DATABASE_ACCESSORS)) {
     const db = getDb();
     const targetData = deepClone(snapshot.databases[resourceName]);
-    await db.replaceAll(targetData);
+    await db.replaceAll(targetData, { immediate: true });
     restored[resourceName] = getResourceCount(targetData);
   }
 
@@ -90,6 +91,12 @@ async function restoreAllDatabasesFromBaseState() {
     baseStateVersion: snapshot.version || 1,
     restored,
   };
+}
+
+async function restoreAllDatabasesFromBaseState() {
+  const restore = restoreQueue.then(performRestoreAllDatabasesFromBaseState, performRestoreAllDatabasesFromBaseState);
+  restoreQueue = restore.catch(() => {});
+  return restore;
 }
 
 module.exports = {
