@@ -2,6 +2,7 @@ class ChaosEnginePage {
   constructor() {
     this.apiService = null;
     this.currentPayload = null;
+    this.customDraftConfig = null;
     this.dirty = false; // track unsaved changes
     this.dirtyFields = new Set(); // names of fields that have been modified
     this.suppressChange = false; // when true, change events won't mark dirty
@@ -21,8 +22,13 @@ class ChaosEnginePage {
 
   _cacheDom() {
     this.modeEl = document.getElementById("chaosMode");
+    this.modePanelEl = document.getElementById("chaosModePanel");
     this.modeDescriptionEl = document.getElementById("chaosModeDescription");
     this.updatedAtEl = document.getElementById("chaosUpdatedAt");
+    this.previewSummaryEl = document.getElementById("chaosPreviewSummary");
+    this.previewHighlightsEl = document.getElementById("chaosPreviewHighlights");
+    this.previewConfigDisplayEl = document.getElementById("chaosPreviewConfigDisplay");
+    this.previewBadgeEl = document.getElementById("chaosPreviewBadge");
 
     this.reloadBtn = document.getElementById("reloadChaosBtn");
     this.resetBtn = document.getElementById("resetChaosBtn");
@@ -63,6 +69,15 @@ class ChaosEnginePage {
     this.scopeRolesEl = document.getElementById("scopeRoles");
     this.scopeIpRangesEl = document.getElementById("scopeIpRanges");
     this.scopeGeolocationEl = document.getElementById("scopeGeolocation");
+
+    this.previewGroupEls = {
+      latency: document.getElementById("chaosGroupLatency"),
+      responseLoss: document.getElementById("chaosGroupResponseLoss"),
+      errorInjection: document.getElementById("chaosGroupErrorInjection"),
+      scope: document.getElementById("chaosGroupScope"),
+      stateful: document.getElementById("chaosGroupStateful"),
+      mirroring: document.getElementById("chaosGroupMirroring"),
+    };
   }
 
   _bindEvents() {
@@ -70,10 +85,7 @@ class ChaosEnginePage {
     this.resetBtn?.addEventListener("click", () => this._reset());
     this.applyModeBtn?.addEventListener("click", () => this._applyMode());
     this.saveCustomBtn?.addEventListener("click", () => this._saveCustom());
-    this.modeEl?.addEventListener("change", () => {
-      this._renderModeDescription();
-      this._onFieldChange("mode");
-    });
+    this.modeEl?.addEventListener("change", () => this._handleModeSelectionChange());
 
     // track changes in any form field to mark unsaved
     const formFields = [
@@ -115,6 +127,16 @@ class ChaosEnginePage {
 
   _onFieldChange(fieldName) {
     if (this.suppressChange) return;
+
+    if (fieldName && fieldName !== "mode") {
+      this.customDraftConfig = this._cloneConfig(this._buildCustomConfigFromForm());
+      if (this.modeEl?.value && this.modeEl.value !== "custom" && this.currentPayload?.presets?.custom) {
+        this.modeEl.value = "custom";
+        this.dirtyFields.add("mode");
+        this._renderModeDescription();
+      }
+    }
+
     if (!this.dirty) {
       this.dirty = true;
     }
@@ -122,6 +144,24 @@ class ChaosEnginePage {
       this.dirtyFields.add(fieldName);
     }
     this._renderSummary();
+    this._renderPreviewState();
+  }
+
+  _cloneConfig(config) {
+    try {
+      return JSON.parse(JSON.stringify(config || {}));
+    } catch (_) {
+      return config || {};
+    }
+  }
+
+  _handleModeSelectionChange() {
+    this._renderModeDescription();
+    const previewConfig = this._resolvePreviewConfig(this.modeEl?.value || "off");
+    if (previewConfig) {
+      this._renderCustomConfig(previewConfig);
+    }
+    this._onFieldChange("mode");
   }
 
   _notify(message, isError = false) {
@@ -180,10 +220,206 @@ class ChaosEnginePage {
       .filter((item) => item.length > 0);
   }
 
+  _escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  _formatModeLabel(mode) {
+    return this.currentPayload?.presets?.[mode]?.label || mode;
+  }
+
+  _serializeComparable(value) {
+    return JSON.stringify(value ?? null);
+  }
+
+  _resolvePreviewConfig(mode) {
+    if (!this.currentPayload) {
+      return null;
+    }
+
+    if (mode === "custom") {
+      if (this.dirty) {
+        return this._cloneConfig(this._buildCustomConfigFromForm());
+      }
+      if (this.customDraftConfig) {
+        return this._cloneConfig(this.customDraftConfig);
+      }
+    }
+
+    const previewConfigs = this.currentPayload.previewConfigs || {};
+    if (previewConfigs[mode]) {
+      return this._cloneConfig(previewConfigs[mode]);
+    }
+
+    if (mode === this.currentPayload.mode) {
+      return this._cloneConfig(this.currentPayload.config || {});
+    }
+
+    if (mode === "custom") {
+      return this._cloneConfig(this.currentPayload.customConfig || this.currentPayload.config || {});
+    }
+
+    return null;
+  }
+
+  _describeSectionValue(key, config) {
+    const source = config || {};
+
+    switch (key) {
+      case "mode":
+        return this._formatModeLabel(source.mode || "off");
+      case "latency": {
+        const latency = source.latency || {};
+        return latency.enabled ? `On · p=${latency.probability ?? 0} · ${latency.minMs ?? 0}-${latency.maxMs ?? 0} ms` : "Off";
+      }
+      case "responseLoss": {
+        const loss = source.responseLoss || {};
+        return loss.enabled ? `On · ${loss.mode || "timeout"} · p=${loss.probability ?? 0} · ${loss.timeoutMs ?? 0} ms` : "Off";
+      }
+      case "errorInjection": {
+        const errors = source.errorInjection || {};
+        const codes = Array.isArray(errors.statusCodes) && errors.statusCodes.length > 0 ? errors.statusCodes.join(",") : "500";
+        const randomLabel = errors.randomStatus ? " · random range" : "";
+        return errors.enabled ? `On · p=${errors.probability ?? 0} · ${codes}${randomLabel}` : "Off";
+      }
+      case "stateful": {
+        const stateful = source.stateful || {};
+        return stateful.enabled ? `On · after ${stateful.requestCount ?? 0} requests` : "Off";
+      }
+      case "mirroring": {
+        const mirroring = source.mirroring || {};
+        const targetUrl = mirroring.targetUrl ? ` → ${mirroring.targetUrl}` : "";
+        return mirroring.enabled ? `On · p=${mirroring.probability ?? 0}${targetUrl}` : "Off";
+      }
+      case "scope": {
+        const scope = source.scope || {};
+        const methods = Array.isArray(scope.methods) && scope.methods.length > 0 ? scope.methods.join(",") : "all methods";
+        const includeCount = Array.isArray(scope.includePaths) ? scope.includePaths.length : 0;
+        const excludeCount = Array.isArray(scope.excludePaths) ? scope.excludePaths.length : 0;
+        return `${scope.percentOfTraffic ?? 100}% traffic · ${methods} · ${includeCount} include / ${excludeCount} exclude`;
+      }
+      default:
+        return "-";
+    }
+  }
+
+  _buildPreviewChanges(appliedConfig, previewConfig, selectedMode) {
+    const changes = [];
+    const appliedMode = this.currentPayload?.mode || "off";
+
+    if (selectedMode !== appliedMode) {
+      changes.push({
+        key: "mode",
+        label: "Mode",
+        previewValue: this._formatModeLabel(selectedMode),
+        appliedValue: this._formatModeLabel(appliedMode),
+      });
+    }
+
+    ["latency", "responseLoss", "errorInjection", "scope", "stateful", "mirroring"].forEach((key) => {
+      if (this._serializeComparable(previewConfig?.[key]) !== this._serializeComparable(appliedConfig?.[key])) {
+        changes.push({
+          key,
+          label:
+            key === "responseLoss"
+              ? "Response loss"
+              : key === "errorInjection"
+                ? "Error responses"
+                : key === "stateful"
+                  ? "Stateful failures"
+                  : key.charAt(0).toUpperCase() + key.slice(1),
+          previewValue: this._describeSectionValue(key, previewConfig),
+          appliedValue: this._describeSectionValue(key, appliedConfig),
+        });
+      }
+    });
+
+    return changes;
+  }
+
+  _setPreviewClass(el, className, enabled) {
+    if (!el?.classList) {
+      return;
+    }
+    if (enabled) {
+      el.classList.add(className);
+      return;
+    }
+    el.classList.remove(className);
+  }
+
+  _renderPreviewState() {
+    if (!this.currentPayload) {
+      return;
+    }
+
+    const selectedMode = this.modeEl?.value || this.currentPayload.mode || "off";
+    const appliedConfig = this.currentPayload.config || {};
+    const previewConfig = this._resolvePreviewConfig(selectedMode) || appliedConfig;
+    const changes = this._buildPreviewChanges(appliedConfig, previewConfig, selectedMode);
+    const hasChanges = changes.length > 0;
+    const isCustomDraft = selectedMode === "custom" && hasChanges;
+
+    if (this.previewBadgeEl) {
+      this.previewBadgeEl.textContent = hasChanges ? (isCustomDraft ? "Custom draft" : "Preview") : "Applied";
+      this._setPreviewClass(this.previewBadgeEl, "chaos-preview-badge--changed", hasChanges);
+      this._setPreviewClass(this.previewBadgeEl, "chaos-preview-badge--custom", isCustomDraft);
+    }
+
+    this._setPreviewClass(this.modePanelEl, "chaos-panel--changed", selectedMode !== this.currentPayload.mode);
+
+    Object.entries(this.previewGroupEls || {}).forEach(([key, el]) => {
+      const isChanged = changes.some((item) => item.key === key);
+      this._setPreviewClass(el, "chaos-group--changed", isChanged);
+    });
+
+    if (this.previewSummaryEl) {
+      if (!hasChanges) {
+        this.previewSummaryEl.textContent = `Preview matches the applied ${this._formatModeLabel(this.currentPayload.mode || "off")} configuration.`;
+      } else if (selectedMode === "custom") {
+        this.previewSummaryEl.textContent = `Custom draft ready. ${changes.length} ${changes.length === 1 ? "area" : "areas"} would change if you save this configuration.`;
+      } else {
+        this.previewSummaryEl.textContent = `Previewing ${this._formatModeLabel(selectedMode)}. ${changes.length} ${changes.length === 1 ? "area would" : "areas would"} change if you apply this mode.`;
+      }
+    }
+
+    if (this.previewHighlightsEl) {
+      if (!hasChanges) {
+        this.previewHighlightsEl.innerHTML =
+          '<div class="chaos-preview-empty">No pending differences. You are already looking at the applied setup.</div>';
+      } else {
+        this.previewHighlightsEl.innerHTML = changes
+          .map(
+            (change) => `
+              <article class="chaos-preview-card chaos-preview-card--changed">
+                <div class="chaos-preview-card__label">${this._escapeHtml(change.label)}</div>
+                <div class="chaos-preview-card__value">${this._escapeHtml(change.previewValue)}</div>
+                <div class="chaos-preview-card__delta">Applied: ${this._escapeHtml(change.appliedValue)}</div>
+              </article>`,
+          )
+          .join("");
+      }
+    }
+
+    if (this.previewConfigDisplayEl) {
+      try {
+        this.previewConfigDisplayEl.textContent = JSON.stringify(previewConfig, null, 2);
+      } catch (_) {
+        this.previewConfigDisplayEl.textContent = "(unable to show preview config)";
+      }
+    }
+  }
+
   _renderCustomConfig(payload) {
     // we set a bunch of form elements; suppress events while doing so
     this.suppressChange = true;
-    const cfg = payload?.customConfig || {};
+    // Accept either a full API payload or a resolved config object.
+    const cfg = payload?.customConfig || payload || {};
     const latency = cfg.latency || {};
     const loss = cfg.responseLoss || {};
     const errors = cfg.errorInjection || {};
@@ -353,14 +589,16 @@ class ChaosEnginePage {
       }
 
       this.currentPayload = payload;
+      this.customDraftConfig = this._cloneConfig(payload.previewConfigs?.custom || payload.customConfig || payload.config || {});
       // reset tracking
       this.dirty = false;
       this.dirtyFields.clear();
 
       this._renderModeOptions(payload);
-      this._renderCustomConfig(payload);
+      this._renderCustomConfig(this._resolvePreviewConfig(payload.mode || "off") || payload.config || {});
       this.updatedAtEl.textContent = this._formatDate(payload.updatedAt);
       this._renderSummary();
+      this._renderPreviewState();
       this._renderConfigDisplay(payload.config || {});
     } catch (error) {
       this._notify("Failed to load Chaos Engine config", true);
@@ -424,20 +662,16 @@ class ChaosEnginePage {
     const el = document.getElementById("chaosSummary");
     if (!el) return;
 
-    const mode = this.modeEl?.value || "off";
-    const latency = this.latencyProbabilityEl?.value || "";
-    const loss = this.lossProbabilityEl?.value || "";
-    const errors = this.errorProbabilityEl?.value || "";
-    const traffic = this.scopePercentOfTrafficEl?.value || "";
+    const selectedMode = this.modeEl?.value || this.currentPayload?.mode || "off";
+    const appliedMode = this.currentPayload?.mode || "off";
+    const previewConfig = this._resolvePreviewConfig(selectedMode) || this.currentPayload?.config || {};
+    const appliedConfig = this.currentPayload?.config || {};
+    const pendingChanges = this._buildPreviewChanges(appliedConfig, previewConfig, selectedMode);
 
-    let text = `Mode: ${mode}`;
-    if (mode === "custom") {
-      text += ` | latency p=${latency}`;
-      text += ` | loss p=${loss}`;
-      text += ` | errors p=${errors}`;
-      if (traffic !== "") {
-        text += ` | traffic ${traffic}%`;
-      }
+    let text = `Applied: ${this._formatModeLabel(appliedMode)} | Preview: ${this._formatModeLabel(selectedMode)}`;
+    if (pendingChanges.length > 0) {
+      text += ` | ${pendingChanges.length} pending ${pendingChanges.length === 1 ? "change" : "changes"}`;
+      text += selectedMode === "custom" ? " | Save as custom to activate" : " | Apply mode to activate";
     }
 
     if (this.dirty) {

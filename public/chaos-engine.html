@@ -31,7 +31,7 @@
             </div>
         </header>
 
-        <section class="glass chaos-panel">
+        <section id="chaosModePanel" class="glass chaos-panel">
             <h2>Mode</h2>
             <div class="chaos-grid">
                 <label class="chaos-field">
@@ -51,7 +51,7 @@
         <section class="glass chaos-panel">
             <h2>Custom configuration</h2>
 
-            <div class="chaos-group">
+            <div id="chaosGroupLatency" class="chaos-group">
                 <h3>Latency</h3>
                 <div class="chaos-grid">
                     <label class="chaos-field"><label class="chaos-field--toggle"><input id="latencyEnabled" type="checkbox"><span> Enable latency injection</span></label><span class="chaos-hint">Turn on to randomly delay responses.</span></label>
@@ -61,7 +61,7 @@
                 </div>
             </div>
 
-            <div class="chaos-group">
+            <div id="chaosGroupResponseLoss" class="chaos-group">
                 <h3>Response loss</h3>
                 <div class="chaos-grid">
                     <label class="chaos-field"><label class="chaos-field--toggle"><input id="lossEnabled" type="checkbox"><span> Enable response loss</span></label><span class="chaos-hint">Randomly drop or timeout requests.</span></label>
@@ -76,7 +76,7 @@
                 </div>
             </div>
 
-            <div class="chaos-group">
+            <div id="chaosGroupErrorInjection" class="chaos-group">
                 <h3>Error responses</h3>
                 <div class="chaos-grid">
                     <label class="chaos-field"><label class="chaos-field--toggle"><input id="errorEnabled" type="checkbox"><span> Enable random errors</span></label><span class="chaos-hint">Inject HTTP error codes into responses.</span></label>
@@ -87,7 +87,7 @@
                 </div>
             </div>
 
-            <div class="chaos-group">
+            <div id="chaosGroupScope" class="chaos-group">
                 <h3>Scope</h3>
                 <div class="chaos-grid">
                     <label class="chaos-field"><span>Methods (comma separated)</span><input id="scopeMethods" type="text" placeholder="GET,POST,PUT,PATCH,DELETE"></input><span class="chaos-hint">Limit chaos to specific HTTP methods.</span></label>
@@ -103,7 +103,7 @@
                 </div>
             </div>
 
-            <div class="chaos-group">
+            <div id="chaosGroupStateful" class="chaos-group">
                 <h3>Stateful failures</h3>
                 <div class="chaos-grid">
                     <label class="chaos-field"><label class=" chaos-field--toggle"><input id="statefulEnabled" type="checkbox"><span> Enable stateful trigger</span></label><span class="chaos-hint">Activate failure after a set number of requests.</span></label>
@@ -111,7 +111,7 @@
                 </div>
             </div>
 
-            <div class="chaos-group">
+            <div id="chaosGroupMirroring" class="chaos-group">
                 <h3>Mirroring</h3>
                 <div class="chaos-grid">
                     <label class="chaos-field"><label class=" chaos-field--toggle"><input id="mirroringEnabled" type="checkbox"><span> Enable request mirroring</span></label><span class="chaos-hint">Send an asynchronous shadow request (same method/path/headers/body) to the target URL.</span></label>
@@ -126,10 +126,26 @@
             </div>
         </section>
 
+        <section class="glass chaos-panel chaos-preview-panel">
+            <div class="chaos-preview-head">
+                <div>
+                    <h2>Preview before apply</h2>
+                    <p class="chaos-hint">See what would change before you activate a preset or save a custom draft.</p>
+                </div>
+                <span id="chaosPreviewBadge" class="chaos-preview-badge">Applied</span>
+            </div>
+            <div id="chaosPreviewSummary" class="chaos-preview-summary" aria-live="polite">Loading preview…</div>
+            <div id="chaosPreviewHighlights" class="chaos-preview-highlights" aria-live="polite"></div>
+            <pre id="chaosPreviewConfigDisplay" class="chaos-config-display chaos-config-display--preview">{}</pre>
+        </section>
+
         <!-- summary area showing current configuration and dirty state -->
         <div id="chaosSummary" class="chaos-summary">Loading current settings...</div>
-        <!-- JSON display of applied configuration for reference -->
-        <pre id="chaosConfigDisplay" class="chaos-config-display">{}</pre>
+
+        <section class="glass chaos-panel chaos-panel--compact">
+            <h2>Applied configuration</h2>
+            <pre id="chaosConfigDisplay" class="chaos-config-display">{}</pre>
+        </section>
     </div>
 
     <div id="footer-component"></div>

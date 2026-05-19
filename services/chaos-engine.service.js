@@ -113,7 +113,7 @@ class ChaosEngineService {
     // Configuration caching with TTL
     this.configCache = null;
     this.configCacheTimestamp = 0;
-    this.CACHE_TTL_MS = 10000;  // Cache for 10s to reduce disk reads
+    this.CACHE_TTL_MS = 10000; // Cache for 10s to reduce disk reads
   }
 
   _clone(value) {
@@ -122,23 +122,23 @@ class ChaosEngineService {
 
   _validateRegexPattern(pattern) {
     const str = String(pattern || "");
-    
+
     // Reject obvious ReDoS patterns
     const dangerousPatterns = [
-      /\(\w\+\)\+/,        // (a+)+ - nested quantifiers
-      /\(\w\*\)\+/,        // (a*)+ - nested quantifiers
-      /\w\+\w\+/,          // a+b+ - multiple quantified groups
-      /\+\+/,              // ++ - double quantifier
-      /\*\+/,              // *+ - conflicting quantifiers
-      /\+\*/,              // +* - conflicting quantifiers
+      /\(\w\+\)\+/, // (a+)+ - nested quantifiers
+      /\(\w\*\)\+/, // (a*)+ - nested quantifiers
+      /\w\+\w\+/, // a+b+ - multiple quantified groups
+      /\+\+/, // ++ - double quantifier
+      /\*\+/, // *+ - conflicting quantifiers
+      /\+\*/, // +* - conflicting quantifiers
     ];
-    
+
     for (const dangerous of dangerousPatterns) {
       if (dangerous.test(str)) {
         throw new Error(`Regex pattern may cause ReDoS: ${str}`);
       }
     }
-    
+
     // Limit pattern length to prevent DoS
     if (str.length > 500) {
       throw new Error("Regex pattern too long (max 500 chars)");
@@ -354,6 +354,16 @@ class ChaosEngineService {
     return this._sanitizeConfig(preset.config, preset.config);
   }
 
+  _buildPreviewConfigs(customConfig) {
+    const previewConfigs = {};
+
+    for (const mode of ALLOWED_MODES) {
+      previewConfigs[mode] = this._resolveConfig(mode, customConfig);
+    }
+
+    return previewConfigs;
+  }
+
   _buildPresetsView() {
     const out = {};
     for (const mode of ALLOWED_MODES) {
@@ -412,6 +422,7 @@ class ChaosEngineService {
       mode: normalized.mode,
       config: resolvedConfig,
       customConfig: normalized.customConfig,
+      previewConfigs: this._buildPreviewConfigs(normalized.customConfig),
       presets: this._buildPresetsView(),
       updatedAt: normalized.updatedAt,
     };
@@ -419,12 +430,9 @@ class ChaosEngineService {
 
   async getChaosEngineConfig() {
     const now = Date.now();
-    
+
     // Check if cache is still valid
-    if (
-      this.configCache !== null &&
-      (now - this.configCacheTimestamp) < this.CACHE_TTL_MS
-    ) {
+    if (this.configCache !== null && now - this.configCacheTimestamp < this.CACHE_TTL_MS) {
       // Cache hit - return cached data
       return this.configCache;
     }
@@ -433,11 +441,11 @@ class ChaosEngineService {
     const data = await this.db.getAll();
     const normalized = this._normalizeData(data);
     const result = this._toPublicPayload(normalized);
-    
+
     // Update cache
     this.configCache = result;
     this.configCacheTimestamp = now;
-    
+
     return result;
   }
 
@@ -508,10 +516,10 @@ class ChaosEngineService {
 
   async resetChaosEngineConfig() {
     const persisted = await this._persistNormalized(this._clone(DEFAULT_DATA));
-    
+
     // Invalidate cache so next request gets fresh config
     this._invalidateCache();
-    
+
     return this._toPublicPayload(persisted);
   }
 }

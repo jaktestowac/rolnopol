@@ -12,16 +12,22 @@ describe("Chaos Engine API", () => {
     await resetChaosEngine();
   });
 
-  it("GET /api/v1/chaos-engine returns mode, config and presets", async () => {
+  it("GET /api/v1/chaos-engine returns mode, config, presets and preview configs", async () => {
     const res = await request(app).get("/api/v1/chaos-engine").expect(200);
 
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveProperty("mode");
     expect(res.body.data).toHaveProperty("config");
     expect(res.body.data).toHaveProperty("presets");
+    expect(res.body.data).toHaveProperty("previewConfigs");
     expect(res.body.data.presets).toHaveProperty("off");
     expect(res.body.data.presets).toHaveProperty("custom");
     expect(res.body.data.presets).toHaveProperty("level5");
+    expect(res.body.data.previewConfigs).toHaveProperty("off");
+    expect(res.body.data.previewConfigs).toHaveProperty("custom");
+    expect(res.body.data.previewConfigs).toHaveProperty("level5");
+    expect(res.body.data.previewConfigs.off.enabled).toBe(false);
+    expect(res.body.data.previewConfigs.level5.responseLoss.enabled).toBe(true);
     expect(res.headers.etag).toBeUndefined();
   });
 

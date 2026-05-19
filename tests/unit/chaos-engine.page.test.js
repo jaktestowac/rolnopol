@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { afterEach, describe, it, expect, beforeEach, vi } from "vitest";
 
 // tests reference the global `window` object, so make sure it exists *before* loading
 // the page script. set a simple window object and import the script once at top level.
@@ -136,5 +136,325 @@ describe("ChaosEnginePage form helpers", () => {
     expect(page.scopePercentOfTrafficEl.value).toBe(77);
     expect(page.scopeIncludePathsEl.value).toBe("/x");
     // other new fields should populate but not strictly verified here
+  });
+});
+
+describe("ChaosEnginePage load behavior when the engine is off", () => {
+  let previousDocument;
+
+  function createElement(initialValue = "") {
+    return {
+      checked: false,
+      value: initialValue,
+      textContent: "",
+      innerHTML: "",
+      hidden: false,
+      classList: {
+        add: vi.fn(),
+        remove: vi.fn(),
+      },
+    };
+  }
+
+  beforeEach(() => {
+    previousDocument = global.document;
+
+    const elementMap = new Map([
+      ["chaosMode", createElement()],
+      ["chaosModePanel", createElement()],
+      ["chaosModeDescription", createElement()],
+      ["chaosUpdatedAt", createElement()],
+      ["chaosPreviewSummary", createElement()],
+      ["chaosPreviewHighlights", createElement()],
+      ["chaosPreviewConfigDisplay", createElement()],
+      ["chaosPreviewBadge", createElement()],
+      ["chaosSummary", createElement()],
+      ["chaosConfigDisplay", createElement()],
+      ["reloadChaosBtn", createElement()],
+      ["resetChaosBtn", createElement()],
+      ["applyModeBtn", createElement()],
+      ["saveCustomBtn", createElement()],
+      ["latencyEnabled", createElement()],
+      ["latencyProbability", createElement()],
+      ["latencyMinMs", createElement()],
+      ["latencyMaxMs", createElement()],
+      ["lossEnabled", createElement()],
+      ["lossProbability", createElement()],
+      ["lossMode", createElement("timeout")],
+      ["lossTimeoutMs", createElement()],
+      ["errorEnabled", createElement()],
+      ["errorProbability", createElement()],
+      ["errorStatusCodes", createElement()],
+      ["errorMessage", createElement()],
+      ["errorRandomStatus", createElement()],
+      ["statefulEnabled", createElement()],
+      ["statefulRequestCount", createElement()],
+      ["mirroringEnabled", createElement()],
+      ["mirroringProbability", createElement()],
+      ["mirroringTargetUrl", createElement()],
+      ["scopeMethods", createElement()],
+      ["scopeExcludePaths", createElement()],
+      ["scopePercentOfTraffic", createElement()],
+      ["scopeIncludePaths", createElement()],
+      ["scopeQueryParams", createElement()],
+      ["scopeHeaders", createElement()],
+      ["scopeHostnames", createElement()],
+      ["scopeRoles", createElement()],
+      ["scopeIpRanges", createElement()],
+      ["scopeGeolocation", createElement()],
+      ["chaosGroupLatency", createElement()],
+      ["chaosGroupResponseLoss", createElement()],
+      ["chaosGroupErrorInjection", createElement()],
+      ["chaosGroupScope", createElement()],
+      ["chaosGroupStateful", createElement()],
+      ["chaosGroupMirroring", createElement()],
+    ]);
+
+    global.document = {
+      getElementById: vi.fn((id) => elementMap.get(id) || null),
+    };
+
+    global.__chaosEngineTestElements = elementMap;
+  });
+
+  afterEach(() => {
+    global.document = previousDocument;
+    delete global.__chaosEngineTestElements;
+  });
+
+  it("resets the form from the resolved off config instead of stale custom values", async () => {
+    const page = new window.ChaosEnginePage();
+    page.apiService = {
+      get: vi.fn(async () => ({
+        success: true,
+        data: {
+          data: {
+            mode: "off",
+            config: {
+              enabled: false,
+              latency: { enabled: false, probability: 0, minMs: 0, maxMs: 0 },
+              responseLoss: { enabled: false, probability: 0, mode: "timeout", timeoutMs: 1000 },
+              errorInjection: {
+                enabled: false,
+                probability: 0,
+                statusCodes: [500],
+                randomStatus: false,
+                message: "Synthetic chaos error",
+              },
+              stateful: { enabled: false, requestCount: 0 },
+              mirroring: { enabled: false, probability: 0, targetUrl: "" },
+              scope: {
+                methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+                excludePaths: ["/v1/chaos-engine*"],
+                includePaths: [],
+                queryParams: {},
+                headers: {},
+                hostnames: [],
+                roles: [],
+                ipRanges: [],
+                geolocation: [],
+                percentOfTraffic: 100,
+              },
+            },
+            customConfig: {
+              enabled: true,
+              latency: { enabled: true, probability: 1, minMs: 999, maxMs: 1000 },
+              responseLoss: { enabled: true, probability: 1, mode: "drop", timeoutMs: 9999 },
+              errorInjection: {
+                enabled: true,
+                probability: 1,
+                statusCodes: [599],
+                randomStatus: true,
+                message: "stale custom values",
+              },
+              stateful: { enabled: true, requestCount: 42 },
+              mirroring: { enabled: true, probability: 1, targetUrl: "http://mirror" },
+              scope: {
+                methods: ["DELETE"],
+                excludePaths: ["/stale"],
+                percentOfTraffic: 5,
+              },
+            },
+            presets: {
+              off: { label: "Off", description: "No perturbation." },
+            },
+            previewConfigs: {
+              off: {
+                enabled: false,
+                latency: { enabled: false, probability: 0, minMs: 0, maxMs: 0 },
+                responseLoss: { enabled: false, probability: 0, mode: "timeout", timeoutMs: 1000 },
+                errorInjection: {
+                  enabled: false,
+                  probability: 0,
+                  statusCodes: [500],
+                  randomStatus: false,
+                  message: "Synthetic chaos error",
+                },
+                stateful: { enabled: false, requestCount: 0 },
+                mirroring: { enabled: false, probability: 0, targetUrl: "" },
+                scope: {
+                  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+                  excludePaths: ["/v1/chaos-engine*"],
+                  includePaths: [],
+                  queryParams: {},
+                  headers: {},
+                  hostnames: [],
+                  roles: [],
+                  ipRanges: [],
+                  geolocation: [],
+                  percentOfTraffic: 100,
+                },
+              },
+            },
+            updatedAt: "2026-05-19T12:00:00.000Z",
+          },
+        },
+      })),
+    };
+
+    page._cacheDom();
+
+    await page._load();
+
+    expect(page.modeEl.value).toBe("off");
+    expect(page.latencyEnabledEl.checked).toBe(false);
+    expect(page.lossEnabledEl.checked).toBe(false);
+    expect(page.errorEnabledEl.checked).toBe(false);
+    expect(page.statefulEnabledEl.checked).toBe(false);
+    expect(page.mirroringEnabledEl.checked).toBe(false);
+    expect(page.errorStatusCodesEl.value).toBe("500");
+    expect(page.scopeMethodsEl.value).toBe("GET,POST,PUT,PATCH,DELETE");
+    expect(page.scopePercentOfTrafficEl.value).toBe(100);
+    expect(page.scopeExcludePathsEl.value).toContain("/v1/chaos-engine*");
+    expect(page.previewSummaryEl.textContent).toContain("Preview matches the applied");
+    expect(page.previewConfigDisplayEl.textContent).toContain('"enabled": false');
+  });
+
+  it("hydrates the form from preview configs when selecting a preset before apply", () => {
+    const page = new window.ChaosEnginePage();
+    page._cacheDom();
+    page.currentPayload = {
+      mode: "off",
+      config: {
+        enabled: false,
+        latency: { enabled: false, probability: 0, minMs: 0, maxMs: 0 },
+        responseLoss: { enabled: false, probability: 0, mode: "timeout", timeoutMs: 1000 },
+        errorInjection: { enabled: false, probability: 0, statusCodes: [500], randomStatus: false, message: "Synthetic chaos error" },
+        stateful: { enabled: false, requestCount: 0 },
+        mirroring: { enabled: false, probability: 0, targetUrl: "" },
+        scope: {
+          methods: ["GET"],
+          excludePaths: [],
+          includePaths: [],
+          queryParams: {},
+          headers: {},
+          hostnames: [],
+          roles: [],
+          ipRanges: [],
+          geolocation: [],
+          percentOfTraffic: 100,
+        },
+      },
+      customConfig: {
+        enabled: true,
+        latency: { enabled: true, probability: 0.15, minMs: 10, maxMs: 30 },
+        responseLoss: { enabled: false, probability: 0, mode: "timeout", timeoutMs: 1000 },
+        errorInjection: { enabled: false, probability: 0, statusCodes: [500], randomStatus: false, message: "draft" },
+        stateful: { enabled: false, requestCount: 0 },
+        mirroring: { enabled: false, probability: 0, targetUrl: "" },
+        scope: {
+          methods: ["GET"],
+          excludePaths: [],
+          includePaths: [],
+          queryParams: {},
+          headers: {},
+          hostnames: [],
+          roles: [],
+          ipRanges: [],
+          geolocation: [],
+          percentOfTraffic: 100,
+        },
+      },
+      presets: {
+        off: { label: "Off", description: "No perturbation." },
+        custom: { label: "Custom", description: "User-defined chaos parameters." },
+        level3: { label: "Level 3 - Turbulent", description: "Frequent latency spikes and random faults." },
+      },
+      previewConfigs: {
+        off: {
+          enabled: false,
+          latency: { enabled: false, probability: 0, minMs: 0, maxMs: 0 },
+          responseLoss: { enabled: false, probability: 0, mode: "timeout", timeoutMs: 1000 },
+          errorInjection: { enabled: false, probability: 0, statusCodes: [500], randomStatus: false, message: "Synthetic chaos error" },
+          stateful: { enabled: false, requestCount: 0 },
+          mirroring: { enabled: false, probability: 0, targetUrl: "" },
+          scope: {
+            methods: ["GET"],
+            excludePaths: [],
+            includePaths: [],
+            queryParams: {},
+            headers: {},
+            hostnames: [],
+            roles: [],
+            ipRanges: [],
+            geolocation: [],
+            percentOfTraffic: 100,
+          },
+        },
+        custom: {
+          enabled: true,
+          latency: { enabled: true, probability: 0.15, minMs: 10, maxMs: 30 },
+          responseLoss: { enabled: false, probability: 0, mode: "timeout", timeoutMs: 1000 },
+          errorInjection: { enabled: false, probability: 0, statusCodes: [500], randomStatus: false, message: "draft" },
+          stateful: { enabled: false, requestCount: 0 },
+          mirroring: { enabled: false, probability: 0, targetUrl: "" },
+          scope: {
+            methods: ["GET"],
+            excludePaths: [],
+            includePaths: [],
+            queryParams: {},
+            headers: {},
+            hostnames: [],
+            roles: [],
+            ipRanges: [],
+            geolocation: [],
+            percentOfTraffic: 100,
+          },
+        },
+        level3: {
+          enabled: true,
+          latency: { enabled: true, probability: 0.5, minMs: 150, maxMs: 650 },
+          responseLoss: { enabled: true, probability: 0.02, mode: "timeout", timeoutMs: 1800 },
+          errorInjection: { enabled: true, probability: 0.07, statusCodes: [500, 502, 503], randomStatus: false, message: "Chaos L3" },
+          stateful: { enabled: false, requestCount: 0 },
+          mirroring: { enabled: false, probability: 0, targetUrl: "" },
+          scope: {
+            methods: ["GET"],
+            excludePaths: [],
+            includePaths: [],
+            queryParams: {},
+            headers: {},
+            hostnames: [],
+            roles: [],
+            ipRanges: [],
+            geolocation: [],
+            percentOfTraffic: 100,
+          },
+        },
+      },
+    };
+
+    page.customDraftConfig = page._cloneConfig(page.currentPayload.customConfig);
+    page.modeEl.value = "level3";
+
+    page._handleModeSelectionChange();
+
+    expect(page.latencyEnabledEl.checked).toBe(true);
+    expect(page.latencyProbabilityEl.value).toBe(0.5);
+    expect(page.lossEnabledEl.checked).toBe(true);
+    expect(page.lossTimeoutMsEl.value).toBe(1800);
+    expect(page.previewSummaryEl.textContent).toContain("Previewing Level 3 - Turbulent");
+    expect(page.previewHighlightsEl.innerHTML).toContain("Latency");
+    expect(page.previewHighlightsEl.innerHTML).toContain("Applied: Off");
   });
 });
