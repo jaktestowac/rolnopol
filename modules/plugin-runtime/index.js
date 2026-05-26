@@ -8,7 +8,7 @@ const { logInfo, logError, logDebug } = require("../../helpers/logger-api");
  * 1) Global manifest (`plugins.manifest.json`) - overrides everything.
  * 2) Local plugin manifest (`plugins/<plugin>/plugin.manifest.json`) - overrides code defaults.
  * 3) Plugin code defaults (`plugins/<plugin>/index.js`) - used when no manifest overrides.
- * 4) Fallback - if `enabled` is not explicitly set anywhere, the plugin defaults to enabled.
+ * 4) Fallback - if `enabled` is not explicitly set anywhere, the plugin defaults to disabled.
  *
  * This is why you can have `enabled` in both the plugin code and the manifest; the manifest
  * always wins, and the code value is treated as a default.
@@ -89,7 +89,7 @@ function _resolveEnabled(pluginDef, localPluginConfig, globalManifestPluginConfi
   if (typeof pluginDef.enabled === "boolean") {
     return pluginDef.enabled;
   }
-  return true;
+  return false;
 }
 
 function _resolveConfig(pluginDef, localPluginConfig, globalManifestPluginConfig) {

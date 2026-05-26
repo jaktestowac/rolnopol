@@ -18,7 +18,7 @@ describe("Plugin runtime internal property-based tests", () => {
     );
   });
 
-  test("_resolveEnabled precedence global > local > pluginDef > default", () => {
+  test("_resolveEnabled precedence global > local > pluginDef > default-disabled", () => {
     fc.assert(
       fc.property(fc.boolean(), fc.boolean(), fc.boolean(), (g, l, p) => {
         const out = _resolveEnabled({ enabled: p }, { enabled: l }, { enabled: g });
@@ -41,7 +41,7 @@ describe("Plugin runtime internal property-based tests", () => {
       }),
     );
 
-    expect(_resolveEnabled({}, {}, {})).toBe(true);
+    expect(_resolveEnabled({}, {}, {})).toBe(false);
   });
 
   test("_resolveConfig merges shallowly with correct precedence", () => {

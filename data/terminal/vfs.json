@@ -122,6 +122,11 @@
               "type": "image",
               "contentType": "image/svg+xml",
               "src": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 120\"><rect width=\"360\" height=\"120\" fill=\"#07110f\"/><text x=\"24\" y=\"74\" fill=\"#7dffb2\" font-family=\"monospace\" font-size=\"28\">WELCOME TO THE ARCHIVE</text></svg>"
+            },
+            "hello.txt": {
+              "title": "Hello Banner",
+              "type": "text",
+              "content": "This is a text-based banner that can be displayed in the terminal."
             }
           }
         },

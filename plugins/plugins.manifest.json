@@ -20,6 +20,49 @@
     "plugin-template": {
       "enabled": false,
       "config": {}
+    },
+    "harvest-moon-header-plugin": {
+      "enabled": false,
+      "config": {
+        "routePaths": ["/api/v1/healthcheck", "/api/v1/ping"],
+        "queryParam": "moon",
+        "queryValue": "harvest",
+        "headerName": "x-rolnopol-harvest-moon",
+        "headerValue": "golden-fields-awake"
+      }
+    },
+    "barn-whisper-ping-plugin": {
+      "enabled": false,
+      "config": {
+        "sigValue": "barn-whisper",
+        "whisper": "The barn doors only sing when the weather vane points toward mischief.",
+        "hoofbeats": 7
+      }
+    },
+    "starlit-statistics-plugin": {
+      "enabled": false,
+      "config": {
+        "routePath": "/api/v1/statistics",
+        "queryParam": "constellation",
+        "queryValue": "lyra",
+        "title": "Lyra over Rolnopol"
+      }
+    },
+    "secret-garden-route-plugin": {
+      "enabled": false,
+      "config": {
+        "routePath": "/api/v1/easter-eggs/secret-garden",
+        "phrase": "Moss remembers every footprint.",
+        "flowers": ["moonflower", "fern", "cornflower"]
+      }
+    },
+    "firefly-notification-plugin": {
+      "enabled": false,
+      "config": {
+        "routePath": "/api/v1/easter-eggs/firefly-jar",
+        "maxEvents": 5,
+        "eventTypes": ["field.created", "notification.sent"]
+      }
     }
   }
 }

@@ -101,6 +101,25 @@ describe("plugin-runtime local manifests", () => {
     expect(plugin).toBeUndefined();
   });
 
+  it("defaults discovered plugins to disabled when enabled is unset everywhere", async () => {
+    const pluginsDir = path.join(tempRoot, "plugins");
+    const pluginName = "unset-enabled-plugin";
+    const pluginDir = path.join(pluginsDir, pluginName);
+
+    await writePlugin(pluginDir, `module.exports = {\n  name: "${pluginName}",\n  autoDiscoverable: true\n};\n`);
+
+    await writeJson(path.join(pluginsDir, "plugins.manifest.json"), {
+      plugins: {},
+    });
+
+    const pluginRuntime = require(runtimeModulePath);
+    pluginRuntime.initialize({ pluginsDir });
+
+    const plugin = pluginRuntime.getPlugins().find((item) => item.name === pluginName);
+    expect(plugin).toBeTruthy();
+    expect(plugin.enabled).toBe(false);
+  });
+
   it("merges config with precedence code < local < global", async () => {
     const pluginsDir = path.join(tempRoot, "plugins");
     const pluginName = "config-precedence-plugin";
