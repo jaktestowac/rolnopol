@@ -4,6 +4,8 @@ const {
   TerminalCommandRegistry,
   createLocalTerminalCommandRegistry,
   createTerminalCommandSystem,
+  formatTerminalPromptLabel,
+  formatTerminalPromptPath,
   parseTerminalInput,
 } = require("../../public/js/pages/terminal-command-system.js");
 const { createTerminalThemeManager } = require("../../public/js/pages/terminal-theme-manager.js");
@@ -367,5 +369,14 @@ describe("terminal command system", () => {
 
     expect(effectsSuggestion.kind).toBe("argument");
     expect(effectsSuggestion.matches.map((match) => match.value)).toEqual(expect.arrayContaining(["on", "off"]));
+  });
+
+  it("formats shell prompt paths for the archive terminal", () => {
+    expect(formatTerminalPromptPath("/")).toBe("~");
+    expect(formatTerminalPromptPath("/docs")).toBe("~/docs");
+    expect(formatTerminalPromptPath("/projects/rolnopol-jt/scripts")).toBe("~/projects/rolnopol-jt/scripts");
+
+    expect(formatTerminalPromptLabel("/")).toBe("guest@archive:~$");
+    expect(formatTerminalPromptLabel("/docs/guide")).toBe("guest@archive:~/docs/guide$");
   });
 });

@@ -68,6 +68,12 @@
               "title": "Release Notes",
               "type": "text",
               "content": "- Added disk-backed scripts\n- Added nested VFS samples\n- Added sync endpoint"
+            },
+            "secret-index.md": {
+              "title": "Secret Index",
+              "type": "text",
+              "secret": true,
+              "content": "This hidden index maps the quiet corners of the archive and only appears in verbose all-files listings."
             }
           }
         }
@@ -113,6 +119,40 @@
         }
       }
     },
+    ".control-room": {
+      "title": "Control Room",
+      "hidden": true,
+      "children": {
+        "ops-log.txt": {
+          "title": "Operations Log",
+          "type": "text",
+          "content": "Fallback relays calibrated.\nClock drift corrected.\nArchive control loop stable."
+        },
+        "switchboard.json": {
+          "title": "Switchboard",
+          "type": "json",
+          "content": {
+            "channels": [
+              {
+                "id": "north-grid",
+                "status": "stable",
+                "latencyMs": 14
+              },
+              {
+                "id": "deep-vault",
+                "status": "standby",
+                "latencyMs": 27
+              }
+            ],
+            "maintenanceWindow": {
+              "day": "Thursday",
+              "start": "22:00",
+              "durationMinutes": 45
+            }
+          }
+        }
+      }
+    },
     "media": {
       "children": {
         "banners": {
@@ -127,6 +167,18 @@
               "title": "Hello Banner",
               "type": "text",
               "content": "This is a text-based banner that can be displayed in the terminal."
+            },
+            "banner.png": {
+              "title": "PNG Banner",
+              "type": "image",
+              "contentType": "image/png",
+              "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWgAAAAgCAYAAADQYy8VAAAACXBIWXMAAAsTAAALEwEAmpwYAAABGklEQVR4nO3bMQEAAAgDoJvc/9K3hHFQhBqQmZJ"
+            },
+            "animated.gif": {
+              "title": "Animated Banner",
+              "type": "image",
+              "contentType": "image/gif",
+              "src": "data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQv///wAAAAAAAAAAACH5BAEAAAIALAAAAAAQABAAAAM6CLrc/jDKSau9OOvNu/9gKI5kaZ5oqq5sAQA7"
             }
           }
         },
@@ -138,6 +190,89 @@
               "contentType": "image/svg+xml",
               "src": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect width=\"64\" height=\"64\" rx=\"8\" fill=\"#0b120f\"/><path d=\"M14 20h36v24H14z\" fill=\"none\" stroke=\"#66ff99\" stroke-width=\"3\"/><path d=\"M20 28l8 4-8 4\" fill=\"none\" stroke=\"#66ff99\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M32 36h12\" stroke=\"#66ff99\" stroke-width=\"3\" stroke-linecap=\"round\"/></svg>"
             }
+          }
+        }
+      }
+    },
+    "structures": {
+      "children": {
+        "stack.json": {
+          "title": "Stack Structure",
+          "type": "json",
+          "content": {
+            "type": "stack",
+            "top": "delta",
+            "items": ["alpha", "beta", "gamma", "delta"]
+          }
+        },
+        "queue.json": {
+          "title": "Queue Structure",
+          "type": "json",
+          "content": {
+            "type": "queue",
+            "front": "task-01",
+            "rear": "task-04",
+            "items": ["task-01", "task-02", "task-03", "task-04"]
+          }
+        },
+        "graph.json": {
+          "title": "Graph Structure",
+          "type": "json",
+          "content": {
+            "type": "graph",
+            "nodes": ["archive", "vault", "signal", "lab"],
+            "edges": [
+              ["archive", "vault"],
+              ["archive", "signal"],
+              ["signal", "lab"]
+            ]
+          }
+        },
+        "tree.json": {
+          "title": "Tree Structure",
+          "type": "json",
+          "content": {
+            "type": "tree",
+            "value": "root",
+            "children": [
+              {
+                "value": "branch-a",
+                "children": [{ "value": "leaf-a1" }, { "value": "leaf-a2" }]
+              },
+              {
+                "value": "branch-b",
+                "children": [{ "value": "leaf-b1" }]
+              }
+            ]
+          }
+        },
+        "linked-list.json": {
+          "title": "Linked List",
+          "type": "json",
+          "content": {
+            "type": "linked-list",
+            "head": {
+              "value": "node-1",
+              "next": {
+                "value": "node-2",
+                "next": {
+                  "value": "node-3",
+                  "next": null
+                }
+              }
+            }
+          }
+        },
+        "matrix.json": {
+          "title": "Adjacency Matrix",
+          "type": "json",
+          "content": {
+            "type": "matrix",
+            "rows": [
+              [0, 1, 1],
+              [1, 0, 0],
+              [1, 0, 0]
+            ]
           }
         }
       }

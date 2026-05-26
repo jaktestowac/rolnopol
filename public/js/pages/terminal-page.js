@@ -39,6 +39,7 @@
     timeout: 12000,
     retries: 1,
   });
+  const formatTerminalPromptLabel = window.TerminalCommandSystem?.formatTerminalPromptLabel;
   const commandSystem = window.TerminalCommandSystem?.createTerminalCommandSystem({
     version: TERMINAL_VERSION,
     versionLabel: "Archive Terminal",
@@ -74,6 +75,17 @@
     rebootSequenceId: 0,
   };
   let bootSequenceRendered = false;
+
+  function getShellPromptLabel(pathValue = state.currentPath) {
+    if (typeof formatTerminalPromptLabel === "function") {
+      return formatTerminalPromptLabel(pathValue, {
+        identity: "guest@archive",
+        suffix: "$",
+      });
+    }
+
+    return PROMPT;
+  }
 
   if (!terminalShell || !terminalOutput || !terminalInput || !commandSystem || !outputRenderer) {
     return;
@@ -115,7 +127,7 @@
     }
 
     if (terminalPrompt) {
-      terminalPrompt.textContent = promptState?.label || PROMPT;
+      terminalPrompt.textContent = promptState?.label || getShellPromptLabel();
       terminalPrompt.classList.toggle("terminal-prompt--active", isPrompting);
     }
 
@@ -916,7 +928,7 @@
 
     const prompt = document.createElement("span");
     prompt.className = "terminal-prompt";
-    prompt.textContent = PROMPT;
+    prompt.textContent = getShellPromptLabel(state.currentPath);
 
     const value = document.createElement("span");
     value.className = "terminal-command";
@@ -1100,9 +1112,13 @@
         }
       }
 
-      await outputRenderer.render(result, {
-        signal: renderController?.signal,
-      });
+      const shouldRenderResult = !(parsedCommandName === "cd" && result?.type === "text" && !String(result.content || "").trim());
+
+      if (shouldRenderResult) {
+        await outputRenderer.render(result, {
+          signal: renderController?.signal,
+        });
+      }
 
       applyResultSideEffects(result, command, parsedCommandName);
 

@@ -269,6 +269,7 @@ let TERMINAL_SCRIPTS = {
 let TERMINAL_ASSETS = {
   "signal-image": {
     id: "signal-image",
+    path: "assets/signal-image",
     title: "Signal Frame",
     type: "image",
     alt: "Abstract terminal signal frame",
@@ -280,6 +281,7 @@ let TERMINAL_ASSETS = {
   },
   "archive-banner": {
     id: "archive-banner",
+    path: "assets/archive-banner",
     title: "Archive Banner",
     type: "text",
     content: "ARCHIVE NODE ONLINE",
@@ -387,6 +389,66 @@ function normalizeAccessMode(rawAccess) {
     .toLowerCase();
   if (access === "password" || access === "permission") return access;
   return "public";
+}
+
+function normalizeVisibilityMode(rawVisibility) {
+  const visibility = String(rawVisibility || "public")
+    .trim()
+    .toLowerCase();
+
+  if (visibility === "hidden" || visibility === "secret") {
+    return visibility;
+  }
+
+  return "public";
+}
+
+function isHiddenResourceName(name) {
+  const normalized = String(name || "")
+    .trim()
+    .split("/")
+    .filter(Boolean)
+    .pop();
+
+  return !!normalized && normalized.startsWith(".");
+}
+
+function extractVisibilityMetadata(node = {}, fallbackName = "") {
+  const rawVisibility = isPlainObject(node.visibility) ? node.visibility.mode || node.visibility.visibility : node.visibility;
+  const visibilityMode = normalizeVisibilityMode(rawVisibility);
+  const hidden =
+    node.hidden === true ||
+    node.secret === true ||
+    visibilityMode === "hidden" ||
+    visibilityMode === "secret" ||
+    isHiddenResourceName(fallbackName);
+  const secret = node.secret === true || visibilityMode === "secret";
+
+  return {
+    hidden,
+    secret,
+  };
+}
+
+function normalizeInlineSvgSource(source, contentType = "") {
+  const text = typeof source === "string" ? source.trim() : "";
+  const normalizedContentType = String(contentType || "")
+    .trim()
+    .toLowerCase();
+
+  if (!text) {
+    return source;
+  }
+
+  if (text.startsWith("data:")) {
+    return text;
+  }
+
+  if (normalizedContentType === "image/svg+xml" && text.startsWith("<svg")) {
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(text)}`;
+  }
+
+  return source;
 }
 
 function extractAccessMetadata(node = {}) {
@@ -668,6 +730,7 @@ function registerDirectoryMetadata(directoryPath, metadata = {}) {
   const normalized = normalizeVirtualPathKey(directoryPath);
   const access = extractAccessMetadata(metadata);
   const effect = sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(metadata));
+  const visibility = extractVisibilityMetadata(metadata, normalized.split("/").pop() || normalized || "/");
   TERMINAL_DIRECTORY_METADATA.set(normalized, {
     title: metadata.title || metadata.name || metadata.label || normalized.split("/").pop() || normalized || "/",
     type: "dir",
@@ -675,6 +738,8 @@ function registerDirectoryMetadata(directoryPath, metadata = {}) {
     requiredPermissions: clone(access.requiredPermissions || []),
     passwordHint: access.passwordHint || "",
     password: access.password,
+    hidden: visibility.hidden,
+    secret: visibility.secret,
     effect,
   });
 
@@ -697,6 +762,19 @@ function getAssetRecord(assetId) {
         .toLowerCase()
     ] || null
   );
+}
+
+function getAssetVirtualPath(asset = {}) {
+  return normalizeVirtualPathKey(asset.path || `assets/${asset.id || ""}`);
+}
+
+function getAssetRecordByPath(assetPath) {
+  const normalized = normalizeVirtualPathKey(assetPath);
+  if (!normalized) {
+    return null;
+  }
+
+  return Object.values(TERMINAL_ASSETS).find((asset) => getAssetVirtualPath(asset) === normalized) || null;
 }
 
 function buildVisibleDirectoryEntry(sessionId, directoryPath, name, metadata = {}) {
@@ -755,11 +833,12 @@ function listDirectoryEntries(sessionId, requestedPath, options = {}) {
   const prefix = normalizeVirtualPathKey(resolved);
   const providedPassword = options.providedPassword ?? options.password ?? "";
   const permissions = Array.isArray(options.permissions) ? options.permissions : [];
+  const showHidden = options.showHidden === true;
   const entries = new Map();
 
   const exactDirectoryMetadata = getDirectoryMetadata(prefix);
   const exactFile = getFileRecord(prefix);
-  const exactAsset = prefix.startsWith("assets/") ? getAssetRecord(prefix.slice("assets/".length)) : null;
+  const exactAsset = getAssetRecordByPath(prefix) || (prefix.startsWith("assets/") ? getAssetRecord(prefix.slice("assets/".length)) : null);
 
   if (exactDirectoryMetadata) {
     const accessCheck = canAccessResource({
@@ -820,12 +899,20 @@ function listDirectoryEntries(sessionId, requestedPath, options = {}) {
 
   function addDir(name, fullPath, metadata = {}) {
     if (!name || entries.has(name)) return;
+
+    const visibility = extractVisibilityMetadata(metadata, name);
+    if (visibility.hidden && !showHidden) {
+      return;
+    }
+
     entries.set(name, {
       name,
       type: "dir",
       path: `/${normalizeVirtualPathKey(fullPath)}`.replace(/\/+/g, "/"),
       title: metadata.title || name,
       effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(metadata)),
+      hidden: visibility.hidden,
+      secret: visibility.secret,
       ...summarizeAccessForListing(fullPath, "directory", metadata, sessionId, {
         providedPassword,
         permissions,
@@ -835,6 +922,12 @@ function listDirectoryEntries(sessionId, requestedPath, options = {}) {
 
   function addFile(name, fullPath, file, resourceType = "file") {
     if (!name || entries.has(name)) return;
+
+    const visibility = extractVisibilityMetadata(file, name);
+    if (visibility.hidden && !showHidden) {
+      return;
+    }
+
     entries.set(name, {
       name,
       type: file?.type || resourceType || "file",
@@ -842,6 +935,8 @@ function listDirectoryEntries(sessionId, requestedPath, options = {}) {
       title: file?.title || file?.path || name,
       contentType: file?.contentType || null,
       effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(file)),
+      hidden: visibility.hidden,
+      secret: visibility.secret,
       ...summarizeAccessForListing(fullPath, resourceType, file, sessionId, {
         providedPassword,
         permissions,
@@ -908,6 +1003,44 @@ function listDirectoryEntries(sessionId, requestedPath, options = {}) {
     }
   });
 
+  Object.keys(TERMINAL_ASSETS).forEach((assetKey) => {
+    const asset = TERMINAL_ASSETS[assetKey];
+    const key = getAssetVirtualPath(asset);
+
+    if (!key) {
+      return;
+    }
+
+    if (!prefix) {
+      const idx = key.indexOf("/");
+      if (idx >= 0) {
+        const dirName = key.slice(0, idx);
+        const dirFullPath = `/${dirName}`;
+        addDir(dirName, dirFullPath, getDirectoryMetadata(dirFullPath) || { title: dirName, access: "public" });
+      } else {
+        addFile(key, `/${key}`, asset, "asset");
+      }
+      return;
+    }
+
+    if (key === prefix) {
+      addFile(key.split("/").pop(), `/${key}`, asset, "asset");
+      return;
+    }
+
+    if (key.startsWith(prefix + "/")) {
+      const remainder = key.slice(prefix.length + 1);
+      const parts = remainder.split("/");
+      const name = parts[0];
+      if (parts.length > 1) {
+        const dirFullPath = `/${prefix}/${name}`;
+        addDir(name, dirFullPath, getDirectoryMetadata(dirFullPath) || { title: name, access: "public" });
+      } else {
+        addFile(name, `/${prefix}/${name}`, asset, "asset");
+      }
+    }
+  });
+
   // Top-level synthetic directories
   if (!prefix) {
     if (Object.keys(TERMINAL_ASSETS).length > 0)
@@ -918,22 +1051,12 @@ function listDirectoryEntries(sessionId, requestedPath, options = {}) {
     Object.keys(TERMINAL_ASSETS).forEach((assetId) => {
       if (!entries.has(assetId)) {
         const asset = TERMINAL_ASSETS[assetId];
-        entries.set(assetId, {
-          name: assetId,
-          type: asset.type || "asset",
-          path: `/assets/${assetId}`,
-          title: asset.title,
-          alt: asset.alt,
-          access: sanitizeAccessMetadata(asset).access,
-          locked: isProtectedAccess(asset),
-          resourceType: "asset",
-          effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(asset)),
-        });
+        addFile(assetId, `/${getAssetVirtualPath(asset) || `assets/${assetId}`}`, asset, "asset");
       }
     });
   } else if (prefix.startsWith("assets/")) {
     const assetId = prefix.slice("assets/".length);
-    const asset = TERMINAL_ASSETS[assetId];
+    const asset = getAssetRecord(assetId) || getAssetRecordByPath(prefix);
     if (asset) {
       const name = assetId.split("/").pop();
       addFile(name, `/${prefix}`, asset, "asset");
@@ -1020,22 +1143,27 @@ function flattenVfsNode(node, currentPath, filesMap, assetsMap, directoriesSet, 
     const pathParts = rel.split("/");
     const top = pathParts[0] || "";
     const isAsset = top === "assets" || child.type === "asset" || child.type === "image";
+    const visibility = extractVisibilityMetadata(child, name);
+    const normalizedImageSource = normalizeInlineSvgSource(child.src || child.content, child.contentType || child.mimeType || child.type);
 
     if (isAsset) {
       const assetId = name.replace(/\.[^/.]+$/, "").toLowerCase();
       const effect = sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(child));
       assetsMap[assetId] = {
         id: assetId,
+        path: rel,
         title: child.title || name,
         type: child.type || "image",
         alt: child.alt || null,
-        src: child.src || (typeof child.content === "string" ? child.content : undefined),
+        src: normalizedImageSource,
         content: child.content,
         contentType: child.contentType || null,
         access: childAccess.access,
         requiredPermissions: clone(childAccess.requiredPermissions || []),
         passwordHint: childAccess.passwordHint || "",
         password: childAccess.password,
+        hidden: visibility.hidden,
+        secret: visibility.secret,
         effect,
       };
     } else {
@@ -1045,13 +1173,15 @@ function flattenVfsNode(node, currentPath, filesMap, assetsMap, directoriesSet, 
         title: child.title || name,
         type: child.type || "text",
         contentType: child.contentType || null,
-        content: child.content || child.src || null,
+        content: child.content || normalizedImageSource || null,
         alt: child.alt || null,
-        src: child.src || null,
+        src: normalizedImageSource || null,
         access: childAccess.access,
         requiredPermissions: clone(childAccess.requiredPermissions || []),
         passwordHint: childAccess.passwordHint || "",
         password: childAccess.password,
+        hidden: visibility.hidden,
+        secret: visibility.secret,
         effect,
       };
     }
@@ -1230,11 +1360,14 @@ function listScripts() {
 function listAssets() {
   return Object.values(TERMINAL_ASSETS).map((asset) => ({
     id: asset.id,
+    path: getAssetVirtualPath(asset),
     title: asset.title,
     type: asset.type,
     alt: asset.alt,
-    access: summarizeAccessForListing(`assets/${asset.id}`, asset.type || "asset", asset, null, {}).access,
-    locked: summarizeAccessForListing(`assets/${asset.id}`, asset.type || "asset", asset, null, {}).locked,
+    hidden: asset.hidden === true,
+    secret: asset.secret === true,
+    access: summarizeAccessForListing(getAssetVirtualPath(asset), asset.type || "asset", asset, null, {}).access,
+    locked: summarizeAccessForListing(getAssetVirtualPath(asset), asset.type || "asset", asset, null, {}).locked,
     effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(asset)),
   }));
 }
@@ -1245,6 +1378,8 @@ function listFiles() {
     title: file.title,
     type: file.type,
     contentType: file.contentType,
+    hidden: file.hidden === true,
+    secret: file.secret === true,
     access: summarizeAccessForListing(file.path, file.type || "file", file, null, {}).access,
     locked: summarizeAccessForListing(file.path, file.type || "file", file, null, {}).locked,
     effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(file)),
@@ -1323,6 +1458,8 @@ function formatVirtualListingEntry(entry, options = {}) {
     `name=${entry?.name || ""}${suffix}`,
     `type=${entry?.type || "file"}`,
     `path=${entry?.path || ""}`,
+    `hidden=${entry?.hidden ? "true" : "false"}`,
+    `secret=${entry?.secret ? "true" : "false"}`,
     `access=${entry?.access || "public"}`,
     `locked=${entry?.locked ? "true" : "false"}`,
     `resourceType=${entry?.resourceType || (entry?.type === "dir" ? "directory" : "file")}`,
@@ -1363,12 +1500,21 @@ function resolveFileLikeResource(sessionId, target) {
   if (directAsset) {
     return {
       kind: "asset",
-      path: `assets/${directAsset.id}`,
+      path: getAssetVirtualPath(directAsset) || `assets/${directAsset.id}`,
       resource: directAsset,
     };
   }
 
   const normalizedTarget = normalizeVirtualPathKey(rawTarget);
+  const directAssetByPath = getAssetRecordByPath(normalizedTarget);
+  if (directAssetByPath) {
+    return {
+      kind: "asset",
+      path: getAssetVirtualPath(directAssetByPath),
+      resource: directAssetByPath,
+    };
+  }
+
   const directFile = getFileRecord(normalizedTarget) || getFile(rawTarget);
   if (directFile) {
     return {
@@ -1379,6 +1525,15 @@ function resolveFileLikeResource(sessionId, target) {
   }
 
   const resolved = normalizeVirtualPathKey(resolvePathForSession(sessionId, rawTarget));
+  const resolvedAsset = getAssetRecordByPath(resolved);
+  if (resolvedAsset) {
+    return {
+      kind: "asset",
+      path: getAssetVirtualPath(resolvedAsset),
+      resource: resolvedAsset,
+    };
+  }
+
   const resolvedFile = getFileRecord(resolved);
   if (resolvedFile) {
     return {
@@ -1431,7 +1586,7 @@ function buildExecuteResult(commandName, args, flags, sessionId, terminalContext
       const resolved = resolvePathForSession(sessionId, dest);
 
       const prefix = stripLeadingSlash(resolved).replace(/\/$/, "");
-      const existsAsFile = !!TERMINAL_FILES[prefix] || !!TERMINAL_ASSETS[prefix] || !!TERMINAL_SCRIPTS[prefix];
+      const existsAsFile = !!TERMINAL_FILES[prefix] || !!getAssetRecordByPath(prefix) || !!TERMINAL_SCRIPTS[prefix];
       const existsAsDir = prefix === "" || TERMINAL_DIRECTORIES.has(prefix) || prefix === "assets" || prefix === "scripts";
 
       if (existsAsDir) {
@@ -1477,7 +1632,7 @@ function buildExecuteResult(commandName, args, flags, sessionId, terminalContext
       return buildCommandResult(
         {
           type: "text",
-          content: `Changed directory to ${newPath}`,
+          content: "",
           metadata: {
             path: newPath,
             effect: sanitizeTerminalEffectMetadata(extractTerminalEffectMetadata(directoryMeta || {})),
@@ -1492,6 +1647,7 @@ function buildExecuteResult(commandName, args, flags, sessionId, terminalContext
       const listing = listDirectoryEntries(sessionId, listTarget, {
         providedPassword,
         permissions,
+        showHidden: flags.a === true,
       });
       const longFormat = flags.l === true;
 

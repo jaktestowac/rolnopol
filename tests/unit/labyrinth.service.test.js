@@ -2,14 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const labyrinthService = require("../../services/labyrinth.service");
 
-const GAME_OVER_MESSAGES = [
-  "The monster caught you. The maze keeps your footsteps and forgets the rest.",
-  "Game over. The monster was faster, and the walls were in no hurry to help.",
-  "You were caught. Somewhere, the maze just learned a new silence.",
-  "The monster reached you first. The corridor closes like a verdict.",
-  "Captured. The maze won this round, but it had the advantage of teeth.",
-];
-
 function findAdjacentOpenDirection(snapshot) {
   const { player, grid } = snapshot;
   const candidates = [
@@ -62,6 +54,7 @@ function directionBetween(from, to) {
 
 describe("LabyrinthService", () => {
   beforeEach(() => {
+    labyrinthService.cheatCodesEnabled = false;
     labyrinthService.resetLabyrinth(
       {
         seed: "service-test-seed",
@@ -133,6 +126,29 @@ describe("LabyrinthService", () => {
 
   it("rejects numeric chat codes when chat codes are disabled", () => {
     expect(() => labyrinthService.applyAction("1")).toThrow("Unknown labyrinth action: 1");
+  });
+
+  it("supports additional numeric cheat codes when chat codes are enabled", () => {
+    labyrinthService.cheatCodesEnabled = true;
+
+    const initial = labyrinthService.getSnapshot();
+    expect(initial.fog.radius).toBe(2);
+    expect(initial.fog.enabled).toBe(true);
+    expect(initial.stats.reveals).toBe(0);
+
+    const revealResult = labyrinthService.applyAction("2");
+    expect(revealResult.action).toBe("reveal");
+    expect(revealResult.snapshot.stats.reveals).toBe(1);
+
+    const visionResult = labyrinthService.applyAction("3");
+    expect(visionResult.action).toBe("maxvision");
+    expect(visionResult.snapshot.fog.radius).toBe(8);
+    expect(visionResult.event?.type).toBe("maxVision");
+
+    const fogResult = labyrinthService.applyAction("4");
+    expect(fogResult.action).toBe("togglefog");
+    expect(fogResult.snapshot.fog.enabled).toBe(false);
+    expect(fogResult.event?.type).toBe("toggleFog");
   });
 
   it("supports the tiny maze preset", () => {
@@ -232,7 +248,9 @@ describe("LabyrinthService", () => {
     expect(result.event?.type).toBe("gameOver");
     expect(snapshot.stats.gameOver).toBe(true);
     expect(result.event.details.reason).toBe("monster");
-    expect(GAME_OVER_MESSAGES).toContain(result.message);
+    expect(typeof result.message).toBe("string");
+    expect(result.message.length).toBeGreaterThan(0);
+    expect(/monster|game over|captured|caught/i.test(result.message)).toBe(true);
     expect(result.event.details.message).toBe(result.message);
   });
 

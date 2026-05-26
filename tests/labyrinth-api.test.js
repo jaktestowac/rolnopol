@@ -219,6 +219,7 @@ describe("Labyrinth API and hidden page", () => {
     expect(res.body.data.capabilities.actions).toContain("move");
     expect(res.body.data.capabilities.actions).toContain("configure");
     expect(res.body.data.capabilities.actions).toContain("revealAll");
+    expect(res.body.data.capabilities.cheatCodes).toMatchObject({ enabled: false, shortcuts: [] });
     expect(res.body.data.capabilities.sizes.map((size) => size.name)).toContain("medium");
     expect(res.body.data.theme.scene.title).toContain("maze");
   });

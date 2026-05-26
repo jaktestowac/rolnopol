@@ -254,9 +254,21 @@ const ACTION_ALIASES = new Map([
   ["reset-maze", "reset"],
 ]);
 
-const CHEAT_CODES_ENABLED = false;
+const CHEAT_CODES_ENABLED = true;
 
-const CHAT_CODE_ACTIONS = new Map([["1", "revealAll"]]);
+const CHEAT_CODE_ACTIONS = new Map([
+  ["1", "revealall"],
+  ["2", "reveal"],
+  ["3", "maxvision"],
+  ["4", "togglefog"],
+]);
+
+const CHEAT_CODE_SHORTCUTS = [
+  { key: "1", action: "revealAll", label: "Reveal entire maze" },
+  { key: "2", action: "reveal", label: "Reveal nearby cells" },
+  { key: "3", action: "maxVision", label: "Set fog radius to max" },
+  { key: "4", action: "toggleFog", label: "Toggle fog" },
+];
 
 const DEFAULT_SESSION_ID = "default";
 
@@ -430,6 +442,7 @@ class LabyrinthService {
     this.registerActionHandler("move", (payload = {}) => this._movePlayer(payload));
     this.registerActionHandler("reveal", (payload = {}) => this._revealArea(payload));
     this.registerActionHandler("revealAll", (payload = {}) => this._revealAllMap(payload));
+    this.registerActionHandler("maxVision", (payload = {}) => this._maxVision(payload));
     this.registerActionHandler("toggleFog", (payload = {}) => this._toggleFog(payload));
     this.registerActionHandler("setTheme", (payload = {}) => this._setTheme(payload));
     this.registerActionHandler("reset", (payload = {}, options = {}) => this.resetLabyrinth(payload, options));
@@ -437,10 +450,22 @@ class LabyrinthService {
     this.registerActionHandler("setFogRadius", (payload = {}) => this._setFogRadius(payload));
   }
 
+  _buildCapabilities() {
+    return {
+      actions: ["move", "reveal", "revealAll", "toggleFog", "setTheme", "reset", "configure", "setFogRadius"],
+      themes: this.listThemes(),
+      sizes: this.listSizes(),
+      cheatCodes: {
+        enabled: this.cheatCodesEnabled === true,
+        shortcuts: this.cheatCodesEnabled === true ? clone(CHEAT_CODE_SHORTCUTS) : [],
+      },
+    };
+  }
+
   _resolveActionName(rawAction) {
     const normalized = normalizeString(rawAction).toLowerCase();
-    if (this.cheatCodesEnabled && CHAT_CODE_ACTIONS.has(normalized)) {
-      return CHAT_CODE_ACTIONS.get(normalized);
+    if (this.cheatCodesEnabled && CHEAT_CODE_ACTIONS.has(normalized)) {
+      return CHEAT_CODE_ACTIONS.get(normalized);
     }
 
     return ACTION_ALIASES.get(normalized) || rawAction;
@@ -701,11 +726,7 @@ class LabyrinthService {
         gameOver: false,
         solved: false,
       },
-      capabilities: {
-        actions: ["move", "reveal", "revealAll", "toggleFog", "setTheme", "reset", "configure", "setFogRadius"],
-        themes: this.listThemes(),
-        sizes: this.listSizes(),
-      },
+      capabilities: this._buildCapabilities(),
     };
 
     this.state = state;
@@ -1327,6 +1348,16 @@ class LabyrinthService {
     return this.getSnapshot();
   }
 
+  _maxVision(payload = {}) {
+    const requestedRadius = clamp(payload.radius, 0, 8, 8);
+    const nextRadius = Math.max(this.state.fog.radius, requestedRadius);
+    this.state.fog.radius = nextRadius;
+    this._revealAroundPlayer({ radius: nextRadius, silent: true });
+    this.state.stats.explored = this._calculateExploredCoverage();
+    this._incrementRevision("maxVision", { radius: nextRadius });
+    return this.getSnapshot();
+  }
+
   _configure(payload = {}) {
     const nextState = this._defaultConfig({
       size: payload.size,
@@ -1618,7 +1649,7 @@ class LabyrinthService {
       monster: clone(this.state.monster),
       inventory: clone(this.state.inventory),
       stats: clone(this.state.stats),
-      capabilities: clone(this.state.capabilities),
+      capabilities: this._buildCapabilities(),
       viewport: viewport ? clone(viewport) : null,
       grid: rows,
     };

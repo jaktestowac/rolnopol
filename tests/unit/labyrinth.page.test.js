@@ -119,6 +119,7 @@ function createMockElement(tagName = "div") {
 describe("Labyrinth page viewport rendering", () => {
   let mazeGrid;
   let LabyrinthPage;
+  let keydownHandler;
 
   beforeEach(() => {
     const mazeSizeModal = createMockElement("div");
@@ -158,7 +159,11 @@ describe("Labyrinth page viewport rendering", () => {
     body.classList = createClassList(body);
 
     global.window = {
-      addEventListener: vi.fn(),
+      addEventListener: vi.fn((eventName, handler) => {
+        if (eventName === "keydown") {
+          keydownHandler = handler;
+        }
+      }),
       clearInterval: vi.fn(),
       clearTimeout: vi.fn(),
       setInterval: vi.fn(),
@@ -225,6 +230,7 @@ describe("Labyrinth page viewport rendering", () => {
     };
 
     LabyrinthPage = loadLabyrinthPageModule();
+    keydownHandler = null;
   });
 
   it("renders only a 20x20 window for large mazes", () => {
@@ -357,6 +363,69 @@ describe("Labyrinth page viewport rendering", () => {
     newMazeBtn.click();
 
     expect(openSizeModalSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("triggers numeric cheat shortcuts on the frontend when the snapshot enables them", () => {
+    const page = new LabyrinthPage();
+    const applyActionSpy = vi.spyOn(page, "_applyAction").mockImplementation(() => Promise.resolve(null));
+
+    page.init();
+    page._closeSizeModal();
+    page.state = {
+      capabilities: {
+        cheatCodes: {
+          enabled: true,
+          shortcuts: [
+            { key: "1", action: "revealAll", label: "Reveal entire maze" },
+            { key: "2", action: "reveal", label: "Reveal nearby cells" },
+            { key: "3", action: "maxVision", label: "Set fog radius to max" },
+            { key: "4", action: "toggleFog", label: "Toggle fog" },
+          ],
+        },
+      },
+    };
+
+    expect(typeof keydownHandler).toBe("function");
+
+    keydownHandler({
+      key: "3",
+      defaultPrevented: false,
+      altKey: false,
+      metaKey: false,
+      ctrlKey: false,
+      preventDefault: vi.fn(),
+    });
+
+    expect(applyActionSpy).toHaveBeenCalledWith("3", {});
+  });
+
+  it("ignores numeric cheat shortcuts on the frontend when the snapshot disables them", () => {
+    const page = new LabyrinthPage();
+    const applyActionSpy = vi.spyOn(page, "_applyAction").mockImplementation(() => Promise.resolve(null));
+
+    page.init();
+    page._closeSizeModal();
+    page.state = {
+      capabilities: {
+        cheatCodes: {
+          enabled: false,
+          shortcuts: [],
+        },
+      },
+    };
+
+    expect(typeof keydownHandler).toBe("function");
+
+    keydownHandler({
+      key: "2",
+      defaultPrevented: false,
+      altKey: false,
+      metaKey: false,
+      ctrlKey: false,
+      preventDefault: vi.fn(),
+    });
+
+    expect(applyActionSpy).not.toHaveBeenCalledWith("2", {});
   });
 
   it("opens the exit modal and starts a new maze when confirmed", () => {

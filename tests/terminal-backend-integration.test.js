@@ -225,6 +225,7 @@ describe("terminal backend integration", () => {
     const cdRes = await request(app).post("/api/v1/terminal/execute").send({ input: "cd docs", sessionId }).expect(200);
 
     expect(cdRes.body.success).toBe(true);
+    expect(cdRes.body.data.result.content).toBe("");
     expect(cdRes.body.data.result.metadata.path).toBe("/docs");
 
     const pwdRes = await request(app).post("/api/v1/terminal/execute").send({ input: "pwd", sessionId }).expect(200);
@@ -237,6 +238,51 @@ describe("terminal backend integration", () => {
     expect(treeRes.body.success).toBe(true);
     expect(treeRes.body.data.result.content).toContain("docs/readme.md");
     expect(treeRes.body.data.result.content).toContain("docs/guide/filesystem.md");
+  });
+
+  it("lists nested image resources and opens them by virtual path", async () => {
+    const sessionId = "fs-session-image-1";
+
+    const listRes = await request(app).post("/api/v1/terminal/execute").send({ input: "ls media/banners", sessionId }).expect(200);
+
+    expect(listRes.body.success).toBe(true);
+    expect(listRes.body.data.result.content).toContain("hello.txt");
+    expect(listRes.body.data.result.content).toContain("welcome.svg");
+
+    const openRes = await request(app)
+      .post("/api/v1/terminal/execute")
+      .send({ input: "open media/banners/welcome.svg", sessionId })
+      .expect(200);
+
+    expect(openRes.body.success).toBe(true);
+    expect(openRes.body.data.result.type).toBe("image");
+    expect(openRes.body.data.result.src).toContain("data:image/svg+xml");
+  });
+
+  it("hides hidden resources by default and reveals them with ls -al", async () => {
+    const sessionId = "fs-session-hidden-1";
+
+    const rootRes = await request(app).post("/api/v1/terminal/execute").send({ input: "ls", sessionId }).expect(200);
+
+    expect(rootRes.body.success).toBe(true);
+    expect(rootRes.body.data.result.content).not.toContain(".control-room/");
+
+    const rootAllRes = await request(app).post("/api/v1/terminal/execute").send({ input: "ls -al", sessionId }).expect(200);
+
+    expect(rootAllRes.body.success).toBe(true);
+    expect(rootAllRes.body.data.result.content).toContain(".control-room/");
+    expect(rootAllRes.body.data.result.content).toContain("hidden=true");
+
+    const guideRes = await request(app).post("/api/v1/terminal/execute").send({ input: "ls docs/guide", sessionId }).expect(200);
+
+    expect(guideRes.body.success).toBe(true);
+    expect(guideRes.body.data.result.content).not.toContain("secret-index.md");
+
+    const guideAllRes = await request(app).post("/api/v1/terminal/execute").send({ input: "ls -al docs/guide", sessionId }).expect(200);
+
+    expect(guideAllRes.body.success).toBe(true);
+    expect(guideAllRes.body.data.result.content).toContain("secret-index.md");
+    expect(guideAllRes.body.data.result.content).toContain("secret=true");
   });
 
   it("shows locked directory entries and unlocks protected directories with a password", async () => {

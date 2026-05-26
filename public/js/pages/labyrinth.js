@@ -7,6 +7,7 @@
   const LABYRINTH_SESSION_STORAGE_KEY = "rolnopol.labyrinth.session-id";
   const VICTORY_MESSAGE = "You reached the exit! A new maze is ready. If every maze is a question, what answer were you looking for?";
   const GAME_OVER_MESSAGE = "The monster caught you. Game over.";
+  const DEFAULT_STATUS_HINT = "Use the controls to continue exploring.";
 
   function createSessionSeed() {
     const randomPart =
@@ -192,6 +193,13 @@
         if (key === "q") {
           event.preventDefault();
           this._applyAction("revealAll", {});
+          return;
+        }
+
+        const cheatShortcut = this._getCheatShortcutByKey(key);
+        if (cheatShortcut) {
+          event.preventDefault();
+          this._applyAction(cheatShortcut.key, {});
           return;
         }
 
@@ -613,6 +621,20 @@
       }
     }
 
+    _getCheatShortcutList(snapshot = this.state) {
+      const shortcuts = snapshot?.capabilities?.cheatCodes?.shortcuts;
+      return Array.isArray(shortcuts) ? shortcuts : [];
+    }
+
+    _getCheatShortcutByKey(key, snapshot = this.state) {
+      const normalizedKey = String(key || "").trim();
+      if (!normalizedKey) {
+        return null;
+      }
+
+      return this._getCheatShortcutList(snapshot).find((shortcut) => shortcut?.key === normalizedKey) || null;
+    }
+
     _renderHeader(snapshot) {
       const revision = snapshot?.revision || 0;
       if (this.controls.revisionBadge) {
@@ -875,8 +897,15 @@
         this.controls.statusPill.dataset.tone = tone;
       }
       if (this.controls.statusHint) {
+        const shortcutSummary = this._getCheatShortcutList()
+          .map((shortcut) => `${shortcut.key}:${shortcut.label}`)
+          .join(" • ");
         this.controls.statusHint.textContent =
-          tone === "error" ? "Check the configuration or retry the action." : "Use the controls to continue exploring.";
+          tone === "error"
+            ? "Check the configuration or retry the action."
+            : shortcutSummary
+              ? `${DEFAULT_STATUS_HINT} Cheat keys: ${shortcutSummary}`
+              : DEFAULT_STATUS_HINT;
       }
     }
 

@@ -303,6 +303,22 @@
     return segments[segments.length - 1] || "";
   }
 
+  function formatTerminalPromptPath(pathValue) {
+    const normalized = stripTrailingSlash(pathValue || "/") || "/";
+
+    if (normalized === "/") {
+      return "~";
+    }
+
+    return `~${normalized.startsWith("/") ? normalized : `/${normalized}`}`;
+  }
+
+  function formatTerminalPromptLabel(pathValue, options = {}) {
+    const identity = toStringValue(options.identity || "guest@archive").trim() || "guest@archive";
+    const suffix = toStringValue(options.suffix || "$") || "$";
+    return `${identity}:${formatTerminalPromptPath(pathValue)}${suffix}`;
+  }
+
   function getRelativeAutocompletePath(candidatePath, currentPath) {
     const normalizedCandidate = stripTrailingSlash(candidatePath);
     const normalizedCurrent = stripTrailingSlash(currentPath || "/") || "/";
@@ -1802,6 +1818,8 @@
     createLocalTerminalCommandRegistry,
     createTerminalCommandSystem,
     executeRegisteredCommand,
+    formatTerminalPromptLabel,
+    formatTerminalPromptPath,
     formatHelpText,
     formatHistoryText,
     normalizeCommandResult,
