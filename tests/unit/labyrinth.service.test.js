@@ -76,7 +76,8 @@ describe("LabyrinthService", () => {
     expect(themes.map((theme) => theme.name)).toContain("fields");
     expect(themes.every((theme) => typeof theme.scene?.title === "string")).toBe(true);
 
-    expect(sizes.map((size) => size.name)).toEqual(expect.arrayContaining(["tiny", "small", "medium", "big", "huge", "advanced"]));
+    expect(sizes.map((size) => size.name)).toEqual(expect.arrayContaining(["tiny", "small", "medium", "big", "huge"]));
+    expect(sizes.map((size) => size.name)).not.toContain("advanced");
     expect(sizes.find((size) => size.name === "huge")).toMatchObject({ width: 61, height: 61 });
     expect(sizes.find((size) => size.name === "tiny")).toMatchObject({ width: 15, height: 15 });
   });
@@ -166,17 +167,19 @@ describe("LabyrinthService", () => {
     expect(snapshot.maze.height).toBe(15);
   });
 
-  it("creates advanced maze mechanics with key, door, and monster", () => {
+  it("creates advanced maze mechanics for any selected size", () => {
     labyrinthService.resetLabyrinth({
       seed: "service-advanced-seed",
-      size: "advanced",
+      size: "huge",
+      advanced: true,
       fogEnabled: true,
       theme: "fields",
     });
 
     const snapshot = labyrinthService.getSnapshot();
 
-    expect(snapshot.maze.size).toBe("advanced");
+    expect(snapshot.maze.size).toBe("huge");
+    expect(snapshot.maze.advanced).toBe(true);
     expect(snapshot.maze.key).toMatchObject({ collected: false });
     expect(snapshot.maze.door).toMatchObject({ locked: true });
     expect(snapshot.monster).toBeTruthy();
@@ -190,10 +193,27 @@ describe("LabyrinthService", () => {
     expect(pathToKey.length).toBeLessThan(pathToDoor.length);
   });
 
+  it("keeps the legacy advanced preset as an alias for medium plus advanced mode", () => {
+    labyrinthService.resetLabyrinth({
+      seed: "service-legacy-advanced-seed",
+      size: "advanced",
+      fogEnabled: true,
+      theme: "fields",
+    });
+
+    const snapshot = labyrinthService.getSnapshot();
+
+    expect(snapshot.maze.size).toBe("medium");
+    expect(snapshot.maze.advanced).toBe(true);
+    expect(snapshot.maze.width).toBe(31);
+    expect(snapshot.maze.height).toBe(31);
+  });
+
   it("moves the monster toward the player after a successful move", () => {
     labyrinthService.resetLabyrinth({
       seed: "service-monster-seed",
-      size: "advanced",
+      size: "medium",
+      advanced: true,
       fogEnabled: true,
       theme: "obsidian",
     });
@@ -220,7 +240,8 @@ describe("LabyrinthService", () => {
   it("ends the game when the monster catches the player", () => {
     labyrinthService.resetLabyrinth({
       seed: "service-gameover-seed",
-      size: "advanced",
+      size: "medium",
+      advanced: true,
       fogEnabled: true,
       theme: "obsidian",
     });

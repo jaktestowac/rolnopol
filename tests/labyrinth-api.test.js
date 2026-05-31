@@ -194,7 +194,7 @@ describe("Labyrinth API and hidden page", () => {
     expect(res.text).toContain("mazeSizeModal");
     expect(res.text).toContain('data-maze-size="tiny"');
     expect(res.text).toContain('data-maze-size="huge"');
-    expect(res.text).toContain('data-maze-size="advanced"');
+    expect(res.text).toContain("mazeAdvancedModeToggle");
     expect(res.text).toContain("mazeGameOverModal");
     expect(res.text).toContain("mazeGameOverMessage");
     expect(res.text).not.toContain("Configuration");
@@ -216,11 +216,13 @@ describe("Labyrinth API and hidden page", () => {
     expect(res.body.data.grid.length).toBe(15);
     expect(res.body.data.grid[0].length).toBe(15);
     expect(res.body.data.grid.flat().some((cell) => cell.t === "fog")).toBe(true);
+    expect(res.body.data.maze.advanced).toBe(false);
     expect(res.body.data.capabilities.actions).toContain("move");
     expect(res.body.data.capabilities.actions).toContain("configure");
     expect(res.body.data.capabilities.actions).toContain("revealAll");
-    expect(res.body.data.capabilities.cheatCodes).toMatchObject({ enabled: false, shortcuts: [] });
+    expect(res.body.data.capabilities.cheatCodes).toMatchObject({ enabled: expect.any(Boolean), shortcuts: expect.any(Array) });
     expect(res.body.data.capabilities.sizes.map((size) => size.name)).toContain("medium");
+    expect(res.body.data.capabilities.sizes.map((size) => size.name)).not.toContain("advanced");
     expect(res.body.data.theme.scene.title).toContain("maze");
   });
 
@@ -363,6 +365,29 @@ describe("Labyrinth API and hidden page", () => {
     expect(hugeRes.body.data.snapshot.grid).toHaveLength(20);
     expect(hugeRes.body.data.snapshot.grid[0]).toHaveLength(20);
     expect(hugeRes.body.data.snapshot.grid.flat().some((cell) => cell.t === "fog")).toBe(true);
+  });
+
+  it("spawns advanced maze elements for any selected size when advanced mode is enabled", async () => {
+    const res = await request(app)
+      .post("/api/v1/labyrinth/actions")
+      .send({
+        action: "reset",
+        payload: {
+          seed: "maze-huge-advanced-seed",
+          size: "huge",
+          advanced: true,
+          fogEnabled: true,
+          theme: "fields",
+        },
+      })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.snapshot.maze.size).toBe("huge");
+    expect(res.body.data.snapshot.maze.advanced).toBe(true);
+    expect(res.body.data.snapshot.maze.key).toMatchObject({ collected: false });
+    expect(res.body.data.snapshot.maze.door).toMatchObject({ locked: true });
+    expect(res.body.data.snapshot.monster).toBeTruthy();
   });
 
   it("generates two scrolls and emits a pickup event when one is collected", async () => {

@@ -132,6 +132,8 @@ describe("Labyrinth page viewport rendering", () => {
     const mazeGameOverMessage = createMockElement("p");
     const mazeGameOverRestartBtn = createMockElement("button");
     const mazeGameOverMenuBtn = createMockElement("button");
+    const mazeAdvancedModeToggle = createMockElement("input");
+    mazeAdvancedModeToggle.checked = false;
     const eventList = createMockElement("ol");
     const newMazeBtn = createMockElement("button");
     const refreshBtn = createMockElement("button");
@@ -203,6 +205,8 @@ describe("Labyrinth page viewport rendering", () => {
             return mazeGameOverRestartBtn;
           case "mazeGameOverMenuBtn":
             return mazeGameOverMenuBtn;
+          case "mazeAdvancedModeToggle":
+            return mazeAdvancedModeToggle;
           case "eventList":
             return eventList;
           case "newMazeBtn":
@@ -348,6 +352,19 @@ describe("Labyrinth page viewport rendering", () => {
     expect(page._normalizeGridCell({ t: "key", v: 1 })).toMatchObject({ icon: "fa-key", label: "Key" });
     expect(page._normalizeGridCell({ t: "door", v: 1, locked: true })).toMatchObject({ icon: "fa-door-closed", label: "Locked door" });
     expect(page._normalizeGridCell({ t: "monster", v: 1 })).toMatchObject({ icon: "fa-ghost", label: "Monster" });
+  });
+
+  it("passes advanced mode through when a size is chosen", () => {
+    const page = new LabyrinthPage();
+    const bootstrapSpy = vi.spyOn(page, "_bootstrapSession").mockImplementation(() => {});
+
+    page.controls = {
+      advancedModeToggle: { checked: true },
+    };
+
+    page._chooseMazeSize("huge");
+
+    expect(bootstrapSpy).toHaveBeenCalledWith({ renewSeed: true, size: "huge", advanced: true });
   });
 
   it("opens the size modal from the new maze button", () => {

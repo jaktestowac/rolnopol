@@ -59,6 +59,7 @@
       this.isBusy = false;
       this.controls = {};
       this.selectedMazeSize = null;
+      this.advancedModeEnabled = false;
       this.sessionId = loadBrowserSessionId();
       this.sessionSeed = createSessionSeed();
       this.sessionConfig = this._buildSessionConfig(this.sessionSeed);
@@ -88,6 +89,7 @@
         gameOverMessage: document.getElementById("mazeGameOverMessage"),
         gameOverRestart: document.getElementById("mazeGameOverRestartBtn"),
         gameOverMenu: document.getElementById("mazeGameOverMenuBtn"),
+        advancedModeToggle: document.getElementById("mazeAdvancedModeToggle"),
         themeSelect: document.getElementById("themeSelect"),
         newMazeBtn: document.getElementById("newMazeBtn"),
         refreshBtn: document.getElementById("refreshBtn"),
@@ -125,6 +127,9 @@
         this._bootstrapSession({ renewSeed: false });
       });
       this.controls.revealBtn?.addEventListener("click", () => this._applyAction("reveal", {}));
+      this.controls.advancedModeToggle?.addEventListener("change", () => {
+        this._setAdvancedModeEnabled(this.controls.advancedModeToggle.checked === true);
+      });
       this.controls.themeSelect?.addEventListener("change", () => {
         const theme = this.controls.themeSelect.value;
         this._applyAction("setTheme", { theme });
@@ -257,6 +262,12 @@
         this.selectedMazeSize = String(options.size).toLowerCase();
       }
 
+      if (typeof options.advanced === "boolean") {
+        this._setAdvancedModeEnabled(options.advanced);
+      } else if (this.controls.advancedModeToggle) {
+        this._setAdvancedModeEnabled(this.controls.advancedModeToggle.checked === true);
+      }
+
       if (!this.selectedMazeSize) {
         this._openSizeModal();
         return;
@@ -356,8 +367,9 @@
 
     _restartAfterGameOver() {
       const size = this.state?.maze?.size || this.selectedMazeSize || "medium";
+      const advanced = this.state?.maze?.advanced === true || this.advancedModeEnabled === true;
       this._closeGameOverModal();
-      this._bootstrapSession({ renewSeed: true, size });
+      this._bootstrapSession({ renewSeed: true, size, advanced });
     }
 
     _returnToMenuAfterGameOver() {
@@ -369,7 +381,8 @@
     _chooseMazeSize(size) {
       const nextSize = typeof size === "string" ? size.toLowerCase() : "medium";
       this.selectedMazeSize = nextSize;
-      this._bootstrapSession({ renewSeed: true, size: nextSize });
+      this._setAdvancedModeEnabled(this.controls.advancedModeToggle?.checked === true);
+      this._bootstrapSession({ renewSeed: true, size: nextSize, advanced: this.advancedModeEnabled });
     }
 
     async _pollUpdates() {
@@ -431,6 +444,8 @@
       }
 
       this.state = snapshot;
+      this.selectedMazeSize = snapshot?.maze?.size || this.selectedMazeSize;
+      this._setAdvancedModeEnabled(snapshot?.maze?.advanced === true);
       this._renderTheme(snapshot.theme);
       this._renderThemeInfo(snapshot);
       this._renderHeader(snapshot);
@@ -913,10 +928,18 @@
       return this._applyAction("reset", payload);
     }
 
+    _setAdvancedModeEnabled(enabled) {
+      this.advancedModeEnabled = enabled === true;
+      if (this.controls.advancedModeToggle) {
+        this.controls.advancedModeToggle.checked = this.advancedModeEnabled;
+      }
+    }
+
     _buildSessionConfig(seed, size) {
       return {
         seed: seed || createSessionSeed(),
         size: size || this.selectedMazeSize || "medium",
+        advanced: this.advancedModeEnabled === true,
         fogEnabled: true,
         theme: DEFAULT_SESSION_THEME,
       };

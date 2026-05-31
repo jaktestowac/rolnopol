@@ -820,6 +820,47 @@ body.labyrinth-page[data-labyrinth-theme="graphite"] {
   box-shadow: 0 0 0 3px var(--labyrinth-accent-soft);
 }
 
+.labyrinth-advanced-toggle {
+  margin-top: 0.7rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: start;
+  padding: 0.65rem 0.7rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--labyrinth-border);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+}
+
+.labyrinth-advanced-toggle:hover {
+  border-color: var(--labyrinth-accent);
+  box-shadow: 0 0 0 3px var(--labyrinth-accent-soft);
+}
+
+.labyrinth-advanced-toggle__input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0.12rem 0 0;
+  accent-color: var(--labyrinth-accent);
+}
+
+.labyrinth-advanced-toggle__content {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.labyrinth-advanced-toggle__content strong {
+  font-size: 0.82rem;
+  color: #fff;
+}
+
+.labyrinth-advanced-toggle__content span {
+  font-size: 0.72rem;
+  color: rgba(233, 239, 255, 0.62);
+  line-height: 1.45;
+}
+
 @media (max-width: 500px) {
   .labyrinth-layout {
     grid-template-columns: 1fr;

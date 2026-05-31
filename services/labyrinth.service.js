@@ -185,8 +185,8 @@ const DEFAULT_SIZE_PRESETS = {
     complexity: 0.42,
   },
   advanced: {
-    label: "Advanced",
-    description: "Key, door, and a chasing monster for experienced players.",
+    label: "Advanced (legacy)",
+    description: "Legacy alias for a medium maze with advanced mode enabled.",
     width: 31,
     height: 31,
     fogRadius: 3,
@@ -638,8 +638,11 @@ class LabyrinthService {
   }
 
   _defaultConfig(overrides = {}) {
-    const sizeName = this._getSizeName(overrides.size || "medium");
+    const requestedSizeName = this._getSizeName(overrides.size || "medium");
+    const usesLegacyAdvancedPreset = requestedSizeName === "advanced";
+    const sizeName = usesLegacyAdvancedPreset ? "medium" : requestedSizeName;
     const sizePreset = this._getSizePreset(sizeName);
+    const advanced = usesLegacyAdvancedPreset || overrides.advanced === true;
     const base = {
       size: sizeName,
       width: sizePreset.width,
@@ -649,12 +652,14 @@ class LabyrinthService {
       fogRadius: sizePreset.fogRadius,
       theme: "fields",
       complexity: sizePreset.complexity,
+      advanced,
     };
 
     return {
       ...base,
       ...overrides,
       size: sizeName,
+      advanced,
       width: clamp(overrides.width, 9, 81, base.width),
       height: clamp(overrides.height, 9, 81, base.height),
       fogRadius: clamp(overrides.fogRadius, 0, 8, base.fogRadius),
@@ -667,7 +672,7 @@ class LabyrinthService {
   _createState(config = {}) {
     const normalizedConfig = this._defaultConfig(config);
     const generated = this._buildMaze(normalizedConfig.width, normalizedConfig.height, normalizedConfig.seed, normalizedConfig.complexity);
-    const isAdvanced = normalizedConfig.size === "advanced" || normalizedConfig.advanced === true;
+    const isAdvanced = normalizedConfig.advanced === true;
 
     if (isAdvanced) {
       this._braidMaze(
@@ -693,6 +698,7 @@ class LabyrinthService {
       },
       maze: {
         size: normalizedConfig.size,
+        advanced: isAdvanced,
         width: generated.width,
         height: generated.height,
         seed: normalizedConfig.seed,
@@ -1192,15 +1198,17 @@ class LabyrinthService {
   }
 
   listSizes() {
-    return Object.entries(DEFAULT_SIZE_PRESETS).map(([name, size]) => ({
-      name,
-      label: size.label,
-      description: size.description,
-      width: size.width,
-      height: size.height,
-      fogRadius: size.fogRadius,
-      complexity: size.complexity,
-    }));
+    return Object.entries(DEFAULT_SIZE_PRESETS)
+      .filter(([name]) => name !== "advanced")
+      .map(([name, size]) => ({
+        name,
+        label: size.label,
+        description: size.description,
+        width: size.width,
+        height: size.height,
+        fogRadius: size.fogRadius,
+        complexity: size.complexity,
+      }));
   }
 
   _calculateExploredCoverage() {
@@ -1368,6 +1376,7 @@ class LabyrinthService {
       fogRadius: payload.fogRadius ?? this.state.fog.radius,
       theme: payload.theme ?? this.state.theme,
       complexity: payload.complexity ?? this.state.maze.complexity,
+      advanced: typeof payload.advanced === "boolean" ? payload.advanced : this.state.maze.advanced === true,
     });
 
     this._createState(nextState);
@@ -1521,6 +1530,7 @@ class LabyrinthService {
         logInfo("New maze created", {
           sessionId: this._getSessionKey(options.sessionId),
           size: state.maze.size,
+          advanced: state.maze.advanced === true,
           width: state.maze.width,
           height: state.maze.height,
           seed: state.maze.seed,
@@ -1542,6 +1552,7 @@ class LabyrinthService {
       fogRadius: payload.fogRadius,
       theme: payload.theme,
       complexity: payload.complexity,
+      advanced: payload.advanced,
     });
     return this._createState(nextState);
   }
@@ -1563,6 +1574,7 @@ class LabyrinthService {
           logInfo("New maze created", {
             sessionId,
             size: state.maze.size,
+            advanced: state.maze.advanced === true,
             width: state.maze.width,
             height: state.maze.height,
             seed: state.maze.seed,
@@ -1635,6 +1647,7 @@ class LabyrinthService {
       fog: clone(this.state.fog),
       maze: {
         size: this.state.maze.size,
+        advanced: this.state.maze.advanced === true,
         width: this.state.maze.width,
         height: this.state.maze.height,
         seed: this.state.maze.seed,
