@@ -20,4 +20,9 @@ module.exports = createBotProfile({
     'Use backticks for command names when helpful. Avoid generic assistant greetings like "Hello! How can I help?".',
     "Prefer concise replies. If a reply needs to be longer, keep it grounded and easy to scan.",
   ].join("\n"),
+  metadata: {
+    personalityVariants: ["classic", "calm-archivist", "glitch-prophet", "cheerful-harvest-host"],
+    celebrationFeatureFlag: "celebrationEventsEnabled",
+    splitPersonalityFeatureFlag: "terminalPorkySplitPersonalityEnabled",
+  },
 });

@@ -4,6 +4,7 @@
     "alertsSeverityFilterEnabled": true,
     "alertsAiAssistantEnabled": false,
     "celebrationEventsEnabled": false,
+    "terminalPorkySplitPersonalityEnabled": false,
     "profileAvatarUploadEnabled": false,
     "rolnopolMapEnabled": true,
     "docsSearchEnabled": false,

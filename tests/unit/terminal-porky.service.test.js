@@ -14,12 +14,105 @@ async function loadPorkyService({ llmConsoleLogLevel = 0 } = {}) {
   return serviceModule.default || serviceModule;
 }
 
+function buildTerminalContext(overrides = {}) {
+  const { featureFlags = null, ...terminalOverrides } = overrides;
+
+  return {
+    terminal: {
+      mode: "porky",
+      theme: "green",
+      currentPath: "/operator/terminal.html",
+      recentCommands: ["porky"],
+      availableCommands: [{ name: "porky", description: "Talk with Porky" }],
+      ...terminalOverrides,
+    },
+    ...(featureFlags ? { featureFlags } : {}),
+  };
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.resetModules();
+  vi.useRealTimers();
   process.env = { ...ORIGINAL_ENV };
   console.log = ORIGINAL_CONSOLE_LOG;
   console.warn = ORIGINAL_CONSOLE_WARN;
+});
+
+describe("terminal porky split personalities", () => {
+  it("keeps classic Porky active when no persona flags are enabled", async () => {
+    const porkyService = await loadPorkyService();
+
+    const context = buildTerminalContext({
+      now: "2026-06-02T22:30:00.000Z",
+      featureFlags: {
+        celebrationEventsEnabled: false,
+        terminalPorkySplitPersonalityEnabled: false,
+      },
+    });
+    const start = await porkyService.startConversation({ sessionId: "porky-classic-session", context });
+    const reply = await porkyService.sendMessage({ sessionId: "porky-classic-session", message: "who are you", context });
+
+    expect(start.persona).toMatchObject({
+      id: "classic",
+      source: "default",
+      active: false,
+    });
+    expect(start.reply).not.toContain("Tonight's mask:");
+    expect(reply.reply).toContain("I am Porky.");
+  });
+
+  it("switches Porky to a scheduled night persona when the split-personality flag is enabled", async () => {
+    const porkyService = await loadPorkyService();
+
+    const context = buildTerminalContext({
+      now: "2026-06-06T22:30:00.000Z",
+      featureFlags: {
+        celebrationEventsEnabled: false,
+        terminalPorkySplitPersonalityEnabled: true,
+      },
+    });
+    const start = await porkyService.startConversation({ sessionId: "porky-harvest-night", context });
+    const status = await porkyService.getStatus({ sessionId: "porky-harvest-night", context });
+    const reply = await porkyService.sendMessage({ sessionId: "porky-harvest-night", message: "who are you", context });
+
+    expect(start.persona).toMatchObject({
+      id: "cheerful-harvest-host",
+      source: "feature-flag-night",
+      active: true,
+    });
+    expect(start.reply).toContain("Tonight's mask: Cheerful Harvest Host.");
+    expect(status.reply).toContain("persona: Cheerful Harvest Host");
+    expect(reply.reply).toContain("harvest lights are on");
+  });
+
+  it("prefers celebration-event personas over the scheduled night rotation", async () => {
+    const porkyService = await loadPorkyService();
+
+    const context = buildTerminalContext({
+      now: "2026-10-31T22:30:00.000Z",
+      featureFlags: {
+        celebrationEventsEnabled: true,
+        terminalPorkySplitPersonalityEnabled: true,
+      },
+    });
+    const start = await porkyService.startConversation({ sessionId: "porky-halloween-session", context });
+    const status = await porkyService.getStatus({ sessionId: "porky-halloween-session", context });
+    const reply = await porkyService.sendMessage({ sessionId: "porky-halloween-session", message: "who are you", context });
+
+    expect(start.persona).toMatchObject({
+      id: "glitch-prophet",
+      source: "celebration-event",
+      eventId: "halloween",
+      eventName: "Halloween",
+      active: true,
+    });
+    expect(status.status.persona).toMatchObject({
+      id: "glitch-prophet",
+      reason: "Halloween",
+    });
+    expect(reply.reply).toContain("checksum-shaped rumor");
+  });
 });
 
 describe("terminal porky service logging", () => {
@@ -31,15 +124,12 @@ describe("terminal porky service logging", () => {
 
     consoleLogSpy.mockClear();
 
-    const context = {
-      terminal: {
-        mode: "porky",
-        theme: "green",
-        currentPath: "/operator/terminal.html",
-        recentCommands: ["porky"],
-        availableCommands: [{ name: "porky", description: "Talk with Porky" }],
+    const context = buildTerminalContext({
+      featureFlags: {
+        celebrationEventsEnabled: false,
+        terminalPorkySplitPersonalityEnabled: false,
       },
-    };
+    });
 
     await porkyService.startConversation({ sessionId: "porky-log-session", context });
     const reply = await porkyService.sendMessage({ sessionId: "porky-log-session", message: "what is this place?", context });

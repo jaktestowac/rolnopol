@@ -17,6 +17,7 @@ describe("feature-flags.service", () => {
         alertsEnabled: true,
         alertsSeverityFilterEnabled: true,
         celebrationEventsEnabled: false,
+        terminalPorkySplitPersonalityEnabled: false,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -75,6 +76,7 @@ describe("feature-flags.service", () => {
         alertsEnabled: true,
         alertsSeverityFilterEnabled: true,
         celebrationEventsEnabled: false,
+        terminalPorkySplitPersonalityEnabled: false,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -138,6 +140,7 @@ describe("feature-flags.service", () => {
         alertsEnabled: false,
         alertsSeverityFilterEnabled: true,
         celebrationEventsEnabled: false,
+        terminalPorkySplitPersonalityEnabled: false,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
@@ -205,26 +208,29 @@ describe("feature-flags.service", () => {
     expect(result.flags).toHaveProperty("messengerEnabled", false);
     expect(result.flags).toHaveProperty("assistantChatEnabled", false);
     expect(result.updatedAt).toBe(now.toISOString());
-    expect(replaceSpy).toHaveBeenCalledWith(expect.objectContaining({
-      flags: expect.objectContaining({
-        alertsEnabled: false,
-        customPilotFlag: true,
-        celebrationEventsEnabled: false,
-        personalApiKeysEnabled: false,
-        cookieConsentBannerEnabled: false,
-        messengerEnabled: false,
-        assistantChatEnabled: false,
-        homeModernRestyleEnabled: false,
-        weatherPageEnabled: false,
-        weatherWeatherDataExport: false,
-        weatherUserInsightsEnabled: false,
-        weatherTrendChartEnabled: false,
-        promoAdvertsGeneralAdEnabled: false,
-        promoAdvertsBottomBannerEnabled: false,
-        integrationsWebhooksEnabled: false,
+    expect(replaceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        flags: expect.objectContaining({
+          alertsEnabled: false,
+          customPilotFlag: true,
+          celebrationEventsEnabled: false,
+          terminalPorkySplitPersonalityEnabled: false,
+          personalApiKeysEnabled: false,
+          cookieConsentBannerEnabled: false,
+          messengerEnabled: false,
+          assistantChatEnabled: false,
+          homeModernRestyleEnabled: false,
+          weatherPageEnabled: false,
+          weatherWeatherDataExport: false,
+          weatherUserInsightsEnabled: false,
+          weatherTrendChartEnabled: false,
+          promoAdvertsGeneralAdEnabled: false,
+          promoAdvertsBottomBannerEnabled: false,
+          integrationsWebhooksEnabled: false,
+        }),
+        updatedAt: now.toISOString(),
       }),
-      updatedAt: now.toISOString(),
-    }));
+    );
 
     getSpy.mockRestore();
     replaceSpy.mockRestore();
@@ -237,6 +243,7 @@ describe("feature-flags.service", () => {
         alertsEnabled: true,
         alertsSeverityFilterEnabled: true,
         celebrationEventsEnabled: false,
+        terminalPorkySplitPersonalityEnabled: false,
         rolnopolMapEnabled: true,
         docsSearchEnabled: false,
         docsAdvancedSearchEnabled: false,
