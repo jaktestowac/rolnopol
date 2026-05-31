@@ -1,0 +1,624 @@
+:root {
+  --tape-bg: #09080d;
+  --tape-panel: rgba(18, 18, 24, 0.82);
+  --tape-panel-strong: rgba(23, 23, 31, 0.92);
+  --tape-border: rgba(212, 173, 106, 0.16);
+  --tape-accent: #d9b46a;
+  --tape-accent-soft: rgba(217, 180, 106, 0.14);
+  --tape-text: #f3ead5;
+  --tape-muted: rgba(243, 234, 213, 0.66);
+  --tape-subtle: rgba(243, 234, 213, 0.42);
+  --tape-danger: #ff9b90;
+  --tape-success: #95dca1;
+  --tape-shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
+}
+
+body.tape-recorder-page {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(217, 180, 106, 0.1), transparent 38%), linear-gradient(180deg, #05050a 0%, var(--tape-bg) 100%);
+  color: var(--tape-text);
+}
+
+.tape-recorder-shell {
+  width: min(1320px, calc(100vw - 1rem));
+  margin: 0 auto;
+  padding: 0.65rem 0 1rem;
+}
+
+.glass {
+  background: var(--tape-panel);
+  border: 1px solid var(--tape-border);
+  box-shadow: var(--tape-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.tape-recorder-header,
+.tape-panel,
+.tape-detail__hero {
+  border-radius: 1rem;
+}
+
+.tape-recorder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+}
+
+.tape-recorder-header__copy h1,
+.tape-panel__header h2,
+.tape-panel__header h3,
+.tape-detail__hero h2 {
+  margin: 0;
+}
+
+.tape-recorder-eyebrow,
+.tape-panel__eyebrow {
+  margin: 0 0 0.28rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tape-accent);
+}
+
+.tape-recorder-status {
+  margin: 0.45rem 0 0;
+  font-size: 0.9rem;
+  color: var(--tape-muted);
+}
+
+.tape-recorder-status[data-tone="error"] {
+  color: var(--tape-danger);
+}
+
+.tape-recorder-status[data-tone="success"] {
+  color: var(--tape-success);
+}
+
+.tape-recorder-header__actions {
+  display: flex;
+  align-items: end;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.tape-recorder-sort {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--tape-subtle);
+}
+
+.tape-recorder-sort select {
+  min-width: 12rem;
+  height: 2.4rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--tape-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--tape-text);
+  padding: 0 0.8rem;
+}
+
+.tape-recorder-btn {
+  height: 2.4rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--tape-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--tape-text);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.tape-recorder-btn:hover:not(:disabled) {
+  border-color: var(--tape-accent);
+  background: var(--tape-accent-soft);
+  color: #fff7e3;
+  box-shadow: 0 0 0 3px rgba(217, 180, 106, 0.08);
+}
+
+.tape-recorder-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.tape-recorder-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tape-recorder-btn--primary {
+  background: linear-gradient(180deg, rgba(217, 180, 106, 0.2), rgba(217, 180, 106, 0.1));
+  color: #fff1cb;
+}
+
+.tape-recorder-layout {
+  display: grid;
+  grid-template-columns: minmax(290px, 360px) minmax(0, 1fr);
+  align-items: start;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+
+.tape-panel,
+.tape-detail__hero {
+  padding: 0.95rem;
+}
+
+.tape-panel__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+
+.tape-panel__badge,
+.tape-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.85rem;
+  padding: 0 0.72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--tape-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.tape-transcript-panel__actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.tape-speech-status {
+  margin: -0.2rem 0 0.95rem;
+  color: var(--tape-subtle);
+  font-size: 0.78rem;
+}
+
+.tape-speech-status[data-tone="error"] {
+  color: var(--tape-danger);
+}
+
+.tape-speech-status[data-tone="active"] {
+  color: var(--tape-success);
+}
+
+.tape-cabinet__list,
+.tape-fragment-list,
+.tape-activity-list,
+.tape-detail__stack {
+  display: grid;
+  align-content: start;
+  gap: 0.7rem;
+}
+
+.tape-folder {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.tape-folder.is-collapsed .tape-folder__children {
+  display: none;
+}
+
+.tape-folder__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.72rem 0.8rem;
+  border-radius: 0.9rem;
+  border: 1px dashed rgba(217, 180, 106, 0.18);
+  background: linear-gradient(180deg, rgba(217, 180, 106, 0.08), rgba(255, 255, 255, 0.02));
+}
+
+.tape-folder__toggle {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  justify-items: start;
+  gap: 0.2rem;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tape-folder__toggle:hover .tape-folder__title,
+.tape-folder__toggle:focus-visible .tape-folder__title {
+  color: #fff7e3;
+}
+
+.tape-folder__toggle:focus-visible {
+  outline: 2px solid rgba(217, 180, 106, 0.45);
+  outline-offset: 0.24rem;
+  border-radius: 0.5rem;
+}
+
+.tape-folder__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.tape-folder__caret {
+  display: inline-flex;
+  width: 0.9rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--tape-accent);
+  transition: transform 0.18s ease;
+}
+
+.tape-folder.is-expanded .tape-folder__caret {
+  transform: rotate(0deg);
+}
+
+.tape-folder.is-collapsed .tape-folder__caret {
+  transform: rotate(-90deg);
+}
+
+.tape-folder__icon {
+  opacity: 0.94;
+}
+
+.tape-folder__meta,
+.tape-folder__summary,
+.tape-fragment-item__part {
+  margin: 0.25rem 0 0;
+  color: var(--tape-muted);
+  font-size: 0.76rem;
+}
+
+.tape-folder__children {
+  display: grid;
+  gap: 0.65rem;
+  padding-left: 0.9rem;
+  margin-left: 0.5rem;
+  border-left: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.tape-entry {
+  display: grid;
+}
+
+.tape-card {
+  width: 100%;
+  border-radius: 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
+  color: var(--tape-text);
+  padding: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.16s ease,
+    box-shadow 0.2s ease;
+}
+
+.tape-card:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--tape-accent);
+  background: linear-gradient(180deg, rgba(217, 180, 106, 0.12), rgba(255, 255, 255, 0.03));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.tape-card.is-active {
+  border-color: var(--tape-accent);
+  background: linear-gradient(180deg, rgba(217, 180, 106, 0.18), rgba(255, 255, 255, 0.04));
+}
+
+.tape-card.is-locked {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.tape-card__top,
+.tape-fragment-item__top,
+.tape-activity-item__top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.tape-card__title,
+.tape-fragment-item__title {
+  margin: 0;
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+.tape-card__meta,
+.tape-card__summary,
+.tape-fragment-item__summary,
+.tape-activity-item__summary,
+.tape-detail__meta,
+.tape-detail__summary,
+.tape-transcript-placeholder {
+  margin: 0.36rem 0 0;
+  color: var(--tape-muted);
+  line-height: 1.5;
+}
+
+.tape-card__meta,
+.tape-detail__meta {
+  font-size: 0.78rem;
+  color: var(--tape-subtle);
+}
+
+.tape-card__progress {
+  margin-top: 0.62rem;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.74rem;
+  color: var(--tape-subtle);
+}
+
+.tape-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.52rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tape-card__status[data-status="locked"] {
+  color: var(--tape-danger);
+}
+
+.tape-card__status[data-status="completed"] {
+  color: var(--tape-success);
+}
+
+.tape-detail {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  gap: 0.8rem;
+}
+
+.tape-detail__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
+  background: linear-gradient(180deg, rgba(23, 23, 31, 0.96), rgba(18, 18, 24, 0.86));
+}
+
+.tape-detail__hero > div {
+  min-width: 0;
+}
+
+.tape-detail__hero .tape-recorder-btn {
+  align-self: start;
+}
+
+.tape-detail__summary {
+  max-width: 70ch;
+}
+
+.tape-path {
+  margin: 0.36rem 0 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tape-accent);
+}
+
+.tape-detail__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.92fr);
+  align-items: start;
+  gap: 0.8rem;
+}
+
+.tape-transcript-panel {
+  min-height: 16rem;
+  align-self: start;
+}
+
+.tape-transcript-view {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.tape-transcript-card {
+  border-radius: 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(255, 248, 232, 0.06), rgba(255, 255, 255, 0.03));
+  padding: 1rem;
+}
+
+.tape-transcript-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 0.8rem;
+  color: var(--tape-subtle);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tape-transcript-card h4 {
+  margin: 0 0 0.3rem;
+  font-size: 1.06rem;
+}
+
+.tape-transcript-card p {
+  margin: 0;
+  color: #f9f1de;
+  line-height: 1.72;
+}
+
+.tape-transcript-card__lines {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.tape-transcript-card__note {
+  margin-top: 0.95rem;
+  padding-top: 0.95rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  color: var(--tape-muted);
+  font-size: 0.82rem;
+}
+
+.tape-evidence-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+}
+
+.tape-evidence-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.58rem;
+  border-radius: 999px;
+  background: rgba(217, 180, 106, 0.11);
+  border: 1px solid rgba(217, 180, 106, 0.12);
+  color: #f6dfaa;
+  font-size: 0.74rem;
+}
+
+.tape-fragment-item {
+  width: 100%;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--tape-text);
+  padding: 0.75rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tape-fragment-item.is-current {
+  border-color: var(--tape-accent);
+  background: rgba(217, 180, 106, 0.11);
+}
+
+.tape-fragment-item:hover {
+  border-color: var(--tape-accent);
+}
+
+.tape-fragment-item__marker,
+.tape-activity-item__revision {
+  color: var(--tape-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.tape-fragment-item__meta {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: end;
+  gap: 0.12rem;
+}
+
+.tape-activity-scroll {
+  max-height: 18rem;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.tape-activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tape-activity-item {
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.025);
+  padding: 0.72rem;
+}
+
+.tape-activity-item__kind {
+  color: var(--tape-accent);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.tape-activity-item__summary {
+  font-size: 0.8rem;
+}
+
+@media (max-width: 980px) {
+  .tape-recorder-layout,
+  .tape-detail__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .tape-recorder-shell {
+    width: min(calc(100vw - 0.5rem), 1320px);
+    padding-top: 0.35rem;
+  }
+
+  .tape-recorder-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tape-detail__hero {
+    grid-template-columns: 1fr;
+  }
+
+  .tape-recorder-header__actions {
+    align-items: stretch;
+  }
+
+  .tape-recorder-sort select,
+  .tape-recorder-btn {
+    width: 100%;
+  }
+
+  .tape-transcript-panel__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .tape-folder__children {
+    padding-left: 0.6rem;
+    margin-left: 0.2rem;
+  }
+}

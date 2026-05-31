@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Farmer's Tape Recorder - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css?v=20260509-5" />
+    <link rel="stylesheet" href="/css/pages/farmer-tape-recorder.css?v=20260531-2" />
+</head>
+
+<body class="tape-recorder-page">
+    <main id="tapeRecorderShell" class="tape-recorder-shell">
+        <header class="tape-recorder-header glass">
+            <div class="tape-recorder-header__copy">
+                <p class="tape-recorder-eyebrow">operator / archive / analog</p>
+                <h1>Farmer's Tape Recorder</h1>
+                <p id="tapeRecorderStatus" class="tape-recorder-status" data-tone="idle">Synchronizing cabinet…</p>
+            </div>
+            <div class="tape-recorder-header__actions">
+                <label class="tape-recorder-sort" for="tapeSortSelect">
+                    <span>Sort cabinet</span>
+                    <select id="tapeSortSelect"></select>
+                </label>
+                <button id="tapeResetBtn" class="tape-recorder-btn tape-recorder-btn--ghost" type="button">
+                    <i class="fas fa-rotate-left"></i>
+                    <span>Reset trail</span>
+                </button>
+            </div>
+        </header>
+
+        <section class="tape-recorder-layout">
+            <aside class="tape-panel glass tape-cabinet">
+                <div class="tape-panel__header">
+                    <div>
+                        <p class="tape-panel__eyebrow">Cabinet</p>
+                        <h2>Archive cabinet</h2>
+                    </div>
+                    <span id="tapeCabinetCount" class="tape-panel__badge">0 tapes • 0 dirs</span>
+                </div>
+                <div id="tapeCabinetList" class="tape-cabinet__list" aria-live="polite"></div>
+            </aside>
+
+            <section class="tape-detail">
+                <section class="tape-panel glass tape-detail__hero">
+                    <div>
+                        <span id="tapeStatusBadge" class="tape-status-badge">Awaiting selection</span>
+                        <h2 id="tapeDetailTitle">Choose a recording</h2>
+                        <p id="tapeDetailMeta" class="tape-detail__meta">The cabinet only releases one fragment at a time.</p>
+                        <p id="tapeDetailSummary" class="tape-detail__summary">No transcript is embedded in the page source. Investigate from the cabinet and let the backend reveal each fragment in order.</p>
+                    </div>
+                    <button id="tapeAdvanceBtn" class="tape-recorder-btn tape-recorder-btn--primary" type="button" disabled>
+                        <i class="fas fa-wave-square"></i>
+                        <span>Investigate next fragment</span>
+                    </button>
+                </section>
+
+                <section class="tape-detail__grid">
+                    <article class="tape-panel glass tape-transcript-panel">
+                        <div class="tape-panel__header">
+                            <div>
+                                <p class="tape-panel__eyebrow">Transcript</p>
+                                <h3>Active fragment</h3>
+                            </div>
+                            <div class="tape-transcript-panel__actions">
+                                <button id="tapeSpeakBtn" class="tape-recorder-btn tape-recorder-btn--ghost" type="button" disabled>
+                                    <i class="fas fa-volume-high"></i>
+                                    <span>Read fragment</span>
+                                </button>
+                                <span id="fragmentCounter" class="tape-panel__badge">0 / 0</span>
+                            </div>
+                        </div>
+                        <p id="tapeSpeechStatus" class="tape-speech-status" aria-live="polite">Text-to-speech waits for a recovered fragment.</p>
+                        <div id="tapeTranscriptView" class="tape-transcript-view" aria-live="polite"></div>
+                    </article>
+
+                    <aside class="tape-detail__stack">
+                        <section class="tape-panel glass">
+                            <div class="tape-panel__header">
+                                <div>
+                                    <p class="tape-panel__eyebrow">Recovered index</p>
+                                    <h3>Fragments</h3>
+                                </div>
+                            </div>
+                            <div id="tapeFragmentList" class="tape-fragment-list"></div>
+                        </section>
+
+                        <section class="tape-panel glass">
+                            <div class="tape-panel__header">
+                                <div>
+                                    <p class="tape-panel__eyebrow">Session trail</p>
+                                    <h3>Activity</h3>
+                                </div>
+                            </div>
+                            <div class="tape-activity-scroll">
+                                <ol id="tapeActivityList" class="tape-activity-list"></ol>
+                            </div>
+                        </section>
+                    </aside>
+                </section>
+            </section>
+        </section>
+    </main>
+
+    <script src="/js/pages/farmer-tape-recorder.js?v=20260531-2"></script>
+</body>
+
+</html>

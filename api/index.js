@@ -306,6 +306,8 @@ app.get("/api", (req, res) => {
         "POST /api/v1/financial/transfer - Transfer funds (requires auth)",
         "GET /api/v1/terminal - Get terminal prototype metadata",
         "GET /api/v1/terminal/bootstrap - Get static terminal boot sequence",
+        "GET /api/v1/tape-recorder - Get Farmer's Tape Recorder snapshot",
+        "POST /api/v1/tape-recorder/actions - Investigate the next tape recorder action",
         "GET /api/v1/labyrinth - Get labyrinth snapshot",
         "GET /api/v1/labyrinth/updates - Get labyrinth updates since a revision",
         "POST /api/v1/labyrinth/actions - Apply labyrinth actions",
@@ -459,6 +461,15 @@ app.get(["/status", "/status.html"], (req, res, next) => {
 app.get(["/operator/terminal", "/operator/terminal.html"], (req, res, next) => {
   if (req.path === "/operator/terminal") {
     return res.redirect(302, "/operator/terminal.html");
+  }
+
+  return next();
+});
+
+// Public hidden Farmer's Tape Recorder entry point
+app.get(["/operator/tape-recorder", "/operator/tape-recorder.html"], (req, res, next) => {
+  if (req.path === "/operator/tape-recorder") {
+    return res.redirect(302, "/operator/tape-recorder.html");
   }
 
   return next();
