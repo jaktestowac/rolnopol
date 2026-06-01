@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Operator Observatory - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css?v=20260509-5" />
+    <link rel="stylesheet" href="/css/pages/observatory.css?v=20260531-1" />
+</head>
+
+<body class="observatory-page">
+    <main id="observatoryShell" class="observatory-shell">
+        <header class="observatory-header glass">
+            <div class="observatory-header__copy">
+                <h1>Observatory</h1>
+                <p id="observatoryStatus" class="observatory-status">Booting a simplified real-time sky dome inspired by Stellarium Web…</p>
+            </div>
+            <div class="observatory-header__meta">
+                <span id="observatoryTimeBadge" class="observatory-badge">--</span>
+                <span id="observatoryLiveBadge" class="observatory-badge observatory-badge--live">Live ×1</span>
+            </div>
+        </header>
+
+        <section class="observatory-layout">
+            <section class="observatory-stage glass" aria-labelledby="observatoryCanvasTitle">
+                <div class="observatory-stage__toolbar">
+                    <div>
+                        <p class="observatory-panel__eyebrow">Sky dome</p>
+                        <h2 id="observatoryCanvasTitle">Real-time sky above the horizon</h2>
+                    </div>
+                    <div class="observatory-toolbar__controls">
+                        <label class="observatory-toggle" for="observatoryLabelsToggle">
+                            <input id="observatoryLabelsToggle" type="checkbox" checked />
+                            <span>Labels</span>
+                        </label>
+                        <label class="observatory-toggle" for="observatoryConstellationsToggle">
+                            <input id="observatoryConstellationsToggle" type="checkbox" checked />
+                            <span>Constellations</span>
+                        </label>
+                        <label class="observatory-range" for="observatoryMagnitudeRange">
+                            <span>Magnitude limit</span>
+                            <input id="observatoryMagnitudeRange" type="range" min="0" max="5" step="0.1" value="4.2" />
+                            <strong id="observatoryMagnitudeValue">4.2</strong>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="observatory-stage__filters">
+                    <label class="observatory-inline-field" for="observatoryObjectTypeFilter">
+                        <span>Object filter</span>
+                        <select id="observatoryObjectTypeFilter">
+                            <option value="all" selected>All objects</option>
+                            <option value="star">Stars only</option>
+                            <option value="planet">Planets only</option>
+                            <option value="moon">Moon only</option>
+                            <option value="solar-system">Solar system</option>
+                        </select>
+                    </label>
+
+                    <label class="observatory-inline-field" for="observatoryConstellationFilter">
+                        <span>Constellation / region</span>
+                        <select id="observatoryConstellationFilter">
+                            <option value="all" selected>All constellations / regions</option>
+                        </select>
+                    </label>
+
+                    <label class="observatory-field observatory-field--search" for="observatorySearchInput">
+                        <span>Search</span>
+                        <input id="observatorySearchInput" type="search" placeholder="Search object or constellation" autocomplete="off" />
+                    </label>
+
+                    <button id="observatoryClearFiltersBtn" class="observatory-btn observatory-btn--ghost" type="button">
+                        <i class="fas fa-filter-circle-xmark"></i>
+                        <span>Clear filters</span>
+                    </button>
+                </div>
+
+                <div class="observatory-canvas-shell">
+                    <canvas id="observatoryCanvas" class="observatory-canvas" aria-label="Simplified real-time star map"></canvas>
+                    <div class="observatory-canvas__hud">
+                        <p id="observatoryHint" class="observatory-hint">Click a sky object to inspect it. The sky updates continuously from the observatory backend using your selected location and time speed.</p>
+                    </div>
+                </div>
+
+                <div class="observatory-stage__footer">
+                    <label class="observatory-inline-field" for="observatoryTimeScaleSelect">
+                        <span>Time flow</span>
+                        <select id="observatoryTimeScaleSelect">
+                            <option value="0">Paused</option>
+                            <option value="1" selected>Real time</option>
+                            <option value="60">Fast ×60</option>
+                            <option value="600">Fast ×600</option>
+                            <option value="3600">Fast ×3600</option>
+                        </select>
+                    </label>
+                    <button id="observatorySyncNowBtn" class="observatory-btn observatory-btn--ghost" type="button">
+                        <i class="fas fa-clock-rotate-left"></i>
+                        <span>Sync to now</span>
+                    </button>
+                </div>
+            </section>
+
+            <aside class="observatory-sidebar">
+                <section class="observatory-panel glass">
+                    <div class="observatory-panel__header">
+                        <div>
+                            <p class="observatory-panel__eyebrow">Coordinates</p>
+                            <h2>Observer location</h2>
+                        </div>
+                        <button id="observatoryGeolocateBtn" class="observatory-btn observatory-btn--ghost" type="button">
+                            <i class="fas fa-location-crosshairs"></i>
+                            <span>Use my location</span>
+                        </button>
+                    </div>
+
+                    <label class="observatory-field" for="observatoryPresetSelect">
+                        <span>Preset sky</span>
+                        <select id="observatoryPresetSelect"></select>
+                    </label>
+
+                    <div class="observatory-grid-fields">
+                        <label class="observatory-field" for="observatoryLatitudeInput">
+                            <span>Latitude</span>
+                            <input id="observatoryLatitudeInput" type="number" min="-90" max="90" step="0.0001" value="52.2297" />
+                        </label>
+                        <label class="observatory-field" for="observatoryLongitudeInput">
+                            <span>Longitude</span>
+                            <input id="observatoryLongitudeInput" type="number" min="-180" max="180" step="0.0001" value="21.0122" />
+                        </label>
+                    </div>
+
+                    <p id="observatoryLocationSummary" class="observatory-copy">Defaulting to Warsaw, Poland. Swap presets or provide coordinates to watch another sky in real time.</p>
+                </section>
+
+                <section class="observatory-panel glass">
+                    <div class="observatory-panel__header">
+                        <div>
+                            <p class="observatory-panel__eyebrow">Selected object</p>
+                            <h2 id="observatoryObjectName">No object selected</h2>
+                        </div>
+                        <span id="observatoryObjectBadge" class="observatory-pill">Awaiting target</span>
+                    </div>
+                    <p id="observatoryObjectSummary" class="observatory-copy">Pick any plotted object to inspect its altitude, azimuth, and brightness details.</p>
+                    <dl id="observatoryObjectMeta" class="observatory-meta-list"></dl>
+                </section>
+
+                <section class="observatory-panel glass">
+                    <div class="observatory-panel__header">
+                        <div>
+                            <p class="observatory-panel__eyebrow">Visible now</p>
+                            <h2>Visible objects</h2>
+                        </div>
+                        <span id="observatoryVisibleCount" class="observatory-pill">0 visible</span>
+                    </div>
+                    <ol id="observatoryVisibleList" class="observatory-visible-list"></ol>
+                </section>
+            </aside>
+        </section>
+    </main>
+
+    <script src="/js/pages/observatory.js?v=20260531-2"></script>
+</body>
+
+</html>

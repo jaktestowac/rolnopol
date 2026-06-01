@@ -311,6 +311,7 @@ app.get("/api", (req, res) => {
         "GET /api/v1/labyrinth - Get labyrinth snapshot",
         "GET /api/v1/labyrinth/updates - Get labyrinth updates since a revision",
         "POST /api/v1/labyrinth/actions - Apply labyrinth actions",
+        "GET /api/v1/observatory - Get observatory sky snapshot",
       ],
     }),
   );
@@ -479,6 +480,15 @@ app.get(["/operator/tape-recorder", "/operator/tape-recorder.html"], (req, res, 
 app.get(["/operator/labyrinth", "/operator/labyrinth.html"], (req, res, next) => {
   if (req.path === "/operator/labyrinth") {
     return res.redirect(302, "/operator/labyrinth.html");
+  }
+
+  return next();
+});
+
+// Public hidden observatory entry point
+app.get(["/operator/observatory", "/operator/observatory.html", "/operator/astronomy", "/operator/astronomy.html"], (req, res, next) => {
+  if (req.path !== "/operator/observatory.html") {
+    return res.redirect(302, "/operator/observatory.html");
   }
 
   return next();
