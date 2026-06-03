@@ -109,6 +109,14 @@ const TERMINAL_COMMANDS = [
     aliases: [],
   },
   {
+    name: "radio",
+    description: "Listen to a random archive radio broadcast",
+    usage: "radio [station]",
+    category: "content",
+    requiresBackend: true,
+    aliases: [],
+  },
+  {
     name: "sync",
     description: "Refresh backend command metadata",
     usage: "sync",
@@ -1408,6 +1416,143 @@ function buildAssetResponse(asset) {
   return sanitized;
 }
 
+const RADIO_FREQUENCY_DEFAULT = "regular";
+const RADIO_FREQUENCIES = {
+  slow: { label: "slow", cadence: "low", mood: "deep" },
+  regular: { label: "regular", cadence: "steady", mood: "bright" },
+  fast: { label: "fast", cadence: "quick", mood: "urgent" },
+};
+
+function normalizeRadioFrequency(rawFrequency) {
+  const normalized = String(rawFrequency || "")
+    .trim()
+    .toLowerCase();
+  if (!normalized) {
+    return RADIO_FREQUENCY_DEFAULT;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(RADIO_FREQUENCIES, normalized)) {
+    return normalized;
+  }
+
+  if (normalized === "normal" || normalized === "default") {
+    return RADIO_FREQUENCY_DEFAULT;
+  }
+
+  return RADIO_FREQUENCY_DEFAULT;
+}
+
+function getRandomRadioMessages(options = {}) {
+  const station = String(options.station || "archive").trim() || "archive";
+  const frequency = normalizeRadioFrequency(options.frequency);
+  const frequencyConfig = RADIO_FREQUENCIES[frequency] || RADIO_FREQUENCIES[RADIO_FREQUENCY_DEFAULT];
+  const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
+  const baselineLines = [
+    `Signal check: waveform drift is stable.`,
+    `Incoming payload queued from ${station}.`,
+    `Static note: all archive transmissions carry fragments of lost code.`,
+    `Reminder: hidden channels respond to silence and static.`,
+    `Attention operators: a new broadcast is arriving now.`,
+    `Transmission windows are closing soon.`,
+    `Channel integrity: ${frequencyConfig.cadence}.`,
+    `Archive noise floor: ${Math.floor(20 + Math.random() * 40)}%.`,
+    `Memory checksum: ${Math.floor(1000 + Math.random() * 9000)}.`,
+    `Ping: ${Math.floor(1 + Math.random() * 24)}ms / jitter: ${Math.floor(Math.random() * 8)}ms.`,
+    `Archive node report: ${station} telemetry nominal.`,
+    `Payload buffer: ${Math.floor(Math.random() * 8)} message(s) pending.`,
+    `Signal vector adjusted to ${frequencyConfig.mood}.`,
+    `Operator log: "The archive whispers in patterns we can barely grasp."`,
+    `System advisory: "The radio is a mirror reflecting our own static."`,
+    `Archive transmission is a puzzle with pieces that don't always fit together, but the picture they form is always worth studying."`,
+    `Note to self: "The radio doesn't just transmit messages, it transmits the echoes of messages, the shadows of messages, the ghosts of messages we never fully receive."`,
+    `Archive radio is a reminder that communication is never perfect, that every message is a fragment of a larger story we can only glimpse through the noise."`,
+    `The radio is a metaphor for our own attempts to connect, to understand, to be heard in a world that is often indifferent to our signals."`,
+    `Pulse check: your frequency is not only heard, it is being catalogued.`,
+    `Glitch advisory: this station sometimes carries obsolete instructions from old transmission kernels.`,
+    `Operator note: be careful, some channels deliver advice tangled with old warnings.`,
+    `Archive note: every packet is a relic; some of them remember the sender better than the receiver does.`,
+    `If the frequency shifts suddenly, follow the static until it becomes a voice.`,
+    `Some signals are meant to be decoded by pattern, not by words.`,
+    `When the radio hums, the archive may be trying to tell you where the next hidden file is.`,
+    `Mysterious directive: the third menu entry may not be what it appears to be.`,
+    `Easter egg path: hidden pages often leave a trail of repeated glyphs and empty anchors.`,
+    `Listen for the number that does not belong; it may mark a secret route.`,
+    `A clue in the code: unused text fields and abandoned scripts often guard the next discovery.`,
+    `Sometimes the brightest hint is the one written in the margins of the terminal output.`,
+    `The archive keeps one line for those who notice the missing quotation mark.`,
+    `Hidden coordinates can appear in the same line twice, once in plain sight and once in noise.`,
+    `The next secret may be revealed by reading only the even words in a broadcast.`,
+    `There is a phantom command hidden in the help menu that never returns a normal response.`,
+    `A certain sequence of [...] will spell out a door if you take the first letters.`,
+  ];
+
+  const glitchLines = [
+    `▌▐▐░░▒▒▒░▌▐ ERROR: packet fragment lost`,
+    `<< corrupted segment detected >>`,
+    `...reconstructing transmission path...`,
+    `⚠︎ temporal drift encountered in archive stream.`,
+    `ΣIGNAL NOISE: 0x${Math.floor(Math.random() * 65535)
+      .toString(16)
+      .padStart(4, "0")}`,
+    `System echo: "...you cannot hear me..."`,
+    `█▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`,
+    `!FRAME LOST! interview with the phantom transmitter interrupted.`,
+    `-- unrecognized signature in incoming packet --`,
+    `> incomplete phrase: "the next clue is hidden in the..."`,
+    `ERROR: adaptive checksum mismatch, resending lost spectral slice.`,
+    `Archive node ${station} reports: "We thought we had it, but it's slipping away again."`,
+  ];
+
+  const messageCount = 4 + Math.floor(Math.random() * 4);
+  const messages = [];
+  let hasGlitch = false;
+
+  const glitchProbability = frequency === "fast" ? 0.25 : frequency === "slow" ? 0.12 : 0.18;
+
+  for (let index = 0; index < messageCount; index += 1) {
+    const useGlitch = Math.random() < glitchProbability;
+    if (useGlitch) {
+      hasGlitch = true;
+      messages.push({
+        id: `${station}-${frequency}-glitch-${index + 1}`,
+        text: glitchLines[Math.floor(Math.random() * glitchLines.length)],
+      });
+      continue;
+    }
+
+    const text = baselineLines[Math.floor(Math.random() * baselineLines.length)];
+    messages.push({
+      id: `${station}-${frequency}-${index + 1}`,
+      text,
+    });
+  }
+
+  const headerLines = [
+    "╔══════════════════════════════════════════════════════════════════╗",
+    `║  ARCHIVE RADIO TRANSMISSION // ${station.padEnd(28).slice(0, 28)}  ║`,
+    `║  FREQUENCY: ${frequencyConfig.label.padEnd(30).slice(0, 30)}  ║`,
+    `║  TIMESTAMP: ${timestamp}  ║`,
+    "╚══════════════════════════════════════════════════════════════════╝",
+    "",
+    `> broadcast status: ${frequencyConfig.mood.toUpperCase()} / cadence: ${frequencyConfig.cadence}`,
+    "",
+  ];
+
+  const footerLines = [
+    "──────────────────────────────────────────────────────────────────",
+    hasGlitch ? "[GLITCH DETECTED] Re-run radio for next packet." : "Re-run radio for next packet.",
+    "Awaiting next transmission...",
+  ];
+
+  return {
+    station,
+    frequency: frequencyConfig.label,
+    messages,
+    content: [...headerLines, ...messages.map((message) => `> ${message.text}`), "", ...footerLines].join("\n"),
+    glitch: hasGlitch,
+  };
+}
+
 function buildFileResponse(file) {
   const sanitized = clone(file);
   delete sanitized.password;
@@ -1818,6 +1963,24 @@ function buildExecuteResult(commandName, args, flags, sessionId, terminalContext
       );
     }
 
+    case "radio": {
+      const station = String(target || flags.station || flags.s || "archive").trim() || "archive";
+      const frequency = String(flags.frequency || flags.freq || flags.f || RADIO_FREQUENCY_DEFAULT).trim();
+      const broadcast = getRandomRadioMessages({ station, frequency });
+
+      return buildCommandResult(
+        {
+          type: "text",
+          content: broadcast.content,
+          metadata: {
+            ...broadcast,
+            typingEffect: true,
+          },
+        },
+        `Tuned radio to ${broadcast.station} at ${broadcast.frequency} frequency`,
+      );
+    }
+
     case "mission": {
       const script = getScript(target || "intro");
       if (!script) {
@@ -1903,6 +2066,18 @@ router.get("/terminal/bootstrap", (req, res) => {
 router.get("/terminal/commands", (req, res) => {
   sendSuccess(req, res, {
     commands: TERMINAL_COMMANDS,
+  });
+});
+
+router.get("/terminal/radio", (req, res) => {
+  const station = String(req.query.station || req.query.target || "archive").trim() || "archive";
+  const frequency = normalizeRadioFrequency(req.query.frequency || req.query.freq || req.query.f || RADIO_FREQUENCY_DEFAULT);
+  const broadcast = getRandomRadioMessages({ station, frequency });
+
+  return sendSuccess(req, res, {
+    station: broadcast.station,
+    frequency: broadcast.frequency,
+    messages: broadcast.messages,
   });
 });
 

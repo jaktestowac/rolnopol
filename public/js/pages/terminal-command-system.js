@@ -1251,6 +1251,19 @@
     });
 
     tryRegister({
+      name: "radio",
+      description: "Listen to a random archive radio broadcast",
+      usage: "radio [station]",
+      category: "content",
+      requiresBackend: true,
+      examples: ["radio archive", "radio app/script"],
+      handler: (context) =>
+        handleBackendCommand(context, "radio", (apiClient) =>
+          apiClient.executeCommand(context.rawInput, { terminalState: context.terminalState }),
+        ),
+    });
+
+    tryRegister({
       name: "ls",
       description: "List directory contents (virtual filesystem)",
       usage: "ls [path]",

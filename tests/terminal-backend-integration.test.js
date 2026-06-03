@@ -25,8 +25,43 @@ describe("terminal backend integration", () => {
     expect(res.body.success).toBe(true);
     expect(Array.isArray(res.body.data.commands)).toBe(true);
     expect(res.body.data.commands.map((command) => command.name)).toEqual(
-      expect.arrayContaining(["run", "open", "list", "inspect", "search", "mission", "login", "sync", "porky"]),
+      expect.arrayContaining(["run", "open", "list", "inspect", "search", "radio", "mission", "login", "sync", "porky"]),
     );
+  });
+
+  it("executes the radio command and returns a broadcast", async () => {
+    const res = await request(app)
+      .post("/api/v1/terminal/execute")
+      .send({ input: "radio app/script", sessionId: "radio-session-1" })
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.commandName).toBe("radio");
+    expect(res.body.data.result.type).toBe("text");
+    expect(Array.isArray(res.body.data.result.metadata.messages)).toBe(true);
+    expect(res.body.data.result.metadata.messages.length).toBeGreaterThan(0);
+    expect(typeof res.body.data.result.content).toBe("string");
+    expect(res.body.data.result.content.length).toBeGreaterThan(0);
+  });
+
+  it("returns random radio broadcast messages from the radio endpoint", async () => {
+    const res = await request(app).get("/api/v1/terminal/radio").expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.station).toBe("archive");
+    expect(res.body.data.frequency).toBe("regular");
+    expect(Array.isArray(res.body.data.messages)).toBe(true);
+    expect(res.body.data.messages.length).toBeGreaterThan(0);
+    expect(res.body.data.messages[0]).toEqual(expect.objectContaining({ id: expect.any(String), text: expect.any(String) }));
+  });
+
+  it("accepts a frequency parameter on the radio endpoint", async () => {
+    const res = await request(app).get("/api/v1/terminal/radio?frequency=fast").expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.frequency).toBe("fast");
+    expect(Array.isArray(res.body.data.messages)).toBe(true);
+    expect(res.body.data.messages.length).toBeGreaterThan(0);
   });
 
   it("starts, continues, and ends a Porky conversation", async () => {

@@ -468,25 +468,10 @@ class TerminalPorkyService {
     }
   }
 
-  _resolveFeatureFlagOverrides(context = {}) {
-    const terminal = context?.terminal && typeof context.terminal === "object" ? context.terminal : {};
-    const candidates = [terminal.featureFlags, context.featureFlags];
-
-    for (const candidate of candidates) {
-      if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) {
-        return { ...candidate };
-      }
-    }
-
-    return null;
-  }
-
   async _resolveActivePersona(context = {}) {
     const referenceDate = this._resolveReferenceDate(context);
     const activationDate = this._toISODate(referenceDate);
-    const flagData = this._resolveFeatureFlagOverrides(context)
-      ? { flags: this._resolveFeatureFlagOverrides(context) }
-      : await this._getFeatureFlagsSnapshot();
+    const flagData = await this._getFeatureFlagsSnapshot();
     const flags = flagData?.flags && typeof flagData.flags === "object" ? flagData.flags : {};
 
     if (flags.celebrationEventsEnabled === true) {
