@@ -251,7 +251,7 @@ class FeatureFlagsService {
 
     return {
       flags: flagsWithDescriptions,
-      experimentalFlags: normalized.experimentalFlags || [],
+      experimentalFlags: EXPERIMENTAL_FEATURE_FLAGS.filter((flag) => flag in normalized.flags),
       groups: FEATURE_FLAG_GROUPS,
       updatedAt: normalized.updatedAt,
     };
@@ -276,7 +276,7 @@ class FeatureFlagsService {
       // Merge defaults with existing values (existing values take precedence)
       const merged = { ...defaultFlags, ...existingFlags };
 
-      const next = { flags: merged, experimentalFlags: experimentalFlags, updatedAt: new Date().toISOString() };
+      const next = { flags: merged, updatedAt: new Date().toISOString() };
 
       await this.db.replaceAll(next);
       const normalizedNext = this._normalize(next);
