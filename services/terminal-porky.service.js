@@ -84,7 +84,12 @@ const PORKY_PERSONALITY_PROFILES = Object.freeze({
     helpLine: "Ask about the terminal, the latest commands, or whatever strange produce the archive is growing tonight.",
     commandLine: (commandCount) => `${commandCount} commands are cooling on the windowsill. Fresh batch. Lovely smell.`,
     themeLine: (theme) => `The terminal is wearing ${theme}, and honestly it looks ready for a harvest parade.`,
-    secretLines: ["Secrets are ripest when checked at odd hours.", "Follow the warm lanterns. The cold ones are showing off."],
+    secretLines: [
+      "Secrets are ripest when checked at odd hours.",
+      "Follow the warm lanterns. The cold ones are showing off.",
+      "Try: open /operator/harvest-archive — the seasonal ledger has entries for nights like these.",
+      "Some seasons leave records. The harvest archive remembers.",
+    ],
     tonalReplies: [
       "The archive claps politely from somewhere behind the grain bins.",
       "Porky grins like a scarecrow that just learned excellent customer service.",

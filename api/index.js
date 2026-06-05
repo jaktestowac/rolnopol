@@ -497,6 +497,15 @@ app.get(["/operator/observatory", "/operator/observatory.html", "/operator/astro
 // Serve static files
 app.use(express.static(path.join(__dirname, "../public")));
 
+// // Public hidden Holiday Harvest Archive entry point
+app.get(["/operator/harvest-archive", "/operator/harvest-archive.html"], (req, res, next) => {
+  if (req.path === "/operator/harvest-archive") {
+    return res.redirect(302, "/operator/harvest-archive.html");
+  }
+  return next();
+});
+
+
 // Import and use modular routes
 const v1Routes = require("../routes/v1");
 const v2Routes = require("../routes/v2");

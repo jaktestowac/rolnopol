@@ -1,0 +1,400 @@
+:root {
+  --harvest-bg: #0f0a04;
+  --harvest-panel: rgba(30, 20, 10, 0.82);
+  --harvest-panel-strong: rgba(35, 24, 12, 0.92);
+  --harvest-border: rgba(212, 167, 106, 0.18);
+  --harvest-accent: #d4a76a;
+  --harvest-accent-soft: rgba(212, 167, 106, 0.16);
+  --harvest-gold: #ffd27c;
+  --harvest-text: #f0e6d6;
+  --harvest-muted: rgba(240, 230, 214, 0.72);
+  --harvest-subtle: rgba(240, 230, 214, 0.48);
+  --harvest-shadow: 0 22px 48px rgba(0, 0, 0, 0.4);
+  --harvest-success: #9bf0b6;
+  --harvest-danger: #ff9c9c;
+
+  /* Dynamic theme overrides (set by JS) */
+  --harvest-theme-primary: #a0522d;
+  --harvest-theme-secondary: #ffd700;
+  --harvest-theme-bg: #1a0f05;
+  --harvest-theme-accent: #d4a76a;
+  --harvest-theme-surface: #2a1a0a;
+  --harvest-theme-muted: #8b6d4b;
+
+  /* Extended theme tokens */
+  --harvest-theme-gold-glow: rgba(255, 215, 0, 0.35);
+  --harvest-theme-glow-spread: 0 0 20px;
+  --harvest-theme-card-from: rgba(42, 26, 10, 0.85);
+  --harvest-theme-card-to: rgba(30, 18, 6, 0.92);
+  --harvest-theme-text-shadow: rgba(255, 215, 0, 0.25);
+  --harvest-theme-text-shadow-blur: 8px;
+  --harvest-theme-icon-filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.5));
+  --harvest-theme-banner-gradient: linear-gradient(135deg, #1a0f05 0%, #3d220e 50%, #1a0f05 100%);
+  --harvest-theme-header-gradient: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.08), transparent);
+  --harvest-theme-border-style: solid;
+  --harvest-theme-border-width: 1px;
+  --harvest-theme-border-radius: 1rem;
+  --harvest-theme-particle-overlay: none;
+}
+
+body.harvest-archive-page {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, var(--harvest-theme-gold-glow, rgba(212, 167, 106, 0.12)), transparent 32%),
+    radial-gradient(circle at 20% 15%, rgba(255, 210, 124, 0.06), transparent 20%),
+    var(--harvest-theme-banner-gradient, linear-gradient(180deg, #0a0603 0%, var(--harvest-bg) 100%));
+  color: var(--harvest-text);
+  transition: background 0.8s ease;
+}
+
+/* Particle overlay — enabled via JS by setting --harvest-theme-particle-overlay */
+body.harvest-archive-page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: var(--harvest-theme-particle-overlay, none);
+  background-size: var(--harvest-theme-particle-size, 400% 400%);
+  background-position: var(--harvest-theme-particle-position, 0% 0%);
+  background-repeat: repeat;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+body.harvest-archive-page.particles-active::after {
+  opacity: var(--harvest-theme-particle-opacity, 0.5);
+  animation: var(--harvest-theme-particle-animation, none);
+}
+
+.harvest-archive-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.harvest-archive-shell {
+  width: min(960px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1.5rem 0 2rem;
+}
+
+.glass {
+  background: var(--harvest-panel);
+  border: 1px solid var(--harvest-border);
+  box-shadow: var(--harvest-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.harvest-archive-header,
+.harvest-archive-entry-card {
+  border-radius: 1rem;
+}
+
+/* Header */
+.harvest-archive-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  background: var(--harvest-theme-header-gradient, var(--harvest-panel));
+  border-style: var(--harvest-theme-border-style, solid);
+  border-width: var(--harvest-theme-border-width, 1px);
+  border-radius: var(--harvest-theme-border-radius, 1rem);
+  box-shadow:
+    var(--harvest-shadow),
+    var(--harvest-theme-glow-spread, 0 0 0) var(--harvest-theme-gold-glow, transparent);
+  transition:
+    box-shadow 0.6s ease,
+    border-color 0.6s ease;
+}
+
+.harvest-archive-eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--harvest-muted);
+}
+
+.harvest-archive-header h1 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 1.6rem;
+  color: var(--harvest-theme-secondary, var(--harvest-gold));
+  text-shadow: 0 0 var(--harvest-theme-text-shadow-blur, 8px) var(--harvest-theme-text-shadow, transparent);
+  transition:
+    color 0.6s ease,
+    text-shadow 0.6s ease;
+}
+
+.harvest-archive-status {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  color: var(--harvest-muted);
+}
+
+.harvest-archive-status[data-tone="loading"] {
+  animation: harvest-pulse 2s ease-in-out infinite;
+}
+
+.harvest-archive-status[data-tone="inactive"] {
+  color: var(--harvest-subtle);
+}
+
+.harvest-archive-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  background: var(--harvest-accent-soft);
+  color: var(--harvest-accent);
+  white-space: nowrap;
+  box-shadow: 0 0 10px var(--harvest-theme-gold-glow, transparent);
+  transition:
+    box-shadow 0.6s ease,
+    color 0.6s ease;
+}
+
+/* Layout */
+.harvest-archive-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Event banner */
+.harvest-archive-banner {
+  padding: 1.5rem;
+  text-align: center;
+  border-radius: var(--harvest-theme-border-radius, 1rem);
+  background: var(
+    --harvest-theme-banner-gradient,
+    linear-gradient(135deg, var(--harvest-theme-bg, var(--harvest-panel)) 0%, rgba(0, 0, 0, 0.3) 100%)
+  );
+  border: var(--harvest-theme-border-width, 1px) var(--harvest-theme-border-style, solid) var(--harvest-border);
+  box-shadow: inset 0 0 30px var(--harvest-theme-gold-glow, transparent);
+  transition:
+    background 0.8s ease,
+    box-shadow 0.6s ease;
+}
+
+.harvest-archive-banner__emoji {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  filter: var(--harvest-theme-icon-filter, none);
+  transition: filter 0.6s ease;
+}
+
+.harvest-archive-banner__title {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 1.4rem;
+  color: var(--harvest-theme-secondary, var(--harvest-gold));
+  text-shadow: 0 0 var(--harvest-theme-text-shadow-blur, 8px) var(--harvest-theme-text-shadow, transparent);
+  transition:
+    color 0.6s ease,
+    text-shadow 0.6s ease;
+}
+
+.harvest-archive-banner__subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--harvest-muted);
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Entry cards */
+.harvest-archive-entry-card {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, var(--harvest-theme-card-from, transparent), var(--harvest-theme-card-to, transparent));
+  border-style: var(--harvest-theme-border-style, solid);
+  border-width: var(--harvest-theme-border-width, 1px);
+  border-radius: var(--harvest-theme-border-radius, 1rem);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.4s ease,
+    background 0.6s ease;
+}
+
+.harvest-archive-entry-card:hover {
+  border-color: var(--harvest-theme-accent, var(--harvest-accent));
+  box-shadow: 0 0 16px var(--harvest-theme-gold-glow, transparent);
+}
+
+.harvest-archive-entry-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.harvest-archive-entry-card__type {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 1rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--harvest-theme-surface, var(--harvest-accent-soft));
+  color: var(--harvest-theme-secondary, var(--harvest-accent));
+  border: 1px solid var(--harvest-theme-primary, transparent);
+  transition:
+    background 0.6s ease,
+    color 0.6s ease;
+}
+
+.harvest-archive-entry-card__mood {
+  font-size: 0.75rem;
+  color: var(--harvest-subtle);
+  font-style: italic;
+}
+
+.harvest-archive-entry-card__excerpt {
+  margin: 0;
+  line-height: 1.7;
+  font-size: 0.95rem;
+  color: var(--harvest-text);
+  font-family: Georgia, serif;
+}
+
+/* Inactive / sealed state */
+.harvest-archive-sealed {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.harvest-archive-sealed__icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.harvest-archive-sealed__title {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 1.3rem;
+  color: var(--harvest-muted);
+}
+
+.harvest-archive-sealed__text {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  color: var(--harvest-subtle);
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Error state */
+.harvest-archive-error {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  color: var(--harvest-danger);
+}
+
+/* Animations */
+@keyframes harvest-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes harvest-sway {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes harvest-frost-drift {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes harvest-parchment-fade {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes harvest-golden-shimmer {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes harvest-petal-drift {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+@keyframes harvest-sparkle-drift {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .harvest-archive-shell {
+    width: calc(100vw - 1rem);
+    padding: 1rem 0;
+  }
+
+  .harvest-archive-header {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .harvest-archive-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .harvest-archive-entry-card {
+    padding: 1rem;
+  }
+
+  .harvest-archive-banner {
+    padding: 1rem;
+  }
+}

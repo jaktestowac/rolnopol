@@ -35,6 +35,7 @@ const labyrinthRoute = require("./labyrinth.route");
 const observatoryRoute = require("./observatory.route");
 const tasksRoute = require("./tasks.route");
 const contactRoute = require("../contact.route");
+const harvestArchiveRoute = require("./harvest-archive.route");
 const { logInfo, logError } = require("../../helpers/logger-api");
 
 const router = express.Router();
@@ -187,6 +188,7 @@ router.use("/", farmerTapeRecorderRoute);
 router.use("/", labyrinthRoute);
 router.use("/", observatoryRoute);
 router.use("/", tasksRoute);
+router.use("/", harvestArchiveRoute);
 router.use("/contact", contactRoute);
 router.use("/", blogRoute);
 
