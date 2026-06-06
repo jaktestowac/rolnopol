@@ -36,6 +36,13 @@ class DatabaseManager {
   }
 
   /**
+   * Get users database singleton
+   */
+  getUserDatabase() {
+    return this.getDatabase("users", "users.json", []);
+  }
+
+  /**
    * Get fields database singleton
    */
   getFieldsDatabase() {

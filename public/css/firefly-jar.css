@@ -25,6 +25,25 @@ body {
   filter: hue-rotate(var(--hue, 0deg));
   /* Fade in, drift, then fade out – duration overridden per element via --duration */
   animation: drift var(--duration, 8s) ease-in-out infinite;
+  /* Enable tooltip */
+  cursor: default;
+}
+
+/* Icon firefly – a glowing Font Awesome icon with no circle background */
+.firefly-icon {
+  width: auto;
+  height: auto;
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
+  filter: none;
+}
+
+.firefly-icon > i {
+  font-size: var(--icon-size, 14px);
+  color: var(--glow-color, rgba(255, 255, 200, 0.9));
+  filter: drop-shadow(0 0 6px var(--glow-color, rgba(255, 255, 200, 0.9)));
+  pointer-events: none;
 }
 @keyframes drift {
   0% {
