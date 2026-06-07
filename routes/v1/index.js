@@ -1,5 +1,6 @@
 const express = require("express");
 const { createRateLimiter } = require("../../middleware/rate-limit.middleware");
+const { logInfo, logError } = require("../../helpers/logger-api");
 
 // Import all route modules
 const authRoute = require("./auth.route");
@@ -35,10 +36,17 @@ const terminalRoute = require("./terminal.route");
 const farmerTapeRecorderRoute = require("./farmer-tape-recorder.route");
 const labyrinthRoute = require("./labyrinth.route");
 const observatoryRoute = require("./observatory.route");
+// Defensive loading — if fd.route fails, app still starts
+let farmDefenceRoute;
+try {
+  farmDefenceRoute = require("./fd.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load fd.route — FD endpoints unavailable:", err.message);
+  farmDefenceRoute = express.Router(); // empty stub
+}
 const tasksRoute = require("./tasks.route");
 const contactRoute = require("../contact.route");
 const harvestArchiveRoute = require("./harvest-archive.route");
-const { logInfo, logError } = require("../../helpers/logger-api");
 
 const router = express.Router();
 
@@ -191,6 +199,7 @@ router.use("/", terminalRoute);
 router.use("/", farmerTapeRecorderRoute);
 router.use("/", labyrinthRoute);
 router.use("/", observatoryRoute);
+router.use("/", farmDefenceRoute);
 router.use("/", tasksRoute);
 router.use("/", harvestArchiveRoute);
 router.use("/contact", contactRoute);

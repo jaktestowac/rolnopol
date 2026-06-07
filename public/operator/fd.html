@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Farm Defence - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/fd.css" />
+</head>
+
+<body class="fd-page fd-size-modal-open">
+
+    <main class="fd-shell">
+        <header class="glass fd-header">
+            <span class="fd-title"><i class="fas fa-shield-halved"></i> Farm Defence</span>
+            <div class="fd-header__actions">
+                <select id="fdThemeSelect" class="fd-select" aria-label="Theme"></select>
+                <button id="fdNewGameBtn" class="fd-btn" type="button"><i class="fas fa-plus"></i> New game</button>
+                <button id="fdRefreshBtn" class="fd-btn-icon" type="button" title="Refresh"><i class="fas fa-rotate"></i></button>
+                <button id="fdResetBtn" class="fd-btn-icon" type="button" title="Reset"><i class="fas fa-undo"></i></button>
+            </div>
+        </header>
+
+        <section class="fd-layout">
+            <div class="glass fd-board">
+                <!-- Status bar -->
+                <div class="fd-status-bar">
+                    <span id="fdWavePill" class="fd-status">Preparing…</span>
+                    <span class="fd-resource"><i class="fas fa-coins"></i> <strong id="fdGoldStat">0</strong></span>
+                    <span class="fd-resource"><i class="fas fa-heart"></i> <strong id="fdLivesStat">0</strong></span>
+                </div>
+
+                <!-- Grid -->
+                <div class="fd-grid-wrap">
+                    <div id="fdGrid" class="fd-grid" role="grid" aria-label="Farm Defence map"></div>
+                </div>
+
+                <!-- Tower picker -->
+                <div class="fd-tower-picker" id="fdTowerPicker" aria-label="Tower selection"></div>
+
+                <!-- Controls -->
+                <div class="fd-controls">
+                    <button id="fdStartWaveBtn" class="fd-btn fd-btn--accent" type="button"><i class="fas fa-play"></i> Start Wave</button>
+                    <span id="fdRevisionBadge" class="fd-rev">rev 0</span>
+                </div>
+
+            </div>
+
+            <aside class="fd-sidebar">
+                <section class="glass fd-panel">
+                    <div class="fd-stats">
+                        <div class="fd-stat"><span>Towers</span><strong id="fdTowersStat">0</strong></div>
+                        <div class="fd-stat"><span>Kills</span><strong id="fdKillsStat">0</strong></div>
+                        <div class="fd-stat"><span>Leaked</span><strong id="fdLeakedStat">0</strong></div>
+                        <div class="fd-stat"><span>Score</span><strong id="fdScoreStat">0</strong></div>
+                    </div>
+                    <div class="fd-meta-list">
+                        <div><span>Wave</span><strong id="fdWaveStat">-</strong></div>
+                        <div><span>Size</span><strong id="fdSizeStat">-</strong></div>
+                        <div><span>Updated</span><strong id="fdUpdatedStat">-</strong></div>
+                    </div>
+                    <ol id="fdEventList" class="fd-events"></ol>
+                </section>
+                <!-- Next wave preview -->
+                <div id="fdNextWavePreview" class="fd-next-wave" style="display: none;">
+                    <div class="fd-next-wave__header">
+                        <span class="fd-next-wave__title">Next Wave</span>
+                        <span id="fdNextWaveNum" class="fd-next-wave__num"></span>
+                    </div>
+                    <div id="fdNextWaveEnemies" class="fd-next-wave__enemies"></div>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <!-- Size picker modal -->
+    <div id="fdSizeModal" class="fd-modal is-open" role="dialog" aria-modal="true" aria-label="Choose map size">
+        <div class="fd-modal__overlay"></div>
+        <div class="fd-modal__content glass">
+            <h2 class="fd-modal__title"><i class="fas fa-shield-halved"></i> Farm Defence</h2>
+
+            <p class="fd-modal__subtitle">Map size</p>
+            <div class="fd-modal__sizes">
+                <button class="fd-modal__size-btn" type="button" data-fd-size="tiny">Tiny <small>11×11</small></button>
+                <button class="fd-modal__size-btn" type="button" data-fd-size="small">Small <small>15×15</small></button>
+                <button class="fd-modal__size-btn" type="button" data-fd-size="medium">Medium <small>21×21</small></button>
+                <button class="fd-modal__size-btn" type="button" data-fd-size="big">Big <small>31×31</small></button>
+            </div>
+
+            <p class="fd-modal__subtitle">Difficulty</p>
+            <div class="fd-modal__options" id="fdDifficultyPicker"></div>
+
+            <p class="fd-modal__subtitle">Game mode</p>
+            <div class="fd-modal__options" id="fdModePicker"></div>
+        </div>
+    </div>
+
+    <!-- Victory modal -->
+    <div id="fdVictoryModal" class="fd-modal" role="dialog" aria-modal="true" aria-label="Victory">
+        <div class="fd-modal__overlay"></div>
+        <div class="fd-modal__content glass">
+            <button class="fd-modal__close" type="button" aria-label="Close">&times;</button>
+            <div class="fd-modal__icon"><i class="fas fa-trophy"></i></div>
+            <h2 class="fd-modal__title">Victory!</h2>
+            <p id="fdVictoryMessage" class="fd-modal__message">All waves cleared!</p>
+            <div class="fd-modal__actions">
+                <button id="fdVictoryNewGame" class="fd-btn fd-btn--accent" type="button"><i class="fas fa-plus"></i> New game</button>
+                <button id="fdVictoryStay" class="fd-btn" type="button">Stay here</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Defeat modal -->
+    <div id="fdDefeatModal" class="fd-modal" role="dialog" aria-modal="true" aria-label="Defeat">
+        <div class="fd-modal__overlay"></div>
+        <div class="fd-modal__content glass">
+            <button class="fd-modal__close" type="button" aria-label="Close">&times;</button>
+            <div class="fd-modal__icon fd-modal__icon--danger"><i class="fas fa-skull-crossbones"></i></div>
+            <h2 class="fd-modal__title">Defeat</h2>
+            <p id="fdDefeatMessage" class="fd-modal__message">All lives lost!</p>
+            <div class="fd-modal__actions">
+                <button id="fdDefeatRestart" class="fd-btn fd-btn--accent" type="button"><i class="fas fa-undo"></i> Restart</button>
+                <button id="fdDefeatMenu" class="fd-btn" type="button">Return to menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/pages/fd.js?v=20260609"></script>
+</body>
+
+</html>

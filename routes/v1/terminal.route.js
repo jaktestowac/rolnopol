@@ -1221,7 +1221,6 @@ function loadPersistedTerminalData() {
           TERMINAL_SCRIPTS = parsed;
         }
       }
-      console.info(`[terminal.route] Loaded scripts from ${scriptsFile}`);
     }
 
     // Virtual FS (nested) — preferred if present
@@ -1245,7 +1244,6 @@ function loadPersistedTerminalData() {
       registerDirectoryMetadata("assets", { title: "assets", access: "public" });
       registerDirectoryMetadata("scripts", { title: "scripts", access: "public" });
       TERMINAL_ASSETS = Object.keys(newAssets).length ? newAssets : TERMINAL_ASSETS;
-      console.info(`[terminal.route] Loaded virtual FS from ${vfsFile}`);
     } else {
       // Fallback to legacy files.json format (flat map)
       const filesFile = path.join(dataDir, "files.json");

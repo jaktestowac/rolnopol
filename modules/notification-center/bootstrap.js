@@ -84,7 +84,6 @@ async function initializeNotificationCenter({ featureFlagsService } = {}) {
 
   if (!enabled) {
     const eventStore = new EventStore();
-    logInfo("Notification center initialized in no-op mode (disabled)");
     return {
       enabled: false,
       degraded: false,

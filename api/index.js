@@ -305,13 +305,16 @@ app.get("/api", (req, res) => {
         "GET /api/v1/financial/stats - Get financial statistics (requires auth)",
         "POST /api/v1/financial/transfer - Transfer funds (requires auth)",
         "GET /api/v1/terminal - Get terminal prototype metadata",
-        "GET /api/v1/terminal/bootstrap - Get static terminal boot sequence",
-        "GET /api/v1/tape-recorder - Get Farmer's Tape Recorder snapshot",
-        "POST /api/v1/tape-recorder/actions - Investigate the next tape recorder action",
-        "GET /api/v1/labyrinth - Get labyrinth snapshot",
-        "GET /api/v1/labyrinth/updates - Get labyrinth updates since a revision",
-        "POST /api/v1/labyrinth/actions - Apply labyrinth actions",
-        "GET /api/v1/observatory - Get observatory sky snapshot",
+        // "GET /api/v1/terminal/bootstrap - Get static terminal boot sequence",
+        // "GET /api/v1/tape-recorder - Get Farmer's Tape Recorder snapshot",
+        // "POST /api/v1/tape-recorder/actions - Investigate the next tape recorder action",
+        // "GET /api/v1/labyrinth - Get labyrinth snapshot",
+        // "GET /api/v1/labyrinth/updates - Get labyrinth updates since a revision",
+        // "POST /api/v1/labyrinth/actions - Apply labyrinth actions",
+        // "GET /api/v1/fd - Get farm defence snapshot",
+        // "GET /api/v1/fd/updates - Get farm defence updates since a revision",
+        // "POST /api/v1/fd/actions - Apply farm defence actions",
+        // "GET /api/v1/observatory - Get observatory sky snapshot",
       ],
     }),
   );
@@ -485,6 +488,15 @@ app.get(["/operator/labyrinth", "/operator/labyrinth.html"], (req, res, next) =>
   return next();
 });
 
+// Public hidden Farm Defence prototype entry point
+app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
+  if (req.path === "/operator/fd") {
+    return res.redirect(302, "/operator/fd.html");
+  }
+
+  return next();
+});
+
 // Public hidden observatory entry point
 app.get(["/operator/observatory", "/operator/observatory.html", "/operator/astronomy", "/operator/astronomy.html"], (req, res, next) => {
   if (req.path !== "/operator/observatory.html") {
@@ -504,7 +516,6 @@ app.get(["/operator/harvest-archive", "/operator/harvest-archive.html"], (req, r
   }
   return next();
 });
-
 
 // Import and use modular routes
 const v1Routes = require("../routes/v1");
