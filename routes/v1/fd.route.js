@@ -17,12 +17,16 @@ const apiLimiter = createRateLimiter("high");
 if (farmDefenceController) {
   farmDefenceRoute.get("/fd", apiLimiter, farmDefenceController.getFarmDefence.bind(farmDefenceController));
   farmDefenceRoute.get("/fd/updates", apiLimiter, farmDefenceController.getFarmDefenceUpdates.bind(farmDefenceController));
+  farmDefenceRoute.get("/fd/achievements", apiLimiter, farmDefenceController.getFarmDefenceAchievements.bind(farmDefenceController));
+  farmDefenceRoute.get("/fd/leaderboard", apiLimiter, farmDefenceController.getFarmDefenceLeaderboard.bind(farmDefenceController));
   farmDefenceRoute.post("/fd/actions", apiLimiter, farmDefenceController.applyFarmDefenceAction.bind(farmDefenceController));
 } else {
   const { formatResponseBody } = require("../../helpers/response-helper");
   const stub = (req, res) => res.status(503).json(formatResponseBody({ error: "Farm Defence service is currently unavailable" }));
   farmDefenceRoute.get("/fd", apiLimiter, stub);
   farmDefenceRoute.get("/fd/updates", apiLimiter, stub);
+  farmDefenceRoute.get("/fd/achievements", apiLimiter, stub);
+  farmDefenceRoute.get("/fd/leaderboard", apiLimiter, stub);
   farmDefenceRoute.post("/fd/actions", apiLimiter, stub);
 }
 

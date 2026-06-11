@@ -1,4 +1,5 @@
 const { logDebug } = require("../../helpers/logger-api");
+const { DIFFICULTY_PRESETS, GAME_MODES } = require("./config");
 
 /**
  * Wave Generator — pluggable wave generation strategies with difficulty scaling
@@ -20,69 +21,6 @@ const { logDebug } = require("../../helpers/logger-api");
  *   Tier 4 (wave 8+):  ghost, titan
  *   Tier 5 (wave 12+): phantom, boss
  */
-
-const DIFFICULTY_PRESETS = {
-  easy: {
-    label: "Easy",
-    hpMultiplier: 0.7,
-    speedMultiplier: 0.8,
-    goldMultiplier: 1.3,
-    rewardMultiplier: 1.2,
-    startGoldBonus: 100,
-    livesBonus: 5,
-    description: "Relaxed farming. Weaker enemies, more gold.",
-  },
-  normal: {
-    label: "Normal",
-    hpMultiplier: 1.0,
-    speedMultiplier: 1.0,
-    goldMultiplier: 1.0,
-    rewardMultiplier: 1.0,
-    startGoldBonus: 0,
-    livesBonus: 0,
-    description: "Balanced challenge.",
-  },
-  hard: {
-    label: "Hard",
-    hpMultiplier: 1.5,
-    speedMultiplier: 1.3,
-    goldMultiplier: 0.8,
-    rewardMultiplier: 0.9,
-    startGoldBonus: -25,
-    livesBonus: -3,
-    description: "Tough enemies, less gold. For experienced farmers.",
-  },
-  insane: {
-    label: "Insane",
-    hpMultiplier: 2.0,
-    speedMultiplier: 1.6,
-    goldMultiplier: 0.6,
-    rewardMultiplier: 0.8,
-    startGoldBonus: -50,
-    livesBonus: -5,
-    description: "Brutal. Enemies are fast, tanky, and relentless. Good luck.",
-  },
-};
-
-const GAME_MODES = {
-  classic: {
-    label: "Classic",
-    description: "Finite waves. Clear all waves to win.",
-    infinite: false,
-  },
-  endless: {
-    label: "Endless",
-    description: "Infinite waves. Survive as long as you can.",
-    infinite: true,
-  },
-  rush: {
-    label: "Rush",
-    description: "Fast waves with bonus gold. High intensity.",
-    infinite: false,
-    spawnGap: 1,
-    goldMultiplier: 1.5,
-  },
-};
 
 // Enemy tier definitions — which enemies appear at which wave
 // Boss is special: it's added separately every N waves, but also

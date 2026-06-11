@@ -1,21 +1,14 @@
-const { logDebug, logInfo } = require("../helpers/logger-api");
+const { logDebug, logInfo, logError } = require("../helpers/logger-api");
 const { towerRegistry } = require("./fd/tower-registry");
 const { enemyRegistry } = require("./fd/enemy-registry");
 const { effectRegistry } = require("./fd/effect-registry");
 const { WaveGenerator, DIFFICULTY_PRESETS, GAME_MODES } = require("./fd/wave-generator");
 const { MapGenerator } = require("./fd/map-generator");
 const { TickEngine } = require("./fd/tick-engine");
-const { DEFAULT_THEMES } = require("./fd/themes");
+const { DEFAULT_THEMES, DEFAULT_SIZE_PRESETS } = require("./fd/config");
 
 const DEFAULT_SESSION_ID = "default";
 const MAX_EVENTS = 60;
-
-const DEFAULT_SIZE_PRESETS = {
-  tiny: { width: 11, height: 11, startGold: 150, startLives: 15, totalWaves: 5 },
-  small: { width: 15, height: 15, startGold: 200, startLives: 20, totalWaves: 8 },
-  medium: { width: 21, height: 21, startGold: 250, startLives: 20, totalWaves: 10 },
-  big: { width: 31, height: 31, startGold: 300, startLives: 25, totalWaves: 15 },
-};
 
 const DEFAULT_DIFFICULTY = "normal";
 const DEFAULT_GAME_MODE = "classic";
@@ -26,7 +19,18 @@ const ACTION_ALIASES = {
   upgrade: "upgradeTower",
   next: "startWave",
   step: "tick",
+  setname: "setPlayerName",
 };
+
+// Defensive load — if the achievements module fails, the core game still runs.
+let achievementsService = null;
+try {
+  achievementsService = require("./fd/achievements.service");
+} catch (err) {
+  // logError is required below; fall back to console if logger unavailable here.
+  // eslint-disable-next-line no-console
+  console.error("[FarmDefenceService] Failed to load achievements.service — achievements disabled:", err.message);
+}
 
 /**
  * Farm Defence Service — singleton orchestrator.
@@ -56,6 +60,20 @@ class FarmDefenceService {
     // Action handler registry
     this.actionHandlers = new Map();
     this.registerBuiltInActions();
+
+    // Event observers (e.g. AchievementsService). Listeners receive every
+    // authoritative game event and the current session/state. Failures in a
+    // listener never affect the game.
+    this._eventListeners = [];
+    this._currentSessionKey = DEFAULT_SESSION_ID;
+  }
+
+  /**
+   * Subscribe to the authoritative game event stream.
+   * @param {(event: object, ctx: {sessionId: string, state: object}) => void} listener
+   */
+  onEvent(listener) {
+    if (typeof listener === "function") this._eventListeners.push(listener);
   }
 
   // ── Session isolation (identical to labyrinth pattern) ──────────────
@@ -89,6 +107,8 @@ class FarmDefenceService {
     this.state = context.state;
     this.revision = context.revision;
     this.events = context.events;
+    const previousSessionKey = this._currentSessionKey;
+    this._currentSessionKey = key;
 
     try {
       return callback(key, context);
@@ -99,6 +119,7 @@ class FarmDefenceService {
       this.state = previous.state;
       this.revision = previous.revision;
       this.events = previous.events;
+      this._currentSessionKey = previousSessionKey;
     }
   }
 
@@ -117,6 +138,7 @@ class FarmDefenceService {
     this.registerActionHandler("settheme", (p, o) => this._setTheme(p, o));
     this.registerActionHandler("reset", (p, o) => this.resetFarmDefence(p, o));
     this.registerActionHandler("configure", (p, o) => this._configure(p, o));
+    this.registerActionHandler("setplayername", (p, o) => this._setPlayerName(p, o));
   }
 
   _resolveActionName(rawAction) {
@@ -269,6 +291,21 @@ class FarmDefenceService {
     this._incrementRevision("configured", payload);
   }
 
+  /**
+   * Set the player's cosmetic display name on the leaderboard. This does NOT
+   * touch game state or score — it is the only client‑settable field, and the
+   * achievement/leaderboard numbers remain fully server‑authoritative.
+   */
+  _setPlayerName({ name } = {}, options = {}) {
+    if (!name || !String(name).trim()) throw new Error("setPlayerName requires a non-empty 'name'");
+    const sessionId = options.sessionId || this._currentSessionKey;
+    if (achievementsService) {
+      Promise.resolve(achievementsService.setPlayerName(sessionId, name)).catch((err) =>
+        logError("[FarmDefenceService] setPlayerName failed:", err),
+      );
+    }
+  }
+
   // ── Reset ──────────────────────────────────────────────────────────
 
   resetFarmDefence(payload = {}, options = {}) {
@@ -405,6 +442,23 @@ class FarmDefenceService {
       }
       if (this.state.stats.victory && type === "tick") {
         this._incrementRevision("victory");
+      }
+    }
+
+    this._dispatchEvent(event);
+  }
+
+  /**
+   * Notify event observers. A listener throwing must never break the game loop.
+   */
+  _dispatchEvent(event) {
+    if (this._eventListeners.length === 0) return;
+    const ctx = { sessionId: this._currentSessionKey, state: this.state };
+    for (const listener of this._eventListeners) {
+      try {
+        listener(event, ctx);
+      } catch (err) {
+        logError("[FarmDefenceService] Event listener error:", err);
       }
     }
   }
@@ -585,7 +639,7 @@ class FarmDefenceService {
       enemyDefs[e.name] = { label: e.label, hp: e.hp, speed: e.speed, reward: e.reward, icon: e.icon };
     }
     return {
-      actions: ["placeTower", "sellTower", "upgradeTower", "startWave", "tick", "setTheme", "reset", "configure"],
+      actions: ["placeTower", "sellTower", "upgradeTower", "startWave", "tick", "setTheme", "reset", "configure", "setPlayerName"],
       themes: Object.keys(this.themes),
       towerTypes: this.towerRegistry.names(),
       towerDefs,
@@ -707,4 +761,15 @@ class FarmDefenceService {
   }
 }
 
-module.exports = new FarmDefenceService();
+const farmDefenceService = new FarmDefenceService();
+
+// Wire achievements: the service subscribes to the authoritative event stream.
+if (achievementsService && typeof achievementsService.attach === "function") {
+  try {
+    achievementsService.attach(farmDefenceService);
+  } catch (err) {
+    logError("[FarmDefenceService] Failed to attach achievements.service:", err);
+  }
+}
+
+module.exports = farmDefenceService;

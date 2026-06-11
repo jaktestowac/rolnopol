@@ -6,22 +6,56 @@
 const API_ROOT = "/api/v1/fd";
 const POLL_INTERVAL_MS = 10000;
 const TICK_INTERVAL_MS = 500;
+const MIN_TICK_INTERVAL_MS = 80; // floor so high speeds don't overwhelm the server
+const SPEED_OPTIONS = [1, 2, 4];
+const AUTO_WAVE_DELAY_MS = 1200; // breather between auto-started waves
 const FD_SESSION_STORAGE_KEY = "rolnopol.fd.session-id";
+const FD_SPEED_STORAGE_KEY = "rolnopol.fd.tick-speed";
+const FD_AUTOWAVE_STORAGE_KEY = "rolnopol.fd.auto-wave";
 const DEFAULT_SESSION_THEME = "obsidian";
+
+function loadPreference(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw === null ? fallback : raw;
+  } catch {
+    return fallback;
+  }
+}
+
+function savePreference(key, value) {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    /* ignore */
+  }
+}
 
 // ── Session helpers ──────────────────────────────────────────────────
 
 function loadBrowserSessionId() {
+  // localStorage (not sessionStorage) so a player's identity — and therefore
+  // their achievements/leaderboard standing — survives closing the tab.
   try {
-    let id = sessionStorage.getItem(FD_SESSION_STORAGE_KEY);
+    let id = localStorage.getItem(FD_SESSION_STORAGE_KEY);
     if (!id) {
-      id = `fd-session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      sessionStorage.setItem(FD_SESSION_STORAGE_KEY, id);
+      // One-time migration: adopt any id left over in sessionStorage so existing
+      // players keep the progress they earned before this change.
+      id = sessionStorage.getItem(FD_SESSION_STORAGE_KEY) || `fd-session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      localStorage.setItem(FD_SESSION_STORAGE_KEY, id);
     }
     return id;
   } catch {
     return `fd-session-${Date.now()}`;
   }
+}
+
+// Escape user-controlled text (player names) before inserting into innerHTML.
+function escapeHtml(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
 }
 
 function createSessionSeed() {
@@ -43,12 +77,20 @@ class FarmDefencePage {
     this.selectedTowerType = "archer";
     this.sessionId = loadBrowserSessionId();
     this.sessionSeed = createSessionSeed();
+
+    // Playback preferences (persisted across sessions).
+    const savedSpeed = Number(loadPreference(FD_SPEED_STORAGE_KEY, "1"));
+    this.tickSpeed = SPEED_OPTIONS.includes(savedSpeed) ? savedSpeed : 1;
+    this.autoWave = loadPreference(FD_AUTOWAVE_STORAGE_KEY, "false") === "true";
+    this.autoWaveTimer = null;
   }
 
   init() {
     this._cacheDom();
     if (!this.controls.fdGrid) return;
     this._bindEvents();
+    this._renderSpeedControls();
+    this._renderAutoWaveControl();
     this._openSizeModal();
   }
 
@@ -72,6 +114,8 @@ class FarmDefencePage {
       refreshBtn: $("fdRefreshBtn"),
       resetBtn: $("fdResetBtn"),
       startWaveBtn: $("fdStartWaveBtn"),
+      autoWaveBtn: $("fdAutoWaveBtn"),
+      speedButtons: document.querySelectorAll("[data-fd-speed]"),
       towerPicker: $("fdTowerPicker"),
       wavePill: $("fdWavePill"),
       revisionBadge: $("fdRevisionBadge"),
@@ -89,6 +133,15 @@ class FarmDefencePage {
       fdNextWaveNum: $("fdNextWaveNum"),
       fdNextWaveEnemies: $("fdNextWaveEnemies"),
       sizeButtons: document.querySelectorAll("[data-fd-size]"),
+      // Achievements & leaderboard
+      achievementsBtn: $("fdAchievementsBtn"),
+      sizeScoresBtn: $("fdSizeScoresBtn"),
+      achievementsModal: $("fdAchievementsModal"),
+      playerNameInput: $("fdPlayerName"),
+      playerNameSave: $("fdPlayerNameSave"),
+      achvSummary: $("fdAchvSummary"),
+      achvList: $("fdAchvList"),
+      leaderboard: $("fdLeaderboard"),
     };
   }
 
@@ -105,6 +158,23 @@ class FarmDefencePage {
     this.controls.refreshBtn?.addEventListener("click", () => this._fetchSnapshot());
     this.controls.resetBtn?.addEventListener("click", () => this._resetGame());
     this.controls.startWaveBtn?.addEventListener("click", () => this._startWave());
+
+    // Playback: speed + auto-wave
+    this.controls.speedButtons?.forEach((btn) => {
+      btn.addEventListener("click", () => this._setSpeed(Number(btn.getAttribute("data-fd-speed"))));
+    });
+    this.controls.autoWaveBtn?.addEventListener("click", () => this._toggleAutoWave());
+
+    // Achievements & leaderboard
+    this.controls.achievementsBtn?.addEventListener("click", () => this._openAchievementsModal());
+    this.controls.sizeScoresBtn?.addEventListener("click", () => this._openAchievementsModal());
+    this.controls.playerNameSave?.addEventListener("click", () => this._savePlayerName());
+    this.controls.playerNameInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this._savePlayerName();
+      }
+    });
 
     // Theme
     this.controls.themeSelect?.addEventListener("change", (e) => {
@@ -227,13 +297,17 @@ class FarmDefencePage {
 
   // ── Auto-tick ────────────────────────────────────────────────────
 
+  _tickIntervalMs() {
+    return Math.max(MIN_TICK_INTERVAL_MS, Math.round(TICK_INTERVAL_MS / this.tickSpeed));
+  }
+
   _startAutoTick() {
     this._stopAutoTick();
     this.tickTimer = setInterval(() => {
       if (!this.isBusy && this.state?.wave?.status === "active") {
         this._applyAction("tick");
       }
-    }, TICK_INTERVAL_MS);
+    }, this._tickIntervalMs());
   }
 
   _stopAutoTick() {
@@ -241,6 +315,66 @@ class FarmDefencePage {
       clearInterval(this.tickTimer);
       this.tickTimer = null;
     }
+  }
+
+  // ── Speed control ────────────────────────────────────────────────
+
+  _setSpeed(multiplier) {
+    if (!SPEED_OPTIONS.includes(multiplier)) return;
+    this.tickSpeed = multiplier;
+    savePreference(FD_SPEED_STORAGE_KEY, multiplier);
+    this._renderSpeedControls();
+    // Re-arm the tick loop with the new interval if a wave is running.
+    if (this.state?.wave?.status === "active") this._startAutoTick();
+  }
+
+  _renderSpeedControls() {
+    this.controls.speedButtons?.forEach((btn) => {
+      const active = Number(btn.getAttribute("data-fd-speed")) === this.tickSpeed;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
+  // ── Auto-wave ────────────────────────────────────────────────────
+
+  _toggleAutoWave() {
+    this.autoWave = !this.autoWave;
+    savePreference(FD_AUTOWAVE_STORAGE_KEY, this.autoWave);
+    this._renderAutoWaveControl();
+    if (!this.autoWave) this._clearAutoWave();
+    else if (this.state) this._maybeScheduleAutoWave(this.state);
+  }
+
+  _renderAutoWaveControl() {
+    const btn = this.controls.autoWaveBtn;
+    if (!btn) return;
+    btn.classList.toggle("is-active", this.autoWave);
+    btn.setAttribute("aria-pressed", this.autoWave ? "true" : "false");
+  }
+
+  _clearAutoWave() {
+    if (this.autoWaveTimer) {
+      clearTimeout(this.autoWaveTimer);
+      this.autoWaveTimer = null;
+    }
+  }
+
+  /**
+   * When auto-wave is on and a wave has just completed, start the next one after
+   * a short breather. The first wave is always manual so players can build up.
+   */
+  _maybeScheduleAutoWave(snapshot) {
+    const w = snapshot.wave || {};
+    const ended = snapshot.stats?.gameOver || snapshot.stats?.victory;
+    if (!this.autoWave || ended || w.status !== "complete") return;
+    if (this.autoWaveTimer) return; // already scheduled
+    this.autoWaveTimer = setTimeout(() => {
+      this.autoWaveTimer = null;
+      if (this.autoWave && !this.isBusy && this.state?.wave?.status === "complete") {
+        this._startWave();
+      }
+    }, AUTO_WAVE_DELAY_MS);
   }
 
   // ── Snapshot rendering ───────────────────────────────────────────
@@ -305,11 +439,13 @@ class FarmDefencePage {
     if (w.status === "active") {
       if (pill) pill.textContent = `Wave ${w.current} — Active`;
       if (btn) btn.disabled = true;
+      this._clearAutoWave(); // wave running — nothing to auto-start
       this._startAutoTick();
     } else if (w.status === "complete") {
       if (pill) pill.textContent = `Wave ${w.current} — Complete`;
       if (btn) btn.disabled = false;
       this._stopAutoTick();
+      this._maybeScheduleAutoWave(snapshot);
     } else {
       if (pill) pill.textContent = "Preparing…";
       if (btn) btn.disabled = false;
@@ -319,10 +455,12 @@ class FarmDefencePage {
     if (snapshot.stats?.gameOver) {
       if (pill) pill.textContent = "Game Over";
       this._stopAutoTick();
+      this._clearAutoWave();
     }
     if (snapshot.stats?.victory) {
       if (pill) pill.textContent = "Victory!";
       this._stopAutoTick();
+      this._clearAutoWave();
     }
   }
 
@@ -667,6 +805,7 @@ class FarmDefencePage {
 
   _resetGame() {
     this._stopAutoTick();
+    this._clearAutoWave();
     this._applyAction("reset", { seed: this.sessionSeed, size: this.selectedMapSize || "medium" });
   }
 
@@ -683,6 +822,15 @@ class FarmDefencePage {
         this._openDefeatModal(event.details?.message || event.message);
         this._stopPolling();
         this._stopAutoTick();
+      }
+      // On game end the server has finished recording the run; refresh the
+      // achievements/leaderboard view so it's current next time it's opened.
+      if (event.type === "victory" || event.type === "gameOver") {
+        // Small delay: server persists progress asynchronously after the event.
+        setTimeout(() => {
+          this._fetchAchievements();
+          this._fetchLeaderboard();
+        }, 600);
       }
     }
   }
@@ -783,6 +931,104 @@ class FarmDefencePage {
   _closeAllModals() {
     this._closeVictoryModal();
     this._closeDefeatModal();
+    this._closeAchievementsModal();
+  }
+
+  // ── Achievements & leaderboard ───────────────────────────────────
+
+  async _openAchievementsModal() {
+    this.controls.achievementsModal?.classList.add("is-open");
+    await Promise.all([this._fetchAchievements(), this._fetchLeaderboard()]);
+  }
+
+  _closeAchievementsModal() {
+    this.controls.achievementsModal?.classList.remove("is-open");
+  }
+
+  async _fetchAchievements() {
+    try {
+      const res = await this._request("/achievements");
+      if (res?.data) this._renderAchievements(res.data);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async _fetchLeaderboard() {
+    try {
+      const res = await this._request("/leaderboard?limit=20");
+      this._renderLeaderboard(res?.data || []);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  _isDefaultName(name) {
+    return !name || /^fd-session-/.test(name);
+  }
+
+  _renderAchievements(view) {
+    // Don't clobber the name field while the user is editing it.
+    if (this.controls.playerNameInput && document.activeElement !== this.controls.playerNameInput) {
+      this.controls.playerNameInput.value = this._isDefaultName(view.playerName) ? "" : view.playerName;
+    }
+
+    if (this.controls.achvSummary) {
+      this.controls.achvSummary.innerHTML = `
+        <div class="fd-stat"><span>Best score</span><strong>${view.bestScore || 0}</strong></div>
+        <div class="fd-stat"><span>Best wave</span><strong>${view.bestWave || 0}</strong></div>
+        <div class="fd-stat"><span>Games</span><strong>${view.gamesPlayed || 0}</strong></div>
+        <div class="fd-stat"><span>Wins</span><strong>${view.victories || 0}</strong></div>
+        <div class="fd-stat"><span>Unlocked</span><strong>${view.unlockedCount || 0}/${view.totalCount || 0}</strong></div>`;
+    }
+
+    if (this.controls.achvList) {
+      const items = view.achievements || [];
+      this.controls.achvList.innerHTML = items
+        .map((a) => {
+          const pct = a.threshold ? Math.min(100, Math.round((a.progress / a.threshold) * 100)) : 0;
+          return `<div class="fd-achv-item ${a.unlocked ? "is-unlocked" : ""}">
+            <i class="fas ${escapeHtml(a.icon || "fa-medal")} fd-achv-item__icon"></i>
+            <div class="fd-achv-item__body">
+              <div class="fd-achv-item__head">
+                <strong>${escapeHtml(a.label)}</strong>
+                <span>${a.progress}/${a.threshold}</span>
+              </div>
+              <div class="fd-achv-item__desc">${escapeHtml(a.description || "")}</div>
+              <div class="fd-achv-item__bar"><span style="width:${pct}%"></span></div>
+            </div>
+            ${a.unlocked ? '<i class="fas fa-circle-check fd-achv-item__tick"></i>' : ""}
+          </div>`;
+        })
+        .join("");
+    }
+  }
+
+  _renderLeaderboard(rows) {
+    if (!this.controls.leaderboard) return;
+    if (!rows.length) {
+      this.controls.leaderboard.innerHTML = '<li class="fd-leaderboard__empty">No scores yet — finish a game to appear here.</li>';
+      return;
+    }
+    this.controls.leaderboard.innerHTML = rows
+      .map((r) => {
+        const me = r.playerId === this.sessionId ? " is-me" : "";
+        const name = this._isDefaultName(r.playerName) ? "Anonymous farmer" : r.playerName;
+        return `<li class="fd-leaderboard__row${me}">
+          <span class="fd-leaderboard__rank">#${r.rank}</span>
+          <span class="fd-leaderboard__name">${escapeHtml(name)}</span>
+          <span class="fd-leaderboard__wave">W${r.bestWave || 0}</span>
+          <span class="fd-leaderboard__score">${r.bestScore || 0}</span>
+        </li>`;
+      })
+      .join("");
+  }
+
+  async _savePlayerName() {
+    const name = (this.controls.playerNameInput?.value || "").trim();
+    if (!name) return;
+    await this._applyAction("setPlayerName", { name });
+    await Promise.all([this._fetchAchievements(), this._fetchLeaderboard()]);
   }
 
   // ── Modal action handlers ────────────────────────────────────────

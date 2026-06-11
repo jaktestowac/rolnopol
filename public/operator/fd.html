@@ -20,6 +20,7 @@
             <div class="fd-header__actions">
                 <select id="fdThemeSelect" class="fd-select" aria-label="Theme"></select>
                 <button id="fdNewGameBtn" class="fd-btn" type="button"><i class="fas fa-plus"></i> New game</button>
+                <button id="fdAchievementsBtn" class="fd-btn-icon" type="button" title="Achievements & Leaderboard"><i class="fas fa-medal"></i></button>
                 <button id="fdRefreshBtn" class="fd-btn-icon" type="button" title="Refresh"><i class="fas fa-rotate"></i></button>
                 <button id="fdResetBtn" class="fd-btn-icon" type="button" title="Reset"><i class="fas fa-undo"></i></button>
             </div>
@@ -45,6 +46,12 @@
                 <!-- Controls -->
                 <div class="fd-controls">
                     <button id="fdStartWaveBtn" class="fd-btn fd-btn--accent" type="button"><i class="fas fa-play"></i> Start Wave</button>
+                    <button id="fdAutoWaveBtn" class="fd-btn fd-toggle" type="button" aria-pressed="false" title="Automatically start the next wave"><i class="fas fa-forward-fast"></i> Auto-wave</button>
+                    <div class="fd-speed" role="group" aria-label="Game speed">
+                        <button class="fd-speed__btn" type="button" data-fd-speed="1" aria-pressed="true">1×</button>
+                        <button class="fd-speed__btn" type="button" data-fd-speed="2" aria-pressed="false">2×</button>
+                        <button class="fd-speed__btn" type="button" data-fd-speed="4" aria-pressed="false">4×</button>
+                    </div>
                     <span id="fdRevisionBadge" class="fd-rev">rev 0</span>
                 </div>
 
@@ -96,6 +103,11 @@
 
             <p class="fd-modal__subtitle">Game mode</p>
             <div class="fd-modal__options" id="fdModePicker"></div>
+
+            <div class="fd-modal__actions">
+                <button id="fdSizeScoresBtn" class="fd-btn" type="button"><i class="fas fa-medal"></i> View scores &amp; achievements</button>
+                <a href="/" class="fd-btn" role="button"><i class="fas fa-house"></i> Home</a>
+            </div>
         </div>
     </div>
 
@@ -129,7 +141,30 @@
         </div>
     </div>
 
-    <script src="/js/pages/fd.js?v=20260609"></script>
+    <!-- Achievements & leaderboard modal -->
+    <div id="fdAchievementsModal" class="fd-modal" role="dialog" aria-modal="true" aria-label="Achievements and leaderboard">
+        <div class="fd-modal__overlay"></div>
+        <div class="fd-modal__content glass fd-modal__content--wide">
+            <button class="fd-modal__close" type="button" aria-label="Close">&times;</button>
+            <h2 class="fd-modal__title"><i class="fas fa-medal"></i> Achievements</h2>
+
+            <div class="fd-achv__name">
+                <input id="fdPlayerName" class="fd-select fd-achv__name-input" type="text" maxlength="32"
+                    placeholder="Your leaderboard name" aria-label="Leaderboard name" />
+                <button id="fdPlayerNameSave" class="fd-btn" type="button"><i class="fas fa-check"></i> Save</button>
+            </div>
+
+            <div class="fd-stats fd-achv__summary" id="fdAchvSummary"></div>
+
+            <p class="fd-modal__subtitle">Milestones</p>
+            <div id="fdAchvList" class="fd-achv__list"></div>
+
+            <p class="fd-modal__subtitle"><i class="fas fa-ranking-star"></i> Global leaderboard</p>
+            <ol id="fdLeaderboard" class="fd-leaderboard"></ol>
+        </div>
+    </div>
+
+    <script src="/js/pages/fd.js?v=20260611c"></script>
 </body>
 
 </html>
