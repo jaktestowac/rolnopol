@@ -52,10 +52,7 @@ function loadBrowserSessionId() {
 
 // Escape user-controlled text (player names) before inserting into innerHTML.
 function escapeHtml(value) {
-  return String(value ?? "").replace(
-    /[&<>"']/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
-  );
+  return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
 
 function createSessionSeed() {
@@ -75,6 +72,7 @@ class FarmDefencePage {
     this.selectedDifficulty = "normal";
     this.selectedGameMode = "classic";
     this.selectedTowerType = "archer";
+    this.hoveredCell = null; // {x: number, y: number} or null
     this.sessionId = loadBrowserSessionId();
     this.sessionSeed = createSessionSeed();
 
@@ -188,6 +186,29 @@ class FarmDefencePage {
       const x = parseInt(cell.dataset.x, 10);
       const y = parseInt(cell.dataset.y, 10);
       this._handleCellClick(x, y, cell);
+    });
+
+    // Grid mouseover/mouseout for tower range visualization
+    this.controls.fdGrid?.addEventListener("mouseover", (e) => {
+      const cell = e.target.closest(".fd-cell");
+      if (!cell) return;
+      if (cell.classList.contains("is-tower")) {
+        const x = parseInt(cell.dataset.x, 10);
+        const y = parseInt(cell.dataset.y, 10);
+        const tower = this.state?.towers?.find((t) => t.x === x && t.y === y);
+        if (tower) {
+          const towerType = tower.type;
+          if (!towerType) return;
+          const towerDef = this.state?.capabilities?.towerDefs?.[towerType];
+          if (towerDef) {
+            this._showRange(x, y, towerDef.range);
+          }
+        }
+      }
+    });
+
+    this.controls.fdGrid?.addEventListener("mouseout", (e) => {
+      this._clearRangeHighlight();
     });
 
     // Victory modal
@@ -391,6 +412,45 @@ class FarmDefencePage {
     this._renderNextWavePreview(snapshot);
   }
 
+  _injectRangeStyle() {
+    if (document.getElementById("fd-range-style")) return;
+    const style = document.createElement("style");
+    style.id = "fd-range-style";
+    style.textContent = `
+                .fd-cell-in-range {
+                    outline: 2px solid rgba(0, 255, 0, 0.7);
+                    outline-offset: -2px;
+                }
+            `;
+    document.head.appendChild(style);
+  }
+
+  _showRange(x, y, range) {
+    this._injectRangeStyle();
+    this._clearRangeHighlight();
+    const rows = this.state?.grid || [];
+    rows.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        const worldX = Number(this.state?.viewport?.startX || 0) + colIndex;
+        const worldY = Number(this.state?.viewport?.startY || 0) + rowIndex;
+        const dx = Math.abs(worldX - x);
+        const dy = Math.abs(worldY - y);
+        if (dx + dy <= range) {
+          const button = this.controls.fdGrid.querySelector(`[data-x="${worldX}"][data-y="${worldY}"]`);
+          if (button) {
+            button.classList.add("fd-cell-in-range");
+          }
+        }
+      });
+    });
+  }
+
+  _clearRangeHighlight() {
+    this.controls.fdGrid.querySelectorAll(".fd-cell-in-range").forEach((el) => {
+      el.classList.remove("fd-cell-in-range");
+    });
+  }
+
   _renderTheme(theme) {
     if (!theme) return;
     document.body.dataset.fdTheme = theme;
@@ -401,6 +461,7 @@ class FarmDefencePage {
     if (this.controls.themeSelect && this.controls.themeSelect.value !== snapshot.theme) {
       this.controls.themeSelect.value = snapshot.theme;
     }
+
     // Populate theme select if empty
     if (this.controls.themeSelect && this.controls.themeSelect.options.length === 0) {
       const themes = snapshot.capabilities?.themes || [];
@@ -582,6 +643,19 @@ class FarmDefencePage {
     // Restore popups after grid re-render
     if (towerPopup) this.controls.fdGrid.appendChild(towerPopup);
     if (enemyPopup) this.controls.fdGrid.appendChild(enemyPopup);
+  }
+
+  _injectRangeStyle() {
+    if (document.getElementById("fd-range-style")) return;
+    const style = document.createElement("style");
+    style.id = "fd-range-style";
+    style.textContent = `
+        .fd-cell-in-range {
+          outline: 2px solid rgba(0, 255, 0, 0.7);
+          outline-offset: -2px;
+        }
+    `;
+    document.head.appendChild(style);
   }
 
   // ── Tower picker ─────────────────────────────────────────────────
