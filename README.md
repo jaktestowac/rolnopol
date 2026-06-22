@@ -17,6 +17,9 @@ A realistic farming management application designed for **test automation practi
 - 🐛 **Intentional bugs & edge cases** for debugging practice
 - 🧪 **Complex workflows** (financial, resource, authorization)
 
+> [!NOTE]
+> 🏗️ Curious how it all fits together? See **[ARCHITECTURE.md](./ARCHITECTURE.md)** for component, request-flow, auth, WebSocket, and Farm Defence diagrams (rendered with Mermaid).
+
 # Table of Contents
 
 - [Introduction](#introduction)
