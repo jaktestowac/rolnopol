@@ -51,16 +51,18 @@ class NavigationComponent {
 
   async _getFeatureFlagState() {
     if (!this.featureFlagsService || typeof this.featureFlagsService.isEnabled !== "function") {
-      return { alertsEnabled: true, rolnopolMapEnabled: true, rolnopolFarmlogEnabled: false };
+      return { alertsEnabled: true, rolnopolMapEnabled: true, rolnopolFarmlogEnabled: false, greenhouseControlRoomEnabled: false };
     }
 
     try {
       const alertsEnabled = await this.featureFlagsService.isEnabled("alertsEnabled", true);
       const rolnopolMapEnabled = await this.featureFlagsService.isEnabled("rolnopolMapEnabled", true);
       const rolnopolFarmlogEnabled = await this.featureFlagsService.isEnabled("rolnopolFarmlogEnabled", false);
-      return { alertsEnabled, rolnopolMapEnabled, rolnopolFarmlogEnabled };
+      const greenhouseControlRoomEnabled = await this.featureFlagsService.isEnabled("greenhouseControlRoomEnabled", false);
+      const taskLabEnabled = await this.featureFlagsService.isEnabled("taskLabEnabled", false);
+      return { alertsEnabled, rolnopolMapEnabled, rolnopolFarmlogEnabled, greenhouseControlRoomEnabled, taskLabEnabled };
     } catch (error) {
-      return { alertsEnabled: true, rolnopolMapEnabled: true, rolnopolFarmlogEnabled: false };
+      return { alertsEnabled: true, rolnopolMapEnabled: true, rolnopolFarmlogEnabled: false, greenhouseControlRoomEnabled: false };
     }
   }
   /**
@@ -206,6 +208,22 @@ class NavigationComponent {
       `
       : "";
 
+    const greenhouseLink = flagState?.greenhouseControlRoomEnabled
+      ? `
+        <a href="/greenhouse.html" class="nav__item">
+          <i class="fa-solid fa-seedling"></i> Greenhouse
+        </a>
+      `
+      : "";
+
+    const tasklabLink = flagState?.taskLabEnabled
+      ? `
+        <a href="/tasklab.html" class="nav__item">
+          <i class="fa-solid fa-clipboard-check"></i> TaskLab
+        </a>
+      `
+      : "";
+
     this.navElement.innerHTML = `
       <span class="nav__welcome">
         Welcome, <span class="nav__username">${username}</span>
@@ -236,6 +254,8 @@ class NavigationComponent {
         </a>
         ${alertsLink}
         ${farmlogLink}
+        ${greenhouseLink}
+        ${tasklabLink}
         <a href="/docs.html" class="nav__item">
           <i class="fa-solid fa-book"></i> Documentation
         </a>
@@ -258,6 +278,13 @@ class NavigationComponent {
         </a>
       `
       : "";
+    const greenhouseLink = flagState?.greenhouseControlRoomEnabled
+      ? `
+        <a href="/greenhouse.html" class="nav__item">
+          <i class="fa-solid fa-seedling"></i> Greenhouse
+        </a>
+      `
+      : "";
     this.navElement.innerHTML = `
       <div class="nav__auth-buttons">
         <a href="/login.html" class="nav__button">Login</a>
@@ -276,6 +303,7 @@ class NavigationComponent {
           <i class="fa-solid fa-tools"></i> Tools
         </a>
         ${farmlogLink}
+        ${greenhouseLink}
         <a href="/docs.html" class="nav__item">
           <i class="fa-solid fa-book"></i> Documentation
         </a>

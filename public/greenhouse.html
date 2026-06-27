@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Greenhouse — Grow a Plant - Rolnopol</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/pages/greenhouse.css" />
+</head>
+
+<body class="greenhouse-page-body">
+  <div id="header-component"></div>
+
+  <main class="gh-container">
+    <header class="gh-header">
+      <h1><i class="fas fa-seedling"></i> Greenhouse</h1>
+    </header>
+
+    <!-- Tabs -->
+    <div class="gh-tabs" role="tablist">
+      <!-- <button class="gh-tab " data-tab="examples" role="tab">🔌 gRPC Examples</button> -->
+      <button class="gh-tab active" data-tab="guided" role="tab">🌿 Guided Demo</button>
+      <button class="gh-tab" data-tab="garden" role="tab">🌱 My Greenhouses</button>
+    </div>
+
+    <div id="ghBanner" class="gh-banner" hidden></div>
+
+    <!-- Tab 1: gRPC examples -->
+    <section id="ghTabExamples" class="gh-tab-panel">
+      <p class="gh-ex-intro">
+        Each button below makes a real call to the greenhouse <b>gRPC service</b> (through the app). Watch how the two
+        gRPC call types behave.
+      </p>
+
+      <div class="gh-ex-card">
+        <h3>1 · Unary — request → one response</h3>
+        <p>One request in, one response back — like a normal function call, but over the network.</p>
+        <div class="gh-ex-actions">
+          <button class="gh-btn" data-ex="listCrops">ListCrops()</button>
+          <button class="gh-btn" data-ex="listGreenhouses">ListGreenhouses()</button>
+        </div>
+        <pre class="gh-ex-output" id="ghExUnaryOut">// click a button to call a unary RPC</pre>
+      </div>
+
+      <div class="gh-ex-card">
+        <h3>2 · Server streaming — request → many responses</h3>
+        <p>One request opens a stream and the server keeps pushing frames. Here it streams your greenhouses every tick.</p>
+        <div class="gh-ex-actions">
+          <button class="gh-btn" id="ghExStreamStart">▶ Start WatchGreenhouses</button>
+          <button class="gh-btn" id="ghExStreamStop" disabled>■ Stop</button>
+          <span class="gh-ex-count">frames: <b id="ghExFrames">0</b></span>
+        </div>
+        <pre class="gh-ex-output" id="ghExStreamOut">// press Start to open the stream</pre>
+      </div>
+    </section>
+
+    <!-- Tab 2: Guided demo — one plant, each step is a real gRPC call -->
+    <section id="ghTabGuided" class="gh-tab-panel" hidden>
+      <p class="gh-ex-intro">
+        Walk one plant through its life on <b>Greenhouse&nbsp;1</b>.
+      </p>
+      <div class="gh-guided">
+        <div class="gh-slot gd-card">
+          <div class="gh-slot-title">Greenhouse 1</div>
+          <div class="gd-empty">Empty — plant a seed to begin.</div>
+          <div class="gh-slot-plant gd-plant" hidden>
+            <div class="gh-plant-emoji">🌱</div>
+            <div class="gh-plant-name">—</div>
+            <div class="gh-plant-stage">seed</div>
+            <div class="gh-bar growth"><span class="fill"></span><label>Growth <b>0%</b></label></div>
+            <div class="gh-bar water"><span class="fill"></span><label>Water <b>0%</b></label></div>
+            <div class="gh-thirsty" hidden>💧 thirsty — needs water</div>
+          </div>
+        </div>
+        <div class="gd-steps">
+          <button class="gh-btn" id="ghGdPlant">🌱 Plant tomato — <code>Plant()</code></button>
+          <button class="gh-btn water" id="ghGdWater" disabled>💧 Water — <code>Water()</code></button>
+          <button class="gh-btn" id="ghGdWatch" disabled>▶ Watch grow — <code>WatchGreenhouses()</code></button>
+          <button class="gh-btn" id="ghGdHarvest" disabled>🧺 Harvest — <code>Harvest()</code></button>
+        </div>
+      </div>
+      <pre class="gh-ex-output" id="ghGdLog">// gRPC calls will appear here</pre>
+    </section>
+
+    <!-- Tab 3: Grow-a-Plant -->
+    <section id="ghTabGarden" class="gh-tab-panel" hidden>
+      <div class="gh-meta">
+        <span class="gh-harvested">🧺 Harvested: <b id="ghHarvested">0</b></span>
+        <span id="ghDemoBadge" class="gh-badge gh-hide-demo">Demo greenhouse — log in to save</span>
+      </div>
+      <section id="ghSlots" class="gh-slots" aria-label="Greenhouses"></section>
+    </section>
+  </main>
+
+  <div id="notification-container" class="notification-container"></div>
+
+  <!-- Scripts (shared app shell) -->
+  <script src="/js/core/event-bus.js"></script>
+  <script src="/js/core/storage.js"></script>
+  <script src="/js/core/app.js"></script>
+
+  <script src="/js/services/api-service.js"></script>
+  <script src="/js/services/auth-service.js"></script>
+  <script src="/js/services/feature-flags-service.js"></script>
+
+  <script src="/js/components/notification.js"></script>
+  <script src="/js/components/navigation.js"></script>
+  <script src="/js/components.js"></script>
+
+  <script src="/js/api.js"></script>
+
+  <script src="/js/utils/error-logger.js"></script>
+  <script src="/js/utils/utils.js"></script>
+  <script src="/js/utils/global-compat.js"></script>
+
+  <script src="/js/pages/greenhouse.js?v=12"></script>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/utils/init-navigation.js"></script>
+  <script>
+    initNavigation("greenhouse");
+  </script>
+</body>
+
+</html>

@@ -43,6 +43,10 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   rolnopolFarmlogEnabled: "Enable or disable the Rolnopol Blog Space (Farmlog) feature",
   rolnopolFarmlogEngagementEnabled: "Enable or disable Farmlog likes, favorites, and most-liked post ranking",
   taskManagerEnabled: "Enable or disable the user task manager module",
+  taskLabEnabled:
+    "Enable or disable the TaskLab module (gRPC client to the standalone TaskLab service, REST API, and dashboard) for logged-in users",
+  greenhouseControlRoomEnabled:
+    "Enable or disable the greenhouse control room module (gRPC client to the standalone greenhouse service, REST API, and dashboard)",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -69,7 +73,8 @@ const FEATURE_FLAG_GROUPS = {
   ],
   gameplay: ["petBuddyEnabled"],
   farmlog: ["rolnopolFarmlogEnabled", "rolnopolFarmlogEngagementEnabled"],
-  productivity: ["taskManagerEnabled"],
+  productivity: ["taskManagerEnabled", "taskLabEnabled"],
+  greenhouse: ["greenhouseControlRoomEnabled"],
 };
 
 const EXPERIMENTAL_FEATURE_FLAGS = [
@@ -102,6 +107,8 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "rolnopolFarmlogEnabled",
   "rolnopolFarmlogEngagementEnabled",
   "taskManagerEnabled",
+  "taskLabEnabled",
+  "greenhouseControlRoomEnabled",
 ];
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -144,6 +151,8 @@ const PREDEFINED_FEATURE_FLAGS = {
   rolnopolFarmlogEnabled: false,
   rolnopolFarmlogEngagementEnabled: false,
   taskManagerEnabled: false,
+  taskLabEnabled: false,
+  greenhouseControlRoomEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

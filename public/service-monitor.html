@@ -4,11 +4,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Backend - Rolnopol</title>
+  <title>Service Monitor - Rolnopol</title>
   <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="stylesheet" href="/css/pages/backend.css" />
+  <link rel="stylesheet" href="/css/pages/service-monitor.css" />
 </head>
 
 <body class="bg-agri-pattern">
@@ -21,43 +22,32 @@
     </div>
     <header class="header glass backend-header">
       <div class="backend-header__title">
-        <span class="bg-agri-gradient"><i class="fas fa-sitemap"></i></span>
+        <span class="bg-agri-gradient"><i class="fas fa-heart-pulse"></i></span>
         <div>
-          <h1>Backend</h1>
-          <p>Internal tools and operational pages.</p>
+          <h1>Service Monitor</h1>
+          <p>Live health of the external gRPC services.</p>
         </div>
       </div>
       <div class="backend-header__meta">
-        <span class="backend-pill"><i class="fas fa-bolt"></i> Live</span>
-        <span class="backend-pill backend-pill--muted">No auth required</span>
+        <a class="backend-pill " href="/backend.html"><i class="fas fa-arrow-left"></i> Backend</a>
+        <button id="refresh-btn" class="backend-pill svc-refresh" type="button">
+          <i class="fas fa-rotate"></i> Refresh
+        </button>
       </div>
     </header>
 
     <section class="glass backend-panel">
-      <h2>Available tools</h2>
-      <div class="backend-links">
-        <a class="backend-card" href="/feature-flags.html">
-          <div class="backend-card__icon"><i class="fas fa-toggle-on"></i></div>
-          <div>
-            <div class="backend-card__title">Feature Flags</div>
-            <div class="backend-card__desc">Toggle features instantly without restart.</div>
-          </div>
-        </a>
-        <a class="backend-card" href="/chaos-engine.html">
-          <div class="backend-card__icon"><i class="fas fa-biohazard"></i></div>
-          <div>
-            <div class="backend-card__title">Chaos Engine</div>
-            <div class="backend-card__desc">Inject latency, dropped responses, and random API failures.</div>
-          </div>
-        </a>
-        <a class="backend-card" href="/service-monitor.html">
-          <div class="backend-card__icon"><i class="fas fa-heart-pulse"></i></div>
-          <div>
-            <div class="backend-card__title">Service Monitor</div>
-            <div class="backend-card__desc">Live health of the external Greenhouse and TaskLab gRPC services.</div>
-          </div>
-        </a>
+      <div class="svc-panel-head">
+        <h2>External services</h2>
+        <span id="svc-updated" class="svc-updated"></span>
       </div>
+      <div id="svc-grid" class="svc-grid" aria-live="polite">
+        <p class="svc-empty">Loading service status…</p>
+      </div>
+      <p class="svc-hint">
+        <i class="fas fa-circle-info"></i>
+        Auto-refreshes every 15s.
+      </p>
     </section>
   </div>
 
@@ -84,6 +74,8 @@
   <script src="/js/utils/router.js"></script>
   <script src="/js/utils/global-compat.js"></script>
   <script src="/js/utils/init-navigation.js"></script>
+  <!-- Page logic -->
+  <script src="/js/pages/service-monitor.js"></script>
   <script>
     initNavigation("backend");
   </script>
