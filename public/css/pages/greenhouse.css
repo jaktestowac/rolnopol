@@ -1,0 +1,341 @@
+/* Greenhouse — "Grow a Plant" page styles.
+   Uses the app's shared theme tokens from styles.css where available, with
+   sensible fallbacks so the page looks at home alongside other Rolnopol pages. */
+
+.greenhouse-page-body {
+  background: var(--bg-color, #0f1a14);
+  color: var(--text-color, #e8f0ea);
+  min-height: 100vh;
+}
+
+.gh-container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.gh-header {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+.gh-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+}
+.gh-header h1 .fa-seedling {
+  color: var(--accent-color, #5fd07a);
+}
+.gh-subtitle {
+  margin: 0 0 0.6rem;
+  color: var(--muted-color, #9bb3a3);
+  font-size: 0.9rem;
+}
+.gh-meta {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.gh-harvested {
+  font-size: 0.9rem;
+  color: var(--text-color, #e8f0ea);
+}
+
+.gh-badge {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  background: rgba(255, 196, 0, 0.15);
+  color: #ffd24d;
+  border: 1px solid rgba(255, 196, 0, 0.4);
+}
+.gh-hide-demo {
+  display: none !important;
+}
+
+.gh-banner {
+  margin: 0 0 1rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  background: rgba(220, 70, 70, 0.15);
+  border: 1px solid rgba(220, 70, 70, 0.5);
+  color: #ff9b9b;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Tabs */
+.gh-tabs {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+.gh-tab {
+  padding: 0.5rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #2a3b30);
+  background: transparent;
+  color: var(--muted-color, #9bb3a3);
+  cursor: pointer;
+  font-size: 0.92rem;
+}
+.gh-tab:hover {
+  border-color: var(--accent-color, #5fd07a);
+}
+.gh-tab.active {
+  background: var(--card-bg, #16241c);
+  color: var(--text-color, #e8f0ea);
+  border-color: var(--accent-color, #5fd07a);
+}
+.gh-tab-panel[hidden] {
+  display: none !important;
+}
+
+/* gRPC examples tab */
+.gh-ex-intro {
+  text-align: center;
+  color: var(--muted-color, #9bb3a3);
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+.gh-ex-card {
+  background: var(--card-bg, #16241c);
+  border: 1px solid var(--border-color, #2a3b30);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+.gh-ex-card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+.gh-ex-card > p {
+  margin: 0 0 0.7rem;
+  color: var(--muted-color, #9bb3a3);
+  font-size: 0.85rem;
+}
+.gh-ex-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+}
+.gh-ex-actions .gh-btn {
+  flex: 0 0 auto;
+}
+.gh-ex-count {
+  font-size: 0.8rem;
+  color: var(--muted-color, #9bb3a3);
+}
+.gh-ex-output {
+  background: var(--bg-color, #0f1a14);
+  border: 1px solid var(--border-color, #2a3b30);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: #cfe6d6;
+  margin: 0;
+}
+
+.gh-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+@media (max-width: 720px) {
+  .gh-slots {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gh-slot {
+  background: var(--card-bg, #16241c);
+  border: 1px solid var(--border-color, #2a3b30);
+  border-radius: 14px;
+  padding: 1rem;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+.gh-slot-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-color, #9bb3a3);
+  margin-bottom: 0.6rem;
+}
+
+/* The hidden attribute must win over the display:flex rules below
+   (class selectors otherwise override the UA [hidden] { display:none }). */
+.gh-slot-empty[hidden],
+.gh-slot-plant[hidden],
+.gd-empty[hidden] {
+  display: none !important;
+}
+
+/* Guided demo tab */
+.gh-guided {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+@media (max-width: 720px) {
+  .gh-guided {
+    grid-template-columns: 1fr;
+  }
+}
+.gd-card {
+  min-height: 260px;
+}
+.gd-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--muted-color, #9bb3a3);
+  font-size: 0.85rem;
+}
+.gd-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.gd-steps .gh-btn {
+  text-align: left;
+}
+.gd-steps .gh-btn code {
+  opacity: 0.85;
+  font-size: 0.85em;
+}
+
+/* Empty slot — crop picker */
+.gh-slot-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  text-align: center;
+}
+.gh-slot-empty .gh-empty-hint {
+  color: var(--muted-color, #9bb3a3);
+  font-size: 0.85rem;
+}
+.gh-crop-select {
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #2a3b30);
+  background: var(--bg-color, #0f1a14);
+  color: inherit;
+  font-size: 0.95rem;
+}
+
+/* Occupied slot — plant display */
+.gh-slot-plant {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.gh-plant-emoji {
+  font-size: 3.4rem;
+  line-height: 1.1;
+  margin-top: 0.4rem;
+  transition: transform 0.2s;
+}
+.gh-slot.ripe .gh-plant-emoji {
+  animation: gh-pop 1.2s ease-in-out infinite;
+}
+@keyframes gh-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+.gh-plant-name {
+  font-weight: 600;
+}
+.gh-plant-stage {
+  font-size: 0.78rem;
+  color: var(--muted-color, #9bb3a3);
+  text-transform: capitalize;
+}
+.gh-thirsty {
+  font-size: 0.75rem;
+  color: #ffb74d;
+}
+
+.gh-bar {
+  width: 100%;
+  position: relative;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color, #2a3b30);
+  overflow: hidden;
+}
+.gh-bar .fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+.gh-bar.growth .fill {
+  background: linear-gradient(90deg, #3da35a, #5fd07a);
+}
+.gh-bar.water .fill {
+  background: linear-gradient(90deg, #3a8fd0, #6cc6ff);
+}
+.gh-bar label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: #eaf6ee;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.gh-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+  width: 100%;
+}
+.gh-btn {
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--accent-color, #5fd07a);
+  background: rgba(95, 208, 122, 0.15);
+  color: var(--accent-color, #5fd07a);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.gh-btn:hover:not(:disabled) {
+  background: rgba(95, 208, 122, 0.3);
+}
+.gh-btn.water {
+  border-color: #6cc6ff;
+  color: #6cc6ff;
+  background: rgba(108, 198, 255, 0.12);
+}
+.gh-btn.water:hover:not(:disabled) {
+  background: rgba(108, 198, 255, 0.26);
+}
+.gh-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

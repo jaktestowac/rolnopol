@@ -3,6 +3,8 @@ const { resolve } = require("path");
 
 console.log("Starting Rolnopol application...");
 
+const OPTIONAL_STARTUP_DEPENDENCIES = new Set(["@grpc/grpc-js", "@grpc/proto-loader"]);
+
 const getVisualWidth = (str) => {
   let width = 0;
   for (const char of str) {
@@ -28,12 +30,17 @@ const checkAllDependencies = () => {
     const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
 
     const missing = [];
+    const optionalMissing = [];
     Object.keys(allDeps).forEach((dep) => {
       try {
         require.resolve(dep);
       } catch (e) {
         if (e.code === "MODULE_NOT_FOUND") {
-          missing.push(dep);
+          if (OPTIONAL_STARTUP_DEPENDENCIES.has(dep)) {
+            optionalMissing.push(dep);
+          } else {
+            missing.push(dep);
+          }
         }
       }
     });
@@ -74,6 +81,12 @@ const checkAllDependencies = () => {
 
       process.exit(1);
     }
+
+    if (optionalMissing.length > 0) {
+      console.warn(
+        `[startup] Optional gRPC dependencies unavailable (${optionalMissing.join(", ")}). Greenhouse/TaskLab gRPC features will be disabled, but the main app will continue to start.`,
+      );
+    }
   } catch (error) {
     console.error("❌ Error while checking dependencies:");
     throw error;
@@ -108,6 +121,21 @@ const notificationWebSocketService = require("../services/notification-ws.servic
 const chaosEngineMiddleware = require("../middleware/chaos-engine.middleware");
 const notificationCenter = require("../modules/notification-center");
 const pluginRuntime = require("../modules/plugin-runtime");
+
+let greenhouseWebSocketService;
+try {
+  greenhouseWebSocketService = require("../services/greenhouse-ws.service");
+} catch (error) {
+  logError("[startup] Failed to load greenhouse-ws.service — greenhouse live updates unavailable:", error.message);
+  greenhouseWebSocketService = {
+    attach() {
+      return null;
+    },
+    close() {
+      /* noop */
+    },
+  };
+}
 
 app.set("etag", false);
 
@@ -211,6 +239,7 @@ process.on("SIGINT", async () => {
   await pluginRuntime.shutdown();
   notificationWebSocketService.close();
   messengerWebSocketService.close();
+  greenhouseWebSocketService.close();
   await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
@@ -221,6 +250,7 @@ process.on("SIGTERM", async () => {
   await pluginRuntime.shutdown();
   notificationWebSocketService.close();
   messengerWebSocketService.close();
+  greenhouseWebSocketService.close();
   await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
@@ -231,6 +261,7 @@ process.on("SIGHUP", async () => {
   await pluginRuntime.shutdown();
   notificationWebSocketService.close();
   messengerWebSocketService.close();
+  greenhouseWebSocketService.close();
   await notificationCenter.stop();
   await cleanupDatabases();
   process.exit(0);
@@ -404,6 +435,50 @@ app.get(["/buddy", "/buddy.html"], async (req, res, next) => {
     return next();
   } catch (error) {
     logError("Pet Buddy feature gate check failed", { error });
+    return next();
+  }
+});
+
+// Feature-gate greenhouse control room page before static serving
+app.get(["/greenhouse", "/greenhouse.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.greenhouseControlRoomEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/greenhouse") {
+      return res.redirect(302, "/greenhouse.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Greenhouse feature gate check failed", { error });
+    return next();
+  }
+});
+
+// Feature-gate TaskLab page before static serving
+app.get(["/tasklab", "/tasklab.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.taskLabEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/tasklab") {
+      return res.redirect(302, "/tasklab.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("TaskLab feature gate check failed", { error });
     return next();
   }
 });
@@ -661,6 +736,7 @@ if (require.main === module) {
       const server = http.createServer(app);
       messengerWebSocketService.attach(server);
       notificationWebSocketService.attach(server);
+      greenhouseWebSocketService.attach(server);
 
       server.listen(port, () => {
         logInfo(`🚀 Server running on port ${port}`);
@@ -686,6 +762,7 @@ if (require.main === module) {
 
 app.attachWebSockets = function attachWebSockets(server) {
   messengerWebSocketService.attach(server);
+  greenhouseWebSocketService.attach(server);
   return notificationWebSocketService.attach(server);
 };
 

@@ -38,7 +38,9 @@
     "petBuddyEnabled": false,
     "rolnopolFarmlogEnabled": false,
     "rolnopolFarmlogEngagementEnabled": false,
-    "taskManagerEnabled": false
+    "taskManagerEnabled": false,
+    "taskLabEnabled": false,
+    "greenhouseControlRoomEnabled": false
   },
-  "updatedAt": "2026-05-16T18:57:48.767Z"
+  "updatedAt": "2026-06-22T22:31:56.368Z"
 }
