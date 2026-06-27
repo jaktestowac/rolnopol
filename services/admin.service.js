@@ -15,7 +15,7 @@ const dbManager = require("../data/database-manager");
 const pricingService = require("./commodities-pricing.service");
 const commoditiesAdminControlsService = require("./commodities-admin-controls.service");
 const packageJson = require("../package.json");
-const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 class AdminService {

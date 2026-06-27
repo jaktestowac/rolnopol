@@ -1,6 +1,6 @@
 const dbManager = require("../data/database-manager");
 const logger = require("../helpers/logger-api");
-const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 const publishEvent = (event) => {

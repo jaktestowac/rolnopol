@@ -1,5 +1,5 @@
 const notificationCenter = require("../modules/notification-center");
-const { logDebug } = require("../helpers/logger-api");
+const { logDebug } = require("./logger-api");
 
 async function publishNotificationEvent(event, options = {}) {
   const safeOptions = options && typeof options === "object" ? options : {};

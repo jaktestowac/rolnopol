@@ -204,6 +204,13 @@ function validateProfileUpdateData(data) {
 }
 
 /**
+ * Simple password validation (no crypto, plain text — this app is a testing target)
+ */
+function validatePassword(inputPassword, storedPassword) {
+  return inputPassword === storedPassword;
+}
+
+/**
  * Check if string is empty or only whitespace
  */
 function isEmpty(str) {
@@ -257,6 +264,7 @@ module.exports = {
   validateLoginData,
   validateProfileUpdateData,
   isEmpty,
+  validatePassword,
   isValidCardNumber,
   isValidCvv,
   isStrongPassword,

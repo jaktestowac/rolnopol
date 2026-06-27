@@ -1,7 +1,7 @@
 const dbManager = require("./database-manager");
 const { logDebug, logError } = require("../helpers/logger-api");
 const { createEntity, updateEntityTimestamp } = require("../helpers/entity.helpers");
-const ResourceService = require("../services/resource.service");
+const { notifyUserCreated, notifyUserDeleted } = require("./user-lifecycle");
 
 /**
  * User database operations
@@ -94,14 +94,9 @@ class UserDatabase {
       // The add() method now returns the created user directly
       const createdUser = await this.db.add(newUser);
 
-      // Initialize financial account for the user (this might write to financial.json)
-      try {
-        const financialService = require("../services/financial.service");
-        await financialService.initializeAccount(createdUser.id);
-      } catch (financialError) {
-        logError("Error initializing financial account:", financialError);
-        // Don't fail user creation if financial account fails
-      }
+      // Notify the service layer (e.g. financial-account init) without the
+      // data layer depending on services. Best-effort: never fails creation.
+      await notifyUserCreated(createdUser);
 
       logDebug("User created successfully", {
         id: createdUser.id,
@@ -184,8 +179,8 @@ class UserDatabase {
       await this.db.remove((user) => user.id === numericId);
       logDebug("User deleted permanently", { id: numericId });
 
-      // Cascade delete related resources
-      await ResourceService.cascadeDelete({ type: "user", userId: numericId });
+      // Cascade delete related resources via lifecycle hooks (service → data).
+      await notifyUserDeleted(userToDelete);
       return userToDelete;
     } catch (error) {
       logError("Error deleting user:", error);
