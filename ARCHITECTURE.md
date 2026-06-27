@@ -82,26 +82,26 @@ graph TD
     E --> G --> H
     C --> F
 
-    style A fill:#e8f5e9
-    style B fill:#e3f2fd
-    style C fill:#fff3e0
-    style D fill:#f3e5f5
-    style E fill:#fce4ec
-    style F fill:#ede7f6
-    style G fill:#e0f2f1
-    style H fill:#efebe9
+    style A fill:#4f709c,stroke:#24395b,color:#ffffff,stroke-width:1.5px
+    style B fill:#4f7f8c,stroke:#264952,color:#ffffff,stroke-width:1.5px
+    style C fill:#5e7962,stroke:#34482d,color:#ffffff,stroke-width:1.5px
+    style D fill:#6a5576,stroke:#3b2b46,color:#ffffff,stroke-width:1.5px
+    style E fill:#7b5b5d,stroke:#442f31,color:#ffffff,stroke-width:1.5px
+    style F fill:#5f6f87,stroke:#323f59,color:#ffffff,stroke-width:1.5px
+    style G fill:#4a6b58,stroke:#27402f,color:#ffffff,stroke-width:1.5px
+    style H fill:#6b5f46,stroke:#3d331f,color:#ffffff,stroke-width:1.5px
 ```
 
 **Design principles in play:**
 
-| Principle | Where it shows up |
-| --- | --- |
-| **Thin controllers** | Controllers parse the request and delegate; logic lives in services. |
-| **Singleton databases** | `DatabaseManager` hands out one `JSONDatabase` per resource to serialize writes. |
-| **Runtime toggles** | Feature flags gate routes & UI pages without redeploys. |
-| **Defensive loading** | If `fd.route` (or other optional modules) fails to load, the app still boots with a stub. |
-| **Authoritative server** | Game state (e.g. Farm Defence) lives server-side; clients send actions only. |
-| **Event-driven realtime** | The Notification Center is a pub/sub hub feeding the WebSocket gateways. |
+| Principle                 | Where it shows up                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| **Thin controllers**      | Controllers parse the request and delegate; logic lives in services.                      |
+| **Singleton databases**   | `DatabaseManager` hands out one `JSONDatabase` per resource to serialize writes.          |
+| **Runtime toggles**       | Feature flags gate routes & UI pages without redeploys.                                   |
+| **Defensive loading**     | If `fd.route` (or other optional modules) fails to load, the app still boots with a stub. |
+| **Authoritative server**  | Game state (e.g. Farm Defence) lives server-side; clients send actions only.              |
+| **Event-driven realtime** | The Notification Center is a pub/sub hub feeding the WebSocket gateways.                  |
 
 ---
 
@@ -223,11 +223,11 @@ sequenceDiagram
 
 Rolnopol supports **three** auth mechanisms, all resolved in `middleware/auth.middleware.js` and backed by `helpers/token.helpers.js` (JWT) + `data/session-tokens.json` (revocation list).
 
-| Mechanism | Credential location | Token store | Expiry | Use |
-| --- | --- | --- | --- | --- |
-| **User JWT** | `Authorization: Bearer`, `token` header, or `rolnopolToken` cookie | `session-tokens.json` | 24h | Normal user endpoints |
-| **Admin JWT** | Bearer / `token` body / `krakenToken` cookie | `session-tokens.json` | 1h | Admin panel & platform controls |
-| **Personal API key** | `x-api-key` header | `personal-api-keys.json` | per-key | Scoped programmatic access |
+| Mechanism            | Credential location                                                | Token store              | Expiry  | Use                             |
+| -------------------- | ------------------------------------------------------------------ | ------------------------ | ------- | ------------------------------- |
+| **User JWT**         | `Authorization: Bearer`, `token` header, or `rolnopolToken` cookie | `session-tokens.json`    | 24h     | Normal user endpoints           |
+| **Admin JWT**        | Bearer / `token` body / `krakenToken` cookie                       | `session-tokens.json`    | 1h      | Admin panel & platform controls |
+| **Personal API key** | `x-api-key` header                                                 | `personal-api-keys.json` | per-key | Scoped programmatic access      |
 
 ```mermaid
 sequenceDiagram
@@ -297,10 +297,10 @@ Key behaviors:
 
 Two **independent** WebSocket gateways share the HTTP server via the `upgrade` event. Each authenticates the upgrade request (JWT), enforces per-IP and per-user rate limits, caps payloads at 16 KB, and runs a 30-second heartbeat sweep to drop stale sockets.
 
-| Gateway | Path | Source file | Purpose |
-| --- | --- | --- | --- |
-| **Messenger** | `/api/v1/messages/ws` | `services/messenger-ws.service.js` | Live chat: new messages, `messagesRead`, `relationshipChanged` |
-| **Notifications** | `/api/v1/notifications/ws` | `services/notification-ws.service.js` | Platform notifications, fed by the Notification Center |
+| Gateway           | Path                       | Source file                           | Purpose                                                        |
+| ----------------- | -------------------------- | ------------------------------------- | -------------------------------------------------------------- |
+| **Messenger**     | `/api/v1/messages/ws`      | `services/messenger-ws.service.js`    | Live chat: new messages, `messagesRead`, `relationshipChanged` |
+| **Notifications** | `/api/v1/notifications/ws` | `services/notification-ws.service.js` | Platform notifications, fed by the Notification Center         |
 
 ```mermaid
 sequenceDiagram
