@@ -171,6 +171,14 @@ describe("Harvest Archive Service", () => {
   });
 
   it("respects year-specific entries", async () => {
+    getCelebrationEventsForDate.mockReturnValue([mockActiveEvent]);
+
+    // Warm the service first: its loader busts the require cache and re-requires
+    // the data module on first use, so requiring it before that first call would
+    // hand us a different (stale) module instance whose mutations the service
+    // never sees.
+    await service.getArchiveEntries("2026-09-22");
+
     // Add a year-specific entry to test
     const { HARVEST_ARCHIVE_ENTRIES } = require("../data/harvest-archive.data");
     const originalLength = HARVEST_ARCHIVE_ENTRIES.length;
@@ -184,8 +192,6 @@ describe("Harvest Archive Service", () => {
       excerpt: "Only for 2026.",
       mood: "exclusive",
     });
-
-    getCelebrationEventsForDate.mockReturnValue([mockActiveEvent]);
 
     const result2026 = await service.getArchiveEntries("2026-09-22");
     const result2027 = await service.getArchiveEntries("2027-09-22");
