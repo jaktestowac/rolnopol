@@ -38,30 +38,43 @@
   // localStorage key for user-added custom locations
   const CUSTOM_LOC_KEY = "farmStay_customLocs";
 
-  // Icons for known amenity tags shown inside chips
-  const AMENITY_ICON = {
-    kitchen: "fa-kitchen-set",
-    wifi: "fa-wifi",
-    fireplace: "fa-fire",
-    parking: "fa-square-parking",
-    breakfast: "fa-mug-hot",
-    animals: "fa-paw",
-    firepit: "fa-fire-flame-curved",
-    water: "fa-droplet",
-    garden: "fa-seedling",
-    spa: "fa-spa",
-    gym: "fa-dumbbell",
-    "beach-access": "fa-umbrella-beach",
-    shower: "fa-shower",
-    "wine-cellar": "fa-wine-glass",
-    fishing: "fa-fish",
-    "mountain-views": "fa-mountain",
-    kayaks: "fa-anchor",
-    terrace: "fa-sun",
-  };
+  // Presentation catalog (stay types, policies, amenities, card-photo themes)
+  // fetched from the backend — GET /catalog — so the option lists and their
+  // icons/gradients live in ONE place. Populated by loadCatalog() at init;
+  // lookups below are rebuilt from it. DEFAULT_LOOK covers the offline case.
+  const DEFAULT_LOOK = { gradient: "linear-gradient(135deg, #cfe3d4, #a5c8e0)", icon: "fa-house" };
+  let catalog = { types: [], policies: [], amenities: [], photoThemes: [] };
+  let amenityByKey = {}; // key → { label, icon }
+  let typeByKey = {}; // key → { label, icon, gradient }
+  let themeByKey = {}; // key → { label, icon, gradient }
 
-  // Card photo icon per stay type
-  const TYPE_ICON = { room: "fa-bed", cottage: "fa-house-chimney", camping: "fa-tent" };
+  function indexCatalog() {
+    amenityByKey = Object.fromEntries((catalog.amenities || []).map((a) => [a.key, a]));
+    typeByKey = Object.fromEntries((catalog.types || []).map((t) => [t.key, t]));
+    themeByKey = Object.fromEntries((catalog.photoThemes || []).map((t) => [t.key, t]));
+  }
+
+  async function loadCatalog() {
+    const { ok, body } = await api("GET", "/catalog");
+    if (ok && body && Array.isArray(body.amenities)) catalog = body;
+    indexCatalog();
+    listingDraft.photo = catalog.photoThemes[0]?.key || "";
+  }
+
+  // Listing-form working state (not backed by native form fields).
+  const listingDraft = { amenities: new Set(), photo: "" };
+
+  // Resolve the card-photo look for a property: a chosen theme, then the type
+  // default, then a neutral fallback. Returns an inline gradient + icon.
+  function photoLook(p) {
+    // Responses carry photo_ref (snake_case, from the proto); create payloads
+    // send photoRef (camelCase). Read both so this works either way.
+    const theme = themeByKey[p.photo_ref || p.photoRef];
+    if (theme) return { gradient: theme.gradient, icon: theme.icon };
+    const type = typeByKey[p.type];
+    if (type) return { gradient: type.gradient, icon: type.icon };
+    return DEFAULT_LOOK;
+  }
 
   // ── Formatting ──────────────────────────────────────────────────────────────
   function formatROL(n) {
@@ -72,7 +85,9 @@
   // ── Custom locations ─────────────────────────────────────────────────────────
   function loadCustomLocs() {
     try {
-      return JSON.parse(localStorage.getItem(CUSTOM_LOC_KEY) || "[]");
+      const raw = JSON.parse(localStorage.getItem(CUSTOM_LOC_KEY) || "[]");
+      // Migrate legacy plain-string entries to {voi, city} objects
+      return raw.map((item) => (typeof item === "string" ? { voi: "Custom", city: item } : item));
     } catch {
       return [];
     }
@@ -91,13 +106,17 @@
     const frag = [];
     if (includeAny) frag.push('<option value="">Anywhere in Poland</option>');
     for (const [voi, cities] of Object.entries(PL_LOCATIONS)) {
+      const extra = custom.filter((c) => c.voi === voi).map((c) => c.city);
       frag.push(`<optgroup label="${voi}">`);
-      for (const c of cities) frag.push(`<option value="${c}">${c}</option>`);
+      for (const c of [...cities, ...extra]) frag.push(`<option value="${c}">${c}</option>`);
       frag.push("</optgroup>");
     }
-    if (custom.length) {
+    // Custom entries whose region isn't a standard one go to a fallback group
+    const knownRegions = new Set(Object.keys(PL_LOCATIONS));
+    const orphans = custom.filter((c) => !knownRegions.has(c.voi));
+    if (orphans.length) {
       frag.push('<optgroup label="Custom">');
-      for (const c of custom) frag.push(`<option value="${c}">${c}</option>`);
+      for (const c of orphans) frag.push(`<option value="${c.city}">${c.city}</option>`);
       frag.push("</optgroup>");
     }
     sel.innerHTML = frag.join("");
@@ -108,18 +127,18 @@
     if (!el) return;
     const locs = loadCustomLocs();
     if (!locs.length) {
-      el.innerHTML = '<span class="fs-note">No custom locations added yet.</span>';
+      el.innerHTML = '<span class="fs-note">None yet.</span>';
       return;
     }
     el.innerHTML = locs
       .map(
         (c) =>
-          `<span class="fs-chip fs-chip-loc">${esc(c)} <button class="fs-chip-rm" data-rm="${esc(c)}" title="Remove">&times;</button></span>`,
+          `<span class="fs-chip fs-chip-loc">${esc(c.city)} <span class="fs-chip-voi">(${esc(c.voi)})</span><button class="fs-chip-rm" data-city="${esc(c.city)}" data-voi="${esc(c.voi)}" title="Remove">&times;</button></span>`,
       )
-      .join(" ");
-    el.querySelectorAll("[data-rm]").forEach((b) =>
+      .join("");
+    el.querySelectorAll("[data-city]").forEach((b) =>
       b.addEventListener("click", () => {
-        const remaining = loadCustomLocs().filter((x) => x !== b.dataset.rm);
+        const remaining = loadCustomLocs().filter((x) => !(x.city === b.dataset.city && x.voi === b.dataset.voi));
         saveCustomLocs(remaining);
         refreshAllLocationSelects();
         renderCustomLocs();
@@ -128,19 +147,20 @@
   }
 
   function addCustomLoc() {
-    const input = $("lCustomLoc");
-    if (!input) return;
-    const val = input.value.trim();
-    if (!val) return;
+    const cityInput = $("lCustomLoc");
+    const voiSel = $("lCustomVoi");
+    const city = cityInput?.value.trim();
+    const voi = voiSel?.value;
+    if (!city || !voi) return;
     const locs = loadCustomLocs();
-    if (!locs.includes(val)) {
-      locs.push(val);
+    if (!locs.some((l) => l.city === city && l.voi === voi)) {
+      locs.push({ voi, city });
       saveCustomLocs(locs);
       refreshAllLocationSelects();
       renderCustomLocs();
     }
-    input.value = "";
-    input.focus();
+    cityInput.value = "";
+    cityInput.focus();
   }
 
   // ── HTTP helper ──────────────────────────────────────────────────────────────
@@ -259,6 +279,7 @@
         $(`tab-${tab.dataset.tab}`).classList.add("is-active");
         if (tab.dataset.tab === "trips") loadTrips();
         if (tab.dataset.tab === "listings") loadListings();
+        if (tab.dataset.tab === "hosting") loadHosting();
       });
     });
   }
@@ -312,9 +333,9 @@
   }
 
   function amenityChip(a) {
-    const icon = AMENITY_ICON[a];
-    const iTag = icon ? `<i class="fa-solid ${icon}"></i> ` : "";
-    return `<span class="fs-chip">${iTag}${esc(a)}</span>`;
+    const meta = amenityByKey[a];
+    const iTag = meta?.icon ? `<i class="fa-solid ${meta.icon}"></i> ` : "";
+    return `<span class="fs-chip">${iTag}${esc(meta?.label || a)}</span>`;
   }
 
   function renderCard(p) {
@@ -323,8 +344,17 @@
         ? `<span class="fs-price">${formatROL(p.quote.total)} <small>${p.quote.currency}<br>total</small></span>`
         : `<span class="fs-price unavailable">price offline</span>`;
     const amenities = (p.amenities || []).map(amenityChip).join("");
-    return `<article class="fs-card">
-      <div class="fs-card-photo type-${esc(p.type)}"><i class="fa-solid ${TYPE_ICON[p.type] || "fa-house"}"></i></div>
+    const photo = photoLook(p);
+    // Hosts see their own listings in results (so they know how they look) but
+    // cannot book them — swap the Book button for a non-actionable marker.
+    const bookAction = p.isOwn
+      ? `<span class="fs-own-tag" title="This is your listing"><i class="fa-solid fa-user-check"></i> Yours</span>`
+      : `<button class="fs-btn fs-btn-primary fs-btn-sm" data-book="${esc(p.id)}" data-name="${esc(p.name)}"><i class="fa-solid fa-calendar-plus"></i> Book</button>`;
+    return `<article class="fs-card${p.isOwn ? " is-own" : ""}">
+      <div class="fs-card-photo" style="background:${photo.gradient}">
+        <i class="fa-solid ${photo.icon}"></i>
+        ${p.isOwn ? '<span class="fs-card-badge"><i class="fa-solid fa-warehouse"></i> Your listing</span>' : ""}
+      </div>
       <div class="fs-card-body">
         <div class="fs-card-title">${esc(p.name)}</div>
         <div class="fs-card-meta"><i class="fa-solid fa-location-dot"></i> ${esc(p.district || "—")} · ${esc(p.type)} · up to ${p.capacity} guests</div>
@@ -335,7 +365,7 @@
           <div class="fs-card-actions">
             <button class="fs-btn fs-btn-sm" data-avail="${esc(p.id)}"><i class="fa-regular fa-calendar-days"></i> </button>
             <button class="fs-btn fs-btn-sm" data-details="${esc(p.id)}"><i class="fa-solid fa-circle-info"></i> </button>
-            <button class="fs-btn fs-btn-primary fs-btn-sm" data-book="${esc(p.id)}" data-name="${esc(p.name)}"><i class="fa-solid fa-calendar-plus"></i> Book</button>
+            ${bookAction}
           </div>
         </div>
         <div class="fs-card-avail" id="avail-${esc(p.id)}" hidden></div>
@@ -446,7 +476,9 @@
         ? `<div class="fs-modal-total">${formatROL(body.quote.total)} ${body.quote.currency} <small>total for your dates</small></div>`
         : "";
     const calHtml = renderCalendar(body.calendar) || '<div class="fs-note">Pick dates in search to see availability.</div>';
+    const photo = photoLook(p);
     openModal(`
+      <div class="fs-modal-photo" style="background:${photo.gradient}"><i class="fa-solid ${photo.icon}"></i></div>
       <h3>${esc(p.name)}</h3>
       <p class="fs-note"><i class="fa-solid fa-location-dot"></i> ${esc(p.district || "—")} · ${esc(p.type)} · up to ${p.capacity} guests · cancellation: ${esc(p.policy)}</p>
       <div class="fs-card-amenities">${amenities}</div>
@@ -636,28 +668,144 @@
     else banner(body.error || "Could not submit review.");
   }
 
+  // ── Host bookings (shared by Listings occupancy + Hosting tab) ───────────────
+  async function fetchHostBookings() {
+    const { ok, body } = await api("GET", "/bookings?role=host");
+    return ok && Array.isArray(body.bookings) ? body.bookings : [];
+  }
+
+  // A listing is "occupied" (undeletable) while it has an active hold or an
+  // upcoming/ongoing confirmed stay. Completed/cancelled stays don't block.
+  function occupiedPropertyIds(hostBookings) {
+    const s = new Set();
+    for (const b of hostBookings) if (b.state === "hold" || b.state === "confirmed") s.add(b.property_id);
+    return s;
+  }
+
   // ── Listings (host) ─────────────────────────────────────────────────────────
   async function loadListings() {
     const list = $("fsListings");
     list.innerHTML = '<div class="fs-empty">Loading…</div>';
-    const { ok, status, body } = await api("GET", "/properties/mine");
+    const [res, hostBookings] = await Promise.all([api("GET", "/properties/mine"), fetchHostBookings()]);
+    const { ok, status, body } = res;
     if (!ok) {
       list.innerHTML = "";
       if (status === 401) return banner("Please log in to use FarmStay.", true);
       return banner(status === 503 ? "Inventory service offline." : body.error || "Could not load listings.", true);
     }
     const props = body.properties || [];
+    const occupied = occupiedPropertyIds(hostBookings);
     $("fsListingsSummary").textContent = `${props.length} listing(s)`;
-    list.innerHTML = props.length ? props.map(renderListing).join("") : '<div class="fs-empty">No listings yet — publish one above.</div>';
+    list.innerHTML = props.length
+      ? props.map((p) => renderListing(p, occupied.has(p.id))).join("")
+      : '<div class="fs-empty">No listings yet — publish one above.</div>';
+    list.querySelectorAll("[data-delete]").forEach((b) =>
+      b.addEventListener("click", () => deleteListing(b.dataset.delete, b.dataset.name)),
+    );
   }
 
-  function renderListing(p) {
+  function renderListing(p, isOccupied) {
+    const photo = photoLook(p);
+    const amenities = (p.amenities || []).map(amenityChip).join("");
+    const del = isOccupied
+      ? `<button class="fs-btn fs-btn-sm" disabled title="Has active or upcoming bookings — can't remove"><i class="fa-solid fa-lock"></i> Booked</button>`
+      : `<button class="fs-btn fs-btn-danger fs-btn-sm" data-delete="${esc(p.id)}" data-name="${esc(p.name)}"><i class="fa-solid fa-trash"></i> Remove</button>`;
     return `<div class="fs-row">
+      <div class="fs-row-thumb" style="background:${photo.gradient}"><i class="fa-solid ${photo.icon}"></i></div>
       <div class="fs-row-main">
         <div class="fs-row-title">${esc(p.name)} ${p.active ? "" : '<span class="fs-state expired">inactive</span>'}</div>
         <div class="fs-row-sub"><i class="fa-solid fa-location-dot"></i> ${esc(p.district || "—")} · ${esc(p.type)} · up to ${p.capacity} · ${formatROL(p.base_price)} ROL/night · ${esc(p.policy)}</div>
+        ${amenities ? `<div class="fs-card-amenities">${amenities}</div>` : ""}
       </div>
+      <div class="fs-row-actions">${del}</div>
     </div>`;
+  }
+
+  async function deleteListing(id, name) {
+    if (!window.confirm(`Remove listing "${name}"? This cannot be undone.`)) return;
+    const { ok, status, body } = await api("DELETE", `/properties/${encodeURIComponent(id)}`);
+    if (ok) {
+      banner("Listing removed.");
+      loadListings();
+    } else if (status === 409) {
+      banner("Can't remove — this listing has active or upcoming bookings.", true);
+    } else {
+      banner(body.error || "Could not remove listing.");
+    }
+  }
+
+  // ── Listing form: amenity + photo pickers ────────────────────────────────────
+  function renderAmenityPicker() {
+    const el = $("lAmenities");
+    if (!el) return;
+    el.innerHTML = (catalog.amenities || [])
+      .map((a) => {
+        const on = listingDraft.amenities.has(a.key);
+        return `<button type="button" class="fs-amenity-opt${on ? " selected" : ""}" data-amenity="${esc(a.key)}" aria-pressed="${on}">
+        <i class="fa-solid ${esc(a.icon)}"></i> ${esc(a.label)}
+      </button>`;
+      })
+      .join("");
+    el.querySelectorAll("[data-amenity]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        const a = btn.dataset.amenity;
+        if (listingDraft.amenities.has(a)) listingDraft.amenities.delete(a);
+        else listingDraft.amenities.add(a);
+        btn.classList.toggle("selected");
+        btn.setAttribute("aria-pressed", String(listingDraft.amenities.has(a)));
+      }),
+    );
+  }
+
+  function renderPhotoPicker() {
+    const el = $("lPhotoThemes");
+    if (!el) return;
+    el.innerHTML = (catalog.photoThemes || [])
+      .map((t) => {
+        const on = listingDraft.photo === t.key;
+        return `<button type="button" class="fs-theme-opt${on ? " selected" : ""}" data-theme="${esc(t.key)}" aria-pressed="${on}" title="${esc(t.label)}" style="background:${t.gradient}">
+        <i class="fa-solid ${esc(t.icon)}"></i>
+        <span>${esc(t.label)}</span>
+      </button>`;
+      })
+      .join("");
+    el.querySelectorAll("[data-theme]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        listingDraft.photo = btn.dataset.theme;
+        el.querySelectorAll("[data-theme]").forEach((b) => {
+          const sel = b === btn;
+          b.classList.toggle("selected", sel);
+          b.setAttribute("aria-pressed", String(sel));
+        });
+      }),
+    );
+  }
+
+  function resetListingDraft() {
+    listingDraft.amenities.clear();
+    listingDraft.photo = catalog.photoThemes[0]?.key || "";
+    renderAmenityPicker();
+    renderPhotoPicker();
+  }
+
+  // Fill the type + policy <select>s from the catalog. Leaves the HTML defaults
+  // in place when the catalog is empty (e.g. gateway offline) so the form still
+  // works.
+  function populateTypeAndPolicySelects() {
+    const typeOpts = (catalog.types || []).map((t) => `<option value="${esc(t.key)}">${esc(t.label)}</option>`).join("");
+    if (typeOpts) {
+      const lType = $("lType");
+      if (lType) lType.innerHTML = typeOpts;
+      const fsType = $("fsType");
+      if (fsType) fsType.innerHTML = `<option value="">Any</option>${typeOpts}`;
+    }
+    const policyOpts = (catalog.policies || [])
+      .map((p) => `<option value="${esc(p.key)}"${p.key === "moderate" ? " selected" : ""}>${esc(p.label)}</option>`)
+      .join("");
+    if (policyOpts) {
+      const lPolicy = $("lPolicy");
+      if (lPolicy) lPolicy.innerHTML = policyOpts;
+    }
   }
 
   async function createListing(e) {
@@ -669,30 +817,172 @@
       capacity: Number($("lCapacity").value) || 1,
       basePrice: Number($("lBasePrice").value) || 0,
       policy: $("lPolicy").value,
+      amenities: [...listingDraft.amenities],
+      photoRef: listingDraft.photo,
     };
     const { ok, status, body } = await api("POST", "/properties", payload);
     if (ok) {
       banner("Listing published!");
       $("fsListingForm").reset();
+      resetListingDraft();
       loadListings();
     } else {
       banner(status === 401 ? "Please log in first." : body.error || "Could not publish listing.");
     }
   }
 
+  // ── Hosting (earnings + occupancy) ────────────────────────────────────────────
+  async function loadHosting() {
+    const list = $("fsHosting");
+    const earn = $("fsEarnings");
+    const btn = $("fsRefreshHosting");
+    list.innerHTML = '<div class="fs-empty">Loading…</div>';
+    earn.innerHTML = "";
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing…';
+    }
+    const [res, hostBookings] = await Promise.all([api("GET", "/properties/mine"), fetchHostBookings()]);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Refresh';
+    }
+    refreshBalance(); // completed stays may have paid out on this load
+
+    const props = res.ok && Array.isArray(res.body.properties) ? res.body.properties : [];
+    const propById = Object.fromEntries(props.map((p) => [p.id, p]));
+
+    const paidOut = hostBookings.filter((b) => b.state === "completed").reduce((s, b) => s + (b.quote_total || 0), 0);
+    const upcoming = hostBookings.filter((b) => b.state === "confirmed").reduce((s, b) => s + (b.quote_total || 0), 0);
+    const activeCount = hostBookings.filter((b) => ["hold", "confirmed", "completed"].includes(b.state)).length;
+    $("fsHostingSummary").textContent = `${props.length} listing(s) · ${hostBookings.length} booking(s)`;
+    earn.innerHTML = `
+      <div class="fs-earn-card paid"><div class="fs-earn-label"><i class="fa-solid fa-sack-dollar"></i> Earned (paid out)</div><div class="fs-earn-value">${formatROL(paidOut)} <small>ROL</small></div></div>
+      <div class="fs-earn-card up"><div class="fs-earn-label"><i class="fa-solid fa-hourglass-half"></i> Upcoming</div><div class="fs-earn-value">${formatROL(upcoming)} <small>ROL</small></div></div>
+      <div class="fs-earn-card"><div class="fs-earn-label"><i class="fa-solid fa-calendar-check"></i> Active bookings</div><div class="fs-earn-value">${activeCount}</div></div>`;
+
+    const relevant = hostBookings.filter((b) => ["hold", "confirmed", "completed", "cancelled"].includes(b.state));
+    if (!relevant.length) {
+      list.innerHTML = '<div class="fs-empty">No bookings on your listings yet.</div>';
+      return;
+    }
+    const byProp = {};
+    for (const b of relevant) (byProp[b.property_id] = byProp[b.property_id] || []).push(b);
+    list.innerHTML = Object.entries(byProp)
+      .map(([pid, bookings]) => renderHostProperty(pid, propById[pid], bookings))
+      .join("");
+  }
+
+  function renderHostProperty(pid, prop, bookings) {
+    const photo = prop ? photoLook(prop) : DEFAULT_LOOK;
+    const name = prop ? esc(prop.name) : `${esc(pid)} <small>(removed listing)</small>`;
+    const cal = renderOccupancyCalendar(bookings);
+    const rows = bookings
+      .slice()
+      .sort((a, b) => (a.from < b.from ? 1 : -1))
+      .map((b) => {
+        const payout =
+          b.state === "completed"
+            ? '<span class="fs-payout paid"><i class="fa-solid fa-check"></i> paid out</span>'
+            : b.state === "confirmed"
+              ? '<span class="fs-payout pending">pays on checkout</span>'
+              : "";
+        return `<div class="fs-host-bk">
+          <span class="fs-state ${b.state}">${b.state}</span>
+          <span class="fs-host-bk-dates"><i class="fa-regular fa-calendar"></i> ${b.from} → ${b.to}</span>
+          <span class="fs-host-bk-guest"><i class="fa-solid fa-user"></i> ${esc(b.guest_id)}</span>
+          <span class="fs-host-bk-money">${formatROL(b.quote_total)} ROL ${payout}</span>
+        </div>`;
+      })
+      .join("");
+    return `<div class="fs-host-prop">
+      <div class="fs-host-prop-head">
+        <div class="fs-row-thumb" style="background:${photo.gradient}"><i class="fa-solid ${photo.icon}"></i></div>
+        <div class="fs-host-prop-title">${name}</div>
+      </div>
+      ${cal}
+      <div class="fs-host-bookings">${rows}</div>
+    </div>`;
+  }
+
+  // Client-side night enumeration for [from, to) (half-open), UTC.
+  function eachNightC(from, to) {
+    const out = [];
+    let t = Date.parse(`${from}T00:00:00Z`);
+    const end = Date.parse(`${to}T00:00:00Z`);
+    while (t < end) {
+      out.push(new Date(t).toISOString().slice(0, 10));
+      t += 86400000;
+    }
+    return out;
+  }
+
+  // Full-month occupancy calendar built from a listing's bookings: each booked
+  // night is coloured and carries a guest/amount tooltip.
+  function renderOccupancyCalendar(bookings) {
+    const nights = {};
+    for (const b of bookings) {
+      if (!["confirmed", "completed", "hold"].includes(b.state)) continue;
+      for (const d of eachNightC(b.from, b.to)) nights[d] = b;
+    }
+    const dates = Object.keys(nights).sort();
+    if (!dates.length) return "";
+    const dow = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+    let [y, m] = dates[0].slice(0, 7).split("-").map(Number); // m is 1-based
+    const [ey, em] = dates[dates.length - 1].slice(0, 7).split("-").map(Number);
+    let html = '<div class="fs-cal-wrap">';
+    while (y < ey || (y === ey && m <= em)) {
+      const label = new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+      const firstDow = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7; // Mon-based
+      html += `<div class="fs-cal"><div class="fs-cal-month">${esc(label)}</div><div class="fs-cal-grid">`;
+      html += dow.map((d) => `<div class="fs-cal-dow">${d}</div>`).join("");
+      if (firstDow) html += `<div class="fs-cal-cell fs-cal-pad" style="grid-column: span ${firstDow}"></div>`;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const ds = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const b = nights[ds];
+        if (b) {
+          const cls = b.state === "hold" ? "occ-hold" : "occ";
+          html += `<div class="fs-cal-cell ${cls}" title="${ds}: ${esc(b.guest_id)} · ${formatROL(b.quote_total)} ROL (${esc(b.state)})">${day}</div>`;
+        } else {
+          html += `<div class="fs-cal-cell">${day}</div>`;
+        }
+      }
+      html += "</div></div>";
+      m++;
+      if (m > 12) {
+        m = 1;
+        y++;
+      }
+    }
+    html += '<div class="fs-cal-legend"><span class="occ"></span> booked <span class="occ-hold"></span> on hold</div></div>';
+    return html;
+  }
+
   // ── Init ────────────────────────────────────────────────────────────────────
-  function init() {
+  async function init() {
     populateLocationSelect($("fsDistrict"), { includeAny: true });
     populateLocationSelect($("lDistrict"), { includeAny: false });
     initTabs();
     defaultDates();
     $("fsSearchForm").addEventListener("submit", doSearch);
     $("fsRefreshTrips").addEventListener("click", loadTrips);
+    $("fsRefreshHosting").addEventListener("click", loadHosting);
     $("fsListingForm").addEventListener("submit", createListing);
     $("fsModalClose").addEventListener("click", closeModal);
     $("fsModal").addEventListener("click", (e) => {
       if (e.target === $("fsModal")) closeModal();
     });
+
+    // Populate region picker in the custom location form
+    const voiSel = $("lCustomVoi");
+    if (voiSel) {
+      voiSel.innerHTML =
+        '<option value="">Region…</option>' +
+        Object.keys(PL_LOCATIONS)
+          .map((v) => `<option value="${esc(v)}">${esc(v)}</option>`)
+          .join("");
+    }
 
     // Custom location handlers
     const addLocBtn = $("lAddCustomLoc");
@@ -706,6 +996,13 @@
         }
       });
     renderCustomLocs();
+
+    // Load the backend catalog before rendering anything that depends on it
+    // (pickers, type/policy selects, and card photo gradients in search).
+    await loadCatalog();
+    populateTypeAndPolicySelects();
+    renderAmenityPicker();
+    renderPhotoPicker();
 
     refreshHealth();
     refreshBalance();

@@ -152,6 +152,39 @@ async function updateProperty(call, callback) {
   }
 }
 
+async function deleteProperty(call, callback) {
+  const r = call.request || {};
+  try {
+    const nowMs = now();
+    const result = await db.mutate((data) => {
+      const property = data.properties.find((p) => p.id === r.id);
+      if (!property) return { value: { error: "NOT_FOUND" } };
+      if (property.hostId !== r.host_id) return { value: { error: "FORBIDDEN" } };
+      // "Occupied" = the calendar has an active hold or a current/future
+      // confirmed stay. Past (checked-out) confirmed locks and host blackouts
+      // do NOT block deletion.
+      const cal = data.calendars?.[r.id];
+      const occupied = (cal?.locks || []).some(
+        (l) => (l.kind === "hold" && isLockActive(l, nowMs)) || (l.kind === "confirmed" && l.to > new Date(nowMs).toISOString().slice(0, 10)),
+      );
+      if (occupied) return { value: { error: "OCCUPIED" } };
+
+      const properties = data.properties.filter((p) => p.id !== r.id);
+      const calendars = { ...data.calendars };
+      delete calendars[r.id];
+      return { next: { ...data, properties, calendars }, value: { deleted: true } };
+    });
+    if (result.error === "NOT_FOUND") return fail(callback, grpc.status.NOT_FOUND, `Property "${r.id}" not found`, "DeleteProperty");
+    if (result.error === "FORBIDDEN") return fail(callback, grpc.status.PERMISSION_DENIED, "Not your property", "DeleteProperty");
+    if (result.error === "OCCUPIED")
+      return fail(callback, grpc.status.FAILED_PRECONDITION, "OCCUPIED", "DeleteProperty", { id: r.id });
+    log.info("DeleteProperty", { id: r.id, host: r.host_id });
+    callback(null, { id: r.id, deleted: true });
+  } catch (err) {
+    fail(callback, grpc.status.INTERNAL, err.message, "DeleteProperty");
+  }
+}
+
 // ── Search + calendar ──────────────────────────────────────────────────────────
 
 async function search(call, callback) {
@@ -322,6 +355,7 @@ module.exports = {
     ListProperties: listProperties,
     CreateProperty: createProperty,
     UpdateProperty: updateProperty,
+    DeleteProperty: deleteProperty,
     Search: search,
     GetCalendar: getCalendar,
     Hold: hold,

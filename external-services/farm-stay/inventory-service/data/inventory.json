@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "seq": 0,
+  "seq": 14,
   "properties": [
     {
       "id": "prop-oak-cottage",
       "hostId": "seed-host",
       "name": "Oak Hill Cottage",
-      "district": "north",
+      "district": "Karpacz",
       "type": "cottage",
       "capacity": 4,
       "basePrice": 120,
@@ -23,7 +23,7 @@
       "id": "prop-meadow-room",
       "hostId": "seed-host",
       "name": "Meadow View Room",
-      "district": "north",
+      "district": "Zakopane",
       "type": "room",
       "capacity": 2,
       "basePrice": 60,
@@ -39,7 +39,7 @@
       "id": "prop-riverside-camp",
       "hostId": "seed-host",
       "name": "Riverside Camping Spot",
-      "district": "east",
+      "district": "Augustów",
       "type": "camping",
       "capacity": 6,
       "basePrice": 35,
@@ -55,7 +55,7 @@
       "id": "prop-barn-loft",
       "hostId": "seed-host",
       "name": "Restored Barn Loft",
-      "district": "west",
+      "district": "Wisła",
       "type": "room",
       "capacity": 3,
       "basePrice": 95,
@@ -67,11 +67,190 @@
       ],
       "photoRef": "barn-loft.jpg",
       "active": true
+    },
+    {
+      "id": "prop-5",
+      "hostId": "seed-host",
+      "name": "Sunflower Guesthouse",
+      "district": "Wrocław",
+      "type": "cottage",
+      "capacity": 5,
+      "basePrice": 155,
+      "policy": "moderate",
+      "amenities": [
+        "kitchen",
+        "wifi",
+        "garden",
+        "parking"
+      ],
+      "photoRef": "sunflower-house.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-6",
+      "hostId": "seed-host",
+      "name": "Mazurian Lakeside Cabin",
+      "district": "Giżycko",
+      "type": "cottage",
+      "capacity": 6,
+      "basePrice": 175,
+      "policy": "moderate",
+      "amenities": [
+        "fireplace",
+        "kayaks",
+        "fishing",
+        "parking"
+      ],
+      "photoRef": "mazurian-cabin.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-7",
+      "hostId": "seed-host",
+      "name": "Heritage Manor Room",
+      "district": "Kraków",
+      "type": "room",
+      "capacity": 2,
+      "basePrice": 110,
+      "policy": "flexible",
+      "amenities": [
+        "breakfast",
+        "wifi",
+        "spa"
+      ],
+      "photoRef": "heritage-room.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-8",
+      "hostId": "seed-host",
+      "name": "Coastal Dunes Camping",
+      "district": "Kołobrzeg",
+      "type": "camping",
+      "capacity": 8,
+      "basePrice": 45,
+      "policy": "strict",
+      "amenities": [
+        "firepit",
+        "beach-access",
+        "water",
+        "shower"
+      ],
+      "photoRef": "coastal-camp.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-9",
+      "hostId": "seed-host",
+      "name": "Warsaw Garden Studio",
+      "district": "Warszawa",
+      "type": "room",
+      "capacity": 2,
+      "basePrice": 130,
+      "policy": "flexible",
+      "amenities": [
+        "wifi",
+        "gym",
+        "parking",
+        "breakfast"
+      ],
+      "photoRef": "warsaw-studio.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-10",
+      "hostId": "seed-host",
+      "name": "Kashubian Farmhouse",
+      "district": "Gdańsk",
+      "type": "cottage",
+      "capacity": 8,
+      "basePrice": 195,
+      "policy": "moderate",
+      "amenities": [
+        "kitchen",
+        "fireplace",
+        "garden",
+        "animals",
+        "parking"
+      ],
+      "photoRef": "kashubian-farm.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-11",
+      "hostId": "seed-host",
+      "name": "Bieszczady Forest Camp",
+      "district": "Ustrzyki Dolne",
+      "type": "camping",
+      "capacity": 4,
+      "basePrice": 30,
+      "policy": "strict",
+      "amenities": [
+        "firepit",
+        "mountain-views",
+        "water"
+      ],
+      "photoRef": "bieszczady-camp.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-12",
+      "hostId": "seed-host",
+      "name": "Poznań Orchard House",
+      "district": "Poznań",
+      "type": "room",
+      "capacity": 3,
+      "basePrice": 85,
+      "policy": "moderate",
+      "amenities": [
+        "breakfast",
+        "garden",
+        "wifi",
+        "parking"
+      ],
+      "photoRef": "poznan-orchard.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-13",
+      "hostId": "1",
+      "name": "21212",
+      "district": "123",
+      "type": "room",
+      "capacity": 2,
+      "basePrice": 80,
+      "policy": "moderate",
+      "amenities": [],
+      "photoRef": "",
+      "active": true
+    },
+    {
+      "id": "prop-14",
+      "hostId": "1",
+      "name": "test 2",
+      "district": "Wrocław",
+      "type": "room",
+      "capacity": 2,
+      "basePrice": 80,
+      "policy": "moderate",
+      "amenities": [
+        "wine-cellar",
+        "parking"
+      ],
+      "photoRef": "orchard",
+      "active": true
     }
   ],
   "calendars": {
     "prop-oak-cottage": {
-      "locks": []
+      "locks": [
+        {
+          "lockId": "lock-1",
+          "from": "2026-08-06",
+          "to": "2026-08-09",
+          "kind": "confirmed"
+        }
+      ]
     },
     "prop-meadow-room": {
       "locks": []
@@ -80,6 +259,36 @@
       "locks": []
     },
     "prop-barn-loft": {
+      "locks": []
+    },
+    "prop-5": {
+      "locks": []
+    },
+    "prop-6": {
+      "locks": []
+    },
+    "prop-7": {
+      "locks": []
+    },
+    "prop-8": {
+      "locks": []
+    },
+    "prop-9": {
+      "locks": []
+    },
+    "prop-10": {
+      "locks": []
+    },
+    "prop-11": {
+      "locks": []
+    },
+    "prop-12": {
+      "locks": []
+    },
+    "prop-13": {
+      "locks": []
+    },
+    "prop-14": {
       "locks": []
     }
   }

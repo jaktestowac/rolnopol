@@ -93,6 +93,7 @@ module.exports = {
       },
       userId,
     ),
+  deleteProperty: (userId, id, hostId) => unary("DeleteProperty", { id, host_id: hostId }, userId),
   updateProperty: (userId, id, hostId, patch) =>
     unary(
       "UpdateProperty",

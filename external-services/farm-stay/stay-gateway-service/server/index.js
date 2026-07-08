@@ -12,6 +12,7 @@ const inventory = require("../clients/inventory-client");
 const reservation = require("../clients/reservation-client");
 const pricing = require("../clients/pricing-client");
 const reviews = require("../clients/review-client");
+const catalogMeta = require("../config/catalog-meta");
 const { sendError, isUnavailable, grpcPreconditionToken } = require("./errors");
 const { createLogger } = require("../../shared/logger");
 
@@ -112,6 +113,9 @@ function buildApp() {
     next();
   });
 
+  // Presentation catalog — option lists + icons/gradients for the UI. Static.
+  app.get("/v1/catalog", (req, res) => res.json(catalogMeta));
+
   // ── Host: listings ──────────────────────────────────────────────────────────
 
   app.post("/v1/properties", async (req, res) => {
@@ -130,6 +134,20 @@ function buildApp() {
       const p = await inventory.updateProperty(user, req.params.id, user, req.body || {});
       res.json(p);
     } catch (err) {
+      sendError(res, err);
+    }
+  });
+
+  app.delete("/v1/properties/:id", async (req, res) => {
+    const user = userOf(req);
+    try {
+      const result = await inventory.deleteProperty(user, req.params.id, user);
+      res.json({ id: result.id, deleted: result.deleted });
+    } catch (err) {
+      // Refuse to delete a listing with active/upcoming bookings.
+      if (grpcPreconditionToken(err) === "OCCUPIED") {
+        return res.status(409).json({ error: "OCCUPIED", detail: "Listing has active or upcoming bookings" });
+      }
       sendError(res, err);
     }
   });
@@ -172,6 +190,9 @@ function buildApp() {
     const { from, to } = req.query;
     const guests = Number(req.query.guests) || 1;
     try {
+      // Own listings are included (excludeHostId omitted) so hosts can see how
+      // their stays appear in "All stays"; each result is tagged with isOwn so
+      // the UI can mark them and disable booking (booking own property is 409'd).
       const { properties } = await inventory.search(user, {
         from,
         to,
@@ -179,7 +200,6 @@ function buildApp() {
         district: req.query.district,
         type: req.query.type,
         maxPrice: Number(req.query.maxPrice) || 0,
-        excludeHostId: user,
       });
       const scores = await scoresBestEffort(properties.map((p) => p.id));
       const results = await Promise.all(
@@ -189,6 +209,7 @@ function buildApp() {
             ...p,
             quote,
             quoteStatus,
+            isOwn: p.host_id === user,
             score: scores ? scores[p.id] || { avgRating: 0, count: 0 } : null,
           };
         }),

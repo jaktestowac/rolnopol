@@ -71,8 +71,60 @@ async function currentBalance(userId) {
   }
 }
 
+/**
+ * Host payout sweep. A confirmed booking reads as "completed" once checkout has
+ * passed (lazy, in the reservation service). When the host next loads their
+ * bookings we credit the stay total to the host's ROL balance — exactly once.
+ *
+ * Idempotency lives here, not in the (money-agnostic) ecosystem: each payout is
+ * a financial transaction tagged `referenceId: payout-<bookingId>`, so a booking
+ * already carrying that transaction is skipped. Mutates each swept booking with
+ * `payout_status: "paid"` so the UI can show it.
+ */
+async function sweepHostPayouts(userId, bookings) {
+  const hostCompleted = bookings.filter((b) => b.host_id === String(userId) && b.state === "completed");
+  if (!hostCompleted.length) return;
+  await ensureAccount(userId);
+  let account;
+  try {
+    account = await financialService.getAccount(userId);
+  } catch {
+    return; // financial service unavailable — retry on next load
+  }
+  const paid = new Set(
+    (account?.transactions || [])
+      .filter((t) => t.type === "income" && String(t.referenceId || "").startsWith("payout-"))
+      .map((t) => t.referenceId),
+  );
+  for (const b of hostCompleted) {
+    const ref = `payout-${b.id}`;
+    if (!paid.has(ref)) {
+      const amount = money(b.quote_total || 0);
+      if (amount > 0) {
+        try {
+          await financialService.addTransaction(userId, {
+            type: "income",
+            amount,
+            description: `FarmStay payout for booking ${b.id}`,
+            category: "farmstay",
+            referenceId: ref,
+          });
+          paid.add(ref);
+        } catch (err) {
+          logError("[farm-stay] host payout failed", err.message);
+          continue; // leave unpaid; retried on the next load
+        }
+      }
+    }
+    b.payout_status = "paid";
+  }
+}
+
 // Health (aggregate across the ecosystem).
 router.get("/farm-stay/health", (req, res) => proxy(res, farmStay.healthAll()));
+
+// Presentation catalog (types, policies, amenities, photo themes) for the UI.
+router.get("/farm-stay/catalog", (req, res) => proxy(res, farmStay.getCatalog(userOf(req))));
 
 // Balance passthrough so the page can show finite ROL without a second service.
 router.get("/farm-stay/balance", async (req, res) => {
@@ -111,6 +163,7 @@ router.get("/farm-stay/properties/:id", (req, res) =>
 );
 router.post("/farm-stay/properties", (req, res) => proxy(res, farmStay.createProperty(userOf(req), req.body)));
 router.patch("/farm-stay/properties/:id", (req, res) => proxy(res, farmStay.updateProperty(userOf(req), req.params.id, req.body)));
+router.delete("/farm-stay/properties/:id", (req, res) => proxy(res, farmStay.deleteProperty(userOf(req), req.params.id)));
 router.post("/farm-stay/properties/:id/blackouts", (req, res) => proxy(res, farmStay.addBlackout(userOf(req), req.params.id, req.body)));
 router.delete("/farm-stay/properties/:id/blackouts/:lockId", (req, res) =>
   proxy(res, farmStay.removeBlackout(userOf(req), req.params.id, req.params.lockId)),
@@ -118,7 +171,20 @@ router.delete("/farm-stay/properties/:id/blackouts/:lockId", (req, res) =>
 
 // Bookings.
 router.post("/farm-stay/bookings", (req, res) => proxy(res, farmStay.createBooking(userOf(req), req.body)));
-router.get("/farm-stay/bookings", (req, res) => proxy(res, farmStay.listBookings(userOf(req), { role: req.query.role })));
+
+// Listing bookings also runs the host payout sweep (completed stays → ROL income).
+router.get("/farm-stay/bookings", async (req, res) => {
+  const userId = userOf(req);
+  const result = await farmStay.listBookings(userId, { role: req.query.role });
+  if (result.status !== 200 || !Array.isArray(result.body?.bookings)) return forward(res, result);
+  try {
+    await sweepHostPayouts(userId, result.body.bookings);
+  } catch (err) {
+    logError("[farm-stay] payout sweep error", err.message);
+  }
+  const balance = await currentBalance(userId);
+  res.status(200).json({ ...result.body, balance: balance != null ? money(balance) : null, currency: "ROL" });
+});
 
 /**
  * Confirm → charge ROL. Confirm first (the gateway re-quotes and runs the

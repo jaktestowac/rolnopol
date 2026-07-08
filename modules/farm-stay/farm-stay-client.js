@@ -47,11 +47,13 @@ async function call(method, path, { userId, body, query } = {}) {
 module.exports = {
   base: BASE,
   healthAll: () => call("GET", "/health/all"),
+  getCatalog: (userId) => call("GET", "/v1/catalog", { userId }),
   search: (userId, query) => call("GET", "/v1/search", { userId, query }),
   getProperty: (userId, id, query) => call("GET", `/v1/properties/${encodeURIComponent(id)}`, { userId, query }),
   listMine: (userId) => call("GET", "/v1/properties/mine", { userId }),
   createProperty: (userId, body) => call("POST", "/v1/properties", { userId, body }),
   updateProperty: (userId, id, body) => call("PATCH", `/v1/properties/${encodeURIComponent(id)}`, { userId, body }),
+  deleteProperty: (userId, id) => call("DELETE", `/v1/properties/${encodeURIComponent(id)}`, { userId }),
   addBlackout: (userId, id, body) => call("POST", `/v1/properties/${encodeURIComponent(id)}/blackouts`, { userId, body }),
   removeBlackout: (userId, id, lockId) =>
     call("DELETE", `/v1/properties/${encodeURIComponent(id)}/blackouts/${encodeURIComponent(lockId)}`, { userId }),

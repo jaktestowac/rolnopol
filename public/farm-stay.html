@@ -15,7 +15,10 @@
 
     <main class="fs-container">
       <header class="fs-header">
-        <h1><i class="fa-solid fa-tractor"></i> FarmStay</h1>
+        <div class="fs-header-left">
+          <h1><i class="fa-solid fa-tractor"></i> FarmStay</h1>
+          <p class="fs-subtitle">Sleep among the fields — book a stay on Poland's finest farms, or open your own barn doors to guests.</p>
+        </div>
         <div class="fs-header-right">
           <span id="fsBalance" class="fs-balance" title="Your ROL balance"></span>
           <div id="fsHealth" class="fs-health" title="Ecosystem status"></div>
@@ -28,6 +31,7 @@
         <button class="fs-tab is-active" data-tab="search" role="tab"><i class="fa-solid fa-magnifying-glass"></i> Search stays</button>
         <button class="fs-tab" data-tab="trips" role="tab"><i class="fa-solid fa-calendar-check"></i> My trips</button>
         <button class="fs-tab" data-tab="listings" role="tab"><i class="fa-solid fa-warehouse"></i> My listings</button>
+        <button class="fs-tab" data-tab="hosting" role="tab"><i class="fa-solid fa-sack-dollar"></i> Hosting</button>
       </nav>
 
       <!-- ── Search tab ─────────────────────────────────────────── -->
@@ -70,7 +74,7 @@
       <!-- ── Listings tab ───────────────────────────────────────── -->
       <section id="tab-listings" class="fs-tab-panel">
         <form id="fsListingForm" class="fs-listing-form" autocomplete="off">
-          <h3>List a room on your farm</h3>
+          <h3><i class="fa-solid fa-warehouse"></i> List your stay</h3>
           <div class="fs-listing-grid">
             <label>Name<input id="lName" type="text" required placeholder="Cosy hayloft" /></label>
             <label
@@ -96,21 +100,43 @@
               </select>
             </label>
           </div>
+          <fieldset class="fs-fieldset">
+            <legend><i class="fa-solid fa-star"></i> Amenities</legend>
+            <p class="fs-fieldset-hint">Tap everything your stay offers guests.</p>
+            <div id="lAmenities" class="fs-amenity-grid"></div>
+          </fieldset>
+
+          <fieldset class="fs-fieldset">
+            <legend><i class="fa-solid fa-image"></i> Card photo</legend>
+            <p class="fs-fieldset-hint">Pick the look guests see in search results.</p>
+            <div id="lPhotoThemes" class="fs-theme-grid"></div>
+          </fieldset>
+
           <button type="submit" class="fs-btn fs-btn-primary"><i class="fa-solid fa-plus"></i> Publish listing</button>
         </form>
 
         <div class="fs-custom-loc">
           <h4 class="fs-custom-loc-title"><i class="fa-solid fa-location-pin"></i> Custom locations</h4>
-          <p class="fs-note">Add a custom city or village — it will appear in both search and listing dropdowns.</p>
           <div class="fs-custom-loc-form">
-            <input id="lCustomLoc" type="text" placeholder="e.g. Małe Końskie" maxlength="60" />
-            <button type="button" class="fs-btn" id="lAddCustomLoc"><i class="fa-solid fa-plus"></i> Add to list</button>
+            <select id="lCustomVoi"><option value="">Voivodeship…</option></select>
+            <input id="lCustomLoc" type="text" placeholder="City or village" maxlength="60" />
+            <button type="button" class="fs-btn fs-btn-sm" id="lAddCustomLoc"><i class="fa-solid fa-plus"></i> Add</button>
           </div>
           <div id="fsCustomLocs" class="fs-custom-loc-list"></div>
         </div>
 
         <div class="fs-meta"><span id="fsListingsSummary"></span></div>
         <div id="fsListings" class="fs-list"></div>
+      </section>
+
+      <!-- ── Hosting tab (earnings + occupancy) ─────────────────── -->
+      <section id="tab-hosting" class="fs-tab-panel">
+        <div class="fs-meta">
+          <button id="fsRefreshHosting" class="fs-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          <span id="fsHostingSummary"></span>
+        </div>
+        <div id="fsEarnings" class="fs-earnings"></div>
+        <div id="fsHosting" class="fs-list"></div>
       </section>
     </main>
 

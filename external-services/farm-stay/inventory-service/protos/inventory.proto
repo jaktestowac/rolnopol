@@ -27,6 +27,7 @@ service Inventory {
   rpc ListProperties(ListPropertiesRequest) returns (PropertyList);
   rpc CreateProperty(CreatePropertyRequest) returns (Property);
   rpc UpdateProperty(UpdatePropertyRequest) returns (Property);
+  rpc DeleteProperty(DeletePropertyRequest) returns (DeleteReply);
   rpc Search(SearchRequest) returns (PropertyList);
   rpc GetCalendar(CalendarRequest) returns (Calendar);
   rpc Hold(HoldRequest) returns (HoldReply);
@@ -77,6 +78,16 @@ message UpdatePropertyRequest {
   double base_price = 5;
   string policy = 6;
   bool active = 7;
+}
+
+message DeletePropertyRequest {
+  string id = 1;
+  string host_id = 2; // for ownership check
+}
+
+message DeleteReply {
+  string id = 1;
+  bool deleted = 2;
 }
 
 message SearchRequest {
