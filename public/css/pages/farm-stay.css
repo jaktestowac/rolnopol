@@ -1,0 +1,676 @@
+/* FarmStay page — booking.com-like stays UI. */
+
+.fs-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.fs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.fs-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+.fs-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.fs-balance {
+  background: #ebfbee;
+  color: #2b8a3e;
+  border: 1px solid #b2f2bb;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Ecosystem health — collapsed summary + expandable panel */
+.fs-health {
+  position: relative;
+  font-size: 0.8rem;
+}
+.fs-health .fs-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f1f3f5;
+  color: #495057;
+}
+.fs-health .fs-dot::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #adb5bd;
+  flex-shrink: 0;
+}
+.fs-health .fs-dot.up::before {
+  background: #2f9e44;
+}
+.fs-health .fs-dot.down::before {
+  background: #e03131;
+}
+.fs-health .fs-dot.warn::before {
+  background: #e67700;
+}
+.fs-health .fs-dot.down {
+  color: #c92a2a;
+}
+.fs-health .fs-dot.warn {
+  color: #d9480f;
+}
+
+/* Summary toggle button */
+.fs-health-btn {
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.fs-health-btn:hover {
+  filter: brightness(0.95);
+}
+.fs-health-chevron {
+  font-size: 0.65em;
+  margin-left: 2px;
+  transition: transform 0.2s;
+  color: inherit;
+  opacity: 0.7;
+}
+.fs-health-btn[aria-expanded="true"] .fs-health-chevron {
+  transform: rotate(180deg);
+}
+
+/* Dropdown panel with individual service dots */
+.fs-health-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  z-index: 200;
+  min-width: 140px;
+}
+.fs-health-panel[hidden] {
+  display: none;
+}
+
+.fs-banner {
+  background: #fff3bf;
+  border: 1px solid #ffe066;
+  color: #664d03;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+/* Tabs */
+.fs-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #e9ecef;
+  margin-bottom: 20px;
+}
+.fs-tab {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #868e96;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+.fs-tab.is-active {
+  color: #1c7ed6;
+  border-bottom-color: #1c7ed6;
+  font-weight: 600;
+}
+.fs-tab-panel {
+  display: none;
+}
+.fs-tab-panel.is-active {
+  display: block;
+}
+
+/* Search form */
+.fs-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.fs-search label,
+.fs-listing-grid label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.78rem;
+  color: #495057;
+  gap: 4px;
+}
+.fs-search input,
+.fs-search select,
+.fs-listing-grid input,
+.fs-listing-grid select {
+  padding: 8px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.fs-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #868e96;
+  font-size: 0.85rem;
+  margin: 8px 0 16px;
+}
+
+/* Buttons */
+.fs-btn {
+  padding: 9px 14px;
+  border: 1px solid #ced4da;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.fs-btn-med {
+  padding: 9px 14px;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fs-btn-med:hover,
+.fs-btn:hover {
+  background: #f1f3f5;
+}
+.fs-btn-primary {
+  background: #1c7ed6;
+  border-color: #1c7ed6;
+  color: #fff;
+}
+.fs-btn-primary:hover {
+  background: #1971c2;
+}
+.fs-btn-danger {
+  color: #e03131;
+  border-color: #ffc9c9;
+}
+.fs-btn-danger:hover {
+  background: #fff5f5;
+}
+
+/* Results grid */
+.fs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.fs-card {
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+.fs-card-photo {
+  height: 120px;
+  background: linear-gradient(135deg, #d3f9d8, #a5d8ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  color: #fff;
+}
+.fs-card-body {
+  padding: 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fs-card-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.fs-card-meta {
+  font-size: 0.8rem;
+  color: #868e96;
+}
+.fs-card-amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+.fs-chip {
+  font-size: 0.7rem;
+  background: #f1f3f5;
+  color: #495057;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.fs-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 8px;
+}
+.fs-price {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1c7ed6;
+}
+.fs-price small {
+  font-weight: 400;
+  color: #868e96;
+  font-size: 0.72rem;
+}
+.fs-price.unavailable {
+  color: #e8590c;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.fs-stars {
+  color: #f59f00;
+  font-size: 0.82rem;
+}
+.fs-stars .count {
+  color: #adb5bd;
+}
+
+/* Lists (trips + listings) */
+.fs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.fs-row {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: #fff;
+}
+.fs-row-main {
+  flex: 1;
+  min-width: 200px;
+}
+.fs-row-title {
+  font-weight: 600;
+}
+.fs-row-sub {
+  font-size: 0.8rem;
+  color: #868e96;
+}
+.fs-row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* State chips */
+.fs-state {
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+.fs-state.hold {
+  background: #fff3bf;
+  color: #856404;
+}
+.fs-state.confirmed {
+  background: #d3f9d8;
+  color: #2b8a3e;
+}
+.fs-state.completed {
+  background: #d0ebff;
+  color: #1971c2;
+}
+.fs-state.cancelled {
+  background: #ffe3e3;
+  color: #c92a2a;
+}
+.fs-state.expired {
+  background: #f1f3f5;
+  color: #868e96;
+}
+
+.fs-listing-form {
+  background: #f8f9fa;
+  padding: 18px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+.fs-listing-form h3 {
+  margin: 0 0 12px;
+}
+.fs-listing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.fs-empty {
+  color: #adb5bd;
+  padding: 30px;
+  text-align: center;
+}
+
+/* Modal */
+.fs-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+/* The [hidden] attribute must win over display:flex above, or the empty modal
+   shows on page load. */
+.fs-modal[hidden] {
+  display: none;
+}
+.fs-modal-card {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 24px;
+  position: relative;
+}
+.fs-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  cursor: pointer;
+  color: #868e96;
+}
+.fs-modal h3 {
+  margin: 0 0 12px;
+}
+.fs-quote-lines {
+  font-size: 0.82rem;
+  color: #495057;
+  margin: 10px 0;
+}
+.fs-quote-lines div {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+.fs-modal-total {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1c7ed6;
+  margin: 8px 0 16px;
+}
+.fs-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+.fs-note {
+  font-size: 0.78rem;
+  color: #868e96;
+  margin-top: 8px;
+}
+.fs-alert {
+  background: #fff5f5;
+  border: 1px solid #ffc9c9;
+  color: #c92a2a;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  margin: 8px 0;
+}
+
+/* Small buttons + card actions */
+.fs-btn-sm {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+.fs-card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Detail sections */
+.fs-detail-section {
+  margin: 14px 0;
+  font-size: 0.9rem;
+}
+.fs-detail-section strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #343a40;
+}
+.fs-review {
+  font-size: 0.82rem;
+  color: #495057;
+  padding: 6px 0;
+  border-bottom: 1px solid #f1f3f5;
+}
+.fs-review .fs-stars {
+  color: #f59f00;
+}
+
+/* Availability calendar */
+.fs-cal-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.fs-cal-month {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 6px;
+}
+.fs-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 30px);
+  gap: 3px;
+}
+.fs-cal-dow {
+  font-size: 0.62rem;
+  color: #adb5bd;
+  text-align: center;
+}
+.fs-cal-cell {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  border-radius: 6px;
+}
+.fs-cal-pad {
+  visibility: hidden;
+}
+.fs-cal-cell.free {
+  background: #d3f9d8;
+  color: #2b8a3e;
+}
+.fs-cal-cell.taken {
+  background: #ffe3e3;
+  color: #c92a2a;
+  text-decoration: line-through;
+}
+.fs-cal-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #868e96;
+  margin-top: 10px;
+  width: 100%;
+}
+.fs-cal-legend span {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.fs-cal-legend .free {
+  background: #d3f9d8;
+}
+.fs-cal-legend .taken {
+  background: #ffe3e3;
+  margin-left: 8px;
+}
+
+/* Per-type card photo backgrounds */
+.fs-card-photo.type-room {
+  background: linear-gradient(135deg, #d0ebff, #a5d8ff);
+  color: #1864ab;
+}
+.fs-card-photo.type-cottage {
+  background: linear-gradient(135deg, #d3f9d8, #8ce99a);
+  color: #2b8a3e;
+}
+.fs-card-photo.type-camping {
+  background: linear-gradient(135deg, #fff3bf, #ffec99);
+  color: #e67700;
+}
+
+/* Inline availability panel inside a search result card */
+.fs-card-avail {
+  padding: 10px 0 4px;
+  border-top: 1px solid #f1f3f5;
+  margin-top: 8px;
+}
+.fs-avail-note {
+  padding: 6px 0;
+}
+
+/* Expandable availability section in the details modal */
+.fs-avail-details {
+  border-top: 1px solid #f1f3f5;
+  border-bottom: 1px solid #f1f3f5;
+  padding: 2px 0;
+  margin: 12px 0;
+}
+.fs-avail-details > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 0;
+  color: #343a40;
+  user-select: none;
+}
+.fs-avail-details > summary::-webkit-details-marker {
+  display: none;
+}
+.fs-avail-details > summary strong {
+  flex: 1;
+}
+.fs-summary-chevron {
+  font-size: 0.7em;
+  color: #adb5bd;
+  transition: transform 0.2s;
+}
+.fs-avail-details[open] .fs-summary-chevron {
+  transform: rotate(180deg);
+}
+.fs-avail-details[open] > summary {
+  margin-bottom: 6px;
+}
+
+/* Custom location section in the listings tab */
+.fs-custom-loc {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 18px;
+  margin-top: 24px;
+}
+.fs-custom-loc-title {
+  margin: 0 0 2px;
+  font-size: 0.95rem;
+  color: #343a40;
+  font-weight: 600;
+}
+.fs-custom-loc-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 10px 0 8px;
+}
+.fs-custom-loc-form input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.fs-custom-loc-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 22px;
+}
+.fs-chip-loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e7f5ff;
+  color: #1864ab;
+  border: 1px solid #a5d8ff;
+}
+.fs-chip-rm {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #74c0fc;
+  padding: 0 2px;
+  line-height: 1;
+}
+.fs-chip-rm:hover {
+  color: #1971c2;
+}

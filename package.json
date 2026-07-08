@@ -1,6 +1,6 @@
 {
   "name": "rolnopol-app",
-  "version": "1.46.0",
+  "version": "1.47.0",
   "description": "A Rolnopol app with JSON database, authentication, and admin panel",
   "main": "api/index.js",
   "scripts": {
@@ -17,6 +17,16 @@
     "tasklab": "node ./grpc/tasklab-server/index.js",
     "tasklab:demo": "node ./grpc/client-tasklab.js",
     "tasklab:test": "cross-env NODE_ENV=test vitest run tests/unit/tasklab.service.test.js && cross-env NODE_ENV=test vitest run tests/tasklab-grpc.test.js tests/tasklab-rest.test.js tests/tasklab-pages-gating.test.js",
+    "farmstay": "node ./external-services/farm-stay/start-all.js",
+    "farmstay:kill": "node ./external-services/farm-stay/kill-all.js",
+    "farmstay:gateway": "node ./external-services/farm-stay/stay-gateway-service/server/index.js",
+    "farmstay:inventory": "node ./external-services/farm-stay/inventory-service/server/index.js",
+    "farmstay:pricing": "node ./external-services/farm-stay/pricing-service/server/index.js",
+    "farmstay:reservation": "node ./external-services/farm-stay/reservation-service/server/index.js",
+    "farmstay:reviews": "node ./external-services/farm-stay/review-desk-service/server/index.js",
+    "farmstay:control": "node ./external-services/farm-stay/control.js",
+    "farmstay:demo": "node ./external-services/farm-stay/stay-gateway-service/client-demo.js",
+    "farmstay:kill-ports": "call ./external-services/farm-stay/kill-ports.bat",
     "format": "npx prettier --write .",
     "bump-version": "node bump-version.js minor"
   },

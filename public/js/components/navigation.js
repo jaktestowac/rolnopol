@@ -60,7 +60,8 @@ class NavigationComponent {
       const rolnopolFarmlogEnabled = await this.featureFlagsService.isEnabled("rolnopolFarmlogEnabled", false);
       const greenhouseControlRoomEnabled = await this.featureFlagsService.isEnabled("greenhouseControlRoomEnabled", false);
       const taskLabEnabled = await this.featureFlagsService.isEnabled("taskLabEnabled", false);
-      return { alertsEnabled, rolnopolMapEnabled, rolnopolFarmlogEnabled, greenhouseControlRoomEnabled, taskLabEnabled };
+      const farmStayEnabled = await this.featureFlagsService.isEnabled("farmStayEnabled", false);
+      return { alertsEnabled, rolnopolMapEnabled, rolnopolFarmlogEnabled, greenhouseControlRoomEnabled, taskLabEnabled, farmStayEnabled };
     } catch (error) {
       return { alertsEnabled: true, rolnopolMapEnabled: true, rolnopolFarmlogEnabled: false, greenhouseControlRoomEnabled: false };
     }
@@ -224,6 +225,14 @@ class NavigationComponent {
       `
       : "";
 
+    const farmStayLink = flagState?.farmStayEnabled
+      ? `
+        <a href="/farm-stay.html" class="nav__item">
+          <i class="fa-solid fa-tractor"></i> FarmStay
+        </a>
+      `
+      : "";
+
     this.navElement.innerHTML = `
       <span class="nav__welcome">
         Welcome, <span class="nav__username">${username}</span>
@@ -256,6 +265,7 @@ class NavigationComponent {
         ${farmlogLink}
         ${greenhouseLink}
         ${tasklabLink}
+        ${farmStayLink}
         <a href="/docs.html" class="nav__item">
           <i class="fa-solid fa-book"></i> Documentation
         </a>
@@ -285,6 +295,13 @@ class NavigationComponent {
         </a>
       `
       : "";
+    const farmStayLink = flagState?.farmStayEnabled
+      ? `
+        <a href="/farm-stay.html" class="nav__item">
+          <i class="fa-solid fa-tractor"></i> FarmStay
+        </a>
+      `
+      : "";
     this.navElement.innerHTML = `
       <div class="nav__auth-buttons">
         <a href="/login.html" class="nav__button">Login</a>
@@ -304,6 +321,7 @@ class NavigationComponent {
         </a>
         ${farmlogLink}
         ${greenhouseLink}
+        ${farmStayLink}
         <a href="/docs.html" class="nav__item">
           <i class="fa-solid fa-book"></i> Documentation
         </a>

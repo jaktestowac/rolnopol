@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package inventory;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Inventory — the single source of truth for FarmStay listings AND their
+// calendars. A property IS its calendar, so Search filters catalog + free dates
+// in one call, and Hold performs an ATOMIC check-and-lock over a date range.
+//
+// Loaded at runtime by the standalone service and the gateway's gRPC client.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service Health {
+  rpc Check(HealthRequest) returns (HealthReply);
+}
+
+message HealthRequest {}
+message HealthReply {
+  string status = 1; // "SERVING" | "NOT_SERVING"
+  bool db_initialized = 2;
+  int32 property_count = 3;
+  string version = 4;
+  int64 uptime_ms = 5;
+}
+
+service Inventory {
+  rpc ListProperties(ListPropertiesRequest) returns (PropertyList);
+  rpc CreateProperty(CreatePropertyRequest) returns (Property);
+  rpc UpdateProperty(UpdatePropertyRequest) returns (Property);
+  rpc Search(SearchRequest) returns (PropertyList);
+  rpc GetCalendar(CalendarRequest) returns (Calendar);
+  rpc Hold(HoldRequest) returns (HoldReply);
+  rpc ConfirmHold(LockRequest) returns (LockReply);
+  rpc Release(LockRequest) returns (LockReply);
+}
+
+message Property {
+  string id = 1;
+  string host_id = 2;
+  string name = 3;
+  string district = 4;
+  string type = 5; // room | cottage | camping
+  int32 capacity = 6;
+  double base_price = 7;
+  string policy = 8; // flexible | moderate | strict
+  repeated string amenities = 9;
+  string photo_ref = 10;
+  bool active = 11;
+}
+
+message ListPropertiesRequest {
+  string host_id = 1; // optional — empty = all active
+}
+
+message PropertyList {
+  repeated Property properties = 1;
+  int32 total = 2;
+}
+
+message CreatePropertyRequest {
+  string host_id = 1;
+  string name = 2;
+  string district = 3;
+  string type = 4;
+  int32 capacity = 5;
+  double base_price = 6;
+  string policy = 7;
+  repeated string amenities = 8;
+  string photo_ref = 9;
+}
+
+message UpdatePropertyRequest {
+  string id = 1;
+  string host_id = 2; // for ownership check
+  string name = 3;
+  int32 capacity = 4;
+  double base_price = 5;
+  string policy = 6;
+  bool active = 7;
+}
+
+message SearchRequest {
+  string from = 1; // YYYY-MM-DD
+  string to = 2;
+  int32 guests = 3;
+  string district = 4; // optional
+  string type = 5; // optional
+  double max_price = 6; // optional, 0 = no cap
+  string exclude_host_id = 7; // hide caller's own listings
+}
+
+message CalendarRequest {
+  string property_id = 1;
+  string from = 2;
+  string to = 3;
+}
+
+message DayStatus {
+  string date = 1;
+  bool available = 2;
+}
+
+message Calendar {
+  string property_id = 1;
+  repeated DayStatus days = 2;
+}
+
+message HoldRequest {
+  string property_id = 1;
+  string from = 2;
+  string to = 3;
+  int32 ttl_sec = 4; // 0 → server default; ignored for blackout
+  string kind = 5; // "hold" (default) | "blackout"
+  string host_id = 6; // required for blackout (ownership)
+}
+
+message HoldReply {
+  string lock_id = 1;
+  string expires_at = 2; // ISO, empty for blackout/confirmed
+  string next_free_from = 3; // hint when unavailable (best-effort, may be empty)
+}
+
+message LockRequest {
+  string lock_id = 1;
+}
+
+message LockReply {
+  string lock_id = 1;
+  string kind = 2; // resulting kind, or "released"
+  bool ok = 3;
+}

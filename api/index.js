@@ -489,6 +489,28 @@ app.get(["/tasklab", "/tasklab.html"], async (req, res, next) => {
   }
 });
 
+// Feature-gate FarmStay page before static serving
+app.get(["/farm-stay", "/farm-stay.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.farmStayEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/farm-stay") {
+      return res.redirect(302, "/farm-stay.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("FarmStay feature gate check failed", { error });
+    return next();
+  }
+});
+
 // Feature-gate Farmlog UI pages before static serving
 app.get(
   ["/farmlog", "/farmlog.html", "/farmlog-blog", "/farmlog-blog.html", "/farmlog-post", "/farmlog-post.html"],

@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "seq": 0,
+  "properties": [
+    {
+      "id": "prop-oak-cottage",
+      "hostId": "seed-host",
+      "name": "Oak Hill Cottage",
+      "district": "north",
+      "type": "cottage",
+      "capacity": 4,
+      "basePrice": 120,
+      "policy": "moderate",
+      "amenities": [
+        "kitchen",
+        "fireplace",
+        "parking"
+      ],
+      "photoRef": "oak-cottage.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-meadow-room",
+      "hostId": "seed-host",
+      "name": "Meadow View Room",
+      "district": "north",
+      "type": "room",
+      "capacity": 2,
+      "basePrice": 60,
+      "policy": "flexible",
+      "amenities": [
+        "breakfast",
+        "wifi"
+      ],
+      "photoRef": "meadow-room.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-riverside-camp",
+      "hostId": "seed-host",
+      "name": "Riverside Camping Spot",
+      "district": "east",
+      "type": "camping",
+      "capacity": 6,
+      "basePrice": 35,
+      "policy": "strict",
+      "amenities": [
+        "firepit",
+        "water"
+      ],
+      "photoRef": "riverside-camp.jpg",
+      "active": true
+    },
+    {
+      "id": "prop-barn-loft",
+      "hostId": "seed-host",
+      "name": "Restored Barn Loft",
+      "district": "west",
+      "type": "room",
+      "capacity": 3,
+      "basePrice": 95,
+      "policy": "moderate",
+      "amenities": [
+        "wifi",
+        "parking",
+        "animals"
+      ],
+      "photoRef": "barn-loft.jpg",
+      "active": true
+    }
+  ],
+  "calendars": {
+    "prop-oak-cottage": {
+      "locks": []
+    },
+    "prop-meadow-room": {
+      "locks": []
+    },
+    "prop-riverside-camp": {
+      "locks": []
+    },
+    "prop-barn-loft": {
+      "locks": []
+    }
+  }
+}

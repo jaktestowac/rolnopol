@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FarmStay — Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/farm-stay.css" />
+  </head>
+
+  <body class="fs-page-body">
+    <div id="header-component"></div>
+
+    <main class="fs-container">
+      <header class="fs-header">
+        <h1><i class="fa-solid fa-tractor"></i> FarmStay</h1>
+        <div class="fs-header-right">
+          <span id="fsBalance" class="fs-balance" title="Your ROL balance"></span>
+          <div id="fsHealth" class="fs-health" title="Ecosystem status"></div>
+        </div>
+      </header>
+
+      <div id="fsBanner" class="fs-banner" hidden></div>
+
+      <nav class="fs-tabs" role="tablist">
+        <button class="fs-tab is-active" data-tab="search" role="tab"><i class="fa-solid fa-magnifying-glass"></i> Search stays</button>
+        <button class="fs-tab" data-tab="trips" role="tab"><i class="fa-solid fa-calendar-check"></i> My trips</button>
+        <button class="fs-tab" data-tab="listings" role="tab"><i class="fa-solid fa-warehouse"></i> My listings</button>
+      </nav>
+
+      <!-- ── Search tab ─────────────────────────────────────────── -->
+      <section id="tab-search" class="fs-tab-panel is-active">
+        <form id="fsSearchForm" class="fs-search" autocomplete="off">
+          <label>Check-in<input id="fsFrom" type="date" required /></label>
+          <label>Check-out<input id="fsTo" type="date" required /></label>
+          <label>Guests<input id="fsGuests" type="number" min="1" value="2" /></label>
+          <label
+            >Location
+            <select id="fsDistrict">
+              <option value="">Anywhere in Poland</option>
+            </select>
+          </label>
+          <label
+            >Type
+            <select id="fsType">
+              <option value="">Any</option>
+              <option value="room">Room</option>
+              <option value="cottage">Cottage</option>
+              <option value="camping">Camping</option>
+            </select>
+          </label>
+          <label>Max price<input id="fsMaxPrice" type="number" min="0" placeholder="—" /></label>
+          <button type="submit" class="fs-btn fs-btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+        </form>
+        <div id="fsSearchMeta" class="fs-meta"></div>
+        <div id="fsResults" class="fs-grid"></div>
+      </section>
+
+      <!-- ── Trips tab ──────────────────────────────────────────── -->
+      <section id="tab-trips" class="fs-tab-panel">
+        <div class="fs-meta">
+          <button id="fsRefreshTrips" class="fs-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          <span id="fsTripsSummary"></span>
+        </div>
+        <div id="fsTrips" class="fs-list"></div>
+      </section>
+
+      <!-- ── Listings tab ───────────────────────────────────────── -->
+      <section id="tab-listings" class="fs-tab-panel">
+        <form id="fsListingForm" class="fs-listing-form" autocomplete="off">
+          <h3>List a room on your farm</h3>
+          <div class="fs-listing-grid">
+            <label>Name<input id="lName" type="text" required placeholder="Cosy hayloft" /></label>
+            <label
+              >Type
+              <select id="lType">
+                <option value="room">Room</option>
+                <option value="cottage">Cottage</option>
+                <option value="camping">Camping</option>
+              </select>
+            </label>
+            <label
+              >Location
+              <select id="lDistrict"></select>
+            </label>
+            <label>Capacity<input id="lCapacity" type="number" min="1" value="2" /></label>
+            <label>Base price / night<input id="lBasePrice" type="number" min="0" value="80" /></label>
+            <label
+              >Cancellation policy
+              <select id="lPolicy">
+                <option value="flexible">Flexible</option>
+                <option value="moderate" selected>Moderate</option>
+                <option value="strict">Strict</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit" class="fs-btn fs-btn-primary"><i class="fa-solid fa-plus"></i> Publish listing</button>
+        </form>
+
+        <div class="fs-custom-loc">
+          <h4 class="fs-custom-loc-title"><i class="fa-solid fa-location-pin"></i> Custom locations</h4>
+          <p class="fs-note">Add a custom city or village — it will appear in both search and listing dropdowns.</p>
+          <div class="fs-custom-loc-form">
+            <input id="lCustomLoc" type="text" placeholder="e.g. Małe Końskie" maxlength="60" />
+            <button type="button" class="fs-btn" id="lAddCustomLoc"><i class="fa-solid fa-plus"></i> Add to list</button>
+          </div>
+          <div id="fsCustomLocs" class="fs-custom-loc-list"></div>
+        </div>
+
+        <div class="fs-meta"><span id="fsListingsSummary"></span></div>
+        <div id="fsListings" class="fs-list"></div>
+      </section>
+    </main>
+
+    <!-- Booking modal (hold → confirm) -->
+    <div id="fsModal" class="fs-modal" hidden>
+      <div class="fs-modal-card">
+        <button class="fs-modal-close" id="fsModalClose" aria-label="Close">&times;</button>
+        <div id="fsModalBody"></div>
+      </div>
+    </div>
+
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <script src="/js/pages/farm-stay.js?v=1"></script>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("farm-stay");
+    </script>
+  </body>
+</html>
