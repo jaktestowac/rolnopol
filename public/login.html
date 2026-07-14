@@ -74,6 +74,16 @@
               <input type="password" id="password" name="password" class="form-input" required placeholder="Enter your password" data-testid="password-input" />
             </div>
 
+            <div id="twoFactorSection" class="form-group" style="display: none" data-testid="two-factor-login-section">
+              <label for="twoFactorCode" class="form-label">Authenticator Code</label>
+              <input type="text" id="twoFactorCode" name="twoFactorCode" class="form-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Enter the 6-digit code" data-testid="two-factor-code-input" />
+              <small id="twoFactorHint" style="display: block; margin-top: 0.5rem; color: #6a7b5e;">Open your authenticator app and enter the current 6-digit code to finish logging in.</small>
+            </div>
+
+            <div id="twoFactorActions" style="display: none; margin-bottom: 1rem;">
+              <button type="button" id="resetTwoFactorFlow" class="btn btn-outline btn-full" data-testid="reset-two-factor-flow-btn">Use different credentials</button>
+            </div>
+
             <button type="submit" class="btn btn-agri btn-full" data-testid="login-submit-btn">Login</button>
           </form>
 

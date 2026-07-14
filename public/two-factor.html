@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <title>Two-Factor Authentication - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/two-factor.css" />
+</head>
+
+<body class="bg-agri-pattern">
+    <div id="header-component"></div>
+
+    <div class="container two-factor-page" data-testid="two-factor-container">
+        <header class="header glass two-factor-hero">
+            <div class="two-factor-hero__title">
+                <span class="two-factor-hero__icon bg-agri-gradient"><i class="fas fa-shield-halved"></i></span>
+                <div>
+                    <h1>Rolnopol</h1>
+                    <p>Two-Factor Authentication Settings</p>
+                </div>
+            </div>
+            <a href="/profile.html" class="btn btn-compact btn-outline two-factor-hero__back" title="Back to account settings">
+                <i class="fas fa-arrow-left"></i>
+                Account
+            </a>
+        </header>
+
+        <main class="main">
+            <div id="loadingMessage" class="loading-card-modern glass" data-testid="two-factor-loading">
+                <div class="loading-spinner futuristic-loader"></div>
+                <p>Loading your 2FA configuration...</p>
+            </div>
+
+            <div id="errorMessage" class="error-card-modern glass" style="display: none" data-testid="two-factor-error">
+                <div class="error-icon-modern">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="error-content-modern">
+                    <h3>Unable to load 2FA settings</h3>
+                    <p id="errorText">Please refresh the page and try again.</p>
+                    <button class="btn btn-compact btn-agri" onclick="location.reload()">
+                        <i class="fas fa-redo"></i>
+                        Try Again
+                    </button>
+                </div>
+            </div>
+
+            <div id="twoFactorContent" style="display: none" data-testid="two-factor-content">
+                <div class="two-factor-layout2">
+                    <section class="profile-card-modern futuristic-card two-factor-card two-factor-card--overview">
+                        <div class="card-header-modern futuristic two-factor-card__header">
+                            <h3>
+                                <i class="fas fa-user-shield"></i>
+                                Security overview
+                            </h3>
+                            <span id="twoFactorStatusBadge" class="status-badge-modern status-badge-modern--revoked">
+                                <i class="fas fa-circle"></i>
+                                <span id="twoFactorStatusLabel">Disabled</span>
+                            </span>
+                        </div>
+                        <div class="card-content-modern two-factor-card__body">
+                            <p id="twoFactorStatusHint" class="two-factor-lede">Two-factor authentication adds an authenticator-app code on top of your password during login.</p>
+                            <div class="two-factor-meta-grid">
+                                <div class="glass two-factor-meta-item">
+                                    <span>Issuer</span>
+                                    <strong id="twoFactorIssuer">Rolnopol</strong>
+                                </div>
+                                <div class="glass two-factor-meta-item">
+                                    <span>Account label</span>
+                                    <strong id="twoFactorAccountLabel">-</strong>
+                                </div>
+                                <div class="glass two-factor-meta-item">
+                                    <span>Enabled at</span>
+                                    <strong id="twoFactorEnabledAt">Not enabled</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="setupSection" class="profile-card-modern futuristic-card two-factor-card two-factor-card--setup">
+                        <div class="card-header-modern futuristic">
+                            <h3>
+                                <i class="fas fa-mobile-screen-button"></i>
+                                Enable authenticator app login
+                            </h3>
+                        </div>
+                        <div class="card-content-modern two-factor-card__body">
+                            <p class="two-factor-lede">Use Google Authenticator, Microsoft Authenticator, Authy, or another compatible app. Generate a setup secret, add it to your app, then verify one code.</p>
+                            <div class="two-factor-actions">
+                                <button id="generateSetupBtn" type="button" class="btn btn-futuristic btn-compact" data-testid="generate-2fa-setup-btn">
+                                    <i class="fas fa-wand-magic-sparkles"></i>
+                                    Generate setup secret
+                                </button>
+                                <a href="/profile.html" class="btn btn-earth btn-compact">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Back to account settings
+                                </a>
+                            </div>
+
+                            <div class="two-factor-setup-grid">
+                                <div id="manualEntryPanel" class="glass two-factor-setup-panel" style="display: none;">
+                                    <div class="two-factor-panel-heading">
+                                        <i class="fas fa-key"></i>
+                                        <strong>Manual entry key</strong>
+                                    </div>
+                                    <p>Add this secret to your authenticator app exactly as shown. If you regenerate, the old secret stops working.</p>
+                                    <code id="manualEntryKey">-</code>
+                                    <p id="setupGeneratedAt" class="two-factor-timestamp">No setup secret generated yet.</p>
+                                </div>
+
+                                <div id="qrCodePanel" class="glass two-factor-setup-panel two-factor-setup-panel--qr" style="display: none;">
+                                    <div class="two-factor-panel-heading">
+                                        <i class="fas fa-qrcode"></i>
+                                        <strong>Scan QR code</strong>
+                                    </div>
+                                    <p>Scan this QR code with your authenticator app to fill in the 2FA account details automatically.</p>
+                                    <div class="two-factor-qr-frame">
+                                        <img id="qrCodeImage" alt="Authenticator app QR code for Rolnopol two-factor setup" />
+                                    </div>
+                                    <a id="otpAuthUrlLink" href="#" target="_blank" rel="noopener noreferrer" class="two-factor-link">
+                                        <i class="fas fa-link"></i>
+                                        View authenticator setup URI
+                                    </a>
+                                </div>
+                            </div>
+
+                            <form id="enableTwoFactorForm" class="update-form-modern two-factor-form" novalidate>
+                                <div class="form-group-modern">
+                                    <label for="verificationCode" class="form-label-modern">
+                                        <i class="fas fa-key"></i>
+                                        Verification code
+                                    </label>
+                                    <input type="text" id="verificationCode" class="form-input-modern" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Enter the 6-digit code" data-testid="enable-2fa-code-input" />
+                                    <div class="form-help-modern">
+                                        <i class="fas fa-info-circle"></i>
+                                        Enter the current 6-digit code from your authenticator app.
+                                    </div>
+                                </div>
+                                <button id="enableTwoFactorBtn" type="submit" class="btn btn-futuristic btn-full-modern" data-testid="enable-2fa-submit-btn">
+                                    <i class="fas fa-shield-check"></i>
+                                    Enable 2FA
+                                </button>
+                            </form>
+                            <div id="pageMessage" class="message-modern" style="display: none"></div>
+                        </div>
+                    </section>
+
+                    <section id="disableSection" class="profile-card-modern futuristic-card two-factor-card two-factor-card--danger" style="display: none">
+                        <div class="card-header-modern danger-header">
+                            <h3>
+                                <i class="fas fa-user-lock"></i>
+                                Disable 2FA
+                            </h3>
+                        </div>
+                        <div class="card-content-modern two-factor-card__body">
+                            <p class="two-factor-danger-text">To disable two-factor authentication, confirm with one current authenticator-app code.</p>
+                            <form id="disableTwoFactorForm" class="update-form-modern two-factor-form" novalidate>
+                                <div class="form-group-modern">
+                                    <label for="disableCode" class="form-label-modern">
+                                        <i class="fas fa-key"></i>
+                                        Current 2FA code
+                                    </label>
+                                    <input type="text" id="disableCode" class="form-input-modern" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Enter the 6-digit code" data-testid="disable-2fa-code-input" />
+                                </div>
+                                <button id="disableTwoFactorBtn" type="submit" class="btn btn-danger btn-full-modern" data-testid="disable-2fa-submit-btn">
+                                    <i class="fas fa-unlock"></i>
+                                    Disable 2FA
+                                </button>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <div id="footer-component"></div>
+    </div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/two-factor.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+        initNavigation("two-factor");
+    </script>
+</body>
+
+</html>

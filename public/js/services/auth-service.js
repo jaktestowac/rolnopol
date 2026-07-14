@@ -37,11 +37,17 @@ class AuthService {
         throw error;
       }
 
+      const payload = response.data?.data || response.data;
+
+      if (payload?.twoFactorRequired) {
+        return payload;
+      }
+
       // Check for token in the nested data structure
-      if (response.data?.data?.token) {
-        this._setSession(response.data.data);
-        this.eventBus.emit("auth:login", response.data.data);
-        return response.data.data;
+      if (payload?.token) {
+        this._setSession(payload);
+        this.eventBus.emit("auth:login", payload);
+        return payload;
       }
 
       throw new Error("Invalid response format");

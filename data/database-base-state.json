@@ -2023,6 +2023,11 @@
       }
     ],
     "farmlogFavorites": [],
+    "twoFactorAuth": {
+      "version": 1,
+      "keys": [],
+      "updatedAt": "2026-05-01T21:32:57.787Z"
+    },
     "personalApiKeys": {
       "version": 1,
       "keys": [],

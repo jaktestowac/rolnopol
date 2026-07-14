@@ -423,6 +423,28 @@ app.get(["/integrations", "/integrations.html"], async (req, res, next) => {
   }
 });
 
+// Feature-gate two-factor configuration page before static serving
+app.get(["/two-factor", "/two-factor.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.twoFactorAuthEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/two-factor") {
+      return res.redirect(302, "/two-factor.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Two-factor configuration page gate check failed", { error });
+    return next();
+  }
+});
+
 // Feature-gate pet buddy page before static serving
 app.get(["/buddy", "/buddy.html"], async (req, res, next) => {
   try {

@@ -151,6 +151,17 @@ class DatabaseManager {
   }
 
   /**
+   * Get two-factor authentication database singleton
+   */
+  getTwoFactorAuthDatabase() {
+    return this.getDatabase("two-factor-auth", "two-factor-auth.json", {
+      version: 1,
+      keys: [],
+      updatedAt: null,
+    });
+  }
+
+  /**
    * Get user avatars database singleton
    */
   getUserAvatarsDatabase() {

@@ -15,6 +15,7 @@ class ProfilePage {
     // Prevent duplicate toasts in quick succession
     this._lastToast = { message: null, at: 0 };
     this.avatarUploadEnabled = false;
+    this.twoFactorProfileInfoEnabled = false;
     this.selectedAvatarFile = null;
     this.selectedAvatarPreview = "";
   }
@@ -44,6 +45,7 @@ class ProfilePage {
     }
 
     this.avatarUploadEnabled = await this._isAvatarUploadFeatureEnabled();
+    this.twoFactorProfileInfoEnabled = await this._isTwoFactorFeatureEnabled();
     await this._loadProfileData();
     this._setupProfileForm();
     this._setupEventListeners();
@@ -56,6 +58,18 @@ class ProfilePage {
 
     try {
       return await this.featureFlagsService.isEnabled("profileAvatarUploadEnabled", false);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async _isTwoFactorFeatureEnabled() {
+    if (!this.featureFlagsService || typeof this.featureFlagsService.isEnabled !== "function") {
+      return false;
+    }
+
+    try {
+      return await this.featureFlagsService.isEnabled("twoFactorAuthEnabled", false);
     } catch (error) {
       return false;
     }
@@ -85,6 +99,7 @@ class ProfilePage {
         loadingElement.style.display = "none";
         profileContent.style.display = "block";
         this._updateProfileDisplay();
+        await this._loadTwoFactorProfileInfo();
       } else {
         // Handle authentication errors
         if (response.status === 401 || response.status === 403) {
@@ -119,6 +134,55 @@ class ProfilePage {
     }
     await this._loadFields();
     await this._loadStaff();
+  }
+
+  async _loadTwoFactorProfileInfo() {
+    const infoItem = document.getElementById("twoFactorProfileInfo");
+
+    if (!infoItem) {
+      return;
+    }
+
+    infoItem.style.display = "none";
+
+    if (!this.twoFactorProfileInfoEnabled || !this.apiService) {
+      return;
+    }
+
+    try {
+      const response = await this.apiService.get("users/profile/two-factor", {
+        requiresAuth: true,
+        suppressErrorEvents: true,
+      });
+
+      if (!response.success) {
+        return;
+      }
+
+      const config = response.data?.data || response.data || {};
+      this._renderTwoFactorProfileInfo(config);
+    } catch (error) {
+      errorLogger.log("Profile Two-Factor Info", error, { showToUser: false });
+    }
+  }
+
+  _renderTwoFactorProfileInfo(config = {}) {
+    const infoItem = document.getElementById("twoFactorProfileInfo");
+    const statusValue = document.getElementById("twoFactorProfileStatus");
+
+    if (!infoItem || !statusValue) {
+      return;
+    }
+
+    if (config.enabled !== true) {
+      infoItem.style.display = "none";
+      statusValue.textContent = "Enabled";
+      return;
+    }
+
+    const enabledAt = config.enabledAt ? ` since ${this._formatDate(config.enabledAt)}` : "";
+    statusValue.textContent = `Enabled${enabledAt}`;
+    infoItem.style.display = "flex";
   }
 
   async _loadFields() {

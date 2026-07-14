@@ -3019,7 +3019,7 @@ body {
   color: var(--agri-green);
   border-radius: 1rem;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 800;
 }
 
 .status-badge-modern i {
@@ -3032,7 +3032,7 @@ body {
 }
 
 .status-badge-modern--revoked {
-  background: rgba(239, 68, 68, 0.12);
+  background: rgba(58, 30, 30, 0.281);
   color: var(--error-color);
 }
 

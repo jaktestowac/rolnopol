@@ -65,9 +65,21 @@ class AuthController {
    */
   async login(req, res) {
     try {
-      const { email, password } = req.body;
+      const { email, password, twoFactorCode } = req.body;
 
-      const result = await authService.loginUser({ email, password });
+      const result = await authService.loginUser({ email, password, twoFactorCode });
+
+      if (result?.twoFactorRequired) {
+        return res.status(202).json(
+          formatResponseBody(
+            {
+              message: "Two-factor authentication required",
+              data: result,
+            },
+            false,
+          ),
+        );
+      }
 
       // Set authentication cookies with standardized naming
       res.cookie("rolnopolToken", result.token, {
@@ -103,7 +115,12 @@ class AuthController {
 
       let statusCode = 500;
       if (error.message.includes("Validation failed")) statusCode = 400;
-      else if (error.message.includes("Invalid credentials") || error.message.includes("deactivated")) statusCode = 401;
+      else if (
+        error.message.includes("Invalid credentials") ||
+        error.message.includes("deactivated") ||
+        error.message.includes("two-factor")
+      )
+        statusCode = 401;
 
       res.status(statusCode).json(
         formatResponseBody({
