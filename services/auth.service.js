@@ -1,12 +1,11 @@
 const UserDataSingleton = require("../data/user-data-singleton");
 const { generateToken, revokeToken } = require("../helpers/token.helpers");
-const { validateRegistrationData, validateLoginData } = require("../helpers/validators");
-const { validatePassword } = require("../middleware/auth.middleware");
+const { validateRegistrationData, validateLoginData, validatePassword } = require("../helpers/validators");
 const { loginExpiration } = require("../data/settings");
 const { logDebug, logError } = require("../helpers/logger-api");
 const financialService = require("./financial.service");
 const featureFlagsService = require("./feature-flags.service");
-const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 class AuthService {

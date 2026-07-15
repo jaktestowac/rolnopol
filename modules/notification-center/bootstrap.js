@@ -11,7 +11,13 @@ const EventStore = require("./store/event-store");
 const NotificationStore = require("./store/notification-store");
 const InAppDispatcher = require("./channels/in-app-dispatcher");
 const WebhookDispatcher = require("./channels/webhook-dispatcher");
-const webhookService = require("../../services/webhook.service");
+
+// Safe no-op webhook adapter used when no webhook service is injected — keeps
+// the module decoupled from the app's concrete services.
+const NOOP_WEBHOOK_SERVICE = {
+  listActiveSubscriptionsForDelivery: async () => [],
+  recordDelivery: async () => {},
+};
 
 const createNoopPublisher = () => ({
   isEnabled: () => false,
@@ -79,8 +85,9 @@ async function shouldEnable(featureFlagsService) {
   }
 }
 
-async function initializeNotificationCenter({ featureFlagsService } = {}) {
+async function initializeNotificationCenter({ featureFlagsService, webhookService } = {}) {
   const enabled = await shouldEnable(featureFlagsService);
+  const webhookAdapter = webhookService || NOOP_WEBHOOK_SERVICE;
 
   if (!enabled) {
     const eventStore = new EventStore();
@@ -149,8 +156,8 @@ async function initializeNotificationCenter({ featureFlagsService } = {}) {
     const inAppDispatcher = new InAppDispatcher(config.channels.inApp, { sleep: config.sleep });
     const webhookDispatcher = new WebhookDispatcher(config.channels.webhook, {
       sleep: config.sleep,
-      resolveSubscriptions: ({ userId, eventType }) => webhookService.listActiveSubscriptionsForDelivery({ userId, eventType }),
-      recordDelivery: (entry) => webhookService.recordDelivery(entry),
+      resolveSubscriptions: ({ userId, eventType }) => webhookAdapter.listActiveSubscriptionsForDelivery({ userId, eventType }),
+      recordDelivery: (entry) => webhookAdapter.recordDelivery(entry),
     });
     const dispatcher = new NotificationDispatcher(
       eventBus,

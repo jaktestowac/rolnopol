@@ -1,5 +1,5 @@
 const dbManager = require("../data/database-manager");
-const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 const DAY_MS = 24 * 60 * 60 * 1000;

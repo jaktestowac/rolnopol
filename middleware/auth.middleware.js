@@ -148,17 +148,9 @@ const authenticateAdmin = (req, res, next) => {
   next();
 };
 
-/**
- * Simple password validation (no crypto, plain text)
- */
-const validatePassword = (inputPassword, storedPassword) => {
-  return inputPassword === storedPassword;
-};
-
 module.exports = {
   authenticateUser,
   authenticateSessionUser,
   createAuthenticateUser,
   authenticateAdmin,
-  validatePassword,
 };

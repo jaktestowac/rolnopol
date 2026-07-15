@@ -2,7 +2,7 @@ const dbManager = require("../data/database-manager");
 const { logError, logInfo, logDebug } = require("../helpers/logger-api");
 const { FINANCE_INTEGRITY_CALCULATION } = require("../data/settings");
 const JSONDatabase = require("../data/json-database");
-const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 class FinancialService {
@@ -653,4 +653,10 @@ class FinancialService {
   }
 }
 
-module.exports = new FinancialService();
+const financialService = new FinancialService();
+
+// Initialize a financial account whenever a user is created, without the data
+// layer depending on this service (dependency direction stays service → data).
+require("../data/user-lifecycle").onUserCreated("financial:init-account", (user) => financialService.initializeAccount(user.id));
+
+module.exports = financialService;

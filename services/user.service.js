@@ -4,7 +4,7 @@ const { createAvatarDataUrl, validateAvatarUpload } = require("../helpers/avatar
 const { logDebug, logError } = require("../helpers/logger-api");
 const messengerEventsService = require("./messenger-events.service");
 const userAvatarStorageService = require("./user-avatar-storage.service");
-const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 class UserService {

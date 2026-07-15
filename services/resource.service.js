@@ -1,7 +1,7 @@
 const dbManager = require("../data/database-manager");
 const { ALLOWED_ANIMAL_TYPES } = require("../data/animal-types");
 const { logDebug, logInfo } = require("../helpers/logger-api");
-const { publishNotificationEvent } = require("../middleware/notification-publisher.middleware");
+const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
 const publishEvent = (event) => {
@@ -578,5 +578,9 @@ ResourceService.prototype.updateAnimal = async function (userId, id, updateData)
 
   return updated;
 };
+
+// Cascade-delete a user's resources when the user is deleted, without the data
+// layer depending on this service (dependency direction stays service → data).
+require("../data/user-lifecycle").onUserDeleted("resource:cascade-user", (user) => ResourceService.cascadeDelete({ type: "user", userId: user.id }));
 
 module.exports = ResourceService;

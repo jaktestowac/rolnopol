@@ -121,6 +121,27 @@ const notificationWebSocketService = require("../services/notification-ws.servic
 const chaosEngineMiddleware = require("../middleware/chaos-engine.middleware");
 const notificationCenter = require("../modules/notification-center");
 const pluginRuntime = require("../modules/plugin-runtime");
+// Eagerly load services that register user-lifecycle hooks (financial-account
+// init on create, resource cascade-delete on delete) so the side effects are
+// wired at boot regardless of route load order. See data/user-lifecycle.js.
+require("../services/financial.service");
+require("../services/resource.service");
+const webhookService = require("../services/webhook.service");
+
+let greenhouseWebSocketService;
+try {
+  greenhouseWebSocketService = require("../services/greenhouse-ws.service");
+} catch (error) {
+  logError("[startup] Failed to load greenhouse-ws.service — greenhouse live updates unavailable:", error.message);
+  greenhouseWebSocketService = {
+    attach() {
+      return null;
+    },
+    close() {
+      /* noop */
+    },
+  };
+}
 
 let greenhouseWebSocketService;
 try {
@@ -212,7 +233,7 @@ app.use(async (req, res, next) => {
   next();
 });
 
-notificationCenter.initialize({ featureFlagsService }).catch((error) => {
+notificationCenter.initialize({ featureFlagsService, webhookService }).catch((error) => {
   logError("Notification center initialization error", { error });
 });
 

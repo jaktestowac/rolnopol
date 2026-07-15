@@ -21,6 +21,7 @@ function _normalizeEvent(event = {}, defaults = {}) {
 }
 
 let featureFlagsServiceRef = null;
+let webhookServiceRef = null;
 let refreshPromise = null;
 const eventSubscriptions = [];
 
@@ -102,7 +103,8 @@ let moduleState = {
 
 async function initialize(options = {}) {
   featureFlagsServiceRef = options.featureFlagsService || featureFlagsServiceRef;
-  moduleState = await initializeNotificationCenter(options);
+  webhookServiceRef = options.webhookService || webhookServiceRef;
+  moduleState = await initializeNotificationCenter({ ...options, webhookService: webhookServiceRef });
   _syncEventSubscriptions();
   return moduleState;
 }
@@ -134,7 +136,7 @@ async function _refreshStateFromFeatureFlagIfNeeded() {
     }
 
     await moduleState.stop();
-    moduleState = await initializeNotificationCenter({ featureFlagsService: featureFlagsServiceRef });
+    moduleState = await initializeNotificationCenter({ featureFlagsService: featureFlagsServiceRef, webhookService: webhookServiceRef });
     _syncEventSubscriptions();
   })();
 
@@ -249,6 +251,7 @@ function isEnabled() {
 
 function _resetForTests() {
   featureFlagsServiceRef = null;
+  webhookServiceRef = null;
   refreshPromise = null;
   _clearEventSubscriptions();
   moduleState = {
