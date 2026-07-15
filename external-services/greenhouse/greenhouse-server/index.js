@@ -1,7 +1,7 @@
 /**
  * Greenhouse gRPC service — standalone process (PROCESS 2).
  *
- * Start with:  npm run greenhouse   (node ./grpc/greenhouse-server/index.js)
+ * Start with:  npm run greenhouse   (node ./external-services/greenhouse/greenhouse-server/index.js)
  * Listens on :50051 (configurable via GREENHOUSE_GRPC_PORT).
  *
  * P0: boots, self-seeds the greenhouse DB, serves the Health.Check probe.
@@ -67,7 +67,7 @@ function setupGracefulShutdown(server) {
   process.on("SIGTERM", () => shutdown("SIGTERM"));
 }
 
-// Start when run directly (node ./grpc/greenhouse-server/index.js).
+// Start when run directly (node ./external-services/greenhouse/greenhouse-server/index.js).
 if (require.main === module) {
   start().catch((error) => {
     log.error("failed to start", { error: error.message, stack: error.stack });

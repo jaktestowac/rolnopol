@@ -15,8 +15,8 @@ process.env.TASKLAB_GRPC_PORT = "50082";
 process.env.TASKLAB_GRPC_TARGET = "localhost:50082";
 
 const app = require("../api/index.js");
-const greenhouseServer = require("../grpc/greenhouse-server/index.js");
-const tasklabServer = require("../grpc/tasklab-server/index.js");
+const greenhouseServer = require("../external-services/greenhouse/greenhouse-server/index.js");
+const tasklabServer = require("../external-services/tasklab/tasklab-server/index.js");
 const greenhouseClient = require("../modules/greenhouse/greenhouse-client.js");
 const tasklabClient = require("../modules/tasklab/tasklab-client.js");
 

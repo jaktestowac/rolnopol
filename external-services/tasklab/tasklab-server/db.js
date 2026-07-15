@@ -8,12 +8,12 @@
  * Shape: { version, users: { [userId]: { tasks: [...], lastId: number, updatedAt } } }
  */
 const path = require("path");
-const JSONDatabase = require("../../data/json-database");
+const JSONDatabase = require("../../../data/json-database");
 
 // Path is overridable via env so tests can point at a throwaway file.
 const TASKLAB_DB_PATH = process.env.TASKLAB_DB_PATH
   ? path.resolve(process.env.TASKLAB_DB_PATH)
-  : path.join(__dirname, "..", "..", "data", "tasklab.json");
+  : path.join(__dirname, "..", "..", "..", "data", "tasklab.json");
 
 const DEFAULTS = {
   version: 1,

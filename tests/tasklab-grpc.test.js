@@ -10,8 +10,8 @@ process.env.TASKLAB_GRPC_PORT = "0";
 process.env.TASKLAB_LOG = "silent";
 
 const { grpc, loadPackage, callUnary } = require("./helpers/grpc-harness");
-const { PROTO_PATH, PROTO_LOADER_OPTIONS } = require("../grpc/tasklab-config.js");
-const { start } = require("../grpc/tasklab-server/index.js");
+const { PROTO_PATH, PROTO_LOADER_OPTIONS } = require("../external-services/tasklab/tasklab-config.js");
+const { start } = require("../external-services/tasklab/tasklab-server/index.js");
 
 let server;
 let healthClient;

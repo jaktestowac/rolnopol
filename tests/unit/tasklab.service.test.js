@@ -8,8 +8,8 @@ const TMP_DB = path.join(os.tmpdir(), `tasklab-service-test-${process.pid}.json`
 process.env.TASKLAB_DB_PATH = TMP_DB;
 process.env.TASKLAB_LOG = "silent";
 
-const tasklabDb = require("../../grpc/tasklab-server/db.js");
-const tasklabService = require("../../grpc/tasklab-server/tasklab.service.js");
+const tasklabDb = require("../../external-services/tasklab/tasklab-server/db.js");
+const tasklabService = require("../../external-services/tasklab/tasklab-server/tasklab.service.js");
 
 const USER = "user-1";
 const OTHER = "user-2";

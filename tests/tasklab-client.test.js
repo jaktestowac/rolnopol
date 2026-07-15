@@ -32,7 +32,7 @@ beforeAll(async () => {
 
   // Require AFTER env is set so config picks up the reserved port/target.
   client = require("../modules/tasklab/tasklab-client.js");
-  startService = require("../grpc/tasklab-server/index.js").start;
+  startService = require("../external-services/tasklab/tasklab-server/index.js").start;
 });
 
 afterAll(() => {

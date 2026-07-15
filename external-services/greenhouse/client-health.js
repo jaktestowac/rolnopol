@@ -2,7 +2,7 @@
  * Greenhouse gRPC CLI client — for demos & manual testing.
  *
  * Run the service first (npm run greenhouse), then:
- *   npm run greenhouse:demo
+ *   npm run greenhouse:health
  *
  * P0: calls Health.Check and prints the reply. Later phases will exercise the
  * unary, server-streaming, client-streaming, and bidi RPCs.
