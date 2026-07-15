@@ -1,5 +1,6 @@
 const dbManager = require("../data/database-manager");
 const { logInfo, logError } = require("./logger-api");
+const { OPTIONAL_STARTUP_DEPENDENCIES } = require("./optional-dependencies");
 const fs = require("fs");
 const path = require("path");
 
@@ -111,152 +112,6 @@ function collectMissingModules(projectRoot, packageJson) {
   return missingModules;
 }
 
-async function performStartupHealthCheck() {
-  try {
-    const packageJson = require("../package.json");
-    const health = {
-      status: "healthy",
-      uptime: process.uptime(),
-      memory: dbManager.getMemoryStats(),
-      version: packageJson.version,
-    };
-
-    // --- Check for missing node_modules / dependencies ---
-    const projectRoot = path.resolve(__dirname, "..");
-    const nodeModulesPath = path.join(projectRoot, "node_modules");
-    const missingModules = [];
-
-    // detect preferred package manager for suggestion
-    function getInstallCommand() {
-      try {
-        if (packageJson.packageManager) {
-          // e.g. "pnpm@8.5.0" or "npm@9.0.0"
-          const pm = String(packageJson.packageManager).split("@")[0];
-          return `${pm} install`;
-        }
-      } catch (_) {}
-      if (fs.existsSync(path.join(projectRoot, "pnpm-lock.yaml"))) return "pnpm install";
-      if (fs.existsSync(path.join(projectRoot, "yarn.lock"))) return "yarn install";
-      if (fs.existsSync(path.join(projectRoot, "package-lock.json"))) return "npm install";
-      return "npm install";
-    }
-
-    const installCmd = getInstallCommand();
-
-    // collect declared dependency types we care about
-    const declaredDeps = new Set();
-    ["dependencies", "optionalDependencies", "peerDependencies"].forEach((k) => {
-      const map = packageJson[k] || {};
-      Object.keys(map).forEach((name) => declaredDeps.add(name));
-    });
-    const deps = Array.from(declaredDeps);
-
-    const existsNodeModules = fs.existsSync(nodeModulesPath);
-    if (!existsNodeModules) {
-      // Mark all declared dependencies as missing
-      missingModules.push(...deps);
-    } else {
-      // Check each dependency can be resolved from project root
-      for (const dep of deps) {
-        try {
-          // try to resolve the package from project root
-          require.resolve(dep, { paths: [projectRoot] });
-        } catch (e) {
-          missingModules.push(dep);
-        }
-      }
-    }
-    console.log("healthcheck missing modules", missingModules.length, missingModules);
-
-    if (missingModules.length > 0) {
-      health.status = "degraded";
-    }
-
-    // expose modules information in health object for programmatic access
-    health.modules = { missing: missingModules, installCommand: installCmd };
-
-    // Check for presence of project marker file `rolno.d` in repository root
-    const rolno = checkRolnoFileExists();
-    const dbValidation = await dbManager.validateAll();
-    health.databaseValidation = dbValidation;
-    const failing = Object.entries(dbValidation).filter(([_, v]) => v.status === "error");
-    if (failing.length > 0) {
-      health.status = "degraded";
-    }
-
-    // --- Readable Output ---
-    const lines = [];
-    lines.push("\n================ Application Health Check ================");
-    lines.push(`Status   : ${health.status.toUpperCase()}`);
-    lines.push(`Version  : ${health.version}`);
-    lines.push(`Uptime   : ${formatUptime(health.uptime)}`);
-    const mem = health.memory.memoryUsage;
-    lines.push(
-      `Memory   : Heap Used ${formatBytes(mem.heapUsed)} / Heap Total ${formatBytes(mem.heapTotal)} | RSS ${formatBytes(mem.rss)}`,
-    );
-
-    // Module status
-    lines.push("\nModules:");
-    if (missingModules.length === 0) {
-      lines.push("All declared dependencies are installed (node_modules present)");
-    } else {
-      lines.push(`Missing dependencies (${missingModules.length}): ${missingModules.join(", ")}`);
-      lines.push("\nTo install missing packages, run the following in the project root:");
-      lines.push(`  ${installCmd}`);
-      lines.push(`Or to install only missing packages explicitly: ${installCmd} ${missingModules.join(" ")}`);
-    }
-
-    lines.push("\nDatabases:");
-    // Table header
-    lines.push(pad("DB Name", 24) + " | " + pad("Status", 8) + " | " + pad("Size", 10, "right") + " | " + pad("Entities", 8, "right"));
-    lines.push("-".repeat(24) + "-|-" + "-".repeat(8) + "-|-" + "-".repeat(10) + "-|-" + "-".repeat(8));
-    // Get file paths for each DB
-    const dbStatus = dbManager.getStatus();
-    const dbInstances = dbManager.instances;
-    for (const [db, result] of Object.entries(dbValidation)) {
-      let sizeStr = "N/A";
-      let entityCount = "?";
-      const filePath = dbStatus[db] && dbStatus[db].filePath;
-      if (filePath && fs.existsSync(filePath)) {
-        try {
-          const stats = fs.statSync(filePath);
-          sizeStr = formatBytes(stats.size);
-        } catch (e) {
-          sizeStr = "ERR";
-        }
-      }
-      const dbInstance = dbInstances.get(db);
-      if (dbInstance && dbInstance.data !== null && dbInstance.data !== undefined) {
-        if (Array.isArray(dbInstance.data)) {
-          entityCount = dbInstance.data.length;
-        } else if (typeof dbInstance.data === "object") {
-          entityCount = Object.keys(dbInstance.data).length;
-        } else {
-          entityCount = 0;
-        }
-      }
-      let statusStr = result.status === "ok" ? "OK" : "ERROR";
-      if (result.status !== "ok" && result.error) statusStr += ": " + result.error;
-      lines.push(pad(db, 24) + " | " + pad(statusStr, 8) + " | " + pad(sizeStr, 10, "right") + " | " + pad(entityCount, 8, "right"));
-    }
-    lines.push("========================================================\n");
-    if (health.status === "degraded") {
-      // If missing modules, print a bordered message and abort startup
-      if (missingModules.length > 0) {
-        printMissingDepsBox(missingModules, installCmd);
-      } else {
-        logError(lines.join("\n"));
-      }
-    } else {
-      logInfo(lines.join("\n"));
-    }
-    return health;
-  } catch (err) {
-    logError("Health check failed on startup", err);
-    throw err;
-  }
-}
-
 // Utility to check if project root contains the marker file `rolno.d`
 function checkRolnoFileExists() {
   const projectRoot = path.resolve(__dirname, "..");
@@ -326,12 +181,23 @@ async function performStartupHealthCheck() {
   try {
     const health = await buildHealthData();
 
-    const missingModules = Array.isArray(health.modules?.missing) ? health.modules.missing : [];
-    const installCmd = health.modules?.installCommand || "npm install";
+    const packageJson = require("../package.json");
+    const projectRoot = path.resolve(__dirname, "..");
+    const allMissing = collectMissingModules(projectRoot, packageJson);
+    const missingModules = allMissing.filter((dep) => !OPTIONAL_STARTUP_DEPENDENCIES.has(dep));
+    const optionalMissing = allMissing.filter((dep) => OPTIONAL_STARTUP_DEPENDENCIES.has(dep));
+    const installCmd = health.modules?.installCommand || getInstallCommand(projectRoot, packageJson);
 
+    health.modules = { missing: missingModules, optionalMissing, installCommand: installCmd };
     if (missingModules.length > 0) {
-      // If modules are missing, abort startup with a boxed message
+      health.status = "degraded";
+      // If required modules are missing, abort startup with a boxed message
       printMissingDepsBox(missingModules, installCmd);
+    } else if (optionalMissing.length > 0) {
+      logError(
+        `Optional dependencies unavailable (${optionalMissing.join(", ")}). ` +
+          "Greenhouse/TaskLab gRPC features will be disabled, but startup continues.",
+      );
     }
 
     // --- Render human readable output ---

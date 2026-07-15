@@ -3,7 +3,7 @@ const { resolve } = require("path");
 
 console.log("Starting Rolnopol application...");
 
-const OPTIONAL_STARTUP_DEPENDENCIES = new Set(["@grpc/grpc-js", "@grpc/proto-loader"]);
+const { OPTIONAL_STARTUP_DEPENDENCIES } = require("../helpers/optional-dependencies");
 
 const getVisualWidth = (str) => {
   let width = 0;
