@@ -45,8 +45,35 @@ try {
   farmDefenceRoute = express.Router(); // empty stub
 }
 const tasksRoute = require("./tasks.route");
+// Defensive loading — services-monitor depends on the gRPC clients; if it fails
+// to load, the rest of the app must still start.
+let servicesMonitorRoute;
+try {
+  servicesMonitorRoute = require("./services-monitor.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load services-monitor.route — service monitoring unavailable:", err.message);
+  servicesMonitorRoute = express.Router();
+}
 const contactRoute = require("../contact.route");
 const harvestArchiveRoute = require("./harvest-archive.route");
+// Defensive loading — greenhouse route depends on the gRPC client; if it fails
+// to load, the rest of the app must still start.
+let greenhouseRoute;
+try {
+  greenhouseRoute = require("./greenhouse.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load greenhouse.route — greenhouse endpoints unavailable:", err.message);
+  greenhouseRoute = express.Router();
+}
+// Defensive loading — tasklab route depends on the gRPC client; if it fails to
+// load, the rest of the app must still start.
+let tasklabRoute;
+try {
+  tasklabRoute = require("./tasklab.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load tasklab.route — tasklab endpoints unavailable:", err.message);
+  tasklabRoute = express.Router();
+}
 
 const router = express.Router();
 
@@ -202,6 +229,9 @@ router.use("/", observatoryRoute);
 router.use("/", farmDefenceRoute);
 router.use("/", tasksRoute);
 router.use("/", harvestArchiveRoute);
+router.use("/", greenhouseRoute);
+router.use("/", tasklabRoute);
+router.use("/", servicesMonitorRoute);
 router.use("/contact", contactRoute);
 router.use("/", blogRoute);
 

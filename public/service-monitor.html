@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Service Monitor - Rolnopol</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/pages/backend.css" />
+  <link rel="stylesheet" href="/css/pages/service-monitor.css" />
+</head>
+
+<body class="bg-agri-pattern">
+  <div id="header-component"></div>
+
+  <div class="container backend-page">
+    <div class="backend-ambient" aria-hidden="true">
+      <span class="backend-orb backend-orb--one"></span>
+      <span class="backend-orb backend-orb--two"></span>
+    </div>
+    <header class="header glass backend-header">
+      <div class="backend-header__title">
+        <span class="bg-agri-gradient"><i class="fas fa-heart-pulse"></i></span>
+        <div>
+          <h1>Service Monitor</h1>
+          <p>Live health of the external gRPC services.</p>
+        </div>
+      </div>
+      <div class="backend-header__meta">
+        <a class="backend-pill " href="/backend.html"><i class="fas fa-arrow-left"></i> Backend</a>
+        <button id="refresh-btn" class="backend-pill svc-refresh" type="button">
+          <i class="fas fa-rotate"></i> Refresh
+        </button>
+      </div>
+    </header>
+
+    <section class="glass backend-panel">
+      <div class="svc-panel-head">
+        <h2>External services</h2>
+        <span id="svc-updated" class="svc-updated"></span>
+      </div>
+      <div id="svc-grid" class="svc-grid" aria-live="polite">
+        <p class="svc-empty">Loading service status…</p>
+      </div>
+      <p class="svc-hint">
+        <i class="fas fa-circle-info"></i>
+        Auto-refreshes every 15s.
+      </p>
+    </section>
+  </div>
+
+  <div id="footer-component"></div>
+
+  <!-- Core Dependencies -->
+  <script src="/js/core/event-bus.js"></script>
+  <script src="/js/core/storage.js"></script>
+  <script src="/js/core/app.js"></script>
+  <!-- Services -->
+  <script src="/js/services/api-service.js"></script>
+  <script src="/js/services/auth-service.js"></script>
+  <script src="/js/services/feature-flags-service.js"></script>
+  <!-- Components -->
+  <script src="/js/components/notification.js"></script>
+  <script src="/js/components/navigation.js"></script>
+  <script src="/js/components/form.js"></script>
+  <script src="/js/components.js"></script>
+  <!-- API Functions -->
+  <script src="/js/api.js"></script>
+  <!-- Utilities -->
+  <script src="/js/utils/error-logger.js"></script>
+  <script src="/js/utils/utils.js"></script>
+  <script src="/js/utils/router.js"></script>
+  <script src="/js/utils/global-compat.js"></script>
+  <script src="/js/utils/init-navigation.js"></script>
+  <!-- Page logic -->
+  <script src="/js/pages/service-monitor.js"></script>
+  <script>
+    initNavigation("backend");
+  </script>
+</body>
+
+</html>

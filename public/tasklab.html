@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskLab — Rolnopol</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/pages/tasklab.css" />
+</head>
+
+<body class="tasklab-page-body">
+  <div id="header-component"></div>
+
+  <main class="tl-container">
+    <header class="tl-header">
+      <h1><i class="fa-solid fa-clipboard-check"></i> TaskLab</h1>
+    </header>
+
+    <div id="tlBanner" class="tl-banner" hidden></div>
+
+    <!-- Quick add -->
+    <form id="tlCreateForm" class="tl-create" autocomplete="off">
+      <div class="tl-field tl-field--title">
+        <input id="tlTitle" name="title" type="text" placeholder="What needs doing?" required />
+        <span class="tl-counter"><b id="tlTitleCount">0</b>/<span id="tlTitleMax">120</span></span>
+      </div>
+      <div class="tl-field tl-field--content">
+        <input id="tlContent" name="content" type="text" placeholder="Details (optional)" />
+        <span class="tl-counter"><b id="tlContentCount">0</b>/<span id="tlContentMax">2000</span></span>
+      </div>
+      <button type="submit" class="tl-btn tl-btn-primary" id="tlCreateBtn">
+        <i class="fa-solid fa-plus"></i> Add
+      </button>
+    </form>
+
+    <!-- Filter + search -->
+    <section class="tl-toolbar">
+      <div class="tl-filters" id="tlStatusFilters" role="tablist" aria-label="Filter by status"></div>
+      <div class="tl-toolbar-right">
+        <label class="tl-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="tlSearch" type="search" placeholder="Search…" />
+        </label>
+        <label class="tl-archived-toggle">
+          <input id="tlIncludeArchived" type="checkbox" /> Archived
+        </label>
+        <span class="tl-summary" id="tlSummary"></span>
+      </div>
+    </section>
+
+    <!-- Task list -->
+    <section id="tlList" class="tl-list" aria-label="Tasks"></section>
+    <div id="tlEmpty" class="tl-empty" hidden>No tasks here yet — add one above.</div>
+  </main>
+
+  <div id="notification-container" class="notification-container"></div>
+
+  <!-- Scripts (shared app shell) -->
+  <script src="/js/core/event-bus.js"></script>
+  <script src="/js/core/storage.js"></script>
+  <script src="/js/core/app.js"></script>
+
+  <script src="/js/services/api-service.js"></script>
+  <script src="/js/services/auth-service.js"></script>
+  <script src="/js/services/feature-flags-service.js"></script>
+
+  <script src="/js/components/notification.js"></script>
+  <script src="/js/components/navigation.js"></script>
+  <script src="/js/components.js"></script>
+
+  <script src="/js/api.js"></script>
+
+  <script src="/js/utils/error-logger.js"></script>
+  <script src="/js/utils/utils.js"></script>
+  <script src="/js/utils/global-compat.js"></script>
+
+  <script src="/js/pages/tasklab.js?v=1"></script>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/utils/init-navigation.js"></script>
+  <script>
+    initNavigation("tasklab");
+  </script>
+</body>
+
+</html>

@@ -203,6 +203,8 @@ async function getNavFeatureFlagState() {
       petBuddyEnabled,
       rolnopolFarmlogEnabled,
       taskManagerEnabled,
+      taskLabEnabled,
+      greenhouseControlRoomEnabled,
     ] = await Promise.all([
       featureFlagsService.isEnabled("alertsEnabled", true),
       featureFlagsService.isEnabled("rolnopolMapEnabled", true),
@@ -212,6 +214,8 @@ async function getNavFeatureFlagState() {
       featureFlagsService.isEnabled("petBuddyEnabled", true),
       featureFlagsService.isEnabled("rolnopolFarmlogEnabled", false),
       featureFlagsService.isEnabled("taskManagerEnabled", false),
+      featureFlagsService.isEnabled("taskLabEnabled", false),
+      featureFlagsService.isEnabled("greenhouseControlRoomEnabled", false),
     ]);
     return {
       alertsEnabled,
@@ -222,6 +226,8 @@ async function getNavFeatureFlagState() {
       petBuddyEnabled,
       rolnopolFarmlogEnabled,
       taskManagerEnabled,
+      taskLabEnabled,
+      greenhouseControlRoomEnabled,
     };
   } catch (error) {
     return DEFAULT_ON_ERROR;
@@ -437,6 +443,8 @@ async function updateHeaderNav(username = "") {
     petBuddyEnabled,
     rolnopolFarmlogEnabled,
     taskManagerEnabled,
+    taskLabEnabled,
+    greenhouseControlRoomEnabled,
   } = await getNavFeatureFlagState();
   const mapLink = rolnopolMapEnabled
     ? '<li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>'
@@ -462,6 +470,12 @@ async function updateHeaderNav(username = "") {
   const tasksLink = taskManagerEnabled
     ? '<li><a href="/tasks.html" class="nav-link" title="Tasks" aria-label="Tasks" data-testid="nav-tasks"><i class="fas fa-list-check"></i><span class="nav-text">Tasks</span></a></li>'
     : "";
+  const tasklabLink = taskLabEnabled
+    ? '<li><a href="/tasklab.html" class="nav-link" title="TaskLab" aria-label="TaskLab" data-testid="nav-tasklab"><i class="fa-solid fa-clipboard-check"></i><span class="nav-text">TaskLab</span></a></li>'
+    : "";
+  const greenhouseLink = greenhouseControlRoomEnabled
+    ? '<li><a href="/greenhouse.html" class="nav-link" title="Greenhouse" aria-label="Greenhouse" data-testid="nav-greenhouse"><i class="fa-solid fa-cubes"></i><span class="nav-text">Greenhouse</span></a></li>'
+    : "";
 
   // Check authentication using standardized cookie names
   const token = getCookie("rolnopolToken");
@@ -479,9 +493,11 @@ async function updateHeaderNav(username = "") {
       ${alertsLink}
       ${farmlogLink}
       ${tasksLink}
+      ${tasklabLink}
       ${weatherLink}
       ${messengerLink}
       ${buddyLink}
+      ${greenhouseLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li class="nav-user" >
@@ -504,6 +520,7 @@ async function updateHeaderNav(username = "") {
       ${alertsLink}
       ${farmlogLink}
       ${weatherLink}
+      ${greenhouseLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Documentation</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li><a href="/register.html" class="nav-link" title="Register" aria-label="Register" data-testid="nav-register"><i class="fas fa-user-plus"></i><span class="nav-text">Register</span></a></li>
