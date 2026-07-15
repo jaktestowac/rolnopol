@@ -1,27 +1,24 @@
 /**
- * Shared gRPC config for the TaskLab service.
+ * Shared gRPC config for the greenhouse service.
  * Used by both the standalone server and any gRPC clients (CLI, app, tests).
- *
- * Kept separate from grpc/config.js (greenhouse) so the two services have
- * independent ports and proto contracts.
  */
 const path = require("path");
 
-const HOST = process.env.TASKLAB_GRPC_HOST || "0.0.0.0";
+const HOST = process.env.GREENHOUSE_GRPC_HOST || "0.0.0.0";
 // Allow 0 (ephemeral port, used by tests); only fall back when unset/blank.
 const PORT =
-  process.env.TASKLAB_GRPC_PORT != null && process.env.TASKLAB_GRPC_PORT !== ""
-    ? Number(process.env.TASKLAB_GRPC_PORT)
-    : 50052;
+  process.env.GREENHOUSE_GRPC_PORT != null && process.env.GREENHOUSE_GRPC_PORT !== ""
+    ? Number(process.env.GREENHOUSE_GRPC_PORT)
+    : 50051;
 
 // Address the server binds to.
 const BIND_ADDRESS = `${HOST}:${PORT}`;
 
 // Address clients dial (loopback by default).
-const CLIENT_TARGET = process.env.TASKLAB_GRPC_TARGET || `localhost:${PORT}`;
+const CLIENT_TARGET = process.env.GREENHOUSE_GRPC_TARGET || `localhost:${PORT}`;
 
-// Absolute path to the shared .proto contract.
-const PROTO_PATH = path.join(__dirname, "protos", "tasklab.proto");
+// Absolute path to the service-owned .proto contract.
+const PROTO_PATH = path.join(__dirname, "greenhouse.proto");
 
 // proto-loader options shared by server and clients so message shapes match.
 const PROTO_LOADER_OPTIONS = {

@@ -12,7 +12,7 @@ process.env.TASKLAB_GRPC_TARGET = "localhost:50073";
 process.env.TASKLAB_LOG = "silent";
 
 const app = require("../api/index.js");
-const { start } = require("../grpc/tasklab-server/index.js");
+const { start } = require("../external-services/tasklab/tasklab-server/index.js");
 const tasklabClient = require("../modules/tasklab/tasklab-client.js");
 const tokenHelpers = require("../helpers/token.helpers.js");
 

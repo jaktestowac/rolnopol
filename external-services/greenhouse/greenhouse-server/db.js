@@ -9,12 +9,12 @@
  * Shape: { version, users: { [userId]: { greenhouses, harvested, updatedAt } } }
  */
 const path = require("path");
-const JSONDatabase = require("../../data/json-database");
+const JSONDatabase = require("../../../data/json-database");
 
 // Path is overridable via env so tests can point at a throwaway file.
 const GREENHOUSE_DB_PATH = process.env.GREENHOUSE_DB_PATH
   ? path.resolve(process.env.GREENHOUSE_DB_PATH)
-  : path.join(__dirname, "..", "..", "data", "greenhouse.json");
+  : path.join(__dirname, "..", "..", "..", "data", "greenhouse.json");
 
 const DEFAULTS = {
   version: 2,

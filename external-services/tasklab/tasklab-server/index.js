@@ -1,7 +1,7 @@
 /**
  * TaskLab gRPC service — standalone process.
  *
- * Start with:  npm run tasklab   (node ./grpc/tasklab-server/index.js)
+ * Start with:  npm run tasklab   (node ./external-services/tasklab/tasklab-server/index.js)
  * Listens on :50052 (configurable via TASKLAB_GRPC_PORT).
  *
  * Boots, self-seeds the TaskLab DB, serves the Health.Check probe, and registers
@@ -67,7 +67,7 @@ function setupGracefulShutdown(server) {
   process.on("SIGTERM", () => shutdown("SIGTERM"));
 }
 
-// Start when run directly (node ./grpc/tasklab-server/index.js).
+// Start when run directly (node ./external-services/tasklab/tasklab-server/index.js).
 if (require.main === module) {
   start().catch((error) => {
     log.error("failed to start", { error: error.message, stack: error.stack });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-const tickEngine = require("../../grpc/greenhouse-server/simulator/tick-engine.js");
+const tickEngine = require("../../external-services/greenhouse/greenhouse-server/simulator/tick-engine.js");
 
 const TOMATO = { id: "tomato", ripeTicks: 20 }; // 5% growth per watered tick
 

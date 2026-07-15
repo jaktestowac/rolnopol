@@ -21,8 +21,8 @@ const grpc = require("@grpc/grpc-js");
 const featureFlagsService = require("./feature-flags.service");
 const { client: greenhouseClient } = require("../modules/greenhouse");
 const { client: tasklabClient } = require("../modules/tasklab");
-const { CLIENT_TARGET: GREENHOUSE_TARGET } = require("../grpc/greenhouse-config");
-const { CLIENT_TARGET: TASKLAB_TARGET } = require("../grpc/tasklab-config");
+const { CLIENT_TARGET: GREENHOUSE_TARGET } = require("../external-services/greenhouse/greenhouse-config");
+const { CLIENT_TARGET: TASKLAB_TARGET } = require("../external-services/tasklab/tasklab-config");
 
 // ── Adapters ─────────────────────────────────────────────────────────────────
 // Each adapter is a factory: given transport-specific config it returns an async

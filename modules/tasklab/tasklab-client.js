@@ -2,7 +2,7 @@
  * TaskLab gRPC client (app side).
  *
  * The Rolnopol app is a gRPC *client* of the standalone TaskLab service. This
- * wrapper lazily dials the service (CLIENT_TARGET from grpc/tasklab-config),
+ * wrapper lazily dials the service (CLIENT_TARGET from external-services/tasklab/tasklab-config),
  * attaches the caller's user id as gRPC metadata, and exposes promise-returning
  * unary calls.
  *
@@ -18,7 +18,7 @@
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 
-const { PROTO_PATH, PROTO_LOADER_OPTIONS, CLIENT_TARGET } = require("../../grpc/tasklab-config");
+const { PROTO_PATH, PROTO_LOADER_OPTIONS, CLIENT_TARGET } = require("../../external-services/tasklab/tasklab-config");
 
 const CALL_DEADLINE_MS = 3000;
 
