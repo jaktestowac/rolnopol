@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package tasklab;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TaskLab — a simple per-user task service over gRPC.
+//
+// Mirrors the greenhouse service shape (standalone process + app gRPC client),
+// but for logged-in users only. Each user owns a private list of tasks. A task
+// has a title, content, a status it moves between, and an archived flag.
+//
+//   ListStatuses — status catalog + length limits
+//   ListTasks    — the caller's tasks, with optional status filter + text search
+//   CreateTask   — add a task (title/content length-limited)
+//   SetStatus    — move a task between statuses
+//   Archive      — archive a task (kept, hidden from the default list)
+//   Restore      — un-archive a task
+//
+// Loaded at runtime by BOTH processes (standalone service + app gRPC client/CLI).
+// ─────────────────────────────────────────────────────────────────────────────
+
+service Health {
+  rpc Check(HealthRequest) returns (HealthReply);
+}
+
+message HealthRequest {}
+
+message HealthReply {
+  string status = 1; // "SERVING" | "NOT_SERVING"
+  bool db_initialized = 2;
+  int32 status_count = 3; // number of statuses in the catalog
+  string version = 4;
+  int64 uptime_ms = 5;
+}
+
+service TaskControl {
+  rpc ListStatuses(Empty) returns (StatusList);
+  rpc ListTasks(ListTasksRequest) returns (TaskList);
+  rpc CreateTask(CreateTaskRequest) returns (Task);
+  rpc SetStatus(SetStatusRequest) returns (Task);
+  rpc Archive(TaskIdRequest) returns (Task);
+  rpc Restore(TaskIdRequest) returns (Task);
+}
+
+message Empty {}
+
+message Status {
+  string id = 1; // "open" | "in_progress" | "blocked" | "done"
+  string label = 2; // human label
+  string emoji = 3;
+}
+
+message StatusList {
+  repeated Status statuses = 1;
+  int32 max_title_length = 2;
+  int32 max_content_length = 3;
+}
+
+message Task {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+  string status = 4; // one of Status.id
+  bool archived = 5;
+  string created_at = 6; // ISO timestamp
+  string updated_at = 7; // ISO timestamp
+}
+
+message ListTasksRequest {
+  string status = 1; // optional filter — empty = any status
+  string query = 2; // optional case-insensitive search over title + content
+  bool include_archived = 3; // false = active tasks only
+}
+
+message TaskList {
+  repeated Task tasks = 1;
+  int32 total = 2; // tasks returned after filtering
+  int32 active_count = 3; // non-archived tasks the user has
+  int32 archived_count = 4; // archived tasks the user has
+}
+
+message CreateTaskRequest {
+  string title = 1;
+  string content = 2;
+}
+
+message SetStatusRequest {
+  string id = 1;
+  string status = 2;
+}
+
+message TaskIdRequest {
+  string id = 1;
+}

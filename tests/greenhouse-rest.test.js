@@ -11,7 +11,7 @@ process.env.GREENHOUSE_GRPC_PORT = "50072";
 process.env.GREENHOUSE_GRPC_TARGET = "localhost:50072";
 
 const app = require("../api/index.js");
-const { start } = require("../grpc/greenhouse-server/index.js");
+const { start } = require("../external-services/greenhouse/greenhouse-server/index.js");
 const greenhouseClient = require("../modules/greenhouse/greenhouse-client.js");
 const tokenHelpers = require("../helpers/token.helpers.js");
 

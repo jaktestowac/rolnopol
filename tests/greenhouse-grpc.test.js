@@ -10,8 +10,8 @@ process.env.GREENHOUSE_GRPC_PORT = "0";
 process.env.GREENHOUSE_TICK_MS = "20";
 
 const { grpc, loadPackage, callUnary, collectStream, metadata } = require("./helpers/grpc-harness");
-const { PROTO_PATH, PROTO_LOADER_OPTIONS } = require("../grpc/greenhouse-config.js");
-const { start } = require("../grpc/greenhouse-server/index.js");
+const { PROTO_PATH, PROTO_LOADER_OPTIONS } = require("../external-services/greenhouse/greenhouse-config.js");
+const { start } = require("../external-services/greenhouse/greenhouse-server/index.js");
 
 let server;
 let healthClient;
