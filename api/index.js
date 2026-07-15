@@ -143,6 +143,21 @@ try {
   };
 }
 
+let greenhouseWebSocketService;
+try {
+  greenhouseWebSocketService = require("../services/greenhouse-ws.service");
+} catch (error) {
+  logError("[startup] Failed to load greenhouse-ws.service — greenhouse live updates unavailable:", error.message);
+  greenhouseWebSocketService = {
+    attach() {
+      return null;
+    },
+    close() {
+      /* noop */
+    },
+  };
+}
+
 app.set("etag", false);
 
 let easterBreadcrumbCounter = 0;
