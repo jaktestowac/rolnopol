@@ -1,6 +1,6 @@
 {
   "name": "rolnopol-app",
-  "version": "1.51.0",
+  "version": "1.52.0",
   "description": "A Rolnopol app with JSON database, authentication, and admin panel",
   "main": "api/index.js",
   "scripts": {
@@ -20,6 +20,7 @@
     "farmstay:control": "node ./external-services/farm-stay/control.js",
     "farmstay:demo": "node ./external-services/farm-stay/stay-gateway-service/client-demo.js",
     "farmstay:kill-ports": "call ./external-services/farm-stay/kill-ports.bat",
+    "farmstay:test": "cross-env NODE_ENV=test vitest run tests/unit/farm-stay.inventory.test.js tests/unit/farm-stay.pricing.test.js tests/unit/farm-stay.reservation.test.js tests/unit/farm-stay.reviews.test.js tests/unit/farm-stay.gateway.test.js && cross-env NODE_ENV=test vitest run tests/farm-stay-independence.test.js tests/farm-stay-race.test.js tests/farm-stay-consistency.test.js tests/farm-stay-e2e.test.js tests/farm-stay-degradation.test.js tests/farm-stay-health.test.js tests/farm-stay-rest.test.js",
     "greenhouse": "node ./external-services/greenhouse/greenhouse-server/index.js",
     "greenhouse:health": "node ./external-services/greenhouse/client-health.js",
     "greenhouse:plant": "node ./external-services/greenhouse/client-plant.js",
