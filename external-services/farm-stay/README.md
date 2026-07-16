@@ -54,13 +54,13 @@ flowchart LR
 
 ## Services
 
-| Service | Runtime | Port | Owns data | Responsibility |
-| --- | --- | ---: | --- | --- |
-| `stay-gateway-service` | REST | `4310` | No | Public Farm Stay API, identity forwarding, orchestration, health aggregation. |
-| `inventory-service` | gRPC | `50071` | Yes | Property catalog, calendars, blackouts, atomic holds, confirmed locks. |
-| `pricing-service` | REST | `4311` | No | Deterministic quotes from base price, dates, guests, seasons, weekends, discounts. |
-| `reservation-service` | gRPC | `50072` | Yes | Booking records, hold/confirm/cancel state machine, refund windows, release status. |
-| `review-desk-service` | REST | `4312` | Yes | Reviews, duplicate-booking guard, property score aggregation. |
+| Service                | Runtime |    Port | Owns data | Responsibility                                                                      |
+| ---------------------- | ------- | ------: | --------- | ----------------------------------------------------------------------------------- |
+| `stay-gateway-service` | REST    |  `4310` | No        | Public Farm Stay API, identity forwarding, orchestration, health aggregation.       |
+| `inventory-service`    | gRPC    | `50071` | Yes       | Property catalog, calendars, blackouts, atomic holds, confirmed locks.              |
+| `pricing-service`      | REST    |  `4311` | No        | Deterministic quotes from base price, dates, guests, seasons, weekends, discounts.  |
+| `reservation-service`  | gRPC    | `50072` | Yes       | Booking records, hold/confirm/cancel state machine, refund windows, release status. |
+| `review-desk-service`  | REST    |  `4312` | Yes       | Reviews, duplicate-booking guard, property score aggregation.                       |
 
 The leaf services do not call each other. All cross-service work starts at the
 gateway.
@@ -217,6 +217,113 @@ stateDiagram-v2
     cancelled_pending_release --> cancelled: Release retry succeeds
 ```
 
+## FarmStay Cash Flow
+
+FarmStay is a booking marketplace, but **money never lives in the FarmStay
+ecosystem** — it is handled entirely in Rolnopol's financial service (denominated
+in **ROL**). The `routes/v1/farm-stay.route.js` bridge is the only place that
+moves money: it charges the guest on confirm, refunds on cancel, and pays the
+host once a stay completes. All amounts are rounded to 2 decimals.
+
+### Money pools
+
+```mermaid
+flowchart LR
+    Guest["Guest<br/>(ROL account)"]
+    Rolnopol["Rolnopol<br/>financial.service (ROL)"]
+    Host["Host<br/>(ROL account)"]
+
+    Guest -- "confirm booking<br/>expense = quote_total" --> Rolnopol
+    Rolnopol -- "stay completed<br/>income = quote_total" --> Host
+    Rolnopol -- "cancel confirmed<br/>income = refundPct% of paid" --> Guest
+```
+
+### Confirm → charge ROL
+
+On confirm the gateway re-quotes and runs a price-change handshake, then Rolnopol
+debits the guest. If the balance is too low the confirmation is rolled back
+(cancel releases the hold) and a `402` is returned — the stay is never held
+unpaid.
+
+```mermaid
+sequenceDiagram
+    actor Guest
+    participant Route as farm-stay.route.js
+    participant GW as stay-gateway-service
+    participant FS as financial.service (ROL)
+    Guest->>Route: POST /bookings/:id/confirm
+    Route->>GW: confirmBooking (re-quote + price handshake)
+    GW-->>Route: 200 booking + quote_total
+    Route->>FS: addTransaction(expense, quote_total, ref=bookingId)
+    alt balance >= quote_total
+        FS-->>Route: charged
+        Route-->>Guest: 200 { charged, balance }
+    else insufficient funds
+        FS-->>Route: throw Insufficient funds
+        Route->>GW: cancelBooking (rollback hold)
+        Route-->>Guest: 402 INSUFFICIENT_FUNDS { needed, balance }
+    end
+```
+
+### Cancel → refund ROL
+
+Cancelling a _confirmed_ (already paid) booking refunds `refundPct%` of what was
+paid back to the guest as income. The refund percentage comes from the gateway's
+cancel response.
+
+```mermaid
+sequenceDiagram
+    actor Guest
+    participant Route as farm-stay.route.js
+    participant GW as stay-gateway-service
+    participant FS as financial.service (ROL)
+    Guest->>Route: POST /bookings/:id/cancel
+    Route->>GW: getBooking (read prior state)
+    GW-->>Route: state = confirmed? paidTotal
+    Route->>GW: cancelBooking
+    GW-->>Route: 200 refundPct
+    alt wasPaid && refundPct > 0
+        Route->>FS: addTransaction(income, paidTotal*refundPct/100, ref=bookingId)
+        FS-->>Route: refunded
+    end
+    Route-->>Guest: 200 { refunded, balance }
+```
+
+### Host payout sweep (completed stays)
+
+A confirmed booking becomes `completed` once checkout passes (lazy, in the
+reservation service). The first time _any_ party (guest or host) loads that
+booking, Rolnopol credits the host's ROL balance with the stay total — exactly
+once, keyed by `referenceId: payout-<bookingId>`. Bookings are grouped by host so
+each host account is touched once per sweep.
+
+```mermaid
+sequenceDiagram
+    participant Caller as Guest or Host
+    participant Route as farm-stay.route.js
+    participant GW as stay-gateway-service
+    participant FS as financial.service (ROL)
+    Caller->>Route: GET /bookings | /purchases | /bookings/:id
+    Route->>GW: listBookings / getBooking
+    GW-->>Route: bookings[]
+    loop for each completed booking
+        Route->>FS: getAccount(hostId)
+        FS-->>Route: transactions
+        alt no payout-<bookingId> yet
+            Route->>FS: addTransaction(income, quote_total, ref=payout-<bookingId>)
+            FS-->>Route: paid (idempotent)
+        end
+        Note over Route: mark booking payout_status = "paid"
+    end
+    Route-->>Caller: bookings + balance
+```
+
+> [!NOTE]
+> 💡 The guest ledger is reconstructed from ROL transactions: a booking's charge
+> is an `expense` tagged with the `bookingId`, and a refund is an `income` with
+> the same reference. Host payouts use a `payout-<id>` reference and are excluded
+> from the guest view. Downloadable PDF receipts are guest-only.
+
 ## Gateway API
 
 Rolnopol proxies these as `/api/v1/farm-stay/*`. The gateway itself exposes the
@@ -276,27 +383,27 @@ npm run farmstay:kill
 
 ## Environment
 
-| Var | Default | Purpose |
-| --- | --- | --- |
-| `STAY_GATEWAY_PORT` / `STAY_GATEWAY_HOST` | `4310` / `0.0.0.0` | Gateway bind address. |
-| `INVENTORY_GRPC_PORT` / `INVENTORY_GRPC_HOST` | `50071` / `0.0.0.0` | Inventory gRPC bind address. |
-| `PRICING_PORT` / `PRICING_HOST` | `4311` / `0.0.0.0` | Pricing REST bind address. |
-| `RESERVATION_GRPC_PORT` / `RESERVATION_GRPC_HOST` | `50072` / `0.0.0.0` | Reservation gRPC bind address. |
-| `REVIEW_DESK_PORT` / `REVIEW_DESK_HOST` | `4312` / `0.0.0.0` | Review REST bind address. |
-| `INVENTORY_GRPC_TARGET` | `localhost:<inventory port>` | Gateway target for inventory. |
-| `RESERVATION_GRPC_TARGET` | `localhost:<reservation port>` | Gateway target for reservation. |
-| `PRICING_URL` | `http://localhost:<pricing port>` | Gateway target for pricing. |
-| `REVIEW_DESK_URL` | `http://localhost:<review port>` | Gateway target for reviews. |
-| `FARM_STAY_CONTROL_PORT` | `4319` | Supervisor control server port. |
-| `FARM_STAY_HOLD_TTL_SEC` | `600` in inventory, `0` from gateway means default | Hold TTL for booking locks. |
-| `FARM_STAY_GRPC_DEADLINE_MS` | `3000` | Gateway gRPC leaf deadline. |
-| `FARM_STAY_HTTP_TIMEOUT_MS` | `3000` | Gateway REST leaf timeout. |
-| `FARM_STAY_HEALTH_TIMEOUT_MS` | `1500` | Gateway aggregate health timeout. |
-| `FARM_STAY_TIME_OFFSET_MS` | unset | Test/demo clock offset used by shared clock. |
-| `FARM_STAY_LOG` | `info` | Shared service log level; use `silent` in tests. |
-| `INVENTORY_DB_PATH` | `inventory-service/data/inventory.json` | Inventory data path. |
-| `RESERVATIONS_DB_PATH` | `reservation-service/data/reservations.json` | Reservation data path. |
-| `REVIEWS_DB_PATH` | `review-desk-service/data/reviews.json` | Review data path. |
+| Var                                               | Default                                            | Purpose                                          |
+| ------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------ |
+| `STAY_GATEWAY_PORT` / `STAY_GATEWAY_HOST`         | `4310` / `0.0.0.0`                                 | Gateway bind address.                            |
+| `INVENTORY_GRPC_PORT` / `INVENTORY_GRPC_HOST`     | `50071` / `0.0.0.0`                                | Inventory gRPC bind address.                     |
+| `PRICING_PORT` / `PRICING_HOST`                   | `4311` / `0.0.0.0`                                 | Pricing REST bind address.                       |
+| `RESERVATION_GRPC_PORT` / `RESERVATION_GRPC_HOST` | `50072` / `0.0.0.0`                                | Reservation gRPC bind address.                   |
+| `REVIEW_DESK_PORT` / `REVIEW_DESK_HOST`           | `4312` / `0.0.0.0`                                 | Review REST bind address.                        |
+| `INVENTORY_GRPC_TARGET`                           | `localhost:<inventory port>`                       | Gateway target for inventory.                    |
+| `RESERVATION_GRPC_TARGET`                         | `localhost:<reservation port>`                     | Gateway target for reservation.                  |
+| `PRICING_URL`                                     | `http://localhost:<pricing port>`                  | Gateway target for pricing.                      |
+| `REVIEW_DESK_URL`                                 | `http://localhost:<review port>`                   | Gateway target for reviews.                      |
+| `FARM_STAY_CONTROL_PORT`                          | `4319`                                             | Supervisor control server port.                  |
+| `FARM_STAY_HOLD_TTL_SEC`                          | `600` in inventory, `0` from gateway means default | Hold TTL for booking locks.                      |
+| `FARM_STAY_GRPC_DEADLINE_MS`                      | `3000`                                             | Gateway gRPC leaf deadline.                      |
+| `FARM_STAY_HTTP_TIMEOUT_MS`                       | `3000`                                             | Gateway REST leaf timeout.                       |
+| `FARM_STAY_HEALTH_TIMEOUT_MS`                     | `1500`                                             | Gateway aggregate health timeout.                |
+| `FARM_STAY_TIME_OFFSET_MS`                        | unset                                              | Test/demo clock offset used by shared clock.     |
+| `FARM_STAY_LOG`                                   | `info`                                             | Shared service log level; use `silent` in tests. |
+| `INVENTORY_DB_PATH`                               | `inventory-service/data/inventory.json`            | Inventory data path.                             |
+| `RESERVATIONS_DB_PATH`                            | `reservation-service/data/reservations.json`       | Reservation data path.                           |
+| `REVIEWS_DB_PATH`                                 | `review-desk-service/data/reviews.json`            | Review data path.                                |
 
 ## App Integration
 

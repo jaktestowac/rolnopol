@@ -98,4 +98,46 @@ describe("farm-stay REST bridge — full ecosystem up", () => {
     const res = await request(app).get("/api/v1/farm-stay/health").set("token", token).expect(200);
     expect(res.body.overall).toBe("SERVING");
   });
+
+  it("returns host analytics with a totals summary (200)", async () => {
+    const res = await request(app).get("/api/v1/farm-stay/hosting/analytics").set("token", token).expect(200);
+    expect(res.body.totals).toBeTruthy();
+    expect(typeof res.body.totals.grossIncome).toBe("number");
+    expect(res.body.totals.listings).toBeGreaterThan(0); // a listing was created earlier in this suite
+    expect(Array.isArray(res.body.incomeByMonth)).toBe(true);
+    expect(Array.isArray(res.body.perProperty)).toBe(true);
+    expect(Array.isArray(res.body.occupancyByYear)).toBe(true);
+  });
+
+  it("returns purchase history as an array (200)", async () => {
+    const res = await request(app).get("/api/v1/farm-stay/purchases").set("token", token).expect(200);
+    expect(Array.isArray(res.body.purchases)).toBe(true);
+    expect(res.body.currency).toBe("ROL");
+  });
+
+  it("404s a receipt for an unknown booking", async () => {
+    await request(app).get("/api/v1/farm-stay/bookings/bk-does-not-exist/receipt.pdf").set("token", token).expect(404);
+  });
+
+  it("streams a PDF receipt for the guest's own booking and forbids others (403)", async () => {
+    const guest = tokenHelpers.generateToken("guest-fs-receipt");
+    const created = await request(app)
+      .post("/api/v1/farm-stay/properties")
+      .set("token", token)
+      .send({ name: "Receipt Test Barn", type: "cottage", capacity: 4, basePrice: 60, district: "Lublin", policy: "flexible" })
+      .expect(201);
+    const booking = await request(app)
+      .post("/api/v1/farm-stay/bookings")
+      .set("token", guest)
+      .send({ propertyId: created.body.id, from: "2031-03-10", to: "2031-03-12", guests: 2 })
+      .expect(201);
+
+    const res = await request(app).get(`/api/v1/farm-stay/bookings/${booking.body.bookingId}/receipt.pdf`).set("token", guest).expect(200);
+    expect(res.headers["content-type"]).toMatch(/application\/pdf/);
+    expect(res.headers["content-disposition"]).toMatch(/attachment; filename=/);
+    expect(Number(res.headers["content-length"])).toBeGreaterThan(0);
+
+    // The host (a different user) may not download the guest's receipt.
+    await request(app).get(`/api/v1/farm-stay/bookings/${booking.body.bookingId}/receipt.pdf`).set("token", token).expect(403);
+  });
 });

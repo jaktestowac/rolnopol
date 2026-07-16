@@ -30,6 +30,7 @@
       <nav class="fs-tabs" role="tablist">
         <button class="fs-tab is-active" data-tab="search" role="tab"><i class="fa-solid fa-magnifying-glass"></i> Search stays</button>
         <button class="fs-tab" data-tab="trips" role="tab"><i class="fa-solid fa-calendar-check"></i> My trips</button>
+        <button class="fs-tab" data-tab="purchases" role="tab"><i class="fa-solid fa-receipt"></i> Purchases</button>
         <button class="fs-tab" data-tab="listings" role="tab"><i class="fa-solid fa-warehouse"></i> My listings</button>
         <button class="fs-tab" data-tab="hosting" role="tab"><i class="fa-solid fa-sack-dollar"></i> Hosting</button>
       </nav>
@@ -69,6 +70,15 @@
           <span id="fsTripsSummary"></span>
         </div>
         <div id="fsTrips" class="fs-list"></div>
+      </section>
+
+      <!-- ── Purchases tab (history + PDF receipts) ─────────────── -->
+      <section id="tab-purchases" class="fs-tab-panel">
+        <div class="fs-meta">
+          <button id="fsRefreshPurchases" class="fs-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          <span id="fsPurchasesSummary"></span>
+        </div>
+        <div id="fsPurchases" class="fs-list"></div>
       </section>
 
       <!-- ── Listings tab ───────────────────────────────────────── -->
@@ -118,7 +128,9 @@
         <div class="fs-custom-loc">
           <h4 class="fs-custom-loc-title"><i class="fa-solid fa-location-pin"></i> Custom locations</h4>
           <div class="fs-custom-loc-form">
-            <select id="lCustomVoi"><option value="">Voivodeship…</option></select>
+            <select id="lCustomVoi">
+              <option value="">Voivodeship…</option>
+            </select>
             <input id="lCustomLoc" type="text" placeholder="City or village" maxlength="60" />
             <button type="button" class="fs-btn fs-btn-sm" id="lAddCustomLoc"><i class="fa-solid fa-plus"></i> Add</button>
           </div>
@@ -136,6 +148,29 @@
           <span id="fsHostingSummary"></span>
         </div>
         <div id="fsEarnings" class="fs-earnings"></div>
+        <div id="fsHostStats" class="fs-stat-grid"></div>
+        <div id="fsHostCharts" class="fs-charts" hidden>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-chart-line"></i> Income over time</h3>
+            <div class="fs-chart-box"><canvas id="fsChartIncome"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-calendar-days"></i> Occupied nights per year</h3>
+            <div class="fs-chart-box"><canvas id="fsChartOccupancy"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-users"></i> Visitors per month</h3>
+            <div class="fs-chart-box"><canvas id="fsChartVisitors"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-sack-dollar"></i> Income by listing</h3>
+            <div class="fs-chart-box"><canvas id="fsChartByProperty"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-chart-pie"></i> Booking status</h3>
+            <div class="fs-chart-box"><canvas id="fsChartStates"></canvas></div>
+          </div>
+        </div>
         <div id="fsHosting" class="fs-list"></div>
       </section>
     </main>

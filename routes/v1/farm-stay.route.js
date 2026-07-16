@@ -20,17 +20,13 @@ const { requireFeatureFlag } = require("../../middleware/feature-flag.middleware
 const { authenticateSessionUser } = require("../../middleware/auth.middleware");
 const { client: farmStay } = require("../../modules/farm-stay");
 const financialService = require("../../services/financial.service");
+const { buildReceiptPdf } = require("../../helpers/farm-stay-receipt");
 const { logError } = require("../../helpers/logger-api");
 
 const router = express.Router();
 const apiLimiter = createRateLimiter("api");
 
-router.use(
-  "/farm-stay",
-  requireFeatureFlag("farmStayEnabled", { resourceName: "FarmStay" }),
-  apiLimiter,
-  authenticateSessionUser,
-);
+router.use("/farm-stay", requireFeatureFlag("farmStayEnabled", { resourceName: "FarmStay" }), apiLimiter, authenticateSessionUser);
 
 const userOf = (req) => req.user?.userId;
 const money = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
@@ -72,51 +68,92 @@ async function currentBalance(userId) {
 }
 
 /**
+ * Per-booking money ledger for the caller, built from their FarmStay financial
+ * transactions. A booking's charge is an `expense` tagged with the bookingId;
+ * a refund is an `income` with the same reference. Host payouts use a
+ * `payout-<id>` reference and are excluded here (they belong to the host, not
+ * to a guest purchase). Returns `{ [bookingId]: { charged, refunded } }`.
+ */
+async function guestLedger(userId) {
+  const ledger = {};
+  let account;
+  try {
+    account = await financialService.getAccount(userId);
+  } catch {
+    return ledger; // financial service unavailable — receipts show booking totals only
+  }
+  for (const t of account?.transactions || []) {
+    const ref = String(t.referenceId || "");
+    if (!ref || ref.startsWith("payout-")) continue;
+    const entry = (ledger[ref] = ledger[ref] || { charged: 0, refunded: 0 });
+    if (t.type === "expense") entry.charged += Number(t.amount) || 0;
+    else if (t.type === "income") entry.refunded += Number(t.amount) || 0;
+  }
+  return ledger;
+}
+
+/**
  * Host payout sweep. A confirmed booking reads as "completed" once checkout has
- * passed (lazy, in the reservation service). When the host next loads their
- * bookings we credit the stay total to the host's ROL balance — exactly once.
+ * passed (lazy, in the reservation service). Each completed booking credits its
+ * stay total to the *host's* ROL balance — exactly once — regardless of who is
+ * looking at the booking. Because `addTransaction` can credit any user id (not
+ * only the caller), a host is paid as soon as the stay completes and ANY party
+ * (guest or host) next loads the booking; it no longer waits for the host to
+ * open their own list. Bookings are grouped by host so each host account is
+ * loaded once per sweep.
  *
  * Idempotency lives here, not in the (money-agnostic) ecosystem: each payout is
  * a financial transaction tagged `referenceId: payout-<bookingId>`, so a booking
  * already carrying that transaction is skipped. Mutates each swept booking with
  * `payout_status: "paid"` so the UI can show it.
  */
-async function sweepHostPayouts(userId, bookings) {
-  const hostCompleted = bookings.filter((b) => b.host_id === String(userId) && b.state === "completed");
-  if (!hostCompleted.length) return;
-  await ensureAccount(userId);
-  let account;
-  try {
-    account = await financialService.getAccount(userId);
-  } catch {
-    return; // financial service unavailable — retry on next load
+async function sweepHostPayouts(bookings) {
+  const completed = (bookings || []).filter((b) => b.state === "completed" && b.host_id);
+  if (!completed.length) return;
+
+  // Group completed bookings by host so we touch each host account only once.
+  const byHost = new Map();
+  for (const b of completed) {
+    const host = String(b.host_id);
+    if (!byHost.has(host)) byHost.set(host, []);
+    byHost.get(host).push(b);
   }
-  const paid = new Set(
-    (account?.transactions || [])
-      .filter((t) => t.type === "income" && String(t.referenceId || "").startsWith("payout-"))
-      .map((t) => t.referenceId),
-  );
-  for (const b of hostCompleted) {
-    const ref = `payout-${b.id}`;
-    if (!paid.has(ref)) {
-      const amount = money(b.quote_total || 0);
-      if (amount > 0) {
-        try {
-          await financialService.addTransaction(userId, {
-            type: "income",
-            amount,
-            description: `FarmStay payout for booking ${b.id}`,
-            category: "farmstay",
-            referenceId: ref,
-          });
-          paid.add(ref);
-        } catch (err) {
-          logError("[farm-stay] host payout failed", err.message);
-          continue; // leave unpaid; retried on the next load
+
+  for (const [hostId, hostBookings] of byHost) {
+    await ensureAccount(hostId);
+    let account;
+    try {
+      account = await financialService.getAccount(hostId);
+    } catch {
+      continue; // financial service unavailable for this host — retry on next load
+    }
+    const paid = new Set(
+      (account?.transactions || [])
+        .filter((t) => t.type === "income" && String(t.referenceId || "").startsWith("payout-"))
+        .map((t) => t.referenceId),
+    );
+    for (const b of hostBookings) {
+      const ref = `payout-${b.id}`;
+      if (!paid.has(ref)) {
+        const amount = money(b.quote_total || 0);
+        if (amount > 0) {
+          try {
+            await financialService.addTransaction(hostId, {
+              type: "income",
+              amount,
+              description: `FarmStay payout for booking ${b.id}`,
+              category: "farmstay",
+              referenceId: ref,
+            });
+            paid.add(ref);
+          } catch (err) {
+            logError("[farm-stay] host payout failed", err.message);
+            continue; // leave unpaid; retried on the next load
+          }
         }
       }
+      b.payout_status = "paid";
     }
-    b.payout_status = "paid";
   }
 }
 
@@ -148,6 +185,10 @@ router.get("/farm-stay/search", (req, res) =>
   ),
 );
 router.get("/farm-stay/properties/mine", (req, res) => proxy(res, farmStay.listMine(userOf(req))));
+
+// Host analytics dashboard (income / occupancy / visitors / per-property).
+// The gateway shapes the payload; we pass it through unchanged.
+router.get("/farm-stay/hosting/analytics", (req, res) => proxy(res, farmStay.hostingAnalytics(userOf(req))));
 router.get("/farm-stay/properties/:id/reviews", (req, res) =>
   proxy(res, farmStay.listReviews(userOf(req), req.params.id, { page: req.query.page })),
 );
@@ -178,7 +219,7 @@ router.get("/farm-stay/bookings", async (req, res) => {
   const result = await farmStay.listBookings(userId, { role: req.query.role });
   if (result.status !== 200 || !Array.isArray(result.body?.bookings)) return forward(res, result);
   try {
-    await sweepHostPayouts(userId, result.body.bookings);
+    await sweepHostPayouts(result.body.bookings);
   } catch (err) {
     logError("[farm-stay] payout sweep error", err.message);
   }
@@ -267,6 +308,81 @@ router.post("/farm-stay/bookings/:id/cancel", async (req, res) => {
 });
 
 router.post("/farm-stay/bookings/:id/review", (req, res) => proxy(res, farmStay.reviewBooking(userOf(req), req.params.id, req.body)));
-router.get("/farm-stay/bookings/:id", (req, res) => proxy(res, farmStay.getBooking(userOf(req), req.params.id)));
+
+/**
+ * Purchase history — the caller's bookings as a guest, enriched with the money
+ * actually moved (charged / refunded / net) from Rolnopol's financial ledger.
+ * Only bookings that were paid for (or ever confirmed) count as purchases.
+ */
+router.get("/farm-stay/purchases", async (req, res) => {
+  const userId = userOf(req);
+  const result = await farmStay.listBookings(userId, { role: "guest" });
+  if (result.status !== 200 || !Array.isArray(result.body?.bookings)) return forward(res, result);
+  // A guest viewing a completed stay is enough to release the host's payout.
+  try {
+    await sweepHostPayouts(result.body.bookings);
+  } catch (err) {
+    logError("[farm-stay] payout sweep error", err.message);
+  }
+  const ledger = await guestLedger(userId);
+  const purchases = result.body.bookings
+    .map((b) => {
+      const l = ledger[b.id] || { charged: 0, refunded: 0 };
+      const charged = money(l.charged);
+      const refunded = money(l.refunded);
+      return {
+        id: b.id,
+        propertyId: b.property_id,
+        from: b.from,
+        to: b.to,
+        guests: b.guests,
+        state: b.state,
+        quoteTotal: money(b.quote_total || 0),
+        charged,
+        refunded,
+        net: money(charged - refunded),
+        createdAt: b.created_at || "",
+        receiptUrl: `/api/v1/farm-stay/bookings/${encodeURIComponent(b.id)}/receipt.pdf`,
+      };
+    })
+    .filter((p) => p.charged > 0 || ["confirmed", "completed"].includes(p.state))
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  res.status(200).json({ purchases, total: purchases.length, currency: "ROL" });
+});
+
+/**
+ * Downloadable PDF receipt for one booking. Guest-only (you can only receive a
+ * receipt for a stay you paid for). Built server-side, dependency-free.
+ */
+router.get("/farm-stay/bookings/:id/receipt.pdf", async (req, res) => {
+  const userId = userOf(req);
+  const result = await farmStay.getBooking(userId, req.params.id);
+  if (result.status !== 200 || !result.body?.booking) return forward(res, result);
+  const booking = result.body.booking;
+  if (String(booking.guest_id) !== String(userId)) {
+    return res.status(403).json({ error: "Only the guest can download this receipt" });
+  }
+  const ledger = await guestLedger(userId);
+  const l = ledger[booking.id] || { charged: 0, refunded: 0 };
+  const pdf = buildReceiptPdf({ booking, charged: l.charged, refunded: l.refunded, guest: String(userId) });
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="farmstay-receipt-${booking.id}.pdf"`);
+  res.setHeader("Content-Length", pdf.length);
+  res.status(200).end(pdf);
+});
+
+router.get("/farm-stay/bookings/:id", async (req, res) => {
+  const userId = userOf(req);
+  const result = await farmStay.getBooking(userId, req.params.id);
+  // Viewing a completed booking (as guest or host) releases the host's payout.
+  if (result.status === 200 && result.body?.booking) {
+    try {
+      await sweepHostPayouts([result.body.booking]);
+    } catch (err) {
+      logError("[farm-stay] payout sweep error", err.message);
+    }
+  }
+  return forward(res, result);
+});
 
 module.exports = router;

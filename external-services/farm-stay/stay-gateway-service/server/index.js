@@ -15,6 +15,7 @@ const reviews = require("../clients/review-client");
 const catalogMeta = require("../config/catalog-meta");
 const { sendError, isUnavailable, grpcPreconditionToken } = require("./errors");
 const { createLogger } = require("../../shared/logger");
+const { nightsBetween, eachNight } = require("../../shared/dates");
 
 const log = createLogger("gateway");
 const SERVICE_VERSION = "1.0.0";
@@ -67,6 +68,131 @@ async function healPendingRelease(userId, booking) {
   } catch {
     return booking; // still pending; will retry on the next access
   }
+}
+
+// States that represent real, revenue-bearing occupancy (money the host keeps
+// or will keep). Cancelled/expired holds never occupied the calendar.
+const INCOME_STATES = ["confirmed", "completed"];
+
+const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+
+/**
+ * Shape a host's raw listings + bookings (+ optional review scores) into a
+ * dashboard-ready analytics payload. Pure function — no I/O — so it is unit
+ * testable and keeps the gateway a thin shaper (it owns no data, just merges
+ * what the leaves already returned). Income is the booking `quote_total`; a
+ * booked "night" is one day of a half-open [from, to) stay.
+ */
+function buildHostingAnalytics({ properties = [], bookings = [], scoresById = {} }) {
+  const income = bookings.filter((b) => INCOME_STATES.includes(b.state));
+
+  // ── Totals ──────────────────────────────────────────────────────────────
+  const grossIncome = income.reduce((s, b) => s + (b.quote_total || 0), 0);
+  const paidOut = income.filter((b) => b.state === "completed").reduce((s, b) => s + (b.quote_total || 0), 0);
+  const upcoming = income.filter((b) => b.state === "confirmed").reduce((s, b) => s + (b.quote_total || 0), 0);
+  const nightsBooked = income.reduce((s, b) => s + nightsBetween(b.from, b.to), 0);
+  const guestNights = income.reduce((s, b) => s + nightsBetween(b.from, b.to) * (b.guests || 1), 0);
+  const distinctVisitors = new Set(income.map((b) => b.guest_id)).size;
+
+  const reviewsCount = Object.values(scoresById).reduce((s, x) => s + (x.count || 0), 0);
+  const ratingWeighted = Object.values(scoresById).reduce((s, x) => s + (x.avgRating || 0) * (x.count || 0), 0);
+  const avgRating = reviewsCount ? round2(ratingWeighted / reviewsCount) : 0;
+
+  // ── State distribution (all bookings, not just income-bearing) ───────────
+  const stateDistribution = {};
+  for (const b of bookings) stateDistribution[b.state] = (stateDistribution[b.state] || 0) + 1;
+
+  // ── Income by month (bucketed on check-in) ───────────────────────────────
+  const monthMap = {};
+  for (const b of income) {
+    const key = b.from.slice(0, 7); // YYYY-MM
+    const m = (monthMap[key] = monthMap[key] || { month: key, income: 0, nights: 0, bookings: 0, visitors: new Set() });
+    m.income += b.quote_total || 0;
+    m.nights += nightsBetween(b.from, b.to);
+    m.bookings += 1;
+    m.visitors.add(b.guest_id);
+  }
+  const incomeByMonth = Object.values(monthMap)
+    .sort((a, b) => (a.month < b.month ? -1 : 1))
+    .map((m) => ({ month: m.month, income: round2(m.income), nights: m.nights, bookings: m.bookings, visitors: m.visitors.size }));
+
+  // ── Occupancy (booked nights) by year ────────────────────────────────────
+  const yearMap = {};
+  for (const b of income) {
+    for (const night of eachNight(b.from, b.to)) {
+      const y = night.slice(0, 4);
+      const yr = (yearMap[y] = yearMap[y] || { year: y, nights: 0, guestNights: 0 });
+      yr.nights += 1;
+      yr.guestNights += b.guests || 1;
+    }
+  }
+  const occupancyByYear = Object.values(yearMap).sort((a, b) => (a.year < b.year ? -1 : 1));
+
+  // ── Per-property breakdown ────────────────────────────────────────────────
+  const propMeta = {};
+  for (const p of properties) propMeta[p.id] = p;
+  const propMap = {};
+  const ensureProp = (id) =>
+    (propMap[id] = propMap[id] || {
+      propertyId: id,
+      name: propMeta[id]?.name || id,
+      type: propMeta[id]?.type || "",
+      capacity: propMeta[id]?.capacity || 0,
+      basePrice: propMeta[id]?.base_price || 0,
+      removed: !propMeta[id],
+      income: 0,
+      nights: 0,
+      bookings: 0,
+      visitors: new Set(),
+    });
+  // Seed every current listing so idle ones still appear at zero.
+  for (const p of properties) ensureProp(p.id);
+  for (const b of income) {
+    const p = ensureProp(b.property_id);
+    p.income += b.quote_total || 0;
+    p.nights += nightsBetween(b.from, b.to);
+    p.bookings += 1;
+    p.visitors.add(b.guest_id);
+  }
+  const perProperty = Object.values(propMap)
+    .map((p) => {
+      const score = scoresById[p.propertyId] || { avgRating: 0, count: 0 };
+      return {
+        propertyId: p.propertyId,
+        name: p.name,
+        type: p.type,
+        capacity: p.capacity,
+        removed: p.removed,
+        income: round2(p.income),
+        nights: p.nights,
+        bookings: p.bookings,
+        visitors: p.visitors.size,
+        avgRating: score.avgRating || 0,
+        reviews: score.count || 0,
+      };
+    })
+    .sort((a, b) => b.income - a.income);
+
+  return {
+    totals: {
+      grossIncome: round2(grossIncome),
+      paidOut: round2(paidOut),
+      upcoming: round2(upcoming),
+      listings: properties.length,
+      activeBookings: bookings.filter((b) => ["hold", "confirmed", "completed"].includes(b.state)).length,
+      totalBookings: bookings.length,
+      nightsBooked,
+      guestNights,
+      distinctVisitors,
+      avgRating,
+      reviews: reviewsCount,
+    },
+    incomeByMonth,
+    occupancyByYear,
+    perProperty,
+    stateDistribution,
+    currency: "ROL",
+  };
 }
 
 // ── app ─────────────────────────────────────────────────────────────────────
@@ -159,6 +285,22 @@ function buildApp() {
       res.json({ properties, total });
     } catch (err) {
       sendError(res, err);
+    }
+  });
+
+  // Host analytics dashboard — aggregate of the host's listings + bookings
+  // (+ review scores, best-effort). Pure shaping over what the leaves return;
+  // the gateway stores nothing. Refuses (503) only if a data owner is down.
+  app.get("/v1/hosting/analytics", async (req, res) => {
+    const user = userOf(req);
+    try {
+      const [propsReply, bookingsReply] = await Promise.all([inventory.listProperties(user, user), reservation.listBookings(user, "host")]);
+      const properties = propsReply.properties || [];
+      const bookings = bookingsReply.bookings || [];
+      const scoresById = (await scoresBestEffort(properties.map((p) => p.id))) || {};
+      res.json(buildHostingAnalytics({ properties, bookings, scoresById }));
+    } catch (err) {
+      sendError(res, err); // inventory or reservation down → 503
     }
   });
 
@@ -444,4 +586,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { buildApp, start };
+module.exports = { buildApp, start, buildHostingAnalytics };

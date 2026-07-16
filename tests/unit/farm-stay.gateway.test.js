@@ -26,7 +26,7 @@ function stubLeaves() {
 }
 stubLeaves();
 
-const { buildApp } = require(`${GW}/server/index.js`);
+const { buildApp, buildHostingAnalytics } = require(`${GW}/server/index.js`);
 
 let app;
 const USER = "user-1";
@@ -135,5 +135,105 @@ describe("farm-stay gateway — review eligibility pre-check", () => {
     reservation.getBooking.mockResolvedValue({ id: "bk1", guest_id: "another-guest", property_id: "p1", state: "completed" });
     await as(request(app).post("/v1/bookings/bk1/review").send({ rating: 5 })).expect(403);
     expect(reviews.submitReview).not.toHaveBeenCalled();
+  });
+});
+
+describe("farm-stay gateway — hosting analytics shaping (pure)", () => {
+  const properties = [{ id: "p1", name: "Barn", type: "cottage", capacity: 4, base_price: 100 }];
+  const bookings = [
+    { id: "b1", property_id: "p1", guest_id: "g1", from: "2030-06-10", to: "2030-06-13", guests: 2, state: "completed", quote_total: 300 },
+    { id: "b2", property_id: "p1", guest_id: "g2", from: "2030-07-01", to: "2030-07-03", guests: 1, state: "confirmed", quote_total: 200 },
+    { id: "b3", property_id: "p1", guest_id: "g1", from: "2030-08-01", to: "2030-08-02", guests: 1, state: "cancelled", quote_total: 100 },
+  ];
+  const scoresById = { p1: { propertyId: "p1", avgRating: 4, count: 2 } };
+
+  it("aggregates income, occupancy, visitors, and per-property", () => {
+    const a = buildHostingAnalytics({ properties, bookings, scoresById });
+    // Only confirmed + completed count as income; cancelled is excluded.
+    expect(a.totals.grossIncome).toBe(500);
+    expect(a.totals.paidOut).toBe(300);
+    expect(a.totals.upcoming).toBe(200);
+    expect(a.totals.nightsBooked).toBe(5); // 3 + 2
+    expect(a.totals.guestNights).toBe(8); // 3*2 + 2*1
+    expect(a.totals.distinctVisitors).toBe(2); // g1 (completed) + g2 (confirmed)
+    expect(a.totals.avgRating).toBe(4);
+    expect(a.totals.listings).toBe(1);
+    expect(a.stateDistribution).toEqual({ completed: 1, confirmed: 1, cancelled: 1 });
+
+    const jun = a.incomeByMonth.find((m) => m.month === "2030-06");
+    expect(jun.income).toBe(300);
+    expect(jun.visitors).toBe(1);
+
+    const y2030 = a.occupancyByYear.find((y) => y.year === "2030");
+    expect(y2030.nights).toBe(5); // cancelled range not counted
+
+    expect(a.perProperty[0].propertyId).toBe("p1");
+    expect(a.perProperty[0].income).toBe(500);
+    expect(a.perProperty[0].visitors).toBe(2);
+  });
+
+  it("lists idle properties at zero and marks removed ones", () => {
+    const a = buildHostingAnalytics({
+      properties: [{ id: "idle", name: "Empty Hut" }],
+      bookings: [
+        {
+          id: "b9",
+          property_id: "gone",
+          guest_id: "g1",
+          from: "2030-06-10",
+          to: "2030-06-11",
+          guests: 1,
+          state: "completed",
+          quote_total: 90,
+        },
+      ],
+      scoresById: {},
+    });
+    const idle = a.perProperty.find((p) => p.propertyId === "idle");
+    const gone = a.perProperty.find((p) => p.propertyId === "gone");
+    expect(idle.income).toBe(0);
+    expect(gone.removed).toBe(true);
+    expect(gone.income).toBe(90);
+  });
+});
+
+describe("farm-stay gateway — hosting analytics route", () => {
+  it("fans out to inventory + reservation + scores and shapes the payload", async () => {
+    inventory.listProperties.mockResolvedValue({ properties: [{ id: "p1", name: "Barn", base_price: 100, capacity: 4 }] });
+    reservation.listBookings.mockResolvedValue({
+      bookings: [
+        {
+          id: "b1",
+          property_id: "p1",
+          guest_id: "g1",
+          from: "2030-06-10",
+          to: "2030-06-12",
+          guests: 2,
+          state: "completed",
+          quote_total: 200,
+        },
+      ],
+    });
+    reviews.scores.mockResolvedValue({ scores: [{ propertyId: "p1", avgRating: 5, count: 1 }] });
+
+    const res = await as(request(app).get("/v1/hosting/analytics")).expect(200);
+    expect(res.body.totals.grossIncome).toBe(200);
+    expect(res.body.totals.avgRating).toBe(5);
+    expect(res.body.perProperty[0].propertyId).toBe("p1");
+    expect(reservation.listBookings).toHaveBeenCalledWith(USER, "host");
+  });
+
+  it("still returns analytics when review-desk (scores) is down", async () => {
+    inventory.listProperties.mockResolvedValue({ properties: [{ id: "p1", name: "Barn" }] });
+    reservation.listBookings.mockResolvedValue({ bookings: [] });
+    reviews.scores.mockRejectedValue(Object.assign(new Error("down"), { kind: "unavailable" }));
+    const res = await as(request(app).get("/v1/hosting/analytics")).expect(200);
+    expect(res.body.totals.avgRating).toBe(0);
+  });
+
+  it("returns 503 when reservation (the booking owner) is unavailable", async () => {
+    inventory.listProperties.mockResolvedValue({ properties: [] });
+    reservation.listBookings.mockRejectedValue({ code: grpc.status.UNAVAILABLE, details: "down" });
+    await as(request(app).get("/v1/hosting/analytics")).expect(503);
   });
 });
