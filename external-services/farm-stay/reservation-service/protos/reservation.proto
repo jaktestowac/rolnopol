@@ -48,6 +48,7 @@ message Booking {
   string release_status = 14; // "" | pending | done  (lock release bookkeeping)
   string created_at = 15;
   string policy = 16; // copied from property at creation
+  string coupon = 17; // promo code applied at booking; re-quoted with on confirm
 }
 
 message CreateBookingRequest {
@@ -61,6 +62,7 @@ message CreateBookingRequest {
   double quote_total = 8;
   string hold_expires_at = 9; // ISO from inventory
   string policy = 10;
+  string coupon = 11; // promo code applied to this booking
 }
 
 message ConfirmBookingRequest {

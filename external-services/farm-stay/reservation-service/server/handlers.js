@@ -54,6 +54,7 @@ function toBooking(b, nowMs) {
     release_status: b.releaseStatus || "",
     created_at: b.createdAt || "",
     policy: b.policy || "moderate",
+    coupon: b.coupon || "",
   };
 }
 
@@ -93,6 +94,7 @@ async function createBooking(call, callback) {
         quoteTotal: r.quote_total || 0,
         holdExpiresAt: r.hold_expires_at || "",
         policy: r.policy || "moderate",
+        coupon: r.coupon || "",
         createdAt: nowIso(),
       };
       return { next: { ...data, seq, bookings: [...data.bookings, booking] }, value: booking };

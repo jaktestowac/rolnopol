@@ -200,6 +200,55 @@ function buildHostingAnalytics({ properties = [], bookings = [], scoresById = {}
   };
 }
 
+// ── Search sorting + pagination ───────────────────────────────────────────────
+// Sorting/paging happen in the gateway (not inventory) because the sort keys —
+// price and rating — only exist AFTER the gateway enriches each match with its
+// quote and review score. Pure functions so they are unit-testable in isolation.
+
+const SEARCH_SORTS = ["price_asc", "price_desc", "rating_desc", "capacity_desc"];
+const DEFAULT_PAGE_SIZE = 24;
+const MAX_PAGE_SIZE = 100;
+
+const quotePrice = (r) => (r.quote && typeof r.quote.total === "number" ? r.quote.total : null);
+
+/** Return a NEW array sorted by `sort`; unknown/empty sort → original order. */
+function sortSearchResults(results, sort) {
+  if (!SEARCH_SORTS.includes(sort)) return results;
+  const cmpPrice = (a, b, dir) => {
+    const pa = quotePrice(a);
+    const pb = quotePrice(b);
+    // Unpriced listings (pricing unavailable) always sink to the bottom.
+    if (pa === null && pb === null) return 0;
+    if (pa === null) return 1;
+    if (pb === null) return -1;
+    return dir === "asc" ? pa - pb : pb - pa;
+  };
+  return [...results].sort((a, b) => {
+    switch (sort) {
+      case "price_asc":
+        return cmpPrice(a, b, "asc");
+      case "price_desc":
+        return cmpPrice(a, b, "desc");
+      case "rating_desc":
+        return (b.score?.avgRating || 0) - (a.score?.avgRating || 0);
+      case "capacity_desc":
+        return (b.capacity || 0) - (a.capacity || 0);
+      default:
+        return 0;
+    }
+  });
+}
+
+/** Slice `items` into a clamped page. Returns the page metadata + `slice`. */
+function paginate(items, page, pageSize) {
+  const total = items.length;
+  const size = Math.min(Math.max(1, Number(pageSize) || DEFAULT_PAGE_SIZE), MAX_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(total / size));
+  const current = Math.min(Math.max(1, Number(page) || 1), totalPages);
+  const start = (current - 1) * size;
+  return { page: current, pageSize: size, total, totalPages, slice: items.slice(start, start + size) };
+}
+
 // ── app ─────────────────────────────────────────────────────────────────────
 
 function buildApp() {
@@ -349,7 +398,7 @@ function buildApp() {
         maxPrice: Number(req.query.maxPrice) || 0,
       });
       const scores = await scoresBestEffort(properties.map((p) => p.id));
-      const results = await Promise.all(
+      const enriched = await Promise.all(
         properties.map(async (p) => {
           const { quote, quoteStatus } = await quoteBestEffort(p, from, to, guests);
           return {
@@ -361,7 +410,18 @@ function buildApp() {
           };
         }),
       );
-      res.json({ results, total: results.length, scoreStatus: scores ? "ok" : "unavailable" });
+      const sort = SEARCH_SORTS.includes(req.query.sort) ? req.query.sort : "";
+      const sorted = sortSearchResults(enriched, sort);
+      const { page, pageSize, total, totalPages, slice } = paginate(sorted, req.query.page, req.query.pageSize);
+      res.json({
+        results: slice,
+        total,
+        page,
+        pageSize,
+        totalPages,
+        sort,
+        scoreStatus: scores ? "ok" : "unavailable",
+      });
     } catch (err) {
       sendError(res, err); // inventory down → 503 (catalog lives there)
     }
@@ -400,7 +460,7 @@ function buildApp() {
 
   app.post("/v1/bookings", async (req, res) => {
     const user = userOf(req);
-    const { propertyId, from, to, guests } = req.body || {};
+    const { propertyId, from, to, guests, coupon } = req.body || {};
     try {
       const property = await getProperty(user, propertyId);
       if (!property) return res.status(404).json({ error: "Property not found" });
@@ -421,11 +481,16 @@ function buildApp() {
       // 2) firm quote (release the hold if pricing is unavailable so it doesn't linger)
       let quote;
       try {
-        quote = await pricing.quote({ propertyId, basePrice: property.base_price, from, to, guests });
+        quote = await pricing.quote({ propertyId, basePrice: property.base_price, from, to, guests, coupon });
       } catch (err) {
         await inventory.release(user, hold.lock_id).catch(() => {});
         return sendError(res, err);
       }
+
+      // Only persist a coupon that actually applied, so the confirm-time re-quote
+      // reproduces the same total (an invalid/ineligible code is surfaced in the
+      // quote but not remembered on the booking).
+      const appliedCoupon = quote.coupon && quote.coupon.applied ? quote.coupon.code : "";
 
       // 3) persist the booking as a hold
       let booking;
@@ -441,6 +506,7 @@ function buildApp() {
           quoteTotal: quote.total,
           holdExpiresAt: hold.expires_at,
           policy: property.policy,
+          coupon: appliedCoupon,
         });
       } catch (err) {
         await inventory.release(user, hold.lock_id).catch(() => {});
@@ -473,6 +539,7 @@ function buildApp() {
           from: booking.from,
           to: booking.to,
           guests: booking.guests,
+          coupon: booking.coupon || "",
         });
       } catch (err) {
         return sendError(res, err); // pricing down → 503; hold still alive
@@ -591,4 +658,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { buildApp, start, buildHostingAnalytics };
+module.exports = { buildApp, start, buildHostingAnalytics, sortSearchResults, paginate, SEARCH_SORTS };

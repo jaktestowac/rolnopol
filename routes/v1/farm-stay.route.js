@@ -22,6 +22,8 @@ const { client: farmStay } = require("../../modules/farm-stay");
 const financialService = require("../../services/financial.service");
 const { buildReceiptPdf } = require("../../helpers/farm-stay-receipt");
 const { logError } = require("../../helpers/logger-api");
+const { ERROR_CODES, bridgeError, sendBridgeError } = require("../../helpers/farm-stay-errors");
+const { withIdempotency } = require("../../modules/farm-stay/idempotency");
 
 const router = express.Router();
 const apiLimiter = createRateLimiter("api");
@@ -39,8 +41,17 @@ async function proxy(res, promise) {
   try {
     forward(res, await promise);
   } catch (err) {
-    res.status(500).json({ error: "Internal error", detail: err.message });
+    sendBridgeError(res, 500, ERROR_CODES.INTERNAL, err.message);
   }
+}
+
+// Payment status for a guest's booking, derived from the ROL ledger: a
+// confirmed/completed stay with a recorded charge is "paid"; one without is
+// "pending" (the charge failed at confirm and awaits reconciliation). Non-money
+// states (hold/cancelled/expired) have no payment status.
+function paymentStatusOf(booking, ledgerEntry) {
+  if (!["confirmed", "completed"].includes(booking.state)) return "";
+  return (ledgerEntry?.charged || 0) > 0 ? "paid" : "pending";
 }
 
 // Ensure the caller has a financial account (created lazily for older users).
@@ -157,6 +168,54 @@ async function sweepHostPayouts(bookings) {
   }
 }
 
+/**
+ * Retry guest charges that never landed. A booking is `confirmed`/`completed` but
+ * carries no `expense` in the ROL ledger only when the charge failed after the
+ * gateway already flipped the state (the failure window in POST /confirm). This
+ * settles those: it re-charges the stay total; if the guest now lacks funds, a
+ * still-cancellable (`confirmed`) booking is rolled back, while a `completed` one
+ * is left flagged (the stay already happened — it can't be un-held).
+ *
+ * Idempotent: a booking that already has a charge is skipped, so running the sweep
+ * repeatedly never double-charges. Returns a per-booking summary.
+ */
+async function reconcileGuestCharges(userId, bookings) {
+  const ledger = await guestLedger(userId);
+  const summary = [];
+  for (const b of bookings || []) {
+    if (String(b.guest_id) !== String(userId)) continue;
+    if (!["confirmed", "completed"].includes(b.state)) continue;
+    const entry = ledger[b.id] || { charged: 0, refunded: 0 };
+    if (entry.charged > 0) continue; // already paid
+    const amount = money(b.quote_total || 0);
+    if (amount <= 0) continue;
+    await ensureAccount(userId);
+    try {
+      await financialService.addTransaction(userId, {
+        type: "expense",
+        amount,
+        description: `FarmStay booking ${b.id} (reconciled)`,
+        category: "farmstay",
+        referenceId: String(b.id),
+      });
+      summary.push({ bookingId: b.id, status: "charged", charged: amount });
+    } catch (err) {
+      if (/insufficient/i.test(err.message)) {
+        if (b.state === "confirmed") {
+          await farmStay.cancelBooking(userId, b.id).catch(() => {});
+          summary.push({ bookingId: b.id, status: "cancelled_insufficient_funds" });
+        } else {
+          summary.push({ bookingId: b.id, status: "unpaid_insufficient_funds" });
+        }
+      } else {
+        logError("[farm-stay] reconcile charge failed", err.message);
+        summary.push({ bookingId: b.id, status: "retry_failed" });
+      }
+    }
+  }
+  return summary;
+}
+
 // Health (aggregate across the ecosystem).
 router.get("/farm-stay/health", (req, res) => proxy(res, farmStay.healthAll()));
 
@@ -181,6 +240,9 @@ router.get("/farm-stay/search", (req, res) =>
       district: req.query.district,
       type: req.query.type,
       maxPrice: req.query.maxPrice,
+      sort: req.query.sort,
+      page: req.query.page,
+      pageSize: req.query.pageSize,
     }),
   ),
 );
@@ -213,7 +275,9 @@ router.delete("/farm-stay/properties/:id/blackouts/:lockId", (req, res) =>
 // Bookings.
 router.post("/farm-stay/bookings", (req, res) => proxy(res, farmStay.createBooking(userOf(req), req.body)));
 
-// Listing bookings also runs the host payout sweep (completed stays → ROL income).
+// Listing bookings also runs the host payout sweep (completed stays → ROL income)
+// and annotates the caller's own (guest) bookings with a payment_status derived
+// from the ROL ledger, so the UI can surface a stuck ("pending") charge.
 router.get("/farm-stay/bookings", async (req, res) => {
   const userId = userOf(req);
   const result = await farmStay.listBookings(userId, { role: req.query.role });
@@ -223,87 +287,170 @@ router.get("/farm-stay/bookings", async (req, res) => {
   } catch (err) {
     logError("[farm-stay] payout sweep error", err.message);
   }
+  const ledger = await guestLedger(userId);
+  const bookings = result.body.bookings.map((b) =>
+    String(b.guest_id) === String(userId) ? { ...b, payment_status: paymentStatusOf(b, ledger[b.id]) } : b,
+  );
   const balance = await currentBalance(userId);
-  res.status(200).json({ ...result.body, balance: balance != null ? money(balance) : null, currency: "ROL" });
+  res.status(200).json({ ...result.body, bookings, balance: balance != null ? money(balance) : null, currency: "ROL" });
 });
 
 /**
  * Confirm → charge ROL. Confirm first (the gateway re-quotes and runs the
  * price-change handshake), then debit the final total. If the balance is too
  * low, roll the booking back (cancel → releases the hold) and return 402.
+ *
+ * Idempotent when the caller sends an `Idempotency-Key` header: a retry with the
+ * same key replays the first outcome instead of charging again.
  */
 router.post("/farm-stay/bookings/:id/confirm", async (req, res) => {
   const userId = userOf(req);
+  const idemKey = req.get("idempotency-key") || "";
   try {
-    const result = await farmStay.confirmBooking(userId, req.params.id, req.body);
-    if (result.status !== 200) return forward(res, result);
-
-    const booking = result.body?.booking || {};
-    const amount = money(booking.quote_total || result.body?.quote?.total || 0);
-    await ensureAccount(userId);
-
-    if (amount > 0) {
-      try {
-        await financialService.addTransaction(userId, {
-          type: "expense",
-          amount,
-          description: `FarmStay booking ${booking.id || req.params.id}`,
-          category: "farmstay",
-          referenceId: String(booking.id || req.params.id),
-        });
-      } catch (err) {
-        if (/insufficient/i.test(err.message)) {
-          // Roll back the confirmation so we never hold a stay we couldn't pay for.
-          await farmStay.cancelBooking(userId, req.params.id).catch(() => {});
-          const balance = await currentBalance(userId);
-          return res.status(402).json({ error: "INSUFFICIENT_FUNDS", needed: amount, balance, currency: "ROL" });
-        }
-        logError("[farm-stay] charge failed after confirm", err.message);
-      }
-    }
-    const balance = await currentBalance(userId);
-    return res.status(200).json({ ...result.body, charged: amount, balance: balance != null ? money(balance) : null, currency: "ROL" });
+    const { status, body } = await withIdempotency({ namespace: "confirm", user: userId, key: idemKey }, () =>
+      doConfirm(userId, req.params.id, req.body),
+    );
+    res.status(status).json(body);
   } catch (err) {
-    res.status(500).json({ error: "Internal error", detail: err.message });
+    sendBridgeError(res, 500, ERROR_CODES.INTERNAL, err.message);
   }
 });
 
 /**
- * Cancel → refund ROL. If the booking was confirmed (already paid), refund
- * refundPct% of what was paid as income.
+ * Core confirm+charge, returning `{ status, body }` so it can be wrapped by the
+ * idempotency guard. On a NON-insufficient charge failure the booking stays
+ * confirmed but unpaid; we report `charged: 0` + `paymentStatus: "pending"` (the
+ * old code wrongly reported the full amount as charged) and leave it for the
+ * reconciliation sweep to settle later.
+ */
+async function doConfirm(userId, bookingId, reqBody) {
+  const result = await farmStay.confirmBooking(userId, bookingId, reqBody);
+  if (result.status !== 200) return { status: result.status, body: result.body };
+
+  const booking = result.body?.booking || {};
+  const amount = money(booking.quote_total || result.body?.quote?.total || 0);
+  await ensureAccount(userId);
+
+  let charged = 0;
+  let paymentStatus = amount > 0 ? "paid" : "";
+  if (amount > 0) {
+    try {
+      await financialService.addTransaction(userId, {
+        type: "expense",
+        amount,
+        description: `FarmStay booking ${booking.id || bookingId}`,
+        category: "farmstay",
+        referenceId: String(booking.id || bookingId),
+      });
+      charged = amount;
+    } catch (err) {
+      if (/insufficient/i.test(err.message)) {
+        // Roll back the confirmation so we never hold a stay we couldn't pay for.
+        await farmStay.cancelBooking(userId, bookingId).catch(() => {});
+        const balance = await currentBalance(userId);
+        return {
+          status: 402,
+          body: bridgeError(ERROR_CODES.INSUFFICIENT_FUNDS, undefined, {
+            needed: amount,
+            balance: balance != null ? money(balance) : null,
+            currency: "ROL",
+          }),
+        };
+      }
+      // Confirmed but not charged — defer to reconciliation.
+      logError("[farm-stay] charge failed after confirm", err.message);
+      paymentStatus = "pending";
+    }
+  }
+  const balance = await currentBalance(userId);
+  return {
+    status: 200,
+    body: { ...result.body, charged, paymentStatus, balance: balance != null ? money(balance) : null, currency: "ROL" },
+  };
+}
+
+/**
+ * Cancel → refund ROL. Refund refundPct% of what was ACTUALLY paid (read from the
+ * ledger, not the quote), so a confirmed-but-unpaid booking — one whose charge is
+ * still pending — never refunds money that was never taken.
+ *
+ * Idempotent via the `Idempotency-Key` header.
  */
 router.post("/farm-stay/bookings/:id/cancel", async (req, res) => {
   const userId = userOf(req);
+  const idemKey = req.get("idempotency-key") || "";
   try {
-    const before = await farmStay.getBooking(userId, req.params.id);
-    const prior = before.body?.booking || {};
-    const wasPaid = prior.state === "confirmed";
-    const paidTotal = money(prior.quote_total || 0);
-
-    const result = await farmStay.cancelBooking(userId, req.params.id);
-    if (result.status !== 200) return forward(res, result);
-
-    let refunded = 0;
-    const refundPct = result.body?.refundPct || 0;
-    if (wasPaid && refundPct > 0 && paidTotal > 0) {
-      refunded = money((paidTotal * refundPct) / 100);
-      try {
-        await financialService.addTransaction(userId, {
-          type: "income",
-          amount: refunded,
-          description: `FarmStay refund ${req.params.id} (${refundPct}%)`,
-          category: "farmstay",
-          referenceId: String(req.params.id),
-        });
-      } catch (err) {
-        logError("[farm-stay] refund failed", err.message);
-        refunded = 0;
-      }
-    }
-    const balance = await currentBalance(userId);
-    return res.status(200).json({ ...result.body, refunded, balance: balance != null ? money(balance) : null, currency: "ROL" });
+    const { status, body } = await withIdempotency({ namespace: "cancel", user: userId, key: idemKey }, () =>
+      doCancel(userId, req.params.id),
+    );
+    res.status(status).json(body);
   } catch (err) {
-    res.status(500).json({ error: "Internal error", detail: err.message });
+    sendBridgeError(res, 500, ERROR_CODES.INTERNAL, err.message);
+  }
+});
+
+async function doCancel(userId, bookingId) {
+  const before = await farmStay.getBooking(userId, bookingId);
+  const prior = before.body?.booking || {};
+  const wasConfirmed = prior.state === "confirmed";
+
+  const result = await farmStay.cancelBooking(userId, bookingId);
+  if (result.status !== 200) return { status: result.status, body: result.body };
+
+  // Refund base = what the guest has actually paid net of prior refunds.
+  const ledger = await guestLedger(userId);
+  const entry = ledger[bookingId] || { charged: 0, refunded: 0 };
+  const netPaid = money(entry.charged - entry.refunded);
+
+  let refunded = 0;
+  const refundPct = result.body?.refundPct || 0;
+  if (wasConfirmed && refundPct > 0 && netPaid > 0) {
+    refunded = money((netPaid * refundPct) / 100);
+    try {
+      await financialService.addTransaction(userId, {
+        type: "income",
+        amount: refunded,
+        description: `FarmStay refund ${bookingId} (${refundPct}%)`,
+        category: "farmstay",
+        referenceId: String(bookingId),
+      });
+    } catch (err) {
+      logError("[farm-stay] refund failed", err.message);
+      refunded = 0;
+    }
+  }
+  const balance = await currentBalance(userId);
+  return {
+    status: 200,
+    body: { ...result.body, refunded, balance: balance != null ? money(balance) : null, currency: "ROL" },
+  };
+}
+
+/**
+ * Reconciliation sweep for the authenticated user — settles money that the
+ * read-triggered paths would otherwise only fix when a booking happens to be
+ * viewed. Retries the caller's stuck guest charges (the confirm failure window)
+ * AND releases host payouts for their completed stays. Safe to call repeatedly
+ * (both operations are idempotent) and safe to wire to a scheduler.
+ */
+router.post("/farm-stay/reconcile", async (req, res) => {
+  const userId = userOf(req);
+  try {
+    const [guestRes, hostRes] = await Promise.all([
+      farmStay.listBookings(userId, { role: "guest" }),
+      farmStay.listBookings(userId, { role: "host" }),
+    ]);
+    const guestBookings = Array.isArray(guestRes.body?.bookings) ? guestRes.body.bookings : [];
+    const hostBookings = Array.isArray(hostRes.body?.bookings) ? hostRes.body.bookings : [];
+
+    const charges = await reconcileGuestCharges(userId, guestBookings);
+    await sweepHostPayouts(hostBookings);
+    const payouts = hostBookings.filter((b) => b.payout_status === "paid").map((b) => b.id);
+
+    const balance = await currentBalance(userId);
+    res.status(200).json({ charges, payouts, balance: balance != null ? money(balance) : null, currency: "ROL" });
+  } catch (err) {
+    sendBridgeError(res, 500, ERROR_CODES.INTERNAL, err.message);
   }
 });
 
@@ -341,6 +488,7 @@ router.get("/farm-stay/purchases", async (req, res) => {
         charged,
         refunded,
         net: money(charged - refunded),
+        paymentStatus: paymentStatusOf(b, l),
         createdAt: b.created_at || "",
         receiptUrl: `/api/v1/farm-stay/bookings/${encodeURIComponent(b.id)}/receipt.pdf`,
       };
@@ -361,7 +509,7 @@ router.get("/farm-stay/bookings/:id/receipt.pdf", async (req, res) => {
     if (result.status !== 200 || !result.body?.booking) return forward(res, result);
     const booking = result.body.booking;
     if (String(booking.guest_id) !== String(userId)) {
-      return res.status(403).json({ error: "Only the guest can download this receipt" });
+      return sendBridgeError(res, 403, ERROR_CODES.FORBIDDEN, "Only the guest can download this receipt");
     }
     const ledger = await guestLedger(userId);
     const l = ledger[booking.id] || { charged: 0, refunded: 0 };
@@ -372,7 +520,7 @@ router.get("/farm-stay/bookings/:id/receipt.pdf", async (req, res) => {
     res.status(200).end(pdf);
   } catch (err) {
     // Never leave the request hanging on an unexpected failure (PDF build or I/O).
-    res.status(500).json({ error: "Internal error", detail: err.message });
+    sendBridgeError(res, 500, ERROR_CODES.INTERNAL, err.message);
   }
 });
 

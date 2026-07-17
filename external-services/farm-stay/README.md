@@ -65,6 +65,25 @@ flowchart LR
 The leaf services do not call each other. All cross-service work starts at the
 gateway.
 
+### Search sorting & pagination
+
+`GET /v1/search` accepts `sort` (`price_asc` | `price_desc` | `rating_desc` |
+`capacity_desc`) plus `page` / `pageSize` (default 24, max 100). Because the sort
+keys (price, rating) only exist after the gateway enriches each match with its
+quote and review score, sorting and paging happen in the **gateway** (not
+inventory), which then returns `{ results, total, page, pageSize, totalPages,
+sort }`. Listings with no quote (pricing unavailable) sort last.
+
+### Promo codes
+
+`POST /v1/bookings` (and each quote) accepts an optional `coupon` code. Coupons are
+**compiled-in** to the stateless pricing service (`pricing-service/config/coupons.js`)
+so a quote stays a pure, deterministic function — the confirm-time re-quote
+reproduces the discounted total to the penny. The applied code is persisted on the
+booking so confirm re-quotes with it. A quote echoes the outcome as
+`quote.coupon = { code, applied, amount, error? }` (`error`:
+`COUPON_NOT_FOUND` | `COUPON_MIN_NIGHTS`).
+
 ## Directory Layout
 
 ```text
@@ -324,6 +343,27 @@ sequenceDiagram
 > the same reference. Host payouts use a `payout-<id>` reference and are excluded
 > from the guest view. Downloadable PDF receipts are guest-only.
 
+### Bridge money guarantees
+
+The Rolnopol bridge (`routes/v1/farm-stay.route.js`) adds three safeguards around
+the money it moves:
+
+- **Idempotency.** `POST /bookings/:id/confirm` and `/bookings/:id/cancel` honour an
+  `Idempotency-Key` header: a retry (or double-tap) with the same key replays the
+  first outcome instead of charging/refunding again. Concurrent duplicates share one
+  execution.
+- **Charge-failure window + reconciliation.** If a booking confirms at the gateway but
+  the ROL charge then fails transiently, the response reports `charged: 0` +
+  `paymentStatus: "pending"` (surfaced on `/bookings` and `/purchases`) rather than
+  pretending it was paid. `POST /reconcile` retries the caller's stuck guest charges
+  **and** releases host payouts for their completed stays — independent of anyone
+  browsing a booking — so it can also be driven by a scheduler. Both operations are
+  idempotent.
+- **Structured errors.** Bridge-originated errors use one envelope:
+  `{ error, code, message, ...domainFields }`, where `error` === `code` is a stable
+  SCREAMING_SNAKE token (e.g. `INSUFFICIENT_FUNDS`, `FORBIDDEN`, `INTERNAL`). See
+  `helpers/farm-stay-errors.js`.
+
 ## Gateway API
 
 Rolnopol proxies these as `/api/v1/farm-stay/*`. The gateway itself exposes the
@@ -333,7 +373,7 @@ same paths under `/v1/*` plus health endpoints.
 GET    /health
 GET    /health/all
 GET    /v1/catalog
-GET    /v1/search?from=&to=&guests=&district=&type=&maxPrice=&sort=
+GET    /v1/search?from=&to=&guests=&district=&type=&maxPrice=&sort=&page=&pageSize=
 GET    /v1/properties/:id?from=&to=
 POST   /v1/properties
 PATCH  /v1/properties/:id

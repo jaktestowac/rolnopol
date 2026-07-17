@@ -108,6 +108,8 @@ module.exports = {
       },
       userId,
     ),
+  // Sort + pagination are applied by the gateway (they depend on quote/score),
+  // so the inventory Search contract stays unchanged.
   search: (userId, q) =>
     unary(
       "Search",

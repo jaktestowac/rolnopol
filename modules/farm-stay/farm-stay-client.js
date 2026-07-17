@@ -48,6 +48,7 @@ module.exports = {
   base: BASE,
   healthAll: () => call("GET", "/health/all"),
   getCatalog: (userId) => call("GET", "/v1/catalog", { userId }),
+  // query may include: from, to, guests, district, type, maxPrice, sort, page, pageSize
   search: (userId, query) => call("GET", "/v1/search", { userId, query }),
   getProperty: (userId, id, query) => call("GET", `/v1/properties/${encodeURIComponent(id)}`, { userId, query }),
   listMine: (userId) => call("GET", "/v1/properties/mine", { userId }),

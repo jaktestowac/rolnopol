@@ -85,6 +85,7 @@ module.exports = {
         quote_total: b.quoteTotal || 0,
         hold_expires_at: b.holdExpiresAt || "",
         policy: b.policy || "moderate",
+        coupon: b.coupon || "",
       },
       userId,
     ),

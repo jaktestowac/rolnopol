@@ -29,7 +29,7 @@ function buildApp() {
   });
 
   app.post("/v1/quotes", (req, res) => {
-    const { basePrice, from, to } = req.body || {};
+    const { basePrice, from, to, coupon } = req.body || {};
     if (typeof basePrice !== "number" || basePrice < 0) {
       return res.status(400).json({ error: "basePrice must be a non-negative number" });
     }
@@ -37,7 +37,7 @@ function buildApp() {
       return res.status(400).json({ error: "from/to must be valid dates with from < to" });
     }
     try {
-      const result = quote({ basePrice, from, to });
+      const result = quote({ basePrice, from, to, coupon });
       res.json(result);
     } catch (err) {
       log.error("quote failed", { error: err.message });
