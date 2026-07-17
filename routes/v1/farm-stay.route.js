@@ -356,19 +356,24 @@ router.get("/farm-stay/purchases", async (req, res) => {
  */
 router.get("/farm-stay/bookings/:id/receipt.pdf", async (req, res) => {
   const userId = userOf(req);
-  const result = await farmStay.getBooking(userId, req.params.id);
-  if (result.status !== 200 || !result.body?.booking) return forward(res, result);
-  const booking = result.body.booking;
-  if (String(booking.guest_id) !== String(userId)) {
-    return res.status(403).json({ error: "Only the guest can download this receipt" });
+  try {
+    const result = await farmStay.getBooking(userId, req.params.id);
+    if (result.status !== 200 || !result.body?.booking) return forward(res, result);
+    const booking = result.body.booking;
+    if (String(booking.guest_id) !== String(userId)) {
+      return res.status(403).json({ error: "Only the guest can download this receipt" });
+    }
+    const ledger = await guestLedger(userId);
+    const l = ledger[booking.id] || { charged: 0, refunded: 0 };
+    const pdf = buildReceiptPdf({ booking, charged: l.charged, refunded: l.refunded, guest: String(userId) });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="farmstay-receipt-${booking.id}.pdf"`);
+    res.setHeader("Content-Length", pdf.length);
+    res.status(200).end(pdf);
+  } catch (err) {
+    // Never leave the request hanging on an unexpected failure (PDF build or I/O).
+    res.status(500).json({ error: "Internal error", detail: err.message });
   }
-  const ledger = await guestLedger(userId);
-  const l = ledger[booking.id] || { charged: 0, refunded: 0 };
-  const pdf = buildReceiptPdf({ booking, charged: l.charged, refunded: l.refunded, guest: String(userId) });
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", `attachment; filename="farmstay-receipt-${booking.id}.pdf"`);
-  res.setHeader("Content-Length", pdf.length);
-  res.status(200).end(pdf);
 });
 
 router.get("/farm-stay/bookings/:id", async (req, res) => {

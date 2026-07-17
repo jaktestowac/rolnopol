@@ -13,7 +13,7 @@ const reservation = require("../clients/reservation-client");
 const pricing = require("../clients/pricing-client");
 const reviews = require("../clients/review-client");
 const catalogMeta = require("../config/catalog-meta");
-const { sendError, isUnavailable, grpcPreconditionToken } = require("./errors");
+const { sendError, grpcPreconditionToken } = require("./errors");
 const { createLogger } = require("../../shared/logger");
 const { nightsBetween, eachNight } = require("../../shared/dates");
 
@@ -31,14 +31,19 @@ async function getProperty(userId, id) {
   return (properties || []).find((p) => p.id === id) || null;
 }
 
-/** Best-effort quote: returns null shape when pricing is unavailable. */
+/**
+ * Best-effort quote for BROWSING (search / property details): any pricing
+ * failure — service down, timeout, or an error response — degrades to a null
+ * quote so the listing still renders, just without a price. Booking never uses
+ * this path: POST /v1/bookings calls pricing.quote directly and refuses (503)
+ * when it fails, so a stay is never committed without a firm price.
+ */
 async function quoteBestEffort(property, from, to, guests) {
   try {
     const q = await pricing.quote({ propertyId: property.id, basePrice: property.base_price, from, to, guests });
     return { quote: q, quoteStatus: "ok" };
-  } catch (err) {
-    if (isUnavailable(err)) return { quote: null, quoteStatus: "unavailable" };
-    throw err;
+  } catch {
+    return { quote: null, quoteStatus: "unavailable" };
   }
 }
 
