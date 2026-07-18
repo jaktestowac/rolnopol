@@ -47,6 +47,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
     "Enable or disable the TaskLab module (gRPC client to the standalone TaskLab service, REST API, and dashboard) for logged-in users",
   greenhouseControlRoomEnabled:
     "Enable or disable the greenhouse control room module (gRPC client to the standalone greenhouse service, REST API, and dashboard)",
+  farmStayEnabled: "Enable or disable the FarmStay module (gRPC client to the standalone FarmStay service, REST API, and dashboard)",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -75,6 +76,7 @@ const FEATURE_FLAG_GROUPS = {
   farmlog: ["rolnopolFarmlogEnabled", "rolnopolFarmlogEngagementEnabled"],
   productivity: ["taskManagerEnabled", "taskLabEnabled"],
   greenhouse: ["greenhouseControlRoomEnabled"],
+  farmStay: ["farmStayEnabled"],
 };
 
 const EXPERIMENTAL_FEATURE_FLAGS = [
@@ -109,6 +111,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "taskManagerEnabled",
   "taskLabEnabled",
   "greenhouseControlRoomEnabled",
+  "farmStayEnabled",
 ];
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -153,6 +156,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   taskManagerEnabled: false,
   taskLabEnabled: false,
   greenhouseControlRoomEnabled: false,
+  farmStayEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

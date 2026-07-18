@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "seq": 10,
+  "reviews": [
+    {
+      "id": "rev-1",
+      "propertyId": "prop-7",
+      "bookingId": "bk-1",
+      "author": "1",
+      "rating": 5,
+      "text": "Charming manor room in the heart of Kraków — spotless and a wonderful breakfast.",
+      "createdAt": "2026-04-14T00:00:00.000Z"
+    },
+    {
+      "id": "rev-2",
+      "propertyId": "prop-8",
+      "bookingId": "bk-2",
+      "author": "1",
+      "rating": 4,
+      "text": "Great dunes camping, fell asleep to the waves. Showers could be warmer.",
+      "createdAt": "2026-05-25T00:00:00.000Z"
+    },
+    {
+      "id": "rev-3",
+      "propertyId": "prop-12",
+      "bookingId": "bk-3",
+      "author": "1",
+      "rating": 4,
+      "text": "Cosy orchard house, lovely hosts, quiet Poznań suburb.",
+      "createdAt": "2026-02-18T00:00:00.000Z"
+    },
+    {
+      "id": "rev-4",
+      "propertyId": "prop-oak-cottage",
+      "bookingId": "bk-4",
+      "author": "3",
+      "rating": 5,
+      "text": "The fireplace made the mountain evenings perfect. Highly recommend.",
+      "createdAt": "2026-03-09T00:00:00.000Z"
+    },
+    {
+      "id": "rev-5",
+      "propertyId": "prop-6",
+      "bookingId": "bk-5",
+      "author": "4",
+      "rating": 4,
+      "text": "Kayaks included and the lake view is unreal. Back next summer.",
+      "createdAt": "2026-05-06T00:00:00.000Z"
+    },
+    {
+      "id": "rev-6",
+      "propertyId": "prop-10",
+      "bookingId": "bk-6",
+      "author": "2",
+      "rating": 5,
+      "text": "Huge farmhouse, kids loved the animals. Everything as described.",
+      "createdAt": "2026-06-15T00:00:00.000Z"
+    },
+    {
+      "id": "rev-7",
+      "propertyId": "prop-11",
+      "bookingId": "bk-7",
+      "author": "5",
+      "rating": 3,
+      "text": "Beautiful forest but the nights were cold — bring a proper bag.",
+      "createdAt": "2026-04-26T00:00:00.000Z"
+    },
+    {
+      "id": "rev-8",
+      "propertyId": "prop-5",
+      "bookingId": "bk-8",
+      "author": "7",
+      "rating": 4,
+      "text": "Sunflower guesthouse is exactly the countryside escape we wanted.",
+      "createdAt": "2026-06-05T00:00:00.000Z"
+    },
+    {
+      "id": "rev-9",
+      "propertyId": "prop-24",
+      "bookingId": "bk-9",
+      "author": "6",
+      "rating": 5,
+      "text": "Waking up to the Tatras from bed — worth every złoty.",
+      "createdAt": "2026-06-22T00:00:00.000Z"
+    },
+    {
+      "id": "rev-10",
+      "propertyId": "prop-20",
+      "bookingId": "bk-10",
+      "author": "3",
+      "rating": 5,
+      "text": "Białowieża lodge is magical, saw a bison at dawn. Seven nights flew by.",
+      "createdAt": "2026-06-03T00:00:00.000Z"
+    }
+  ]
+}

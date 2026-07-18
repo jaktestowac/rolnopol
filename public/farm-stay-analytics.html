@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FarmStay — Platform Analytics</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/farm-stay.css" />
+  </head>
+
+  <body class="fs-page-body">
+    <div id="header-component"></div>
+
+    <main class="fs-container">
+      <header class="fs-header">
+        <div class="fs-header-left">
+          <h1><i class="fa-solid fa-chart-column"></i> FarmStay — Platform Analytics</h1>
+          <p class="fs-subtitle">
+            Cumulative statistics across every host, listing, and stay. Internal dashboard — admin access required.
+          </p>
+        </div>
+        <div class="fs-header-right">
+          <button id="fsRefresh" class="fs-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+      </header>
+
+      <div id="fsBanner" class="fs-banner" hidden></div>
+
+      <div id="fsMeta" class="fs-meta"></div>
+      <div id="fsStats" class="fs-stat-grid"></div>
+
+      <!-- Occupancy heatmap: GitHub-style per-day timeline across all stays -->
+      <section id="fsHeatCard" class="fs-chart-card fs-heat-card" hidden>
+        <h3><i class="fa-solid fa-calendar-week"></i> Occupancy calendar <span id="fsHeatPeak" class="fs-heat-peak"></span></h3>
+        <div id="fsHeatmap" class="fs-heat-scroll"></div>
+        <div class="fs-heat-legend">
+          <span>Less</span>
+          <span class="fs-heat-cell l0"></span>
+          <span class="fs-heat-cell l1"></span>
+          <span class="fs-heat-cell l2"></span>
+          <span class="fs-heat-cell l3"></span>
+          <span class="fs-heat-cell l4"></span>
+          <span>More</span>
+        </div>
+      </section>
+
+      <div id="fsCharts" class="fs-charts" hidden>
+        <div class="fs-chart-card">
+          <h3><i class="fa-solid fa-chart-line"></i> GMV over time</h3>
+          <div class="fs-chart-box"><canvas id="fsChartGmv"></canvas></div>
+        </div>
+        <div class="fs-chart-card">
+          <h3><i class="fa-solid fa-calendar-days"></i> Occupied nights per year</h3>
+          <div class="fs-chart-box"><canvas id="fsChartOccupancy"></canvas></div>
+        </div>
+        <div class="fs-chart-card">
+          <h3><i class="fa-solid fa-map-location-dot"></i> GMV by district</h3>
+          <div class="fs-chart-box"><canvas id="fsChartDistrict"></canvas></div>
+        </div>
+        <div class="fs-chart-card">
+          <h3><i class="fa-solid fa-house-chimney"></i> GMV by stay type</h3>
+          <div class="fs-chart-box"><canvas id="fsChartType"></canvas></div>
+        </div>
+        <div class="fs-chart-card">
+          <h3><i class="fa-solid fa-chart-pie"></i> Booking status</h3>
+          <div class="fs-chart-box"><canvas id="fsChartStates"></canvas></div>
+        </div>
+        <div class="fs-chart-card">
+          <h3><i class="fa-solid fa-crown"></i> Top hosts by GMV</h3>
+          <div class="fs-chart-box"><canvas id="fsChartHosts"></canvas></div>
+        </div>
+      </div>
+
+      <section class="fs-analytics-tables">
+        <div class="fs-table-card">
+          <h3><i class="fa-solid fa-trophy"></i> Top properties</h3>
+          <div id="fsTopProperties" class="fs-list"></div>
+        </div>
+        <div class="fs-table-card">
+          <h3><i class="fa-solid fa-users-gear"></i> Top hosts</h3>
+          <div id="fsTopHosts" class="fs-list"></div>
+        </div>
+      </section>
+    </main>
+
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <script src="/js/pages/farm-stay-analytics.js?v=1"></script>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("farm-stay");
+    </script>
+  </body>
+</html>

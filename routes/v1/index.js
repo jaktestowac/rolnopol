@@ -74,6 +74,15 @@ try {
   logError("[routes/v1] Failed to load tasklab.route — tasklab endpoints unavailable:", err.message);
   tasklabRoute = express.Router();
 }
+// Defensive loading — farm-stay route dials the standalone FarmStay gateway; if
+// it fails to load, the rest of the app must still start.
+let farmStayRoute;
+try {
+  farmStayRoute = require("./farm-stay.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load farm-stay.route — farm-stay endpoints unavailable:", err.message);
+  farmStayRoute = express.Router();
+}
 
 const router = express.Router();
 
@@ -231,6 +240,7 @@ router.use("/", tasksRoute);
 router.use("/", harvestArchiveRoute);
 router.use("/", greenhouseRoute);
 router.use("/", tasklabRoute);
+router.use("/", farmStayRoute);
 router.use("/", servicesMonitorRoute);
 router.use("/contact", contactRoute);
 router.use("/", blogRoute);

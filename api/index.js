@@ -143,21 +143,6 @@ try {
   };
 }
 
-let greenhouseWebSocketService;
-try {
-  greenhouseWebSocketService = require("../services/greenhouse-ws.service");
-} catch (error) {
-  logError("[startup] Failed to load greenhouse-ws.service — greenhouse live updates unavailable:", error.message);
-  greenhouseWebSocketService = {
-    attach() {
-      return null;
-    },
-    close() {
-      /* noop */
-    },
-  };
-}
-
 app.set("etag", false);
 
 let easterBreadcrumbCounter = 0;
@@ -500,6 +485,52 @@ app.get(["/tasklab", "/tasklab.html"], async (req, res, next) => {
     return next();
   } catch (error) {
     logError("TaskLab feature gate check failed", { error });
+    return next();
+  }
+});
+
+// Feature-gate FarmStay page before static serving
+app.get(["/farm-stay", "/farm-stay.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.farmStayEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/farm-stay") {
+      return res.redirect(302, "/farm-stay.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("FarmStay feature gate check failed", { error });
+    return next();
+  }
+});
+
+// Hidden FarmStay platform-analytics dashboard — not linked from the nav, gated
+// by the same feature flag. The endpoint it calls is admin-gated server-side, so
+// exposing the (static) HTML is harmless: without admin access the API 403s.
+app.get(["/farm-stay-analytics", "/farm-stay-analytics.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.farmStayEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/farm-stay-analytics") {
+      return res.redirect(302, "/farm-stay-analytics.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("FarmStay analytics feature gate check failed", { error });
     return next();
   }
 });

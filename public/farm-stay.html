@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FarmStay — Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/farm-stay.css" />
+  </head>
+
+  <body class="fs-page-body">
+    <div id="header-component"></div>
+
+    <main class="fs-container">
+      <header class="fs-header">
+        <div class="fs-header-left">
+          <h1><i class="fa-solid fa-tractor"></i> FarmStay</h1>
+          <p class="fs-subtitle">Sleep among the fields — book a stay on Poland's finest farms, or open your own barn doors to guests.</p>
+        </div>
+        <div class="fs-header-right">
+          <span id="fsBalance" class="fs-balance" title="Your ROL balance"></span>
+          <div id="fsHealth" class="fs-health" title="Ecosystem status"></div>
+        </div>
+      </header>
+
+      <div id="fsBanner" class="fs-banner" hidden></div>
+
+      <nav class="fs-tabs" role="tablist">
+        <button class="fs-tab is-active" data-tab="search" role="tab"><i class="fa-solid fa-magnifying-glass"></i> Search stays</button>
+        <button class="fs-tab" data-tab="trips" role="tab"><i class="fa-solid fa-calendar-check"></i> My trips</button>
+        <button class="fs-tab" data-tab="purchases" role="tab"><i class="fa-solid fa-receipt"></i> Purchases</button>
+        <button class="fs-tab" data-tab="travel" role="tab"><i class="fa-solid fa-suitcase-rolling"></i> My travel</button>
+        <button class="fs-tab" data-tab="listings" role="tab"><i class="fa-solid fa-warehouse"></i> My listings</button>
+        <button class="fs-tab" data-tab="hosting" role="tab"><i class="fa-solid fa-sack-dollar"></i> Hosting</button>
+      </nav>
+
+      <!-- ── Search tab ─────────────────────────────────────────── -->
+      <section id="tab-search" class="fs-tab-panel is-active">
+        <form id="fsSearchForm" class="fs-search" autocomplete="off">
+          <label>Check-in<input id="fsFrom" type="date" required /></label>
+          <label>Check-out<input id="fsTo" type="date" required /></label>
+          <label>Guests<input id="fsGuests" type="number" min="1" value="2" /></label>
+          <label
+            >Location
+            <select id="fsDistrict">
+              <option value="">Anywhere in Poland</option>
+            </select>
+          </label>
+          <label
+            >Type
+            <select id="fsType">
+              <option value="">Any</option>
+              <option value="room">Room</option>
+              <option value="cottage">Cottage</option>
+              <option value="camping">Camping</option>
+            </select>
+          </label>
+          <label>Max price<input id="fsMaxPrice" type="number" min="0" placeholder="—" /></label>
+          <button type="submit" class="fs-btn fs-btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+        </form>
+        <div id="fsSearchMeta" class="fs-meta"></div>
+        <div id="fsResults" class="fs-grid"></div>
+      </section>
+
+      <!-- ── Trips tab ──────────────────────────────────────────── -->
+      <section id="tab-trips" class="fs-tab-panel">
+        <div class="fs-meta">
+          <button id="fsRefreshTrips" class="fs-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          <span id="fsTripsSummary"></span>
+        </div>
+        <div id="fsTrips" class="fs-list"></div>
+      </section>
+
+      <!-- ── Purchases tab (history + PDF receipts) ─────────────── -->
+      <section id="tab-purchases" class="fs-tab-panel">
+        <div class="fs-meta">
+          <button id="fsRefreshPurchases" class="fs-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          <span id="fsPurchasesSummary"></span>
+        </div>
+        <div id="fsPurchases" class="fs-list"></div>
+      </section>
+
+      <!-- ── My travel tab (guest "your travel" summary) ────────── -->
+      <section id="tab-travel" class="fs-tab-panel">
+        <div class="fs-meta">
+          <button id="fsRefreshTravel" class="fs-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          <span id="fsTravelSummary"></span>
+        </div>
+        <div id="fsTravelStats" class="fs-stat-grid"></div>
+        <section id="fsTravelHeatCard" class="fs-chart-card fs-heat-card" hidden>
+          <h3><i class="fa-solid fa-calendar-week"></i> Your stay calendar <span id="fsTravelHeatPeak" class="fs-heat-peak"></span></h3>
+          <div id="fsTravelHeatmap" class="fs-heat-scroll"></div>
+          <div class="fs-heat-legend">
+            <span>Less</span>
+            <span class="fs-heat-cell l0"></span>
+            <span class="fs-heat-cell l1"></span>
+            <span class="fs-heat-cell l2"></span>
+            <span class="fs-heat-cell l3"></span>
+            <span class="fs-heat-cell l4"></span>
+            <span>More</span>
+          </div>
+        </section>
+        <div id="fsTravelCharts" class="fs-charts" hidden>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-map-location-dot"></i> Nights by region</h3>
+            <div class="fs-chart-box"><canvas id="fsChartTravelRegion"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-chart-line"></i> Spend over time</h3>
+            <div class="fs-chart-box"><canvas id="fsChartTravelSpend"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-house-chimney"></i> Nights by stay type</h3>
+            <div class="fs-chart-box"><canvas id="fsChartTravelType"></canvas></div>
+          </div>
+        </div>
+        <div id="fsTravelRegions" class="fs-list"></div>
+      </section>
+
+      <!-- ── Listings tab ───────────────────────────────────────── -->
+      <section id="tab-listings" class="fs-tab-panel">
+        <form id="fsListingForm" class="fs-listing-form" autocomplete="off">
+          <h3><i class="fa-solid fa-warehouse"></i> List your stay</h3>
+          <div class="fs-listing-grid">
+            <label>Name<input id="lName" type="text" required placeholder="Cosy hayloft" /></label>
+            <label
+              >Type
+              <select id="lType">
+                <option value="room">Room</option>
+                <option value="cottage">Cottage</option>
+                <option value="camping">Camping</option>
+              </select>
+            </label>
+            <label
+              >Location
+              <select id="lDistrict"></select>
+            </label>
+            <label>Capacity<input id="lCapacity" type="number" min="1" value="2" /></label>
+            <label>Base price / night<input id="lBasePrice" type="number" min="0" value="80" /></label>
+            <label
+              >Cancellation policy
+              <select id="lPolicy">
+                <option value="flexible">Flexible</option>
+                <option value="moderate" selected>Moderate</option>
+                <option value="strict">Strict</option>
+              </select>
+            </label>
+          </div>
+          <fieldset class="fs-fieldset">
+            <legend><i class="fa-solid fa-star"></i> Amenities</legend>
+            <p class="fs-fieldset-hint">Tap everything your stay offers guests.</p>
+            <div id="lAmenities" class="fs-amenity-grid"></div>
+          </fieldset>
+
+          <fieldset class="fs-fieldset">
+            <legend><i class="fa-solid fa-image"></i> Card photo</legend>
+            <p class="fs-fieldset-hint">Pick the look guests see in search results.</p>
+            <div id="lPhotoThemes" class="fs-theme-grid"></div>
+          </fieldset>
+
+          <button type="submit" class="fs-btn fs-btn-primary"><i class="fa-solid fa-plus"></i> Publish listing</button>
+        </form>
+
+        <div class="fs-custom-loc">
+          <h4 class="fs-custom-loc-title"><i class="fa-solid fa-location-pin"></i> Custom locations</h4>
+          <div class="fs-custom-loc-form">
+            <select id="lCustomVoi">
+              <option value="">Voivodeship…</option>
+            </select>
+            <input id="lCustomLoc" type="text" placeholder="City or village" maxlength="60" />
+            <button type="button" class="fs-btn fs-btn-sm" id="lAddCustomLoc"><i class="fa-solid fa-plus"></i> Add</button>
+          </div>
+          <div id="fsCustomLocs" class="fs-custom-loc-list"></div>
+        </div>
+
+        <div class="fs-meta"><span id="fsListingsSummary"></span></div>
+        <div id="fsListings" class="fs-list"></div>
+      </section>
+
+      <!-- ── Hosting tab (earnings + occupancy) ─────────────────── -->
+      <section id="tab-hosting" class="fs-tab-panel">
+        <div class="fs-meta">
+          <button id="fsRefreshHosting" class="fs-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          <span id="fsHostingSummary"></span>
+        </div>
+        <div id="fsEarnings" class="fs-earnings"></div>
+        <div id="fsHostStats" class="fs-stat-grid"></div>
+        <section id="fsHostHeatCard" class="fs-chart-card fs-heat-card" hidden>
+          <h3><i class="fa-solid fa-calendar-week"></i> Occupancy calendar <span id="fsHostHeatPeak" class="fs-heat-peak"></span></h3>
+          <div id="fsHostHeatmap" class="fs-heat-scroll"></div>
+          <div class="fs-heat-legend">
+            <span>Less</span>
+            <span class="fs-heat-cell l0"></span>
+            <span class="fs-heat-cell l1"></span>
+            <span class="fs-heat-cell l2"></span>
+            <span class="fs-heat-cell l3"></span>
+            <span class="fs-heat-cell l4"></span>
+            <span>More</span>
+          </div>
+        </section>
+        <div id="fsHostCharts" class="fs-charts" hidden>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-chart-line"></i> Income over time</h3>
+            <div class="fs-chart-box"><canvas id="fsChartIncome"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-calendar-days"></i> Occupied nights per year</h3>
+            <div class="fs-chart-box"><canvas id="fsChartOccupancy"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-users"></i> Visitors per month</h3>
+            <div class="fs-chart-box"><canvas id="fsChartVisitors"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-sack-dollar"></i> Income by listing</h3>
+            <div class="fs-chart-box"><canvas id="fsChartByProperty"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-chart-pie"></i> Booking status</h3>
+            <div class="fs-chart-box"><canvas id="fsChartStates"></canvas></div>
+          </div>
+        </div>
+        <div id="fsHosting" class="fs-list"></div>
+      </section>
+    </main>
+
+    <!-- Booking modal (hold → confirm) -->
+    <div id="fsModal" class="fs-modal" hidden>
+      <div class="fs-modal-card">
+        <button class="fs-modal-close" id="fsModalClose" aria-label="Close">&times;</button>
+        <div id="fsModalBody"></div>
+      </div>
+    </div>
+
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+
+    <script src="/js/api.js"></script>
+
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <script src="/js/pages/farm-stay.js?v=1"></script>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("farm-stay");
+    </script>
+  </body>
+</html>

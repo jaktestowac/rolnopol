@@ -40,7 +40,8 @@
     "rolnopolFarmlogEngagementEnabled": false,
     "taskManagerEnabled": false,
     "taskLabEnabled": false,
-    "greenhouseControlRoomEnabled": false
+    "greenhouseControlRoomEnabled": false,
+    "farmStayEnabled": false
   },
   "updatedAt": "2026-06-22T22:31:56.368Z"
 }

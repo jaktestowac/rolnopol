@@ -1,0 +1,494 @@
+{
+  "version": 1,
+  "seq": 25,
+  "properties": [
+    {
+      "id": "prop-oak-cottage",
+      "hostId": "1",
+      "name": "Oak Hill Cottage",
+      "district": "Karpacz",
+      "type": "cottage",
+      "capacity": 4,
+      "basePrice": 120,
+      "policy": "moderate",
+      "amenities": ["kitchen", "fireplace", "parking"],
+      "photoRef": "forest",
+      "active": true
+    },
+    {
+      "id": "prop-meadow-room",
+      "hostId": "5",
+      "name": "Meadow View Room",
+      "district": "Zakopane",
+      "type": "room",
+      "capacity": 2,
+      "basePrice": 60,
+      "policy": "flexible",
+      "amenities": ["breakfast", "wifi"],
+      "photoRef": "meadow",
+      "active": true
+    },
+    {
+      "id": "prop-riverside-camp",
+      "hostId": "2",
+      "name": "Riverside Camping Spot",
+      "district": "Augustów",
+      "type": "camping",
+      "capacity": 6,
+      "basePrice": 35,
+      "policy": "strict",
+      "amenities": ["firepit", "water", "kayaks"],
+      "photoRef": "lakeside",
+      "active": true
+    },
+    {
+      "id": "prop-barn-loft",
+      "hostId": "9",
+      "name": "Restored Barn Loft",
+      "district": "Wisła",
+      "type": "room",
+      "capacity": 3,
+      "basePrice": 95,
+      "policy": "moderate",
+      "amenities": ["wifi", "parking", "animals"],
+      "photoRef": "barn",
+      "active": true
+    },
+    {
+      "id": "prop-5",
+      "hostId": "12",
+      "name": "Sunflower Guesthouse",
+      "district": "Wrocław",
+      "type": "cottage",
+      "capacity": 5,
+      "basePrice": 155,
+      "policy": "moderate",
+      "amenities": ["kitchen", "wifi", "garden", "parking"],
+      "photoRef": "meadow",
+      "active": true
+    },
+    {
+      "id": "prop-6",
+      "hostId": "1",
+      "name": "Mazurian Lakeside Cabin",
+      "district": "Giżycko",
+      "type": "cottage",
+      "capacity": 6,
+      "basePrice": 175,
+      "policy": "moderate",
+      "amenities": ["fireplace", "kayaks", "fishing", "parking"],
+      "photoRef": "lakeside",
+      "active": true
+    },
+    {
+      "id": "prop-7",
+      "hostId": "2",
+      "name": "Heritage Manor Room",
+      "district": "Kraków",
+      "type": "room",
+      "capacity": 2,
+      "basePrice": 110,
+      "policy": "flexible",
+      "amenities": ["breakfast", "wifi", "spa"],
+      "photoRef": "vineyard",
+      "active": true
+    },
+    {
+      "id": "prop-8",
+      "hostId": "4",
+      "name": "Coastal Dunes Camping",
+      "district": "Kołobrzeg",
+      "type": "camping",
+      "capacity": 8,
+      "basePrice": 45,
+      "policy": "strict",
+      "amenities": ["firepit", "beach-access", "water", "shower"],
+      "photoRef": "lakeside",
+      "active": true
+    },
+    {
+      "id": "prop-9",
+      "hostId": "1",
+      "name": "Warsaw Garden Studio",
+      "district": "Warszawa",
+      "type": "room",
+      "capacity": 2,
+      "basePrice": 130,
+      "policy": "flexible",
+      "amenities": ["wifi", "gym", "parking", "breakfast"],
+      "photoRef": "orchard",
+      "active": true
+    },
+    {
+      "id": "prop-10",
+      "hostId": "6",
+      "name": "Kashubian Farmhouse",
+      "district": "Gdańsk",
+      "type": "cottage",
+      "capacity": 8,
+      "basePrice": 195,
+      "policy": "moderate",
+      "amenities": ["kitchen", "fireplace", "garden", "animals", "parking"],
+      "photoRef": "barn",
+      "active": true
+    },
+    {
+      "id": "prop-11",
+      "hostId": "6",
+      "name": "Bieszczady Forest Camp",
+      "district": "Ustrzyki Dolne",
+      "type": "camping",
+      "capacity": 4,
+      "basePrice": 30,
+      "policy": "strict",
+      "amenities": ["firepit", "mountain-views", "water"],
+      "photoRef": "forest",
+      "active": true
+    },
+    {
+      "id": "prop-12",
+      "hostId": "7",
+      "name": "Poznań Orchard House",
+      "district": "Poznań",
+      "type": "room",
+      "capacity": 3,
+      "basePrice": 85,
+      "policy": "moderate",
+      "amenities": ["breakfast", "garden", "wifi", "parking"],
+      "photoRef": "orchard",
+      "active": true
+    },
+    {
+      "id": "prop-13",
+      "hostId": "7",
+      "name": "Lubusz Vineyard Cottage",
+      "district": "Zielona Góra",
+      "type": "cottage",
+      "capacity": 4,
+      "basePrice": 140,
+      "policy": "moderate",
+      "amenities": ["kitchen", "wine-cellar", "garden", "parking"],
+      "photoRef": "vineyard",
+      "active": true
+    },
+    {
+      "id": "prop-14",
+      "hostId": "4",
+      "name": "Apple Orchard Loft",
+      "district": "Grójec",
+      "type": "room",
+      "capacity": 2,
+      "basePrice": 75,
+      "policy": "flexible",
+      "amenities": ["breakfast", "wifi", "garden"],
+      "photoRef": "orchard",
+      "active": true
+    },
+    {
+      "id": "prop-19",
+      "hostId": "11",
+      "name": "Highland Shepherd Hut",
+      "district": "Szczyrk",
+      "type": "cottage",
+      "capacity": 2,
+      "basePrice": 90,
+      "policy": "strict",
+      "amenities": ["fireplace", "mountain-views", "animals"],
+      "photoRef": "mountain",
+      "active": true
+    },
+    {
+      "id": "prop-20",
+      "hostId": "1",
+      "name": "Białowieża Forest Lodge",
+      "district": "Białowieża",
+      "type": "cottage",
+      "capacity": 5,
+      "basePrice": 165,
+      "policy": "moderate",
+      "amenities": ["kitchen", "fireplace", "animals", "parking", "terrace"],
+      "photoRef": "forest",
+      "active": true
+    },
+    {
+      "id": "prop-21",
+      "hostId": "5",
+      "name": "Sopot Beach Cabin",
+      "district": "Sopot",
+      "type": "room",
+      "capacity": 2,
+      "basePrice": 145,
+      "policy": "flexible",
+      "amenities": ["wifi", "beach-access", "breakfast", "shower"],
+      "photoRef": "lakeside",
+      "active": true
+    },
+    {
+      "id": "prop-22",
+      "hostId": "2",
+      "name": "Roztocze Meadow Tent",
+      "district": "Zwierzyniec",
+      "type": "camping",
+      "capacity": 4,
+      "basePrice": 38,
+      "policy": "strict",
+      "amenities": ["firepit", "water", "animals"],
+      "photoRef": "meadow",
+      "active": true
+    },
+    {
+      "id": "prop-23",
+      "hostId": "3",
+      "name": "Wine Hills Retreat",
+      "district": "Sandomierz",
+      "type": "cottage",
+      "capacity": 6,
+      "basePrice": 180,
+      "policy": "moderate",
+      "amenities": ["kitchen", "wine-cellar", "terrace", "garden", "parking"],
+      "photoRef": "vineyard",
+      "active": true
+    },
+    {
+      "id": "prop-24",
+      "hostId": "4",
+      "name": "Tatra Panorama Suite",
+      "district": "Kościelisko",
+      "type": "room",
+      "capacity": 3,
+      "basePrice": 160,
+      "policy": "flexible",
+      "amenities": ["breakfast", "wifi", "spa", "mountain-views"],
+      "photoRef": "mountain",
+      "active": true
+    },
+    {
+      "id": "prop-25",
+      "hostId": "11",
+      "name": "Drawa River Kayak Camp",
+      "district": "Drawno",
+      "type": "camping",
+      "capacity": 6,
+      "basePrice": 42,
+      "policy": "moderate",
+      "amenities": ["firepit", "kayaks", "fishing", "water"],
+      "photoRef": "lakeside",
+      "active": true
+    }
+  ],
+  "calendars": {
+    "prop-oak-cottage": {
+      "locks": [
+        {
+          "lockId": "lock-4",
+          "from": "2026-03-05",
+          "to": "2026-03-08",
+          "kind": "confirmed"
+        }
+      ]
+    },
+    "prop-meadow-room": {
+      "locks": []
+    },
+    "prop-riverside-camp": {
+      "locks": []
+    },
+    "prop-barn-loft": {
+      "locks": []
+    },
+    "prop-5": {
+      "locks": [
+        {
+          "lockId": "lock-8",
+          "from": "2026-06-01",
+          "to": "2026-06-04",
+          "kind": "confirmed"
+        }
+      ]
+    },
+    "prop-6": {
+      "locks": [
+        {
+          "lockId": "lock-5",
+          "from": "2026-05-01",
+          "to": "2026-05-05",
+          "kind": "confirmed"
+        },
+        {
+          "lockId": "lock-12",
+          "from": "2026-08-12",
+          "to": "2026-08-16",
+          "kind": "confirmed"
+        },
+        {
+          "lockId": "lock-26",
+          "from": "2026-12-24",
+          "to": "2026-12-27",
+          "kind": "blackout"
+        }
+      ]
+    },
+    "prop-7": {
+      "locks": [
+        {
+          "lockId": "lock-1",
+          "from": "2026-04-10",
+          "to": "2026-04-13",
+          "kind": "confirmed"
+        },
+        {
+          "lockId": "lock-20",
+          "from": "2026-08-01",
+          "to": "2026-08-03",
+          "kind": "hold",
+          "expiresAt": "2026-07-16T12:08:00.000Z"
+        }
+      ]
+    },
+    "prop-8": {
+      "locks": [
+        {
+          "lockId": "lock-2",
+          "from": "2026-05-20",
+          "to": "2026-05-24",
+          "kind": "confirmed"
+        }
+      ]
+    },
+    "prop-9": {
+      "locks": [
+        {
+          "lockId": "lock-11",
+          "from": "2026-09-01",
+          "to": "2026-09-04",
+          "kind": "confirmed"
+        }
+      ]
+    },
+    "prop-10": {
+      "locks": [
+        {
+          "lockId": "lock-6",
+          "from": "2026-06-10",
+          "to": "2026-06-14",
+          "kind": "confirmed"
+        },
+        {
+          "lockId": "lock-13",
+          "from": "2026-08-20",
+          "to": "2026-08-24",
+          "kind": "confirmed"
+        }
+      ]
+    },
+    "prop-11": {
+      "locks": [
+        {
+          "lockId": "lock-7",
+          "from": "2026-04-22",
+          "to": "2026-04-25",
+          "kind": "confirmed"
+        }
+      ]
+    },
+    "prop-12": {
+      "locks": [
+        {
+          "lockId": "lock-3",
+          "from": "2026-02-14",
+          "to": "2026-02-17",
+          "kind": "confirmed"
+        }
+      ]
+    },
+    "prop-13": {
+      "locks": [
+        {
+          "lockId": "lock-17",
+          "from": "2026-09-20",
+          "to": "2026-09-23",
+          "kind": "confirmed"
+        }
+      ]
+    },
+    "prop-14": {
+      "locks": []
+    },
+    "prop-19": {
+      "locks": []
+    },
+    "prop-20": {
+      "locks": [
+        {
+          "lockId": "lock-10",
+          "from": "2026-05-28",
+          "to": "2026-06-02",
+          "kind": "confirmed"
+        },
+        {
+          "lockId": "lock-14",
+          "from": "2026-10-05",
+          "to": "2026-10-09",
+          "kind": "confirmed"
+        }
+      ]
+    },
+    "prop-21": {
+      "locks": [
+        {
+          "lockId": "lock-18",
+          "from": "2026-08-05",
+          "to": "2026-08-08",
+          "kind": "hold",
+          "expiresAt": "2026-07-16T12:08:00.000Z"
+        }
+      ]
+    },
+    "prop-22": {
+      "locks": [
+        {
+          "lockId": "lock-19",
+          "from": "2026-09-15",
+          "to": "2026-09-18",
+          "kind": "hold",
+          "expiresAt": "2026-07-16T12:08:00.000Z"
+        }
+      ]
+    },
+    "prop-23": {
+      "locks": [
+        {
+          "lockId": "lock-16",
+          "from": "2026-11-02",
+          "to": "2026-11-06",
+          "kind": "confirmed"
+        }
+      ]
+    },
+    "prop-24": {
+      "locks": [
+        {
+          "lockId": "lock-9",
+          "from": "2026-06-18",
+          "to": "2026-06-21",
+          "kind": "confirmed"
+        },
+        {
+          "lockId": "lock-15",
+          "from": "2026-08-28",
+          "to": "2026-08-31",
+          "kind": "confirmed"
+        },
+        {
+          "lockId": "lock-27",
+          "from": "2026-12-31",
+          "to": "2027-01-02",
+          "kind": "blackout"
+        }
+      ]
+    },
+    "prop-25": {
+      "locks": []
+    }
+  }
+}

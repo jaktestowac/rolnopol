@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package reservation;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reservation — owns the booking record and its state machine. Holds a lockId
+// issued by inventory (passed in by the gateway) but never talks to inventory.
+//
+// States: hold → confirmed → completed | cancelled | expired
+//   (expired/completed are LAZY: computed on read from holdExpiresAt / checkout.)
+// ─────────────────────────────────────────────────────────────────────────────
+
+service Health {
+  rpc Check(HealthRequest) returns (HealthReply);
+}
+message HealthRequest {}
+message HealthReply {
+  string status = 1;
+  bool db_initialized = 2;
+  int32 booking_count = 3;
+  string version = 4;
+  int64 uptime_ms = 5;
+}
+
+service Reservation {
+  rpc CreateBooking(CreateBookingRequest) returns (Booking);
+  rpc ConfirmBooking(ConfirmBookingRequest) returns (Booking);
+  rpc CancelBooking(BookingIdRequest) returns (CancelReply);
+  rpc MarkReleaseDone(BookingIdRequest) returns (Booking);
+  rpc GetBooking(BookingIdRequest) returns (Booking);
+  rpc ListBookings(ListBookingsRequest) returns (BookingList);
+}
+
+message Booking {
+  string id = 1;
+  string guest_id = 2;
+  string property_id = 3;
+  string host_id = 4;
+  string from = 5;
+  string to = 6;
+  int32 guests = 7;
+  string state = 8; // hold | confirmed | completed | cancelled | expired
+  string lock_id = 9;
+  double quote_total = 10;
+  string hold_expires_at = 11; // ISO, empty once confirmed
+  string cancelled_at = 12;
+  int32 refund_pct = 13; // set on cancel
+  string release_status = 14; // "" | pending | done  (lock release bookkeeping)
+  string created_at = 15;
+  string policy = 16; // copied from property at creation
+  string coupon = 17; // promo code applied at booking; re-quoted with on confirm
+}
+
+message CreateBookingRequest {
+  string guest_id = 1;
+  string property_id = 2;
+  string host_id = 3;
+  string from = 4;
+  string to = 5;
+  int32 guests = 6;
+  string lock_id = 7;
+  double quote_total = 8;
+  string hold_expires_at = 9; // ISO from inventory
+  string policy = 10;
+  string coupon = 11; // promo code applied to this booking
+}
+
+message ConfirmBookingRequest {
+  string id = 1;
+  string guest_id = 2;
+  double accepted_total = 3;
+}
+
+message BookingIdRequest {
+  string id = 1;
+  string user_id = 2; // for ownership checks (guest or host)
+}
+
+message ListBookingsRequest {
+  string user_id = 1;
+  string role = 2; // "guest" | "host" | "any" | "all" (all = every booking, admin-only)
+}
+
+message BookingList {
+  repeated Booking bookings = 1;
+  int32 total = 2;
+}
+
+message CancelReply {
+  Booking booking = 1;
+  string lock_id = 2; // the lock the gateway must Release
+  int32 refund_pct = 3;
+}

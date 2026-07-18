@@ -467,7 +467,13 @@ rolnopol-jt/
 ├── middleware/               # auth · rate-limit · feature-flag · chaos · version · id-validation
 ├── modules/
 │   ├── notification-center/  # pub/sub hub + event log
-│   └── plugin-runtime/       # plugin discovery & lifecycle
+│   ├── plugin-runtime/       # plugin discovery & lifecycle
+│   ├── farm-stay/            # app-side HTTP client of the FarmStay gateway (gateway URL only)
+│   └── greenhouse/ · tasklab/ # app-side clients of the gRPC external services
+├── external-services/        # standalone microservice ecosystems, independent of the app
+│   ├── farm-stay/            # 5 services (REST gateway + inventory/pricing/reservation/review leaves)
+│   ├── greenhouse/           # gRPC crop-simulation service
+│   └── tasklab/              # gRPC task-board service
 ├── plugins/                  # optional plugins + plugins.manifest.json
 ├── helpers/                  # token · response · logger · validators · healthcheck · metrics
 ├── data/
@@ -478,6 +484,10 @@ rolnopol-jt/
 ├── public/                   # frontend: *.html pages, js/, css/, operator/ games, swagger
 └── tests/                    # vitest unit + property-based tests
 ```
+
+### External-service ecosystems
+
+`external-services/` holds self-contained microservice ecosystems that **do not import from the Rolnopol app** — the app talks to each only over the wire (gRPC or REST) via a thin app-side client under `modules/`, all gated by feature flags. The largest is **FarmStay** (`farmStayEnabled`): a booking.com-style stays marketplace of five services — a thin REST **stay-gateway** (owns no data) orchestrating four leaves (**inventory** + **reservation** over gRPC, **pricing** + **review-desk** over REST). The gateway is the only service Rolnopol dials; see [`external-services/farm-stay/README.md`](./external-services/farm-stay/README.md) and its `PRD.md` for the full design (atomic date-range holds, TTL expiry, the price-change handshake, cancellation refund windows, and cross-service release repair). Run it with `npm run farmstay`; test it with `npm run farmstay:test`.
 
 ---
 

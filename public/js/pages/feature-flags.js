@@ -10,6 +10,7 @@ class FeatureFlagsPage {
     this.statusEl = null;
     this.updatedAtEl = null;
     this.flagsCountEl = null;
+    this.enabledFlagsCountEl = null;
     this.reloadBtn = null;
     this.resetBtn = null;
     this.searchInput = null;
@@ -34,6 +35,7 @@ class FeatureFlagsPage {
     this.listEl = document.getElementById("flagsList");
     this.updatedAtEl = document.getElementById("flagsUpdatedAt");
     this.flagsCountEl = document.getElementById("flagsCount");
+    this.enabledFlagsCountEl = document.getElementById("enabledFlagsCount");
     this.reloadBtn = document.getElementById("reloadFlagsBtn");
     this.resetBtn = document.getElementById("resetFlagsBtn");
     this.enableAllBtn = document.getElementById("enableAllFlagsBtn");
@@ -230,6 +232,10 @@ class FeatureFlagsPage {
 
     const totalFlags = Object.keys(this.flags).length;
     this.flagsCountEl.textContent = String(totalFlags);
+    if (this.enabledFlagsCountEl) {
+      const enabledFlags = Object.values(this.flags).filter((flag) => (typeof flag === "object" ? !!flag.value : !!flag)).length;
+      this.enabledFlagsCountEl.textContent = String(enabledFlags);
+    }
     this.updatedAtEl.textContent = this._formatUpdatedAt(this.updatedAt);
 
     if (totalFlags === 0) {
