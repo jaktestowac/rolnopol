@@ -31,6 +31,7 @@
         <button class="fs-tab is-active" data-tab="search" role="tab"><i class="fa-solid fa-magnifying-glass"></i> Search stays</button>
         <button class="fs-tab" data-tab="trips" role="tab"><i class="fa-solid fa-calendar-check"></i> My trips</button>
         <button class="fs-tab" data-tab="purchases" role="tab"><i class="fa-solid fa-receipt"></i> Purchases</button>
+        <button class="fs-tab" data-tab="travel" role="tab"><i class="fa-solid fa-suitcase-rolling"></i> My travel</button>
         <button class="fs-tab" data-tab="listings" role="tab"><i class="fa-solid fa-warehouse"></i> My listings</button>
         <button class="fs-tab" data-tab="hosting" role="tab"><i class="fa-solid fa-sack-dollar"></i> Hosting</button>
       </nav>
@@ -79,6 +80,43 @@
           <span id="fsPurchasesSummary"></span>
         </div>
         <div id="fsPurchases" class="fs-list"></div>
+      </section>
+
+      <!-- ── My travel tab (guest "your travel" summary) ────────── -->
+      <section id="tab-travel" class="fs-tab-panel">
+        <div class="fs-meta">
+          <button id="fsRefreshTravel" class="fs-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          <span id="fsTravelSummary"></span>
+        </div>
+        <div id="fsTravelStats" class="fs-stat-grid"></div>
+        <section id="fsTravelHeatCard" class="fs-chart-card fs-heat-card" hidden>
+          <h3><i class="fa-solid fa-calendar-week"></i> Your stay calendar <span id="fsTravelHeatPeak" class="fs-heat-peak"></span></h3>
+          <div id="fsTravelHeatmap" class="fs-heat-scroll"></div>
+          <div class="fs-heat-legend">
+            <span>Less</span>
+            <span class="fs-heat-cell l0"></span>
+            <span class="fs-heat-cell l1"></span>
+            <span class="fs-heat-cell l2"></span>
+            <span class="fs-heat-cell l3"></span>
+            <span class="fs-heat-cell l4"></span>
+            <span>More</span>
+          </div>
+        </section>
+        <div id="fsTravelCharts" class="fs-charts" hidden>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-map-location-dot"></i> Nights by region</h3>
+            <div class="fs-chart-box"><canvas id="fsChartTravelRegion"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-chart-line"></i> Spend over time</h3>
+            <div class="fs-chart-box"><canvas id="fsChartTravelSpend"></canvas></div>
+          </div>
+          <div class="fs-chart-card">
+            <h3><i class="fa-solid fa-house-chimney"></i> Nights by stay type</h3>
+            <div class="fs-chart-box"><canvas id="fsChartTravelType"></canvas></div>
+          </div>
+        </div>
+        <div id="fsTravelRegions" class="fs-list"></div>
       </section>
 
       <!-- ── Listings tab ───────────────────────────────────────── -->
@@ -149,6 +187,19 @@
         </div>
         <div id="fsEarnings" class="fs-earnings"></div>
         <div id="fsHostStats" class="fs-stat-grid"></div>
+        <section id="fsHostHeatCard" class="fs-chart-card fs-heat-card" hidden>
+          <h3><i class="fa-solid fa-calendar-week"></i> Occupancy calendar <span id="fsHostHeatPeak" class="fs-heat-peak"></span></h3>
+          <div id="fsHostHeatmap" class="fs-heat-scroll"></div>
+          <div class="fs-heat-legend">
+            <span>Less</span>
+            <span class="fs-heat-cell l0"></span>
+            <span class="fs-heat-cell l1"></span>
+            <span class="fs-heat-cell l2"></span>
+            <span class="fs-heat-cell l3"></span>
+            <span class="fs-heat-cell l4"></span>
+            <span>More</span>
+          </div>
+        </section>
         <div id="fsHostCharts" class="fs-charts" hidden>
           <div class="fs-chart-card">
             <h3><i class="fa-solid fa-chart-line"></i> Income over time</h3>

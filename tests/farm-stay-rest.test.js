@@ -115,6 +115,28 @@ describe("farm-stay REST bridge — full ecosystem up", () => {
     expect(res.body.currency).toBe("ROL");
   });
 
+  it("returns a guest travel summary with a money overlay (200)", async () => {
+    const res = await request(app).get("/api/v1/farm-stay/travel-summary").set("token", token).expect(200);
+    expect(res.body.totals).toBeTruthy();
+    expect(typeof res.body.totals.trips).toBe("number");
+    expect(typeof res.body.totals.nights).toBe("number");
+    expect(Array.isArray(res.body.byRegion)).toBe(true);
+    // The bridge overlays real ROL money (net of refunds) on top of the gateway shape.
+    expect(res.body.money).toBeTruthy();
+    expect(typeof res.body.money.net).toBe("number");
+    expect(res.body.currency).toBe("ROL");
+  });
+
+  it("returns platform analytics through the bridge (200, admin gate open in dev)", async () => {
+    const res = await request(app).get("/api/v1/farm-stay/platform/analytics").set("token", token).expect(200);
+    expect(res.body.totals).toBeTruthy();
+    expect(typeof res.body.totals.gmv).toBe("number");
+    expect(typeof res.body.totals.guestHeadcount).toBe("number");
+    expect(res.body.totals.listings).toBeGreaterThan(0); // listings were created earlier in this suite
+    expect(Array.isArray(res.body.topHosts)).toBe(true);
+    expect(Array.isArray(res.body.byDistrict)).toBe(true);
+  });
+
   it("404s a receipt for an unknown booking", async () => {
     await request(app).get("/api/v1/farm-stay/bookings/bk-does-not-exist/receipt.pdf").set("token", token).expect(404);
   });

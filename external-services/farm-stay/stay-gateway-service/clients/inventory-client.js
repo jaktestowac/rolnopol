@@ -77,6 +77,8 @@ module.exports = {
       });
     }),
   listProperties: (userId, hostId) => unary("ListProperties", { host_id: hostId || "" }, userId),
+  // Every listing (active + inactive) across all hosts — platform analytics.
+  listAllProperties: (userId) => unary("ListProperties", { host_id: "", include_inactive: true }, userId),
   createProperty: (userId, p) =>
     unary(
       "CreateProperty",

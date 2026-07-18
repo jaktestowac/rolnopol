@@ -499,6 +499,40 @@ router.get("/farm-stay/purchases", async (req, res) => {
 });
 
 /**
+ * Guest "your travel" summary — the gateway shapes the caller's trips (nights,
+ * regions, quote-based spend); we overlay what they were ACTUALLY charged and
+ * refunded in ROL (money lives in Rolnopol, not the ecosystem), so `money.net`
+ * is the real out-of-pocket total.
+ */
+router.get("/farm-stay/travel-summary", async (req, res) => {
+  const userId = userOf(req);
+  const result = await farmStay.guestTravel(userId);
+  if (result.status !== 200 || !result.body?.totals) return forward(res, result);
+  const ledger = await guestLedger(userId);
+  let charged = 0;
+  let refunded = 0;
+  for (const entry of Object.values(ledger)) {
+    charged += entry.charged || 0;
+    refunded += entry.refunded || 0;
+  }
+  const balance = await currentBalance(userId);
+  res.status(200).json({
+    ...result.body,
+    money: { charged: money(charged), refunded: money(refunded), net: money(charged - refunded) },
+    balance: balance != null ? money(balance) : null,
+    currency: "ROL",
+  });
+});
+
+/**
+ * Platform/admin analytics — cumulative statistics across ALL hosts, listings,
+ * and bookings (GMV, guest headcount, occupancy, top hosts/districts). The
+ * gateway aggregates and admin-gates; we pass it through for the hidden
+ * dashboard. Returns whatever status the gateway does (403 when not admin).
+ */
+router.get("/farm-stay/platform/analytics", (req, res) => proxy(res, farmStay.platformAnalytics(userOf(req))));
+
+/**
  * Downloadable PDF receipt for one booking. Guest-only (you can only receive a
  * receipt for a stay you paid for). Built server-side, dependency-free.
  */

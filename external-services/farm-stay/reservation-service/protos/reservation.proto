@@ -78,7 +78,7 @@ message BookingIdRequest {
 
 message ListBookingsRequest {
   string user_id = 1;
-  string role = 2; // "guest" | "host" | "any"
+  string role = 2; // "guest" | "host" | "any" | "all" (all = every booking, admin-only)
 }
 
 message BookingList {

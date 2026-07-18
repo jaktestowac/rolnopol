@@ -26,7 +26,7 @@ function stubLeaves() {
 }
 stubLeaves();
 
-const { buildApp, buildHostingAnalytics } = require(`${GW}/server/index.js`);
+const { buildApp, buildHostingAnalytics, buildGuestTravelSummary, buildPlatformAnalytics } = require(`${GW}/server/index.js`);
 
 let app;
 const USER = "user-1";
@@ -170,6 +170,11 @@ describe("farm-stay gateway — hosting analytics shaping (pure)", () => {
     expect(a.perProperty[0].propertyId).toBe("p1");
     expect(a.perProperty[0].income).toBe(500);
     expect(a.perProperty[0].visitors).toBe(2);
+
+    // Per-day occupancy heatmap: 3 nights (b1) + 2 (b2), cancelled b3 excluded.
+    expect(a.occupancyByDay).toHaveLength(5);
+    expect(a.occupancyByDay[0]).toEqual({ date: "2030-06-10", bookings: 1, guests: 2 });
+    expect(a.peakDay.bookings).toBe(1);
   });
 
   it("lists idle properties at zero and marks removed ones", () => {
@@ -235,5 +240,136 @@ describe("farm-stay gateway — hosting analytics route", () => {
     inventory.listProperties.mockResolvedValue({ properties: [] });
     reservation.listBookings.mockRejectedValue({ code: grpc.status.UNAVAILABLE, details: "down" });
     await as(request(app).get("/v1/hosting/analytics")).expect(503);
+  });
+});
+
+describe("farm-stay gateway — guest travel summary shaping (pure)", () => {
+  const properties = [
+    { id: "p1", name: "Barn", type: "cottage", district: "Zakopane" },
+    { id: "p2", name: "Yurt", type: "camping", district: "Sopot" },
+  ];
+  const bookings = [
+    { id: "b1", property_id: "p1", guest_id: "g1", from: "2030-06-10", to: "2030-06-13", guests: 2, state: "completed", quote_total: 300 },
+    { id: "b2", property_id: "p1", guest_id: "g1", from: "2030-07-01", to: "2030-07-03", guests: 1, state: "confirmed", quote_total: 200 },
+    { id: "b3", property_id: "p2", guest_id: "g1", from: "2030-08-01", to: "2030-08-02", guests: 4, state: "cancelled", quote_total: 100 },
+  ];
+
+  it("aggregates nights, spend, and favourite region from confirmed+completed only", () => {
+    const s = buildGuestTravelSummary({ bookings, properties });
+    expect(s.totals.trips).toBe(2); // cancelled excluded
+    expect(s.totals.completed).toBe(1);
+    expect(s.totals.upcoming).toBe(1);
+    expect(s.totals.nights).toBe(5); // 3 + 2
+    expect(s.totals.guestNights).toBe(8); // 3*2 + 2*1
+    expect(s.totals.spend).toBe(500);
+    expect(s.totals.distinctProperties).toBe(1); // only p1 has trips
+    expect(s.favouriteRegion).toBe("Zakopane");
+    const zak = s.byRegion.find((r) => r.region === "Zakopane");
+    expect(zak.nights).toBe(5);
+    expect(zak.spend).toBe(500);
+
+    // Heatmap data over the guest's own trips (cancelled excluded).
+    expect(s.occupancyByDay).toHaveLength(5);
+    expect(s.peakDay.bookings).toBe(1);
+  });
+
+  it("labels a booked-but-unknown property region as Unknown", () => {
+    const s = buildGuestTravelSummary({
+      bookings: [{ id: "b9", property_id: "gone", guest_id: "g1", from: "2030-06-10", to: "2030-06-11", guests: 1, state: "completed", quote_total: 90 }],
+      properties: [],
+    });
+    expect(s.favouriteRegion).toBe("Unknown");
+    expect(s.totals.nights).toBe(1);
+  });
+});
+
+describe("farm-stay gateway — guest travel route", () => {
+  it("fans out to reservation(guest) + inventory and shapes the summary", async () => {
+    reservation.listBookings.mockResolvedValue({
+      bookings: [{ id: "b1", property_id: "p1", guest_id: USER, from: "2030-06-10", to: "2030-06-12", guests: 2, state: "completed", quote_total: 200 }],
+    });
+    inventory.listProperties.mockResolvedValue({ properties: [{ id: "p1", name: "Barn", type: "cottage", district: "Kraków" }] });
+    const res = await as(request(app).get("/v1/guest/travel")).expect(200);
+    expect(res.body.totals.trips).toBe(1);
+    expect(res.body.totals.spend).toBe(200);
+    expect(res.body.favouriteRegion).toBe("Kraków");
+    expect(reservation.listBookings).toHaveBeenCalledWith(USER, "guest");
+  });
+});
+
+describe("farm-stay gateway — platform analytics shaping (pure)", () => {
+  const properties = [
+    { id: "p1", host_id: "h1", name: "Barn", type: "cottage", district: "Zakopane", active: true },
+    { id: "p2", host_id: "h2", name: "Yurt", type: "camping", district: "Sopot", active: false },
+  ];
+  const bookings = [
+    { id: "b1", property_id: "p1", host_id: "h1", guest_id: "g1", from: "2030-06-10", to: "2030-06-13", guests: 2, state: "completed", quote_total: 300 },
+    { id: "b2", property_id: "p2", host_id: "h2", guest_id: "g2", from: "2030-07-01", to: "2030-07-03", guests: 3, state: "confirmed", quote_total: 200 },
+    { id: "b3", property_id: "p1", host_id: "h1", guest_id: "g3", from: "2030-08-01", to: "2030-08-02", guests: 1, state: "cancelled", quote_total: 100 },
+  ];
+  const scoresById = { p1: { avgRating: 4, count: 2 }, p2: { avgRating: 5, count: 1 } };
+
+  it("aggregates GMV, guest headcount, hosts, and breakdowns across all data", () => {
+    const a = buildPlatformAnalytics({ properties, bookings, scoresById, feePct: 10 });
+    expect(a.totals.gmv).toBe(500); // 300 + 200 (cancelled excluded)
+    expect(a.totals.completedRevenue).toBe(300);
+    expect(a.totals.upcomingRevenue).toBe(200);
+    expect(a.totals.guestHeadcount).toBe(5); // 2 + 3
+    expect(a.totals.distinctGuests).toBe(2); // g1, g2
+    expect(a.totals.hosts).toBe(2);
+    expect(a.totals.listings).toBe(2);
+    expect(a.totals.activeListings).toBe(1);
+    expect(a.totals.nightsBooked).toBe(5); // 3 + 2
+    expect(a.totals.estimatedTakeRatePct).toBe(10);
+    expect(a.totals.estimatedPlatformRevenue).toBe(50); // 500 * 10%
+    expect(a.totals.avgBookingValue).toBe(250);
+    expect(a.stateDistribution).toEqual({ completed: 1, confirmed: 1, cancelled: 1 });
+    expect(a.topHosts[0].gmv).toBe(300); // h1 leads
+    expect(a.byDistrict.find((d) => d.district === "Zakopane").gmv).toBe(300);
+  });
+
+  it("emits per-day occupancy and a peak day for the heatmap", () => {
+    const a = buildPlatformAnalytics({ properties, bookings, scoresById });
+    // 3 nights from b1 (06-10..06-12) + 2 from b2 (07-01..07-02) = 5 booked days.
+    expect(a.occupancyByDay).toHaveLength(5);
+    expect(a.occupancyByDay[0]).toEqual({ date: "2030-06-10", bookings: 1, guests: 2 });
+    expect(a.occupancyByDay.every((d) => d.bookings >= 1)).toBe(true);
+    expect(a.peakDay).toBeTruthy();
+    expect(a.peakDay.bookings).toBe(1);
+  });
+
+  it("counts overlapping stays on the same night as higher occupancy", () => {
+    const overlap = [
+      { id: "b1", property_id: "p1", host_id: "h1", guest_id: "g1", from: "2030-06-10", to: "2030-06-12", guests: 2, state: "completed", quote_total: 200 },
+      { id: "b2", property_id: "p2", host_id: "h2", guest_id: "g2", from: "2030-06-11", to: "2030-06-13", guests: 1, state: "confirmed", quote_total: 150 },
+    ];
+    const a = buildPlatformAnalytics({ properties, bookings: overlap, scoresById: {} });
+    const shared = a.occupancyByDay.find((d) => d.date === "2030-06-11");
+    expect(shared.bookings).toBe(2); // both stays occupy 06-11
+    expect(shared.guests).toBe(3);
+    expect(a.peakDay.date).toBe("2030-06-11");
+  });
+});
+
+describe("farm-stay gateway — platform analytics route", () => {
+  it("fans out to listAllProperties + listAllBookings and shapes the payload", async () => {
+    inventory.listAllProperties.mockResolvedValue({ properties: [{ id: "p1", host_id: "h1", name: "Barn", type: "cottage", district: "Kraków", active: true }] });
+    reservation.listAllBookings.mockResolvedValue({
+      bookings: [{ id: "b1", property_id: "p1", host_id: "h1", guest_id: "g1", from: "2030-06-10", to: "2030-06-12", guests: 2, state: "completed", quote_total: 200 }],
+    });
+    reviews.scores.mockResolvedValue({ scores: [{ propertyId: "p1", avgRating: 5, count: 1 }] });
+
+    const res = await as(request(app).get("/v1/platform/analytics")).expect(200);
+    expect(res.body.totals.gmv).toBe(200);
+    expect(res.body.totals.guestHeadcount).toBe(2);
+    expect(res.body.totals.hosts).toBe(1);
+    expect(inventory.listAllProperties).toHaveBeenCalled();
+    expect(reservation.listAllBookings).toHaveBeenCalled();
+  });
+
+  it("returns 503 when a data owner is unavailable", async () => {
+    inventory.listAllProperties.mockResolvedValue({ properties: [] });
+    reservation.listAllBookings.mockRejectedValue({ code: grpc.status.UNAVAILABLE, details: "down" });
+    await as(request(app).get("/v1/platform/analytics")).expect(503);
   });
 });

@@ -279,6 +279,7 @@
         $(`tab-${tab.dataset.tab}`).classList.add("is-active");
         if (tab.dataset.tab === "trips") loadTrips();
         if (tab.dataset.tab === "purchases") loadPurchases();
+        if (tab.dataset.tab === "travel") loadTravel();
         if (tab.dataset.tab === "listings") loadListings();
         if (tab.dataset.tab === "hosting") loadHosting();
       });
@@ -749,6 +750,110 @@
     }
   }
 
+  // ── My travel (guest "your travel" summary) ──────────────────────────────────
+  async function loadTravel() {
+    const stats = $("fsTravelStats");
+    const regions = $("fsTravelRegions");
+    const charts = $("fsTravelCharts");
+    const btn = $("fsRefreshTravel");
+    stats.innerHTML = '<div class="fs-empty">Loading…</div>';
+    regions.innerHTML = "";
+    if (charts) charts.hidden = true;
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing…';
+    }
+    const { ok, status, body } = await api("GET", "/travel-summary");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Refresh';
+    }
+    if (!ok || !body.totals) {
+      stats.innerHTML = "";
+      if (status === 401) return banner("Please log in to use FarmStay.", true);
+      return banner(status === 503 ? "Booking service offline." : body.error || "Could not load your travel summary.", true);
+    }
+    renderTravel(body);
+  }
+
+  async function renderTravel(a) {
+    const t = a.totals || {};
+    const spent = a.money ? a.money.net : t.spend;
+    $("fsTravelSummary").textContent = t.trips
+      ? `${t.trips} trip(s) · ${t.nights} night(s) · ${formatROL(spent)} ROL spent`
+      : "";
+
+    const stats = $("fsTravelStats");
+    if (!t.trips) {
+      stats.innerHTML = '<div class="fs-empty">No trips yet — confirmed and completed stays show up here as your travel history.</div>';
+      $("fsTravelRegions").innerHTML = "";
+      renderHeatmap("fsTravelHeatmap", "fsTravelHeatPeak", [], null);
+      return;
+    }
+    renderHeatmap("fsTravelHeatmap", "fsTravelHeatPeak", a.occupancyByDay, a.peakDay);
+    stats.innerHTML = [
+      ["fa-suitcase-rolling", "Trips", t.trips],
+      ["fa-moon", "Nights stayed", t.nights],
+      ["fa-people-group", "Guest-nights", t.guestNights],
+      ["fa-wallet", "Total spent", `${formatROL(spent)} ROL`],
+      ["fa-map-pin", "Favourite region", a.favouriteRegion || "—"],
+      ["fa-hourglass-half", "Upcoming", t.upcoming],
+    ]
+      .map(
+        ([icon, label, value]) =>
+          `<div class="fs-stat"><div class="fs-stat-label"><i class="fa-solid ${icon}"></i> ${label}</div><div class="fs-stat-value">${value}</div></div>`,
+      )
+      .join("");
+
+    // Region breakdown list
+    const byRegion = a.byRegion || [];
+    $("fsTravelRegions").innerHTML = byRegion.length
+      ? byRegion
+          .map(
+            (r) =>
+              `<div class="fs-row"><div class="fs-row-main"><div class="fs-row-title"><i class="fa-solid fa-location-dot"></i> ${esc(r.region)}</div><div class="fs-row-sub">${r.trips} trip(s) · ${r.nights} night(s) · ${formatROL(r.spend)} ROL</div></div></div>`,
+          )
+          .join("")
+      : "";
+
+    const chartsEl = $("fsTravelCharts");
+    const ready = await ensureChartJs();
+    if (!ready || !chartsEl) {
+      if (chartsEl) chartsEl.hidden = true;
+      return;
+    }
+    chartsEl.hidden = false;
+
+    drawChart("fsChartTravelRegion", {
+      type: "pie",
+      data: {
+        labels: byRegion.map((r) => r.region),
+        datasets: [{ data: byRegion.map((r) => r.nights), backgroundColor: byRegion.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]) }],
+      },
+      options: withLegend,
+    });
+
+    const months = a.byMonth || [];
+    drawChart("fsChartTravelSpend", {
+      type: "bar",
+      data: {
+        labels: months.map((m) => m.month),
+        datasets: [{ label: "Spend (ROL)", data: months.map((m) => m.spend), backgroundColor: CHART_COLORS[2] }],
+      },
+      options: noLegend,
+    });
+
+    const byType = a.byType || [];
+    drawChart("fsChartTravelType", {
+      type: "doughnut",
+      data: {
+        labels: byType.map((x) => x.type),
+        datasets: [{ data: byType.map((x) => x.nights), backgroundColor: byType.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]) }],
+      },
+      options: withLegend,
+    });
+  }
+
   // ── Host bookings (shared by Listings occupancy + Hosting tab) ───────────────
   async function fetchHostBookings() {
     const { ok, body } = await api("GET", "/bookings?role=host");
@@ -939,14 +1044,92 @@
   const noLegend = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
   const withLegend = { responsive: true, maintainAspectRatio: false };
 
+  // ── Occupancy heatmap (GitHub-style per-day timeline) — shared by Hosting + My travel ──
+  const HEAT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const HEAT_DAY = 86400000;
+
+  function heatLevel(count, max) {
+    if (!count) return 0;
+    if (max <= 1) return 4;
+    const r = count / max;
+    if (r > 0.75) return 4;
+    if (r > 0.5) return 3;
+    if (r > 0.25) return 2;
+    return 1;
+  }
+
+  // One calendar year as a 7×N (day-of-week × week) grid, Monday-based.
+  function heatYearGrid(year, lookup, max) {
+    const startDow = (new Date(Date.UTC(year, 0, 1)).getUTCDay() + 6) % 7; // Mon=0
+    const gridStart = Date.UTC(year, 0, 1) - startDow * HEAT_DAY; // Monday on/before Jan 1
+    const numWeeks = Math.ceil((Date.UTC(year, 11, 31) - gridStart) / HEAT_DAY / 7) + 1;
+    const cells = [];
+    const labels = new Array(numWeeks).fill("");
+    for (let w = 0; w < numWeeks; w++) {
+      for (let r = 0; r < 7; r++) {
+        const dt = new Date(gridStart + (w * 7 + r) * HEAT_DAY);
+        if (dt.getUTCFullYear() !== year) {
+          cells.push('<span class="fs-heat-cell empty"></span>');
+          continue;
+        }
+        const ds = dt.toISOString().slice(0, 10);
+        if (dt.getUTCDate() === 1) labels[w] = HEAT_MONTHS[dt.getUTCMonth()];
+        const day = lookup[ds];
+        const count = day ? day.bookings : 0;
+        const title = day ? `${ds}: ${day.bookings} stay(s) · ${day.guests} guest(s)` : `${ds}: no stays`;
+        cells.push(`<span class="fs-heat-cell l${heatLevel(count, max)}" title="${title}"></span>`);
+      }
+    }
+    const cols = `repeat(${numWeeks}, 11px)`;
+    const monthRow = labels.map((l) => `<span>${l}</span>`).join("");
+    return `<div class="fs-heat-year">
+      <div class="fs-heat-year-label">${year}</div>
+      <div class="fs-heat-body">
+        <div class="fs-heat-days"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span></span></div>
+        <div class="fs-heat-cols">
+          <div class="fs-heat-months" style="grid-template-columns:${cols}">${monthRow}</div>
+          <div class="fs-heat-grid" style="grid-template-columns:${cols}">${cells.join("")}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderHeatmap(mapId, peakId, occupancyByDay, peakDay) {
+    const wrap = $(mapId);
+    const card = wrap ? wrap.closest(".fs-heat-card") : null;
+    const days = occupancyByDay || [];
+    if (!days.length) {
+      if (card) card.hidden = true;
+      return;
+    }
+    if (card) card.hidden = false;
+
+    const lookup = {};
+    let max = 0;
+    for (const d of days) {
+      lookup[d.date] = d;
+      if (d.bookings > max) max = d.bookings;
+    }
+    const peakEl = $(peakId);
+    if (peakEl) peakEl.textContent = peakDay ? `· busiest ${peakDay.date}: ${peakDay.bookings} stay(s), ${peakDay.guests} guest(s)` : "";
+
+    const firstYear = Number(days[0].date.slice(0, 4));
+    const lastYear = Number(days[days.length - 1].date.slice(0, 4));
+    let html = "";
+    for (let y = firstYear; y <= lastYear; y++) html += heatYearGrid(y, lookup, max);
+    wrap.innerHTML = html;
+  }
+
   async function renderHostAnalytics(a) {
     const statEl = $("fsHostStats");
     const chartsEl = $("fsHostCharts");
     if (!a || !a.totals) {
       if (statEl) statEl.innerHTML = "";
       if (chartsEl) chartsEl.hidden = true;
+      renderHeatmap("fsHostHeatmap", "fsHostHeatPeak", [], null);
       return;
     }
+    renderHeatmap("fsHostHeatmap", "fsHostHeatPeak", a.occupancyByDay, a.peakDay);
     const t = a.totals;
     const occ = (a.occupancyByYear || []).reduce((s, y) => s + y.nights, 0);
     if (statEl) {
@@ -1174,6 +1357,7 @@
     $("fsSearchForm").addEventListener("submit", doSearch);
     $("fsRefreshTrips").addEventListener("click", loadTrips);
     $("fsRefreshPurchases").addEventListener("click", loadPurchases);
+    $("fsRefreshTravel").addEventListener("click", loadTravel);
     $("fsRefreshHosting").addEventListener("click", loadHosting);
     $("fsListingForm").addEventListener("submit", createListing);
     $("fsModalClose").addEventListener("click", closeModal);

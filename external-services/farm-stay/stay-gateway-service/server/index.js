@@ -7,7 +7,7 @@
  * lives in the leaf services.
  */
 const express = require("express");
-const { HOST, PORT, HOLD_TTL_SEC, HEALTH_TIMEOUT_MS } = require("../config");
+const { HOST, PORT, HOLD_TTL_SEC, HEALTH_TIMEOUT_MS, ADMIN_USERS, PLATFORM_FEE_PCT } = require("../config");
 const inventory = require("../clients/inventory-client");
 const reservation = require("../clients/reservation-client");
 const pricing = require("../clients/pricing-client");
@@ -24,6 +24,12 @@ const startedAt = Date.now();
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 const userOf = (req) => req.get("x-stay-user") || "";
+
+// Platform analytics is admin-gated. An empty allowlist (the dev default) leaves
+// it open so the hidden dashboard works locally; set FARM_STAY_ADMIN_USERS to
+// restrict it. This mirrors the ecosystem's header-only trust model — the bridge
+// does the real auth, this is a second, config-driven fence.
+const isAdmin = (userId) => ADMIN_USERS.length === 0 || ADMIN_USERS.includes(String(userId));
 
 /** Fetch a single property via ListProperties (inventory has no GetProperty). */
 async function getProperty(userId, id) {
@@ -82,6 +88,26 @@ const INCOME_STATES = ["confirmed", "completed"];
 const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
 /**
+ * Per-day occupancy for a set of revenue-bearing bookings — the data behind the
+ * GitHub-style heatmap. `bookings` counts how many stays occupied each night
+ * (overlapping stays stack); `guests` sums their headcount. Sparse: only days
+ * with at least one booked night appear. Also returns the single busiest day.
+ */
+function buildDayOccupancy(income) {
+  const dayMap = {};
+  for (const b of income) {
+    for (const night of eachNight(b.from, b.to)) {
+      const d = (dayMap[night] = dayMap[night] || { date: night, bookings: 0, guests: 0 });
+      d.bookings += 1;
+      d.guests += b.guests || 1;
+    }
+  }
+  const occupancyByDay = Object.values(dayMap).sort((a, b) => (a.date < b.date ? -1 : 1));
+  const peakDay = occupancyByDay.reduce((best, d) => (best && best.bookings >= d.bookings ? best : d), null);
+  return { occupancyByDay, peakDay };
+}
+
+/**
  * Shape a host's raw listings + bookings (+ optional review scores) into a
  * dashboard-ready analytics payload. Pure function — no I/O — so it is unit
  * testable and keeps the gateway a thin shaper (it owns no data, just merges
@@ -132,6 +158,7 @@ function buildHostingAnalytics({ properties = [], bookings = [], scoresById = {}
     }
   }
   const occupancyByYear = Object.values(yearMap).sort((a, b) => (a.year < b.year ? -1 : 1));
+  const { occupancyByDay, peakDay } = buildDayOccupancy(income);
 
   // ── Per-property breakdown ────────────────────────────────────────────────
   const propMeta = {};
@@ -194,7 +221,246 @@ function buildHostingAnalytics({ properties = [], bookings = [], scoresById = {}
     },
     incomeByMonth,
     occupancyByYear,
+    occupancyByDay,
+    peakDay,
     perProperty,
+    stateDistribution,
+    currency: "ROL",
+  };
+}
+
+/**
+ * Shape a single guest's bookings (+ the property catalog, for region/type
+ * labels) into a "your travel" summary — the guest-facing counterpart to
+ * buildHostingAnalytics. Pure function, no I/O. Only real trips (confirmed +
+ * completed) count toward nights/spend; `spend` here is the booking quote total,
+ * which the bridge overlays with what the guest was ACTUALLY charged (money
+ * lives in Rolnopol, not the ecosystem).
+ */
+function buildGuestTravelSummary({ bookings = [], properties = [] }) {
+  const propMeta = {};
+  for (const p of properties) propMeta[p.id] = p;
+  const regionOf = (b) => propMeta[b.property_id]?.district || "Unknown";
+  const typeOf = (b) => propMeta[b.property_id]?.type || "other";
+
+  const trips = bookings.filter((b) => INCOME_STATES.includes(b.state));
+
+  const nights = trips.reduce((s, b) => s + nightsBetween(b.from, b.to), 0);
+  const guestNights = trips.reduce((s, b) => s + nightsBetween(b.from, b.to) * (b.guests || 1), 0);
+  const spend = trips.reduce((s, b) => s + (b.quote_total || 0), 0);
+  const completed = trips.filter((b) => b.state === "completed");
+  const upcoming = trips.filter((b) => b.state === "confirmed");
+
+  // ── By region (property district) ─────────────────────────────────────────
+  const regionMap = {};
+  for (const b of trips) {
+    const region = regionOf(b);
+    const r = (regionMap[region] = regionMap[region] || { region, trips: 0, nights: 0, spend: 0 });
+    r.trips += 1;
+    r.nights += nightsBetween(b.from, b.to);
+    r.spend += b.quote_total || 0;
+  }
+  const byRegion = Object.values(regionMap)
+    .map((r) => ({ ...r, spend: round2(r.spend) }))
+    .sort((a, b) => b.nights - a.nights || b.spend - a.spend);
+
+  // ── By stay type ──────────────────────────────────────────────────────────
+  const typeMap = {};
+  for (const b of trips) {
+    const type = typeOf(b);
+    const t = (typeMap[type] = typeMap[type] || { type, trips: 0, nights: 0 });
+    t.trips += 1;
+    t.nights += nightsBetween(b.from, b.to);
+  }
+  const byType = Object.values(typeMap).sort((a, b) => b.nights - a.nights);
+
+  // ── By month (bucketed on check-in) ───────────────────────────────────────
+  const monthMap = {};
+  for (const b of trips) {
+    const key = b.from.slice(0, 7);
+    const m = (monthMap[key] = monthMap[key] || { month: key, trips: 0, nights: 0, spend: 0 });
+    m.trips += 1;
+    m.nights += nightsBetween(b.from, b.to);
+    m.spend += b.quote_total || 0;
+  }
+  const byMonth = Object.values(monthMap)
+    .sort((a, b) => (a.month < b.month ? -1 : 1))
+    .map((m) => ({ ...m, spend: round2(m.spend) }));
+
+  const stateDistribution = {};
+  for (const b of bookings) stateDistribution[b.state] = (stateDistribution[b.state] || 0) + 1;
+
+  const { occupancyByDay, peakDay } = buildDayOccupancy(trips);
+
+  return {
+    totals: {
+      trips: trips.length,
+      completed: completed.length,
+      upcoming: upcoming.length,
+      nights,
+      guestNights,
+      spend: round2(spend),
+      distinctProperties: new Set(trips.map((b) => b.property_id)).size,
+      distinctRegions: byRegion.length,
+    },
+    favouriteRegion: byRegion[0]?.region || "",
+    byRegion,
+    byType,
+    byMonth,
+    occupancyByDay,
+    peakDay,
+    stateDistribution,
+    currency: "ROL",
+  };
+}
+
+/**
+ * Shape the ENTIRE ecosystem (all listings, all bookings, all review scores)
+ * into a platform/admin dashboard: GMV, guest headcount, occupancy, and per
+ * host/district/type breakdowns. Same pure-shaper discipline as the host and
+ * guest views — the gateway owns no data, it just merges what the leaves return.
+ * GMV is the sum of income-bearing booking totals (confirmed + completed); the
+ * take-rate is an ESTIMATE against `feePct` (no real fee moves — IMPROVEMENTS #9).
+ */
+function buildPlatformAnalytics({ properties = [], bookings = [], scoresById = {}, feePct = PLATFORM_FEE_PCT }) {
+  const propMeta = {};
+  for (const p of properties) propMeta[p.id] = p;
+  const districtOf = (b) => propMeta[b.property_id]?.district || "Unknown";
+  const typeOf = (b) => propMeta[b.property_id]?.type || "other";
+  const hostOf = (b) => b.host_id || propMeta[b.property_id]?.host_id || "unknown";
+
+  const income = bookings.filter((b) => INCOME_STATES.includes(b.state));
+
+  const gmv = income.reduce((s, b) => s + (b.quote_total || 0), 0);
+  const completedRevenue = income.filter((b) => b.state === "completed").reduce((s, b) => s + (b.quote_total || 0), 0);
+  const upcomingRevenue = income.filter((b) => b.state === "confirmed").reduce((s, b) => s + (b.quote_total || 0), 0);
+  const nightsBooked = income.reduce((s, b) => s + nightsBetween(b.from, b.to), 0);
+  // "Guests across all stays" — the summed headcount, plus the distinct people.
+  const guestHeadcount = income.reduce((s, b) => s + (b.guests || 1), 0);
+  const guestNights = income.reduce((s, b) => s + nightsBetween(b.from, b.to) * (b.guests || 1), 0);
+  const distinctGuests = new Set(income.map((b) => b.guest_id)).size;
+  const distinctHosts = new Set(properties.map((p) => p.host_id).concat(income.map(hostOf))).size;
+
+  const reviewsCount = Object.values(scoresById).reduce((s, x) => s + (x.count || 0), 0);
+  const ratingWeighted = Object.values(scoresById).reduce((s, x) => s + (x.avgRating || 0) * (x.count || 0), 0);
+  const avgRating = reviewsCount ? round2(ratingWeighted / reviewsCount) : 0;
+
+  // ── Income by month + occupancy by year (mirror the host view) ────────────
+  const monthMap = {};
+  for (const b of income) {
+    const key = b.from.slice(0, 7);
+    const m = (monthMap[key] = monthMap[key] || { month: key, gmv: 0, nights: 0, bookings: 0, guests: 0 });
+    m.gmv += b.quote_total || 0;
+    m.nights += nightsBetween(b.from, b.to);
+    m.bookings += 1;
+    m.guests += b.guests || 1;
+  }
+  const gmvByMonth = Object.values(monthMap)
+    .sort((a, b) => (a.month < b.month ? -1 : 1))
+    .map((m) => ({ ...m, gmv: round2(m.gmv) }));
+
+  const yearMap = {};
+  for (const b of income) {
+    for (const night of eachNight(b.from, b.to)) {
+      const y = night.slice(0, 4);
+      const yr = (yearMap[y] = yearMap[y] || { year: y, nights: 0, guestNights: 0 });
+      yr.nights += 1;
+      yr.guestNights += b.guests || 1;
+    }
+  }
+  const occupancyByYear = Object.values(yearMap).sort((a, b) => (a.year < b.year ? -1 : 1));
+  const { occupancyByDay, peakDay } = buildDayOccupancy(income);
+
+  // ── Breakdowns: district, type, host, property ────────────────────────────
+  const bucket = (map, key, seed) => (map[key] = map[key] || { ...seed });
+
+  const districtMap = {};
+  for (const p of properties) bucket(districtMap, p.district || "Unknown", { district: p.district || "Unknown", listings: 0, bookings: 0, nights: 0, gmv: 0 }).listings += 1;
+  for (const b of income) {
+    const d = bucket(districtMap, districtOf(b), { district: districtOf(b), listings: 0, bookings: 0, nights: 0, gmv: 0 });
+    d.bookings += 1;
+    d.nights += nightsBetween(b.from, b.to);
+    d.gmv += b.quote_total || 0;
+  }
+  const byDistrict = Object.values(districtMap)
+    .map((d) => ({ ...d, gmv: round2(d.gmv) }))
+    .sort((a, b) => b.gmv - a.gmv);
+
+  const typeMap = {};
+  for (const p of properties) bucket(typeMap, p.type || "other", { type: p.type || "other", listings: 0, bookings: 0, nights: 0, gmv: 0 }).listings += 1;
+  for (const b of income) {
+    const t = bucket(typeMap, typeOf(b), { type: typeOf(b), listings: 0, bookings: 0, nights: 0, gmv: 0 });
+    t.bookings += 1;
+    t.nights += nightsBetween(b.from, b.to);
+    t.gmv += b.quote_total || 0;
+  }
+  const byType = Object.values(typeMap)
+    .map((t) => ({ ...t, gmv: round2(t.gmv) }))
+    .sort((a, b) => b.gmv - a.gmv);
+
+  const hostMap = {};
+  for (const p of properties) bucket(hostMap, p.host_id || "unknown", { hostId: p.host_id || "unknown", listings: 0, bookings: 0, nights: 0, gmv: 0 }).listings += 1;
+  for (const b of income) {
+    const h = bucket(hostMap, hostOf(b), { hostId: hostOf(b), listings: 0, bookings: 0, nights: 0, gmv: 0 });
+    h.bookings += 1;
+    h.nights += nightsBetween(b.from, b.to);
+    h.gmv += b.quote_total || 0;
+  }
+  const topHosts = Object.values(hostMap)
+    .map((h) => ({ ...h, gmv: round2(h.gmv) }))
+    .sort((a, b) => b.gmv - a.gmv);
+
+  const propMap = {};
+  for (const p of properties)
+    propMap[p.id] = { propertyId: p.id, name: p.name || p.id, host: p.host_id || "", type: p.type || "", district: p.district || "", gmv: 0, bookings: 0, nights: 0, guests: 0 };
+  for (const b of income) {
+    const p =
+      propMap[b.property_id] ||
+      (propMap[b.property_id] = { propertyId: b.property_id, name: b.property_id, host: hostOf(b), type: "", district: "", gmv: 0, bookings: 0, nights: 0, guests: 0, removed: true });
+    p.gmv += b.quote_total || 0;
+    p.bookings += 1;
+    p.nights += nightsBetween(b.from, b.to);
+    p.guests += b.guests || 1;
+  }
+  const topProperties = Object.values(propMap)
+    .map((p) => {
+      const score = scoresById[p.propertyId] || { avgRating: 0, count: 0 };
+      return { ...p, gmv: round2(p.gmv), avgRating: score.avgRating || 0, reviews: score.count || 0 };
+    })
+    .sort((a, b) => b.gmv - a.gmv);
+
+  const stateDistribution = {};
+  for (const b of bookings) stateDistribution[b.state] = (stateDistribution[b.state] || 0) + 1;
+
+  return {
+    totals: {
+      gmv: round2(gmv),
+      completedRevenue: round2(completedRevenue),
+      upcomingRevenue: round2(upcomingRevenue),
+      estimatedTakeRatePct: feePct,
+      estimatedPlatformRevenue: round2((gmv * feePct) / 100),
+      listings: properties.length,
+      activeListings: properties.filter((p) => p.active).length,
+      hosts: distinctHosts,
+      totalBookings: bookings.length,
+      activeBookings: bookings.filter((b) => ["hold", "confirmed", "completed"].includes(b.state)).length,
+      incomeBookings: income.length,
+      guestHeadcount,
+      distinctGuests,
+      nightsBooked,
+      guestNights,
+      avgBookingValue: income.length ? round2(gmv / income.length) : 0,
+      avgRating,
+      reviews: reviewsCount,
+    },
+    gmvByMonth,
+    occupancyByYear,
+    occupancyByDay,
+    peakDay,
+    byDistrict,
+    byType,
+    topHosts,
+    topProperties,
     stateDistribution,
     currency: "ROL",
   };
@@ -608,6 +874,38 @@ function buildApp() {
     }
   });
 
+  // Guest "your travel" summary — the caller's own trips shaped into nights,
+  // spend, and favourite regions (option B of IMPROVEMENTS #20). Spend is the
+  // booking quote total; the bridge overlays what was actually charged in ROL.
+  app.get("/v1/guest/travel", async (req, res) => {
+    const user = userOf(req);
+    try {
+      const [bookingsReply, propsReply] = await Promise.all([reservation.listBookings(user, "guest"), inventory.listProperties(user, "")]);
+      const bookings = bookingsReply.bookings || [];
+      const properties = propsReply.properties || [];
+      res.json(buildGuestTravelSummary({ bookings, properties }));
+    } catch (err) {
+      sendError(res, err); // reservation down → 503
+    }
+  });
+
+  // Platform/admin analytics — aggregate across ALL hosts, listings, and
+  // bookings (option A of IMPROVEMENTS #20). Admin-gated; owns no data, just
+  // shapes what every leaf returns. Review scores are best-effort.
+  app.get("/v1/platform/analytics", async (req, res) => {
+    const user = userOf(req);
+    if (!isAdmin(user)) return res.status(403).json({ error: "FORBIDDEN", detail: "Platform analytics is admin-only" });
+    try {
+      const [propsReply, bookingsReply] = await Promise.all([inventory.listAllProperties(user), reservation.listAllBookings(user)]);
+      const properties = propsReply.properties || [];
+      const bookings = bookingsReply.bookings || [];
+      const scoresById = (await scoresBestEffort(properties.map((p) => p.id))) || {};
+      res.json(buildPlatformAnalytics({ properties, bookings, scoresById }));
+    } catch (err) {
+      sendError(res, err); // inventory or reservation down → 503
+    }
+  });
+
   // ── Reviews ───────────────────────────────────────────────────────────────────
 
   app.post("/v1/bookings/:id/review", async (req, res) => {
@@ -658,4 +956,13 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { buildApp, start, buildHostingAnalytics, sortSearchResults, paginate, SEARCH_SORTS };
+module.exports = {
+  buildApp,
+  start,
+  buildHostingAnalytics,
+  buildGuestTravelSummary,
+  buildPlatformAnalytics,
+  sortSearchResults,
+  paginate,
+  SEARCH_SORTS,
+};

@@ -102,4 +102,31 @@ describe("farm-stay — full lifecycle", () => {
     expect(reviews.body.reviews[0].rating).toBe(5);
     delete process.env.FARM_STAY_TIME_OFFSET_MS;
   });
+
+  it("guest 'your travel' summary reflects the completed stay (real wire)", async () => {
+    process.env.FARM_STAY_TIME_OFFSET_MS = String(Date.parse("2030-07-01T00:00:00Z") - Date.now());
+    const res = await request(app()).get("/v1/guest/travel").set("x-stay-user", GUEST).expect(200);
+    expect(res.body.totals.trips).toBe(1);
+    expect(res.body.totals.completed).toBe(1);
+    expect(res.body.totals.nights).toBe(3); // 2030-06-10 → 06-13
+    expect(res.body.favouriteRegion).toBe("Kraków");
+    delete process.env.FARM_STAY_TIME_OFFSET_MS;
+  });
+
+  it("platform analytics aggregates across all data via role=all + include_inactive (real wire)", async () => {
+    process.env.FARM_STAY_TIME_OFFSET_MS = String(Date.parse("2030-07-01T00:00:00Z") - Date.now());
+    // ADMIN_USERS is unset in the harness → the gate is open (dev default).
+    const res = await request(app()).get("/v1/platform/analytics").set("x-stay-user", "any-admin").expect(200);
+    // Reservations start empty, so booking-derived metrics are exact: only our
+    // one confirmed→completed stay. Property-derived counts (hosts/listings)
+    // also include inventory's self-seeded demo catalog.
+    expect(res.body.totals.incomeBookings).toBe(1);
+    expect(res.body.totals.gmv).toBeGreaterThan(0);
+    expect(res.body.totals.guestHeadcount).toBe(2);
+    expect(res.body.totals.distinctGuests).toBe(1);
+    expect(res.body.totals.hosts).toBeGreaterThanOrEqual(1);
+    expect(res.body.totals.listings).toBeGreaterThanOrEqual(1);
+    expect(res.body.byDistrict.find((d) => d.district === "Kraków")).toBeDefined();
+    delete process.env.FARM_STAY_TIME_OFFSET_MS;
+  });
 });

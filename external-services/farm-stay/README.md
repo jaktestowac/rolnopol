@@ -388,7 +388,19 @@ POST   /v1/bookings/:id/cancel
 GET    /v1/bookings
 GET    /v1/bookings/:id
 POST   /v1/bookings/:id/review
+GET    /v1/hosting/analytics
+GET    /v1/guest/travel                 (guest "your travel" summary)
+GET    /v1/platform/analytics           (admin-gated, cumulative across ALL data)
 ```
+
+`GET /v1/guest/travel` shapes the caller's own trips into nights, spend, and
+favourite regions; the bridge overlays what was actually charged in ROL.
+`GET /v1/platform/analytics` aggregates GMV, guest headcount, occupancy, and top
+hosts/districts/properties across every host and booking (uses `role=all` on the
+reservation `ListBookings` and `include_inactive` on inventory `ListProperties`).
+It is gated by `FARM_STAY_ADMIN_USERS` (comma-separated `x-stay-user` ids; empty =
+open, the dev default). Rolnopol serves the read-only dashboard at the hidden,
+unlinked page `/farm-stay-analytics.html`.
 
 ## Run
 

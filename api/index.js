@@ -511,6 +511,30 @@ app.get(["/farm-stay", "/farm-stay.html"], async (req, res, next) => {
   }
 });
 
+// Hidden FarmStay platform-analytics dashboard — not linked from the nav, gated
+// by the same feature flag. The endpoint it calls is admin-gated server-side, so
+// exposing the (static) HTML is harmless: without admin access the API 403s.
+app.get(["/farm-stay-analytics", "/farm-stay-analytics.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.farmStayEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/farm-stay-analytics") {
+      return res.redirect(302, "/farm-stay-analytics.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("FarmStay analytics feature gate check failed", { error });
+    return next();
+  }
+});
+
 // Feature-gate Farmlog UI pages before static serving
 app.get(
   ["/farmlog", "/farmlog.html", "/farmlog-blog", "/farmlog-blog.html", "/farmlog-post", "/farmlog-post.html"],
