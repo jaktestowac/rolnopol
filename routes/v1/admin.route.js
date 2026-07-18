@@ -48,6 +48,30 @@ adminRoute.get("/admin/overview-stats", authenticateAdmin, adminLimiter, adminCo
 adminRoute.get("/admin/users", authenticateAdmin, adminLimiter, adminController.getAllUsers.bind(adminController));
 
 /**
+ * Get multi-factor (two-factor) authentication overview
+ * GET /api/v1/admin/mfa/overview
+ */
+adminRoute.get("/admin/mfa/overview", authenticateAdmin, adminLimiter, adminController.getMfaOverview.bind(adminController));
+
+/**
+ * Get managed-process state for launchable external services
+ * GET /api/v1/admin/services/managed
+ */
+adminRoute.get("/admin/services/managed", authenticateAdmin, adminLimiter, adminController.getManagedServices.bind(adminController));
+
+/**
+ * Start an external service as a tracked child process (dev/test only)
+ * POST /api/v1/admin/services/:key/start
+ */
+adminRoute.post("/admin/services/:key/start", authenticateAdmin, adminLimiter, adminController.startService.bind(adminController));
+
+/**
+ * Stop a previously started external service (dev/test only)
+ * POST /api/v1/admin/services/:key/stop
+ */
+adminRoute.post("/admin/services/:key/stop", authenticateAdmin, adminLimiter, adminController.stopService.bind(adminController));
+
+/**
  * Update user status
  * PUT /api/v1/admin/users/:userId/status
  */

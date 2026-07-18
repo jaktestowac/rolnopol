@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>External Services - Kraken Dashboard</title>
+  <link rel="stylesheet" href="../css/kraken.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
+  <style>
+    .svc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .svc-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #e6e6e6;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .svc-subtitle {
+      font-size: 0.85rem;
+      color: #8b949e;
+      margin-top: 4px;
+    }
+
+    .svc-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .svc-summary {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .svc-summary-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+
+    .svc-summary-pill .count {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #e6e6e6;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot.online { background: #3fb950; box-shadow: 0 0 8px #3fb95088; }
+    .dot.degraded { background: #d29922; box-shadow: 0 0 8px #d2992288; }
+    .dot.offline { background: #f85149; box-shadow: 0 0 8px #f8514988; }
+    .dot.error { background: #f85149; box-shadow: 0 0 8px #f8514988; }
+    .dot.unknown { background: #6e7681; }
+
+    .svc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 18px;
+    }
+
+    .svc-card {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-left: 4px solid #6e7681;
+      border-radius: 10px;
+      padding: 18px;
+      transition: border-color 0.25s ease, transform 0.2s ease;
+    }
+
+    .svc-card:hover { transform: translateY(-2px); }
+    .svc-card.online { border-left-color: #3fb950; }
+    .svc-card.degraded { border-left-color: #d29922; }
+    .svc-card.offline { border-left-color: #f85149; }
+    .svc-card.error { border-left-color: #f85149; }
+
+    .svc-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .svc-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #e6e6e6;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .svc-desc {
+      font-size: 0.82rem;
+      color: #8b949e;
+      margin: 0 0 12px 0;
+    }
+
+    .svc-meta {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .svc-kv {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
+      font-size: 0.82rem;
+      margin-bottom: 12px;
+    }
+
+    .svc-kv .k { color: #8b949e; white-space: nowrap; }
+    .svc-kv .v { color: #e6e6e6; word-break: break-word; text-align: right; }
+
+    .svc-hint {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #2a2110;
+      border: 1px solid #6b5417;
+      color: #f0c674;
+    }
+
+    .svc-hint code {
+      background: #000000aa;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .svc-error {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #2a1414;
+      border: 1px solid #6b1f1f;
+      color: #ff9c96;
+      word-break: break-word;
+    }
+
+    .leaf-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 0.8rem;
+    }
+
+    .leaf-table th, .leaf-table td {
+      text-align: left;
+      padding: 6px 8px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .leaf-table th { color: #8b949e; font-weight: 600; }
+    .leaf-table td { color: #e6e6e6; }
+
+    .leaf-name { display: flex; align-items: center; gap: 6px; }
+
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    .svc-loading, .svc-empty {
+      color: #8b949e;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .auto-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: #ccc;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Feature-flag control row on each card */
+    .svc-flag {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #17171a;
+      border: 1px solid #2a2a2a;
+    }
+
+    .svc-flag .flag-info { flex: 1; min-width: 0; }
+    .svc-flag .flag-name {
+      font-size: 0.78rem;
+      color: #8b949e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .svc-flag .flag-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+      color: #c9d1d9;
+      word-break: break-all;
+    }
+    .svc-flag .flag-state {
+      font-size: 0.75rem;
+      font-weight: 600;
+      min-width: 42px;
+      text-align: right;
+    }
+    .svc-flag .flag-state.on { color: #3fb950; }
+    .svc-flag .flag-state.off { color: #8b949e; }
+    .svc-flag .flag-state.unknown { color: #d29922; }
+
+    /* Toggle switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex: none;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #3a3a3a;
+      border-radius: 999px;
+      transition: background 0.2s ease;
+    }
+    .switch .slider::before {
+      content: "";
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      top: 3px;
+      background: #e6e6e6;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+    }
+    .switch input:checked + .slider { background: #3fb950; }
+    .switch input:checked + .slider::before { transform: translateX(18px); }
+    .switch input:disabled + .slider { cursor: not-allowed; opacity: 0.5; }
+    .switch.busy .slider { opacity: 0.5; }
+
+    /* Toast */
+    #svcToast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 9999;
+    }
+    .toast {
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastIn 0.2s ease;
+    }
+    .toast.success { background: #238636; }
+    .toast.error { background: #b62324; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* Process control row */
+    .svc-ctrl {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #17171a;
+      border: 1px solid #2a2a2a;
+    }
+    .svc-ctrl-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .svc-ctrl-title {
+      font-size: 0.78rem;
+      color: #8b949e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .svc-ctrl-buttons { display: flex; gap: 8px; }
+    .ctrl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.15s ease, opacity 0.15s ease;
+    }
+    .ctrl-btn:hover:not(:disabled) { filter: brightness(1.12); }
+    .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .ctrl-btn.start { background: #238636; color: #fff; }
+    .ctrl-btn.stop { background: #b62324; color: #fff; }
+
+    .svc-proc {
+      margin-top: 8px;
+      font-size: 0.76rem;
+      color: #8b949e;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .svc-proc .proc-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .proc-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .proc-dot.running { background: #3fb950; }
+    .proc-dot.exited { background: #f85149; }
+    .proc-dot.not-started { background: #6e7681; }
+
+    .svc-logs {
+      margin-top: 8px;
+      max-height: 130px;
+      overflow: auto;
+      background: #0d0d0f;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.72rem;
+      line-height: 1.5;
+      color: #b9c2cc;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .svc-logs .log-err { color: #ff9c96; }
+    .svc-ctrl-note { margin-top: 8px; font-size: 0.75rem; color: #6e7681; }
+  </style>
+</head>
+
+<body>
+  <div class="svc-header">
+    <div>
+      <h2 class="svc-title"><i class="fas fa-network-wired"></i> External Services</h2>
+      <div class="svc-subtitle">
+        Live health of the standalone services the app depends on.
+        Reflects real availability regardless of feature-flag state.
+      </div>
+    </div>
+    <div class="svc-actions">
+      <label class="auto-toggle">
+        <input type="checkbox" id="autoRefreshToggle" checked />
+        Auto-refresh (15s)
+      </label>
+      <span id="svcLastUpdated" class="badge-enhanced badge-info-enhanced">Last updated: never</span>
+      <button id="refreshServicesBtn" class="btn-enhanced btn-primary-enhanced">
+        <i class="fas fa-sync-alt btn-icon"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="svc-summary" id="svcSummary"></div>
+
+  <div class="svc-grid" id="svcGrid">
+    <div class="svc-loading"><i class="fas fa-spinner fa-spin"></i> Loading services…</div>
+  </div>
+
+  <div id="svcToast"></div>
+
+  <script src="../js/kraken-utils.js"></script>
+  <script>
+    class ExternalServicesTab {
+      constructor() {
+        this.token = getCookie("krakenToken");
+        this.grid = document.getElementById("svcGrid");
+        this.summary = document.getElementById("svcSummary");
+        this.lastUpdated = document.getElementById("svcLastUpdated");
+        this.refreshBtn = document.getElementById("refreshServicesBtn");
+        this.autoToggle = document.getElementById("autoRefreshToggle");
+        this.timer = null;
+        this.managed = {};
+        this.launchEnabled = false;
+        this.init();
+      }
+
+      init() {
+        window.addEventListener("message", (event) => {
+          if (event.data.type === "SET_TOKEN") {
+            this.token = event.data.token;
+            this.load();
+          }
+        });
+
+        this.refreshBtn.addEventListener("click", () => this.load());
+        this.autoToggle.addEventListener("change", () => this.setupAutoRefresh());
+
+        // Event delegation: cards are re-rendered on every load, so bind once.
+        this.grid.addEventListener("change", (e) => {
+          const input = e.target.closest(".flag-input");
+          if (input) this.toggleFlag(input);
+        });
+        this.grid.addEventListener("click", (e) => {
+          const btn = e.target.closest(".ctrl-btn");
+          if (btn && !btn.disabled) this.controlService(btn.dataset.action, btn.dataset.key, btn);
+        });
+
+        this.setupAutoRefresh();
+        this.load();
+      }
+
+      toast(message, type = "success") {
+        const container = document.getElementById("svcToast");
+        const el = document.createElement("div");
+        el.className = `toast ${type}`;
+        el.innerHTML = `<i class="fas ${type === "success" ? "fa-check-circle" : "fa-triangle-exclamation"}"></i> ${this.esc(message)}`;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+      }
+
+      // Toggle a service's feature flag via the admin PATCH endpoint. Pauses
+      // auto-refresh during the request so the card isn't re-rendered mid-flight,
+      // and reverts the switch on failure.
+      async toggleFlag(input) {
+        const flag = input.dataset.flag;
+        const name = input.dataset.name || flag;
+        const desired = input.checked;
+
+        if (!this.token) {
+          input.checked = !desired;
+          this.toast("Admin token unavailable — cannot change flags", "error");
+          return;
+        }
+
+        const label = input.closest(".switch");
+        if (label) label.classList.add("busy");
+        input.disabled = true;
+
+        const wasAuto = this.autoToggle.checked;
+        if (this.timer) { clearInterval(this.timer); this.timer = null; }
+
+        try {
+          const response = await secureFetch("/api/v1/admin/feature-flags", {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${this.token}`,
+            },
+            body: JSON.stringify({ flags: { [flag]: desired } }),
+          });
+          const result = await response.json();
+          if (!response.ok || !result.success) {
+            throw new Error(result?.error || `Request failed (${response.status})`);
+          }
+          this.toast(`${name}: feature flag ${desired ? "enabled" : "disabled"}`, "success");
+          await this.load();
+        } catch (error) {
+          if (error.message && error.message.includes("Authentication failed")) return;
+          input.checked = !desired;
+          input.disabled = false;
+          if (label) label.classList.remove("busy");
+          this.toast(`Failed to update ${flag}: ${error.message || error}`, "error");
+        } finally {
+          if (wasAuto) this.setupAutoRefresh();
+        }
+      }
+
+      // Start / stop a service's process via the admin launcher endpoints.
+      async controlService(action, key, btn) {
+        if (!this.token) {
+          this.toast("Admin token unavailable — cannot control services", "error");
+          return;
+        }
+
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${action === "start" ? "Starting" : "Stopping"}…`;
+
+        const wasAuto = this.autoToggle.checked;
+        if (this.timer) { clearInterval(this.timer); this.timer = null; }
+
+        try {
+          const response = await secureFetch(`/api/v1/admin/services/${encodeURIComponent(key)}/${action}`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${this.token}` },
+          });
+          const result = await response.json();
+          if (!response.ok || !result.success) {
+            throw new Error(result?.error || `Request failed (${response.status})`);
+          }
+          this.toast(result.message || `${key} ${action}`, "success");
+          // Give the process a moment to bind (or release) its port before reprobe.
+          await new Promise((r) => setTimeout(r, action === "start" ? 1400 : 500));
+          await this.load();
+        } catch (error) {
+          if (error.message && error.message.includes("Authentication failed")) return;
+          btn.disabled = false;
+          btn.innerHTML = original;
+          this.toast(`Failed to ${action} ${key}: ${error.message || error}`, "error");
+          await this.load();
+        } finally {
+          if (wasAuto) this.setupAutoRefresh();
+        }
+      }
+
+      setupAutoRefresh() {
+        if (this.timer) {
+          clearInterval(this.timer);
+          this.timer = null;
+        }
+        if (this.autoToggle.checked) {
+          this.timer = setInterval(() => this.load(), 15000);
+        }
+      }
+
+      esc(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        })[c]);
+      }
+
+      statusBadge(status) {
+        const map = {
+          online: ["badge-success-enhanced", "Online"],
+          degraded: ["badge-warning-enhanced", "Degraded"],
+          offline: ["badge-danger-enhanced", "Offline"],
+          error: ["badge-danger-enhanced", "Error"],
+        };
+        const [cls, label] = map[status] || ["badge-enhanced", status || "Unknown"];
+        return `<span class="badge-enhanced ${cls}">${this.esc(label)}</span>`;
+      }
+
+      // Interactive feature-flag control. flagEnabled === null means the flag
+      // state couldn't be read → render read-only. Toggling requires the admin
+      // token supplied by the parent dashboard.
+      flagControl(svc) {
+        if (!svc.flag) return "";
+        const known = svc.flagEnabled === true || svc.flagEnabled === false;
+        const on = svc.flagEnabled === true;
+        const stateCls = !known ? "unknown" : on ? "on" : "off";
+        const stateText = !known ? "unknown" : on ? "ON" : "OFF";
+        const disabled = !known || !this.token ? "disabled" : "";
+        return `
+          <div class="svc-flag">
+            <div class="flag-info">
+              <div class="flag-name"><i class="fas fa-flag"></i> Feature flag</div>
+              <div class="flag-code">${this.esc(svc.flag)}</div>
+            </div>
+            <span class="flag-state ${stateCls}">${stateText}</span>
+            <label class="switch" title="${this.token ? "Toggle this service's feature flag" : "Admin token required"}">
+              <input type="checkbox" class="flag-input" data-flag="${this.esc(svc.flag)}"
+                data-name="${this.esc(svc.name)}" ${on ? "checked" : ""} ${disabled} />
+              <span class="slider"></span>
+            </label>
+          </div>`;
+      }
+
+      formatUptime(ms) {
+        const n = Number(ms);
+        if (!Number.isFinite(n) || n <= 0) return "—";
+        const s = Math.floor(n / 1000);
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = s % 60;
+        if (h > 0) return `${h}h ${m}m`;
+        if (m > 0) return `${m}m ${sec}s`;
+        return `${sec}s`;
+      }
+
+      // Process start/stop control. Only rendered when the backend allows
+      // launching (dev/test) and the service is in the launcher allowlist.
+      processControl(svc) {
+        if (!this.launchEnabled) return "";
+        const m = this.managed[svc.key];
+        if (!m || !m.manageable) return "";
+
+        const online = svc.status === "online";
+        const runningManaged = m.status === "running";
+        const canStart = !online && !runningManaged;
+        const canStop = runningManaged;
+
+        let procLine = "";
+        if (runningManaged) {
+          procLine = `<span class="proc-pill"><span class="proc-dot running"></span>Managed process running (pid ${this.esc(m.pid)})</span>`
+            + (m.startedAt ? `<span class="proc-pill"><i class="fas fa-clock"></i> since ${new Date(m.startedAt).toLocaleTimeString("pl-PL")}</span>` : "");
+        } else if (m.status === "exited") {
+          const detail = m.error ? this.esc(m.error) : `exit code ${this.esc(m.exitCode)}${m.exitSignal ? ` (${this.esc(m.exitSignal)})` : ""}`;
+          procLine = `<span class="proc-pill"><span class="proc-dot exited"></span>Last managed run exited — ${detail}</span>`;
+        } else if (online) {
+          procLine = `<span class="proc-pill"><span class="proc-dot running"></span>Running (started outside dashboard — stop from its terminal)</span>`;
+        } else {
+          procLine = `<span class="proc-pill"><span class="proc-dot not-started"></span>Not started from dashboard</span>`;
+        }
+
+        const logs = Array.isArray(m.logs) && m.logs.length
+          ? `<div class="svc-logs">${m.logs.map((l) =>
+              `<div class="${l.stream === "stderr" ? "log-err" : ""}">${this.esc(l.line)}</div>`).join("")}</div>`
+          : "";
+
+        return `
+          <div class="svc-ctrl">
+            <div class="svc-ctrl-head">
+              <span class="svc-ctrl-title"><i class="fas fa-terminal"></i> Process control</span>
+              <div class="svc-ctrl-buttons">
+                <button class="ctrl-btn start" data-action="start" data-key="${this.esc(svc.key)}" ${canStart ? "" : "disabled"}
+                  title="${this.esc(m.startCommand || "")}">
+                  <i class="fas fa-play"></i> Start
+                </button>
+                <button class="ctrl-btn stop" data-action="stop" data-key="${this.esc(svc.key)}" ${canStop ? "" : "disabled"}>
+                  <i class="fas fa-stop"></i> Stop
+                </button>
+              </div>
+            </div>
+            <div class="svc-proc">${procLine}</div>
+            ${logs}
+          </div>`;
+      }
+
+      // Farm Stay aggregate: health = { overall, services: [{ name, status, version, uptimeMs, target }] }
+      renderLeafTable(health) {
+        const leaves = Array.isArray(health?.services) ? health.services : [];
+        if (!leaves.length) return "";
+        const rows = leaves.map((l) => {
+          const up = String(l.status) === "SERVING";
+          const dotCls = up ? "online" : "offline";
+          return `
+            <tr>
+              <td><span class="leaf-name"><span class="dot ${dotCls}"></span>${this.esc(l.name)}</span></td>
+              <td>${this.esc(l.status)}</td>
+              <td class="mono">${this.esc(l.version || "—")}</td>
+              <td>${this.esc(this.formatUptime(l.uptimeMs))}</td>
+              <td class="mono">${this.esc(l.target || "—")}</td>
+            </tr>`;
+        }).join("");
+        return `
+          <table class="leaf-table">
+            <thead>
+              <tr><th>Leaf</th><th>Status</th><th>Version</th><th>Uptime</th><th>Target</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      }
+
+      // Flat health object (greenhouse/tasklab) → key/value list
+      renderFlatHealth(health) {
+        const entries = Object.entries(health || {}).filter(([k]) => k !== "services" && k !== "overall");
+        if (!entries.length) return "";
+        const rows = entries.map(([k, v]) => {
+          const label = k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+          const val = typeof v === "object" ? JSON.stringify(v) : String(v);
+          return `<div class="k">${this.esc(label)}</div><div class="v">${this.esc(val)}</div>`;
+        }).join("");
+        return `<div class="svc-kv" style="margin-top:6px">${rows}</div>`;
+      }
+
+      renderCard(svc) {
+        const status = svc.status || "unknown";
+        let healthBlock = "";
+        if (svc.health) {
+          healthBlock = Array.isArray(svc.health.services)
+            ? this.renderLeafTable(svc.health)
+            : this.renderFlatHealth(svc.health);
+        }
+
+        const hint = svc.hint
+          ? `<div class="svc-hint"><i class="fas fa-lightbulb"></i> ${this.esc(svc.hint).replace(/(npm run [\w:-]+)/, "<code>$1</code>")}</div>`
+          : "";
+        const error = svc.error
+          ? `<div class="svc-error"><i class="fas fa-triangle-exclamation"></i> ${this.esc(svc.error)}</div>`
+          : "";
+
+        return `
+          <div class="svc-card ${this.esc(status)}">
+            <div class="svc-card-head">
+              <h3 class="svc-name"><span class="dot ${this.esc(status)}"></span>${this.esc(svc.name)}</h3>
+              ${this.statusBadge(status)}
+            </div>
+            <p class="svc-desc">${this.esc(svc.description || "")}</p>
+            <div class="svc-meta">
+              <span class="badge-enhanced badge-info-enhanced">${this.esc(svc.transport || "—")}</span>
+            </div>
+            <div class="svc-kv">
+              <div class="k">Target</div><div class="v mono">${this.esc(svc.target || "—")}</div>
+            </div>
+            ${healthBlock}
+            ${error}
+            ${hint}
+            ${this.flagControl(svc)}
+            ${this.processControl(svc)}
+          </div>`;
+      }
+
+      renderSummary(services) {
+        const counts = { online: 0, degraded: 0, offline: 0, error: 0 };
+        services.forEach((s) => { counts[s.status] = (counts[s.status] || 0) + 1; });
+        const pill = (cls, label, n) =>
+          `<div class="svc-summary-pill"><span class="dot ${cls}"></span>${label}<span class="count">${n}</span></div>`;
+        this.summary.innerHTML = [
+          pill("online", "Online", counts.online),
+          pill("degraded", "Degraded", counts.degraded),
+          pill("offline", "Offline", counts.offline),
+          counts.error ? pill("error", "Error", counts.error) : "",
+          `<div class="svc-summary-pill"><i class="fas fa-layer-group"></i> Total<span class="count">${services.length}</span></div>`,
+        ].join("");
+      }
+
+      setBusy(busy) {
+        if (busy) {
+          this.refreshBtn.disabled = true;
+          this.refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin btn-icon"></i> Refreshing…';
+        } else {
+          this.refreshBtn.disabled = false;
+          this.refreshBtn.innerHTML = '<i class="fas fa-sync-alt btn-icon"></i> Refresh';
+        }
+      }
+
+      // Managed-process state powers the Start/Stop controls. Admin-gated and
+      // best-effort: a failure here must never block the health view.
+      async loadManaged() {
+        if (!this.token) { this.managed = {}; this.launchEnabled = false; return; }
+        try {
+          const res = await secureFetch("/api/v1/admin/services/managed", {
+            headers: { Authorization: `Bearer ${this.token}` },
+          });
+          const json = await res.json();
+          if (json && json.success && json.data) {
+            this.launchEnabled = json.data.launchEnabled === true;
+            this.managed = Object.fromEntries((json.data.services || []).map((s) => [s.key, s]));
+          }
+        } catch (error) {
+          // 401/403 is handled by secureFetch; anything else just hides controls.
+          this.managed = {};
+          this.launchEnabled = false;
+        }
+      }
+
+      async load() {
+        this.setBusy(true);
+        try {
+          const [response] = await Promise.all([
+            secureFetch("/api/v1/services/status", {
+              headers: this.token ? { Authorization: `Bearer ${this.token}` } : {},
+            }),
+            this.loadManaged(),
+          ]);
+          const result = await response.json();
+          const services = result?.data?.services || [];
+
+          if (!services.length) {
+            this.summary.innerHTML = "";
+            this.grid.innerHTML = '<div class="svc-empty"><i class="fas fa-inbox"></i> No monitored services registered.</div>';
+          } else {
+            this.renderSummary(services);
+            this.grid.innerHTML = services.map((s) => this.renderCard(s)).join("");
+          }
+
+          const now = new Date();
+          this.lastUpdated.textContent = `Last updated: ${now.toLocaleTimeString("pl-PL")}`;
+        } catch (error) {
+          if (error.message && error.message.includes("Authentication failed")) return;
+          this.grid.innerHTML =
+            `<div class="svc-error"><i class="fas fa-triangle-exclamation"></i> Failed to load service status: ${this.esc(error.message || error)}</div>`;
+        } finally {
+          this.setBusy(false);
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => new ExternalServicesTab());
+  </script>
+</body>
+
+</html>

@@ -21,6 +21,7 @@ const grpc = require("@grpc/grpc-js");
 const featureFlagsService = require("./feature-flags.service");
 const { client: greenhouseClient } = require("../modules/greenhouse");
 const { client: tasklabClient } = require("../modules/tasklab");
+const { client: farmStayClient } = require("../modules/farm-stay");
 const { CLIENT_TARGET: GREENHOUSE_TARGET } = require("../external-services/greenhouse/greenhouse-config");
 const { CLIENT_TARGET: TASKLAB_TARGET } = require("../external-services/tasklab/tasklab-config");
 
@@ -69,6 +70,55 @@ function grpcHealthAdapter({ client, target, startCommand }) {
  *   }
  */
 
+/**
+ * FarmStay aggregate adapter — the FarmStay ecosystem is a five-service family
+ * fronted by a single REST gateway that already aggregates its leaves at
+ * `GET /health/all`. We reuse the app-side gateway client (the same one the
+ * bridge routes use) so this stays a thin monitor with no new transport code.
+ *
+ * The gateway's `{ overall, services[] }` payload is surfaced verbatim in
+ * `health` so the UI can drill into each leaf (inventory, pricing, reservation,
+ * review-desk, gateway). `overall` maps: SERVING→online, DEGRADED→degraded (some
+ * leaves down), DOWN→offline (all leaves down), gateway unreachable→offline.
+ */
+function farmStayAggregateAdapter({ startCommand }) {
+  const target = farmStayClient.base;
+  return async () => {
+    let result;
+    try {
+      result = await farmStayClient.healthAll();
+    } catch (err) {
+      return { status: "error", target, health: null, error: err?.message || "Unknown error", hint: null };
+    }
+
+    const { status: httpStatus, body } = result || {};
+    const offlineHint = startCommand ? `Start it with: ${startCommand}` : null;
+
+    // Gateway itself unreachable — client maps this to 503 + FARM_STAY_OFFLINE.
+    if (httpStatus === 503 || body?.error === "FARM_STAY_OFFLINE") {
+      return {
+        status: "offline",
+        target,
+        health: null,
+        error: body?.detail || body?.error || "FarmStay gateway offline",
+        hint: offlineHint,
+      };
+    }
+
+    const overall = body?.overall || null;
+    const statusByOverall = { SERVING: "online", DEGRADED: "degraded", DOWN: "offline" };
+    const status = statusByOverall[overall] || "error";
+
+    return {
+      status,
+      target,
+      health: body || null,
+      error: status === "error" ? `Unexpected gateway response (HTTP ${httpStatus})` : null,
+      hint: status === "online" ? null : offlineHint,
+    };
+  };
+}
+
 // ── Registry ─────────────────────────────────────────────────────────────────
 // Identity + transport metadata for each monitored service. `probe` is the only
 // behavioral field; everything else is display/context.
@@ -96,6 +146,16 @@ const SERVICES = [
       client: tasklabClient,
       target: TASKLAB_TARGET,
       startCommand: "npm run tasklab",
+    }),
+  },
+  {
+    key: "farm-stay",
+    name: "Farm Stay",
+    description: "Farm-stay booking ecosystem (gateway + 4 leaves)",
+    transport: "REST gateway",
+    flag: "farmStayEnabled",
+    probe: farmStayAggregateAdapter({
+      startCommand: "npm run farmstay",
     }),
   },
 ];

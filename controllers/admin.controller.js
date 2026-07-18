@@ -160,6 +160,138 @@ class AdminController {
   }
 
   /**
+   * Reject service start/stop when running in production. Launching local
+   * processes from the dashboard is a dev/test convenience only.
+   */
+  _serviceLaunchDenied(res) {
+    if (process.env.NODE_ENV === "production") {
+      res.status(403).json(
+        formatResponseBody({
+          error: "Service launching is disabled in production",
+        }),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get managed-process state for launchable external services
+   */
+  async getManagedServices(req, res) {
+    try {
+      const serviceLauncher = require("../services/service-launcher.service");
+      res.status(200).json(
+        formatResponseBody({
+          data: {
+            launchEnabled: process.env.NODE_ENV !== "production",
+            services: serviceLauncher.getState(),
+          },
+        }),
+      );
+    } catch (error) {
+      logError("Error getting managed services:", error);
+      res.status(500).json(
+        formatResponseBody({
+          error: "Failed to get managed services",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Start an external service as a tracked child process
+   */
+  async startService(req, res) {
+    if (this._serviceLaunchDenied(res)) return;
+    try {
+      const serviceLauncher = require("../services/service-launcher.service");
+      const { key } = req.params;
+      if (!serviceLauncher.isManageable(key)) {
+        return res.status(404).json(
+          formatResponseBody({
+            error: `Unknown or non-launchable service: ${key}`,
+          }),
+        );
+      }
+      const result = serviceLauncher.start(key);
+      logInfo("Admin started external service", { key, result });
+      res.status(200).json(
+        formatResponseBody({
+          message: result.alreadyRunning ? `${key} is already running` : `${key} starting`,
+          data: serviceLauncher.stateOf(key),
+        }),
+      );
+    } catch (error) {
+      logError("Error starting external service:", error);
+      const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+      res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message || "Failed to start service",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Stop a previously started external service (and its process tree)
+   */
+  async stopService(req, res) {
+    if (this._serviceLaunchDenied(res)) return;
+    try {
+      const serviceLauncher = require("../services/service-launcher.service");
+      const { key } = req.params;
+      if (!serviceLauncher.isManageable(key)) {
+        return res.status(404).json(
+          formatResponseBody({
+            error: `Unknown or non-launchable service: ${key}`,
+          }),
+        );
+      }
+      const result = await serviceLauncher.stop(key);
+      logInfo("Admin stopped external service", { key, result });
+      res.status(200).json(
+        formatResponseBody({
+          message: result.alreadyStopped ? `${key} was not running` : `${key} stopped`,
+          data: serviceLauncher.stateOf(key),
+        }),
+      );
+    } catch (error) {
+      logError("Error stopping external service:", error);
+      const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+      res.status(statusCode).json(
+        formatResponseBody({
+          error: error.message || "Failed to stop service",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Get multi-factor (two-factor) authentication overview
+   */
+  async getMfaOverview(req, res) {
+    try {
+      const overview = await adminService.getMfaOverview();
+      res.status(200).json(
+        formatResponseBody(
+          {
+            data: overview,
+          },
+          true,
+        ),
+      );
+    } catch (error) {
+      logError("Error getting MFA overview:", error);
+      res.status(500).json(
+        formatResponseBody({
+          error: "Failed to get MFA overview",
+        }),
+      );
+    }
+  }
+
+  /**
    * Get all users
    */
   async getAllUsers(req, res) {

@@ -1162,6 +1162,98 @@ class AdminService {
   }
 
   /**
+   * Build a privacy-safe overview of multi-factor (two-factor) authentication
+   * across every account: the global enforcement state, adoption summary, and a
+   * per-user status list. Secrets and pending secrets are NEVER included — only
+   * whether a factor exists and its lifecycle timestamps.
+   */
+  async getMfaOverview() {
+    const dbManager = require("../data/database-manager");
+    const { DEFAULT_ISSUER } = require("../helpers/two-factor-auth");
+    const twoFactorDb = dbManager.getTwoFactorAuthDatabase ? dbManager.getTwoFactorAuthDatabase() : null;
+
+    const [users, twoFactorStore, featureFlagsData] = await Promise.all([
+      this.userDataInstance.getUsers(),
+      twoFactorDb ? twoFactorDb.getAll() : Promise.resolve({ keys: [] }),
+      featureFlagsService.getFeatureFlags().catch(() => ({ flags: {} })),
+    ]);
+
+    const globallyEnabled = featureFlagsData?.flags?.twoFactorAuthEnabled === true;
+
+    // Index the 2FA store by userId. The store is { version, keys: [...] } but
+    // tolerate a bare array for older fixtures.
+    const rawKeys = Array.isArray(twoFactorStore)
+      ? twoFactorStore
+      : Array.isArray(twoFactorStore?.keys)
+        ? twoFactorStore.keys
+        : [];
+    const recordByUserId = new Map();
+    for (const rec of rawKeys) {
+      const uid = Number(rec?.userId);
+      if (Number.isInteger(uid) && uid > 0) recordByUserId.set(uid, rec);
+    }
+
+    const userRows = users.map((user) => {
+      const rec = recordByUserId.get(Number(user.id)) || null;
+      const enabled = rec?.enabled === true && typeof rec?.secret === "string" && rec.secret.length > 0;
+      const pendingSetup = !enabled && typeof rec?.pendingSecret === "string" && rec.pendingSecret.length > 0;
+      const status = enabled ? "enabled" : pendingSetup ? "pending" : "disabled";
+
+      return {
+        userId: user.id,
+        username: user.username || null,
+        displayedName: user.displayedName || null,
+        email: user.email || null,
+        isActive: user.isActive === true,
+        status,
+        enabled,
+        pendingSetup,
+        enabledAt: rec?.enabledAt || null,
+        setupGeneratedAt: rec?.setupGeneratedAt || null,
+        updatedAt: rec?.updatedAt || null,
+        // A user is only actually challenged at login when the global flag is on
+        // AND they have a verified factor.
+        enforcedAtLogin: globallyEnabled && enabled,
+      };
+    });
+
+    const totalUsers = userRows.length;
+    const enabledCount = userRows.filter((r) => r.enabled).length;
+    const pendingCount = userRows.filter((r) => r.pendingSetup).length;
+    const disabledCount = totalUsers - enabledCount - pendingCount;
+    const activeUsers = userRows.filter((r) => r.isActive).length;
+    const activeEnabled = userRows.filter((r) => r.isActive && r.enabled).length;
+    const adoptionRate = totalUsers > 0 ? Math.round((enabledCount / totalUsers) * 1000) / 10 : 0;
+
+    // Records whose owning user no longer exists (should self-heal via user
+    // lifecycle cleanup, but worth surfacing if they linger).
+    const userIdSet = new Set(users.map((u) => Number(u.id)));
+    const orphanRecords = rawKeys.filter((rec) => !userIdSet.has(Number(rec?.userId))).length;
+
+    return {
+      global: {
+        featureFlag: "twoFactorAuthEnabled",
+        enabled: globallyEnabled,
+        enforced: globallyEnabled,
+        method: "Authenticator app (TOTP)",
+        issuer: DEFAULT_ISSUER,
+      },
+      summary: {
+        totalUsers,
+        activeUsers,
+        enabled: enabledCount,
+        pending: pendingCount,
+        disabled: disabledCount,
+        activeEnabled,
+        adoptionRate,
+        orphanRecords,
+        storeUpdatedAt: twoFactorStore?.updatedAt || null,
+      },
+      users: userRows,
+    };
+  }
+
+  /**
    * Get feature flags for admin dashboard
    */
   async getFeatureFlags(includeDescriptions = true) {

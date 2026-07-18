@@ -240,8 +240,23 @@ logDebug("Plugins loaded on startup", {
 });
 
 // Graceful shutdown handling
+const serviceLauncher = require("../services/service-launcher.service");
+
+// Stop any external services started from the Kraken dashboard so they aren't
+// orphaned (still holding their ports) when the app goes down. This is the
+// graceful path; service-launcher also has a synchronous process 'exit' backstop
+// for crash/forced-exit paths.
+const stopLaunchedServices = async () => {
+  try {
+    await serviceLauncher.shutdownAll();
+  } catch (error) {
+    logError("Error stopping launched external services during shutdown:", error);
+  }
+};
+
 process.on("SIGINT", async () => {
   logDebug("Received SIGINT. Graceful shutdown...");
+  await stopLaunchedServices();
   await pluginRuntime.shutdown();
   notificationWebSocketService.close();
   messengerWebSocketService.close();
@@ -253,6 +268,7 @@ process.on("SIGINT", async () => {
 
 process.on("SIGTERM", async () => {
   logDebug("Received SIGTERM. Graceful shutdown...");
+  await stopLaunchedServices();
   await pluginRuntime.shutdown();
   notificationWebSocketService.close();
   messengerWebSocketService.close();
@@ -264,6 +280,7 @@ process.on("SIGTERM", async () => {
 
 process.on("SIGHUP", async () => {
   logDebug("Received SIGHUP. Graceful shutdown...");
+  await stopLaunchedServices();
   await pluginRuntime.shutdown();
   notificationWebSocketService.close();
   messengerWebSocketService.close();

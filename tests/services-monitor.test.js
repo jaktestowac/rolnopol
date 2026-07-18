@@ -37,17 +37,26 @@ afterAll(() => {
 });
 
 describe("service monitor — services down", () => {
-  it("reports both services offline when nothing is running", async () => {
+  it("reports all services offline when nothing is running", async () => {
     const res = await request(app).get("/api/v1/services/status").expect(200);
     const services = getServices(res.body);
-    expect(services.map((s) => s.key).sort()).toEqual(["greenhouse", "tasklab"]);
+    expect(services.map((s) => s.key).sort()).toEqual(["farm-stay", "greenhouse", "tasklab"]);
     for (const svc of services) {
       expect(svc.status).toBe("offline");
       expect(svc.health).toBeNull();
       expect(typeof svc.error).toBe("string");
+      expect(typeof svc.target).toBe("string");
+    }
+
+    // The two gRPC leaves expose a host:port target and gRPC transport.
+    for (const svc of services.filter((s) => s.key !== "farm-stay")) {
       expect(svc.target).toMatch(/:\d+$/);
       expect(svc.transport).toBe("gRPC");
     }
+
+    // Farm Stay is monitored through its aggregating REST gateway.
+    const farmStay = services.find((s) => s.key === "farm-stay");
+    expect(farmStay.transport).toBe("REST gateway");
   });
 });
 
