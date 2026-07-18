@@ -2,59 +2,31 @@
 
 /**
  * Kill all farmstay services and free their ports
- * Ports: 50071 (inventory), 4311 (pricing), 50072 (reservation), 4319 (control)
+ * Ports: 4310 (gateway), 50071 (inventory), 4311 (pricing), 50072 (reservation),
+ *        4312 (review-desk), 4319 (control)
+ *
+ *   node kill-all.js            # verify each listener is a FarmStay service, then kill
+ *   node kill-all.js --force    # kill whatever listens, no identity check
+ *
+ * Only the LISTENING process on each port is killed, and only after its command
+ * line is confirmed to be the expected FarmStay service — see kill-port.js for
+ * why both guards matter (matching any socket referencing the port would kill the
+ * gateway along with a leaf; skipping the identity check risks killing a stranger
+ * squatting on the port).
  */
 
-const { execSync } = require("child_process");
-const os = require("os");
+const path = require("path");
+const { killPort } = require("./kill-port");
+const { SERVICES, CONTROL_PORT } = require("./services");
 
-const PORTS = [50071, 4311, 50072, 4319];
-const isWindows = os.platform() === "win32";
+const entryMarker = (entry) => path.basename(path.dirname(path.dirname(entry)));
 
-function killProcessOnPort(port) {
-  try {
-    console.log(`\nChecking port ${port}...`);
+// [{ port, expect }] for every service plus the supervisor's control port.
+const TARGETS = SERVICES.map((s) => ({ port: s.port(), expect: entryMarker(s.entry) }));
+TARGETS.push({ port: CONTROL_PORT, expect: "start-all.js" });
 
-    let command;
-    if (isWindows) {
-      // Windows: use netstat and taskkill
-      command = `for /f "tokens=5" %a in ('netstat -ano ^| findstr ":${port}"') do taskkill /PID %a /F`;
-      try {
-        execSync(command, { stdio: "pipe", shell: "cmd" });
-        console.log(`  ✓ Port ${port} freed`);
-      } catch (e) {
-        // Process might not exist, that's ok
-        console.log(`  ✓ Port ${port} is free`);
-      }
-    } else {
-      // Unix/Mac: use lsof and kill
-      try {
-        const output = execSync(`lsof -ti:${port} 2>/dev/null || true`, { encoding: "utf-8" });
-        if (output.trim()) {
-          const pids = output.trim().split("\n");
-          for (const pid of pids) {
-            if (pid) {
-              try {
-                execSync(`kill -9 ${pid}`, { stdio: "pipe" });
-                console.log(`  Killing PID ${pid} on port ${port}...`);
-              } catch (e) {
-                // Already dead
-              }
-            }
-          }
-          console.log(`  ✓ Port ${port} freed`);
-        } else {
-          console.log(`  ✓ Port ${port} is free`);
-        }
-      } catch (e) {
-        console.log(`  ✓ Port ${port} is free`);
-      }
-    }
-  } catch (error) {
-    console.error(`  Error checking port ${port}:`, error.message);
-  }
-}
+const force = process.argv.includes("--force");
 
 console.log("Killing farmstay services...");
-PORTS.forEach(killProcessOnPort);
+for (const t of TARGETS) killPort(t.port, { expect: t.expect, force });
 console.log("\nDone! All farmstay ports should be free.");

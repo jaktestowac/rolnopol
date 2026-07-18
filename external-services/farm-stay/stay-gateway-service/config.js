@@ -34,6 +34,19 @@ const GRPC_DEADLINE_MS = Number(process.env.FARM_STAY_GRPC_DEADLINE_MS || 3000);
 const HTTP_TIMEOUT_MS = Number(process.env.FARM_STAY_HTTP_TIMEOUT_MS || 3000);
 const HEALTH_TIMEOUT_MS = Number(process.env.FARM_STAY_HEALTH_TIMEOUT_MS || 1500);
 
+// Admin allowlist for the platform analytics view — comma-separated x-stay-user
+// ids. EMPTY (the default) leaves it open so the hidden dashboard works out of
+// the box in dev; set it in a shared deployment to lock the endpoint down.
+const ADMIN_USERS = (process.env.FARM_STAY_ADMIN_USERS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+// Notional platform commission used to *estimate* take-rate in the platform
+// analytics (there is no real service fee yet — see IMPROVEMENTS #9). Purely a
+// reporting figure; no money moves on it.
+const PLATFORM_FEE_PCT = Number(process.env.FARM_STAY_PLATFORM_FEE_PCT || 12);
+
 module.exports = {
   HOST,
   PORT,
@@ -48,4 +61,6 @@ module.exports = {
   GRPC_DEADLINE_MS,
   HTTP_TIMEOUT_MS,
   HEALTH_TIMEOUT_MS,
+  ADMIN_USERS,
+  PLATFORM_FEE_PCT,
 };

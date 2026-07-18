@@ -74,9 +74,12 @@ async function check(call, callback) {
 
 async function listProperties(call, callback) {
   try {
-    const { host_id } = call.request || {};
+    const { host_id, include_inactive } = call.request || {};
     const data = await db.getAll();
-    const props = data.properties.filter((p) => (host_id ? p.hostId === host_id : p.active));
+    // A host sees all their own listings (active or not). Without a host filter
+    // the default is active-only (the public catalog); include_inactive lifts
+    // that so the platform analytics view counts every listing ever published.
+    const props = data.properties.filter((p) => (host_id ? p.hostId === host_id : p.active || include_inactive));
     callback(null, { properties: props.map(toProperty), total: props.length });
   } catch (err) {
     fail(callback, grpc.status.INTERNAL, err.message, "ListProperties");

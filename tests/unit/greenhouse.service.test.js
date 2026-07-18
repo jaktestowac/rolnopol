@@ -8,8 +8,8 @@ const fs = require("fs");
 const TMP_DB = path.join(os.tmpdir(), `greenhouse-service-test-${process.pid}.json`);
 process.env.GREENHOUSE_DB_PATH = TMP_DB;
 
-const greenhouseDb = require("../../grpc/greenhouse-server/db.js");
-const greenhouseService = require("../../grpc/greenhouse-server/greenhouse.service.js");
+const greenhouseDb = require("../../external-services/greenhouse/greenhouse-server/db.js");
+const greenhouseService = require("../../external-services/greenhouse/greenhouse-server/greenhouse.service.js");
 
 const USER = { kind: "user", id: "user-1" };
 const DEMO = { kind: "demo", id: "demo-abc123" };

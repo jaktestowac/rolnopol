@@ -3,19 +3,21 @@
  *
  * per-night = basePrice × seasonMultiplier × (weekend ? uplift : 1)
  * stays ≥ 7 nights get a 10% discount on the nightly subtotal.
+ * an optional promo `coupon` (compiled-in) applies AFTER the long-stay discount.
  */
 const dates = require("../../shared/dates");
 const seasons = require("../config/seasons");
+const { applyCoupon } = require("../config/coupons");
 
 function round2(n) {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
 /**
- * @param {{basePrice:number, from:string, to:string}} input
- * @returns {{total, currency, nights, discounts}}
+ * @param {{basePrice:number, from:string, to:string, coupon?:string}} input
+ * @returns {{total, currency, nights, discounts, subtotal, coupon?}}
  */
-function quote({ basePrice, from, to }) {
+function quote({ basePrice, from, to, coupon }) {
   const nightsList = dates.eachNight(from, to);
   const nights = nightsList.map((date) => {
     const season = seasons.seasonForDate(date);
@@ -34,7 +36,20 @@ function quote({ basePrice, from, to }) {
     total = round2(subtotal - amount);
   }
 
-  return { total, currency: "ROL", nights, discounts, subtotal };
+  const result = { total, currency: "ROL", nights, discounts, subtotal };
+
+  // Promo code — applied to the (already long-stay-discounted) running total.
+  const couponOutcome = applyCoupon(coupon, total, nightsList.length, round2);
+  if (couponOutcome.code) {
+    result.coupon = couponOutcome;
+    if (couponOutcome.applied) {
+      discounts.push({ code: `coupon:${couponOutcome.code}`, label: couponOutcome.label, amount: couponOutcome.amount });
+      total = round2(total - couponOutcome.amount);
+      result.total = total;
+    }
+  }
+
+  return result;
 }
 
 module.exports = { quote, round2 };

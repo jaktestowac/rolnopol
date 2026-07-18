@@ -2,7 +2,7 @@
  * Greenhouse gRPC client (app side).
  *
  * The Rolnopol app is a gRPC *client* of the standalone greenhouse service.
- * This wrapper lazily dials the service (CLIENT_TARGET from grpc/greenhouse-config), attaches
+ * This wrapper lazily dials the service (CLIENT_TARGET from external-services/greenhouse/greenhouse-config), attaches
  * the caller identity as gRPC metadata, and exposes promise-returning unary calls.
  *
  * Resilience: if the app starts before the service, the channel would otherwise
@@ -17,7 +17,7 @@
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 
-const { PROTO_PATH, PROTO_LOADER_OPTIONS, CLIENT_TARGET } = require("../../grpc/greenhouse-config");
+const { PROTO_PATH, PROTO_LOADER_OPTIONS, CLIENT_TARGET } = require("../../external-services/greenhouse/greenhouse-config");
 
 const CALL_DEADLINE_MS = 3000;
 

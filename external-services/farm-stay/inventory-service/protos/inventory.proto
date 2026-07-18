@@ -51,6 +51,7 @@ message Property {
 
 message ListPropertiesRequest {
   string host_id = 1; // optional — empty = all active
+  bool include_inactive = 2; // with empty host_id: return inactive listings too (platform analytics)
 }
 
 message PropertyList {

@@ -278,6 +278,8 @@
         tab.classList.add("is-active");
         $(`tab-${tab.dataset.tab}`).classList.add("is-active");
         if (tab.dataset.tab === "trips") loadTrips();
+        if (tab.dataset.tab === "purchases") loadPurchases();
+        if (tab.dataset.tab === "travel") loadTravel();
         if (tab.dataset.tab === "listings") loadListings();
         if (tab.dataset.tab === "hosting") loadHosting();
       });
@@ -524,7 +526,7 @@
     const nights = (quote.nights || [])
       .map(
         (n) =>
-          `<div><span>${n.date}${n.weekend ? " (wknd)" : ""} · ${n.season}</span><span>${formatROL(n.price)} ${quote.currency}</span></div>`,
+          `<div><span>${n.date}${n.weekend ? " (weekend)" : ""} · ${n.season}</span><span>${formatROL(n.price)} ${quote.currency}</span></div>`,
       )
       .join("");
     const disc = (quote.discounts || [])
@@ -668,6 +670,190 @@
     else banner(body.error || "Could not submit review.");
   }
 
+  // ── Purchases (history + PDF receipts) ────────────────────────────────────────
+  async function loadPurchases() {
+    const list = $("fsPurchases");
+    const btn = $("fsRefreshPurchases");
+    list.innerHTML = '<div class="fs-empty">Loading…</div>';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing…';
+    }
+    const { ok, status, body } = await api("GET", "/purchases");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Refresh';
+    }
+    if (!ok) {
+      list.innerHTML = "";
+      if (status === 401) return banner("Please log in to use FarmStay.", true);
+      return banner(status === 503 ? "Booking service offline." : body.error || "Could not load purchases.", true);
+    }
+    const purchases = body.purchases || [];
+    const spent = purchases.reduce((s, p) => s + (p.net || 0), 0);
+    $("fsPurchasesSummary").textContent = purchases.length ? `${purchases.length} purchase(s) · ${formatROL(spent)} ROL net` : "";
+    if (!purchases.length) {
+      list.innerHTML = '<div class="fs-empty">No purchases yet — confirmed bookings show up here with a downloadable receipt.</div>';
+      return;
+    }
+    list.innerHTML = purchases.map(renderPurchase).join("");
+    list.querySelectorAll("[data-receipt]").forEach((b) => b.addEventListener("click", () => downloadReceipt(b.dataset.receipt, b)));
+    list.querySelectorAll("[data-details]").forEach((b) => b.addEventListener("click", () => openDetails(b.dataset.details)));
+  }
+
+  function renderPurchase(p) {
+    const refund = p.refunded > 0 ? ` · <span class="fs-refund">${formatROL(p.refunded)} ROL refunded</span>` : "";
+    return `<div class="fs-row">
+      <div class="fs-row-main">
+        <div class="fs-row-title">${esc(p.propertyId)} <span class="fs-state ${p.state}">${p.state}</span></div>
+        <div class="fs-row-sub">${p.from} → ${p.to} · ${p.guests} guest(s)</div>
+        <div class="fs-row-sub">Charged <strong>${formatROL(p.charged)} ROL</strong> · net <strong>${formatROL(p.net)} ROL</strong>${refund}</div>
+      </div>
+      <div class="fs-row-actions">
+        <button class="fs-btn fs-btn-sm" data-details="${esc(p.propertyId)}"><i class="fa-solid fa-circle-info"></i> Details</button>
+        <button class="fs-btn fs-btn-primary fs-btn-sm" data-receipt="${esc(p.id)}"><i class="fa-solid fa-file-pdf"></i> Receipt</button>
+      </div>
+    </div>`;
+  }
+
+  // Fetch the PDF with the session cookie, then trigger a client-side download.
+  // (A plain link would work same-origin too, but fetching lets us surface a
+  // 403/503 as a banner instead of opening a broken tab.)
+  async function downloadReceipt(bookingId, btn) {
+    const original = btn ? btn.innerHTML : "";
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    }
+    try {
+      const res = await fetch(`${API}/bookings/${encodeURIComponent(bookingId)}/receipt.pdf`, { credentials: "include" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        return banner(err.error || `Could not generate receipt (${res.status}).`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `farmstay-receipt-${bookingId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      banner("Could not download receipt — is the app online?");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    }
+  }
+
+  // ── My travel (guest "your travel" summary) ──────────────────────────────────
+  async function loadTravel() {
+    const stats = $("fsTravelStats");
+    const regions = $("fsTravelRegions");
+    const charts = $("fsTravelCharts");
+    const btn = $("fsRefreshTravel");
+    stats.innerHTML = '<div class="fs-empty">Loading…</div>';
+    regions.innerHTML = "";
+    if (charts) charts.hidden = true;
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing…';
+    }
+    const { ok, status, body } = await api("GET", "/travel-summary");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Refresh';
+    }
+    if (!ok || !body.totals) {
+      stats.innerHTML = "";
+      if (status === 401) return banner("Please log in to use FarmStay.", true);
+      return banner(status === 503 ? "Booking service offline." : body.error || "Could not load your travel summary.", true);
+    }
+    renderTravel(body);
+  }
+
+  async function renderTravel(a) {
+    const t = a.totals || {};
+    const spent = a.money ? a.money.net : t.spend;
+    $("fsTravelSummary").textContent = t.trips
+      ? `${t.trips} trip(s) · ${t.nights} night(s) · ${formatROL(spent)} ROL spent`
+      : "";
+
+    const stats = $("fsTravelStats");
+    if (!t.trips) {
+      stats.innerHTML = '<div class="fs-empty">No trips yet — confirmed and completed stays show up here as your travel history.</div>';
+      $("fsTravelRegions").innerHTML = "";
+      renderHeatmap("fsTravelHeatmap", "fsTravelHeatPeak", [], null);
+      return;
+    }
+    renderHeatmap("fsTravelHeatmap", "fsTravelHeatPeak", a.occupancyByDay, a.peakDay);
+    stats.innerHTML = [
+      ["fa-suitcase-rolling", "Trips", t.trips],
+      ["fa-moon", "Nights stayed", t.nights],
+      ["fa-people-group", "Guest-nights", t.guestNights],
+      ["fa-wallet", "Total spent", `${formatROL(spent)} ROL`],
+      ["fa-map-pin", "Favourite region", a.favouriteRegion || "—"],
+      ["fa-hourglass-half", "Upcoming", t.upcoming],
+    ]
+      .map(
+        ([icon, label, value]) =>
+          `<div class="fs-stat"><div class="fs-stat-label"><i class="fa-solid ${icon}"></i> ${label}</div><div class="fs-stat-value">${value}</div></div>`,
+      )
+      .join("");
+
+    // Region breakdown list
+    const byRegion = a.byRegion || [];
+    $("fsTravelRegions").innerHTML = byRegion.length
+      ? byRegion
+          .map(
+            (r) =>
+              `<div class="fs-row"><div class="fs-row-main"><div class="fs-row-title"><i class="fa-solid fa-location-dot"></i> ${esc(r.region)}</div><div class="fs-row-sub">${r.trips} trip(s) · ${r.nights} night(s) · ${formatROL(r.spend)} ROL</div></div></div>`,
+          )
+          .join("")
+      : "";
+
+    const chartsEl = $("fsTravelCharts");
+    const ready = await ensureChartJs();
+    if (!ready || !chartsEl) {
+      if (chartsEl) chartsEl.hidden = true;
+      return;
+    }
+    chartsEl.hidden = false;
+
+    drawChart("fsChartTravelRegion", {
+      type: "pie",
+      data: {
+        labels: byRegion.map((r) => r.region),
+        datasets: [{ data: byRegion.map((r) => r.nights), backgroundColor: byRegion.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]) }],
+      },
+      options: withLegend,
+    });
+
+    const months = a.byMonth || [];
+    drawChart("fsChartTravelSpend", {
+      type: "bar",
+      data: {
+        labels: months.map((m) => m.month),
+        datasets: [{ label: "Spend (ROL)", data: months.map((m) => m.spend), backgroundColor: CHART_COLORS[2] }],
+      },
+      options: noLegend,
+    });
+
+    const byType = a.byType || [];
+    drawChart("fsChartTravelType", {
+      type: "doughnut",
+      data: {
+        labels: byType.map((x) => x.type),
+        datasets: [{ data: byType.map((x) => x.nights), backgroundColor: byType.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]) }],
+      },
+      options: withLegend,
+    });
+  }
+
   // ── Host bookings (shared by Listings occupancy + Hosting tab) ───────────────
   async function fetchHostBookings() {
     const { ok, body } = await api("GET", "/bookings?role=host");
@@ -699,9 +885,9 @@
     list.innerHTML = props.length
       ? props.map((p) => renderListing(p, occupied.has(p.id))).join("")
       : '<div class="fs-empty">No listings yet — publish one above.</div>';
-    list.querySelectorAll("[data-delete]").forEach((b) =>
-      b.addEventListener("click", () => deleteListing(b.dataset.delete, b.dataset.name)),
-    );
+    list
+      .querySelectorAll("[data-delete]")
+      .forEach((b) => b.addEventListener("click", () => deleteListing(b.dataset.delete, b.dataset.name)));
   }
 
   function renderListing(p, isOccupied) {
@@ -831,7 +1017,205 @@
     }
   }
 
-  // ── Hosting (earnings + occupancy) ────────────────────────────────────────────
+  // ── Charts (Chart.js, loaded on demand from CDN — same as staff pages) ────────
+  const CHART_CDN = "https://cdn.jsdelivr.net/npm/chart.js";
+  const chartInstances = {};
+  let chartJsPromise = null;
+  function ensureChartJs() {
+    if (window.Chart) return Promise.resolve(true);
+    if (!chartJsPromise) {
+      chartJsPromise = new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = CHART_CDN;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+      });
+    }
+    return chartJsPromise;
+  }
+  const CHART_COLORS = ["#4c9a63", "#5b9bd5", "#e0a458", "#a05195", "#d45087", "#2f9e8f", "#c47f3d", "#8a6bbf"];
+  function drawChart(canvasId, config) {
+    const canvas = $(canvasId);
+    if (!canvas) return;
+    if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+    chartInstances[canvasId] = new window.Chart(canvas.getContext("2d"), config);
+  }
+  const noLegend = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+  const withLegend = { responsive: true, maintainAspectRatio: false };
+
+  // ── Occupancy heatmap (GitHub-style per-day timeline) — shared by Hosting + My travel ──
+  const HEAT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const HEAT_DAY = 86400000;
+
+  function heatLevel(count, max) {
+    if (!count) return 0;
+    if (max <= 1) return 4;
+    const r = count / max;
+    if (r > 0.75) return 4;
+    if (r > 0.5) return 3;
+    if (r > 0.25) return 2;
+    return 1;
+  }
+
+  // One calendar year as a 7×N (day-of-week × week) grid, Monday-based.
+  function heatYearGrid(year, lookup, max) {
+    const startDow = (new Date(Date.UTC(year, 0, 1)).getUTCDay() + 6) % 7; // Mon=0
+    const gridStart = Date.UTC(year, 0, 1) - startDow * HEAT_DAY; // Monday on/before Jan 1
+    const numWeeks = Math.ceil((Date.UTC(year, 11, 31) - gridStart) / HEAT_DAY / 7) + 1;
+    const cells = [];
+    const labels = new Array(numWeeks).fill("");
+    for (let w = 0; w < numWeeks; w++) {
+      for (let r = 0; r < 7; r++) {
+        const dt = new Date(gridStart + (w * 7 + r) * HEAT_DAY);
+        if (dt.getUTCFullYear() !== year) {
+          cells.push('<span class="fs-heat-cell empty"></span>');
+          continue;
+        }
+        const ds = dt.toISOString().slice(0, 10);
+        if (dt.getUTCDate() === 1) labels[w] = HEAT_MONTHS[dt.getUTCMonth()];
+        const day = lookup[ds];
+        const count = day ? day.bookings : 0;
+        const title = day ? `${ds}: ${day.bookings} stay(s) · ${day.guests} guest(s)` : `${ds}: no stays`;
+        cells.push(`<span class="fs-heat-cell l${heatLevel(count, max)}" title="${title}"></span>`);
+      }
+    }
+    const cols = `repeat(${numWeeks}, 11px)`;
+    const monthRow = labels.map((l) => `<span>${l}</span>`).join("");
+    return `<div class="fs-heat-year">
+      <div class="fs-heat-year-label">${year}</div>
+      <div class="fs-heat-body">
+        <div class="fs-heat-days"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span></span></div>
+        <div class="fs-heat-cols">
+          <div class="fs-heat-months" style="grid-template-columns:${cols}">${monthRow}</div>
+          <div class="fs-heat-grid" style="grid-template-columns:${cols}">${cells.join("")}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderHeatmap(mapId, peakId, occupancyByDay, peakDay) {
+    const wrap = $(mapId);
+    const card = wrap ? wrap.closest(".fs-heat-card") : null;
+    const days = occupancyByDay || [];
+    if (!days.length) {
+      if (card) card.hidden = true;
+      return;
+    }
+    if (card) card.hidden = false;
+
+    const lookup = {};
+    let max = 0;
+    for (const d of days) {
+      lookup[d.date] = d;
+      if (d.bookings > max) max = d.bookings;
+    }
+    const peakEl = $(peakId);
+    if (peakEl) peakEl.textContent = peakDay ? `· busiest ${peakDay.date}: ${peakDay.bookings} stay(s), ${peakDay.guests} guest(s)` : "";
+
+    const firstYear = Number(days[0].date.slice(0, 4));
+    const lastYear = Number(days[days.length - 1].date.slice(0, 4));
+    let html = "";
+    for (let y = firstYear; y <= lastYear; y++) html += heatYearGrid(y, lookup, max);
+    wrap.innerHTML = html;
+  }
+
+  async function renderHostAnalytics(a) {
+    const statEl = $("fsHostStats");
+    const chartsEl = $("fsHostCharts");
+    if (!a || !a.totals) {
+      if (statEl) statEl.innerHTML = "";
+      if (chartsEl) chartsEl.hidden = true;
+      renderHeatmap("fsHostHeatmap", "fsHostHeatPeak", [], null);
+      return;
+    }
+    renderHeatmap("fsHostHeatmap", "fsHostHeatPeak", a.occupancyByDay, a.peakDay);
+    const t = a.totals;
+    const occ = (a.occupancyByYear || []).reduce((s, y) => s + y.nights, 0);
+    if (statEl) {
+      statEl.innerHTML = [
+        ["fa-users", "Distinct visitors", t.distinctVisitors],
+        ["fa-moon", "Nights booked", t.nightsBooked],
+        ["fa-people-roof", "Guest-nights", t.guestNights],
+        ["fa-calendar-days", "Occupied nights", occ],
+        ["fa-star", "Avg rating", t.avgRating ? `${t.avgRating} (${t.reviews})` : "—"],
+      ]
+        .map(
+          ([icon, label, value]) =>
+            `<div class="fs-stat"><div class="fs-stat-label"><i class="fa-solid ${icon}"></i> ${label}</div><div class="fs-stat-value">${value}</div></div>`,
+        )
+        .join("");
+    }
+
+    const ok = await ensureChartJs();
+    if (!ok || !chartsEl) {
+      if (chartsEl) chartsEl.hidden = true;
+      return;
+    }
+    chartsEl.hidden = false;
+
+    const months = a.incomeByMonth || [];
+    drawChart("fsChartIncome", {
+      type: "bar",
+      data: {
+        labels: months.map((m) => m.month),
+        datasets: [{ label: "Income (ROL)", data: months.map((m) => m.income), backgroundColor: CHART_COLORS[0] }],
+      },
+      options: noLegend,
+    });
+
+    const years = a.occupancyByYear || [];
+    drawChart("fsChartOccupancy", {
+      type: "bar",
+      data: {
+        labels: years.map((y) => y.year),
+        datasets: [{ label: "Occupied nights", data: years.map((y) => y.nights), backgroundColor: CHART_COLORS[1] }],
+      },
+      options: noLegend,
+    });
+
+    drawChart("fsChartVisitors", {
+      type: "line",
+      data: {
+        labels: months.map((m) => m.month),
+        datasets: [
+          {
+            label: "Visitors",
+            data: months.map((m) => m.visitors),
+            borderColor: CHART_COLORS[3],
+            backgroundColor: CHART_COLORS[3],
+            tension: 0.3,
+            fill: false,
+          },
+        ],
+      },
+      options: noLegend,
+    });
+
+    const props = (a.perProperty || []).filter((p) => p.income > 0);
+    drawChart("fsChartByProperty", {
+      type: "pie",
+      data: {
+        labels: props.map((p) => p.name),
+        datasets: [{ data: props.map((p) => p.income), backgroundColor: props.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]) }],
+      },
+      options: withLegend,
+    });
+
+    const states = a.stateDistribution || {};
+    const stateKeys = Object.keys(states);
+    const stateColor = { hold: "#e0a458", confirmed: "#5b9bd5", completed: "#4c9a63", cancelled: "#d45087", expired: "#999" };
+    drawChart("fsChartStates", {
+      type: "doughnut",
+      data: {
+        labels: stateKeys,
+        datasets: [{ data: stateKeys.map((k) => states[k]), backgroundColor: stateKeys.map((k) => stateColor[k] || "#888") }],
+      },
+      options: withLegend,
+    });
+  }
+
+  // ── Hosting (earnings + analytics + occupancy) ────────────────────────────────
   async function loadHosting() {
     const list = $("fsHosting");
     const earn = $("fsEarnings");
@@ -842,11 +1226,16 @@
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Refreshing…';
     }
-    const [res, hostBookings] = await Promise.all([api("GET", "/properties/mine"), fetchHostBookings()]);
+    const [res, hostBookings, analytics] = await Promise.all([
+      api("GET", "/properties/mine"),
+      fetchHostBookings(),
+      api("GET", "/hosting/analytics"),
+    ]);
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Refresh';
     }
+    renderHostAnalytics(analytics.ok ? analytics.body : null);
     refreshBalance(); // completed stays may have paid out on this load
 
     const props = res.ok && Array.isArray(res.body.properties) ? res.body.properties : [];
@@ -967,6 +1356,8 @@
     defaultDates();
     $("fsSearchForm").addEventListener("submit", doSearch);
     $("fsRefreshTrips").addEventListener("click", loadTrips);
+    $("fsRefreshPurchases").addEventListener("click", loadPurchases);
+    $("fsRefreshTravel").addEventListener("click", loadTravel);
     $("fsRefreshHosting").addEventListener("click", loadHosting);
     $("fsListingForm").addEventListener("submit", createListing);
     $("fsModalClose").addEventListener("click", closeModal);

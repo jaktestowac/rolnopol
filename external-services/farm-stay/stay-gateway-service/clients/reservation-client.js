@@ -85,6 +85,7 @@ module.exports = {
         quote_total: b.quoteTotal || 0,
         hold_expires_at: b.holdExpiresAt || "",
         policy: b.policy || "moderate",
+        coupon: b.coupon || "",
       },
       userId,
     ),
@@ -93,5 +94,7 @@ module.exports = {
   markReleaseDone: (userId, id) => unary("MarkReleaseDone", { id, user_id: userId }, userId),
   getBooking: (userId, id) => unary("GetBooking", { id, user_id: userId }, userId),
   listBookings: (userId, role) => unary("ListBookings", { user_id: userId, role: role || "any" }, userId),
+  // Every booking across all users — for the admin/platform analytics view.
+  listAllBookings: (userId) => unary("ListBookings", { user_id: "", role: "all" }, userId),
   _reset: reset,
 };

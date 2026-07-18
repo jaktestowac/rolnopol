@@ -54,6 +54,7 @@ function toBooking(b, nowMs) {
     release_status: b.releaseStatus || "",
     created_at: b.createdAt || "",
     policy: b.policy || "moderate",
+    coupon: b.coupon || "",
   };
 }
 
@@ -93,6 +94,7 @@ async function createBooking(call, callback) {
         quoteTotal: r.quote_total || 0,
         holdExpiresAt: r.hold_expires_at || "",
         policy: r.policy || "moderate",
+        coupon: r.coupon || "",
         createdAt: nowIso(),
       };
       return { next: { ...data, seq, bookings: [...data.bookings, booking] }, value: booking };
@@ -213,13 +215,19 @@ async function listBookings(call, callback) {
     const nowMs = now();
     const data = await db.getAll();
     const role = r.role || "any";
-    const list = data.bookings.filter((b) => {
-      const isGuest = b.guestId === r.user_id;
-      const isHost = b.hostId === r.user_id;
-      if (role === "guest") return isGuest;
-      if (role === "host") return isHost;
-      return isGuest || isHost;
-    });
+    // role "all" ignores user_id and returns every booking — the platform
+    // analytics view. Ownership-scoped roles ("guest"/"host"/"any") still
+    // filter to the caller; the gateway gates "all" behind its admin check.
+    const list =
+      role === "all"
+        ? data.bookings
+        : data.bookings.filter((b) => {
+            const isGuest = b.guestId === r.user_id;
+            const isHost = b.hostId === r.user_id;
+            if (role === "guest") return isGuest;
+            if (role === "host") return isHost;
+            return isGuest || isHost;
+          });
     callback(null, { bookings: list.map((b) => toBooking(b, nowMs)), total: list.length });
   } catch (err) {
     fail(callback, grpc.status.INTERNAL, err.message, "ListBookings");

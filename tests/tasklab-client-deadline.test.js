@@ -54,9 +54,9 @@ beforeAll(async () => {
   process.env.TASKLAB_LOG = "silent";
 
   // Require config + client only now, so the dial target reflects the env above.
-  const { PROTO_PATH, PROTO_LOADER_OPTIONS } = require("../grpc/tasklab-config.js");
+  const { PROTO_PATH, PROTO_LOADER_OPTIONS } = require("../external-services/tasklab/tasklab-config.js");
   client = require("../modules/tasklab/tasklab-client.js");
-  startService = require("../grpc/tasklab-server/index.js").start;
+  startService = require("../external-services/tasklab/tasklab-server/index.js").start;
 
   slowServer = await startSlowServer(PROTO_PATH, PROTO_LOADER_OPTIONS, PORT);
 });
