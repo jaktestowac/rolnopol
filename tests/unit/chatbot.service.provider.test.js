@@ -92,7 +92,9 @@ describe("chatbot.service provider selection", () => {
 
     expect(response.provider).toBe("mock");
     expect(response.botId).toBe("farm-assistant");
-    expect(response.reply).toContain("Here is a quick summary of your farm data");
+    // The mock varies its summary intro; assert on the stable summary bullets.
+    expect(response.reply).toContain("Fields:");
+    expect(response.reply).toContain("Total animals:");
   });
 
   it("rejects unknown bot ids", async () => {
@@ -210,7 +212,9 @@ describe("chatbot.service provider selection", () => {
     });
 
     expect(response.provider).toBe("mock");
-    expect(response.reply).toContain("Here is a quick summary of your farm data");
+    // The mock varies its summary intro; assert on the stable summary bullets.
+    expect(response.reply).toContain("Fields:");
+    expect(response.reply).toContain("Total animals:");
   });
 
   it("returns raw OpenRouter key info for /ratelimits without loading context", async () => {
