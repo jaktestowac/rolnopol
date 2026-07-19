@@ -138,6 +138,212 @@
       display: none !important;
     }
 
+    .docs-feature-flag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #4f6446;
+      background: linear-gradient(135deg, #eaf6e7 0%, #d8f0d3 100%);
+      border: 1px solid rgba(56, 120, 53, 0.28);
+      border-radius: 999px;
+      padding: 0.15rem 0.5rem;
+      white-space: nowrap;
+    }
+
+    .docs-feature-flag-badge i {
+      font-size: 0.62rem;
+    }
+
+    .docs-nav-flag {
+      font-size: 0.6rem;
+      color: #6a7b5e;
+      margin-left: 0.35rem;
+      opacity: 0.8;
+    }
+
+    /* Callouts (info / tip / warning / success) */
+    .docs-callout {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      margin: 1.2rem 0;
+      padding: 0.9rem 1.1rem;
+      border-radius: 0.7rem;
+      border: 1px solid #d4e6cc;
+      background: #f4faf1;
+    }
+
+    .docs-callout__icon {
+      color: #4f6446;
+      font-size: 1.1rem;
+      margin-top: 0.1rem;
+      flex: 0 0 auto;
+    }
+
+    .docs-callout__title {
+      font-weight: 700;
+      color: #2d3a2d;
+      margin-bottom: 0.2rem;
+    }
+
+    .docs-callout__body {
+      line-height: 1.55;
+      color: #3d4a3d;
+    }
+
+    .docs-callout__body p {
+      margin: 0;
+    }
+
+    .docs-callout--info {
+      border-color: #bcd8ef;
+      background: #eef6fc;
+    }
+
+    .docs-callout--info .docs-callout__icon {
+      color: #2b6cb0;
+    }
+
+    .docs-callout--tip {
+      border-color: #d4e6cc;
+      background: #f1faed;
+    }
+
+    .docs-callout--warning {
+      border-color: #f0d9a8;
+      background: #fdf6e6;
+    }
+
+    .docs-callout--warning .docs-callout__icon {
+      color: #b7791f;
+    }
+
+    .docs-callout--success {
+      border-color: #bfe3bd;
+      background: #eef8ec;
+    }
+
+    .docs-callout--success .docs-callout__icon {
+      color: #2f855a;
+    }
+
+    /* Scenario steps (numbered walkthrough) */
+    .docs-steps {
+      margin: 1.3rem 0;
+    }
+
+    .docs-steps__title {
+      font-weight: 700;
+      color: #2d3a2d;
+      margin-bottom: 0.6rem;
+    }
+
+    .docs-steps__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .docs-steps__item {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.35rem 0;
+    }
+
+    .docs-steps__num {
+      flex: 0 0 auto;
+      width: 1.65rem;
+      height: 1.65rem;
+      border-radius: 50%;
+      background: #6a7b5e;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0.1rem;
+    }
+
+    .docs-steps__body {
+      flex: 1;
+      line-height: 1.55;
+      color: #3d4a3d;
+    }
+
+    .docs-steps__step-title {
+      font-weight: 600;
+      color: #2d3a2d;
+    }
+
+    /* Flow diagram (vertical flowchart) */
+    .docs-flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 1.5rem 0;
+    }
+
+    .docs-flow__title {
+      font-weight: 700;
+      color: #2d3a2d;
+      margin-bottom: 0.8rem;
+      align-self: flex-start;
+    }
+
+    .docs-flow__node {
+      width: 100%;
+      max-width: 540px;
+      background: linear-gradient(135deg, #f7f9f6 0%, #eaf6e7 100%);
+      border: 1.5px solid #cfe3c6;
+      border-radius: 0.7rem;
+      padding: 0.75rem 1rem;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(106, 123, 94, 0.1);
+    }
+
+    .docs-flow__node--start {
+      border-color: #8bb886;
+      background: linear-gradient(135deg, #eaf6e7 0%, #d8f0d3 100%);
+    }
+
+    .docs-flow__node--end {
+      border-color: #8bb886;
+      background: linear-gradient(135deg, #e6f4fb 0%, #dceffa 100%);
+    }
+
+    .docs-flow__label {
+      font-weight: 600;
+      color: #2d3a2d;
+    }
+
+    .docs-flow__detail {
+      font-size: 0.85rem;
+      color: #6a7b5e;
+      margin-top: 0.2rem;
+    }
+
+    .docs-flow__connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1rem;
+      color: #6a7b5e;
+      font-size: 0.95rem;
+      padding: 0.2rem 0;
+    }
+
+    .docs-flow__connector-label {
+      font-size: 0.72rem;
+      color: #7d8d71;
+      font-style: italic;
+    }
+
     .docs-nav a {
       padding: 0.5rem 0.75rem;
       font-size: 0.9rem;
@@ -1013,7 +1219,6 @@
           <span class="docs-header-subtitle">Rolnopol System Guide & API Reference</span>
         </div>
       </div>
-
     </header>
 
     <div class="docs-container" data-testid="docs-container">
@@ -1126,789 +1331,7 @@
   <!-- Main Application -->
   <script src="/js/app.js"></script>
   <script src="/js/utils/init-navigation.js"></script>
-  <script>
-    initNavigation("docs");
-
-    const setupDocsSidebarToggle = () => {
-      const toggleButton = document.getElementById("docs-sidebar-toggle");
-      let showFlagged = false;
-
-      const updateToggle = (visible) => {
-        if (!toggleButton) return;
-        showFlagged = visible;
-        toggleButton.classList.toggle("active", visible);
-        toggleButton.setAttribute("aria-pressed", String(visible));
-        const label = toggleButton.querySelector(".docs-sidebar-toggle-label");
-        const state = toggleButton.querySelector(".docs-sidebar-toggle-state");
-        if (label) label.textContent = visible ? "Hide feature-flagged docs" : "Show feature-flagged docs";
-        document.body.classList.toggle("docs-hide-flagged", !visible);
-      };
-
-      if (toggleButton) {
-        toggleButton.addEventListener("click", () => updateToggle(!showFlagged));
-        updateToggle(showFlagged);
-      }
-    };
-
-    setupDocsSidebarToggle();
-
-    const waitForAppInit = async () => {
-      if (!window.App) {
-        return false;
-      }
-      if (window.App.isInitialized) {
-        return true;
-      }
-
-      const maxAttempts = 120;
-      let attempts = 0;
-
-      while (attempts < maxAttempts) {
-        if (window.App.isInitialized) {
-          return true;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        attempts += 1;
-      }
-
-      return window.App.isInitialized === true;
-    };
-
-    const getFeatureFlagValue = async (flagKey, defaultValue) => {
-      const ready = await waitForAppInit();
-      if (!ready) {
-        return defaultValue;
-      }
-
-      const service = window.App?.getModule?.("featureFlagsService");
-      if (!service || typeof service.isEnabled !== "function") {
-        return defaultValue;
-      }
-
-      return service.isEnabled(flagKey, defaultValue);
-    };
-
-    const setupDocsSearch = () => {
-      const wrapper = document.getElementById("docs-search");
-      const input = document.getElementById("docs-search-input");
-      const empty = document.getElementById("docs-search-empty");
-      if (!wrapper || !input) {
-        return;
-      }
-
-      wrapper.style.display = "block";
-
-      const filterSections = () => {
-        const query = input.value.trim().toLowerCase();
-        const sections = document.querySelectorAll(".docs-section");
-        let anyVisible = false;
-
-        sections.forEach((section) => {
-          const text = section.textContent.toLowerCase();
-          const match = !query || text.includes(query);
-          section.style.display = match ? "" : "none";
-
-          const link = document.querySelector(`.docs-nav a[href="#${section.id}"]`);
-          if (link && link.parentElement) {
-            link.parentElement.style.display = match ? "" : "none";
-          }
-
-          if (match) {
-            anyVisible = true;
-          }
-        });
-
-        if (empty) {
-          empty.style.display = anyVisible ? "none" : "block";
-        }
-      };
-
-      input.addEventListener("input", filterSections);
-      filterSections();
-    };
-
-    const setupDocsAdvancedSearch = () => {
-      const wrapper = document.getElementById("docs-search");
-      const advancedSearchDiv = document.getElementById("docs-search-advanced");
-      const searchInput = document.getElementById("docs-search-input");
-      const modeButtons = document.querySelectorAll("#docs-search-mode .docs-search-mode-btn");
-      const scopeCheckboxes = document.querySelectorAll("#docs-search-scope input[type='checkbox']");
-      const caseSensitiveCheckbox = document.getElementById("docs-search-case-sensitive");
-      const empty = document.getElementById("docs-search-empty");
-
-      if (!wrapper || !advancedSearchDiv || !searchInput) {
-        return;
-      }
-
-      wrapper.style.display = "block";
-
-      let searchMode = "contains";
-      const searchScope = { title: true, content: true };
-      let caseSensitive = false;
-
-      // Set up mode buttons
-      modeButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          modeButtons.forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          searchMode = btn.dataset.mode;
-          performAdvancedSearch();
-        });
-      });
-
-      // Set up scope checkboxes
-      scopeCheckboxes.forEach((checkbox) => {
-        checkbox.addEventListener("change", () => {
-          searchScope[checkbox.value] = checkbox.checked;
-          performAdvancedSearch();
-        });
-      });
-
-      // Set up case sensitivity
-      caseSensitiveCheckbox.addEventListener("change", () => {
-        caseSensitive = caseSensitiveCheckbox.checked;
-        performAdvancedSearch();
-      });
-
-      // Toggle advanced search panel on focus
-      searchInput.addEventListener("focus", () => {
-        if (searchInput.value.trim()) {
-          advancedSearchDiv.classList.add("active");
-        }
-      });
-
-      const performAdvancedSearch = () => {
-        if (!searchInput.value.trim()) {
-          document.querySelectorAll(".docs-section").forEach((section) => {
-            section.style.display = "";
-            const link = document.querySelector(`.docs-nav a[href="#${section.id}"]`);
-            if (link && link.parentElement) {
-              link.parentElement.style.display = "";
-            }
-          });
-          if (empty) {
-            empty.style.display = "none";
-          }
-          advancedSearchDiv.classList.remove("active");
-          return;
-        }
-
-        advancedSearchDiv.classList.add("active");
-        let query = searchInput.value.trim();
-        const sections = document.querySelectorAll(".docs-section");
-        let anyVisible = false;
-
-        sections.forEach((section) => {
-          const title = section.getAttribute("data-title") || section.querySelector("h2")?.textContent || "";
-          const content = section.textContent;
-
-          const searchText = caseSensitive ? query : query.toLowerCase();
-          const titleToSearch = caseSensitive ? title : title.toLowerCase();
-          const contentToSearch = caseSensitive ? content : content.toLowerCase();
-
-          let match = false;
-
-          try {
-            if (searchMode === "contains") {
-              if (searchScope.title && titleToSearch.includes(searchText)) {
-                match = true;
-              } else if (searchScope.content && contentToSearch.includes(searchText)) {
-                match = true;
-              }
-            } else if (searchMode === "exact") {
-              // Exact: match whole words using word boundaries
-              const wordBoundaryRegex = new RegExp(
-                `\\b${searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
-                caseSensitive ? "g" : "gi",
-              );
-              if (searchScope.title && wordBoundaryRegex.test(titleToSearch)) {
-                match = true;
-                wordBoundaryRegex.lastIndex = 0;
-              } else if (searchScope.content && wordBoundaryRegex.test(contentToSearch)) {
-                match = true;
-              }
-            } else if (searchMode === "regex") {
-              try {
-                const flags = caseSensitive ? "g" : "gi";
-                const regex = new RegExp(searchText, flags);
-                if (searchScope.title && regex.test(titleToSearch)) {
-                  match = true;
-                  regex.lastIndex = 0;
-                }
-                if (!match && searchScope.content && regex.test(contentToSearch)) {
-                  match = true;
-                }
-              } catch (regexError) {
-                // Invalid regex pattern
-                match = false;
-              }
-            }
-          } catch (e) {
-            // Error in search, show no results
-            match = false;
-          }
-
-          section.style.display = match ? "" : "none";
-
-          const link = document.querySelector(`.docs-nav a[href="#${section.id}"]`);
-          if (link && link.parentElement) {
-            link.parentElement.style.display = match ? "" : "none";
-          }
-
-          if (match) {
-            anyVisible = true;
-          }
-        });
-
-        if (empty) {
-          empty.style.display = anyVisible ? "none" : "block";
-        }
-      };
-
-      // Listen to input changes to trigger search
-      searchInput.addEventListener("input", performAdvancedSearch);
-    };
-
-    // Fetch and render documentation data
-    if (typeof fetchDocumentation === "function") {
-      fetchDocumentation()
-        .then(async (docs) => {
-          // Build sidebar navigation dynamically
-          const nav = document.getElementById("dynamic-docs-nav");
-          if (nav) {
-            nav.innerHTML = "";
-            const currentHash = window.location.hash.replace("#", "");
-            docs.forEach((section, idx) => {
-              const li = document.createElement("li");
-              const a = document.createElement("a");
-              a.href = `#${section.section}`;
-              a.textContent = section.title;
-              a.setAttribute("data-testid", `nav-${section.section}`);
-              // Set active based on hash or default to first
-              if ((currentHash && section.section === currentHash) || (!currentHash && idx === 0)) a.classList.add("active");
-              li.appendChild(a);
-              nav.appendChild(li);
-            });
-          }
-
-          // Sidebar navigation: smooth scroll and active state (moved here)
-          const navLinks = document.querySelectorAll(".docs-nav a");
-          navLinks.forEach((link) => {
-            link.addEventListener("click", function (e) {
-              e.preventDefault();
-              navLinks.forEach((l) => l.classList.remove("active"));
-              this.classList.add("active");
-              const targetId = this.getAttribute("href").substring(1);
-              const targetSection = document.getElementById(targetId);
-              if (targetSection) {
-                // Offset scroll to account for navbar/header (80px)
-                const yOffset = -80;
-                const y = targetSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                window.scrollTo({ top: y, behavior: "smooth" });
-              }
-              // Update hash in URL
-              window.location.hash = this.getAttribute("href");
-            });
-          });
-
-          // On page load, scroll to hash section if present
-          if (window.location.hash) {
-            const targetId = window.location.hash.replace("#", "");
-            const targetSection = document.getElementById(targetId);
-            if (targetSection) {
-              const yOffset = -80;
-              const y = targetSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
-              window.scrollTo({ top: y, behavior: "smooth" });
-            }
-          }
-
-          // Main content rendering (existing logic)
-          const container = document.getElementById("dynamic-docs-content");
-          if (!container) return;
-          container.innerHTML = "";
-          // Section icon mapping
-          const sectionIcons = {
-            overview: "fa-info-circle",
-            "user-roles": "fa-user-shield",
-            features: "fa-star",
-            "user-flows": "fa-route",
-            "api-basics": "fa-code",
-            "testing-tips": "fa-vial",
-            "demo-accounts": "fa-user-check",
-          };
-          const applyFeatureFlag = (element, flagged) => {
-            if (flagged) {
-              element.dataset.featureFlagged = "true";
-            }
-          };
-          docs.forEach((section) => {
-            const sectionDiv = document.createElement("div");
-            sectionDiv.className = "docs-section";
-            sectionDiv.id = section.section;
-            sectionDiv.setAttribute("data-testid", `section-${section.section}`);
-            applyFeatureFlag(sectionDiv, section.isFeatureFlagged);
-            if (section.isFeatureFlagged) {
-              sectionDiv.dataset.featureFlagged = "true";
-            }
-            // Section header with icon
-            const title = document.createElement("h2");
-            title.style.display = "flex";
-            title.style.alignItems = "center";
-            title.style.gap = "0.5rem";
-            if (sectionIcons[section.section]) {
-              const icon = document.createElement("i");
-              icon.className = `fas ${sectionIcons[section.section]}`;
-              icon.style.color = "#6a7b5e";
-              title.appendChild(icon);
-            }
-            const span = document.createElement("span");
-            span.textContent = section.title;
-            title.appendChild(span);
-            sectionDiv.appendChild(title);
-            // Section content rendering
-            if (Array.isArray(section.content) && section.content[0] && section.content[0].heading && section.content[0].markdown) {
-              // New: Render array of { heading, markdown }
-              section.content.forEach((block) => {
-                const h = document.createElement("h3");
-                h.textContent = block.heading;
-                sectionDiv.appendChild(h);
-                const md = document.createElement("div");
-                if (window.marked) {
-                  md.innerHTML = window.marked.parse(block.markdown);
-                } else {
-                  md.textContent = block.markdown;
-                }
-                sectionDiv.appendChild(md);
-              });
-            } else if (
-              Array.isArray(section.content) &&
-              section.content[0] &&
-              section.content[0].heading &&
-              Array.isArray(section.content[0].content)
-            ) {
-              // Render array of { heading, content: [ ... ] }
-              section.content.forEach((block) => {
-                const h = document.createElement("h3");
-                h.textContent = block.heading;
-                sectionDiv.appendChild(h);
-
-                block.content.forEach((item) => {
-                  if (typeof item === "string") {
-                    // Paragraph
-                    const p = document.createElement("p");
-                    p.textContent = item;
-                    sectionDiv.appendChild(p);
-                  } else if (item.type === "subsection-card") {
-                    // Fancy subsection card
-                    const card = document.createElement("div");
-                    card.className = "subsection-card";
-
-                    // Header with icon
-                    const header = document.createElement("div");
-                    header.className = "subsection-card-header";
-
-                    if (item.icon) {
-                      const iconDiv = document.createElement("div");
-                      iconDiv.className = "subsection-card-icon";
-                      const icon = document.createElement("i");
-                      icon.className = `fas ${item.icon}`;
-                      iconDiv.appendChild(icon);
-                      header.appendChild(iconDiv);
-                    }
-
-                    const titleGroup = document.createElement("div");
-                    titleGroup.className = "subsection-card-title-group";
-                    const title = document.createElement("h4");
-                    title.textContent = item.title;
-                    titleGroup.appendChild(title);
-
-                    if (item.description) {
-                      const desc = document.createElement("p");
-                      desc.className = "subsection-card-description";
-                      desc.textContent = item.description;
-                      titleGroup.appendChild(desc);
-                    }
-
-                    header.appendChild(titleGroup);
-                    card.appendChild(header);
-
-                    // Content list
-                    applyFeatureFlag(card, item.isFeatureFlagged);
-                    if (item.items && Array.isArray(item.items)) {
-                      const contentDiv = document.createElement("div");
-                      contentDiv.className = "subsection-card-content";
-                      applyFeatureFlag(contentDiv, item.isFeatureFlagged);
-                      const ul = document.createElement("ul");
-                      applyFeatureFlag(ul, item.isFeatureFlagged);
-
-                      item.items.forEach((listItem) => {
-                        const li = document.createElement("li");
-                        li.textContent = listItem;
-                        ul.appendChild(li);
-                      });
-
-                      contentDiv.appendChild(ul);
-                      card.appendChild(contentDiv);
-                    }
-
-                    sectionDiv.appendChild(card);
-                  } else if (item.type === "list" && Array.isArray(item.items)) {
-                    // List
-                    const ul = document.createElement("ul");
-                    applyFeatureFlag(ul, item.isFeatureFlagged);
-                    item.items.forEach((str) => {
-                      const li = document.createElement("li");
-                      li.textContent = str;
-                      ul.appendChild(li);
-                    });
-                    sectionDiv.appendChild(ul);
-                  } else if (item.type === "paragraph" && item.text) {
-                    // Paragraph (explicit)
-                    const p = document.createElement("p");
-                    p.textContent = item.text;
-                    applyFeatureFlag(p, item.isFeatureFlagged);
-                    sectionDiv.appendChild(p);
-                  } else if (item.type === "table" && item.columns && item.rows) {
-                    // Table
-                    const table = document.createElement("table");
-                    applyFeatureFlag(table, item.isFeatureFlagged);
-                    table.style.margin = "1rem 0";
-                    table.style.borderCollapse = "collapse";
-                    table.style.width = "100%";
-
-                    // Table header
-                    const thead = document.createElement("thead");
-                    const trHead = document.createElement("tr");
-                    item.columns.forEach((col) => {
-                      const th = document.createElement("th");
-                      th.textContent = col;
-                      th.style.border = "1px solid #e0e0e0";
-                      th.style.background = "#f7f9f6";
-                      th.style.padding = "0.5rem 0.7rem";
-                      th.style.fontWeight = "bold";
-                      trHead.appendChild(th);
-                    });
-                    thead.appendChild(trHead);
-                    table.appendChild(thead);
-
-                    // Table body
-                    const tbody = document.createElement("tbody");
-                    item.rows.forEach((row) => {
-                      const tr = document.createElement("tr");
-                      row.forEach((cell) => {
-                        const td = document.createElement("td");
-                        td.textContent = cell;
-                        td.style.border = "1px solid #e0e0e0";
-                        td.style.padding = "0.5rem 0.7rem";
-                        tr.appendChild(td);
-                      });
-                      tbody.appendChild(tr);
-                    });
-                    table.appendChild(tbody);
-
-                    sectionDiv.appendChild(table);
-                  }
-                });
-              });
-            } else if (typeof section.content === "string") {
-              const p = document.createElement("p");
-              p.textContent = section.content;
-              p.style.fontSize = "1.1rem";
-              p.style.marginBottom = "1.5rem";
-              sectionDiv.appendChild(p);
-            } else if (Array.isArray(section.content) && section.content.every((item) => typeof item === "string")) {
-              const ul = document.createElement("ul");
-              ul.style.margin = "1rem 0 2rem 1.5rem";
-              ul.style.fontSize = "1.05rem";
-              section.content.forEach((str) => {
-                const li = document.createElement("li");
-                li.textContent = str;
-                li.style.marginBottom = "0.5rem";
-                ul.appendChild(li);
-              });
-              sectionDiv.appendChild(ul);
-            } else if (
-              section.section === "entities" &&
-              Array.isArray(section.content) &&
-              section.content[0] &&
-              section.content[0].entity
-            ) {
-              // Render entities as cards
-              const entitiesGrid = document.createElement("div");
-              entitiesGrid.style.display = "grid";
-              entitiesGrid.style.gridTemplateColumns = "repeat(auto-fit, minmax(260px, 1fr))";
-              entitiesGrid.style.gap = "1.2rem";
-              section.content.forEach((entity) => {
-                const entityDiv = document.createElement("div");
-                entityDiv.className = "entity-card entity-card-custom";
-                const h4 = document.createElement("h4");
-                h4.innerHTML = `<i class='fas fa-database'></i> ${entity.entity}`;
-                h4.classList.add("entity-card-title");
-                entityDiv.appendChild(h4);
-                if (entity.description) {
-                  const desc = document.createElement("p");
-                  desc.textContent = entity.description;
-                  entityDiv.appendChild(desc);
-                }
-                entitiesGrid.appendChild(entityDiv);
-              });
-              sectionDiv.appendChild(entitiesGrid);
-            } else if (Array.isArray(section.content) && section.content[0] && section.content[0].role) {
-              // Demo accounts get a special grid
-              if (section.section === "demo-accounts") {
-                const demoGrid = document.createElement("div");
-                demoGrid.className = "demo-accounts";
-                demoGrid.style.display = "grid";
-                demoGrid.style.gridTemplateColumns = "repeat(auto-fit, minmax(260px, 1fr))";
-                demoGrid.style.gap = "1.2rem";
-                section.content.forEach((role) => {
-                  const card = document.createElement("div");
-                  card.className = "demo-account demo-account-custom";
-                  const h4 = document.createElement("h4");
-                  h4.innerHTML = `<i class='fas fa-user'></i> ${role.role}`;
-                  h4.classList.add("demo-account-title");
-                  card.appendChild(h4);
-                  if (role.description) {
-                    const desc = document.createElement("p");
-                    desc.textContent = role.description;
-                    card.appendChild(desc);
-                  }
-                  const credentialId = role.username || role.email;
-                  if (credentialId || role.password) {
-                    const creds = document.createElement("div");
-                    const idLabel = role.username ? "Username" : "Email";
-                    creds.innerHTML = `${credentialId ? `<strong>${idLabel}:</strong> <span style='color:#6a7b5e'>${credentialId}</span><br>` : ""}<strong>Password:</strong> <span style='color:#6a7b5e'>${role.password || ""}</span>`;
-                    card.appendChild(creds);
-                  }
-                  demoGrid.appendChild(card);
-                });
-                sectionDiv.appendChild(demoGrid);
-              } else {
-                // User roles
-                const rolesGrid = document.createElement("div");
-                rolesGrid.style.display = "grid";
-                rolesGrid.style.gridTemplateColumns = "repeat(auto-fit, minmax(260px, 1fr))";
-                rolesGrid.style.gap = "1.2rem";
-                section.content.forEach((role) => {
-                  const roleDiv = document.createElement("div");
-                  roleDiv.className = "role-card role-card-custom";
-                  const h4 = document.createElement("h4");
-                  h4.innerHTML = `<i class='fas fa-user'></i> ${role.role}`;
-                  h4.classList.add("role-card-title");
-                  roleDiv.appendChild(h4);
-                  if (role.description) {
-                    const desc = document.createElement("p");
-                    desc.textContent = role.description;
-                    roleDiv.appendChild(desc);
-                  }
-                  if (role.permissions) {
-                    const ul = document.createElement("ul");
-                    ul.className = "permissions-list";
-                    role.permissions.forEach((perm) => {
-                      const li = document.createElement("li");
-                      li.textContent = perm;
-                      ul.appendChild(li);
-                    });
-                    roleDiv.appendChild(ul);
-                  }
-                  rolesGrid.appendChild(roleDiv);
-                });
-                sectionDiv.appendChild(rolesGrid);
-              }
-            } else if (Array.isArray(section.content) && section.content[0] && section.content[0].flow && section.content[0].steps) {
-              // User flows as stacked cards (not grid)
-              section.content.forEach((flowObj) => {
-                const flowDiv = document.createElement("div");
-                flowDiv.className = "feature-card feature-card-custom";
-                flowDiv.style.marginBottom = "1.5rem";
-                if (flowObj.isFeatureFlagged) {
-                  flowDiv.dataset.featureFlagged = "true";
-                }
-                const h4 = document.createElement("h4");
-                h4.innerHTML = `<i class='fas fa-route'></i> ${flowObj.flow}`;
-                h4.classList.add("feature-card-title");
-                flowDiv.appendChild(h4);
-                if (flowObj.summary) {
-                  const summary = document.createElement("p");
-                  summary.textContent = flowObj.summary;
-                  summary.style.fontWeight = "500";
-                  summary.style.marginBottom = "0.7rem";
-                  summary.style.textAlign = "left";
-                  flowDiv.appendChild(summary);
-                }
-                if (Array.isArray(flowObj.steps)) {
-                  const ol = document.createElement("ol");
-                  ol.className = "permissions-list";
-                  flowObj.steps.forEach((step) => {
-                    const li = document.createElement("li");
-                    li.textContent = step;
-                    ol.appendChild(li);
-                  });
-                  flowDiv.appendChild(ol);
-                }
-                sectionDiv.appendChild(flowDiv);
-              });
-            } else if (
-              section.section === "user-roles" &&
-              Array.isArray(section.content) &&
-              section.content[0] &&
-              section.content[0].type
-            ) {
-              // Render user types as cards
-              const typesGrid = document.createElement("div");
-              typesGrid.style.display = "grid";
-              typesGrid.style.gridTemplateColumns = "repeat(auto-fit, minmax(260px, 1fr))";
-              typesGrid.style.gap = "1.2rem";
-              section.content.forEach((typeObj) => {
-                const typeDiv = document.createElement("div");
-                typeDiv.className = "role-card types-card-custom";
-                const h4 = document.createElement("h4");
-                h4.innerHTML = `<i class='fas fa-user'></i> ${typeObj.type}`;
-                h4.classList.add("types-card-title");
-                typeDiv.appendChild(h4);
-                if (typeObj.description) {
-                  const desc = document.createElement("p");
-                  desc.textContent = typeObj.description;
-                  typeDiv.appendChild(desc);
-                }
-                if (typeObj.permissions) {
-                  const ul = document.createElement("ul");
-                  ul.className = "permissions-list";
-                  typeObj.permissions.forEach((perm) => {
-                    const li = document.createElement("li");
-                    li.textContent = perm;
-                    ul.appendChild(li);
-                  });
-                  typeDiv.appendChild(ul);
-                }
-                typesGrid.appendChild(typeDiv);
-              });
-              sectionDiv.appendChild(typesGrid);
-            } else if (section.section === "e2e-scenarios" && Array.isArray(section.content)) {
-              // Render E2E scenarios as cards
-              section.content.forEach((scenario) => {
-                const card = document.createElement("div");
-                card.className = "feature-card feature-card-custom";
-                card.style.marginBottom = "1.5rem";
-                // Title
-                const h4 = document.createElement("h4");
-                h4.innerHTML = `<i class='fas fa-vials'></i> ${scenario.scenario}`;
-                h4.classList.add("feature-card-title");
-                card.appendChild(h4);
-                // Description
-                if (scenario.description) {
-                  const desc = document.createElement("p");
-                  desc.textContent = scenario.description;
-                  desc.style.fontWeight = "500";
-                  desc.style.marginBottom = "0.7rem";
-                  desc.style.textAlign = "left";
-                  card.appendChild(desc);
-                }
-                // Steps
-                if (Array.isArray(scenario.steps)) {
-                  const ol = document.createElement("ol");
-                  ol.className = "permissions-list";
-                  scenario.steps.forEach((step, idx) => {
-                    const li = document.createElement("li");
-                    li.innerHTML = `<span style='color:#6a7b5e;font-weight:bold;margin-right:0.5em;'>Step ${idx + 1}:</span> ${step}`;
-                    ol.appendChild(li);
-                  });
-                  card.appendChild(ol);
-                }
-                sectionDiv.appendChild(card);
-              });
-            } else if (section.section === "features" && Array.isArray(section.content)) {
-              // Render features as a vertical list of category cards
-              const featuresGrid = document.createElement("div");
-              featuresGrid.style.display = "flex";
-              featuresGrid.style.flexDirection = "column";
-              featuresGrid.style.gap = "1rem";
-
-              section.content.forEach((feature) => {
-                const card = document.createElement("div");
-                card.className = "feature-card feature-card-custom";
-                card.style.padding = "0.8rem";
-                applyFeatureFlag(card, feature.isFeatureFlagged);
-
-                const h4 = document.createElement("h4");
-                h4.innerHTML = `<i class='fas fa-check-circle'></i> ${feature.category || "Feature"}`;
-                h4.classList.add("feature-card-title");
-                card.appendChild(h4);
-
-                if (feature.summary) {
-                  const summary = document.createElement("p");
-                  summary.textContent = feature.summary;
-                  summary.style.marginBottom = "0.5rem";
-                  card.appendChild(summary);
-                }
-
-                if (Array.isArray(feature.items)) {
-                  const ul = document.createElement("ul");
-                  ul.style.margin = "0.4rem 0 0 1rem";
-                  ul.style.padding = "0";
-                  ul.style.listStyle = "disc";
-                  feature.items.slice(0, 12).forEach((item) => {
-                    const li = document.createElement("li");
-                    li.textContent = item;
-                    li.style.marginBottom = "0.25rem";
-                    li.style.lineHeight = "1.4";
-                    ul.appendChild(li);
-                  });
-                  if (feature.items.length > 12) {
-                    const li = document.createElement("li");
-                    li.textContent = `...and ${feature.items.length - 12} more`;
-                    li.style.fontStyle = "italic";
-                    ul.appendChild(li);
-                  }
-                  card.appendChild(ul);
-                } else if (feature.content && typeof feature.content === "string") {
-                  const p = document.createElement("p");
-                  p.textContent = feature.content;
-                  card.appendChild(p);
-                }
-
-                featuresGrid.appendChild(card);
-              });
-
-              sectionDiv.appendChild(featuresGrid);
-            } else {
-              // Fallback: show JSON
-              const pre = document.createElement("pre");
-              pre.textContent = JSON.stringify(section.content, null, 2);
-              pre.classList.add("json-fallback");
-              sectionDiv.appendChild(pre);
-            }
-            // Section divider
-            const divider = document.createElement("hr");
-            divider.className = "docs-section-divider";
-            sectionDiv.appendChild(divider);
-            container.appendChild(sectionDiv);
-          });
-
-          const docsSearchEnabled = await getFeatureFlagValue("docsSearchEnabled", false);
-          const docsAdvancedSearchEnabled = await getFeatureFlagValue("docsAdvancedSearchEnabled", false);
-
-          if (docsAdvancedSearchEnabled) {
-            setupDocsAdvancedSearch();
-          } else if (docsSearchEnabled) {
-            setupDocsSearch();
-          }
-
-          if (typeof window.setupDocsAiWidget === "function") {
-            await window.setupDocsAiWidget({
-              getFeatureFlagValue,
-            });
-          }
-        })
-        .catch((err) => {
-          const container = document.getElementById("dynamic-docs-content");
-          if (container) {
-            container.innerHTML = "<p>Error loading documentation.</p>";
-            console.error("Documentation fetch error:", err);
-          }
-        });
-    }
-  </script>
+  <script src="/js/pages/docs-page.js"></script>
 </body>
 
 </html>
