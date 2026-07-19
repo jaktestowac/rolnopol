@@ -136,6 +136,7 @@ async function getNavFeatureFlagState() {
     messengerEnabled: false,
     financialCommoditiesEnabled: false,
     weatherPageEnabled: false,
+    weatherLiveStreamEnabled: false,
     rolnopolFarmlogEnabled: false,
     taskManagerEnabled: false,
   };
@@ -147,6 +148,7 @@ async function getNavFeatureFlagState() {
     messengerEnabled: false,
     financialCommoditiesEnabled: false,
     weatherPageEnabled: false,
+    weatherLiveStreamEnabled: false,
     petBuddyEnabled: true,
     rolnopolFarmlogEnabled: false,
     taskManagerEnabled: false,
@@ -200,6 +202,7 @@ async function getNavFeatureFlagState() {
       messengerEnabled,
       financialCommoditiesEnabled,
       weatherPageEnabled,
+      weatherLiveStreamEnabled,
       petBuddyEnabled,
       rolnopolFarmlogEnabled,
       taskManagerEnabled,
@@ -212,6 +215,7 @@ async function getNavFeatureFlagState() {
       featureFlagsService.isEnabled("messengerEnabled", false),
       featureFlagsService.isEnabled("financialCommoditiesEnabled", false),
       featureFlagsService.isEnabled("weatherPageEnabled", false),
+      featureFlagsService.isEnabled("weatherLiveStreamEnabled", false),
       featureFlagsService.isEnabled("petBuddyEnabled", true),
       featureFlagsService.isEnabled("rolnopolFarmlogEnabled", false),
       featureFlagsService.isEnabled("taskManagerEnabled", false),
@@ -225,6 +229,7 @@ async function getNavFeatureFlagState() {
       messengerEnabled,
       financialCommoditiesEnabled,
       weatherPageEnabled,
+      weatherLiveStreamEnabled,
       petBuddyEnabled,
       rolnopolFarmlogEnabled,
       taskManagerEnabled,
@@ -443,6 +448,7 @@ async function updateHeaderNav(username = "") {
     messengerEnabled,
     financialCommoditiesEnabled,
     weatherPageEnabled,
+    weatherLiveStreamEnabled,
     petBuddyEnabled,
     rolnopolFarmlogEnabled,
     taskManagerEnabled,
@@ -464,6 +470,9 @@ async function updateHeaderNav(username = "") {
     : "";
   const weatherLink = weatherPageEnabled
     ? '<li><a href="/weather.html" class="nav-link" title="Weather" aria-label="Weather" data-testid="nav-weather"><i class="fas fa-cloud-sun-rain"></i><span class="nav-text">Weather</span></a></li>'
+    : "";
+  const weatherLiveLink = weatherLiveStreamEnabled
+    ? '<li><a href="/weather-live.html" class="nav-link" title="Weather Live" aria-label="Weather Live" data-testid="nav-weather-live"><i class="fas fa-satellite-dish"></i><span class="nav-text">Weather Live</span></a></li>'
     : "";
   const buddyLink = petBuddyEnabled
     ? '<li><a href="/buddy.html" class="nav-link" title="Pet Buddy" aria-label="Pet Buddy" data-testid="nav-buddy"><i class="fas fa-egg"></i><span class="nav-text">Buddy</span></a></li>'
@@ -502,6 +511,7 @@ async function updateHeaderNav(username = "") {
       ${tasksLink}
       ${tasklabLink}
       ${weatherLink}
+      ${weatherLiveLink}
       ${messengerLink}
       ${buddyLink}
       ${greenhouseLink}
@@ -528,6 +538,7 @@ async function updateHeaderNav(username = "") {
       ${alertsLink}
       ${farmlogLink}
       ${weatherLink}
+      ${weatherLiveLink}
       ${greenhouseLink}
       ${farmStayLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Documentation</span></a></li>

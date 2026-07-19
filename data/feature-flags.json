@@ -30,6 +30,7 @@
     "weatherWeatherDataExport": false,
     "weatherUserInsightsEnabled": false,
     "weatherTrendChartEnabled": false,
+    "weatherLiveStreamEnabled": false,
     "personalApiKeysEnabled": false,
     "integrationsWebhooksEnabled": false,
     "promoAdvertsHomeEnabled": false,
@@ -44,5 +45,5 @@
     "greenhouseControlRoomEnabled": false,
     "farmStayEnabled": false
   },
-  "updatedAt": "2026-06-22T22:31:56.368Z"
+  "updatedAt": "2026-07-19T14:20:36.281Z"
 }

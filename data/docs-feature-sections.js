@@ -664,6 +664,59 @@ module.exports = [
     },
   },
 
+  {
+    flag: "weatherLiveStreamEnabled",
+    section: {
+      section: "weather-live-stream",
+      title: "Weather — Live Conditions & Alerts (SSE)",
+      content: [
+        heading("Overview", [
+          p(
+            "A public live-weather page (/weather-live.html) that streams current conditions and severe-weather alerts over Server-Sent Events (SSE). It is independent of the main weather page — the 'Weather Live' nav link and the page are visible to anonymous visitors whenever this flag is on, even if 'weatherPageEnabled' is off.",
+          ),
+          ul([
+            "Conditions are anchored to the SAME deterministic daily weather the rest of the module reports, then nudged by small sub-daily variation so the feed looks live while staying consistent.",
+            "The browser's native EventSource auto-reconnects; every event carries a monotonic id for Last-Event-ID resume.",
+            "No login required — the page and both endpoints are public and gated only by this flag.",
+          ]),
+        ]),
+        heading("How a reading reaches the page", [
+          flow([
+            { label: "Open the live page", detail: "/weather-live.html (public)" },
+            { label: "Browser opens an EventSource", detail: "GET /weather/live/stream (text/event-stream)" },
+            { label: "Server emits a conditions frame", detail: "event: conditions, on connect + every interval" },
+            { label: "Severe threshold trips", detail: "event: alert (emitted once per activation)", arrow: "when severe" },
+            { label: "Page updates live", detail: "current conditions card + alerts list" },
+          ]),
+        ]),
+        heading("Endpoints", [
+          table(
+            ["Method", "Path", "Description"],
+            [
+              ["GET", "/weather/live", "One JSON snapshot of current conditions + active alerts (public)"],
+              ["GET", "/weather/live/stream", "SSE stream of `conditions` and `alert` events (public)"],
+            ],
+          ),
+          table(
+            ["Query param", "Meaning"],
+            [
+              ["region", "Region code (e.g. PL-14); defaults to PL-14, normalized server-side"],
+              ["intervalMs", "Cadence between conditions frames (250–60000, default 5000)"],
+              ["variance", "Sub-daily jitter amplitude 0–3 (0 = base daily values verbatim)"],
+              ["limit", "Close the stream after N conditions frames (bounded demos / tests)"],
+              ["seed", "Extra seed so parallel streams differ deterministically"],
+            ],
+          ),
+          callout(
+            "info",
+            "Off by default",
+            "Both endpoints and the page return 404 when 'weatherLiveStreamEnabled' is off. The stream sends a ': keep-alive' heartbeat every 15s so idle connections aren't dropped.",
+          ),
+        ]),
+      ],
+    },
+  },
+
   // ---------------------------------------------------------------------------
   // Financial
   // ---------------------------------------------------------------------------

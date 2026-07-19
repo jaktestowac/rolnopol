@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Live - Rolnopol</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/pages/weather-live.css" />
+</head>
+
+<body class="bg-agri-pattern">
+  <div id="header-component"></div>
+
+  <div class="container weather-live-page">
+    <header class="header glass" style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 1.2rem 0 1.2rem 0;
+          margin-bottom: 1.2rem;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+          border-radius: 1.2rem 1.2rem 0 0;
+        ">
+      <div style="display: flex; align-items: center; gap: 1.1rem; width: 100%; justify-content: center">
+        <h1 style="display: flex; align-items: center; gap: 0.6rem; font-size: 2rem">
+          <span class="bg-agri-gradient"><i class="fas fa-satellite-dish"></i></span>
+        </h1>
+        <div style="display: flex; flex-direction: column; align-items: flex-start">
+          <span class="main-title">Weather Live</span>
+          <span style="font-size: 1.08rem; color: #6a7b5e; font-weight: 400; margin-top: 0.1rem">Streaming current conditions &amp; severe-weather alerts (SSE)</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="glass weather-live-toolbar" aria-label="Live weather controls">
+      <div class="weather-live-toolbar__field">
+        <label for="weatherLiveRegionSelect">Region</label>
+        <select id="weatherLiveRegionSelect" class="form-input">
+          <option value="PL-00" selected>Polska — all regions (PL-00)</option>
+          <option value="PL-14">mazowieckie (PL-14)</option>
+          <option value="PL-02">dolnośląskie (PL-02)</option>
+          <option value="PL-04">kujawsko-pomorskie (PL-04)</option>
+          <option value="PL-08">lubuskie (PL-08)</option>
+          <option value="PL-10">łódzkie (PL-10)</option>
+          <option value="PL-06">lubelskie (PL-06)</option>
+          <option value="PL-12">małopolskie (PL-12)</option>
+          <option value="PL-16">opolskie (PL-16)</option>
+          <option value="PL-20">podlaskie (PL-20)</option>
+          <option value="PL-18">podkarpackie (PL-18)</option>
+          <option value="PL-22">pomorskie (PL-22)</option>
+          <option value="PL-26">świętokrzyskie (PL-26)</option>
+          <option value="PL-24">śląskie (PL-24)</option>
+          <option value="PL-28">warmińsko-mazurskie (PL-28)</option>
+          <option value="PL-30">wielkopolskie (PL-30)</option>
+          <option value="PL-32">zachodniopomorskie (PL-32)</option>
+        </select>
+      </div>
+      <button id="weatherLiveReconnectBtn" class="btn btn-outline" type="button" aria-label="Reconnect live stream">
+        <i class="fas fa-rotate"></i>&nbsp; Reconnect
+      </button>
+      <button id="weatherLivePauseBtn" class="btn btn-outline" type="button" aria-label="Pause or resume live stream">
+        <i class="fas fa-pause"></i>&nbsp; Pause
+      </button>
+
+      <div class="weather-live-statusbar">
+        <span class="weather-live-conn">
+          <span id="weatherLiveConnDot" class="weather-live-dot weather-live-dot--idle" aria-hidden="true"></span>
+          <span id="weatherLiveConnLabel" aria-live="polite">Connecting…</span>
+        </span>
+        <p id="weatherLiveStatus" class="weather-live-status" aria-live="polite">Opening live weather stream…</p>
+      </div>
+    </section>
+
+    <section class="glass weather-live-section weather-live-now">
+      <h2><i class="fas fa-gauge-high"></i> Current conditions</h2>
+      <div class="weather-live-now__headline">
+        <span id="weatherLiveCondition" class="weather-live-now__condition">—</span>
+        <span id="weatherLiveTemp" class="weather-live-now__temp">—</span>
+      </div>
+      <p id="weatherLiveMeta" class="weather-live-now__meta">Waiting for the first reading…</p>
+      <div id="weatherLiveMetrics" class="weather-live-metrics"></div>
+      <p id="weatherLiveBase" class="weather-live-now__base"></p>
+    </section>
+
+    <section class="glass weather-live-section">
+      <h2><i class="fas fa-triangle-exclamation"></i> Severe-weather alerts</h2>
+      <p id="weatherLiveAlertsEmpty" class="weather-live-alerts__empty">No active alerts. Conditions are within normal ranges.</p>
+      <ul id="weatherLiveAlerts" class="weather-live-alerts"></ul>
+    </section>
+
+    <section class="glass weather-live-section weather-live-log">
+      <h2><i class="fas fa-wave-square"></i> Live event log</h2>
+      <ul id="weatherLiveEventLog" class="weather-live-eventlog" aria-live="polite"></ul>
+    </section>
+  </div>
+
+  <div id="footer-component"></div>
+
+  <script src="/js/core/event-bus.js"></script>
+  <script src="/js/core/storage.js"></script>
+  <script src="/js/core/app.js"></script>
+
+  <script src="/js/services/api-service.js"></script>
+  <script src="/js/services/auth-service.js"></script>
+  <script src="/js/services/feature-flags-service.js"></script>
+
+  <script src="/js/components/notification.js"></script>
+  <script src="/js/components/navigation.js"></script>
+  <script src="/js/components/form.js"></script>
+  <script src="/js/components.js"></script>
+
+  <script src="/js/api.js"></script>
+
+  <script src="/js/utils/error-logger.js"></script>
+  <script src="/js/utils/utils.js"></script>
+  <script src="/js/utils/router.js"></script>
+  <script src="/js/utils/global-compat.js"></script>
+
+  <script src="/js/pages/weather-live.js"></script>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/utils/init-navigation.js"></script>
+  <script>
+    initNavigation("weather-live");
+  </script>
+</body>
+
+</html>

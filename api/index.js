@@ -418,6 +418,29 @@ app.get(["/weather", "/weather.html"], async (req, res, next) => {
   }
 });
 
+// Feature-gate Weather Live conditions & alerts page before static serving.
+// Public page (no login required); visible whenever the SSE feature flag is on.
+app.get(["/weather-live", "/weather-live.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.weatherLiveStreamEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/weather-live") {
+      return res.redirect(302, "/weather-live.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Weather Live feature gate check failed", { error });
+    return next();
+  }
+});
+
 // Feature-gate personal integrations page before static serving
 app.get(["/integrations", "/integrations.html"], async (req, res, next) => {
   try {
