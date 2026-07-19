@@ -1003,6 +1003,60 @@ module.exports = [
     },
   },
   {
+    flag: "observatoryEnabled",
+    section: {
+      section: "observatory",
+      title: "Observatory",
+      content: [
+        heading("Overview", [
+          p(
+            "A public, no-login sky-dome page (/operator/observatory.html) rendering stars, planets, and the Moon for any location and moment in time. Backed by real orbital-mechanics math (Kepler's equation, sidereal time, equatorial-to-horizontal conversion) — not canned data.",
+          ),
+          ul([
+            "Pick a location by preset (Warsaw, Tokyo, Sydney, ...), browser geolocation, or manual latitude/longitude.",
+            "A time-flow control lets you pause the sky, run it in real time, or fast-forward (×60 to ×3600) to watch moon phases and planet motion advance.",
+            "The 'Observatory' nav link and the page itself appear only when this flag is on; the shared site nav/footer are re-themed dark to match the page.",
+          ]),
+        ]),
+        heading("REST snapshot vs. live SSE stream", [
+          p(
+            "GET /observatory returns one deterministic snapshot for a given timestamp/location/magnitude limit. GET /observatory/stream is a Server-Sent Events (SSE) feed that replaces client-side polling: the connection owns its own simulated clock (anchored at the requested timestamp, advanced by the requested time-flow speed) and pushes a fresh snapshot on every tick.",
+          ),
+          flow([
+            { label: "Open the observatory page", detail: "/operator/observatory.html (public)" },
+            { label: "Browser opens an EventSource", detail: "GET /observatory/stream (text/event-stream)" },
+            { label: "Server pushes a snapshot", detail: "event: snapshot, on connect + every tick" },
+            { label: "Change location, magnitude limit, or time flow", detail: "client reconnects with updated params" },
+          ]),
+        ]),
+        heading("Endpoints", [
+          table(
+            ["Method", "Path", "Description"],
+            [
+              ["GET", "/observatory", "One JSON sky snapshot (public)"],
+              ["GET", "/observatory/stream", "SSE stream of `snapshot` events (public)"],
+            ],
+          ),
+          table(
+            ["Query param", "Meaning"],
+            [
+              ["presetId / latitude / longitude", "Observer location (preset id takes precedence)"],
+              ["timestamp", "Moment to render; defaults to now"],
+              ["magnitudeLimit", "Only show objects at or below this brightness magnitude (0–6)"],
+              ["timeScale", "Stream only — simulated-time speed multiplier (0 = paused)"],
+              ["limit", "Stream only — close after N snapshot events (bounded demos / tests)"],
+            ],
+          ),
+          callout(
+            "info",
+            "Off by default",
+            "Both endpoints and the page return 404 when 'observatoryEnabled' is off. The stream sends a ': keep-alive' heartbeat every 15s so idle connections aren't dropped.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
     flag: "rolnopolFarmlogEnabled",
     section: {
       section: "farmlog",
