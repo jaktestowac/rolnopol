@@ -1526,6 +1526,27 @@ body {
   align-items: center;
 }
 
+.assistant-chat-widget__open-page {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.5rem;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assistant-chat-widget__open-page:hover {
+  background: rgba(74, 124, 63, 0.14);
+  color: #2f6f2f;
+}
+
 .assistant-chat-widget__clear {
   border: none;
   background: transparent;

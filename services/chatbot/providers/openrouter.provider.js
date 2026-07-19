@@ -118,6 +118,79 @@ class OpenRouterProvider extends BaseProvider {
     };
   }
 
+  /**
+   * Native token streaming via the OpenAI-compatible `stream: true` flag. Each
+   * SSE frame is a chat-completion chunk whose `choices[0].delta.content` holds
+   * the incremental text; the stream terminates with a `[DONE]` sentinel. Tools
+   * are not used on the streaming path.
+   */
+  async *streamText(userMessage, options = {}) {
+    this.ensureConfigured();
+    const systemInstruction = options?.systemInstruction?.parts?.[0]?.text || "";
+    const generationConfig = options?.generationConfig || {};
+    const messages = options.messages;
+
+    const msgArray = messages
+      ? messages.map((msg) => ({ role: msg.role, content: msg.content }))
+      : userMessage
+        ? [{ role: "user", content: userMessage }]
+        : [];
+
+    const payload = {
+      model: this.model,
+      messages: [{ role: "system", content: systemInstruction }, ...msgArray],
+      temperature: generationConfig?.temperature ?? 0.7,
+      max_tokens: generationConfig?.maxOutputTokens ?? 2048,
+      stream: true,
+    };
+
+    const { response, clearTimer } = await this._openStream(this._buildUrl(), payload, { signal: options.signal });
+
+    if (!response.ok) {
+      clearTimer();
+      let message = `${this.providerName} stream request failed (${response.status})`;
+      try {
+        const data = await response.json();
+        message = data?.error?.message || message;
+      } catch (error) {
+        // Non-JSON error body; keep the generic message.
+      }
+      const error = new Error(message);
+      error.status = response.status;
+      throw error;
+    }
+
+    clearTimer();
+
+    let fullText = "";
+    let usage = null;
+
+    for await (const payloadLine of this._iterateSseData(response)) {
+      if (payloadLine === "[DONE]") {
+        break;
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(payloadLine);
+      } catch (error) {
+        continue;
+      }
+
+      if (parsed?.usage) {
+        usage = parsed.usage;
+      }
+
+      const delta = parsed?.choices?.[0]?.delta?.content;
+      if (typeof delta === "string" && delta.length > 0) {
+        fullText += delta;
+        yield { type: "token", delta };
+      }
+    }
+
+    yield { type: "done", text: fullText || "No response from model.", usage };
+  }
+
   async getRateLimits() {
     const raw = await this._callJsonEndpointWithRetry({
       url: this._buildKeyInfoUrl(),

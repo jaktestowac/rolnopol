@@ -2,6 +2,30 @@ const ToolsExecutor = require("../tools/tools-executor");
 const { logWarning } = require("../../../helpers/logger-api");
 const { logInfo, logTrace, logLlmRequest, logLlmResponse } = require("../logger-proxy");
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Strip model/template artifacts that some providers (notably free OpenRouter
+ * models with tool-calling chat templates) can leak into content: raw tool-call
+ * blocks, special <|...|> tokens, bare `call:tool{...}` fragments, and
+ * "User Safety:" / "(tool call)" labels. Applied to the final answer as a
+ * safety net before it is streamed to the client.
+ */
+function stripModelArtifacts(text) {
+  return String(text)
+    // whole tool-call blocks, e.g. <|tool_call>call:get_weather{...}<tool_call|>
+    .replace(/<\|?\/?tool_?call[\s\S]*?tool_?call\|?>/gi, "")
+    // any leftover special tokens like <|assistant|>, <|/tool_call|>, <|eot|>
+    .replace(/<\|[^\n]*?\|>/g, "")
+    // stray opening/closing tool_call markers
+    .replace(/<\/?\|?tool_?call\|?>/gi, "")
+    // bare tool-call fragments: call: get_weather { ... }
+    .replace(/\bcall:\s*[\w.-]+\s*\{[^}]*\}/gi, "")
+    // safety / tool annotations that leak as content
+    .replace(/^[ \t]*User Safety:[ \t]*\w+[ \t]*$/gim, "")
+    .replace(/\s*\((?:tool call|function call)\)\s*/gi, " ");
+}
+
 /**
  * BaseConnector - Abstract parent class for LLM connectors
  * Handles common prompt building, generation logic, and function calling
@@ -13,8 +37,8 @@ class BaseLlmConnector {
     this.metrics = options.prometheusMetrics ?? null;
     this.botProfile = options.botProfile || null;
     this.provider.ensureConfigured();
-    this.maxToolCalls = 5; // Prevent infinite loops
-    this.maxToolCallsPerTool = 2; // Prevent one tool dominating behavior
+    this.maxToolCalls = 8; // Prevent infinite loops
+    this.maxToolCallsPerTool = 4; // Prevent one tool dominating behavior (allows retries, e.g. resolving a region name)
     this.maxConversationTokens = 24000; // Prevent token overflow (rough estimate)
     this.approximateTokensPerMessage = 200; // Rough estimate for pruning
   }
@@ -279,14 +303,20 @@ class BaseLlmConnector {
           `[LLM TOOL REQUEST] Provider '${this.providerName}' requested ${response.toolCalls.length} tool(s) for user ${userId}: ${toolNames.join(", ")}`,
         );
 
-        // Count and enforce per-tool limits
+        // Count and enforce per-tool limits. Rather than aborting with a canned
+        // error (which surfaced to users as "Tool usage limit exceeded"), stop
+        // looping and synthesize a final answer from the data already gathered.
+        let perToolLimitHit = false;
         for (const toolName of toolNames) {
           toolUsage[toolName] = (toolUsage[toolName] || 0) + 1;
           if (toolUsage[toolName] > this.maxToolCallsPerTool) {
-            logWarning(`Tool '${toolName}' called more than ${this.maxToolCallsPerTool} times`);
-            finalResponse = `Tool usage limit exceeded for '${toolName}'. Please try a more specific query.`;
-            return finalResponse;
+            logWarning(`Tool '${toolName}' called more than ${this.maxToolCallsPerTool} times; forcing a final answer.`);
+            perToolLimitHit = true;
+            break;
           }
+        }
+        if (perToolLimitHit) {
+          break;
         }
 
         logInfo(`Tool call #${toolCallCount}: ${toolNames.join(", ")}`);
@@ -338,15 +368,92 @@ class BaseLlmConnector {
     }
 
     if (!finalResponse) {
-      finalResponse = "I reached the maximum number of information lookups. Please try again with a more specific question.";
-      logTrace(`[LLM GENERATION MAX CALLS] Reached maximum tool calls limit`, {
+      // The loop stopped without a plain-text answer (per-tool limit hit or max
+      // tool calls reached). Make one final, tools-disabled pass so the model
+      // answers from the data it already gathered instead of erroring out.
+      logTrace(`[LLM GENERATION FORCE FINAL] Synthesizing final answer without tools`, {
         maxToolCalls: this.maxToolCalls,
         totalCallsMade: toolCallCount,
       });
-      this.metrics?.recordChatbotRequest(this.providerName, "tool_limit");
+      const forced = await this._forceFinalAnswer(conversationMessages, systemInstruction, userId);
+      finalResponse = forced || "I gathered the available data but couldn't compose a final answer. Please try rephrasing your question.";
+      this.metrics?.recordChatbotRequest(this.providerName, forced ? "success" : "tool_limit");
     }
 
     return finalResponse;
+  }
+
+  /**
+   * Make one final completion with tools disabled, instructing the model to
+   * answer using the tool results already in the conversation. Used when the
+   * agentic loop stops due to tool-usage limits, to avoid surfacing a raw
+   * "limit exceeded" message to the user.
+   */
+  async _forceFinalAnswer(conversationMessages, systemInstruction, userId) {
+    const messages = this._pruneConversation([
+      ...conversationMessages,
+      {
+        role: "user",
+        content: "Please provide your final answer now using the information gathered above. Do not call any more tools.",
+      },
+    ]);
+
+    try {
+      const response = await this.provider.askText(null, {
+        messages,
+        systemInstruction,
+        useTools: false,
+        generationConfig: { temperature: 0.5 },
+      });
+      return typeof response?.text === "string" && response.text.trim() ? response.text : null;
+    } catch (error) {
+      logWarning(`Final-answer synthesis failed for provider '${this.providerName}'`, { error: error.message || error, userId });
+      return null;
+    }
+  }
+
+  /**
+   * Stream a response token-by-token. To keep tools working (so the assistant
+   * can actually fetch weather, prices, alerts, etc.), this runs the full
+   * agentic tool loop via generateResponse() to produce the clean final answer,
+   * then streams that answer in small chunks. Streaming the resolved answer —
+   * rather than the raw provider stream — is what lets tools run without
+   * tool-call/template markup leaking into the output. The "thinking" indicator
+   * on the client naturally covers the tool phase (the time before the first
+   * chunk arrives).
+   *
+   * Yields `{ type: "token", delta }` chunks, then `{ type: "done", text, usage }`.
+   */
+  async *generateResponseStream({ prompt, context, promptContext, userId, signal }) {
+    let finalText;
+    try {
+      finalText = await this.generateResponse({ prompt, context, promptContext, userId });
+    } catch (error) {
+      logWarning(`LLM provider '${this.providerName}' failed in generateResponseStream`, { error: error.message || error });
+      throw error;
+    }
+
+    const clean = stripModelArtifacts(typeof finalText === "string" ? finalText : "");
+
+    // Split into words while keeping trailing whitespace, so the reassembled
+    // text is byte-identical to `clean`.
+    const chunks = clean.match(/\S+\s*|\s+/g) || [];
+    // Pace the chunks for a typewriter effect, capped so long answers don't drag.
+    const perChunkDelayMs = chunks.length > 0 ? Math.min(22, Math.floor(2500 / chunks.length)) : 0;
+
+    let streamed = "";
+    for (const chunk of chunks) {
+      if (signal?.aborted) {
+        break;
+      }
+      streamed += chunk;
+      yield { type: "token", delta: chunk };
+      if (perChunkDelayMs > 0) {
+        await sleep(perChunkDelayMs);
+      }
+    }
+
+    yield { type: "done", text: streamed || clean, usage: null };
   }
 
   async getRateLimits() {

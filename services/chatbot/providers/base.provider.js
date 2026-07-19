@@ -303,6 +303,103 @@ class BaseProvider {
     throw new Error("askText() must be implemented by subclass");
   }
 
+  /**
+   * Open a streaming HTTP request. The AbortController timeout only guards the
+   * time-to-first-byte: once the response headers arrive it is cleared, so the
+   * (potentially long) token stream is never cut off mid-flight. Client
+   * disconnects are handled via the optional `signal` passed by the caller.
+   */
+  async _openStream(url, payload, { signal } = {}) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    const onAbort = () => controller.abort();
+    if (signal) {
+      if (signal.aborted) {
+        controller.abort();
+      } else {
+        signal.addEventListener("abort", onAbort, { once: true });
+      }
+    }
+
+    try {
+      const response = await this.fetchImpl(url, {
+        method: "POST",
+        headers: this._buildHeaders(),
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      return { response, clearTimer: () => clearTimeout(timeout) };
+    } catch (error) {
+      clearTimeout(timeout);
+      throw error;
+    }
+  }
+
+  /**
+   * Read a `text/event-stream` (SSE) response body and yield each `data:`
+   * payload string as it arrives. Shared by the streaming providers (Gemini
+   * `alt=sse`, OpenRouter `stream:true`), which use the same SSE framing even
+   * though their JSON payload shapes differ. Yielding (rather than buffering
+   * then replaying) is what makes the deltas reach the client token-by-token.
+   */
+  async *_iterateSseData(response) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    try {
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex;
+        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+          const rawLine = buffer.slice(0, newlineIndex).replace(/\r$/, "");
+          buffer = buffer.slice(newlineIndex + 1);
+
+          const line = rawLine.trim();
+          if (!line || line.startsWith(":") || !line.startsWith("data:")) {
+            continue;
+          }
+
+          const payload = line.slice("data:".length).trim();
+          if (payload) {
+            yield payload;
+          }
+        }
+      }
+    } finally {
+      try {
+        reader.releaseLock();
+      } catch (error) {
+        // Reader may already be released on abort; ignore.
+      }
+    }
+  }
+
+  /**
+   * Stream a completion as an async generator of string deltas. Providers with
+   * native streaming override this; the default falls back to a single blocking
+   * `askText()` call and yields the whole reply as one delta, so every provider
+   * supports the streaming API even without native token streaming.
+   *
+   * Yields `{ type: "token", delta }` chunks, then a final
+   * `{ type: "done", text, usage }`.
+   */
+  async *streamText(userMessage, options = {}) {
+    const result = await this.askText(userMessage, options);
+    const text = result?.text || "";
+    if (text) {
+      yield { type: "token", delta: text };
+    }
+    yield { type: "done", text, usage: result?.usage ?? null };
+  }
+
   async getRateLimits() {
     return {
       provider: this.providerName,

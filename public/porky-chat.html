@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Porky Live Chat - Rolnopol</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/pages/porky-chat.css" />
+</head>
+
+<body class="bg-agri-pattern">
+  <div id="header-component"></div>
+
+  <div class="container porky-chat-page">
+    <header class="header glass" style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 1.2rem 0 1.2rem 0;
+          margin-bottom: 1.2rem;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+          border-radius: 1.2rem 1.2rem 0 0;
+        ">
+      <div style="display: flex; align-items: center; gap: 1.1rem; width: 100%; justify-content: center">
+        <h1 style="display: flex; align-items: center; gap: 0.6rem; font-size: 2rem">
+          <span class="bg-agri-gradient">🐷</span>
+        </h1>
+        <div style="display: flex; flex-direction: column; align-items: flex-start">
+          <span class="main-title">Porky Live Chat</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="glass porky-chat-shell" aria-label="Porky streaming chat">
+      <div class="porky-chat-statusbar">
+        <span class="porky-chat-conn">
+          <span id="porkyChatConnDot" class="porky-chat-dot porky-chat-dot--idle" aria-hidden="true"></span>
+          <span id="porkyChatConnLabel" aria-live="polite">Ready</span>
+        </span>
+        <span id="porkyChatProvider" class="porky-chat-provider"></span>
+      </div>
+
+      <div id="porkyChatMessages" class="porky-chat-messages" aria-live="polite"></div>
+
+      <form id="porkyChatForm" class="porky-chat-form">
+        <input
+          id="porkyChatInput"
+          class="porky-chat-input form-input"
+          type="text"
+          maxlength="1024"
+          placeholder="Ask Porky about your fields, staff, animals…"
+          aria-label="Message to Porky"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          required
+        />
+        <button id="porkyChatSend" class="btn btn-primary porky-chat-send" type="submit">
+          <i class="fas fa-paper-plane"></i>&nbsp; Send
+        </button>
+        <button id="porkyChatStop" class="btn btn-outline porky-chat-stop" type="button" hidden>
+          <i class="fas fa-stop"></i>&nbsp; Stop
+        </button>
+      </form>
+    </section>
+  </div>
+
+  <div id="footer-component"></div>
+
+  <script src="/js/core/event-bus.js"></script>
+  <script src="/js/core/storage.js"></script>
+  <script src="/js/core/app.js"></script>
+
+  <script src="/js/services/api-service.js"></script>
+  <script src="/js/services/auth-service.js"></script>
+  <script src="/js/services/feature-flags-service.js"></script>
+
+  <script src="/js/components/notification.js"></script>
+  <script src="/js/components/navigation.js"></script>
+  <script src="/js/components/form.js"></script>
+  <script src="/js/components.js"></script>
+
+  <script src="/js/api.js"></script>
+
+  <script src="/js/utils/error-logger.js"></script>
+  <script src="/js/utils/utils.js"></script>
+  <script src="/js/utils/router.js"></script>
+  <script src="/js/utils/global-compat.js"></script>
+
+  <script src="/js/pages/porky-chat.js"></script>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/utils/init-navigation.js"></script>
+  <script>
+    initNavigation("porky-chat");
+  </script>
+</body>
+
+</html>

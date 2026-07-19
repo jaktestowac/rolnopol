@@ -104,6 +104,78 @@ class GeminiProvider extends BaseProvider {
       usage: data?.usageMetadata,
     };
   }
+
+  /**
+   * Native token streaming via `streamGenerateContent?alt=sse`. Each SSE frame
+   * carries a partial `GenerateContentResponse`; we extract its candidate text
+   * as an incremental delta. Tools are not used on the streaming path.
+   */
+  async *streamText(prompt, options = {}) {
+    this.ensureConfigured();
+    const messages = options.messages;
+
+    const contents = messages
+      ? messages.map((msg) => ({
+          role: msg.role || "user",
+          parts: [{ text: msg.content }],
+        }))
+      : prompt
+        ? [{ parts: [{ text: prompt }] }]
+        : [];
+
+    const payload = {
+      contents,
+      generationConfig: options.generationConfig,
+      systemInstruction: options.systemInstruction,
+    };
+
+    const url = `${this._buildUrl("streamGenerateContent")}?alt=sse`;
+    const { response, clearTimer } = await this._openStream(url, payload, { signal: options.signal });
+
+    if (!response.ok) {
+      clearTimer();
+      let message = `${this.providerName} stream request failed (${response.status})`;
+      try {
+        const data = await response.json();
+        message = data?.error?.message || message;
+      } catch (error) {
+        // Non-JSON error body; keep the generic message.
+      }
+      const error = new Error(message);
+      error.status = response.status;
+      throw error;
+    }
+
+    clearTimer();
+
+    let fullText = "";
+    let usage = null;
+
+    for await (const payloadLine of this._iterateSseData(response)) {
+      if (payloadLine === "[DONE]") {
+        continue;
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(payloadLine);
+      } catch (error) {
+        continue;
+      }
+
+      if (parsed?.usageMetadata) {
+        usage = parsed.usageMetadata;
+      }
+
+      const delta = this._extractCandidateText(parsed);
+      if (delta) {
+        fullText += delta;
+        yield { type: "token", delta };
+      }
+    }
+
+    yield { type: "done", text: fullText || "No text returned by model.", usage };
+  }
 }
 
 module.exports = GeminiProvider;

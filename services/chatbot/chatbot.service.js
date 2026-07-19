@@ -534,6 +534,102 @@ class ChatbotService {
     }
   }
 
+  /**
+   * Streaming counterpart to ask(). Yields lifecycle events for the SSE
+   * controller to frame:
+   *   - { type: "start", provider, botId, botName }
+   *   - { type: "token", delta }        (repeated)
+   *   - { type: "done", reply, usage, contextSummary }
+   *
+   * Short messages and slash-commands (/docs, /limits) don't stream from a
+   * model, so their whole reply is emitted as a single token for a consistent
+   * client experience. `signal` (AbortSignal) lets a client disconnect abort
+   * the upstream provider call.
+   */
+  async *askStream({ userId, message, botId, signal }) {
+    const startTime = process.hrtime.bigint();
+    let resultStatus = "success";
+    const botProfile = this._getBotProfile(botId);
+    const connector = this._getConnector(botProfile);
+
+    yield { type: "start", provider: connector.providerName, botId: botProfile.id, botName: botProfile.name };
+
+    try {
+      const prompt = this._sanitizePrompt(message);
+
+      if (/^\/docs(\s|$)/i.test(prompt)) {
+        const docsResponse = await this._answerDocsQuery(prompt, connector);
+        this.metrics?.recordChatbotRequest(connector.providerName, "docs");
+        this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(docsResponse.reply));
+        yield { type: "token", delta: docsResponse.reply };
+        yield { type: "done", reply: docsResponse.reply, usage: null, contextSummary: docsResponse.contextSummary };
+        return;
+      }
+
+      if (/^\/(ratelimits|limits)(\s|$)/i.test(prompt)) {
+        const limitsResponse = await this._answerRateLimitsQuery(connector);
+        this.metrics?.recordChatbotRequest(connector.providerName, "limits");
+        this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(limitsResponse.reply));
+        yield { type: "token", delta: limitsResponse.reply };
+        yield { type: "done", reply: limitsResponse.reply, usage: null, contextSummary: limitsResponse.contextSummary };
+        return;
+      }
+
+      if (this._isShortMessage(prompt)) {
+        const shortReply = this._buildMinimalReply(botProfile);
+        this.metrics?.recordChatbotRequest(connector.providerName, "short");
+        this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(shortReply));
+        yield { type: "token", delta: shortReply };
+        yield { type: "done", reply: shortReply, usage: null, contextSummary: null };
+        return;
+      }
+
+      const context = await chatbotContextService.getContextForUser(userId);
+      const compactedContext = this._compactContext(context);
+      const promptContext = connector.providerName === "mock" ? compactedContext : this._buildPromptContext(compactedContext);
+
+      let fullText = "";
+      let usage = null;
+
+      for await (const chunk of connector.generateResponseStream({
+        prompt,
+        context: compactedContext,
+        promptContext,
+        userId,
+        signal,
+      })) {
+        if (chunk?.type === "token" && typeof chunk.delta === "string") {
+          fullText += chunk.delta;
+          yield { type: "token", delta: chunk.delta };
+        } else if (chunk?.type === "done") {
+          usage = chunk.usage ?? usage;
+          if (typeof chunk.text === "string" && chunk.text.length > 0) {
+            fullText = chunk.text;
+          }
+        }
+      }
+
+      const estimate = this._estimateTokens(prompt + " " + fullText);
+      this.metrics?.recordChatbotTokenUsage(connector.providerName, estimate);
+
+      yield { type: "done", reply: fullText, usage, contextSummary: compactedContext.summary };
+    } catch (error) {
+      resultStatus = "failure";
+      logWarning(`Chatbot askStream() failed for user ${userId}`, { error: error.message || error, botId: botProfile.id });
+      this.metrics?.recordChatbotRequest(connector.providerName, "failure");
+      throw error;
+    } finally {
+      const durationSeconds = Number(process.hrtime.bigint() - startTime) / 1e9;
+      this.metrics?.recordChatbotDuration(connector.providerName, durationSeconds);
+      logTrace(`Chatbot askStream() completed for user ${userId}`, {
+        provider: connector.providerName,
+        botId: botProfile.id,
+        resultStatus,
+        durationSeconds,
+      });
+    }
+  }
+
   async runSmokeEval(userId = 1) {
     const scenarios = [
       { prompt: "summary", expected: "Fields:" },

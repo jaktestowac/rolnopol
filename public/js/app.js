@@ -834,6 +834,9 @@
               <p>Ask about your fields, staff, and animals.</p>
             </div>
             <div class="assistant-chat-widget__header-buttons">
+              <button type="button" id="assistant-chat-open-page" class="assistant-chat-widget__open-page" aria-label="Open Porky in a dedicated streaming page" title="Open live streaming chat in a new page">
+                <i class="fas fa-up-right-from-square" aria-hidden="true"></i>
+              </button>
               <button type="button" id="assistant-chat-clear" class="assistant-chat-widget__clear" aria-label="Clear chat history" title="Clear all messages">
                 <i class="fas fa-trash" aria-hidden="true"></i>
               </button>
@@ -862,6 +865,7 @@
 
       const toggleButton = document.getElementById("assistant-chat-toggle");
       const panel = document.getElementById("assistant-chat-panel");
+      const openPageButton = document.getElementById("assistant-chat-open-page");
       const closeButton = document.getElementById("assistant-chat-close");
       const clearButton = document.getElementById("assistant-chat-clear");
       const messagesContainer = document.getElementById("assistant-chat-messages");
@@ -1344,6 +1348,10 @@
         if (accepted) {
           clearMessages();
         }
+      });
+
+      openPageButton?.addEventListener("click", () => {
+        window.open("/porky-chat.html", "_blank", "noopener");
       });
 
       form?.addEventListener("submit", async (event) => {

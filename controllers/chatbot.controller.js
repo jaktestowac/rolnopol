@@ -1,5 +1,5 @@
 const { formatResponseBody } = require("../helpers/response-helper");
-const { logError } = require("../helpers/logger-api");
+const { logError, logDebug } = require("../helpers/logger-api");
 const chatbotService = require("../services/chatbot/chatbot.service");
 const { ALERTS_GUIDE_BOT_ID, DOCS_GUIDE_BOT_ID } = require("../services/chatbot/bots/bot-registry");
 
@@ -52,6 +52,85 @@ class ChatbotController {
           error: error.message,
         }),
       );
+    }
+  }
+
+  /**
+   * Token-by-token streaming of the assistant reply over Server-Sent Events.
+   *
+   * Emits:
+   *   - event: start  { provider, botId, botName }
+   *   - event: token  { delta }        (repeated as tokens arrive)
+   *   - event: done   { reply, usage, contextSummary }
+   *   - event: error  { error }        (on failure, before closing)
+   *
+   * The message is taken from the POST body. A client disconnect aborts the
+   * upstream provider call (cost control). Unlike the public weather stream,
+   * the browser reads this with fetch() (not EventSource) so it can send the
+   * `token` auth header and a POST body.
+   */
+  async streamMessage(req, res) {
+    const abortController = new AbortController();
+    let closed = false;
+
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    });
+    if (typeof res.flushHeaders === "function") {
+      res.flushHeaders();
+    }
+
+    let eventId = 0;
+    const sendEvent = (event, data) => {
+      if (closed) {
+        return;
+      }
+      try {
+        eventId += 1;
+        res.write(`id: ${eventId}\n`);
+        res.write(`event: ${event}\n`);
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      } catch (error) {
+        logDebug("Assistant chat stream write failed", { error: error?.message });
+      }
+    };
+
+    req.on("close", () => {
+      if (!closed) {
+        closed = true;
+        abortController.abort();
+      }
+    });
+
+    try {
+      const stream = chatbotService.askStream({
+        userId: req.user.userId,
+        message: req.body?.message,
+        botId: this._resolveBotId(req),
+        signal: abortController.signal,
+      });
+
+      for await (const chunk of stream) {
+        if (closed) {
+          break;
+        }
+        sendEvent(chunk.type, chunk);
+      }
+    } catch (error) {
+      logError("Error while streaming chatbot response:", error);
+      sendEvent("error", { error: error?.message || "Failed to stream assistant response" });
+    } finally {
+      if (!closed) {
+        closed = true;
+        try {
+          res.end();
+        } catch (error) {
+          logDebug("Assistant chat stream end failed", { error: error?.message });
+        }
+      }
     }
   }
 

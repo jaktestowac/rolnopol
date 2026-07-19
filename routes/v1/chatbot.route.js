@@ -16,6 +16,14 @@ chatbotRoute.post(
 );
 
 chatbotRoute.post(
+  "/assistant-chat/stream",
+  apiLimiter,
+  requireFeatureFlag("assistantChatEnabled", { resourceName: "Assistant Chat" }),
+  authenticateUser,
+  chatbotController.streamMessage.bind(chatbotController),
+);
+
+chatbotRoute.post(
   "/docs-chat/messages",
   apiLimiter,
   requireFeatureFlag("docsAiAssistantEnabled", { resourceName: "Documentation Assistant" }),

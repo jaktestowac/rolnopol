@@ -441,6 +441,30 @@ app.get(["/weather-live", "/weather-live.html"], async (req, res, next) => {
   }
 });
 
+// Feature-gate the dedicated streaming Porky chat page before static serving.
+// Gated by the assistant chat feature; the page is reached from the Porky
+// modal's "open in dedicated page" button.
+app.get(["/porky-chat", "/porky-chat.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.assistantChatEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/porky-chat") {
+      return res.redirect(302, "/porky-chat.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Porky streaming chat feature gate check failed", { error });
+    return next();
+  }
+});
+
 // Feature-gate personal integrations page before static serving
 app.get(["/integrations", "/integrations.html"], async (req, res, next) => {
   try {

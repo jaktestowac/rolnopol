@@ -429,6 +429,17 @@ module.exports = [
             "Both the widget injection and the endpoint require an authenticated user; when disabled the widget is not injected and the endpoint returns 404.",
           ),
         ]),
+        heading("Live streaming page", [
+          p(
+            "A dedicated full-page version of Porky streams the reply token-by-token over Server-Sent Events (SSE), reachable from the 'open in dedicated page' button on the chat modal.",
+          ),
+          ul([
+            "Page: /porky-chat.html (gated by assistantChatEnabled, same as the modal).",
+            "Backed by POST /assistant-chat/stream, which returns a text/event-stream of start, token, done, and error events.",
+            "Single-pass generation (no mid-stream tool calls); farm context is still injected so answers stay grounded.",
+            "The mock provider emits deterministic synthetic tokens; Gemini and OpenRouter stream natively.",
+          ]),
+        ]),
       ],
     },
   },

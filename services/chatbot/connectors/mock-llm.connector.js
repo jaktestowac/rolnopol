@@ -223,6 +223,28 @@ class MockLlmConnector {
 
     return this._buildCoreIntentReply(normalizedPrompt, context);
   }
+
+  /**
+   * Stream the mocked reply as synthetic tokens. The full reply is computed up
+   * front (same content as generateResponse), then chopped into whitespace-
+   * preserving chunks and emitted one at a time. This gives the streaming page
+   * and CI a deterministic token-by-token feed without any network calls.
+   */
+  async *generateResponseStream({ prompt, context }) {
+    const reply = await this.generateResponse({ prompt, context });
+
+    // Split into words while keeping the trailing whitespace on each chunk so
+    // the reassembled text is byte-identical to `reply`.
+    const chunks = String(reply).match(/\S+\s*|\s+/g) || [];
+
+    let fullText = "";
+    for (const chunk of chunks) {
+      fullText += chunk;
+      yield { type: "token", delta: chunk };
+    }
+
+    yield { type: "done", text: fullText, usage: null };
+  }
 }
 
 module.exports = MockLlmConnector;
