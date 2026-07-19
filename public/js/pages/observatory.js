@@ -10,12 +10,6 @@
   "use strict";
 
   const API_ROOT = "/api/v1/observatory";
-  const SNAPSHOT_INTERVAL_MS = {
-    paused: Number.POSITIVE_INFINITY,
-    realTime: 2000,
-    fast: 1000,
-    veryFast: 500,
-  };
 
   const LOCATION_PRESETS = [
     { id: "warsaw", label: "Warsaw, Poland", latitudeDeg: 52.2297, longitudeDeg: 21.0122 },
@@ -950,10 +944,6 @@
     return LOCATION_PRESETS.find((preset) => preset.id === id) || null;
   }
 
-  function extractData(payload) {
-    return payload?.data || payload?.result?.data || payload?.result || payload;
-  }
-
   function computeObjectRenderRadius(object) {
     if (object?.type === "moon") {
       return 7.4;
@@ -1070,8 +1060,7 @@
       this.visibleObjects = [];
       this.animationFrameId = null;
       this.lastDrawAt = 0;
-      this.lastSnapshotAtMs = 0;
-      this.snapshotRequestPromise = null;
+      this.eventSource = null;
       this.handleAnimationFrame = this.handleAnimationFrame.bind(this);
     }
 
@@ -1289,6 +1278,10 @@
         this._resizeCanvas();
         this.render();
       });
+
+      this.windowRef?.addEventListener("beforeunload", () => {
+        this._closeStream();
+      });
     }
 
     _startLoop() {
@@ -1303,30 +1296,6 @@
       this.animationFrameId = this.windowRef.requestAnimationFrame(this.handleAnimationFrame);
     }
 
-    _getSnapshotIntervalMs() {
-      if (this.clock.timeScale === 0) {
-        return SNAPSHOT_INTERVAL_MS.paused;
-      }
-
-      if (this.clock.timeScale <= 1) {
-        return SNAPSHOT_INTERVAL_MS.realTime;
-      }
-
-      if (this.clock.timeScale <= 60) {
-        return SNAPSHOT_INTERVAL_MS.fast;
-      }
-
-      return SNAPSHOT_INTERVAL_MS.veryFast;
-    }
-
-    _getNowMs() {
-      if (this.windowRef?.performance && typeof this.windowRef.performance.now === "function") {
-        return this.windowRef.performance.now();
-      }
-
-      return Date.now();
-    }
-
     handleAnimationFrame(frameMs) {
       if (this.clock.lastFrameMs == null) {
         this.clock.lastFrameMs = frameMs;
@@ -1336,15 +1305,9 @@
       this.clock.lastFrameMs = frameMs;
       this.clock.simulatedTimeMs += deltaMs * this.clock.timeScale;
 
-      const snapshotIntervalMs = this._getSnapshotIntervalMs();
-      if (
-        Number.isFinite(snapshotIntervalMs) &&
-        !this.snapshotRequestPromise &&
-        this._getNowMs() - this.lastSnapshotAtMs >= snapshotIntervalMs
-      ) {
-        this._refreshSnapshot({ quiet: true });
-      }
-
+      // Sky data no longer needs to be re-polled here — the observatory backend
+      // pushes fresh snapshots over the live stream (see _openStream). This loop
+      // only advances the cosmetic clock badge and redraws the canvas.
       if (frameMs - this.lastDrawAt >= 150) {
         this.render();
         this.lastDrawAt = frameMs;
@@ -1383,7 +1346,7 @@
     }
 
     _refreshSnapshot(options = {}) {
-      this.loadSnapshot(options).catch(() => {});
+      this._openStream(options);
     }
 
     _updateMagnitudeBadge() {
@@ -1467,60 +1430,84 @@
       );
     }
 
-    async request(path = "", options = {}) {
-      const response = await fetch(`${API_ROOT}${path}`, options);
-      const payload = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        const message = payload?.error || payload?.message || `Request failed with status ${response.status}`;
-        const error = new Error(message);
-        error.status = response.status;
-        error.payload = payload;
-        throw error;
-      }
-
-      return payload;
-    }
-
-    async loadSnapshot(options = {}) {
-      if (this.snapshotRequestPromise) {
-        return this.snapshotRequestPromise;
-      }
-
+    _buildStreamParams() {
       const params = new URLSearchParams({
         latitude: this.location.latitudeDeg.toFixed(4),
         longitude: this.location.longitudeDeg.toFixed(4),
         magnitudeLimit: this.state.magnitudeLimit.toFixed(1),
         timestamp: this.getCurrentSimulationDate().toISOString(),
+        timeScale: String(this.clock.timeScale),
       });
 
       if (this.location.id && this.location.id !== "custom") {
         params.set("presetId", this.location.id);
       }
 
+      return params;
+    }
+
+    _closeStream() {
+      if (this.eventSource) {
+        this.eventSource.close();
+        this.eventSource = null;
+      }
+    }
+
+    // Opens (or reopens) the live sky stream. The sky no longer needs to be
+    // re-fetched on a client-side timer: the server owns the simulated clock for
+    // this connection and pushes a `snapshot` event as it advances, honouring the
+    // requested `timeScale`. Any setting that affects what the stream should show
+    // (location, magnitude limit, time scale/sync) closes the old connection and
+    // opens a fresh one with updated query params, exactly like changing a
+    // subscription.
+    _openStream(options = {}) {
+      this._closeStream();
+
+      if (typeof EventSource === "undefined") {
+        this._setStatus("Live sky streaming is unavailable in this browser.", "error");
+        return;
+      }
+
+      const params = this._buildStreamParams();
+
       if (options.quiet !== true) {
         this._setStatus("Pulling fresh sky data from the observatory backend…", "success");
       }
 
-      this.snapshotRequestPromise = this.request(`?${params.toString()}`)
-        .then((payload) => {
-          const data = extractData(payload);
-          this.applySnapshot(data);
+      let source;
+      try {
+        source = new EventSource(`${API_ROOT}/stream?${params.toString()}`);
+      } catch (error) {
+        this._setStatus("Failed to open the live sky stream.", "error");
+        return;
+      }
+      this.eventSource = source;
+
+      let announced = false;
+      source.addEventListener("snapshot", (event) => {
+        let data;
+        try {
+          data = JSON.parse(event.data);
+        } catch (error) {
+          return;
+        }
+
+        this.applySnapshot(data);
+
+        if (!announced) {
+          announced = true;
           if (options.quiet !== true) {
             this._setStatus(data?.page?.subtitle || "Observatory snapshot refreshed.", "success");
           }
-          return data;
-        })
-        .catch((error) => {
-          this._setStatus(error.message || "Failed to load observatory sky data", "error");
-          throw error;
-        })
-        .finally(() => {
-          this.lastSnapshotAtMs = this._getNowMs();
-          this.snapshotRequestPromise = null;
-        });
+        }
+      });
 
-      return this.snapshotRequestPromise;
+      source.addEventListener("error", () => {
+        if (source.readyState === 2) {
+          this._setStatus("Live sky stream disconnected. Adjust a setting to reconnect.", "error");
+        }
+        // Otherwise EventSource retries the connection automatically.
+      });
     }
 
     _getAllVisibleObjects(snapshot = this.state.snapshot) {

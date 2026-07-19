@@ -1,9 +1,34 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import request from "supertest";
 
 const app = require("../api/index.js");
 
-describe("Operator observatory hidden page", () => {
+async function getCurrentFlags() {
+  const res = await request(app).get("/api/v1/feature-flags").expect(200);
+  return res.body?.data?.flags || {};
+}
+
+async function setObservatoryEnabled(enabled) {
+  await request(app)
+    .patch("/api/v1/feature-flags")
+    .send({ flags: { observatoryEnabled: enabled } })
+    .expect(200);
+}
+
+describe("Operator observatory page", () => {
+  let originalFlags;
+
+  beforeAll(async () => {
+    originalFlags = await getCurrentFlags();
+    await setObservatoryEnabled(true);
+  });
+
+  afterAll(async () => {
+    if (originalFlags) {
+      await request(app).put("/api/v1/feature-flags").send({ flags: originalFlags }).expect(200);
+    }
+  });
+
   it("serves the observatory page", async () => {
     const response = await request(app).get("/operator/observatory.html").expect(200);
 

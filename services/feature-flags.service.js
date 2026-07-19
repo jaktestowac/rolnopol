@@ -51,6 +51,8 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   greenhouseControlRoomEnabled:
     "Enable or disable the greenhouse control room module (gRPC client to the standalone greenhouse service, REST API, and dashboard)",
   farmStayEnabled: "Enable or disable the FarmStay module (gRPC client to the standalone FarmStay service, REST API, and dashboard)",
+  observatoryEnabled:
+    "Enable or disable the Observatory sky-dome page with stars and constellations tracking, and the observatory REST/SSE endpoints (public, no login required)",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -87,6 +89,7 @@ const FEATURE_FLAG_GROUPS = {
   productivity: ["taskManagerEnabled", "taskLabEnabled"],
   greenhouse: ["greenhouseControlRoomEnabled"],
   farmStay: ["farmStayEnabled"],
+  observatory: ["observatoryEnabled"],
 };
 
 const EXPERIMENTAL_FEATURE_FLAGS = [
@@ -124,6 +127,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "taskLabEnabled",
   "greenhouseControlRoomEnabled",
   "farmStayEnabled",
+  "observatoryEnabled",
 ];
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -171,6 +175,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   taskLabEnabled: false,
   greenhouseControlRoomEnabled: false,
   farmStayEnabled: false,
+  observatoryEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

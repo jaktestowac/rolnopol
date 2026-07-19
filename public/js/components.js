@@ -139,6 +139,7 @@ async function getNavFeatureFlagState() {
     weatherLiveStreamEnabled: false,
     rolnopolFarmlogEnabled: false,
     taskManagerEnabled: false,
+    observatoryEnabled: false,
   };
 
   // Conservative fallback when feature checks fail
@@ -152,6 +153,7 @@ async function getNavFeatureFlagState() {
     petBuddyEnabled: true,
     rolnopolFarmlogEnabled: false,
     taskManagerEnabled: false,
+    observatoryEnabled: false,
   };
 
   // Try to get the registered service
@@ -209,6 +211,7 @@ async function getNavFeatureFlagState() {
       taskLabEnabled,
       greenhouseControlRoomEnabled,
       farmStayEnabled,
+      observatoryEnabled,
     ] = await Promise.all([
       featureFlagsService.isEnabled("alertsEnabled", true),
       featureFlagsService.isEnabled("rolnopolMapEnabled", true),
@@ -222,6 +225,7 @@ async function getNavFeatureFlagState() {
       featureFlagsService.isEnabled("taskLabEnabled", false),
       featureFlagsService.isEnabled("greenhouseControlRoomEnabled", false),
       featureFlagsService.isEnabled("farmStayEnabled", false),
+      featureFlagsService.isEnabled("observatoryEnabled", false),
     ]);
     return {
       alertsEnabled,
@@ -236,6 +240,7 @@ async function getNavFeatureFlagState() {
       taskLabEnabled,
       greenhouseControlRoomEnabled,
       farmStayEnabled,
+      observatoryEnabled,
     };
   } catch (error) {
     return DEFAULT_ON_ERROR;
@@ -455,6 +460,7 @@ async function updateHeaderNav(username = "") {
     taskLabEnabled,
     greenhouseControlRoomEnabled,
     farmStayEnabled,
+    observatoryEnabled,
   } = await getNavFeatureFlagState();
   const mapLink = rolnopolMapEnabled
     ? '<li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>'
@@ -492,6 +498,9 @@ async function updateHeaderNav(username = "") {
   const farmStayLink = farmStayEnabled
     ? '<li><a href="/farm-stay.html" class="nav-link" title="FarmStay" aria-label="FarmStay" data-testid="nav-farm-stay"><i class="fa-solid fa-tractor"></i><span class="nav-text">FarmStay</span></a></li>'
     : "";
+  const observatoryLink = observatoryEnabled
+    ? '<li><a href="/operator/observatory.html" class="nav-link" title="Observatory" aria-label="Observatory" data-testid="nav-observatory"><i class="fa-solid fa-star"></i><span class="nav-text">Observatory</span></a></li>'
+    : "";
 
   // Check authentication using standardized cookie names
   const token = getCookie("rolnopolToken");
@@ -516,6 +525,7 @@ async function updateHeaderNav(username = "") {
       ${buddyLink}
       ${greenhouseLink}
       ${farmStayLink}
+      ${observatoryLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li class="nav-user" >
@@ -541,6 +551,7 @@ async function updateHeaderNav(username = "") {
       ${weatherLiveLink}
       ${greenhouseLink}
       ${farmStayLink}
+      ${observatoryLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Documentation</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li><a href="/register.html" class="nav-link" title="Register" aria-label="Register" data-testid="nav-register"><i class="fas fa-user-plus"></i><span class="nav-text">Register</span></a></li>

@@ -686,14 +686,30 @@ app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
   return next();
 });
 
-// Public hidden observatory entry point
-app.get(["/operator/observatory", "/operator/observatory.html", "/operator/astronomy", "/operator/astronomy.html"], (req, res, next) => {
-  if (req.path !== "/operator/observatory.html") {
-    return res.redirect(302, "/operator/observatory.html");
-  }
+// Feature-gate the Observatory page before static serving
+app.get(
+  ["/operator/observatory", "/operator/observatory.html", "/operator/astronomy", "/operator/astronomy.html"],
+  async (req, res, next) => {
+    try {
+      const data = await featureFlagsService.getFeatureFlags();
+      const enabled = data?.flags?.observatoryEnabled === true;
 
-  return next();
-});
+      if (!enabled) {
+        notFoundStatsModule.incrementHtml(req.originalUrl);
+        return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+      }
+
+      if (req.path !== "/operator/observatory.html") {
+        return res.redirect(302, "/operator/observatory.html");
+      }
+
+      return next();
+    } catch (error) {
+      logError("Observatory feature gate check failed", { error });
+      return next();
+    }
+  },
+);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "../public")));

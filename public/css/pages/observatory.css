@@ -30,6 +30,85 @@ body.observatory-page {
   padding: 0.65rem 0 1rem;
 }
 
+/* Dark-mode shared nav/footer, scoped to this page so the rest of the site
+   keeps its default light chrome while Observatory matches its night-sky theme. */
+body.observatory-page .navbar {
+  background: rgba(5, 7, 18, 0.86);
+  border-bottom: 1px solid var(--observatory-border);
+  box-shadow: var(--observatory-shadow);
+}
+
+body.observatory-page .navbar-brand {
+  color: var(--observatory-text);
+}
+
+body.observatory-page .navbar-brand:hover {
+  color: var(--observatory-accent);
+}
+
+body.observatory-page .nav-link {
+  color: var(--observatory-muted);
+}
+
+body.observatory-page .nav-link:hover {
+  color: var(--observatory-accent);
+  background-color: var(--observatory-accent-soft);
+}
+
+body.observatory-page .nav-link.active {
+  color: var(--observatory-gold);
+  background-color: var(--observatory-accent-soft);
+}
+
+body.observatory-page .mobile-menu-toggle {
+  color: var(--observatory-text);
+}
+
+body.observatory-page .hamburger-line {
+  background-color: var(--observatory-text);
+}
+
+body.observatory-page .footer {
+  border-top: 1px solid var(--observatory-border);
+  color: var(--observatory-subtle);
+  background: transparent;
+}
+
+body.observatory-page .footer a {
+  color: var(--observatory-accent);
+}
+
+body.observatory-page .footer a:hover,
+body.observatory-page .footer a:focus {
+  color: var(--observatory-gold);
+}
+
+body.observatory-page .footer .footer-github-link,
+body.observatory-page .footer .footer-youtube-link,
+body.observatory-page .footer .footer-linkedin-link {
+  color: var(--observatory-subtle);
+}
+
+@media (max-width: 768px) {
+  body.observatory-page .navbar-nav {
+    background: var(--observatory-panel-strong);
+    border-top: 1px solid var(--observatory-border);
+    box-shadow: var(--observatory-shadow);
+  }
+
+  body.observatory-page .nav-link {
+    border-bottom: 1px solid var(--observatory-border);
+  }
+
+  body.observatory-page .nav-link:hover {
+    color: var(--observatory-accent);
+  }
+
+  body.observatory-page .mobile-menu-toggle:hover {
+    background-color: var(--observatory-accent-soft);
+  }
+}
+
 .glass {
   background: var(--observatory-panel);
   border: 1px solid var(--observatory-border);
