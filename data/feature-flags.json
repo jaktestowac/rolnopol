@@ -43,7 +43,8 @@
     "taskManagerEnabled": false,
     "taskLabEnabled": false,
     "greenhouseControlRoomEnabled": false,
-    "farmStayEnabled": false
+    "farmStayEnabled": false,
+    "observatoryEnabled": false
   },
-  "updatedAt": "2026-07-19T14:20:36.281Z"
+  "updatedAt": "2026-07-19T15:37:40.407Z"
 }
