@@ -6,6 +6,7 @@ const { logDebug, logError } = require("../helpers/logger-api");
 const { toPublicUser } = require("../helpers/public-user");
 const financialService = require("./financial.service");
 const featureFlagsService = require("./feature-flags.service");
+const twoFactorService = require("./two-factor.service");
 const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
