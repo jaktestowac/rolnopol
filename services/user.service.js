@@ -1,6 +1,7 @@
 const UserDataSingleton = require("../data/user-data-singleton");
 const { validateProfileUpdateData } = require("../helpers/validators");
 const { createAvatarDataUrl, validateAvatarUpload } = require("../helpers/avatar-image");
+const { toPublicUser } = require("../helpers/public-user");
 const { logDebug, logError } = require("../helpers/logger-api");
 const messengerEventsService = require("./messenger-events.service");
 const userAvatarStorageService = require("./user-avatar-storage.service");
@@ -36,8 +37,7 @@ class UserService {
 
     const avatarRecord = await userAvatarStorageService.getAvatarByUserId(user.id);
 
-    // Remove password from response
-    const { password, ...userResponse } = user;
+    const userResponse = toPublicUser(user);
 
     if (avatarRecord) {
       userResponse.avatarDataUrl = avatarRecord.avatarDataUrl;
@@ -112,8 +112,7 @@ class UserService {
     // Update user
     const updatedUser = await this.userDataInstance.updateUser(userId, dataToUpdate);
 
-    // Remove password from response
-    const { password: _, ...userResponse } = updatedUser;
+    const userResponse = toPublicUser(updatedUser);
 
     logDebug("User profile updated successfully", { userId });
 
@@ -183,7 +182,7 @@ class UserService {
       new Date().toISOString(),
     );
 
-    const { password, ...userResponse } = user;
+    const userResponse = toPublicUser(user);
     userResponse.avatarDataUrl = avatarRecord.avatarDataUrl;
     userResponse.avatarUpdatedAt = avatarRecord.avatarUpdatedAt;
 
@@ -198,11 +197,7 @@ class UserService {
   async getAllUsers() {
     const users = await this.userDataInstance.getAllUsers();
 
-    // Remove passwords from all users
-    return users.map((user) => {
-      const { password, ...userResponse } = user;
-      return userResponse;
-    });
+    return users.map((user) => toPublicUser(user));
   }
 
   /**
@@ -234,8 +229,7 @@ class UserService {
     // Delete user
     const deletedUser = await this.userDataInstance.deleteUser(userId);
 
-    // Remove password from response
-    const { password, ...userResponse } = deletedUser;
+    const userResponse = toPublicUser(deletedUser);
 
     logDebug("User profile deleted successfully", { userId });
 

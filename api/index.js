@@ -240,8 +240,23 @@ logDebug("Plugins loaded on startup", {
 });
 
 // Graceful shutdown handling
+const serviceLauncher = require("../services/service-launcher.service");
+
+// Stop any external services started from the Kraken dashboard so they aren't
+// orphaned (still holding their ports) when the app goes down. This is the
+// graceful path; service-launcher also has a synchronous process 'exit' backstop
+// for crash/forced-exit paths.
+const stopLaunchedServices = async () => {
+  try {
+    await serviceLauncher.shutdownAll();
+  } catch (error) {
+    logError("Error stopping launched external services during shutdown:", error);
+  }
+};
+
 process.on("SIGINT", async () => {
   logDebug("Received SIGINT. Graceful shutdown...");
+  await stopLaunchedServices();
   await pluginRuntime.shutdown();
   notificationWebSocketService.close();
   messengerWebSocketService.close();
@@ -253,6 +268,7 @@ process.on("SIGINT", async () => {
 
 process.on("SIGTERM", async () => {
   logDebug("Received SIGTERM. Graceful shutdown...");
+  await stopLaunchedServices();
   await pluginRuntime.shutdown();
   notificationWebSocketService.close();
   messengerWebSocketService.close();
@@ -264,6 +280,7 @@ process.on("SIGTERM", async () => {
 
 process.on("SIGHUP", async () => {
   logDebug("Received SIGHUP. Graceful shutdown...");
+  await stopLaunchedServices();
   await pluginRuntime.shutdown();
   notificationWebSocketService.close();
   messengerWebSocketService.close();
@@ -419,6 +436,28 @@ app.get(["/integrations", "/integrations.html"], async (req, res, next) => {
     return next();
   } catch (error) {
     logError("Personal integrations feature gate check failed", { error });
+    return next();
+  }
+});
+
+// Feature-gate two-factor configuration page before static serving
+app.get(["/two-factor", "/two-factor.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.twoFactorAuthEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/two-factor") {
+      return res.redirect(302, "/two-factor.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Two-factor configuration page gate check failed", { error });
     return next();
   }
 });

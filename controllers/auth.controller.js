@@ -65,9 +65,21 @@ class AuthController {
    */
   async login(req, res) {
     try {
-      const { email, password } = req.body;
+      const { email, password, twoFactorCode } = req.body;
 
-      const result = await authService.loginUser({ email, password });
+      const result = await authService.loginUser({ email, password, twoFactorCode });
+
+      if (result?.twoFactorRequired) {
+        return res.status(202).json(
+          formatResponseBody(
+            {
+              message: "Two-factor authentication required",
+              data: result,
+            },
+            false,
+          ),
+        );
+      }
 
       // Set authentication cookies with standardized naming
       res.cookie("rolnopolToken", result.token, {
@@ -99,11 +111,23 @@ class AuthController {
         ),
       );
     } catch (error) {
-      logWarning("Error during user login:", error);
-
       let statusCode = 500;
       if (error.message.includes("Validation failed")) statusCode = 400;
-      else if (error.message.includes("Invalid credentials") || error.message.includes("deactivated")) statusCode = 401;
+      else if (
+        error.message.includes("Invalid credentials") ||
+        error.message.includes("deactivated") ||
+        error.message.includes("two-factor")
+      )
+        statusCode = 401;
+
+      // Expected client-side failures (4xx) are warnings; unexpected server
+      // failures (5xx) are logged as errors so genuine bugs stand out in the
+      // terminal (with stack trace when LOG_STACK_TRACE is enabled).
+      if (statusCode >= 500) {
+        logError(`Unexpected error during user login (email: ${req.body?.email ?? "unknown"}):`, error);
+      } else {
+        logWarning("Login rejected:", error);
+      }
 
       res.status(statusCode).json(
         formatResponseBody({

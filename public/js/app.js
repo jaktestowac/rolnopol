@@ -257,6 +257,9 @@
       case "profile":
         setupProfilePage();
         break;
+      case "two-factor":
+        setupTwoFactorPage();
+        break;
       case "integrations":
         setupIntegrationsPage();
         break;
@@ -320,6 +323,60 @@
     if (loginForm) {
       const form = new FormComponent(loginForm);
       const eventBus = window.App.getEventBus();
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const twoFactorSection = document.getElementById("twoFactorSection");
+      const twoFactorActions = document.getElementById("twoFactorActions");
+      const twoFactorCodeInput = document.getElementById("twoFactorCode");
+      const resetTwoFactorFlowButton = document.getElementById("resetTwoFactorFlow");
+      const submitButton = loginForm.querySelector('button[type="submit"]');
+      const defaultSubmitText = submitButton ? submitButton.innerHTML : "Login";
+      let twoFactorStepActive = false;
+
+      const hideTwoFactorStep = () => {
+        twoFactorStepActive = false;
+
+        if (twoFactorSection) {
+          twoFactorSection.style.display = "none";
+        }
+
+        if (twoFactorActions) {
+          twoFactorActions.style.display = "none";
+        }
+
+        if (twoFactorCodeInput) {
+          twoFactorCodeInput.value = "";
+        }
+
+        if (submitButton) {
+          submitButton.innerHTML = defaultSubmitText;
+        }
+      };
+
+      const showTwoFactorStep = (payload) => {
+        twoFactorStepActive = true;
+
+        if (twoFactorSection) {
+          twoFactorSection.style.display = "block";
+        }
+
+        if (twoFactorActions) {
+          twoFactorActions.style.display = "block";
+        }
+
+        if (submitButton) {
+          submitButton.innerHTML = "Verify &amp; Login";
+        }
+
+        if (twoFactorCodeInput && typeof twoFactorCodeInput.focus === "function") {
+          twoFactorCodeInput.focus();
+        }
+
+        if (payload?.prompt && window.showNotification) {
+          window.showNotification(payload.prompt, "info", 4000);
+        }
+      };
+
       if (eventBus) {
         form.setEventBus(eventBus);
       }
@@ -328,13 +385,60 @@
       form.addValidator("email", FormValidators.required("Email is required"));
       form.addValidator("email", FormValidators.email());
       form.addValidator("password", FormValidators.required("Password is required"));
+      form.addValidator("twoFactorCode", (value) => {
+        if (!twoFactorStepActive) {
+          return null;
+        }
+
+        const normalizedValue = String(value || "")
+          .replace(/\s+/g, "")
+          .trim();
+        if (!/^\d{6}$/.test(normalizedValue)) {
+          return "Two-factor code must be 6 digits";
+        }
+
+        return null;
+      });
+
+      if (resetTwoFactorFlowButton) {
+        resetTwoFactorFlowButton.addEventListener("click", () => {
+          hideTwoFactorStep();
+        });
+      }
+
+      if (emailInput) {
+        emailInput.addEventListener("input", () => {
+          if (twoFactorStepActive) {
+            hideTwoFactorStep();
+          }
+        });
+      }
+
+      if (passwordInput) {
+        passwordInput.addEventListener("input", () => {
+          if (twoFactorStepActive) {
+            hideTwoFactorStep();
+          }
+        });
+      }
 
       // Handle submission
       form.onSubmit(async (data) => {
         try {
           // Map username->email if a legacy field sneaks in
           if (!data.email && data.username) data.email = data.username;
-          await authService.login({ email: data.email, password: data.password });
+          const result = await authService.login({
+            email: data.email,
+            password: data.password,
+            twoFactorCode: twoFactorStepActive ? data.twoFactorCode : undefined,
+          });
+
+          if (result?.twoFactorRequired) {
+            showTwoFactorStep(result);
+            return;
+          }
+
+          hideTwoFactorStep();
           // Wait for authentication to be properly set before redirecting
           const isAuthenticated = await authService.waitForAuth(3000);
           if (isAuthenticated) {
@@ -460,6 +564,23 @@
     } else {
       // Fallback to original profile loading
       loadProfileData();
+    }
+  }
+
+  function setupTwoFactorPage() {
+    const authService = window.App.getModule("authService");
+
+    if (!authService || !authService.requireAuth("/login.html")) {
+      return;
+    }
+
+    const TwoFactorPageClass = window.TwoFactorPage || globalThis.TwoFactorPage;
+
+    if (TwoFactorPageClass) {
+      const twoFactorPage = new TwoFactorPageClass();
+      window.App.registerModule("twoFactorPage", twoFactorPage);
+    } else {
+      console.error("TwoFactorPage class not found");
     }
   }
 

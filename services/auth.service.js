@@ -3,8 +3,10 @@ const { generateToken, revokeToken } = require("../helpers/token.helpers");
 const { validateRegistrationData, validateLoginData, validatePassword } = require("../helpers/validators");
 const { loginExpiration } = require("../data/settings");
 const { logDebug, logError } = require("../helpers/logger-api");
+const { toPublicUser } = require("../helpers/public-user");
 const financialService = require("./financial.service");
 const featureFlagsService = require("./feature-flags.service");
+const twoFactorService = require("./two-factor.service");
 const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
@@ -123,8 +125,7 @@ class AuthService {
     // Calculate cookie expiration time in milliseconds
     const cookieMaxAge = loginExpiration.hours ? loginExpiration.hours * 60 * 60 * 1000 : loginExpiration.minutes * 60 * 1000;
 
-    // Remove password from response
-    const { password: _, ...userResponse } = newUser;
+    const userResponse = toPublicUser(newUser);
 
     logDebug("User registered successfully", {
       userId: newUser.id,
@@ -163,7 +164,7 @@ class AuthService {
    * Login user (email-based)
    */
   async loginUser(credentials) {
-    const { email, password } = credentials;
+    const { email, password, twoFactorCode } = credentials;
     let resolvedUserId = null;
 
     try {
@@ -191,6 +192,19 @@ class AuthService {
         throw new Error("Invalid credentials");
       }
 
+      const requiresTwoFactor = await twoFactorService.isLoginVerificationRequired(user);
+      if (requiresTwoFactor) {
+        const normalizedCode = typeof twoFactorCode === "string" ? twoFactorCode.trim() : "";
+
+        if (!normalizedCode) {
+          return twoFactorService.buildLoginChallenge(user);
+        }
+
+        if (!(await twoFactorService.verifyLoginCode(user, normalizedCode))) {
+          throw new Error("Invalid two-factor authentication code");
+        }
+      }
+
       // Update last login
       await this.userDataInstance.updateUserLastLogin(user.id.toString());
 
@@ -200,8 +214,8 @@ class AuthService {
       // Calculate cookie expiration time in milliseconds
       const cookieMaxAge = loginExpiration.hours ? loginExpiration.hours * 60 * 60 * 1000 : loginExpiration.minutes * 60 * 1000;
 
-      // Remove password from response
-      const { password: _, ...userResponse } = user;
+      const refreshedUser = await this.userDataInstance.findUser(user.id);
+      const userResponse = toPublicUser(refreshedUser || user);
 
       logDebug("User logged in successfully", {
         userId: user.id,
@@ -221,9 +235,11 @@ class AuthService {
         ? "account_deactivated"
         : message.includes("Invalid credentials")
           ? "invalid_credentials"
-          : message.includes("Validation failed")
-            ? "validation_failed"
-            : "unknown_error";
+          : message.includes("two-factor")
+            ? "invalid_two_factor_code"
+            : message.includes("Validation failed")
+              ? "validation_failed"
+              : "unknown_error";
 
       const eventType = reason === "invalid_credentials" ? EVENT_TYPES.USER_LOGIN_INVALID_CREDENTIALS : EVENT_TYPES.USER_LOGIN_FAILED;
 
@@ -268,10 +284,7 @@ class AuthService {
       throw new Error("Account is deactivated");
     }
 
-    // Remove password from response
-    const { password, ...userResponse } = user;
-
-    return userResponse;
+    return toPublicUser(user);
   }
 
   /**

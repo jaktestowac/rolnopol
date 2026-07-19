@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MFA / Security - Kraken Dashboard</title>
+  <link rel="stylesheet" href="../css/kraken.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" />
+  <style>
+    .mfa-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .mfa-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #e6e6e6;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mfa-subtitle {
+      font-size: 0.85rem;
+      color: #8b949e;
+      margin-top: 4px;
+      max-width: 640px;
+    }
+
+    .mfa-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .global-banner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #333;
+      background: #1e1e1e;
+      flex-wrap: wrap;
+    }
+
+    .global-banner.on { border-left: 4px solid #3fb950; }
+    .global-banner.off { border-left: 4px solid #d29922; }
+
+    .global-banner .big-icon { font-size: 1.8rem; }
+    .global-banner.on .big-icon { color: #3fb950; }
+    .global-banner.off .big-icon { color: #d29922; }
+
+    .global-banner .gb-body { flex: 1; min-width: 220px; }
+    .global-banner .gb-title { font-weight: 600; color: #e6e6e6; font-size: 1rem; }
+    .global-banner .gb-note { font-size: 0.82rem; color: #8b949e; margin-top: 2px; }
+    .global-banner .gb-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .stats-grid { margin-bottom: 20px; }
+
+    .adoption-wrap {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+    }
+
+    .adoption-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .adoption-head .label { color: #ccc; font-weight: 600; }
+    .adoption-head .pct { color: #3fb950; font-weight: 700; font-size: 1.1rem; }
+
+    .adoption-bar {
+      height: 12px;
+      border-radius: 999px;
+      background: #2a2a2a;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .adoption-seg { height: 100%; }
+    .adoption-seg.enabled { background: #3fb950; }
+    .adoption-seg.pending { background: #d29922; }
+
+    .adoption-legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: #8b949e;
+      flex-wrap: wrap;
+    }
+
+    .adoption-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .dot.enabled { background: #3fb950; }
+    .dot.pending { background: #d29922; }
+    .dot.disabled { background: #6e7681; }
+
+    .table-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .table-toolbar input,
+    .table-toolbar select {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      color: #e6e6e6;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .table-toolbar input { min-width: 240px; }
+
+    .mfa-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #e6e6e6;
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+    .muted { color: #6e7681; }
+
+    .mfa-empty, .mfa-loading { color: #8b949e; padding: 30px; text-align: center; }
+  </style>
+</head>
+
+<body>
+  <div class="mfa-header">
+    <div>
+      <h2 class="mfa-title"><i class="fas fa-shield-halved"></i> MFA / Two-Factor Authentication</h2>
+      <div class="mfa-subtitle">
+        Overview of authenticator-app (TOTP) multi-factor authentication across all accounts.
+        Secrets are never exposed — only enrollment state and lifecycle timestamps.
+      </div>
+    </div>
+    <div class="mfa-actions">
+      <span id="mfaLastUpdated" class="badge-enhanced badge-info-enhanced">Last updated: never</span>
+      <button id="refreshMfaBtn" class="btn-enhanced btn-primary-enhanced">
+        <i class="fas fa-sync-alt btn-icon"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div id="globalBanner"></div>
+
+  <div class="stats-grid" id="mfaStats"></div>
+
+  <div class="adoption-wrap" id="adoptionWrap" style="display:none">
+    <div class="adoption-head">
+      <span class="label"><i class="fas fa-chart-pie"></i> MFA adoption</span>
+      <span class="pct" id="adoptionPct">0%</span>
+    </div>
+    <div class="adoption-bar" id="adoptionBar"></div>
+    <div class="adoption-legend" id="adoptionLegend"></div>
+  </div>
+
+  <h3 class="mfa-section-title"><i class="fas fa-users-gear"></i> Per-user MFA status</h3>
+  <div class="table-toolbar">
+    <input type="text" id="mfaSearch" placeholder="Search by name, username or email…" />
+    <select id="mfaStatusFilter">
+      <option value="all">All statuses</option>
+      <option value="enabled">Enabled</option>
+      <option value="pending">Pending setup</option>
+      <option value="disabled">Disabled</option>
+    </select>
+    <span id="mfaRowCount" class="badge-enhanced badge-info-enhanced">0 users</span>
+  </div>
+
+  <div class="table-container">
+    <table class="table-enhanced" id="mfaTable">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>MFA status</th>
+          <th>Enforced at login</th>
+          <th>Enabled at</th>
+          <th>Setup started</th>
+          <th>Last change</th>
+        </tr>
+      </thead>
+      <tbody id="mfaTableBody">
+        <tr><td colspan="7" class="mfa-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="../js/kraken-utils.js"></script>
+  <script>
+    class MfaTab {
+      constructor() {
+        this.token = getCookie("krakenToken");
+        this.banner = document.getElementById("globalBanner");
+        this.stats = document.getElementById("mfaStats");
+        this.tableBody = document.getElementById("mfaTableBody");
+        this.rowCount = document.getElementById("mfaRowCount");
+        this.lastUpdated = document.getElementById("mfaLastUpdated");
+        this.refreshBtn = document.getElementById("refreshMfaBtn");
+        this.search = document.getElementById("mfaSearch");
+        this.statusFilter = document.getElementById("mfaStatusFilter");
+        this.users = [];
+        this.init();
+      }
+
+      init() {
+        window.addEventListener("message", (event) => {
+          if (event.data.type === "SET_TOKEN") {
+            this.token = event.data.token;
+            this.load();
+          }
+        });
+        this.refreshBtn.addEventListener("click", () => this.load());
+        this.search.addEventListener("input", () => this.renderTable());
+        this.statusFilter.addEventListener("change", () => this.renderTable());
+        if (this.token) this.load();
+      }
+
+      esc(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        })[c]);
+      }
+
+      fmtDate(iso) {
+        if (!iso) return '<span class="muted">—</span>';
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return '<span class="muted">—</span>';
+        return `<span title="${this.esc(iso)}">${d.toLocaleString("pl-PL")}</span>`;
+      }
+
+      statusBadge(status) {
+        const map = {
+          enabled: ["badge-success-enhanced", "fa-lock", "Enabled"],
+          pending: ["badge-warning-enhanced", "fa-hourglass-half", "Pending"],
+          disabled: ["badge-danger-enhanced", "fa-lock-open", "Disabled"],
+        };
+        const [cls, icon, label] = map[status] || ["badge-enhanced", "fa-question", status];
+        return `<span class="badge-enhanced ${cls}"><i class="fas ${icon}"></i> ${this.esc(label)}</span>`;
+      }
+
+      statCard(icon, title, value, sub) {
+        return `
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas ${icon}"></i></div>
+            <div class="stat-content">
+              <div class="stat-header"><h3 class="stat-title">${this.esc(title)}</h3></div>
+              <p class="stat-value">${this.esc(value)}</p>
+              <p class="stat-change">${this.esc(sub)}</p>
+            </div>
+          </div>`;
+      }
+
+      renderGlobal(global, summary) {
+        const on = global.enabled === true;
+        this.banner.innerHTML = `
+          <div class="global-banner ${on ? "on" : "off"}">
+            <i class="fas ${on ? "fa-shield-halved" : "fa-shield"} big-icon"></i>
+            <div class="gb-body">
+              <div class="gb-title">
+                Global 2FA enforcement is ${on ? "ENABLED" : "DISABLED"}
+              </div>
+              <div class="gb-note">
+                ${on
+                  ? "Users with a verified authenticator are challenged for a 6-digit code at login."
+                  : "The <code>twoFactorAuthEnabled</code> feature flag is off — no one is challenged at login, even if enrolled. Toggle it on the Feature Flags tab."}
+              </div>
+            </div>
+            <div class="gb-meta">
+              <span class="badge-enhanced ${on ? "badge-success-enhanced" : "badge-warning-enhanced"}">
+                <i class="fas fa-flag"></i> ${this.esc(global.featureFlag)}: ${on ? "on" : "off"}
+              </span>
+              <span class="badge-enhanced badge-info-enhanced"><i class="fas fa-mobile-screen"></i> ${this.esc(global.method)}</span>
+              <span class="badge-enhanced badge-info-enhanced"><i class="fas fa-building"></i> Issuer: ${this.esc(global.issuer)}</span>
+            </div>
+          </div>`;
+      }
+
+      renderStats(summary, global) {
+        const enforcedNow = global.enabled ? summary.enabled : 0;
+        this.stats.innerHTML = [
+          this.statCard("fa-users", "Total users", summary.totalUsers, `${summary.activeUsers} active`),
+          this.statCard("fa-lock", "MFA enabled", summary.enabled, `${summary.activeEnabled} active accounts`),
+          this.statCard("fa-hourglass-half", "Pending setup", summary.pending, "Started, not verified"),
+          this.statCard("fa-lock-open", "No MFA", summary.disabled, "Not enrolled"),
+          this.statCard("fa-user-shield", "Enforced at login", enforcedNow, global.enabled ? "Challenged now" : "Flag off — none"),
+          this.statCard("fa-triangle-exclamation", "Orphan records", summary.orphanRecords, "No matching user"),
+        ].join("");
+      }
+
+      renderAdoption(summary) {
+        const wrap = document.getElementById("adoptionWrap");
+        if (!summary.totalUsers) { wrap.style.display = "none"; return; }
+        wrap.style.display = "block";
+        const enabledPct = (summary.enabled / summary.totalUsers) * 100;
+        const pendingPct = (summary.pending / summary.totalUsers) * 100;
+        document.getElementById("adoptionPct").textContent = `${summary.adoptionRate}%`;
+        document.getElementById("adoptionBar").innerHTML = `
+          <div class="adoption-seg enabled" style="width:${enabledPct}%"></div>
+          <div class="adoption-seg pending" style="width:${pendingPct}%"></div>`;
+        document.getElementById("adoptionLegend").innerHTML = `
+          <span><span class="dot enabled"></span>Enabled (${summary.enabled})</span>
+          <span><span class="dot pending"></span>Pending (${summary.pending})</span>
+          <span><span class="dot disabled"></span>Disabled (${summary.disabled})</span>`;
+      }
+
+      renderTable() {
+        const q = this.search.value.trim().toLowerCase();
+        const filter = this.statusFilter.value;
+        const rows = this.users.filter((u) => {
+          if (filter !== "all" && u.status !== filter) return false;
+          if (!q) return true;
+          return [u.displayedName, u.username, u.email, String(u.userId)]
+            .some((f) => String(f || "").toLowerCase().includes(q));
+        });
+
+        this.rowCount.textContent = `${rows.length} user${rows.length === 1 ? "" : "s"}`;
+
+        if (!rows.length) {
+          this.tableBody.innerHTML = '<tr><td colspan="7" class="mfa-empty"><i class="fas fa-inbox"></i> No users match.</td></tr>';
+          return;
+        }
+
+        this.tableBody.innerHTML = rows.map((u) => {
+          const enforced = u.enforcedAtLogin
+            ? '<span class="badge-enhanced badge-success-enhanced"><i class="fas fa-check"></i> Yes</span>'
+            : '<span class="badge-enhanced muted">No</span>';
+          const name = this.esc(u.displayedName || u.username || `User #${u.userId}`);
+          const sub = u.username ? `<div class="muted mono">@${this.esc(u.username)} · #${this.esc(u.userId)}</div>` : `<div class="muted mono">#${this.esc(u.userId)}</div>`;
+          return `
+            <tr>
+              <td>${name}${sub}</td>
+              <td>${this.esc(u.email || "—")}</td>
+              <td>${this.statusBadge(u.status)}</td>
+              <td>${enforced}</td>
+              <td>${this.fmtDate(u.enabledAt)}</td>
+              <td>${this.fmtDate(u.setupGeneratedAt)}</td>
+              <td>${this.fmtDate(u.updatedAt)}</td>
+            </tr>`;
+        }).join("");
+      }
+
+      setBusy(busy) {
+        this.refreshBtn.disabled = busy;
+        this.refreshBtn.innerHTML = busy
+          ? '<i class="fas fa-spinner fa-spin btn-icon"></i> Refreshing…'
+          : '<i class="fas fa-sync-alt btn-icon"></i> Refresh';
+      }
+
+      async load() {
+        this.setBusy(true);
+        try {
+          const response = await secureFetch("/api/v1/admin/mfa/overview", {
+            headers: { Authorization: `Bearer ${this.token}` },
+          });
+          const result = await response.json();
+          if (!result.success) throw new Error(result.error || "Request failed");
+
+          const { global, summary, users } = result.data;
+          this.users = Array.isArray(users) ? users : [];
+
+          this.renderGlobal(global, summary);
+          this.renderStats(summary, global);
+          this.renderAdoption(summary);
+          this.renderTable();
+
+          this.lastUpdated.textContent = `Last updated: ${new Date().toLocaleTimeString("pl-PL")}`;
+        } catch (error) {
+          if (error.message && error.message.includes("Authentication failed")) return;
+          this.tableBody.innerHTML =
+            `<tr><td colspan="7" class="mfa-empty"><i class="fas fa-triangle-exclamation"></i> Failed to load MFA overview: ${this.esc(error.message || error)}</td></tr>`;
+        } finally {
+          this.setBusy(false);
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => new MfaTab());
+  </script>
+</body>
+
+</html>

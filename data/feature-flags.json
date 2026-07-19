@@ -11,6 +11,7 @@
     "docsAdvancedSearchEnabled": false,
     "docsAiAssistantEnabled": false,
     "registrationStrongPasswordEnabled": false,
+    "twoFactorAuthEnabled": false,
     "contactFormEnabled": true,
     "staffFieldsExportEnabled": false,
     "financialReportsEnabled": false,

@@ -48,6 +48,10 @@ async function initializeDatabases() {
     await userAvatarsDb.getAll();
     logDebug("User avatars database initialized");
 
+    const twoFactorAuthDb = dbManager.getTwoFactorAuthDatabase();
+    await twoFactorAuthDb.getAll();
+    logDebug("Two-factor auth database initialized");
+
     const tasksDb = dbManager.getTasksDatabase();
     await tasksDb.getAll();
     logDebug("Tasks database initialized");

@@ -81,6 +81,10 @@
             </div>
           </div>
           <div class="profile-header-actions">
+            <a href="/two-factor.html" class="btn btn-compact btn-outline btn-futuristic" data-feature-flag="twoFactorAuthEnabled" data-feature-flag-default="false" style="display: none" title="Manage two-factor authentication">
+              <i class="fas fa-shield-halved"></i>
+              2FA
+            </a>
             <a id="openIntegrationsPageBtn" href="/integrations.html" class="btn btn-compact btn-outline btn-futuristic" data-feature-flag="personalApiKeysEnabled,integrationsWebhooksEnabled" data-feature-flag-logic="any" data-feature-flag-default="false" style="display: none" title="Manage personal integrations">
               <i class="fas fa-plug"></i>
               Integrations
@@ -192,6 +196,13 @@
                       Last Login
                     </div>
                     <div class="info-value-modern" id="lastLogin" data-testid="last-login">-</div>
+                  </div>
+                  <div id="twoFactorProfileInfo" class="info-item-modern" style="display: none" data-testid="profile-two-factor-info">
+                    <div class="info-label-modern">
+                      <i class="fas fa-shield-halved"></i>
+                      Two-Factor Authentication
+                    </div>
+                    <div class="info-value-modern" id="twoFactorProfileStatus" data-testid="profile-two-factor-status">Enabled</div>
                   </div>
                 </div>
                 <div id="inlineEditActions" style="

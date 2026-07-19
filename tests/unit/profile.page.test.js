@@ -64,6 +64,8 @@ describe("ProfilePage personal API key feature gating", () => {
       ["avatarUploadPreviewImage", createElement()],
       ["avatarUploadPreviewFallback", createElement()],
       ["avatarUploadPreviewTitle", createElement()],
+      ["twoFactorProfileInfo", createElement()],
+      ["twoFactorProfileStatus", createElement()],
     ]);
 
     global.window = {
@@ -184,5 +186,30 @@ describe("ProfilePage personal API key feature gating", () => {
       width: 256,
       height: 128,
     });
+  });
+
+  it("shows two-factor status on profile information when 2FA is enabled", () => {
+    const page = new global.__ProfilePage();
+    const infoItem = global.__profileTestElements.get("twoFactorProfileInfo");
+    const statusValue = global.__profileTestElements.get("twoFactorProfileStatus");
+
+    page._formatDate = vi.fn(() => "July 14, 2026, 10:15 PM");
+
+    page._renderTwoFactorProfileInfo({
+      enabled: true,
+      enabledAt: "2026-07-14T20:15:00.000Z",
+    });
+
+    expect(infoItem.style.display).toBe("flex");
+    expect(statusValue.textContent).toBe("Enabled since July 14, 2026, 10:15 PM");
+  });
+
+  it("keeps two-factor status hidden on profile information when 2FA is disabled", () => {
+    const page = new global.__ProfilePage();
+    const infoItem = global.__profileTestElements.get("twoFactorProfileInfo");
+
+    page._renderTwoFactorProfileInfo({ enabled: false });
+
+    expect(infoItem.style.display).toBe("none");
   });
 });
