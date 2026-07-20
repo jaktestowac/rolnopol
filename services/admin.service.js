@@ -9,7 +9,7 @@ const {
 } = require("../helpers/token.helpers");
 const { ADMIN_USERNAME, ADMIN_PASSWORD, loginExpirationAdmin } = require("../data/settings");
 const { logDebug, logError } = require("../helpers/logger-api");
-const { getLogList, clearLogList } = require("../helpers/logger-api");
+const { getLogList, clearLogList, getLogLevel, setLogLevel, getAvailableLogLevels } = require("../helpers/logger-api");
 const featureFlagsService = require("./feature-flags.service");
 const dbManager = require("../data/database-manager");
 const pricingService = require("./commodities-pricing.service");
@@ -1304,6 +1304,27 @@ class AdminService {
 
     const normalizedLevel = level === "warning" ? "warn" : level;
     return logs.filter((entry) => String(entry?.level || "").toLowerCase() === normalizedLevel);
+  }
+
+  /**
+   * Get the active runtime log level and the selectable options
+   */
+  async getLogLevel() {
+    return {
+      level: getLogLevel(),
+      availableLevels: getAvailableLogLevels(),
+    };
+  }
+
+  /**
+   * Change the active runtime log level (minimum severity that gets recorded)
+   */
+  async setLogLevel(level) {
+    const updated = setLogLevel(level);
+    return {
+      level: updated,
+      availableLevels: getAvailableLogLevels(),
+    };
   }
 
   /**

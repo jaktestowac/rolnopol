@@ -228,6 +228,18 @@ adminRoute.post("/admin/cache/clear", authenticateAdmin, adminLimiter, adminCont
 adminRoute.get("/admin/logs/export", authenticateAdmin, adminLimiter, adminController.exportLogs.bind(adminController));
 
 /**
+ * Admin: Get active runtime log level
+ * GET /api/v1/admin/logs/level
+ */
+adminRoute.get("/admin/logs/level", authenticateAdmin, adminLimiter, adminController.getLogLevel.bind(adminController));
+
+/**
+ * Admin: Change active runtime log level
+ * PATCH /api/v1/admin/logs/level
+ */
+adminRoute.patch("/admin/logs/level", authenticateAdmin, adminLimiter, adminController.setLogLevel.bind(adminController));
+
+/**
  * Admin: Get all marketplace offers
  * GET /api/v1/admin/marketplace/offers
  */

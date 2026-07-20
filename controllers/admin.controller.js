@@ -841,6 +841,53 @@ class AdminController {
   }
 
   /**
+   * Get the active runtime log level and selectable options
+   */
+  async getLogLevel(req, res) {
+    try {
+      const data = await adminService.getLogLevel();
+      res.status(200).json(
+        formatResponseBody({
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error getting log level:", error);
+      res.status(500).json(
+        formatResponseBody({
+          error: "Failed to get log level",
+        }),
+      );
+    }
+  }
+
+  /**
+   * Change the active runtime log level
+   */
+  async setLogLevel(req, res) {
+    try {
+      const { level } = req.body || {};
+      const data = await adminService.setLogLevel(level);
+      logInfo("Admin changed log level", { level: data.level });
+      res.status(200).json(
+        formatResponseBody({
+          message: `Log level set to ${data.level}`,
+          data,
+        }),
+      );
+    } catch (error) {
+      logError("Error setting log level:", error);
+      const message = String(error?.message || "Failed to set log level");
+      const statusCode = message.toLowerCase().includes("invalid log level") ? 400 : 500;
+      res.status(statusCode).json(
+        formatResponseBody({
+          error: message,
+        }),
+      );
+    }
+  }
+
+  /**
    * Create database backup
    */
   async createBackup(req, res) {

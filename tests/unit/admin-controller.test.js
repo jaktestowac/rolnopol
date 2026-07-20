@@ -88,6 +88,32 @@ describe("admin.service", () => {
     expect(completeness).toBeGreaterThanOrEqual(0);
   });
 
+  it("should report the active log level with selectable options", async () => {
+    const result = await adminService.getLogLevel();
+    expect(result.availableLevels).toEqual([
+      "TRACE",
+      "DEBUG",
+      "INFO",
+      "WARN",
+      "ERROR",
+    ]);
+    expect(result.availableLevels).toContain(result.level);
+  });
+
+  it("should change the active log level", async () => {
+    const result = await adminService.setLogLevel("warn");
+    expect(result.level).toBe("WARN");
+    expect((await adminService.getLogLevel()).level).toBe("WARN");
+    // Restore a permissive default so other suites are unaffected
+    await adminService.setLogLevel("TRACE");
+  });
+
+  it("should reject an invalid log level", async () => {
+    await expect(adminService.setLogLevel("bogus")).rejects.toThrow(
+      /Invalid log level/,
+    );
+  });
+
   it("should create and restore database backup", async () => {
     vi.spyOn(adminService.userDataInstance, "getUsers").mockResolvedValue([
       { id: 1, password: "pass" },

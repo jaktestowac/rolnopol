@@ -25,12 +25,24 @@
       </div>
       <div class="logs-container">
         <div class="logs-filters">
-          <select id="logLevelFilter" class="form-control">
-            <option value="all">All Levels</option>
-            <option value="info">Info</option>
-            <option value="warning">Warning</option>
-            <option value="error">Error</option>
-          </select>
+          <div class="log-level-control">
+            <label for="serverLogLevel">Active log level</label>
+            <div class="log-level-row">
+              <select id="serverLogLevel" class="form-control" disabled>
+                <option value="">Loading…</option>
+              </select>
+              <span id="logLevelStatus" class="log-level-status"></span>
+            </div>
+          </div>
+          <div class="log-filter-control">
+            <label for="logLevelFilter">Filter view</label>
+            <select id="logLevelFilter" class="form-control">
+              <option value="all">All Levels</option>
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="error">Error</option>
+            </select>
+          </div>
         </div>
         <div class="logs-list" id="logsList">
           <div class="text-center loading-enhanced">
@@ -55,6 +67,16 @@
         return null;
       }
 
+      // Escape text for safe insertion into HTML
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
       class LogsTab {
         constructor() {
           this.token = getCookie("krakenToken");
@@ -63,6 +85,7 @@
 
         init() {
           this.bindEvents();
+          this.loadLogLevel();
           this.loadLogs();
         }
 
@@ -73,6 +96,82 @@
           document
             .getElementById("logLevelFilter")
             .addEventListener("change", () => this.filterLogs());
+          document
+            .getElementById("serverLogLevel")
+            .addEventListener("change", (e) =>
+              this.changeLogLevel(e.target.value),
+            );
+        }
+
+        _authHeaders(extra = {}) {
+          const headers = { ...extra };
+          if (this.token) headers.Authorization = `Bearer ${this.token}`;
+          return headers;
+        }
+
+        _setLevelStatus(text, kind = "") {
+          const status = document.getElementById("logLevelStatus");
+          if (!status) return;
+          status.textContent = text || "";
+          status.className = "log-level-status" + (kind ? " " + kind : "");
+        }
+
+        async loadLogLevel() {
+          const select = document.getElementById("serverLogLevel");
+          try {
+            const response = await fetch("/api/v1/admin/logs/level", {
+              headers: this._authHeaders(),
+            });
+            if (!response.ok) throw new Error("Failed to fetch log level");
+            const result = await response.json();
+            const data = result?.data || {};
+            const levels = Array.isArray(data.availableLevels)
+              ? data.availableLevels
+              : [];
+            const current = data.level || "";
+
+            select.innerHTML = levels
+              .map(
+                (lvl) =>
+                  `<option value="${lvl}"${lvl === current ? " selected" : ""}>${lvl}</option>`,
+              )
+              .join("");
+            select.disabled = false;
+            this._setLevelStatus("");
+          } catch (error) {
+            console.error("Failed to load log level:", error);
+            select.innerHTML = '<option value="">Unavailable</option>';
+            select.disabled = true;
+            this._setLevelStatus("Could not load log level", "error");
+          }
+        }
+
+        async changeLogLevel(level) {
+          if (!level) return;
+          const select = document.getElementById("serverLogLevel");
+          select.disabled = true;
+          this._setLevelStatus("Saving…");
+          try {
+            const response = await fetch("/api/v1/admin/logs/level", {
+              method: "PATCH",
+              headers: this._authHeaders({
+                "Content-Type": "application/json",
+              }),
+              body: JSON.stringify({ level }),
+            });
+            const result = await response.json();
+            if (!response.ok || result?.success === false) {
+              throw new Error(result?.error || "Failed to update log level");
+            }
+            this._setLevelStatus(`Recording ${result?.data?.level || level} and above`, "success");
+          } catch (error) {
+            console.error("Failed to change log level:", error);
+            this._setLevelStatus(error.message || "Failed to update", "error");
+            // Re-sync the dropdown with the server's actual level
+            this.loadLogLevel();
+          } finally {
+            select.disabled = false;
+          }
         }
 
         async loadLogs() {
@@ -115,9 +214,39 @@
                 }
 
                 // Message
+                const hasMessage =
+                  log.message !== undefined &&
+                  log.message !== null &&
+                  log.message !== "";
                 let message = log.message || log.body || log.data || "";
                 if (typeof message === "object")
                   message = JSON.stringify(message);
+
+                // Detail payload (data/body). When there is no explicit message
+                // the payload is already shown as the message, so don't repeat it.
+                let detailValue = null;
+                if (
+                  log.data !== undefined &&
+                  log.data !== null &&
+                  log.data !== ""
+                )
+                  detailValue = log.data;
+                else if (
+                  log.body !== undefined &&
+                  log.body !== null &&
+                  log.body !== ""
+                )
+                  detailValue = log.body;
+                if (detailValue !== null && !hasMessage) detailValue = null;
+
+                let detailText = "";
+                if (detailValue !== null) {
+                  detailText =
+                    typeof detailValue === "object"
+                      ? JSON.stringify(detailValue, null, 2)
+                      : String(detailValue);
+                }
+                const hasDetail = detailText.length > 0;
 
                 // Source
                 let source = log.method
@@ -127,12 +256,21 @@
 
                 // Copy button
                 const copyData = JSON.stringify(
-                  { time, level, message, source },
+                  {
+                    time,
+                    level,
+                    message,
+                    source,
+                    ...(hasDetail ? { data: detailValue } : {}),
+                  },
                   null,
                   2,
                 );
                 return `
-                            <div class="log-entry log-${level}" data-log-idx="${idx}">
+                            <div class="log-entry log-${level}${hasDetail ? " has-detail" : ""}" data-log-idx="${idx}">
+                                <button class="log-expand-btn${hasDetail ? "" : " is-empty"}" title="Show data" aria-expanded="false"${hasDetail ? "" : " tabindex=\"-1\" aria-hidden=\"true\""}>
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
                                 <div class="log-time">${time}</div>
                                 <div class="log-level badge-enhanced badge-${level === "error" ? "danger" : level === "warning" ? "warning" : "info"}-enhanced">
                                     ${level.toUpperCase()}
@@ -146,6 +284,7 @@
                                 <button class="copy-log-btn" title="Copy log entry" data-copy="${encodeURIComponent(copyData)}">
                                     <i class="fas fa-copy"></i>
                                 </button>
+                                ${hasDetail ? `<div class="log-data-panel" hidden><pre>${escapeHtml(detailText)}</pre></div>` : ""}
                             </div>
                         `;
               })
@@ -197,6 +336,24 @@
                 }
               });
             });
+            // Expand/collapse the data panel. Clicking anywhere on an entry
+            // toggles it, except when a copy button was the target.
+            logsList
+              .querySelectorAll(".log-entry.has-detail")
+              .forEach((entry) => {
+                entry.addEventListener("click", (e) => {
+                  if (e.target.closest(".copy-log-btn, .copy-message-btn"))
+                    return;
+                  const expanded = entry.classList.toggle("expanded");
+                  const panel = entry.querySelector(".log-data-panel");
+                  if (panel) panel.hidden = !expanded;
+                  const toggle = entry.querySelector(".log-expand-btn");
+                  if (toggle) {
+                    toggle.setAttribute("aria-expanded", String(expanded));
+                    toggle.title = expanded ? "Hide data" : "Show data";
+                  }
+                });
+              });
           } catch (error) {
             console.error("Failed to load logs:", error);
             logsList.innerHTML =

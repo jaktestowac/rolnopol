@@ -1085,6 +1085,49 @@ body {
 .logs-filters {
   padding: var(--kraken-space-md);
   border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--kraken-space-lg);
+}
+
+.log-level-control,
+.log-filter-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kraken-space-xs);
+}
+
+.log-level-control label,
+.log-filter-control label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.log-level-control .form-control,
+.log-filter-control .form-control {
+  min-width: 140px;
+}
+
+.log-level-row {
+  display: flex;
+  align-items: center;
+  gap: var(--kraken-space-sm);
+}
+
+.log-level-status {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.log-level-status.success {
+  color: var(--accent-green, #22c55e);
+}
+
+.log-level-status.error {
+  color: var(--accent-red, #ef4444);
 }
 
 .form-control {
@@ -1111,6 +1154,7 @@ body {
   border-bottom: 1px solid var(--border-color);
   font-size: 0.8125rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--kraken-space-sm);
   background: var(--bg-tertiary);
@@ -1121,6 +1165,48 @@ body {
 
 .log-entry:hover {
   background: var(--bg-secondary);
+}
+
+.log-entry.has-detail {
+  cursor: pointer;
+}
+
+.log-expand-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0 0.25rem;
+  align-self: center;
+  transition: transform 0.15s;
+}
+
+.log-expand-btn.is-empty {
+  visibility: hidden;
+}
+
+.log-entry.expanded .log-expand-btn {
+  transform: rotate(90deg);
+  color: var(--accent-blue);
+}
+
+.log-data-panel {
+  flex-basis: 100%;
+  margin-top: var(--kraken-space-xs);
+}
+
+.log-data-panel pre {
+  margin: 0;
+  padding: var(--kraken-space-sm) var(--kraken-space-md);
+  background: var(--bg-primary, var(--bg-secondary));
+  border: 1px solid var(--border-color);
+  border-radius: var(--kraken-radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
 }
 
 .copy-log-btn {
