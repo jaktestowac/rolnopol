@@ -161,6 +161,63 @@
         padding: 3px 10px;
         color: var(--accent-2);
       }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin: 0 0 16px;
+      }
+      .ex-search {
+        flex: 1 1 240px;
+        background: #0f1a14;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 9px 12px;
+        font-size: 14px;
+      }
+      .ex-select {
+        background: #0f1a14;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 9px 12px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 22px 0 4px;
+      }
+      .page-btn {
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 8px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color 0.15s ease;
+      }
+      .page-btn:hover:not(:disabled) {
+        border-color: var(--accent);
+      }
+      .page-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .page-info {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body class="agri-academy-page">
@@ -196,6 +253,82 @@
           String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
         const unitId = new URLSearchParams(location.search).get("unit");
         const mins = (s) => Math.round((s || 0) / 60);
+        const priceOf = (e) => (e.pricing && e.pricing.mode === "paid" ? Number(e.pricing.priceRol) || 0 : 0);
+
+        // ── Available certifications: search / sort / paginate ────────────────────────
+        let exams = [];
+        let examQuery = "";
+        let examSort = "title-asc";
+        let examPage = 1;
+        const EXAMS_PER_PAGE = 6;
+
+        function examCard(e) {
+          const price =
+            e.pricing && e.pricing.mode === "paid"
+              ? `<span class="tag paid">${e.pricing.priceRol} ROL</span>`
+              : `<span class="tag free">Free</span>`;
+          return `
+            <div class="exam">
+              <h3>${esc(e.title)}</h3>
+              <p>${esc(e.description || "")}</p>
+              <div class="meta">
+                ${price}
+                <span class="tag">${mins(e.durationSec)} min</span>
+                <span class="tag">Pass ${e.passPct}%</span>
+                <span class="tag">${e.accessWindowDays}-day access</span>
+              </div>
+              <a class="enroll" href="/agri-academy.html?exam=${encodeURIComponent(e.id)}">Enroll &amp; take →</a>
+            </div>`;
+        }
+
+        // Renders prev/next pagination into `containerId`; stays hidden when there's a single page.
+        function renderPager(containerId, page, totalPages, totalItems, noun, onGo) {
+          const el = document.getElementById(containerId);
+          if (totalPages <= 1) {
+            el.classList.add("hidden");
+            el.innerHTML = "";
+            return;
+          }
+          el.classList.remove("hidden");
+          el.innerHTML = `
+            <button class="page-btn" data-go="prev" ${page <= 1 ? "disabled" : ""}>← Prev</button>
+            <span class="page-info">Page ${page} of ${totalPages} · ${totalItems} ${noun}${totalItems === 1 ? "" : "s"}</span>
+            <button class="page-btn" data-go="next" ${page >= totalPages ? "disabled" : ""}>Next →</button>`;
+          el.querySelector('[data-go="prev"]').onclick = () => page > 1 && onGo(page - 1);
+          el.querySelector('[data-go="next"]').onclick = () => page < totalPages && onGo(page + 1);
+        }
+
+        function renderExams() {
+          const q = examQuery.trim().toLowerCase();
+          const filtered = exams.filter((e) => !q || [e.title, e.description].join(" ").toLowerCase().includes(q));
+          filtered.sort((a, b) => {
+            switch (examSort) {
+              case "title-desc":
+                return (b.title || "").localeCompare(a.title || "");
+              case "price-asc":
+                return priceOf(a) - priceOf(b) || (a.title || "").localeCompare(b.title || "");
+              case "price-desc":
+                return priceOf(b) - priceOf(a) || (a.title || "").localeCompare(b.title || "");
+              case "duration-asc":
+                return (a.durationSec || 0) - (b.durationSec || 0) || (a.title || "").localeCompare(b.title || "");
+              case "pass-asc":
+                return (a.passPct || 0) - (b.passPct || 0) || (a.title || "").localeCompare(b.title || "");
+              default:
+                return (a.title || "").localeCompare(b.title || "");
+            }
+          });
+          const totalPages = Math.max(1, Math.ceil(filtered.length / EXAMS_PER_PAGE));
+          if (examPage > totalPages) examPage = totalPages;
+          const start = (examPage - 1) * EXAMS_PER_PAGE;
+          const pageItems = filtered.slice(start, start + EXAMS_PER_PAGE);
+          document.getElementById("examGrid").innerHTML = pageItems.length
+            ? pageItems.map(examCard).join("")
+            : `<div class="state" style="grid-column:1/-1">No certifications match “${esc(examQuery)}”.</div>`;
+          renderPager("examPager", examPage, totalPages, filtered.length, "certification", (p) => {
+            examPage = p;
+            renderExams();
+          });
+        }
 
         if (!unitId) {
           state.textContent = "No unit specified.";
@@ -204,29 +337,7 @@
             .then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))))
             .then((u) => {
               state.style.display = "none";
-              const exams = u.exams || [];
-              const cards = exams.length
-                ? exams
-                    .map((e) => {
-                      const price =
-                        e.pricing && e.pricing.mode === "paid"
-                          ? `<span class="tag paid">${e.pricing.priceRol} ROL</span>`
-                          : `<span class="tag free">Free</span>`;
-                      return `
-                      <div class="exam">
-                        <h3>${esc(e.title)}</h3>
-                        <p>${esc(e.description || "")}</p>
-                        <div class="meta">
-                          ${price}
-                          <span class="tag">${mins(e.durationSec)} min</span>
-                          <span class="tag">Pass ${e.passPct}%</span>
-                          <span class="tag">${e.accessWindowDays}-day access</span>
-                        </div>
-                        <a class="enroll" href="/agri-academy.html?exam=${encodeURIComponent(e.id)}">Enroll &amp; take →</a>
-                      </div>`;
-                    })
-                    .join("")
-                : `<div class="state">No published exams yet.</div>`;
+              exams = u.exams || [];
               const color = u.color || "#3fae6b";
               const icon = u.icon || "graduation-cap";
               const chips = (u.tags || []).map((t) => `<span class="chip">${esc(t)}</span>`).join("");
@@ -243,7 +354,39 @@
                 ${chips ? `<div class="chips">${chips}</div>` : ""}
               </div>
               <h2 class="section">Available certifications</h2>
-              <div class="grid">${cards}</div>`;
+              ${
+                exams.length
+                  ? `<div class="toolbar">
+                      <input id="examSearch" class="ex-search" type="search" placeholder="Search certifications…" />
+                      <select id="examSort" class="ex-select" aria-label="Sort certifications">
+                        <option value="title-asc">Name (A–Z)</option>
+                        <option value="title-desc">Name (Z–A)</option>
+                        <option value="price-asc">Price (low → high)</option>
+                        <option value="price-desc">Price (high → low)</option>
+                        <option value="duration-asc">Shortest first</option>
+                        <option value="pass-asc">Easiest pass %</option>
+                      </select>
+                    </div>`
+                  : ""
+              }
+              <div id="examGrid" class="grid"></div>
+              <div id="examPager" class="pager hidden"></div>`;
+
+              if (!exams.length) {
+                document.getElementById("examGrid").innerHTML = `<div class="state" style="grid-column:1/-1">No published exams yet.</div>`;
+                return;
+              }
+              document.getElementById("examSearch").addEventListener("input", (e) => {
+                examQuery = e.target.value;
+                examPage = 1;
+                renderExams();
+              });
+              document.getElementById("examSort").addEventListener("change", (e) => {
+                examSort = e.target.value;
+                examPage = 1;
+                renderExams();
+              });
+              renderExams();
             })
             .catch(() => {
               state.textContent = "This unit could not be loaded.";

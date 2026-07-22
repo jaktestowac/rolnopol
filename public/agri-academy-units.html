@@ -313,6 +313,55 @@
       .ex-link:hover {
         text-decoration: underline;
       }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin: 0 0 18px;
+      }
+      .toolbar .ex-search {
+        margin-bottom: 0;
+        flex: 1 1 260px;
+      }
+      .ex-select {
+        background: #0f1a14;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 9px 12px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 24px 0 4px;
+      }
+      .page-btn {
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 8px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color 0.15s ease;
+      }
+      .page-btn:hover:not(:disabled) {
+        border-color: var(--accent);
+      }
+      .page-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .page-info {
+        color: var(--muted);
+        font-size: 13px;
+      }
     </style>
   </head>
   <body class="agri-academy-page">
@@ -336,7 +385,17 @@
         <button class="tab" data-tab="certs"><i class="fa-solid fa-award"></i> My certificates</button>
       </div>
       <section id="tab-units" class="tabpanel">
+        <div id="unitsToolbar" class="toolbar hidden">
+          <input id="unitsSearch" class="ex-search" type="search" placeholder="Search units by name, description, or tag…" />
+          <select id="unitsSort" class="ex-select" aria-label="Sort units">
+            <option value="name-asc">Name (A–Z)</option>
+            <option value="name-desc">Name (Z–A)</option>
+            <option value="exams-desc">Most exams</option>
+            <option value="exams-asc">Fewest exams</option>
+          </select>
+        </div>
         <div id="grid" class="grid"></div>
+        <div id="unitsPager" class="pager hidden"></div>
         <div id="state" class="state">Loading units…</div>
       </section>
       <section id="tab-exams" class="tabpanel hidden">
@@ -395,6 +454,23 @@
           return isNaN(d) ? "—" : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
         };
 
+        // Renders prev/next pagination into `containerId`; stays hidden when there's a single page.
+        function renderPager(containerId, page, totalPages, totalItems, noun, onGo) {
+          const el = $(containerId);
+          if (totalPages <= 1) {
+            el.classList.add("hidden");
+            el.innerHTML = "";
+            return;
+          }
+          el.classList.remove("hidden");
+          el.innerHTML = `
+            <button class="page-btn" data-go="prev" ${page <= 1 ? "disabled" : ""}>← Prev</button>
+            <span class="page-info">Page ${page} of ${totalPages} · ${totalItems} ${noun}${totalItems === 1 ? "" : "s"}</span>
+            <button class="page-btn" data-go="next" ${page >= totalPages ? "disabled" : ""}>Next →</button>`;
+          el.querySelector('[data-go="prev"]').onclick = () => page > 1 && onGo(page - 1);
+          el.querySelector('[data-go="next"]').onclick = () => page < totalPages && onGo(page + 1);
+        }
+
         // Authenticated fetch (session cookie) → { ok, status, body }.
         async function api(path) {
           try {
@@ -407,38 +483,87 @@
         }
 
         // ── Units (public) ──────────────────────────────────────────────────────────
+        let allUnits = [];
+        let unitQuery = "";
+        let unitSort = "name-asc";
+        let unitPage = 1;
+        const UNITS_PER_PAGE = 9;
+
+        function unitCard(u) {
+          const color = u.color || "#3fae6b";
+          const icon = u.icon || "graduation-cap";
+          const chips = (u.tags || [])
+            .slice(0, 4)
+            .map((t) => `<span class="chip">${esc(t)}</span>`)
+            .join("");
+          return `
+            <a class="card" href="/agri-academy-unit.html?unit=${enc(u.unitId)}" style="border-left:4px solid ${esc(color)}">
+              <div class="card-head">
+                <span class="ubadge" style="background:${esc(color)}"><i class="fa-solid fa-${esc(icon)}"></i></span>
+                <h2>${esc(u.name)}</h2>
+              </div>
+              <p>${esc(u.description || "")}</p>
+              ${chips ? `<div class="chips">${chips}</div>` : ""}
+              <span class="pill">${u.examCount} exam${u.examCount === 1 ? "" : "s"}</span>
+            </a>`;
+        }
+
+        function renderUnits() {
+          const q = unitQuery.trim().toLowerCase();
+          const filtered = allUnits.filter((u) => {
+            if (!q) return true;
+            const hay = [u.name, u.description, ...(u.tags || [])].join(" ").toLowerCase();
+            return hay.includes(q);
+          });
+          filtered.sort((a, b) => {
+            switch (unitSort) {
+              case "name-desc":
+                return (b.name || "").localeCompare(a.name || "");
+              case "exams-desc":
+                return (b.examCount || 0) - (a.examCount || 0) || (a.name || "").localeCompare(b.name || "");
+              case "exams-asc":
+                return (a.examCount || 0) - (b.examCount || 0) || (a.name || "").localeCompare(b.name || "");
+              default:
+                return (a.name || "").localeCompare(b.name || "");
+            }
+          });
+          const totalPages = Math.max(1, Math.ceil(filtered.length / UNITS_PER_PAGE));
+          if (unitPage > totalPages) unitPage = totalPages;
+          const start = (unitPage - 1) * UNITS_PER_PAGE;
+          const pageItems = filtered.slice(start, start + UNITS_PER_PAGE);
+          $("grid").innerHTML = pageItems.length
+            ? pageItems.map(unitCard).join("")
+            : `<div class="state" style="grid-column:1/-1">No units match “${esc(unitQuery)}”.</div>`;
+          renderPager("unitsPager", unitPage, totalPages, filtered.length, "unit", (p) => {
+            unitPage = p;
+            renderUnits();
+          });
+        }
+
         async function loadUnits() {
           const r = await api("/units");
           if (!r.ok) {
             $("state").textContent = "AgriAcademy is unavailable right now.";
             return;
           }
-          const units = r.body.units || [];
-          if (!units.length) {
+          allUnits = r.body.units || [];
+          if (!allUnits.length) {
             $("state").textContent = "No certification units yet.";
             return;
           }
           $("state").style.display = "none";
-          $("grid").innerHTML = units
-            .map((u) => {
-              const color = u.color || "#3fae6b";
-              const icon = u.icon || "graduation-cap";
-              const chips = (u.tags || [])
-                .slice(0, 4)
-                .map((t) => `<span class="chip">${esc(t)}</span>`)
-                .join("");
-              return `
-                <a class="card" href="/agri-academy-unit.html?unit=${enc(u.unitId)}" style="border-left:4px solid ${esc(color)}">
-                  <div class="card-head">
-                    <span class="ubadge" style="background:${esc(color)}"><i class="fa-solid fa-${esc(icon)}"></i></span>
-                    <h2>${esc(u.name)}</h2>
-                  </div>
-                  <p>${esc(u.description || "")}</p>
-                  ${chips ? `<div class="chips">${chips}</div>` : ""}
-                  <span class="pill">${u.examCount} exam${u.examCount === 1 ? "" : "s"}</span>
-                </a>`;
-            })
-            .join("");
+          $("unitsToolbar").classList.remove("hidden");
+          $("unitsSearch").addEventListener("input", (e) => {
+            unitQuery = e.target.value;
+            unitPage = 1;
+            renderUnits();
+          });
+          $("unitsSort").addEventListener("change", (e) => {
+            unitSort = e.target.value;
+            unitPage = 1;
+            renderUnits();
+          });
+          renderUnits();
         }
 
         // ── My exams (auth) ─────────────────────────────────────────────────────────
