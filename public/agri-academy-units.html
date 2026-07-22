@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgriAcademy — Certification Units</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/agri-academy.css" />
+    <style>
+      :root {
+        --bg: #0f1a14;
+        --card: #16241b;
+        --ink: #eaf3ec;
+        --muted: #9bb3a4;
+        --accent: #3fae6b;
+        --accent-2: #7bd4a0;
+        --border: #24382b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: radial-gradient(1200px 600px at 80% -10%, #1c3326 0%, var(--bg) 55%);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      header {
+        padding: 40px 24px 8px;
+        max-width: 1040px;
+        margin: 0 auto;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      h1 {
+        margin: 6px 0 4px;
+        font-size: 34px;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0 0 8px;
+      }
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 16px 24px 64px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 18px;
+      }
+      .card {
+        background: linear-gradient(180deg, var(--card), #12201800);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        text-decoration: none;
+        color: inherit;
+        transition:
+          transform 0.15s ease,
+          border-color 0.15s ease;
+        display: block;
+      }
+      .card:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent);
+      }
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+      .card p {
+        color: var(--muted);
+        margin: 0 0 16px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .pill {
+        display: inline-block;
+        background: #1e3527;
+        color: var(--accent-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .state {
+        color: var(--muted);
+        padding: 40px 0;
+        text-align: center;
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .card-head h2 {
+        margin: 0;
+      }
+      .ubadge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        font-size: 20px;
+        color: #06170d;
+        flex-shrink: 0;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 0 0 14px;
+      }
+      .chip {
+        font-size: 12px;
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 10px;
+        color: var(--accent-2);
+      }
+      .topbar {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 20px 24px 0;
+      }
+      .topbar a {
+        color: var(--accent-2);
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 18px 0 4px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 10px;
+        padding: 11px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: #1e3527;
+        color: var(--ink);
+        transition:
+          transform 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+      }
+      .btn--primary {
+        background: linear-gradient(180deg, var(--accent), #2e8f55);
+        border-color: var(--accent);
+        color: #06170d;
+      }
+      .section-title {
+        max-width: 1040px;
+        margin: 8px auto 0;
+        padding: 0 24px;
+        font-size: 18px;
+        color: var(--ink);
+      }
+      .hidden {
+        display: none;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 0 0 20px;
+        border-bottom: 1px solid var(--border);
+      }
+      .tab {
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 600;
+        padding: 12px 14px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .tab:hover {
+        color: var(--ink);
+      }
+      .tab.is-active {
+        color: var(--accent-2);
+        border-bottom-color: var(--accent);
+      }
+      .badge {
+        display: inline-block;
+        font-size: 12px;
+        border-radius: 999px;
+        padding: 3px 10px;
+        border: 1px solid var(--border);
+        color: var(--accent-2);
+        font-weight: 600;
+      }
+      .badge--pass {
+        color: #8ee6ab;
+        border-color: #2f5b41;
+        background: #12281c;
+      }
+      .badge--fail {
+        color: #ff9c9c;
+        border-color: #4a2626;
+        background: #2a1515;
+      }
+      .badge--warn {
+        color: #ffd98a;
+        border-color: #4a3d1e;
+        background: #2a2313;
+      }
+      .badge--active {
+        color: #8bc4ff;
+        border-color: #25405f;
+        background: #12203a;
+      }
+      .badge--pending {
+        color: #cfe9d7;
+        border-color: var(--border);
+        background: #16241b;
+      }
+      .badge--muted {
+        color: var(--muted);
+        border-color: var(--border);
+        background: transparent;
+      }
+      .btn--sm {
+        margin-top: 12px;
+      }
+      .ex-search {
+        width: 100%;
+        max-width: 360px;
+        margin-bottom: 14px;
+        background: #0f1a14;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 9px 12px;
+        font-size: 14px;
+      }
+      .atable-wrap {
+        overflow-x: auto;
+      }
+      .ex-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .ex-table th,
+      .ex-table td {
+        text-align: left;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      .ex-table th[data-sort] {
+        cursor: pointer;
+        color: var(--muted);
+        user-select: none;
+        font-weight: 600;
+      }
+      .ex-table th[data-sort]:hover {
+        color: var(--ink);
+      }
+      .ex-table th.sort-asc::after {
+        content: " ▲";
+        font-size: 10px;
+        color: var(--accent-2);
+      }
+      .ex-table th.sort-desc::after {
+        content: " ▼";
+        font-size: 10px;
+        color: var(--accent-2);
+      }
+      .ex-table td {
+        color: var(--ink);
+      }
+      .ex-link {
+        color: var(--accent-2);
+        text-decoration: none;
+      }
+      .ex-link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body class="agri-academy-page">
+    <div id="header-component"></div>
+    <div class="topbar"><a href="/index.html">← Rolnopol home</a></div>
+    <header>
+      <div class="eyebrow">🌱 AgriAcademy</div>
+      <h1>Certification Units</h1>
+      <p class="sub">Earn verifiable farm-skill certifications — or open your own certification unit and author exams.</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="/agri-academy.html"><i>🎓</i> Browse &amp; enroll in exams</a>
+        <a class="btn" href="/agri-academy-authoring.html?new=1"><i>➕</i> Create a new unit</a>
+        <a class="btn" href="/agri-academy-authoring.html"><i>🏛️</i> Manage my unit</a>
+        <a class="btn" href="/agri-academy-status.html"><i>📡</i> Service status</a>
+      </div>
+    </header>
+    <main>
+      <div class="tabs">
+        <button class="tab is-active" data-tab="units"><i class="fa-solid fa-building-columns"></i> Units</button>
+        <button class="tab" data-tab="exams"><i class="fa-solid fa-file-lines"></i> My exams</button>
+        <button class="tab" data-tab="certs"><i class="fa-solid fa-award"></i> My certificates</button>
+      </div>
+      <section id="tab-units" class="tabpanel">
+        <div id="grid" class="grid"></div>
+        <div id="state" class="state">Loading units…</div>
+      </section>
+      <section id="tab-exams" class="tabpanel hidden">
+        <div id="sessState" class="state">Loading…</div>
+        <div id="sessWrap" class="hidden">
+          <input id="sessSearch" class="ex-search" type="search" placeholder="Search by exam or status…" />
+          <div class="atable-wrap">
+            <table id="sessTable" class="ex-table">
+              <thead>
+                <tr>
+                  <th data-sort="exam">Exam</th>
+                  <th data-sort="status">Status</th>
+                  <th data-sort="score">Score</th>
+                  <th data-sort="date">Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="sessTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section id="tab-certs" class="tabpanel hidden">
+        <div id="certGrid" class="grid"></div>
+        <div id="certState" class="state">Loading…</div>
+      </section>
+    </main>
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("agri-academy");
+    </script>
+    <script>
+      (() => {
+        const $ = (id) => document.getElementById(id);
+        const enc = encodeURIComponent;
+        const esc = (s) =>
+          String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+        const loginPrompt = (verb) => `Please <a class="back" href="/login.html">log in</a> to ${verb}.`;
+        const fmtDate = (ms) => {
+          if (!ms) return "—";
+          const d = new Date(ms);
+          return isNaN(d) ? "—" : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+        };
+
+        // Authenticated fetch (session cookie) → { ok, status, body }.
+        async function api(path) {
+          try {
+            const r = await fetch("/api/v1/agri-academy" + path, { credentials: "include" });
+            const body = await r.json().catch(() => null);
+            return { ok: r.ok, status: r.status, body };
+          } catch {
+            return { ok: false, status: 0, body: null };
+          }
+        }
+
+        // ── Units (public) ──────────────────────────────────────────────────────────
+        async function loadUnits() {
+          const r = await api("/units");
+          if (!r.ok) {
+            $("state").textContent = "AgriAcademy is unavailable right now.";
+            return;
+          }
+          const units = r.body.units || [];
+          if (!units.length) {
+            $("state").textContent = "No certification units yet.";
+            return;
+          }
+          $("state").style.display = "none";
+          $("grid").innerHTML = units
+            .map((u) => {
+              const color = u.color || "#3fae6b";
+              const icon = u.icon || "graduation-cap";
+              const chips = (u.tags || [])
+                .slice(0, 4)
+                .map((t) => `<span class="chip">${esc(t)}</span>`)
+                .join("");
+              return `
+                <a class="card" href="/agri-academy-unit.html?unit=${enc(u.unitId)}" style="border-left:4px solid ${esc(color)}">
+                  <div class="card-head">
+                    <span class="ubadge" style="background:${esc(color)}"><i class="fa-solid fa-${esc(icon)}"></i></span>
+                    <h2>${esc(u.name)}</h2>
+                  </div>
+                  <p>${esc(u.description || "")}</p>
+                  ${chips ? `<div class="chips">${chips}</div>` : ""}
+                  <span class="pill">${u.examCount} exam${u.examCount === 1 ? "" : "s"}</span>
+                </a>`;
+            })
+            .join("");
+        }
+
+        // ── My exams (auth) ─────────────────────────────────────────────────────────
+        // Outcome-oriented status for the history table: a clear label + a colour tone.
+        function sessionStatus(s) {
+          const r = s.result;
+          switch (s.state) {
+            case "entitled":
+              return { label: "Not started", tone: "pending" };
+            case "active":
+              return { label: "In progress", tone: "active" };
+            case "submitted":
+              return { label: "Grading…", tone: "pending" };
+            case "awaiting_payment":
+              return { label: "Payment required", tone: "warn" };
+            case "scored":
+            case "expired_scored":
+              if (!r) return { label: "Completed", tone: "muted" };
+              return r.passed ? { label: "Passed", tone: "pass" } : { label: "Failed", tone: "fail" };
+            case "expired_unstarted":
+              return { label: "Expired — not started", tone: "muted" };
+            case "abandoned":
+              return { label: "Abandoned", tone: "muted" };
+            default:
+              return { label: s.state, tone: "muted" };
+          }
+        }
+        const sessionLabel = (s) => sessionStatus(s).label;
+        // Compact, searchable, sortable exam-history table.
+        let sessLoaded = false;
+        let sessions = [];
+        let sessQuery = "";
+        let sortKey = "date";
+        let sortDir = -1; // newest first by default
+        const scoreOf = (s) => (s.result && typeof s.result.scorePct === "number" ? s.result.scorePct : null);
+
+        function renderSessions() {
+          const q = sessQuery.trim().toLowerCase();
+          const rows = sessions.filter(
+            (s) => !q || (s.examTitle || s.examId || "").toLowerCase().includes(q) || sessionLabel(s).toLowerCase().includes(q),
+          );
+          rows.sort((a, b) => {
+            let av, bv;
+            if (sortKey === "exam") {
+              av = (a.examTitle || a.examId || "").toLowerCase();
+              bv = (b.examTitle || b.examId || "").toLowerCase();
+            } else if (sortKey === "status") {
+              av = sessionLabel(a).toLowerCase();
+              bv = sessionLabel(b).toLowerCase();
+            } else if (sortKey === "score") {
+              av = scoreOf(a) ?? -1;
+              bv = scoreOf(b) ?? -1;
+            } else {
+              av = a.date || 0;
+              bv = b.date || 0;
+            }
+            return av < bv ? -sortDir : av > bv ? sortDir : 0;
+          });
+          $("sessTableBody").innerHTML =
+            rows
+              .map((s) => {
+                const sc = scoreOf(s);
+                const st = sessionStatus(s);
+                const certNo = s.result && s.result.certNo;
+                const action = certNo
+                  ? `<a class="ex-link" href="/agri-academy-certificate.html?cert=${enc(certNo)}" target="_blank">Certificate</a>`
+                  : `<a class="ex-link" href="/agri-academy.html?exam=${enc(s.examId)}">Open</a>`;
+                return `<tr>
+                  <td>${esc(s.examTitle || s.examId)}</td>
+                  <td><span class="badge badge--${st.tone}">${esc(st.label)}</span></td>
+                  <td>${sc == null ? "—" : sc + "%"}</td>
+                  <td>${fmtDate(s.date)}</td>
+                  <td>${action}</td>
+                </tr>`;
+              })
+              .join("") || `<tr><td colspan="5" class="state" style="padding:16px 12px">No matching exams.</td></tr>`;
+          document.querySelectorAll("#sessTable th[data-sort]").forEach((th) => {
+            th.classList.toggle("sort-asc", sortKey === th.dataset.sort && sortDir === 1);
+            th.classList.toggle("sort-desc", sortKey === th.dataset.sort && sortDir === -1);
+          });
+        }
+
+        async function loadSessions() {
+          if (sessLoaded) return;
+          sessLoaded = true;
+          const r = await api("/sessions");
+          if (r.status === 401) {
+            $("sessState").innerHTML = loginPrompt("see the exams you've enrolled in");
+            return;
+          }
+          if (!r.ok) {
+            $("sessState").textContent = "Could not load your exams.";
+            return;
+          }
+          sessions = (r.body && r.body.sessions) || [];
+          if (!sessions.length) {
+            $("sessState").innerHTML =
+              `You haven't enrolled in any exams yet. <a class="back" href="/agri-academy.html">Browse exams →</a>`;
+            return;
+          }
+          $("sessState").style.display = "none";
+          $("sessWrap").classList.remove("hidden");
+          $("sessSearch").addEventListener("input", (e) => {
+            sessQuery = e.target.value;
+            renderSessions();
+          });
+          document.querySelectorAll("#sessTable th[data-sort]").forEach((th) =>
+            th.addEventListener("click", () => {
+              const k = th.dataset.sort;
+              if (sortKey === k) sortDir = -sortDir;
+              else {
+                sortKey = k;
+                sortDir = k === "date" || k === "score" ? -1 : 1;
+              }
+              renderSessions();
+            }),
+          );
+          renderSessions();
+        }
+
+        // ── My certificates (auth) ────────────────────────────────────────────────────
+        let certLoaded = false;
+        async function loadCerts() {
+          if (certLoaded) return;
+          certLoaded = true;
+          const r = await api("/certificates");
+          if (r.status === 401) {
+            $("certState").innerHTML = loginPrompt("see your certificates");
+            return;
+          }
+          if (!r.ok) {
+            $("certState").textContent = "Could not load your certificates.";
+            return;
+          }
+          const certs = (r.body && r.body.certificates) || [];
+          if (!certs.length) {
+            $("certState").textContent = "No certificates yet — pass an exam to earn one.";
+            return;
+          }
+          $("certState").style.display = "none";
+          $("certGrid").innerHTML = certs
+            .map(
+              (c) => `
+                <div class="card">
+                  <div class="card-head"><h2 style="margin:0;font-size:18px">${esc(c.examTitle || c.examId)}</h2></div>
+                  <p>Score ${c.scorePct}%</p>
+                  <div class="chips" style="margin-bottom:6px"><span class="chip">${esc(c.certNo)}</span></div>
+                  <a class="btn btn--primary btn--sm" href="/agri-academy-certificate.html?cert=${enc(c.certNo)}" target="_blank">View certificate</a>
+                </div>`,
+            )
+            .join("");
+        }
+
+        // ── Tabs ────────────────────────────────────────────────────────────────────
+        document.querySelectorAll(".tab").forEach((btn) =>
+          btn.addEventListener("click", () => {
+            const name = btn.dataset.tab;
+            document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("is-active", b === btn));
+            for (const t of ["units", "exams", "certs"]) $("tab-" + t).classList.toggle("hidden", t !== name);
+            if (name === "exams") loadSessions();
+            if (name === "certs") loadCerts();
+          }),
+        );
+
+        loadUnits();
+      })();
+    </script>
+  </body>
+</html>

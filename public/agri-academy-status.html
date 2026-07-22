@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgriAcademy — System Status</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/agri-academy.css" />
+    <style>
+      :root {
+        --bg: #0f1a14;
+        --card: #16241b;
+        --ink: #eaf3ec;
+        --muted: #9bb3a4;
+        --accent: #3fae6b;
+        --accent-2: #7bd4a0;
+        --border: #24382b;
+        --up: #3fbf6b;
+        --down: #ff8a8a;
+        --warn: #ffce6b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        background: radial-gradient(1200px 600px at 80% -10%, #1c3326 0%, var(--bg) 55%);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      .topbar {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px 24px 0;
+      }
+      .topbar a {
+        color: var(--accent-2);
+        text-decoration: none;
+        font-size: 14px;
+      }
+      header {
+        padding: 24px 24px 8px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      h1 {
+        margin: 6px 0 4px;
+        font-size: 32px;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 16px 24px 64px;
+      }
+      /* Overall banner — the headline of the page */
+      .overall {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border: 1px solid var(--border);
+        border-left-width: 6px;
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin: 16px 0 8px;
+        background: var(--card);
+      }
+      .overall .glyph {
+        font-size: 30px;
+        line-height: 1;
+      }
+      .overall h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .overall p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .overall--op {
+        border-left-color: var(--up);
+      }
+      .overall--op h2 {
+        color: var(--accent-2);
+      }
+      .overall--degraded {
+        border-left-color: var(--warn);
+      }
+      .overall--degraded h2 {
+        color: var(--warn);
+      }
+      .overall--down {
+        border-left-color: var(--down);
+      }
+      .overall--down h2 {
+        color: var(--down);
+      }
+      .overall--unknown {
+        border-left-color: var(--muted);
+      }
+      /* Meta row: last-checked + refresh */
+      .meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 6px 2px 18px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .refresh {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 9px;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: #1e3527;
+        color: var(--ink);
+      }
+      .refresh:hover {
+        border-color: var(--accent);
+      }
+      .refresh[disabled] {
+        opacity: 0.6;
+        cursor: default;
+      }
+      /* Per-service list */
+      .svc-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .svc {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 14px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 18px;
+      }
+      .svc .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        box-shadow: 0 0 0 4px transparent;
+      }
+      .dot--up {
+        background: var(--up);
+        box-shadow: 0 0 0 4px rgba(63, 191, 107, 0.15);
+      }
+      .dot--down {
+        background: var(--down);
+        box-shadow: 0 0 0 4px rgba(255, 138, 138, 0.15);
+      }
+      .svc .name {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .svc .desc {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 3px 0 0;
+      }
+      .proto {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: var(--accent-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 1px 8px;
+      }
+      .svc .right {
+        text-align: right;
+        white-space: nowrap;
+      }
+      .status-label {
+        font-weight: 700;
+        font-size: 14px;
+      }
+      .status-label.up {
+        color: var(--up);
+      }
+      .status-label.down {
+        color: var(--down);
+      }
+      .svc .detail {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 3px;
+      }
+      .state {
+        color: var(--muted);
+        padding: 40px 0;
+        text-align: center;
+      }
+      .legend {
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .legend .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .hidden {
+        display: none;
+      }
+      @media (max-width: 560px) {
+        .svc {
+          grid-template-columns: auto 1fr;
+        }
+        .svc .right {
+          grid-column: 2;
+          text-align: left;
+          margin-top: 6px;
+        }
+      }
+    </style>
+  </head>
+  <body class="agri-academy-page">
+    <div id="header-component"></div>
+    <div class="topbar"><a href="/agri-academy-units.html">← Certification units</a></div>
+    <header>
+      <div class="eyebrow">📡 AgriAcademy</div>
+      <h1>System Status</h1>
+      <p class="sub">Live health of the five external AgriAcademy services that power certification exams.</p>
+    </header>
+    <main>
+      <div id="overall" class="overall overall--unknown">
+        <span class="glyph" id="overallGlyph">⏳</span>
+        <div>
+          <h2 id="overallTitle">Checking status…</h2>
+          <p id="overallSub">Contacting the AgriAcademy service ecosystem.</p>
+        </div>
+      </div>
+
+      <div class="meta-row">
+        <span id="lastChecked">—</span>
+        <button id="refreshBtn" class="refresh"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+      </div>
+
+      <div id="services" class="svc-list"></div>
+      <div id="servicesState" class="state">Loading services…</div>
+
+      <div class="legend">
+        <span><i class="dot dot--up"></i> Operational</span>
+        <span><i class="dot dot--down"></i> Unreachable</span>
+        <span>Auto-refreshes every 5s</span>
+      </div>
+    </main>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("agri-academy");
+    </script>
+    <script>
+      (() => {
+        const $ = (id) => document.getElementById(id);
+        const esc = (s) =>
+          String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+        // Presentation metadata for the five known services (ordered logically).
+        // Anything unexpected still renders, appended at the end.
+        const SERVICES = {
+          "exam-center": { title: "Exam Center", desc: "Runtime gateway & orchestrator", proto: "REST", order: 0 },
+          authoring: { title: "Authoring", desc: "Units, exams & question authoring", proto: "REST", order: 1 },
+          "question-bank": { title: "Question Bank", desc: "Typed question pools", proto: "gRPC", order: 2 },
+          grading: { title: "Grading", desc: "Stateless attempt scorer", proto: "gRPC", order: 3 },
+          "certificate-issuer": { title: "Certificate Issuer", desc: "Mint / verify / revoke", proto: "REST", order: 4 },
+        };
+
+        const OVERALL = {
+          SERVING: { cls: "overall--op", glyph: "✅", title: "All systems operational", sub: "Every AgriAcademy service is up and responding." },
+          DEGRADED: { cls: "overall--degraded", glyph: "⚠️", title: "Degraded performance", sub: "One or more services are unreachable — some features may not work." },
+          DOWN: { cls: "overall--down", glyph: "⛔", title: "Major outage", sub: "The AgriAcademy ecosystem is unavailable." },
+          UNKNOWN: { cls: "overall--unknown", glyph: "❓", title: "Status unavailable", sub: "Couldn't reach the AgriAcademy status service." },
+        };
+
+        function humanUptime(ms) {
+          const n = Number(ms);
+          if (!Number.isFinite(n) || n <= 0) return "—";
+          const s = Math.floor(n / 1000);
+          const d = Math.floor(s / 86400);
+          const h = Math.floor((s % 86400) / 3600);
+          const m = Math.floor((s % 3600) / 60);
+          if (d) return `${d}d ${h}h`;
+          if (h) return `${h}h ${m}m`;
+          if (m) return `${m}m ${s % 60}s`;
+          return `${s}s`;
+        }
+
+        function setOverall(key) {
+          const o = OVERALL[key] || OVERALL.UNKNOWN;
+          const el = $("overall");
+          el.className = "overall " + o.cls;
+          $("overallGlyph").textContent = o.glyph;
+          $("overallTitle").textContent = o.title;
+          $("overallSub").textContent = o.sub;
+        }
+
+        function renderServices(services) {
+          const sorted = [...services].sort((a, b) => {
+            const oa = SERVICES[a.name]?.order ?? 99;
+            const ob = SERVICES[b.name]?.order ?? 99;
+            return oa - ob || String(a.name).localeCompare(String(b.name));
+          });
+          $("servicesState").style.display = "none";
+          $("services").innerHTML = sorted
+            .map((s) => {
+              const meta = SERVICES[s.name] || { title: s.name, desc: "", proto: "" };
+              const up = s.status === "SERVING";
+              return `
+                <div class="svc">
+                  <span class="dot ${up ? "dot--up" : "dot--down"}" title="${up ? "Operational" : "Unreachable"}"></span>
+                  <div>
+                    <p class="name">${esc(meta.title)} ${meta.proto ? `<span class="proto">${esc(meta.proto)}</span>` : ""}</p>
+                    <p class="desc">${esc(meta.desc)}</p>
+                  </div>
+                  <div class="right">
+                    <div class="status-label ${up ? "up" : "down"}">${up ? "Operational" : "Unreachable"}</div>
+                    <div class="detail">${up ? `${s.version ? "v" + esc(s.version) + " · " : ""}up ${humanUptime(s.uptimeMs)}` : "not responding"}</div>
+                  </div>
+                </div>`;
+            })
+            .join("");
+        }
+
+        async function load() {
+          const btn = $("refreshBtn");
+          btn.disabled = true;
+          let body = null;
+          let reached = false;
+          try {
+            // Public (no auth) status surface — read the body even on a 503, which
+            // still carries { overall, services } when the ecosystem is degraded.
+            const res = await fetch("/api/v1/agri-academy/status", { credentials: "include" });
+            body = await res.json().catch(() => null);
+            reached = true;
+          } catch {
+            reached = false;
+          }
+
+          if (!reached || !body || !Array.isArray(body.services)) {
+            // The gateway itself is unreachable (or returned an error shape).
+            setOverall("DOWN");
+            $("services").innerHTML = "";
+            $("servicesState").style.display = "block";
+            $("servicesState").textContent = "Cannot reach the AgriAcademy status service right now.";
+          } else {
+            setOverall(OVERALL[body.overall] ? body.overall : "UNKNOWN");
+            renderServices(body.services);
+          }
+          $("lastChecked").textContent = "Last checked: " + new Date().toLocaleTimeString();
+          btn.disabled = false;
+        }
+
+        $("refreshBtn").addEventListener("click", load);
+        load();
+        setInterval(load, 5000);
+      })();
+    </script>
+  </body>
+</html>

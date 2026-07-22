@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AgriAcademy — Take an exam</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/pages/agri-academy.css" />
+  <style>
+    :root {
+      --bg: #0f1a14;
+      --card: #16241b;
+      --ink: #eaf3ec;
+      --muted: #9bb3a4;
+      --accent: #3fae6b;
+      --accent-2: #7bd4a0;
+      --border: #24382b;
+      --danger: #ff8a8a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        "Segoe UI",
+        system-ui,
+        -apple-system,
+        sans-serif;
+      background: radial-gradient(1200px 600px at 80% -10%, #1c3326 0%, var(--bg) 55%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    a.back {
+      color: var(--accent-2);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent-2);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 8px 0 4px;
+      font-size: 30px;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 0 0 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0 0 12px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tag {
+      font-size: 12px;
+      background: #1e3527;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 10px;
+      color: var(--accent-2);
+    }
+
+    .tag.paid {
+      color: #ffd98a;
+      border-color: #4a3d1e;
+      background: #2a2313;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--accent);
+      background: linear-gradient(180deg, var(--accent), #2e8f55);
+      color: #06170d;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn[disabled] {
+      opacity: 0.55;
+      cursor: default;
+    }
+
+    .btn--ghost {
+      background: #1e3527;
+      color: var(--ink);
+      border-color: var(--border);
+      font-weight: 600;
+    }
+
+    .q {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    .q h4 {
+      margin: 0 0 12px;
+      font-size: 16px;
+    }
+
+    .opt {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .opt:hover {
+      border-color: var(--accent);
+    }
+
+    .banner {
+      margin: 16px 0;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #16241b;
+    }
+
+    .banner.err {
+      color: var(--danger);
+      border-color: #4a2626;
+      background: #2a1515;
+    }
+
+    .banner.ok {
+      color: var(--accent-2);
+    }
+
+    .banner.warn {
+      color: #ffd98a;
+      border-color: #4a3d1e;
+      background: #2a2313;
+    }
+
+    .state {
+      color: var(--muted);
+      padding: 32px 0;
+      text-align: center;
+    }
+
+    .result {
+      text-align: center;
+      padding: 28px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .score {
+      font-size: 48px;
+      font-weight: 800;
+      margin: 8px 0;
+    }
+
+    .pass {
+      color: var(--accent-2);
+    }
+
+    .fail {
+      color: var(--danger);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .timer {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    code {
+      background: #1e3527;
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: var(--accent-2);
+    }
+  </style>
+</head>
+
+<body class="agri-academy-page">
+  <div id="header-component"></div>
+  <div class="wrap">
+    <a class="back" href="/agri-academy-units.html">← All certification units</a>
+    <header>
+      <div class="eyebrow">🎓 AgriAcademy</div>
+      <h1>Take an exam</h1>
+      <p class="sub">Enroll in a published certification, sit the timed test, and earn a verifiable certificate.</p>
+    </header>
+
+    <div id="banner" class="banner hidden"></div>
+
+    <!-- Catalog view -->
+    <section id="catalog">
+      <div id="grid" class="grid"></div>
+      <div id="catalogState" class="state">Loading exams…</div>
+    </section>
+
+    <!-- Attempt view -->
+    <section id="attempt" class="hidden">
+      <div class="card" style="margin-top: 16px">
+        <h3 id="attemptTitle"></h3>
+        <div class="timer" id="attemptTimer"></div>
+      </div>
+      <div id="questions"></div>
+      <button id="submitBtn" class="btn">Submit exam</button>
+    </section>
+
+    <!-- Result view -->
+    <section id="result" class="hidden"></section>
+
+    <!-- My certificates -->
+    <section id="certsSection" style="margin-top: 40px">
+      <h2 style="font-size: 18px">My certificates</h2>
+      <div id="certs" class="grid"></div>
+      <div id="certsState" class="state">—</div>
+    </section>
+  </div>
+
+  <script src="/js/core/event-bus.js"></script>
+  <script src="/js/core/storage.js"></script>
+  <script src="/js/core/app.js"></script>
+  <script src="/js/services/api-service.js"></script>
+  <script src="/js/services/auth-service.js"></script>
+  <script src="/js/services/feature-flags-service.js"></script>
+  <script src="/js/components/notification.js"></script>
+  <script src="/js/components/navigation.js"></script>
+  <script src="/js/components.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils/error-logger.js"></script>
+  <script src="/js/utils/utils.js"></script>
+  <script src="/js/utils/global-compat.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/utils/init-navigation.js"></script>
+  <script>
+    initNavigation("agri-academy");
+  </script>
+  <script>
+    (() => {
+      const API = "/api/v1/agri-academy";
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) =>
+        String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+      const mins = (s) => Math.round((s || 0) / 60);
+
+      async function api(method, path, body) {
+        const opts = { method, credentials: "include" };
+        if (body) {
+          opts.headers = { "Content-Type": "application/json" };
+          opts.body = JSON.stringify(body);
+        }
+        let res;
+        try {
+          res = await fetch(`${API}${path}`, opts);
+        } catch {
+          return { ok: false, status: 0, body: { error: "AGRI_ACADEMY_OFFLINE" } };
+        }
+        const json = await res.json().catch(() => ({}));
+        return { ok: res.ok, status: res.status, body: json };
+      }
+
+      function banner(msg, kind) {
+        const el = $("banner");
+        el.textContent = msg;
+        el.className = "banner" + (kind ? " " + kind : "");
+        el.classList.remove("hidden");
+      }
+      function clearBanner() {
+        $("banner").classList.add("hidden");
+      }
+      function needLogin() {
+        banner("Please log in to enroll and take exams.", "err");
+        $("catalogState").innerHTML =
+          `You need an account. <a class="back" href="/login.html">Log in</a> or <a class="back" href="/register.html">register</a>.`;
+      }
+
+      let session = null; // active attempt session
+
+      // ── Catalog ────────────────────────────────────────────────────────────────
+      async function loadCatalog() {
+        const r = await api("GET", "/exams");
+        if (r.status === 401) return needLogin();
+        if (!r.ok) {
+          $("catalogState").textContent = "Could not load exams.";
+          return;
+        }
+        const exams = r.body.exams || [];
+        $("catalogState").style.display = exams.length ? "none" : "block";
+        if (!exams.length) $("catalogState").textContent = "No published exams yet.";
+        $("grid").innerHTML = exams
+          .map((e) => {
+            const paid = e.pricing && e.pricing.mode === "paid";
+            const price = paid ? `<span class="tag paid">${e.pricing.priceRol} ROL</span>` : `<span class="tag">Free</span>`;
+            return `
+              <div class="card">
+                <h3>${esc(e.title)}</h3>
+                <p>${esc(e.description || "")}</p>
+                <div class="meta">
+                  ${price}
+                  <span class="tag">${mins(e.durationSec)} min</span>
+                  <span class="tag">Pass ${e.passPct}%</span>
+                  <span class="tag">${e.attemptsAllowed} attempts</span>
+                </div>
+                <button class="btn" data-enroll="${esc(e.id)}">${paid ? "Pay &amp; enroll" : "Enroll"}</button>
+              </div>`;
+          })
+          .join("");
+        document
+          .querySelectorAll("[data-enroll]")
+          .forEach((b) => b.addEventListener("click", () => enroll(b.getAttribute("data-enroll"))));
+      }
+
+      // Restore the catalog view after a failed/aborted enroll so the loading
+      // state never gets stuck on screen.
+      function backToCatalog() {
+        $("attempt").classList.add("hidden");
+        $("result").classList.add("hidden");
+        $("catalog").classList.remove("hidden");
+        $("submitBtn").classList.remove("hidden");
+      }
+
+      // ── Enroll → start ───────────────────────────────────────────────────────────
+      async function enroll(examId) {
+        showStarting("Enrolling…");
+        const r = await api("POST", "/sessions", { examId });
+        if (r.status === 401) {
+          backToCatalog();
+          return needLogin();
+        }
+        if (r.status === 402) {
+          backToCatalog();
+          banner(`Insufficient ROL — you need ${r.body.needed} ROL (balance ${r.body.balance ?? "?"}).`, "err");
+          return;
+        }
+        if (r.status === 403 && r.body.error === "EXAM_LOCKED") {
+          backToCatalog();
+          banner(lockedMessage(r.body), "warn");
+          return;
+        }
+        if (!r.ok || !r.body.sessionId) {
+          backToCatalog();
+          banner(r.body.error || "Could not enroll.", "err");
+          return;
+        }
+        banner(r.body.charged ? `Enrolled — charged ${r.body.charged} ROL. Starting…` : "Enrolled. Starting…", "ok");
+        await startAttempt(r.body.sessionId);
+      }
+
+      // Friendly, non-scary text for an attempt lock (with the cooldown if known).
+      function lockedMessage(body) {
+        const until = Number(body && body.lockedUntil);
+        if (until && until > Date.now()) {
+          const mm = Math.max(1, Math.ceil((until - Date.now()) / 60000));
+          return `You've used all attempts for this exam. It's locked for about ${mm} more minute${mm === 1 ? "" : "s"} — try again after the cooldown.`;
+        }
+        return "You've used all attempts for this exam. Please try again after the cooldown.";
+      }
+
+      // Loading state shown while enrolling + starting (so an "enroll & take"
+      // deep-link never flashes the whole catalog before the attempt appears).
+      function showStarting(msg) {
+        clearBanner();
+        $("catalog").classList.add("hidden");
+        $("result").classList.add("hidden");
+        $("attempt").classList.remove("hidden");
+        $("attemptTitle").textContent = msg;
+        $("attemptTimer").textContent = "";
+        $("questions").innerHTML = "";
+        $("submitBtn").classList.add("hidden");
+      }
+
+      async function startAttempt(sessionId) {
+        const r = await api("POST", `/sessions/${encodeURIComponent(sessionId)}/start`);
+        if (r.status === 403 && r.body.error === "EXAM_LOCKED") {
+          backToCatalog();
+          banner(lockedMessage(r.body), "warn");
+          return;
+        }
+        if (r.status === 503) {
+          backToCatalog();
+          banner("The exam service is busy right now — please try again in a moment.", "warn");
+          return;
+        }
+        if (!r.ok || !r.body.questions) {
+          backToCatalog();
+          banner(r.body.error ? "Could not start: " + r.body.error : "Could not start the attempt.", "err");
+          return;
+        }
+        session = r.body;
+        renderAttempt();
+      }
+
+      // ── Attempt ──────────────────────────────────────────────────────────────────
+      function renderAttempt() {
+        clearBanner();
+        $("catalog").classList.add("hidden");
+        $("result").classList.add("hidden");
+        $("attempt").classList.remove("hidden");
+        $("submitBtn").classList.remove("hidden");
+        $("attemptTitle").textContent = "Answer all questions";
+        if (session.expiresAt) {
+          const left = Math.max(0, Math.round((session.expiresAt - Date.now()) / 1000));
+          $("attemptTimer").textContent = `Time remaining: ~${mins(left)} min`;
+        }
+        $("questions").innerHTML = (session.questions || [])
+          .map((q, i) => {
+            const inputType = q.type === "single" ? "radio" : "checkbox";
+            const opts = (q.options || [])
+              .map(
+                (o) => `
+                <label class="opt">
+                  <input type="${inputType}" name="q_${cssName(q.id)}" value="${esc(o.id)}" />
+                  <span>${esc(o.text)}</span>
+                </label>`,
+              )
+              .join("");
+            return `<div class="q"><h4>${i + 1}. ${esc(q.text)} <span class="tag">${q.type}</span></h4>${opts}</div>`;
+          })
+          .join("");
+      }
+
+      $("submitBtn").addEventListener("click", async () => {
+        $("submitBtn").disabled = true;
+        // Persist every answer, then submit.
+        for (const q of session.questions || []) {
+          const inputs = Array.from(document.querySelectorAll(`input[name="q_${cssName(q.id)}"]:checked`)).map((el) => el.value);
+          const answer = q.type === "single" ? (inputs[0] ?? null) : inputs;
+          await api("PUT", `/sessions/${encodeURIComponent(session.sessionId)}/answers/${encodeURIComponent(q.id)}`, { answer });
+        }
+        const r = await api("POST", `/sessions/${encodeURIComponent(session.sessionId)}/submit`);
+        $("submitBtn").disabled = false;
+        if (r.status === 202) {
+          banner("Grading is in progress — checking again…", "ok");
+          setTimeout(pollResult, 800);
+          return;
+        }
+        if (!r.ok || !r.body.result) {
+          banner(r.body.error || "Could not submit.", "err");
+          return;
+        }
+        renderResult(r.body.result);
+      });
+
+      // `name` attributes can't hold arbitrary chars safely; encode question ids.
+      function cssName(id) {
+        return String(id).replace(/[^a-zA-Z0-9_-]/g, "_");
+      }
+
+      async function pollResult() {
+        const r = await api("GET", `/sessions/${encodeURIComponent(session.sessionId)}`);
+        if (r.body.status === "grading_pending") {
+          setTimeout(pollResult, 1000);
+          return;
+        }
+        if (r.body.result) renderResult(r.body.result);
+      }
+
+      function renderResult(result) {
+        clearBanner();
+        $("attempt").classList.add("hidden");
+        const passed = result.passed;
+        const certLine =
+          result.certNo != null
+            ? `Certificate <code>${esc(result.certNo)}</code> — <a class="back" href="/agri-academy-certificate.html?cert=${encodeURIComponent(result.certNo)}" target="_blank">view certificate</a>`
+            : passed
+              ? "Certificate is being issued — check “My certificates”."
+              : "";
+        const examId = session && session.examId;
+        $("result").innerHTML = `
+          <div class="result">
+            <div class="eyebrow">${passed ? "Passed" : "Not passed"}</div>
+            <div class="score ${passed ? "pass" : "fail"}">${result.scorePct}%</div>
+            <p class="sub">${passed ? "Congratulations — you earned a certificate." : "You can retry within your remaining attempts."}</p>
+            <p>${certLine}</p>
+            ${passed || !examId ? "" : '<button class="btn" id="retryBtn">Try again</button>'}
+            <a class="btn btn--ghost" href="/agri-academy.html">Back to exams</a>
+          </div>`;
+        $("result").classList.remove("hidden");
+        const retry = document.getElementById("retryBtn");
+        if (retry) {
+          retry.addEventListener("click", () => {
+            $("result").classList.add("hidden");
+            $("catalog").classList.remove("hidden");
+            enroll(examId);
+          });
+        }
+        loadCerts();
+      }
+
+      // ── My certificates ───────────────────────────────────────────────────────────
+      async function loadCerts() {
+        const r = await api("GET", "/certificates");
+        if (r.status === 401) {
+          $("certsState").textContent = "Log in to see your certificates.";
+          return;
+        }
+        const certs = (r.body && r.body.certificates) || [];
+        $("certsState").style.display = certs.length ? "none" : "block";
+        if (!certs.length) $("certsState").textContent = "No certificates yet.";
+        $("certs").innerHTML = certs
+          .map(
+            (c) => `
+            <div class="card">
+              <h3>${esc(c.examTitle || c.examId)}</h3>
+              <p>Score ${c.scorePct}%</p>
+              <div class="meta"><span class="tag">${esc(c.certNo)}</span></div>
+              <a class="btn btn--ghost" href="/agri-academy-certificate.html?cert=${encodeURIComponent(c.certNo)}" target="_blank">View certificate</a>
+            </div>`,
+          )
+          .join("");
+      }
+
+      // ── Boot ────────────────────────────────────────────────────────────────────
+      (async function () {
+        const preselect = new URLSearchParams(location.search).get("exam");
+        if (preselect) {
+          // Arriving from an "enroll & take" link. Hide the catalog up front and go
+          // straight into the enroll → start flow so the full exam list never
+          // flashes before the attempt appears. Drop ?exam from the URL so a
+          // refresh (or the result screen) doesn't silently start another attempt.
+          history.replaceState({}, "", location.pathname);
+          $("catalog").classList.add("hidden");
+          await enroll(preselect);
+        }
+        await loadCatalog();
+        await loadCerts();
+      })();
+    })();
+  </script>
+</body>
+
+</html>

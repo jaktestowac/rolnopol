@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgriAcademy — Certificate</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+      body {
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        background: #0f1a14;
+      }
+      .toolbar {
+        width: 100%;
+        max-width: 860px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .toolbar a,
+      .toolbar button {
+        font-size: 14px;
+        color: #eaf3ec;
+        background: #1e3527;
+        border: 1px solid #24382b;
+        border-radius: 9px;
+        padding: 8px 14px;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .state {
+        color: #cfe9d7;
+        padding: 60px 20px;
+        text-align: center;
+      }
+      /* The certificate document — styled entirely from the template descriptor. */
+      .cert {
+        width: 100%;
+        max-width: 860px;
+        aspect-ratio: 1.414 / 1;
+        border-radius: 16px;
+        border: 3px solid;
+        padding: 48px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      }
+      .cert::after {
+        content: "";
+        position: absolute;
+        inset: 14px;
+        border: 1px solid currentColor;
+        opacity: 0.28;
+        border-radius: 10px;
+        pointer-events: none;
+      }
+      .motif {
+        font-size: 46px;
+        line-height: 1;
+      }
+      .kicker {
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        font-size: 14px;
+        font-weight: 700;
+        margin-top: 10px;
+      }
+      .holder {
+        font-size: clamp(28px, 6vw, 46px);
+        font-weight: 800;
+        margin: 14px 0 4px;
+      }
+      .lead,
+      .exam,
+      .issuer,
+      .meta {
+        margin: 2px 0;
+      }
+      .exam {
+        font-size: clamp(18px, 3vw, 24px);
+        font-weight: 700;
+      }
+      .rule {
+        width: 120px;
+        height: 3px;
+        border-radius: 2px;
+        margin: 16px 0;
+      }
+      .meta {
+        font-size: 13px;
+        margin-top: 8px;
+      }
+      .certno {
+        font-family: "Courier New", monospace;
+        letter-spacing: 0.08em;
+      }
+      .stamp {
+        position: absolute;
+        top: 26px;
+        right: 26px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        border: 2px solid;
+        border-radius: 8px;
+        padding: 6px 10px;
+        transform: rotate(6deg);
+      }
+      .stamp.valid {
+        color: #2e8f55;
+        border-color: #2e8f55;
+      }
+      .stamp.expired {
+        color: #b8912e;
+        border-color: #b8912e;
+      }
+      .stamp.revoked {
+        color: #b23a3a;
+        border-color: #b23a3a;
+      }
+      @media print {
+        body {
+          background: #fff;
+          padding: 0;
+        }
+        .toolbar {
+          display: none;
+        }
+        .cert {
+          box-shadow: none;
+          max-width: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <a href="/agri-academy-units.html">← AgriAcademy</a>
+      <button id="printBtn">🖨️ Print / Save PDF</button>
+    </div>
+    <div id="mount"></div>
+    <div id="state" class="state">Loading certificate…</div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) =>
+        String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+      const fmtDate = (iso) => {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        return isNaN(d) ? "—" : d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+      };
+
+      $("printBtn").addEventListener("click", () => window.print());
+
+      const certNo = new URLSearchParams(location.search).get("cert");
+
+      function render(v) {
+        const t = v.templateStyle || {};
+        document.body.style.background = t.bg || "#0f1a14";
+        const statusStamp = v.status === "valid" ? "" : `<div class="stamp ${esc(v.status)}">${esc(v.status)}</div>`;
+        const revokedNote = v.status === "revoked" && v.revokedReason ? `<div class="meta">Reason: ${esc(v.revokedReason)}</div>` : "";
+        $("state").style.display = "none";
+        $("mount").innerHTML = `
+          <div class="cert" style="background:${esc(t.panel || "#16241b")};border-color:${esc(t.accent || "#3fae6b")};color:${esc(t.ink || "#eaf3ec")};font-family:${t.font || "Georgia, serif"}">
+            ${statusStamp}
+            <div class="motif">${t.motif || "🎓"}</div>
+            <div class="kicker" style="color:${esc(t.accent || "#3fae6b")}">Certificate of Achievement</div>
+            <div class="holder">${esc(v.holder || "—")}</div>
+            <div class="lead" style="color:${esc(t.sub || "#9bb3a4")}">has successfully completed</div>
+            <div class="exam">${esc(v.examTitle || v.examId || "")}</div>
+            <div class="rule" style="background:${esc(t.accent || "#3fae6b")}"></div>
+            <div class="issuer" style="color:${esc(t.sub || "#9bb3a4")}">Issued by ${esc(v.unitName || v.unit || "AgriAcademy")}</div>
+            <div class="meta" style="color:${esc(t.sub || "#9bb3a4")}">Score ${v.scorePct != null ? v.scorePct + "%" : "—"} · Issued ${fmtDate(v.issuedAt)} · Valid until ${fmtDate(v.expiresAt)}</div>
+            <div class="meta certno" style="color:${esc(t.sub || "#9bb3a4")}">${esc(v.certNo || certNo || "")}</div>
+            ${revokedNote}
+          </div>`;
+      }
+
+      if (!certNo) {
+        $("state").textContent = "No certificate specified.";
+      } else {
+        fetch("/api/v1/agri-academy/verify/" + encodeURIComponent(certNo))
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))))
+          .then((v) => {
+            if (!v || v.status === "unknown") {
+              $("state").textContent = "Certificate not found.";
+              return;
+            }
+            render(v);
+          })
+          .catch(() => {
+            $("state").textContent = "This certificate could not be loaded.";
+          });
+      }
+    </script>
+  </body>
+</html>

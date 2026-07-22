@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgriAcademy — Certification Unit</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/agri-academy.css" />
+    <style>
+      :root {
+        --bg: #0f1a14;
+        --card: #16241b;
+        --ink: #eaf3ec;
+        --muted: #9bb3a4;
+        --accent: #3fae6b;
+        --accent-2: #7bd4a0;
+        --border: #24382b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: radial-gradient(1200px 600px at 80% -10%, #1c3326 0%, var(--bg) 55%);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      a.back {
+        color: var(--accent-2);
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .hero {
+        margin: 24px 0 8px;
+        padding: 32px;
+        background: linear-gradient(180deg, var(--card), #12201800);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      h1 {
+        margin: 8px 0;
+        font-size: 32px;
+      }
+      .desc {
+        color: var(--muted);
+        line-height: 1.6;
+        margin: 0;
+        max-width: 60ch;
+      }
+      h2.section {
+        margin: 28px 0 14px;
+        font-size: 18px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+      }
+      .exam {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px;
+      }
+      .exam h3 {
+        margin: 0 0 6px;
+        font-size: 17px;
+      }
+      .exam p {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 0 0 14px;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .tag {
+        font-size: 12px;
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 10px;
+        color: var(--accent-2);
+      }
+      .tag.free {
+        color: #cfe9d7;
+      }
+      .tag.paid {
+        color: #ffd98a;
+        border-color: #4a3d1e;
+        background: #2a2313;
+      }
+      .state {
+        color: var(--muted);
+        padding: 40px 0;
+        text-align: center;
+      }
+      .enroll {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 14px;
+        border: 1px solid var(--accent);
+        background: linear-gradient(180deg, var(--accent), #2e8f55);
+        color: #06170d;
+        border-radius: 9px;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .brand-head {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .ubadge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        font-size: 26px;
+        color: #06170d;
+        flex-shrink: 0;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+      }
+      .chip {
+        font-size: 12px;
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 10px;
+        color: var(--accent-2);
+      }
+    </style>
+  </head>
+  <body class="agri-academy-page">
+    <div id="header-component"></div>
+    <div class="wrap">
+      <a class="back" href="/agri-academy-units.html">← All units</a>
+      <div id="content"></div>
+      <div id="state" class="state">Loading…</div>
+    </div>
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("agri-academy");
+    </script>
+    <script>
+      (() => {
+        const content = document.getElementById("content");
+        const state = document.getElementById("state");
+        const esc = (s) =>
+          String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+        const unitId = new URLSearchParams(location.search).get("unit");
+        const mins = (s) => Math.round((s || 0) / 60);
+
+        if (!unitId) {
+          state.textContent = "No unit specified.";
+        } else {
+          fetch("/api/v1/agri-academy/units/" + encodeURIComponent(unitId))
+            .then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))))
+            .then((u) => {
+              state.style.display = "none";
+              const exams = u.exams || [];
+              const cards = exams.length
+                ? exams
+                    .map((e) => {
+                      const price =
+                        e.pricing && e.pricing.mode === "paid"
+                          ? `<span class="tag paid">${e.pricing.priceRol} ROL</span>`
+                          : `<span class="tag free">Free</span>`;
+                      return `
+                      <div class="exam">
+                        <h3>${esc(e.title)}</h3>
+                        <p>${esc(e.description || "")}</p>
+                        <div class="meta">
+                          ${price}
+                          <span class="tag">${mins(e.durationSec)} min</span>
+                          <span class="tag">Pass ${e.passPct}%</span>
+                          <span class="tag">${e.accessWindowDays}-day access</span>
+                        </div>
+                        <a class="enroll" href="/agri-academy.html?exam=${encodeURIComponent(e.id)}">Enroll &amp; take →</a>
+                      </div>`;
+                    })
+                    .join("")
+                : `<div class="state">No published exams yet.</div>`;
+              const color = u.color || "#3fae6b";
+              const icon = u.icon || "graduation-cap";
+              const chips = (u.tags || []).map((t) => `<span class="chip">${esc(t)}</span>`).join("");
+              content.innerHTML = `
+              <div class="hero" style="border-color:${esc(color)}">
+                <div class="brand-head">
+                  <div class="ubadge" style="background:${esc(color)}"><i class="fa-solid fa-${esc(icon)}"></i></div>
+                  <div>
+                    <div class="eyebrow">Certification Unit</div>
+                    <h1 style="margin:4px 0">${esc(u.name)}</h1>
+                  </div>
+                </div>
+                <p class="desc" style="margin-top:12px">${esc(u.description || "")}</p>
+                ${chips ? `<div class="chips">${chips}</div>` : ""}
+              </div>
+              <h2 class="section">Available certifications</h2>
+              <div class="grid">${cards}</div>`;
+            })
+            .catch(() => {
+              state.textContent = "This unit could not be loaded.";
+            });
+        }
+      })();
+    </script>
+  </body>
+</html>

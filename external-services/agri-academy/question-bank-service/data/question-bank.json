@@ -1,0 +1,2519 @@
+{
+  "version": 1,
+  "pools": {
+    "pesticide-basics": [
+      {
+        "id": "pb-q1",
+        "type": "single",
+        "text": "Which item is essential personal protective equipment when handling pesticides?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Chemical-resistant gloves"
+          },
+          {
+            "id": "b",
+            "text": "Open sandals"
+          },
+          {
+            "id": "c",
+            "text": "Sunglasses"
+          },
+          {
+            "id": "d",
+            "text": "Shorts"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q2",
+        "type": "multi",
+        "text": "Which of the following are safe pesticide-handling practices? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Read the product label before use"
+          },
+          {
+            "id": "b",
+            "text": "Mix indoors with no ventilation"
+          },
+          {
+            "id": "c",
+            "text": "Wear an approved respirator when required"
+          },
+          {
+            "id": "d",
+            "text": "Eat or drink while spraying"
+          }
+        ],
+        "correct": [
+          "a",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q3",
+        "type": "single",
+        "text": "Where should pesticides be stored?",
+        "options": [
+          {
+            "id": "a",
+            "text": "In a locked, ventilated cabinet away from food and feed"
+          },
+          {
+            "id": "b",
+            "text": "In the kitchen"
+          },
+          {
+            "id": "c",
+            "text": "In a child's bedroom"
+          },
+          {
+            "id": "d",
+            "text": "Loose in a car boot"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q4",
+        "type": "multi",
+        "text": "What should you do with empty pesticide containers? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Triple-rinse them"
+          },
+          {
+            "id": "b",
+            "text": "Reuse them for drinking water"
+          },
+          {
+            "id": "c",
+            "text": "Dispose of them per local regulations"
+          },
+          {
+            "id": "d",
+            "text": "Burn them in an open pile"
+          }
+        ],
+        "correct": [
+          "a",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q5",
+        "type": "single",
+        "text": "When should you read the product label?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Before buying, mixing, and applying the product"
+          },
+          {
+            "id": "b",
+            "text": "Only if you start to feel unwell"
+          },
+          {
+            "id": "c",
+            "text": "After the job is finished"
+          },
+          {
+            "id": "d",
+            "text": "Never — labels are optional"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q6",
+        "type": "single",
+        "text": "What does a label's \"re-entry interval\" tell you?",
+        "options": [
+          {
+            "id": "a",
+            "text": "How long to wait before re-entering a treated area"
+          },
+          {
+            "id": "b",
+            "text": "The product's shelf life"
+          },
+          {
+            "id": "c",
+            "text": "The dilution ratio"
+          },
+          {
+            "id": "d",
+            "text": "The container size"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q7",
+        "type": "multi",
+        "text": "Which conditions increase spray drift? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Strong wind"
+          },
+          {
+            "id": "b",
+            "text": "Very fine droplet size"
+          },
+          {
+            "id": "c",
+            "text": "Nozzle held at the correct low height"
+          },
+          {
+            "id": "d",
+            "text": "High temperature with low humidity"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q8",
+        "type": "single",
+        "text": "Pesticide is splashed into someone's eye. What is the correct first response?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Rinse with clean water for at least 15 minutes and seek medical help"
+          },
+          {
+            "id": "b",
+            "text": "Rub the eye vigorously"
+          },
+          {
+            "id": "c",
+            "text": "Wait to see if it clears on its own"
+          },
+          {
+            "id": "d",
+            "text": "Apply more product to neutralise it"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q9",
+        "type": "multi",
+        "text": "Good personal hygiene after handling pesticides includes: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Washing hands and face before eating"
+          },
+          {
+            "id": "b",
+            "text": "Changing out of contaminated clothing"
+          },
+          {
+            "id": "c",
+            "text": "Eating immediately without washing"
+          },
+          {
+            "id": "d",
+            "text": "Showering at the end of the day"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q10",
+        "type": "single",
+        "text": "Where should you mix and load to limit point-source contamination?",
+        "options": [
+          {
+            "id": "a",
+            "text": "On an impermeable, bunded area away from water sources"
+          },
+          {
+            "id": "b",
+            "text": "Next to an open stream"
+          },
+          {
+            "id": "c",
+            "text": "Directly over a storm drain"
+          },
+          {
+            "id": "d",
+            "text": "In the middle of the crop"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q11",
+        "type": "multi",
+        "text": "A pesticide application record should include: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Product name and application rate"
+          },
+          {
+            "id": "b",
+            "text": "Date and location"
+          },
+          {
+            "id": "c",
+            "text": "Weather conditions at the time"
+          },
+          {
+            "id": "d",
+            "text": "The operator's favourite colour"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q12",
+        "type": "single",
+        "text": "The signal word \"DANGER\" on a pesticide label means the product is:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Highly toxic — requires the greatest caution"
+          },
+          {
+            "id": "b",
+            "text": "Completely harmless"
+          },
+          {
+            "id": "c",
+            "text": "Exempt from PPE requirements"
+          },
+          {
+            "id": "d",
+            "text": "Past its expiry date"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q13",
+        "type": "single",
+        "text": "Why is it important to calibrate a sprayer?",
+        "options": [
+          {
+            "id": "a",
+            "text": "To apply the correct rate — not too much or too little"
+          },
+          {
+            "id": "b",
+            "text": "To make the tractor go faster"
+          },
+          {
+            "id": "c",
+            "text": "So the tank never needs cleaning"
+          },
+          {
+            "id": "d",
+            "text": "To avoid reading the label"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q14",
+        "type": "multi",
+        "text": "Which can be early signs of pesticide poisoning? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Headache and nausea"
+          },
+          {
+            "id": "b",
+            "text": "Excessive sweating"
+          },
+          {
+            "id": "c",
+            "text": "Improved eyesight"
+          },
+          {
+            "id": "d",
+            "text": "Dizziness"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q15",
+        "type": "single",
+        "text": "A no-spray buffer zone next to a watercourse exists mainly to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Protect water from contamination"
+          },
+          {
+            "id": "b",
+            "text": "Mark where to park"
+          },
+          {
+            "id": "c",
+            "text": "Allow a higher dose"
+          },
+          {
+            "id": "d",
+            "text": "Speed up drying"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "pb-q16",
+        "type": "single",
+        "text": "Checking tank-mix compatibility before combining products helps to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Avoid mixtures that clog nozzles or react badly"
+          },
+          {
+            "id": "b",
+            "text": "Create more foam"
+          },
+          {
+            "id": "c",
+            "text": "Change the spray colour"
+          },
+          {
+            "id": "d",
+            "text": "Make PPE unnecessary"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      }
+    ],
+    "tractor-safety": [
+      {
+        "id": "ts-q1",
+        "type": "single",
+        "text": "Before starting a tractor you should first:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Walk around it and check for hazards and bystanders"
+          },
+          {
+            "id": "b",
+            "text": "Rev the engine to maximum"
+          },
+          {
+            "id": "c",
+            "text": "Remove the seatbelt"
+          },
+          {
+            "id": "d",
+            "text": "Disable the brakes"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q2",
+        "type": "multi",
+        "text": "Which are recommended safety measures? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Use the roll-over protection structure (ROPS)"
+          },
+          {
+            "id": "b",
+            "text": "Fasten the seatbelt when ROPS is fitted"
+          },
+          {
+            "id": "c",
+            "text": "Carry extra riders on the drawbar"
+          },
+          {
+            "id": "d",
+            "text": "Keep bystanders clear of the working area"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q3",
+        "type": "single",
+        "text": "On a steep slope you should:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Drive straight up or down rather than across where possible"
+          },
+          {
+            "id": "b",
+            "text": "Turn sharply at speed"
+          },
+          {
+            "id": "c",
+            "text": "Raise heavy implements as high as possible"
+          },
+          {
+            "id": "d",
+            "text": "Disengage the handbrake and coast"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q4",
+        "type": "multi",
+        "text": "Which pre-operation checks are important? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Tyre pressure and condition"
+          },
+          {
+            "id": "b",
+            "text": "Brake and steering function"
+          },
+          {
+            "id": "c",
+            "text": "Whether the radio works"
+          },
+          {
+            "id": "d",
+            "text": "Guards and PTO shields in place"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q5",
+        "type": "single",
+        "text": "What is the safest way to mount or dismount a tractor?",
+        "options": [
+          {
+            "id": "a",
+            "text": "Maintain three points of contact, facing the machine"
+          },
+          {
+            "id": "b",
+            "text": "Jump off while it is still moving"
+          },
+          {
+            "id": "c",
+            "text": "Step down onto the rear tyre only"
+          },
+          {
+            "id": "d",
+            "text": "Climb out over the rear linkage"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q6",
+        "type": "multi",
+        "text": "Which are correct power take-off (PTO) safety rules? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Keep the PTO shields in place"
+          },
+          {
+            "id": "b",
+            "text": "Stop the PTO before dismounting"
+          },
+          {
+            "id": "c",
+            "text": "Wear loose clothing near the shaft"
+          },
+          {
+            "id": "d",
+            "text": "Never step over a rotating shaft"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q7",
+        "type": "single",
+        "text": "Carrying an extra rider on a tractor is:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Not allowed unless a proper instructor/passenger seat is fitted"
+          },
+          {
+            "id": "b",
+            "text": "Fine on the drawbar"
+          },
+          {
+            "id": "c",
+            "text": "Fine on the mudguard"
+          },
+          {
+            "id": "d",
+            "text": "Encouraged for company"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q8",
+        "type": "single",
+        "text": "If a tractor fitted with ROPS begins to roll over, you should:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Stay in the seat with the seatbelt fastened"
+          },
+          {
+            "id": "b",
+            "text": "Jump clear immediately"
+          },
+          {
+            "id": "c",
+            "text": "Stand up and grip the wheel harder"
+          },
+          {
+            "id": "d",
+            "text": "Turn sharply downhill"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q9",
+        "type": "multi",
+        "text": "Which are correct hitching practices? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Hitch towed loads only to the drawbar"
+          },
+          {
+            "id": "b",
+            "text": "Hitch high onto the axle for heavy pulls"
+          },
+          {
+            "id": "c",
+            "text": "Use the correct pins and safety chains"
+          },
+          {
+            "id": "d",
+            "text": "Keep others clear while hitching"
+          }
+        ],
+        "correct": [
+          "a",
+          "c",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q10",
+        "type": "single",
+        "text": "Before leaving the tractor you should:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Lower implements, apply the park brake, stop the engine, and remove the key"
+          },
+          {
+            "id": "b",
+            "text": "Leave it idling in gear"
+          },
+          {
+            "id": "c",
+            "text": "Leave raised implements up"
+          },
+          {
+            "id": "d",
+            "text": "Leave the key in for the next person"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q11",
+        "type": "multi",
+        "text": "Which apply when travelling on a public road? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Use lights and a slow-moving-vehicle emblem"
+          },
+          {
+            "id": "b",
+            "text": "Secure or lock mounted implements"
+          },
+          {
+            "id": "c",
+            "text": "Travel at full speed regardless of the load"
+          },
+          {
+            "id": "d",
+            "text": "Ensure the brakes are balanced"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q12",
+        "type": "single",
+        "text": "Correct ballast and tyre pressure matter mainly because they affect:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Stability and traction"
+          },
+          {
+            "id": "b",
+            "text": "Only fuel economy"
+          },
+          {
+            "id": "c",
+            "text": "Nothing important"
+          },
+          {
+            "id": "d",
+            "text": "Only the paintwork"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q13",
+        "type": "single",
+        "text": "A slow-moving-vehicle (SMV) emblem warns other road users that the vehicle:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Travels well below normal traffic speed"
+          },
+          {
+            "id": "b",
+            "text": "Is for sale"
+          },
+          {
+            "id": "c",
+            "text": "Always has right of way"
+          },
+          {
+            "id": "d",
+            "text": "Is about to stop permanently"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q14",
+        "type": "multi",
+        "text": "To reduce run-over risk when children may be nearby: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Know where everyone is before moving off"
+          },
+          {
+            "id": "b",
+            "text": "Keep children out of the work area"
+          },
+          {
+            "id": "c",
+            "text": "Let them ride in the loader bucket"
+          },
+          {
+            "id": "d",
+            "text": "Use a spotter when reversing"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q15",
+        "type": "single",
+        "text": "The differential lock is best used when:",
+        "options": [
+          {
+            "id": "a",
+            "text": "One wheel loses traction, at low speed in a straight line"
+          },
+          {
+            "id": "b",
+            "text": "Cornering fast on the road"
+          },
+          {
+            "id": "c",
+            "text": "Left engaged at all times"
+          },
+          {
+            "id": "d",
+            "text": "Parking on a slope"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "ts-q16",
+        "type": "single",
+        "text": "Refuelling a tractor should be done:",
+        "options": [
+          {
+            "id": "a",
+            "text": "With the engine off and away from ignition sources"
+          },
+          {
+            "id": "b",
+            "text": "While smoking"
+          },
+          {
+            "id": "c",
+            "text": "With the engine running to save time"
+          },
+          {
+            "id": "d",
+            "text": "In a sealed shed with no ventilation"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      }
+    ],
+    "exam-5": [
+      {
+        "id": "e5-q1",
+        "type": "single",
+        "text": "What does a standard soil test most commonly measure?",
+        "options": [
+          {
+            "id": "a",
+            "text": "pH and available nutrients"
+          },
+          {
+            "id": "b",
+            "text": "The colour of the sky"
+          },
+          {
+            "id": "c",
+            "text": "Ambient noise"
+          },
+          {
+            "id": "d",
+            "text": "Wind speed"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e5-q2",
+        "type": "single",
+        "text": "Why is soil organic matter valuable?",
+        "options": [
+          {
+            "id": "a",
+            "text": "It improves structure, water-holding, and nutrient supply"
+          },
+          {
+            "id": "b",
+            "text": "It makes soil heavier for no reason"
+          },
+          {
+            "id": "c",
+            "text": "It repels all earthworms"
+          },
+          {
+            "id": "d",
+            "text": "It has no effect"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e5-q3",
+        "type": "multi",
+        "text": "Which practices help build organic matter? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Adding compost or manure"
+          },
+          {
+            "id": "b",
+            "text": "Growing cover crops"
+          },
+          {
+            "id": "c",
+            "text": "Continuous bare fallow"
+          },
+          {
+            "id": "d",
+            "text": "Returning crop residues"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e5-q4",
+        "type": "single",
+        "text": "A soil pH of 4.5 is best described as:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Strongly acidic"
+          },
+          {
+            "id": "b",
+            "text": "Neutral"
+          },
+          {
+            "id": "c",
+            "text": "Strongly alkaline"
+          },
+          {
+            "id": "d",
+            "text": "Not measurable"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e5-q5",
+        "type": "multi",
+        "text": "Which are macronutrients essential for crops? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Nitrogen"
+          },
+          {
+            "id": "b",
+            "text": "Phosphorus"
+          },
+          {
+            "id": "c",
+            "text": "Potassium"
+          },
+          {
+            "id": "d",
+            "text": "Neon"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e5-q6",
+        "type": "single",
+        "text": "Applying nutrients based on a soil test rather than a fixed recipe helps to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Match supply to crop need and reduce waste"
+          },
+          {
+            "id": "b",
+            "text": "Guarantee lodging"
+          },
+          {
+            "id": "c",
+            "text": "Increase runoff on purpose"
+          },
+          {
+            "id": "d",
+            "text": "Skip the growing season"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e5-q7",
+        "type": "single",
+        "text": "Compaction in soil primarily reduces:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Root growth and water infiltration"
+          },
+          {
+            "id": "b",
+            "text": "The price of grain"
+          },
+          {
+            "id": "c",
+            "text": "Daylight hours"
+          },
+          {
+            "id": "d",
+            "text": "Seed colour"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e5-q8",
+        "type": "multi",
+        "text": "Which reduce nutrient loss to water? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Buffer strips near watercourses"
+          },
+          {
+            "id": "b",
+            "text": "Applying fertiliser before heavy rain"
+          },
+          {
+            "id": "c",
+            "text": "Incorporating fertiliser into the soil"
+          },
+          {
+            "id": "d",
+            "text": "Matching rate to crop demand"
+          }
+        ],
+        "correct": [
+          "a",
+          "c",
+          "d"
+        ],
+        "weight": 1
+      }
+    ],
+    "exam-6": [
+      {
+        "id": "e6-q1",
+        "type": "single",
+        "text": "In certified organic systems, synthetic nitrogen fertiliser is:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Prohibited"
+          },
+          {
+            "id": "b",
+            "text": "Required"
+          },
+          {
+            "id": "c",
+            "text": "Unlimited"
+          },
+          {
+            "id": "d",
+            "text": "Only used indoors"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e6-q2",
+        "type": "single",
+        "text": "The main purpose of the organic conversion period is to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Allow soil and system to meet organic standards before certified sale"
+          },
+          {
+            "id": "b",
+            "text": "Increase pesticide use"
+          },
+          {
+            "id": "c",
+            "text": "Skip inspections"
+          },
+          {
+            "id": "d",
+            "text": "Raise prices instantly"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e6-q3",
+        "type": "multi",
+        "text": "Which records are typically required for organic certification? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Input purchases and use"
+          },
+          {
+            "id": "b",
+            "text": "Field and crop histories"
+          },
+          {
+            "id": "c",
+            "text": "Harvest and sales records"
+          },
+          {
+            "id": "d",
+            "text": "Staff lunch preferences"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e6-q4",
+        "type": "single",
+        "text": "For organic weed control a grower would prefer:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Cultivation, mulching, and rotation"
+          },
+          {
+            "id": "b",
+            "text": "Broad-spectrum synthetic herbicide"
+          },
+          {
+            "id": "c",
+            "text": "Ignoring weeds entirely"
+          },
+          {
+            "id": "d",
+            "text": "Salting the whole field"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e6-q5",
+        "type": "multi",
+        "text": "Acceptable organic soil-fertility inputs often include: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Well-rotted compost"
+          },
+          {
+            "id": "b",
+            "text": "Approved animal manures"
+          },
+          {
+            "id": "c",
+            "text": "Green manures / legumes"
+          },
+          {
+            "id": "d",
+            "text": "Untested industrial sludge"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e6-q6",
+        "type": "single",
+        "text": "Buffer zones between organic and conventional land exist to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Prevent contamination and spray drift onto organic crops"
+          },
+          {
+            "id": "b",
+            "text": "Mark parking"
+          },
+          {
+            "id": "c",
+            "text": "Store fuel"
+          },
+          {
+            "id": "d",
+            "text": "Grow more weeds"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e6-q7",
+        "type": "single",
+        "text": "An organic inspection is usually carried out:",
+        "options": [
+          {
+            "id": "a",
+            "text": "At least annually by an approved certifier"
+          },
+          {
+            "id": "b",
+            "text": "Never"
+          },
+          {
+            "id": "c",
+            "text": "Only by the farmer themselves"
+          },
+          {
+            "id": "d",
+            "text": "Once a decade"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e6-q8",
+        "type": "multi",
+        "text": "Crop rotation in organic systems helps to: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Break pest and disease cycles"
+          },
+          {
+            "id": "b",
+            "text": "Manage soil fertility"
+          },
+          {
+            "id": "c",
+            "text": "Reduce weed pressure"
+          },
+          {
+            "id": "d",
+            "text": "Eliminate the need for any planning"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e6-q9",
+        "type": "single",
+        "text": "GMO seed in a certified organic crop is:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Not permitted"
+          },
+          {
+            "id": "b",
+            "text": "Encouraged"
+          },
+          {
+            "id": "c",
+            "text": "Mandatory"
+          },
+          {
+            "id": "d",
+            "text": "Only allowed at night"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e6-q10",
+        "type": "single",
+        "text": "Split, non-organic parallel production must be:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Clearly separated and documented"
+          },
+          {
+            "id": "b",
+            "text": "Hidden from the certifier"
+          },
+          {
+            "id": "c",
+            "text": "Mixed freely"
+          },
+          {
+            "id": "d",
+            "text": "Ignored"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      }
+    ],
+    "exam-7": [
+      {
+        "id": "e7-q1",
+        "type": "single",
+        "text": "Before harvesting, the combine header height should be set to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Suit the crop and cut cleanly without picking up soil"
+          },
+          {
+            "id": "b",
+            "text": "The maximum at all times"
+          },
+          {
+            "id": "c",
+            "text": "Below ground level"
+          },
+          {
+            "id": "d",
+            "text": "Whatever is fastest"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e7-q2",
+        "type": "multi",
+        "text": "Pre-harvest combine checks include: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Fire extinguisher present and charged"
+          },
+          {
+            "id": "b",
+            "text": "Belts, chains, and bearings inspected"
+          },
+          {
+            "id": "c",
+            "text": "Grain tank and unloading auger clear"
+          },
+          {
+            "id": "d",
+            "text": "Radio station tuned"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e7-q3",
+        "type": "single",
+        "text": "Excessive grain loss out the back of the combine often indicates:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Incorrect fan speed or concave settings"
+          },
+          {
+            "id": "b",
+            "text": "The paint is wrong"
+          },
+          {
+            "id": "c",
+            "text": "Too much daylight"
+          },
+          {
+            "id": "d",
+            "text": "Nothing adjustable"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e7-q4",
+        "type": "single",
+        "text": "Combine fires are most commonly caused by:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Chaff build-up near hot engine and bearing surfaces"
+          },
+          {
+            "id": "b",
+            "text": "Cold weather only"
+          },
+          {
+            "id": "c",
+            "text": "Clean machines"
+          },
+          {
+            "id": "d",
+            "text": "Low fuel exclusively"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e7-q5",
+        "type": "multi",
+        "text": "Safe unblocking of a plugged combine requires: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Engine off and key removed"
+          },
+          {
+            "id": "b",
+            "text": "Moving parts fully stopped"
+          },
+          {
+            "id": "c",
+            "text": "Reaching in while it runs"
+          },
+          {
+            "id": "d",
+            "text": "Following lockout procedure"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e7-q6",
+        "type": "single",
+        "text": "Higher drum/rotor speed than needed tends to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Increase grain damage and cracking"
+          },
+          {
+            "id": "b",
+            "text": "Improve germination"
+          },
+          {
+            "id": "c",
+            "text": "Reduce fuel use to zero"
+          },
+          {
+            "id": "d",
+            "text": "Have no effect"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e7-q7",
+        "type": "single",
+        "text": "When moving a combine on a public road you should:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Fit lights/markers and remove or secure the header per rules"
+          },
+          {
+            "id": "b",
+            "text": "Drive on the header"
+          },
+          {
+            "id": "c",
+            "text": "Travel at full field speed"
+          },
+          {
+            "id": "d",
+            "text": "Ignore other traffic"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e7-q8",
+        "type": "multi",
+        "text": "Signs the concave clearance is too tight include: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Cracked or broken grain"
+          },
+          {
+            "id": "b",
+            "text": "High power demand and slugging"
+          },
+          {
+            "id": "c",
+            "text": "Perfectly clean sample with no losses"
+          },
+          {
+            "id": "d",
+            "text": "Excess straw breakup"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      }
+    ],
+    "exam-8": [
+      {
+        "id": "e8-q1",
+        "type": "single",
+        "text": "Engine oil should be checked:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Regularly, with the machine level and engine off"
+          },
+          {
+            "id": "b",
+            "text": "Only when it seizes"
+          },
+          {
+            "id": "c",
+            "text": "Never"
+          },
+          {
+            "id": "d",
+            "text": "While driving"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e8-q2",
+        "type": "multi",
+        "text": "A good pre-season service includes: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Changing filters and fluids"
+          },
+          {
+            "id": "b",
+            "text": "Greasing points per the manual"
+          },
+          {
+            "id": "c",
+            "text": "Checking tyres and lights"
+          },
+          {
+            "id": "d",
+            "text": "Repainting the seat"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e8-q3",
+        "type": "single",
+        "text": "Grease points should be lubricated:",
+        "options": [
+          {
+            "id": "a",
+            "text": "At the intervals in the operator's manual"
+          },
+          {
+            "id": "b",
+            "text": "Once in the machine's lifetime"
+          },
+          {
+            "id": "c",
+            "text": "Only if they squeak loudly"
+          },
+          {
+            "id": "d",
+            "text": "Never, to save grease"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e8-q4",
+        "type": "single",
+        "text": "A slack drive belt will typically cause:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Slipping and poor power transfer"
+          },
+          {
+            "id": "b",
+            "text": "More horsepower"
+          },
+          {
+            "id": "c",
+            "text": "Better fuel economy"
+          },
+          {
+            "id": "d",
+            "text": "Nothing"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e8-q5",
+        "type": "multi",
+        "text": "Before working under a raised implement you should: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Use proper stands or locks"
+          },
+          {
+            "id": "b",
+            "text": "Rely only on hydraulics"
+          },
+          {
+            "id": "c",
+            "text": "Stop the engine and remove the key"
+          },
+          {
+            "id": "d",
+            "text": "Chock the wheels"
+          }
+        ],
+        "correct": [
+          "a",
+          "c",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e8-q6",
+        "type": "single",
+        "text": "Checking tyre pressures matters because it affects:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Traction, wear, and fuel use"
+          },
+          {
+            "id": "b",
+            "text": "Only the colour"
+          },
+          {
+            "id": "c",
+            "text": "The radio signal"
+          },
+          {
+            "id": "d",
+            "text": "Nothing measurable"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e8-q7",
+        "type": "single",
+        "text": "Old or contaminated hydraulic fluid can lead to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Component wear and poor performance"
+          },
+          {
+            "id": "b",
+            "text": "Improved lifespan"
+          },
+          {
+            "id": "c",
+            "text": "Faster ploughing guaranteed"
+          },
+          {
+            "id": "d",
+            "text": "No change at all"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e8-q8",
+        "type": "multi",
+        "text": "Keeping a maintenance log helps to: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Track service intervals"
+          },
+          {
+            "id": "b",
+            "text": "Spot recurring faults"
+          },
+          {
+            "id": "c",
+            "text": "Support resale value"
+          },
+          {
+            "id": "d",
+            "text": "Predict the weather"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      }
+    ],
+    "exam-9": [
+      {
+        "id": "e9-q1",
+        "type": "single",
+        "text": "Low-stress stock handling relies mainly on:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Understanding the animal's flight zone and point of balance"
+          },
+          {
+            "id": "b",
+            "text": "Shouting and hitting"
+          },
+          {
+            "id": "c",
+            "text": "Sudden loud noises"
+          },
+          {
+            "id": "d",
+            "text": "Chasing at speed"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e9-q2",
+        "type": "multi",
+        "text": "The 'five freedoms' of animal welfare include: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Freedom from hunger and thirst"
+          },
+          {
+            "id": "b",
+            "text": "Freedom from discomfort"
+          },
+          {
+            "id": "c",
+            "text": "Freedom to express normal behaviour"
+          },
+          {
+            "id": "d",
+            "text": "Freedom from ever being weighed"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e9-q3",
+        "type": "single",
+        "text": "A sick animal is often best managed by:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Isolating and observing it, and seeking veterinary advice"
+          },
+          {
+            "id": "b",
+            "text": "Mixing it with the whole herd"
+          },
+          {
+            "id": "c",
+            "text": "Ignoring it"
+          },
+          {
+            "id": "d",
+            "text": "Releasing it to roam"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e9-q4",
+        "type": "multi",
+        "text": "Signs of ill health in livestock include: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Off feed / not ruminating"
+          },
+          {
+            "id": "b",
+            "text": "Isolation from the group"
+          },
+          {
+            "id": "c",
+            "text": "Lameness"
+          },
+          {
+            "id": "d",
+            "text": "A shiny ear tag"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e9-q5",
+        "type": "single",
+        "text": "Good race and yard design should:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Use curves and solid sides to encourage smooth flow"
+          },
+          {
+            "id": "b",
+            "text": "Have sharp blind corners"
+          },
+          {
+            "id": "c",
+            "text": "Be as slippery as possible"
+          },
+          {
+            "id": "d",
+            "text": "Face directly into the sun"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e9-q6",
+        "type": "single",
+        "text": "Clean, fresh water for livestock should be:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Available at all times"
+          },
+          {
+            "id": "b",
+            "text": "Offered once a week"
+          },
+          {
+            "id": "c",
+            "text": "Only after work"
+          },
+          {
+            "id": "d",
+            "text": "Optional"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e9-q7",
+        "type": "multi",
+        "text": "Before transporting animals you should check: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "They are fit to travel"
+          },
+          {
+            "id": "b",
+            "text": "The vehicle is clean and safe"
+          },
+          {
+            "id": "c",
+            "text": "Stocking density is appropriate"
+          },
+          {
+            "id": "d",
+            "text": "The colour of the driver's hat"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      }
+    ],
+    "exam-10": [
+      {
+        "id": "e10-q1",
+        "type": "single",
+        "text": "Before attaching the cluster, teats should be:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Cleaned and, where used, fore-milked and pre-dipped"
+          },
+          {
+            "id": "b",
+            "text": "Left muddy"
+          },
+          {
+            "id": "c",
+            "text": "Painted"
+          },
+          {
+            "id": "d",
+            "text": "Ignored"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e10-q2",
+        "type": "multi",
+        "text": "Good milking hygiene includes: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Clean hands and gloves"
+          },
+          {
+            "id": "b",
+            "text": "Clean, dry teats before attaching"
+          },
+          {
+            "id": "c",
+            "text": "Post-milking teat disinfection"
+          },
+          {
+            "id": "d",
+            "text": "Skipping all cleaning to save time"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e10-q3",
+        "type": "single",
+        "text": "Rapid cooling of milk after collection is important to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Limit bacterial growth and protect quality"
+          },
+          {
+            "id": "b",
+            "text": "Change its colour"
+          },
+          {
+            "id": "c",
+            "text": "Increase somatic cells"
+          },
+          {
+            "id": "d",
+            "text": "Warm the parlour"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e10-q4",
+        "type": "single",
+        "text": "A high somatic cell count in milk often indicates:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Udder infection such as mastitis"
+          },
+          {
+            "id": "b",
+            "text": "Excellent udder health"
+          },
+          {
+            "id": "c",
+            "text": "Cold weather only"
+          },
+          {
+            "id": "d",
+            "text": "Nothing at all"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e10-q5",
+        "type": "multi",
+        "text": "Cleaning-in-place (CIP) of milking equipment typically uses: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "A warm detergent wash"
+          },
+          {
+            "id": "b",
+            "text": "An acid rinse cycle"
+          },
+          {
+            "id": "c",
+            "text": "Adequate water temperature and flow"
+          },
+          {
+            "id": "d",
+            "text": "Milk as the only cleaner"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e10-q6",
+        "type": "single",
+        "text": "Bulk tank milk temperature should generally be held:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Chilled to the required storage temperature"
+          },
+          {
+            "id": "b",
+            "text": "At room temperature"
+          },
+          {
+            "id": "c",
+            "text": "Near boiling"
+          },
+          {
+            "id": "d",
+            "text": "However is convenient"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      }
+    ],
+    "exam-11": [
+      {
+        "id": "e11-q1",
+        "type": "single",
+        "text": "The main goal of pruning a fruit tree is to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Improve structure, light, and fruiting"
+          },
+          {
+            "id": "b",
+            "text": "Remove as much wood as possible"
+          },
+          {
+            "id": "c",
+            "text": "Make it as tall as possible"
+          },
+          {
+            "id": "d",
+            "text": "Damage the tree"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e11-q2",
+        "type": "multi",
+        "text": "Which cuts/removals are commonly made? (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Dead, diseased, or damaged wood"
+          },
+          {
+            "id": "b",
+            "text": "Crossing or rubbing branches"
+          },
+          {
+            "id": "c",
+            "text": "Strong healthy scaffold limbs at random"
+          },
+          {
+            "id": "d",
+            "text": "Water shoots and suckers"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "d"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e11-q3",
+        "type": "single",
+        "text": "Most pip fruit (apples/pears) are best pruned:",
+        "options": [
+          {
+            "id": "a",
+            "text": "In the dormant season"
+          },
+          {
+            "id": "b",
+            "text": "At peak flowering only"
+          },
+          {
+            "id": "c",
+            "text": "During a storm"
+          },
+          {
+            "id": "d",
+            "text": "Never"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e11-q4",
+        "type": "single",
+        "text": "A pruning cut should be made:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Just above an outward-facing bud or at the branch collar"
+          },
+          {
+            "id": "b",
+            "text": "In the middle of an internode leaving a long stub"
+          },
+          {
+            "id": "c",
+            "text": "Flush, cutting into the trunk"
+          },
+          {
+            "id": "d",
+            "text": "Anywhere at random"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e11-q5",
+        "type": "multi",
+        "text": "Good pruning hygiene includes: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Using sharp, clean tools"
+          },
+          {
+            "id": "b",
+            "text": "Disinfecting tools between diseased trees"
+          },
+          {
+            "id": "c",
+            "text": "Removing prunings from around the tree"
+          },
+          {
+            "id": "d",
+            "text": "Tearing branches by hand"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      }
+    ],
+    "exam-12": [
+      {
+        "id": "e12-q1",
+        "type": "single",
+        "text": "Integrated Pest Management (IPM) prioritises:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Monitoring and combining methods, using chemicals as a last resort"
+          },
+          {
+            "id": "b",
+            "text": "Spraying on a fixed calendar regardless of pests"
+          },
+          {
+            "id": "c",
+            "text": "Never inspecting the crop"
+          },
+          {
+            "id": "d",
+            "text": "Only chemical control"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e12-q2",
+        "type": "single",
+        "text": "Powdery mildew on grapevines typically appears as:",
+        "options": [
+          {
+            "id": "a",
+            "text": "A white-grey powdery coating on leaves and berries"
+          },
+          {
+            "id": "b",
+            "text": "Bright red spots only"
+          },
+          {
+            "id": "c",
+            "text": "Blue fuzzy cubes"
+          },
+          {
+            "id": "d",
+            "text": "No visible sign"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e12-q3",
+        "type": "multi",
+        "text": "Cultural controls that reduce vine disease include: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Canopy management for airflow"
+          },
+          {
+            "id": "b",
+            "text": "Removing infected material"
+          },
+          {
+            "id": "c",
+            "text": "Appropriate row orientation and spacing"
+          },
+          {
+            "id": "d",
+            "text": "Leaving the canopy as dense as possible"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e12-q4",
+        "type": "single",
+        "text": "Scouting the vineyard regularly allows you to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Detect pests and disease early and act in time"
+          },
+          {
+            "id": "b",
+            "text": "Waste time"
+          },
+          {
+            "id": "c",
+            "text": "Guarantee no pests ever appear"
+          },
+          {
+            "id": "d",
+            "text": "Avoid all decisions"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e12-q5",
+        "type": "multi",
+        "text": "When applying an approved plant-protection product you should: (select all that apply)",
+        "options": [
+          {
+            "id": "a",
+            "text": "Follow the label rate and interval"
+          },
+          {
+            "id": "b",
+            "text": "Wear the specified PPE"
+          },
+          {
+            "id": "c",
+            "text": "Observe the pre-harvest interval"
+          },
+          {
+            "id": "d",
+            "text": "Spray in strong wind for wider coverage"
+          }
+        ],
+        "correct": [
+          "a",
+          "b",
+          "c"
+        ],
+        "weight": 1
+      },
+      {
+        "id": "e12-q6",
+        "type": "single",
+        "text": "Rotating chemical mode-of-action groups helps to:",
+        "options": [
+          {
+            "id": "a",
+            "text": "Slow the development of resistance"
+          },
+          {
+            "id": "b",
+            "text": "Speed up resistance"
+          },
+          {
+            "id": "c",
+            "text": "Change berry colour"
+          },
+          {
+            "id": "d",
+            "text": "Do nothing useful"
+          }
+        ],
+        "correct": [
+          "a"
+        ],
+        "weight": 1
+      }
+    ]
+  }
+}

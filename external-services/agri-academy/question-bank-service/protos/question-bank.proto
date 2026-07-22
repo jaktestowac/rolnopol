@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package questionbank;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Question bank — the single source of truth for AgriAcademy questions (typed:
+// `single` / `multi`, extensible). Dialed by BOTH gateways: the exam center
+// READS (DrawQuestions / GetAnswerKey), the authoring service WRITES
+// (UpsertQuestion / DeleteQuestion / ListQuestions). The bank holds no clients.
+//
+// Answer keys (`correct`) travel on the wire to the exam center (which strips
+// them before responding to takers) and to authoring (which owns its own keys).
+// ─────────────────────────────────────────────────────────────────────────────
+
+service Health {
+  rpc Check(HealthRequest) returns (HealthReply);
+}
+
+message HealthRequest {}
+message HealthReply {
+  string status = 1; // "SERVING" | "NOT_SERVING"
+  bool db_initialized = 2;
+  int32 exam_count = 3;
+  int32 question_count = 4;
+  string version = 5;
+  int64 uptime_ms = 6;
+}
+
+service QuestionBank {
+  // Read (exam center)
+  rpc DrawQuestions(DrawRequest) returns (QuestionList);
+  rpc GetAnswerKey(KeyRequest) returns (KeyReply);
+  // Write (authoring)
+  rpc UpsertQuestion(UpsertRequest) returns (Question);
+  rpc DeleteQuestion(DeleteRequest) returns (DeleteReply);
+  rpc ListQuestions(ListRequest) returns (QuestionList);
+}
+
+message Option {
+  string id = 1;
+  string text = 2;
+}
+
+message Question {
+  string id = 1;
+  string type = 2; // "single" | "multi"
+  string text = 3;
+  repeated Option options = 4;
+  repeated string correct = 5; // option ids — the answer KEY
+  int32 weight = 6;
+}
+
+// Seeded pseudo-random selection + per-question option shuffle. Same seed ⇒
+// identical draw (deterministic tests).
+message DrawRequest {
+  string exam_id = 1;
+  int32 count = 2;
+  int32 seed = 3;
+}
+
+message ListRequest {
+  string exam_id = 1;
+}
+
+message QuestionList {
+  repeated Question questions = 1;
+  int32 total = 2; // total pool size for the exam (before any count cap)
+}
+
+message KeyRequest {
+  string exam_id = 1;
+  repeated string question_ids = 2;
+}
+message AnswerKey {
+  string question_id = 1;
+  repeated string correct = 2;
+  int32 weight = 3;
+  string type = 4;
+}
+message KeyReply {
+  repeated AnswerKey keys = 1;
+}
+
+message UpsertRequest {
+  string exam_id = 1;
+  Question question = 2;
+}
+
+message DeleteRequest {
+  string exam_id = 1;
+  string question_id = 2;
+}
+message DeleteReply {
+  bool deleted = 1;
+}
