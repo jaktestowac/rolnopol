@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AgriAcademy — Leaderboards</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/pages/agri-academy.css" />
+  <style>
+    :root {
+      --bg: #0f1a14;
+      --card: #16241b;
+      --ink: #eaf3ec;
+      --muted: #9bb3a4;
+      --accent: #3fae6b;
+      --accent-2: #7bd4a0;
+      --border: #24382b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        "Segoe UI",
+        system-ui,
+        -apple-system,
+        sans-serif;
+      background: radial-gradient(1200px 600px at 80% -10%, #1c3326 0%, var(--bg) 55%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .topbar {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 20px 24px 0;
+    }
+
+    .topbar a {
+      color: var(--accent-2);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    header {
+      padding: 40px 24px 8px;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent-2);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 6px 0 4px;
+      font-size: 34px;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 0 0 8px;
+      max-width: 68ch;
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 16px 24px 64px;
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 18px 0 6px;
+    }
+
+    .stat {
+      background: linear-gradient(180deg, var(--card), #12201800);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      min-width: 130px;
+    }
+
+    .stat .n {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--accent-2);
+    }
+
+    .stat .l {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 18px 0 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab:hover {
+      color: var(--ink);
+    }
+
+    .tab.is-active {
+      color: var(--accent-2);
+      border-bottom-color: var(--accent);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .state {
+      color: var(--muted);
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin: 0 0 14px;
+    }
+
+    .ex-search {
+      flex: 1 1 260px;
+      max-width: 360px;
+      background: #0f1a14;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--ink);
+      padding: 9px 12px;
+      font-size: 14px;
+    }
+
+    .ex-select {
+      background: #0f1a14;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--ink);
+      padding: 9px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .atable-wrap {
+      overflow-x: auto;
+    }
+
+    .ex-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .ex-table th,
+    .ex-table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .ex-table th.num,
+    .ex-table td.num {
+      text-align: right;
+    }
+
+    .ex-table th[data-sort] {
+      cursor: pointer;
+      color: var(--muted);
+      user-select: none;
+      font-weight: 600;
+    }
+
+    .ex-table th[data-sort]:hover {
+      color: var(--ink);
+    }
+
+    .ex-table th.sort-asc::after {
+      content: " ▲";
+      font-size: 10px;
+      color: var(--accent-2);
+    }
+
+    .ex-table th.sort-desc::after {
+      content: " ▼";
+      font-size: 10px;
+      color: var(--accent-2);
+    }
+
+    .ex-table td {
+      color: var(--ink);
+    }
+
+    .ex-table tbody tr:hover {
+      background: #12201888;
+    }
+
+    .rank {
+      font-weight: 700;
+      color: var(--muted);
+      width: 44px;
+    }
+
+    .rank.top {
+      font-size: 16px;
+    }
+
+    .named {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ubadge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      font-size: 14px;
+      color: #06170d;
+      flex-shrink: 0;
+    }
+
+    .avatar {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      font-size: 13px;
+      background: #1e3527;
+      border: 1px solid var(--border);
+      color: var(--accent-2);
+      flex-shrink: 0;
+    }
+
+    .tag {
+      font-size: 12px;
+      background: #1e3527;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 10px;
+      color: var(--accent-2);
+    }
+
+    .tag.free {
+      color: #cfe9d7;
+    }
+
+    .tag.paid {
+      color: #ffd98a;
+      border-color: #4a3d1e;
+      background: #2a2313;
+    }
+
+    .pager {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0 4px;
+    }
+
+    .page-btn {
+      background: #1e3527;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--ink);
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+
+    .page-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+    }
+
+    .page-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .page-info {
+      color: var(--muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body class="agri-academy-page">
+  <div id="header-component"></div>
+  <div class="topbar"><a href="/agri-academy-units.html">← Certification units</a></div>
+  <header>
+    <div class="eyebrow">🏆 AgriAcademy</div>
+    <h1>Leaderboards</h1>
+    <p class="sub">
+      Anonymized standings across the whole AgriAcademy ecosystem — top certification units, top learners (shown under privacy-preserving aliases), and the highest-rated certifications.
+    </p>
+    <div id="stats" class="stats hidden"></div>
+  </header>
+  <main>
+    <div class="tabs">
+      <button class="tab is-active" data-tab="units"><i class="fa-solid fa-building-columns"></i> Top units</button>
+      <button class="tab" data-tab="learners"><i class="fa-solid fa-user-graduate"></i> Top learners</button>
+      <button class="tab" data-tab="exams"><i class="fa-solid fa-award"></i> Top certifications</button>
+    </div>
+    <div id="state" class="state">Loading leaderboards…</div>
+
+    <section id="board-units" class="board hidden">
+      <div class="toolbar">
+        <input class="ex-search" data-search type="search" placeholder="Search units…" />
+        <select class="ex-select" data-sortselect aria-label="Sort units"></select>
+      </div>
+      <div class="atable-wrap">
+        <table class="ex-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="pager hidden"></div>
+    </section>
+
+    <section id="board-learners" class="board hidden">
+      <div class="toolbar">
+        <input class="ex-search" data-search type="search" placeholder="Search learners…" />
+        <select class="ex-select" data-sortselect aria-label="Sort learners"></select>
+      </div>
+      <div class="atable-wrap">
+        <table class="ex-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="pager hidden"></div>
+    </section>
+
+    <section id="board-exams" class="board hidden">
+      <div class="toolbar">
+        <input class="ex-search" data-search type="search" placeholder="Search certifications…" />
+        <select class="ex-select" data-sortselect aria-label="Sort certifications"></select>
+      </div>
+      <div class="atable-wrap">
+        <table class="ex-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="pager hidden"></div>
+    </section>
+  </main>
+
+  <script src="/js/core/event-bus.js"></script>
+  <script src="/js/core/storage.js"></script>
+  <script src="/js/core/app.js"></script>
+  <script src="/js/services/api-service.js"></script>
+  <script src="/js/services/auth-service.js"></script>
+  <script src="/js/services/feature-flags-service.js"></script>
+  <script src="/js/components/notification.js"></script>
+  <script src="/js/components/navigation.js"></script>
+  <script src="/js/components.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/utils/error-logger.js"></script>
+  <script src="/js/utils/utils.js"></script>
+  <script src="/js/utils/global-compat.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/utils/init-navigation.js"></script>
+  <script>
+    initNavigation("agri-academy");
+  </script>
+  <script>
+    (() => {
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const esc = (s) =>
+        String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+      const pct = (n) => (n == null ? "—" : `${n}%`);
+      const initials = (name) =>
+        (String(name || "?")
+          .split(/\s+/)
+          .map((w) => w[0])
+          .filter((ch) => /[a-z0-9]/i.test(ch))
+          .slice(0, 2)
+          .join("") || "?").toUpperCase();
+      const stars = (n) => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
+      const medal = (rank) => (rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : String(rank));
+
+      const PAGE_SIZE = 10;
+
+      // A ranked board: sort ALL rows by the active column (position = standing in
+      // that order), then filter by the search query, then page 10 at a time.
+      function mountBoard(rootSel, columns, defaultKey, rows) {
+        const root = $(rootSel);
+        const thead = $("thead", root);
+        const tbody = $("tbody", root);
+        const searchEl = $("[data-search]", root);
+        const sortSel = $("[data-sortselect]", root);
+        const pagerEl = $(".pager", root);
+
+        let query = "";
+        let sortKey = defaultKey;
+        let sortDir = -1; // headline metrics rank high→low
+        let page = 1;
+
+        const col = (k) => columns.find((c) => c.key === k);
+
+        thead.innerHTML =
+          "<tr>" +
+          columns
+            .map((c) => `<th${c.num ? ' class="num"' : ""}${c.sortable === false ? "" : ` data-sort="${c.key}"`}>${esc(c.label)}</th>`)
+            .join("") +
+          "</tr>";
+
+        sortSel.innerHTML = columns
+          .filter((c) => c.sortable !== false)
+          .map((c) => `<option value="${c.key}">${esc(c.sortLabel || c.label)}</option>`)
+          .join("");
+        sortSel.value = sortKey;
+
+        function render() {
+          const c = col(sortKey) || col(defaultKey);
+          const sorted = rows.slice().sort((a, b) => {
+            const av = c.get(a);
+            const bv = c.get(b);
+            const cmp = typeof av === "string" ? av.localeCompare(bv) : av - bv;
+            return cmp === 0 ? 0 : cmp < 0 ? -sortDir : sortDir;
+          });
+          const positioned = sorted.map((r, i) => ({ row: r, pos: i + 1 }));
+          const q = query.trim().toLowerCase();
+          const filtered = q ? positioned.filter((p) => columns.some((cc) => cc.search && String(cc.get(p.row)).toLowerCase().includes(q))) : positioned;
+
+          const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+          if (page > totalPages) page = totalPages;
+          const start = (page - 1) * PAGE_SIZE;
+          const slice = filtered.slice(start, start + PAGE_SIZE);
+
+          tbody.innerHTML = slice.length
+            ? slice
+              .map(
+                ({ row, pos }) =>
+                  "<tr>" +
+                  `<td class="rank${pos <= 3 ? " top" : ""}">${medal(pos)}</td>` +
+                  columns
+                    .slice(1)
+                    .map((cc) => `<td${cc.num ? ' class="num"' : ""}>${cc.cell(row)}</td>`)
+                    .join("") +
+                  "</tr>",
+              )
+              .join("")
+            : `<tr><td colspan="${columns.length}" class="state" style="padding:20px 12px">No matches.</td></tr>`;
+
+          thead.querySelectorAll("th[data-sort]").forEach((th) => {
+            th.classList.toggle("sort-asc", sortKey === th.dataset.sort && sortDir === 1);
+            th.classList.toggle("sort-desc", sortKey === th.dataset.sort && sortDir === -1);
+          });
+
+          if (totalPages <= 1) {
+            pagerEl.classList.add("hidden");
+            pagerEl.innerHTML = "";
+          } else {
+            pagerEl.classList.remove("hidden");
+            pagerEl.innerHTML =
+              `<button class="page-btn" data-go="prev" ${page <= 1 ? "disabled" : ""}>← Prev</button>` +
+              `<span class="page-info">Page ${page} of ${totalPages} · ${filtered.length} shown</span>` +
+              `<button class="page-btn" data-go="next" ${page >= totalPages ? "disabled" : ""}>Next →</button>`;
+            $('[data-go="prev"]', pagerEl).onclick = () => page > 1 && ((page -= 1), render());
+            $('[data-go="next"]', pagerEl).onclick = () => page < totalPages && ((page += 1), render());
+          }
+        }
+
+        function applySort(key) {
+          if (sortKey === key) sortDir = -sortDir;
+          else {
+            sortKey = key;
+            sortDir = col(key).num === false ? 1 : -1; // text asc, numbers desc
+          }
+          sortSel.value = sortKey;
+          page = 1;
+          render();
+        }
+
+        thead.querySelectorAll("th[data-sort]").forEach((th) => th.addEventListener("click", () => applySort(th.dataset.sort)));
+        sortSel.addEventListener("change", (e) => applySort(e.target.value));
+        searchEl.addEventListener("input", (e) => {
+          query = e.target.value;
+          page = 1;
+          render();
+        });
+        render();
+      }
+
+      const unitColumns = [
+        { key: "rank", label: "#", sortable: false, get: (r) => r.rank, cell: () => "" },
+        {
+          key: "name",
+          label: "Unit",
+          num: false,
+          search: true,
+          sortLabel: "Name (A–Z)",
+          get: (r) => r.name || "",
+          cell: (r) =>
+            `<span class="named"><span class="ubadge" style="background:${esc(r.color || "#3fae6b")}"><i class="fa-solid fa-${esc(r.icon || "graduation-cap")}"></i></span>${esc(r.name)}</span>`,
+        },
+        {
+          key: "avgRating",
+          label: "Rating",
+          num: true,
+          sortLabel: "Rating (high→low)",
+          get: (r) => r.avgRating || 0,
+          cell: (r) =>
+            r.ratings
+              ? `<span title="${r.avgRating.toFixed(1)} from ${r.ratings} rating${r.ratings === 1 ? "" : "s"}"><span style="color:#ffce54">${stars(r.avgRating)}</span> <span style="color:var(--muted)">${r.avgRating.toFixed(1)} (${r.ratings})</span></span>`
+              : `<span style="color:var(--muted)">Unrated</span>`,
+        },
+        { key: "enrollments", label: "Enrolments", num: true, get: (r) => r.enrollments || 0, cell: (r) => r.enrollments || 0 },
+        { key: "learners", label: "Learners", num: true, get: (r) => r.learners || 0, cell: (r) => r.learners || 0 },
+        { key: "certificates", label: "Certificates", num: true, get: (r) => r.certificates || 0, cell: (r) => r.certificates || 0 },
+        { key: "passRate", label: "Pass rate", num: true, get: (r) => r.passRate || 0, cell: (r) => pct(r.passRate) },
+        { key: "avgScore", label: "Avg score", num: true, get: (r) => r.avgScore || 0, cell: (r) => pct(r.avgScore) },
+      ];
+
+      const learnerColumns = [
+        { key: "rank", label: "#", sortable: false, get: (r) => r.rank, cell: () => "" },
+        {
+          key: "alias",
+          label: "Learner",
+          num: false,
+          search: true,
+          sortLabel: "Alias (A–Z)",
+          get: (r) => r.alias || "",
+          cell: (r) => `<span class="named"><span class="avatar">${esc(initials(r.alias))}</span>${esc(r.alias)}</span>`,
+        },
+        { key: "enrollments", label: "Enrolled", num: true, get: (r) => r.enrollments || 0, cell: (r) => r.enrollments || 0 },
+        { key: "passed", label: "Passed", num: true, get: (r) => r.passed || 0, cell: (r) => r.passed || 0 },
+        { key: "certificates", label: "Certificates", num: true, get: (r) => r.certificates || 0, cell: (r) => r.certificates || 0 },
+        { key: "avgScore", label: "Avg score", num: true, get: (r) => r.avgScore || 0, cell: (r) => pct(r.avgScore) },
+        { key: "bestScore", label: "Best score", num: true, get: (r) => r.bestScore || 0, cell: (r) => pct(r.bestScore) },
+      ];
+
+      const examColumns = [
+        { key: "rank", label: "#", sortable: false, get: (r) => r.rank, cell: () => "" },
+        { key: "title", label: "Certification", num: false, search: true, sortLabel: "Name (A–Z)", get: (r) => r.title || "", cell: (r) => esc(r.title) },
+        { key: "unitName", label: "Unit", num: false, search: true, get: (r) => r.unitName || "", cell: (r) => esc(r.unitName || "—") },
+        {
+          key: "avgRating",
+          label: "Rating",
+          num: true,
+          sortLabel: "Rating (high→low)",
+          get: (r) => r.avgRating || 0,
+          cell: (r) =>
+            r.ratings
+              ? `<span title="${r.avgRating.toFixed(1)} from ${r.ratings} rating${r.ratings === 1 ? "" : "s"}"><span style="color:#ffce54">${stars(r.avgRating)}</span> <span style="color:var(--muted)">${r.avgRating.toFixed(1)} (${r.ratings})</span></span>`
+              : `<span style="color:var(--muted)">Unrated</span>`,
+        },
+        { key: "enrollments", label: "Enrolments", num: true, get: (r) => r.enrollments || 0, cell: (r) => r.enrollments || 0 },
+        { key: "passRate", label: "Pass rate", num: true, get: (r) => r.passRate || 0, cell: (r) => pct(r.passRate) },
+        { key: "avgScore", label: "Avg score", num: true, get: (r) => r.avgScore || 0, cell: (r) => pct(r.avgScore) },
+        {
+          key: "priceRol",
+          label: "Price",
+          num: true,
+          get: (r) => r.priceRol || 0,
+          cell: (r) => (r.mode === "paid" ? `<span class="tag paid">${r.priceRol} ROL</span>` : `<span class="tag free">Free</span>`),
+        },
+      ];
+
+      // Tabs
+      document.querySelectorAll(".tab").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          const name = btn.dataset.tab;
+          document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("is-active", b === btn));
+          for (const t of ["units", "learners", "exams"]) $("#board-" + t).classList.toggle("hidden", t !== name);
+        }),
+      );
+
+      async function load() {
+        let body;
+        try {
+          const r = await fetch("/api/v1/agri-academy/leaderboard", { credentials: "include" });
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          body = await r.json();
+        } catch {
+          $("#state").textContent = "Leaderboards are unavailable right now.";
+          return;
+        }
+        const t = body.totals || {};
+        $("#stats").innerHTML = [
+          { n: t.units ?? 0, l: "Units" },
+          { n: t.learners ?? 0, l: "Learners" },
+          { n: t.exams ?? 0, l: "Certifications" },
+          { n: t.certificates ?? 0, l: "Certificates issued" },
+        ]
+          .map((s) => `<div class="stat"><div class="n">${esc(s.n)}</div><div class="l">${esc(s.l)}</div></div>`)
+          .join("");
+        $("#stats").classList.remove("hidden");
+        $("#state").classList.add("hidden");
+        $("#board-units").classList.remove("hidden");
+
+        mountBoard("#board-units", unitColumns, "certificates", body.units || []);
+        mountBoard("#board-learners", learnerColumns, "certificates", body.learners || []);
+        mountBoard("#board-exams", examColumns, "avgRating", body.exams || []);
+      }
+
+      load();
+    })();
+  </script>
+</body>
+
+</html>

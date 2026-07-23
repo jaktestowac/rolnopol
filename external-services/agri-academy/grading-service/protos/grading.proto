@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package grading;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Grading — a STATELESS scorer. Score in, verdict out; it owns no data file and
+// holds no clients. Dialed only by the exam center at submit / lazy finalization.
+//
+// Scoring is dispatched PER QUESTION `type` by a strategy registry that mirrors
+// authoring's validation registry. The `type` string travels per item, so adding
+// a new question type is a new scoring strategy here (+ validation in authoring)
+// with NO proto change: `single` → full weight iff the one selected id equals the
+// key; `multi` → partial credit `(correctSelected − wrongSelected)` floored at 0,
+// ×weight. The answer key travels on each item — the exam center already holds it
+// (from the draw) and never lets it reach a taker.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service Health {
+  rpc Check(HealthRequest) returns (HealthReply);
+}
+
+message HealthRequest {}
+message HealthReply {
+  string status = 1; // "SERVING" | "NOT_SERVING"
+  string version = 2;
+  int64 uptime_ms = 3;
+}
+
+service Grading {
+  rpc GradeAttempt(GradeRequest) returns (GradeReply);
+}
+
+message GradeItem {
+  string question_id = 1;
+  string type = 2;            // "single" | "multi"
+  repeated string answer = 3; // option ids the taker selected
+  repeated string key = 4;    // option ids that are correct (the answer KEY)
+  int32 weight = 5;
+}
+
+message GradeRequest {
+  repeated GradeItem items = 1;
+  int32 pass_pct = 2;
+}
+
+message PerQuestion {
+  string question_id = 1;
+  bool correct = 2;    // fully correct
+  double awarded = 3;
+  double max = 4;
+}
+
+message GradeReply {
+  int32 score_pct = 1;
+  bool passed = 2; // score_pct >= pass_pct
+  repeated PerQuestion per_question = 3;
+}

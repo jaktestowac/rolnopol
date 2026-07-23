@@ -1,6 +1,6 @@
 {
   "name": "rolnopol-app",
-  "version": "1.68.0",
+  "version": "1.71.0",
   "description": "A Rolnopol app with JSON database, authentication, and admin panel",
   "main": "api/index.js",
   "scripts": {
@@ -34,6 +34,13 @@
     "tasklab": "node ./external-services/tasklab/tasklab-server/index.js",
     "tasklab:demo": "node ./external-services/tasklab/client-tasklab.js",
     "tasklab:test": "cross-env NODE_ENV=test vitest run tests/unit/tasklab.service.test.js && cross-env NODE_ENV=test vitest run tests/tasklab-grpc.test.js tests/tasklab-rest.test.js tests/tasklab-pages-gating.test.js",
+    "academy": "node ./external-services/agri-academy/start-all.js",
+    "academy:exam-center": "node ./external-services/agri-academy/exam-center-service/server/index.js",
+    "academy:authoring": "node ./external-services/agri-academy/authoring-service/server/index.js",
+    "academy:questions": "node ./external-services/agri-academy/question-bank-service/server/index.js",
+    "academy:grading": "node ./external-services/agri-academy/grading-service/server/index.js",
+    "academy:certs": "node ./external-services/agri-academy/certificate-issuer-service/server/index.js",
+    "academy:test": "cross-env NODE_ENV=test vitest run tests/unit/agri-academy.question-bank.test.js tests/unit/agri-academy.question-types.test.js tests/unit/agri-academy.grading.test.js tests/unit/agri-academy.certificates.test.js tests/unit/agri-academy.authoring.test.js tests/unit/agri-academy.exam-center.test.js tests/agri-academy-rest.test.js tests/agri-academy-payment.test.js tests/agri-academy-health.test.js tests/agri-academy-pages-gating.test.js tests/agri-academy-independence.test.js",
     "format": "npx prettier --write .",
     "bump-version": "node bump-version.js minor"
   },

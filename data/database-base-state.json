@@ -1566,12 +1566,15 @@
         "alertsEnabled": true,
         "alertsSeverityFilterEnabled": true,
         "alertsAiAssistantEnabled": false,
+        "celebrationEventsEnabled": false,
+        "terminalPorkySplitPersonalityEnabled": false,
         "profileAvatarUploadEnabled": false,
         "rolnopolMapEnabled": true,
         "docsSearchEnabled": false,
         "docsAdvancedSearchEnabled": false,
         "docsAiAssistantEnabled": false,
         "registrationStrongPasswordEnabled": false,
+        "twoFactorAuthEnabled": false,
         "contactFormEnabled": true,
         "staffFieldsExportEnabled": false,
         "financialReportsEnabled": false,
@@ -1590,6 +1593,7 @@
         "weatherWeatherDataExport": false,
         "weatherUserInsightsEnabled": false,
         "weatherTrendChartEnabled": false,
+        "weatherLiveStreamEnabled": false,
         "personalApiKeysEnabled": false,
         "integrationsWebhooksEnabled": false,
         "promoAdvertsHomeEnabled": false,
@@ -1599,9 +1603,14 @@
         "petBuddyEnabled": false,
         "rolnopolFarmlogEnabled": false,
         "rolnopolFarmlogEngagementEnabled": false,
-        "taskManagerEnabled": false
+        "taskManagerEnabled": false,
+        "taskLabEnabled": false,
+        "greenhouseControlRoomEnabled": false,
+        "farmStayEnabled": false,
+        "agriAcademyEnabled": true,
+        "observatoryEnabled": false
       },
-      "updatedAt": "2026-04-05T12:23:49.714Z"
+      "updatedAt": "2026-07-21T20:43:51.995Z"
     },
     "chaosEngine": {
       "mode": "off",
@@ -1622,7 +1631,11 @@
         "errorInjection": {
           "enabled": true,
           "probability": 0.06,
-          "statusCodes": [500, 502, 503],
+          "statusCodes": [
+            500,
+            502,
+            503
+          ],
           "randomStatus": false,
           "message": "[Chaos Engine] Injected a synthetic backend error."
         },
@@ -1636,8 +1649,21 @@
           "targetUrl": ""
         },
         "scope": {
-          "methods": ["GET", "POST", "PUT", "PATCH", "DELETE"],
-          "excludePaths": ["/v1/chaos-engine*", "/v1/healthcheck", "/version", "/metrics", "/admin", "/feature-flags"],
+          "methods": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
+          "excludePaths": [
+            "/v1/chaos-engine*",
+            "/v1/healthcheck",
+            "/version",
+            "/metrics",
+            "/admin",
+            "/feature-flags"
+          ],
           "includePaths": [],
           "queryParams": {},
           "headers": {},
@@ -1660,6 +1686,97 @@
     "messages": {
       "messages": []
     },
+    "farmlogPostLikes": [
+      {
+        "userId": "1",
+        "postId": 15,
+        "blogId": 3,
+        "createdAt": "2026-04-18T11:30:58.537Z",
+        "updatedAt": "2026-04-18T11:30:58.537Z",
+        "id": 1
+      },
+      {
+        "userId": "2",
+        "postId": 15,
+        "blogId": 3,
+        "createdAt": "2026-04-19T21:30:58.537Z",
+        "updatedAt": "2026-04-19T21:30:58.537Z",
+        "id": 2
+      },
+      {
+        "userId": "3",
+        "postId": 14,
+        "blogId": 3,
+        "createdAt": "2026-04-20T09:30:58.537Z",
+        "updatedAt": "2026-04-20T09:30:58.537Z",
+        "id": 3
+      },
+      {
+        "userId": "11",
+        "postId": 13,
+        "blogId": 3,
+        "createdAt": "2026-04-21T14:30:58.537Z",
+        "updatedAt": "2026-04-21T14:30:58.537Z",
+        "id": 4
+      },
+      {
+        "userId": "12",
+        "postId": 12,
+        "blogId": 3,
+        "createdAt": "2026-04-22T18:30:58.537Z",
+        "updatedAt": "2026-04-22T18:30:58.537Z",
+        "id": 5
+      },
+      {
+        "userId": "13",
+        "postId": 11,
+        "blogId": 3,
+        "createdAt": "2026-04-23T20:30:58.537Z",
+        "updatedAt": "2026-04-23T20:30:58.537Z",
+        "id": 6
+      },
+      {
+        "userId": "14",
+        "postId": 10,
+        "blogId": 3,
+        "createdAt": "2026-04-24T22:30:58.537Z",
+        "updatedAt": "2026-04-24T22:30:58.537Z",
+        "id": 7
+      },
+      {
+        "userId": "15",
+        "postId": 9,
+        "blogId": 3,
+        "createdAt": "2026-04-25T08:30:58.537Z",
+        "updatedAt": "2026-04-25T08:30:58.537Z",
+        "id": 8
+      },
+      {
+        "userId": "14",
+        "postId": 14,
+        "blogId": 3,
+        "createdAt": "2026-04-26T12:30:58.537Z",
+        "updatedAt": "2026-04-26T12:30:58.537Z",
+        "id": 9
+      },
+      {
+        "userId": "13",
+        "postId": 14,
+        "blogId": 3,
+        "createdAt": "2026-04-27T16:30:58.537Z",
+        "updatedAt": "2026-04-27T16:30:58.537Z",
+        "id": 10
+      },
+      {
+        "userId": "1",
+        "postId": 14,
+        "blogId": 3,
+        "createdAt": "2026-05-01T21:32:57.787Z",
+        "updatedAt": "2026-05-01T21:32:57.787Z",
+        "id": 11
+      }
+    ],
+    "farmlogFavorites": [],
     "webhooks": {
       "version": 1,
       "webhooks": [],
@@ -1694,7 +1811,11 @@
         "title": "My Voyage Blog",
         "slug": "my-voyage-blog",
         "visibility": "public",
-        "tags": ["voyage", "travel", "adventure"],
+        "tags": [
+          "voyage",
+          "travel",
+          "adventure"
+        ],
         "createdAt": "2026-04-11T12:12:09.916Z",
         "updatedAt": "2026-04-11T12:12:09.916Z",
         "deletedAt": null,
@@ -1706,7 +1827,11 @@
         "title": "Test Automation and AI in Testing",
         "slug": "test-automation-and-ai-in-testing",
         "visibility": "public",
-        "tags": ["test automation", "quality", "testers"],
+        "tags": [
+          "test automation",
+          "quality",
+          "testers"
+        ],
         "createdAt": "2026-04-12T12:12:09.916Z",
         "updatedAt": "2026-04-12T12:12:09.916Z",
         "deletedAt": null,
@@ -1718,7 +1843,11 @@
         "title": "Industrial Memory and Autonomous Infrastructure",
         "slug": "industrial-memory-and-autonomous-infrastructure",
         "visibility": "public",
-        "tags": ["infrastructure", "automation", "systems"],
+        "tags": [
+          "infrastructure",
+          "automation",
+          "systems"
+        ],
         "createdAt": "2026-04-21T09:42:17.204Z",
         "updatedAt": "2026-04-21T09:42:17.204Z",
         "deletedAt": null,
@@ -1932,102 +2061,6 @@
         "id": 18
       }
     ],
-    "farmlogPostLikes": [
-      {
-        "userId": "1",
-        "postId": 15,
-        "blogId": 3,
-        "createdAt": "2026-04-18T11:30:58.537Z",
-        "updatedAt": "2026-04-18T11:30:58.537Z",
-        "id": 1
-      },
-      {
-        "userId": "2",
-        "postId": 15,
-        "blogId": 3,
-        "createdAt": "2026-04-19T21:30:58.537Z",
-        "updatedAt": "2026-04-19T21:30:58.537Z",
-        "id": 2
-      },
-      {
-        "userId": "3",
-        "postId": 14,
-        "blogId": 3,
-        "createdAt": "2026-04-20T09:30:58.537Z",
-        "updatedAt": "2026-04-20T09:30:58.537Z",
-        "id": 3
-      },
-      {
-        "userId": "11",
-        "postId": 13,
-        "blogId": 3,
-        "createdAt": "2026-04-21T14:30:58.537Z",
-        "updatedAt": "2026-04-21T14:30:58.537Z",
-        "id": 4
-      },
-      {
-        "userId": "12",
-        "postId": 12,
-        "blogId": 3,
-        "createdAt": "2026-04-22T18:30:58.537Z",
-        "updatedAt": "2026-04-22T18:30:58.537Z",
-        "id": 5
-      },
-      {
-        "userId": "13",
-        "postId": 11,
-        "blogId": 3,
-        "createdAt": "2026-04-23T20:30:58.537Z",
-        "updatedAt": "2026-04-23T20:30:58.537Z",
-        "id": 6
-      },
-      {
-        "userId": "14",
-        "postId": 10,
-        "blogId": 3,
-        "createdAt": "2026-04-24T22:30:58.537Z",
-        "updatedAt": "2026-04-24T22:30:58.537Z",
-        "id": 7
-      },
-      {
-        "userId": "15",
-        "postId": 9,
-        "blogId": 3,
-        "createdAt": "2026-04-25T08:30:58.537Z",
-        "updatedAt": "2026-04-25T08:30:58.537Z",
-        "id": 8
-      },
-      {
-        "userId": "14",
-        "postId": 14,
-        "blogId": 3,
-        "createdAt": "2026-04-26T12:30:58.537Z",
-        "updatedAt": "2026-04-26T12:30:58.537Z",
-        "id": 9
-      },
-      {
-        "userId": "13",
-        "postId": 14,
-        "blogId": 3,
-        "createdAt": "2026-04-27T16:30:58.537Z",
-        "updatedAt": "2026-04-27T16:30:58.537Z",
-        "id": 10
-      },
-      {
-        "userId": "1",
-        "postId": 14,
-        "blogId": 3,
-        "createdAt": "2026-05-01T21:32:57.787Z",
-        "updatedAt": "2026-05-01T21:32:57.787Z",
-        "id": 11
-      }
-    ],
-    "farmlogFavorites": [],
-    "twoFactorAuth": {
-      "version": 1,
-      "keys": [],
-      "updatedAt": "2026-05-01T21:32:57.787Z"
-    },
     "personalApiKeys": {
       "version": 1,
       "keys": [],
@@ -2036,6 +2069,11 @@
     "userAvatars": {
       "version": 1,
       "avatars": [],
+      "updatedAt": "2026-05-01T21:32:57.787Z"
+    },
+    "twoFactorAuth": {
+      "version": 1,
+      "keys": [],
       "updatedAt": "2026-05-01T21:32:57.787Z"
     },
     "pets": {
@@ -2053,6 +2091,5814 @@
         "lastChecklistItemId": 0
       },
       "updatedAt": null
+    },
+    "notificationEvents": {
+      "events": [],
+      "metadata": {
+        "lastEventId": null,
+        "total": 0,
+        "lastUpdated": null
+      }
+    },
+    "notificationStore": {
+      "notifications": [],
+      "metadata": {
+        "lastNotificationId": null,
+        "total": 0,
+        "lastUpdated": null
+      }
+    },
+    "fdAchievements": {
+      "version": 1,
+      "players": {},
+      "updatedAt": null
+    },
+    "greenhouse": {
+      "version": 2,
+      "users": {},
+      "updatedAt": null
+    },
+    "tasklab": {
+      "version": 1,
+      "users": {},
+      "updatedAt": null
+    },
+    "farmStayInventory": {
+      "version": 1,
+      "seq": 25,
+      "properties": [
+        {
+          "id": "prop-oak-cottage",
+          "hostId": "1",
+          "name": "Oak Hill Cottage",
+          "district": "Karpacz",
+          "type": "cottage",
+          "capacity": 4,
+          "basePrice": 120,
+          "policy": "moderate",
+          "amenities": [
+            "kitchen",
+            "fireplace",
+            "parking"
+          ],
+          "photoRef": "forest",
+          "active": true
+        },
+        {
+          "id": "prop-meadow-room",
+          "hostId": "5",
+          "name": "Meadow View Room",
+          "district": "Zakopane",
+          "type": "room",
+          "capacity": 2,
+          "basePrice": 60,
+          "policy": "flexible",
+          "amenities": [
+            "breakfast",
+            "wifi"
+          ],
+          "photoRef": "meadow",
+          "active": true
+        },
+        {
+          "id": "prop-riverside-camp",
+          "hostId": "2",
+          "name": "Riverside Camping Spot",
+          "district": "Augustów",
+          "type": "camping",
+          "capacity": 6,
+          "basePrice": 35,
+          "policy": "strict",
+          "amenities": [
+            "firepit",
+            "water",
+            "kayaks"
+          ],
+          "photoRef": "lakeside",
+          "active": true
+        },
+        {
+          "id": "prop-barn-loft",
+          "hostId": "9",
+          "name": "Restored Barn Loft",
+          "district": "Wisła",
+          "type": "room",
+          "capacity": 3,
+          "basePrice": 95,
+          "policy": "moderate",
+          "amenities": [
+            "wifi",
+            "parking",
+            "animals"
+          ],
+          "photoRef": "barn",
+          "active": true
+        },
+        {
+          "id": "prop-5",
+          "hostId": "12",
+          "name": "Sunflower Guesthouse",
+          "district": "Wrocław",
+          "type": "cottage",
+          "capacity": 5,
+          "basePrice": 155,
+          "policy": "moderate",
+          "amenities": [
+            "kitchen",
+            "wifi",
+            "garden",
+            "parking"
+          ],
+          "photoRef": "meadow",
+          "active": true
+        },
+        {
+          "id": "prop-6",
+          "hostId": "1",
+          "name": "Mazurian Lakeside Cabin",
+          "district": "Giżycko",
+          "type": "cottage",
+          "capacity": 6,
+          "basePrice": 175,
+          "policy": "moderate",
+          "amenities": [
+            "fireplace",
+            "kayaks",
+            "fishing",
+            "parking"
+          ],
+          "photoRef": "lakeside",
+          "active": true
+        },
+        {
+          "id": "prop-7",
+          "hostId": "2",
+          "name": "Heritage Manor Room",
+          "district": "Kraków",
+          "type": "room",
+          "capacity": 2,
+          "basePrice": 110,
+          "policy": "flexible",
+          "amenities": [
+            "breakfast",
+            "wifi",
+            "spa"
+          ],
+          "photoRef": "vineyard",
+          "active": true
+        },
+        {
+          "id": "prop-8",
+          "hostId": "4",
+          "name": "Coastal Dunes Camping",
+          "district": "Kołobrzeg",
+          "type": "camping",
+          "capacity": 8,
+          "basePrice": 45,
+          "policy": "strict",
+          "amenities": [
+            "firepit",
+            "beach-access",
+            "water",
+            "shower"
+          ],
+          "photoRef": "lakeside",
+          "active": true
+        },
+        {
+          "id": "prop-9",
+          "hostId": "1",
+          "name": "Warsaw Garden Studio",
+          "district": "Warszawa",
+          "type": "room",
+          "capacity": 2,
+          "basePrice": 130,
+          "policy": "flexible",
+          "amenities": [
+            "wifi",
+            "gym",
+            "parking",
+            "breakfast"
+          ],
+          "photoRef": "orchard",
+          "active": true
+        },
+        {
+          "id": "prop-10",
+          "hostId": "6",
+          "name": "Kashubian Farmhouse",
+          "district": "Gdańsk",
+          "type": "cottage",
+          "capacity": 8,
+          "basePrice": 195,
+          "policy": "moderate",
+          "amenities": [
+            "kitchen",
+            "fireplace",
+            "garden",
+            "animals",
+            "parking"
+          ],
+          "photoRef": "barn",
+          "active": true
+        },
+        {
+          "id": "prop-11",
+          "hostId": "6",
+          "name": "Bieszczady Forest Camp",
+          "district": "Ustrzyki Dolne",
+          "type": "camping",
+          "capacity": 4,
+          "basePrice": 30,
+          "policy": "strict",
+          "amenities": [
+            "firepit",
+            "mountain-views",
+            "water"
+          ],
+          "photoRef": "forest",
+          "active": true
+        },
+        {
+          "id": "prop-12",
+          "hostId": "7",
+          "name": "Poznań Orchard House",
+          "district": "Poznań",
+          "type": "room",
+          "capacity": 3,
+          "basePrice": 85,
+          "policy": "moderate",
+          "amenities": [
+            "breakfast",
+            "garden",
+            "wifi",
+            "parking"
+          ],
+          "photoRef": "orchard",
+          "active": true
+        },
+        {
+          "id": "prop-13",
+          "hostId": "7",
+          "name": "Lubusz Vineyard Cottage",
+          "district": "Zielona Góra",
+          "type": "cottage",
+          "capacity": 4,
+          "basePrice": 140,
+          "policy": "moderate",
+          "amenities": [
+            "kitchen",
+            "wine-cellar",
+            "garden",
+            "parking"
+          ],
+          "photoRef": "vineyard",
+          "active": true
+        },
+        {
+          "id": "prop-14",
+          "hostId": "4",
+          "name": "Apple Orchard Loft",
+          "district": "Grójec",
+          "type": "room",
+          "capacity": 2,
+          "basePrice": 75,
+          "policy": "flexible",
+          "amenities": [
+            "breakfast",
+            "wifi",
+            "garden"
+          ],
+          "photoRef": "orchard",
+          "active": true
+        },
+        {
+          "id": "prop-19",
+          "hostId": "11",
+          "name": "Highland Shepherd Hut",
+          "district": "Szczyrk",
+          "type": "cottage",
+          "capacity": 2,
+          "basePrice": 90,
+          "policy": "strict",
+          "amenities": [
+            "fireplace",
+            "mountain-views",
+            "animals"
+          ],
+          "photoRef": "mountain",
+          "active": true
+        },
+        {
+          "id": "prop-20",
+          "hostId": "1",
+          "name": "Białowieża Forest Lodge",
+          "district": "Białowieża",
+          "type": "cottage",
+          "capacity": 5,
+          "basePrice": 165,
+          "policy": "moderate",
+          "amenities": [
+            "kitchen",
+            "fireplace",
+            "animals",
+            "parking",
+            "terrace"
+          ],
+          "photoRef": "forest",
+          "active": true
+        },
+        {
+          "id": "prop-21",
+          "hostId": "5",
+          "name": "Sopot Beach Cabin",
+          "district": "Sopot",
+          "type": "room",
+          "capacity": 2,
+          "basePrice": 145,
+          "policy": "flexible",
+          "amenities": [
+            "wifi",
+            "beach-access",
+            "breakfast",
+            "shower"
+          ],
+          "photoRef": "lakeside",
+          "active": true
+        },
+        {
+          "id": "prop-22",
+          "hostId": "2",
+          "name": "Roztocze Meadow Tent",
+          "district": "Zwierzyniec",
+          "type": "camping",
+          "capacity": 4,
+          "basePrice": 38,
+          "policy": "strict",
+          "amenities": [
+            "firepit",
+            "water",
+            "animals"
+          ],
+          "photoRef": "meadow",
+          "active": true
+        },
+        {
+          "id": "prop-23",
+          "hostId": "3",
+          "name": "Wine Hills Retreat",
+          "district": "Sandomierz",
+          "type": "cottage",
+          "capacity": 6,
+          "basePrice": 180,
+          "policy": "moderate",
+          "amenities": [
+            "kitchen",
+            "wine-cellar",
+            "terrace",
+            "garden",
+            "parking"
+          ],
+          "photoRef": "vineyard",
+          "active": true
+        },
+        {
+          "id": "prop-24",
+          "hostId": "4",
+          "name": "Tatra Panorama Suite",
+          "district": "Kościelisko",
+          "type": "room",
+          "capacity": 3,
+          "basePrice": 160,
+          "policy": "flexible",
+          "amenities": [
+            "breakfast",
+            "wifi",
+            "spa",
+            "mountain-views"
+          ],
+          "photoRef": "mountain",
+          "active": true
+        },
+        {
+          "id": "prop-25",
+          "hostId": "11",
+          "name": "Drawa River Kayak Camp",
+          "district": "Drawno",
+          "type": "camping",
+          "capacity": 6,
+          "basePrice": 42,
+          "policy": "moderate",
+          "amenities": [
+            "firepit",
+            "kayaks",
+            "fishing",
+            "water"
+          ],
+          "photoRef": "lakeside",
+          "active": true
+        }
+      ],
+      "calendars": {
+        "prop-oak-cottage": {
+          "locks": [
+            {
+              "lockId": "lock-4",
+              "from": "2026-03-05",
+              "to": "2026-03-08",
+              "kind": "confirmed"
+            }
+          ]
+        },
+        "prop-meadow-room": {
+          "locks": []
+        },
+        "prop-riverside-camp": {
+          "locks": []
+        },
+        "prop-barn-loft": {
+          "locks": []
+        },
+        "prop-5": {
+          "locks": [
+            {
+              "lockId": "lock-8",
+              "from": "2026-06-01",
+              "to": "2026-06-04",
+              "kind": "confirmed"
+            }
+          ]
+        },
+        "prop-6": {
+          "locks": [
+            {
+              "lockId": "lock-5",
+              "from": "2026-05-01",
+              "to": "2026-05-05",
+              "kind": "confirmed"
+            },
+            {
+              "lockId": "lock-12",
+              "from": "2026-08-12",
+              "to": "2026-08-16",
+              "kind": "confirmed"
+            },
+            {
+              "lockId": "lock-26",
+              "from": "2026-12-24",
+              "to": "2026-12-27",
+              "kind": "blackout"
+            }
+          ]
+        },
+        "prop-7": {
+          "locks": [
+            {
+              "lockId": "lock-1",
+              "from": "2026-04-10",
+              "to": "2026-04-13",
+              "kind": "confirmed"
+            },
+            {
+              "lockId": "lock-20",
+              "from": "2026-08-01",
+              "to": "2026-08-03",
+              "kind": "hold",
+              "expiresAt": "2026-07-16T12:08:00.000Z"
+            }
+          ]
+        },
+        "prop-8": {
+          "locks": [
+            {
+              "lockId": "lock-2",
+              "from": "2026-05-20",
+              "to": "2026-05-24",
+              "kind": "confirmed"
+            }
+          ]
+        },
+        "prop-9": {
+          "locks": [
+            {
+              "lockId": "lock-11",
+              "from": "2026-09-01",
+              "to": "2026-09-04",
+              "kind": "confirmed"
+            }
+          ]
+        },
+        "prop-10": {
+          "locks": [
+            {
+              "lockId": "lock-6",
+              "from": "2026-06-10",
+              "to": "2026-06-14",
+              "kind": "confirmed"
+            },
+            {
+              "lockId": "lock-13",
+              "from": "2026-08-20",
+              "to": "2026-08-24",
+              "kind": "confirmed"
+            }
+          ]
+        },
+        "prop-11": {
+          "locks": [
+            {
+              "lockId": "lock-7",
+              "from": "2026-04-22",
+              "to": "2026-04-25",
+              "kind": "confirmed"
+            }
+          ]
+        },
+        "prop-12": {
+          "locks": [
+            {
+              "lockId": "lock-3",
+              "from": "2026-02-14",
+              "to": "2026-02-17",
+              "kind": "confirmed"
+            }
+          ]
+        },
+        "prop-13": {
+          "locks": [
+            {
+              "lockId": "lock-17",
+              "from": "2026-09-20",
+              "to": "2026-09-23",
+              "kind": "confirmed"
+            }
+          ]
+        },
+        "prop-14": {
+          "locks": []
+        },
+        "prop-19": {
+          "locks": []
+        },
+        "prop-20": {
+          "locks": [
+            {
+              "lockId": "lock-10",
+              "from": "2026-05-28",
+              "to": "2026-06-02",
+              "kind": "confirmed"
+            },
+            {
+              "lockId": "lock-14",
+              "from": "2026-10-05",
+              "to": "2026-10-09",
+              "kind": "confirmed"
+            }
+          ]
+        },
+        "prop-21": {
+          "locks": [
+            {
+              "lockId": "lock-18",
+              "from": "2026-08-05",
+              "to": "2026-08-08",
+              "kind": "hold",
+              "expiresAt": "2026-07-16T12:08:00.000Z"
+            }
+          ]
+        },
+        "prop-22": {
+          "locks": [
+            {
+              "lockId": "lock-19",
+              "from": "2026-09-15",
+              "to": "2026-09-18",
+              "kind": "hold",
+              "expiresAt": "2026-07-16T12:08:00.000Z"
+            }
+          ]
+        },
+        "prop-23": {
+          "locks": [
+            {
+              "lockId": "lock-16",
+              "from": "2026-11-02",
+              "to": "2026-11-06",
+              "kind": "confirmed"
+            }
+          ]
+        },
+        "prop-24": {
+          "locks": [
+            {
+              "lockId": "lock-9",
+              "from": "2026-06-18",
+              "to": "2026-06-21",
+              "kind": "confirmed"
+            },
+            {
+              "lockId": "lock-15",
+              "from": "2026-08-28",
+              "to": "2026-08-31",
+              "kind": "confirmed"
+            },
+            {
+              "lockId": "lock-27",
+              "from": "2026-12-31",
+              "to": "2027-01-02",
+              "kind": "blackout"
+            }
+          ]
+        },
+        "prop-25": {
+          "locks": []
+        }
+      }
+    },
+    "farmStayReservations": {
+      "version": 1,
+      "seq": 25,
+      "bookings": [
+        {
+          "id": "bk-1",
+          "guestId": "1",
+          "propertyId": "prop-7",
+          "hostId": "2",
+          "from": "2026-04-10",
+          "to": "2026-04-13",
+          "guests": 2,
+          "quoteTotal": 363,
+          "policy": "flexible",
+          "createdAt": "2026-06-16T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-1",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-2",
+          "guestId": "1",
+          "propertyId": "prop-8",
+          "hostId": "4",
+          "from": "2026-05-20",
+          "to": "2026-05-24",
+          "guests": 3,
+          "quoteTotal": 193.5,
+          "policy": "strict",
+          "createdAt": "2026-06-15T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-2",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-3",
+          "guestId": "1",
+          "propertyId": "prop-12",
+          "hostId": "7",
+          "from": "2026-02-14",
+          "to": "2026-02-17",
+          "guests": 3,
+          "quoteTotal": 307.91,
+          "policy": "moderate",
+          "createdAt": "2026-06-14T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-3",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-4",
+          "guestId": "3",
+          "propertyId": "prop-oak-cottage",
+          "hostId": "1",
+          "from": "2026-03-05",
+          "to": "2026-03-08",
+          "guests": 2,
+          "quoteTotal": 396,
+          "policy": "moderate",
+          "createdAt": "2026-06-13T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-4",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-5",
+          "guestId": "4",
+          "propertyId": "prop-6",
+          "hostId": "1",
+          "from": "2026-05-01",
+          "to": "2026-05-05",
+          "guests": 3,
+          "quoteTotal": 752.5,
+          "policy": "moderate",
+          "createdAt": "2026-06-12T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-5",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-6",
+          "guestId": "2",
+          "propertyId": "prop-10",
+          "hostId": "6",
+          "from": "2026-06-10",
+          "to": "2026-06-14",
+          "guests": 4,
+          "quoteTotal": 1048.13,
+          "policy": "moderate",
+          "createdAt": "2026-06-11T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-6",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-7",
+          "guestId": "5",
+          "propertyId": "prop-11",
+          "hostId": "6",
+          "from": "2026-04-22",
+          "to": "2026-04-25",
+          "guests": 2,
+          "quoteTotal": 94.5,
+          "policy": "strict",
+          "createdAt": "2026-06-10T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-7",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-8",
+          "guestId": "7",
+          "propertyId": "prop-5",
+          "hostId": "12",
+          "from": "2026-06-01",
+          "to": "2026-06-04",
+          "guests": 3,
+          "quoteTotal": 581.25,
+          "policy": "moderate",
+          "createdAt": "2026-06-09T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-8",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-9",
+          "guestId": "6",
+          "propertyId": "prop-24",
+          "hostId": "4",
+          "from": "2026-06-18",
+          "to": "2026-06-21",
+          "guests": 3,
+          "quoteTotal": 660,
+          "policy": "flexible",
+          "createdAt": "2026-06-08T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-9",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-10",
+          "guestId": "3",
+          "propertyId": "prop-20",
+          "hostId": "1",
+          "from": "2026-05-28",
+          "to": "2026-06-02",
+          "guests": 2,
+          "quoteTotal": 915.75,
+          "policy": "moderate",
+          "createdAt": "2026-06-07T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-10",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-11",
+          "guestId": "2",
+          "propertyId": "prop-9",
+          "hostId": "1",
+          "from": "2026-09-01",
+          "to": "2026-09-04",
+          "guests": 2,
+          "quoteTotal": 390,
+          "policy": "flexible",
+          "createdAt": "2026-06-06T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-11",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-12",
+          "guestId": "2",
+          "propertyId": "prop-6",
+          "hostId": "1",
+          "from": "2026-08-12",
+          "to": "2026-08-16",
+          "guests": 4,
+          "quoteTotal": 940.63,
+          "policy": "moderate",
+          "createdAt": "2026-06-05T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-12",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-13",
+          "guestId": "1",
+          "propertyId": "prop-10",
+          "hostId": "6",
+          "from": "2026-08-20",
+          "to": "2026-08-24",
+          "guests": 2,
+          "quoteTotal": 1048.13,
+          "policy": "moderate",
+          "createdAt": "2026-06-04T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-13",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-14",
+          "guestId": "2",
+          "propertyId": "prop-20",
+          "hostId": "1",
+          "from": "2026-10-05",
+          "to": "2026-10-09",
+          "guests": 3,
+          "quoteTotal": 660,
+          "policy": "moderate",
+          "createdAt": "2026-06-03T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-14",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-15",
+          "guestId": "8",
+          "propertyId": "prop-24",
+          "hostId": "4",
+          "from": "2026-08-28",
+          "to": "2026-08-31",
+          "guests": 3,
+          "quoteTotal": 660,
+          "policy": "flexible",
+          "createdAt": "2026-06-02T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-15",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-16",
+          "guestId": "4",
+          "propertyId": "prop-23",
+          "hostId": "3",
+          "from": "2026-11-02",
+          "to": "2026-11-06",
+          "guests": 2,
+          "quoteTotal": 720,
+          "policy": "moderate",
+          "createdAt": "2026-06-01T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-16",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-17",
+          "guestId": "9",
+          "propertyId": "prop-13",
+          "hostId": "7",
+          "from": "2026-09-20",
+          "to": "2026-09-23",
+          "guests": 3,
+          "quoteTotal": 420,
+          "policy": "moderate",
+          "createdAt": "2026-05-31T12:00:00.000Z",
+          "state": "confirmed",
+          "lockId": "lock-17",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-18",
+          "guestId": "1",
+          "propertyId": "prop-21",
+          "hostId": "5",
+          "from": "2026-08-05",
+          "to": "2026-08-08",
+          "guests": 2,
+          "quoteTotal": 570.94,
+          "policy": "flexible",
+          "createdAt": "2026-05-30T12:00:00.000Z",
+          "state": "hold",
+          "lockId": "lock-18",
+          "holdExpiresAt": "2026-07-16T12:08:00.000Z"
+        },
+        {
+          "id": "bk-19",
+          "guestId": "5",
+          "propertyId": "prop-22",
+          "hostId": "2",
+          "from": "2026-09-15",
+          "to": "2026-09-18",
+          "guests": 2,
+          "quoteTotal": 114,
+          "policy": "strict",
+          "createdAt": "2026-05-29T12:00:00.000Z",
+          "state": "hold",
+          "lockId": "lock-19",
+          "holdExpiresAt": "2026-07-16T12:08:00.000Z"
+        },
+        {
+          "id": "bk-20",
+          "guestId": "9",
+          "propertyId": "prop-7",
+          "hostId": "2",
+          "from": "2026-08-01",
+          "to": "2026-08-03",
+          "guests": 2,
+          "quoteTotal": 295.63,
+          "policy": "flexible",
+          "createdAt": "2026-05-28T12:00:00.000Z",
+          "state": "hold",
+          "lockId": "lock-20",
+          "holdExpiresAt": "2026-07-16T12:08:00.000Z"
+        },
+        {
+          "id": "bk-21",
+          "guestId": "1",
+          "propertyId": "prop-25",
+          "hostId": "11",
+          "from": "2026-07-10",
+          "to": "2026-07-13",
+          "guests": 4,
+          "quoteTotal": 173.25,
+          "policy": "moderate",
+          "createdAt": "2026-05-27T12:00:00.000Z",
+          "state": "hold",
+          "lockId": "lock-21",
+          "holdExpiresAt": "2026-07-10T09:00:00.000Z"
+        },
+        {
+          "id": "bk-22",
+          "guestId": "2",
+          "propertyId": "prop-13",
+          "hostId": "7",
+          "from": "2026-07-01",
+          "to": "2026-07-04",
+          "guests": 2,
+          "quoteTotal": 551.25,
+          "policy": "moderate",
+          "createdAt": "2026-05-26T12:00:00.000Z",
+          "state": "hold",
+          "lockId": "lock-22",
+          "holdExpiresAt": "2026-07-01T09:00:00.000Z"
+        },
+        {
+          "id": "bk-23",
+          "guestId": "3",
+          "propertyId": "prop-oak-cottage",
+          "hostId": "1",
+          "from": "2026-06-25",
+          "to": "2026-06-28",
+          "guests": 3,
+          "quoteTotal": 495,
+          "policy": "moderate",
+          "createdAt": "2026-05-25T12:00:00.000Z",
+          "state": "cancelled",
+          "lockId": "lock-23",
+          "cancelledAt": "2026-06-05T10:00:00Z",
+          "refundPct": 100,
+          "releaseStatus": "done",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-24",
+          "guestId": "4",
+          "propertyId": "prop-5",
+          "hostId": "12",
+          "from": "2026-09-10",
+          "to": "2026-09-13",
+          "guests": 4,
+          "quoteTotal": 511.5,
+          "policy": "moderate",
+          "createdAt": "2026-05-24T12:00:00.000Z",
+          "state": "cancelled",
+          "lockId": "lock-24",
+          "cancelledAt": "2026-07-05T14:30:00Z",
+          "refundPct": 100,
+          "releaseStatus": "done",
+          "holdExpiresAt": ""
+        },
+        {
+          "id": "bk-25",
+          "guestId": "8",
+          "propertyId": "prop-11",
+          "hostId": "6",
+          "from": "2026-08-01",
+          "to": "2026-08-04",
+          "guests": 2,
+          "quoteTotal": 118.13,
+          "policy": "strict",
+          "createdAt": "2026-05-23T12:00:00.000Z",
+          "state": "cancelled",
+          "lockId": "lock-25",
+          "cancelledAt": "2026-07-14T09:15:00Z",
+          "refundPct": 50,
+          "releaseStatus": "done",
+          "holdExpiresAt": ""
+        }
+      ]
+    },
+    "farmStayReviews": {
+      "version": 1,
+      "seq": 10,
+      "reviews": [
+        {
+          "id": "rev-1",
+          "propertyId": "prop-7",
+          "bookingId": "bk-1",
+          "author": "1",
+          "rating": 5,
+          "text": "Charming manor room in the heart of Kraków — spotless and a wonderful breakfast.",
+          "createdAt": "2026-04-14T00:00:00.000Z"
+        },
+        {
+          "id": "rev-2",
+          "propertyId": "prop-8",
+          "bookingId": "bk-2",
+          "author": "1",
+          "rating": 4,
+          "text": "Great dunes camping, fell asleep to the waves. Showers could be warmer.",
+          "createdAt": "2026-05-25T00:00:00.000Z"
+        },
+        {
+          "id": "rev-3",
+          "propertyId": "prop-12",
+          "bookingId": "bk-3",
+          "author": "1",
+          "rating": 4,
+          "text": "Cosy orchard house, lovely hosts, quiet Poznań suburb.",
+          "createdAt": "2026-02-18T00:00:00.000Z"
+        },
+        {
+          "id": "rev-4",
+          "propertyId": "prop-oak-cottage",
+          "bookingId": "bk-4",
+          "author": "3",
+          "rating": 5,
+          "text": "The fireplace made the mountain evenings perfect. Highly recommend.",
+          "createdAt": "2026-03-09T00:00:00.000Z"
+        },
+        {
+          "id": "rev-5",
+          "propertyId": "prop-6",
+          "bookingId": "bk-5",
+          "author": "4",
+          "rating": 4,
+          "text": "Kayaks included and the lake view is unreal. Back next summer.",
+          "createdAt": "2026-05-06T00:00:00.000Z"
+        },
+        {
+          "id": "rev-6",
+          "propertyId": "prop-10",
+          "bookingId": "bk-6",
+          "author": "2",
+          "rating": 5,
+          "text": "Huge farmhouse, kids loved the animals. Everything as described.",
+          "createdAt": "2026-06-15T00:00:00.000Z"
+        },
+        {
+          "id": "rev-7",
+          "propertyId": "prop-11",
+          "bookingId": "bk-7",
+          "author": "5",
+          "rating": 3,
+          "text": "Beautiful forest but the nights were cold — bring a proper bag.",
+          "createdAt": "2026-04-26T00:00:00.000Z"
+        },
+        {
+          "id": "rev-8",
+          "propertyId": "prop-5",
+          "bookingId": "bk-8",
+          "author": "7",
+          "rating": 4,
+          "text": "Sunflower guesthouse is exactly the countryside escape we wanted.",
+          "createdAt": "2026-06-05T00:00:00.000Z"
+        },
+        {
+          "id": "rev-9",
+          "propertyId": "prop-24",
+          "bookingId": "bk-9",
+          "author": "6",
+          "rating": 5,
+          "text": "Waking up to the Tatras from bed — worth every złoty.",
+          "createdAt": "2026-06-22T00:00:00.000Z"
+        },
+        {
+          "id": "rev-10",
+          "propertyId": "prop-20",
+          "bookingId": "bk-10",
+          "author": "3",
+          "rating": 5,
+          "text": "Białowieża lodge is magical, saw a bison at dawn. Seven nights flew by.",
+          "createdAt": "2026-06-03T00:00:00.000Z"
+        }
+      ]
+    },
+    "agriAcademyAuthoring": {
+      "version": 1,
+      "seq": 12,
+      "units": {
+        "unit-demo": {
+          "unitId": "unit-demo",
+          "ownerUserId": "demo-owner",
+          "name": "Rolnopol Demo Certification Unit",
+          "description": "A built-in demo unit showcasing free farm-skill certifications. Register your own unit to author exams.",
+          "contactEmail": "demo@agri-academy.example",
+          "tags": [
+            "pesticides",
+            "tractors",
+            "safety"
+          ],
+          "color": "#3fae6b",
+          "icon": "wheat-awn",
+          "payoutUserId": "demo-owner",
+          "createdAt": "2026-07-21T20:43:37.454Z",
+          "status": "active"
+        },
+        "unit-1": {
+          "unitId": "unit-1",
+          "ownerUserId": "2",
+          "name": "Green Acres Training Co-op",
+          "description": "Farmer-led co-operative delivering practical certifications in soil health, nutrient management, and organic production.",
+          "contactEmail": "training@greenacres.coop",
+          "tags": [
+            "soil",
+            "crops",
+            "organic",
+            "nutrients"
+          ],
+          "color": "#2e8f55",
+          "icon": "seedling",
+          "payoutUserId": "2",
+          "createdAt": "2026-04-12T09:15:00.000Z",
+          "status": "active"
+        },
+        "unit-2": {
+          "unitId": "unit-2",
+          "ownerUserId": "3",
+          "name": "Ironfield Machinery School",
+          "description": "Hands-on operator training and safety certification for tractors, combines, and powered farm equipment.",
+          "contactEmail": "enrol@ironfield-machinery.example",
+          "tags": [
+            "machinery",
+            "tractors",
+            "safety",
+            "maintenance"
+          ],
+          "color": "#c9743a",
+          "icon": "tractor",
+          "payoutUserId": "3",
+          "createdAt": "2026-04-28T13:40:00.000Z",
+          "status": "active"
+        },
+        "unit-3": {
+          "unitId": "unit-3",
+          "ownerUserId": "4",
+          "name": "Meadowbrook Livestock & Welfare",
+          "description": "Animal-welfare and husbandry certifications for dairy, beef, and mixed livestock holdings.",
+          "contactEmail": "welfare@meadowbrook.example",
+          "tags": [
+            "livestock",
+            "dairy",
+            "welfare",
+            "animals"
+          ],
+          "color": "#4a90d9",
+          "icon": "cow",
+          "payoutUserId": "4",
+          "createdAt": "2026-05-06T08:05:00.000Z",
+          "status": "active"
+        },
+        "unit-4": {
+          "unitId": "unit-4",
+          "ownerUserId": "5",
+          "name": "Orchard & Vine Guild",
+          "description": "Horticulture certifications covering fruit-tree management, pruning, and vineyard pest control.",
+          "contactEmail": "guild@orchardandvine.example",
+          "tags": [
+            "orchard",
+            "vineyard",
+            "pruning",
+            "horticulture"
+          ],
+          "color": "#8b5cf6",
+          "icon": "apple-whole",
+          "payoutUserId": "5",
+          "createdAt": "2026-05-19T15:22:00.000Z",
+          "status": "active"
+        }
+      },
+      "exams": {
+        "pesticide-basics": {
+          "id": "pesticide-basics",
+          "ownerUnitId": "unit-demo",
+          "title": "Pesticide Handling Basics",
+          "description": "Core safety rules for storing, mixing, and applying agricultural pesticides.",
+          "questionCount": 3,
+          "durationSec": 1800,
+          "accessWindowDays": 7,
+          "passPct": 60,
+          "attemptsAllowed": 3,
+          "certValidMonths": 24,
+          "certTemplate": "botanical",
+          "pricing": {
+            "mode": "free",
+            "priceRol": 0
+          },
+          "status": "published",
+          "createdAt": "2026-07-21T20:43:37.454Z",
+          "updatedAt": "2026-07-21T20:43:37.454Z"
+        },
+        "tractor-safety": {
+          "id": "tractor-safety",
+          "ownerUnitId": "unit-demo",
+          "title": "Tractor Safety",
+          "description": "Safe operation, maintenance checks, and hazard awareness for farm tractors.",
+          "questionCount": 3,
+          "durationSec": 1200,
+          "accessWindowDays": 14,
+          "passPct": 70,
+          "attemptsAllowed": 3,
+          "certValidMonths": 24,
+          "certTemplate": "gold-formal",
+          "pricing": {
+            "mode": "free",
+            "priceRol": 0
+          },
+          "status": "published",
+          "createdAt": "2026-07-21T20:43:37.454Z",
+          "updatedAt": "2026-07-21T20:43:37.454Z"
+        },
+        "demo-quiz": {
+          "id": "demo-quiz",
+          "ownerUnitId": "unit-demo",
+          "title": "Farm Safety Quick Check",
+          "description": "A quick two-question taster covering everyday farm-safety basics.",
+          "questionCount": 2,
+          "durationSec": 600,
+          "accessWindowDays": 7,
+          "passPct": 50,
+          "attemptsAllowed": 3,
+          "certValidMonths": 24,
+          "certTemplate": "classic-green",
+          "pricing": {
+            "mode": "free",
+            "priceRol": 0
+          },
+          "status": "published",
+          "createdAt": "2026-07-21T20:43:37.454Z",
+          "updatedAt": "2026-07-21T20:43:37.454Z"
+        },
+        "exam-5": {
+          "id": "exam-5",
+          "ownerUnitId": "unit-1",
+          "title": "Soil Health & Nutrient Management",
+          "description": "Understanding soil structure, testing, organic matter, and balanced nutrient application.",
+          "questionCount": 6,
+          "durationSec": 1800,
+          "accessWindowDays": 14,
+          "passPct": 60,
+          "attemptsAllowed": 3,
+          "certValidMonths": 24,
+          "certTemplate": "botanical",
+          "pricing": {
+            "mode": "free",
+            "priceRol": 0
+          },
+          "status": "published",
+          "createdAt": "2026-04-15T10:00:00.000Z",
+          "updatedAt": "2026-04-15T10:00:00.000Z"
+        },
+        "exam-6": {
+          "id": "exam-6",
+          "ownerUnitId": "unit-1",
+          "title": "Organic Farming Certification",
+          "description": "Standards, record-keeping, and prohibited inputs for certified organic crop production.",
+          "questionCount": 8,
+          "durationSec": 2400,
+          "accessWindowDays": 30,
+          "passPct": 75,
+          "attemptsAllowed": 2,
+          "certValidMonths": 36,
+          "certTemplate": "classic-green",
+          "pricing": {
+            "mode": "paid",
+            "priceRol": 25
+          },
+          "status": "published",
+          "createdAt": "2026-04-20T11:30:00.000Z",
+          "updatedAt": "2026-04-20T11:30:00.000Z"
+        },
+        "exam-7": {
+          "id": "exam-7",
+          "ownerUnitId": "unit-2",
+          "title": "Combine Harvester Operation",
+          "description": "Safe set-up, in-field operation, and settings for grain and oilseed harvesting.",
+          "questionCount": 7,
+          "durationSec": 2100,
+          "accessWindowDays": 21,
+          "passPct": 75,
+          "attemptsAllowed": 3,
+          "certValidMonths": 24,
+          "certTemplate": "rustic-kraft",
+          "pricing": {
+            "mode": "paid",
+            "priceRol": 40
+          },
+          "status": "published",
+          "createdAt": "2026-05-01T09:00:00.000Z",
+          "updatedAt": "2026-05-01T09:00:00.000Z"
+        },
+        "exam-8": {
+          "id": "exam-8",
+          "ownerUnitId": "unit-2",
+          "title": "Farm Machinery Maintenance",
+          "description": "Routine servicing, lubrication, and pre-season checks for common farm machinery.",
+          "questionCount": 6,
+          "durationSec": 1500,
+          "accessWindowDays": 14,
+          "passPct": 70,
+          "attemptsAllowed": 3,
+          "certValidMonths": 18,
+          "certTemplate": "slate-minimal",
+          "pricing": {
+            "mode": "free",
+            "priceRol": 0
+          },
+          "status": "published",
+          "createdAt": "2026-05-03T14:10:00.000Z",
+          "updatedAt": "2026-05-03T14:10:00.000Z"
+        },
+        "exam-9": {
+          "id": "exam-9",
+          "ownerUnitId": "unit-3",
+          "title": "Livestock Welfare & Handling",
+          "description": "Low-stress handling, the five freedoms, and recognising signs of ill health.",
+          "questionCount": 7,
+          "durationSec": 1800,
+          "accessWindowDays": 21,
+          "passPct": 70,
+          "attemptsAllowed": 3,
+          "certValidMonths": 24,
+          "certTemplate": "modern-teal",
+          "pricing": {
+            "mode": "paid",
+            "priceRol": 30
+          },
+          "status": "published",
+          "createdAt": "2026-05-08T09:45:00.000Z",
+          "updatedAt": "2026-05-08T09:45:00.000Z"
+        },
+        "exam-10": {
+          "id": "exam-10",
+          "ownerUnitId": "unit-3",
+          "title": "Dairy Hygiene & Milk Quality",
+          "description": "Milking routine, udder health, cleaning-in-place, and cold-chain basics.",
+          "questionCount": 6,
+          "durationSec": 1500,
+          "accessWindowDays": 14,
+          "passPct": 65,
+          "attemptsAllowed": 3,
+          "certValidMonths": 18,
+          "certTemplate": "midnight",
+          "pricing": {
+            "mode": "free",
+            "priceRol": 0
+          },
+          "status": "published",
+          "createdAt": "2026-05-11T08:20:00.000Z",
+          "updatedAt": "2026-05-11T08:20:00.000Z"
+        },
+        "exam-11": {
+          "id": "exam-11",
+          "ownerUnitId": "unit-4",
+          "title": "Fruit Tree Pruning Fundamentals",
+          "description": "Timing, cut types, and shaping for healthy, productive fruit trees.",
+          "questionCount": 5,
+          "durationSec": 1200,
+          "accessWindowDays": 14,
+          "passPct": 60,
+          "attemptsAllowed": 3,
+          "certValidMonths": 24,
+          "certTemplate": "sunrise",
+          "pricing": {
+            "mode": "free",
+            "priceRol": 0
+          },
+          "status": "published",
+          "createdAt": "2026-05-21T10:30:00.000Z",
+          "updatedAt": "2026-05-21T10:30:00.000Z"
+        },
+        "exam-12": {
+          "id": "exam-12",
+          "ownerUnitId": "unit-4",
+          "title": "Vineyard Pest & Disease Management",
+          "description": "Identifying and managing common vine pests and fungal diseases with an IPM approach.",
+          "questionCount": 6,
+          "durationSec": 1800,
+          "accessWindowDays": 21,
+          "passPct": 70,
+          "attemptsAllowed": 2,
+          "certValidMonths": 24,
+          "certTemplate": "royal-purple",
+          "pricing": {
+            "mode": "paid",
+            "priceRol": 20
+          },
+          "status": "published",
+          "createdAt": "2026-05-25T13:00:00.000Z",
+          "updatedAt": "2026-05-25T13:00:00.000Z"
+        }
+      }
+    },
+    "agriAcademyExamCenter": {
+      "version": 1,
+      "seq": 8,
+      "users": {
+        "2": {
+          "sessions": {
+            "sess-3": {
+              "id": "sess-3",
+              "userId": "2",
+              "examId": "exam-9",
+              "snapshot": {
+                "examId": "exam-9",
+                "title": "Livestock Welfare & Handling",
+                "questionCount": 7,
+                "durationSec": 1800,
+                "accessWindowDays": 21,
+                "passPct": 70,
+                "attemptsAllowed": 3,
+                "certValidMonths": 24,
+                "certTemplate": "modern-teal",
+                "pricing": {
+                  "mode": "paid",
+                  "priceRol": 30
+                },
+                "ownerUnitId": "unit-3",
+                "unitName": "Meadowbrook Livestock & Welfare",
+                "payoutUserId": "4"
+              },
+              "seed": "seed-3exam-9",
+              "answers": {
+                "e9-q1": "a",
+                "e9-q2": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "e9-q3": "a",
+                "e9-q4": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "e9-q5": "a",
+                "e9-q6": "a",
+                "e9-q7": [
+                  "d"
+                ]
+              },
+              "questions": [
+                {
+                  "id": "e9-q1",
+                  "type": "single",
+                  "text": "Low-stress stock handling relies mainly on:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Understanding the animal's flight zone and point of balance"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Shouting and hitting"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Sudden loud noises"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Chasing at speed"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e9-q2",
+                  "type": "multi",
+                  "text": "The 'five freedoms' of animal welfare include: (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Freedom from hunger and thirst"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Freedom from discomfort"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Freedom to express normal behaviour"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Freedom from ever being weighed"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "c"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e9-q3",
+                  "type": "single",
+                  "text": "A sick animal is often best managed by:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Isolating and observing it, and seeking veterinary advice"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Mixing it with the whole herd"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Ignoring it"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Releasing it to roam"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e9-q4",
+                  "type": "multi",
+                  "text": "Signs of ill health in livestock include: (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Off feed / not ruminating"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Isolation from the group"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Lameness"
+                    },
+                    {
+                      "id": "d",
+                      "text": "A shiny ear tag"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "c"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e9-q5",
+                  "type": "single",
+                  "text": "Good race and yard design should:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Use curves and solid sides to encourage smooth flow"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Have sharp blind corners"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Be as slippery as possible"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Face directly into the sun"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e9-q6",
+                  "type": "single",
+                  "text": "Clean, fresh water for livestock should be:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Available at all times"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Offered once a week"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Only after work"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Optional"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e9-q7",
+                  "type": "multi",
+                  "text": "Before transporting animals you should check: (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "They are fit to travel"
+                    },
+                    {
+                      "id": "b",
+                      "text": "The vehicle is clean and safe"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Stocking density is appropriate"
+                    },
+                    {
+                      "id": "d",
+                      "text": "The colour of the driver's hat"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "c"
+                  ],
+                  "weight": 1
+                }
+              ],
+              "entitledAt": "2026-06-13T14:30:00.000Z",
+              "accessExpiresAt": "2026-07-04T14:30:00.000Z",
+              "startedAt": "2026-06-15T14:30:00.000Z",
+              "expiresAt": "2026-06-15T15:00:00.000Z",
+              "submittedAt": "2026-06-15T14:48:00.000Z",
+              "finalReason": "submit",
+              "result": {
+                "scorePct": 77,
+                "passed": true,
+                "perQuestion": [
+                  {
+                    "question_id": "e9-q1",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e9-q2",
+                    "correct": true,
+                    "awarded": 3,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e9-q3",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e9-q4",
+                    "correct": true,
+                    "awarded": 3,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e9-q5",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e9-q6",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e9-q7",
+                    "correct": false,
+                    "awarded": 0,
+                    "max": 3
+                  }
+                ],
+                "finalizedAt": "2026-06-15T14:48:00.000Z",
+                "certNo": "AA-2026-000003",
+                "certificateStatus": "issued"
+              },
+              "state": "scored",
+              "payment": {
+                "priceRol": 30,
+                "ownerUnitId": "unit-3",
+                "paid": true
+              }
+            },
+            "sess-8": {
+              "id": "sess-8",
+              "userId": "2",
+              "examId": "exam-12",
+              "snapshot": {
+                "examId": "exam-12",
+                "title": "Vineyard Pest & Disease Management",
+                "questionCount": 6,
+                "durationSec": 1800,
+                "accessWindowDays": 21,
+                "passPct": 70,
+                "attemptsAllowed": 2,
+                "certValidMonths": 24,
+                "certTemplate": "royal-purple",
+                "pricing": {
+                  "mode": "paid",
+                  "priceRol": 20
+                },
+                "ownerUnitId": "unit-4",
+                "unitName": "Orchard & Vine Guild",
+                "payoutUserId": "5"
+              },
+              "seed": null,
+              "answers": {},
+              "questions": null,
+              "entitledAt": "2026-07-19T09:30:00.000Z",
+              "accessExpiresAt": "2026-08-09T09:30:00.000Z",
+              "startedAt": null,
+              "expiresAt": null,
+              "submittedAt": null,
+              "finalReason": null,
+              "result": null,
+              "state": "entitled"
+            }
+          },
+          "attempts": {
+            "exam-9": 1
+          },
+          "locks": {}
+        },
+        "3": {
+          "sessions": {
+            "sess-1": {
+              "id": "sess-1",
+              "userId": "3",
+              "examId": "exam-5",
+              "snapshot": {
+                "examId": "exam-5",
+                "title": "Soil Health & Nutrient Management",
+                "questionCount": 6,
+                "durationSec": 1800,
+                "accessWindowDays": 14,
+                "passPct": 60,
+                "attemptsAllowed": 3,
+                "certValidMonths": 24,
+                "certTemplate": "botanical",
+                "pricing": {
+                  "mode": "free",
+                  "priceRol": 0
+                },
+                "ownerUnitId": "unit-1",
+                "unitName": "Green Acres Training Co-op",
+                "payoutUserId": "2"
+              },
+              "seed": "seed-1exam-5",
+              "answers": {
+                "e5-q1": "a",
+                "e5-q2": "a",
+                "e5-q3": [
+                  "a",
+                  "b",
+                  "d"
+                ],
+                "e5-q4": "a",
+                "e5-q5": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "e5-q6": "b"
+              },
+              "questions": [
+                {
+                  "id": "e5-q1",
+                  "type": "single",
+                  "text": "What does a standard soil test most commonly measure?",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "pH and available nutrients"
+                    },
+                    {
+                      "id": "b",
+                      "text": "The colour of the sky"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Ambient noise"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Wind speed"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e5-q2",
+                  "type": "single",
+                  "text": "Why is soil organic matter valuable?",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "It improves structure, water-holding, and nutrient supply"
+                    },
+                    {
+                      "id": "b",
+                      "text": "It makes soil heavier for no reason"
+                    },
+                    {
+                      "id": "c",
+                      "text": "It repels all earthworms"
+                    },
+                    {
+                      "id": "d",
+                      "text": "It has no effect"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e5-q3",
+                  "type": "multi",
+                  "text": "Which practices help build organic matter? (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Adding compost or manure"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Growing cover crops"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Continuous bare fallow"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Returning crop residues"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "d"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e5-q4",
+                  "type": "single",
+                  "text": "A soil pH of 4.5 is best described as:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Strongly acidic"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Neutral"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Strongly alkaline"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Not measurable"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e5-q5",
+                  "type": "multi",
+                  "text": "Which are macronutrients essential for crops? (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Nitrogen"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Phosphorus"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Potassium"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Neon"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "c"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e5-q6",
+                  "type": "single",
+                  "text": "Applying nutrients based on a soil test rather than a fixed recipe helps to:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Match supply to crop need and reduce waste"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Guarantee lodging"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Increase runoff on purpose"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Skip the growing season"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                }
+              ],
+              "entitledAt": "2026-05-31T09:10:00.000Z",
+              "accessExpiresAt": "2026-06-14T09:10:00.000Z",
+              "startedAt": "2026-06-02T09:10:00.000Z",
+              "expiresAt": "2026-06-02T09:40:00.000Z",
+              "submittedAt": "2026-06-02T09:28:00.000Z",
+              "finalReason": "submit",
+              "result": {
+                "scorePct": 90,
+                "passed": true,
+                "perQuestion": [
+                  {
+                    "question_id": "e5-q1",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e5-q2",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e5-q3",
+                    "correct": true,
+                    "awarded": 3,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e5-q4",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e5-q5",
+                    "correct": true,
+                    "awarded": 3,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e5-q6",
+                    "correct": false,
+                    "awarded": 0,
+                    "max": 1
+                  }
+                ],
+                "finalizedAt": "2026-06-02T09:28:00.000Z",
+                "certNo": "AA-2026-000001",
+                "certificateStatus": "issued"
+              },
+              "state": "scored"
+            }
+          },
+          "attempts": {
+            "exam-5": 1
+          },
+          "locks": {}
+        },
+        "4": {
+          "sessions": {
+            "sess-2": {
+              "id": "sess-2",
+              "userId": "4",
+              "examId": "exam-8",
+              "snapshot": {
+                "examId": "exam-8",
+                "title": "Farm Machinery Maintenance",
+                "questionCount": 6,
+                "durationSec": 1500,
+                "accessWindowDays": 14,
+                "passPct": 70,
+                "attemptsAllowed": 3,
+                "certValidMonths": 18,
+                "certTemplate": "slate-minimal",
+                "pricing": {
+                  "mode": "free",
+                  "priceRol": 0
+                },
+                "ownerUnitId": "unit-2",
+                "unitName": "Ironfield Machinery School",
+                "payoutUserId": "3"
+              },
+              "seed": "seed-2exam-8",
+              "answers": {
+                "e8-q1": "a",
+                "e8-q2": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "e8-q3": "a",
+                "e8-q4": "a",
+                "e8-q5": [
+                  "a",
+                  "c",
+                  "d"
+                ],
+                "e8-q6": "a"
+              },
+              "questions": [
+                {
+                  "id": "e8-q1",
+                  "type": "single",
+                  "text": "Engine oil should be checked:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Regularly, with the machine level and engine off"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Only when it seizes"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Never"
+                    },
+                    {
+                      "id": "d",
+                      "text": "While driving"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e8-q2",
+                  "type": "multi",
+                  "text": "A good pre-season service includes: (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Changing filters and fluids"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Greasing points per the manual"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Checking tyres and lights"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Repainting the seat"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "c"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e8-q3",
+                  "type": "single",
+                  "text": "Grease points should be lubricated:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "At the intervals in the operator's manual"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Once in the machine's lifetime"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Only if they squeak loudly"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Never, to save grease"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e8-q4",
+                  "type": "single",
+                  "text": "A slack drive belt will typically cause:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Slipping and poor power transfer"
+                    },
+                    {
+                      "id": "b",
+                      "text": "More horsepower"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Better fuel economy"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Nothing"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e8-q5",
+                  "type": "multi",
+                  "text": "Before working under a raised implement you should: (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Use proper stands or locks"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Rely only on hydraulics"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Stop the engine and remove the key"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Chock the wheels"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "c",
+                    "d"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e8-q6",
+                  "type": "single",
+                  "text": "Checking tyre pressures matters because it affects:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Traction, wear, and fuel use"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Only the colour"
+                    },
+                    {
+                      "id": "c",
+                      "text": "The radio signal"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Nothing measurable"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                }
+              ],
+              "entitledAt": "2026-06-07T11:00:00.000Z",
+              "accessExpiresAt": "2026-06-21T11:00:00.000Z",
+              "startedAt": "2026-06-09T11:00:00.000Z",
+              "expiresAt": "2026-06-09T11:25:00.000Z",
+              "submittedAt": "2026-06-09T11:15:00.000Z",
+              "finalReason": "submit",
+              "result": {
+                "scorePct": 100,
+                "passed": true,
+                "perQuestion": [
+                  {
+                    "question_id": "e8-q1",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e8-q2",
+                    "correct": true,
+                    "awarded": 3,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e8-q3",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e8-q4",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e8-q5",
+                    "correct": true,
+                    "awarded": 3,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e8-q6",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  }
+                ],
+                "finalizedAt": "2026-06-09T11:15:00.000Z",
+                "certNo": "AA-2026-000002",
+                "certificateStatus": "issued"
+              },
+              "state": "scored"
+            },
+            "sess-6": {
+              "id": "sess-6",
+              "userId": "4",
+              "examId": "exam-10",
+              "snapshot": {
+                "examId": "exam-10",
+                "title": "Dairy Hygiene & Milk Quality",
+                "questionCount": 6,
+                "durationSec": 1500,
+                "accessWindowDays": 14,
+                "passPct": 65,
+                "attemptsAllowed": 3,
+                "certValidMonths": 18,
+                "certTemplate": "midnight",
+                "pricing": {
+                  "mode": "free",
+                  "priceRol": 0
+                },
+                "ownerUnitId": "unit-3",
+                "unitName": "Meadowbrook Livestock & Welfare",
+                "payoutUserId": "4"
+              },
+              "seed": "seed-6exam-10",
+              "answers": {
+                "e10-q1": "a",
+                "e10-q2": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "e10-q3": "a",
+                "e10-q4": "a",
+                "e10-q5": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "e10-q6": "a"
+              },
+              "questions": [
+                {
+                  "id": "e10-q1",
+                  "type": "single",
+                  "text": "Before attaching the cluster, teats should be:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Cleaned and, where used, fore-milked and pre-dipped"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Left muddy"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Painted"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Ignored"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e10-q2",
+                  "type": "multi",
+                  "text": "Good milking hygiene includes: (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Clean hands and gloves"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Clean, dry teats before attaching"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Post-milking teat disinfection"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Skipping all cleaning to save time"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "c"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e10-q3",
+                  "type": "single",
+                  "text": "Rapid cooling of milk after collection is important to:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Limit bacterial growth and protect quality"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Change its colour"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Increase somatic cells"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Warm the parlour"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e10-q4",
+                  "type": "single",
+                  "text": "A high somatic cell count in milk often indicates:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Udder infection such as mastitis"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Excellent udder health"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Cold weather only"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Nothing at all"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e10-q5",
+                  "type": "multi",
+                  "text": "Cleaning-in-place (CIP) of milking equipment typically uses: (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "A warm detergent wash"
+                    },
+                    {
+                      "id": "b",
+                      "text": "An acid rinse cycle"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Adequate water temperature and flow"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Milk as the only cleaner"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "c"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e10-q6",
+                  "type": "single",
+                  "text": "Bulk tank milk temperature should generally be held:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Chilled to the required storage temperature"
+                    },
+                    {
+                      "id": "b",
+                      "text": "At room temperature"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Near boiling"
+                    },
+                    {
+                      "id": "d",
+                      "text": "However is convenient"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                }
+              ],
+              "entitledAt": "2026-07-01T10:20:00.000Z",
+              "accessExpiresAt": "2026-07-15T10:20:00.000Z",
+              "startedAt": "2026-07-03T10:20:00.000Z",
+              "expiresAt": "2026-07-03T10:45:00.000Z",
+              "submittedAt": "2026-07-03T10:35:00.000Z",
+              "finalReason": "submit",
+              "result": {
+                "scorePct": 100,
+                "passed": true,
+                "perQuestion": [
+                  {
+                    "question_id": "e10-q1",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e10-q2",
+                    "correct": true,
+                    "awarded": 3,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e10-q3",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e10-q4",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e10-q5",
+                    "correct": true,
+                    "awarded": 3,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e10-q6",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  }
+                ],
+                "finalizedAt": "2026-07-03T10:35:00.000Z",
+                "certNo": "AA-2026-000005",
+                "certificateStatus": "issued"
+              },
+              "state": "scored"
+            }
+          },
+          "attempts": {
+            "exam-8": 1,
+            "exam-10": 1
+          },
+          "locks": {}
+        },
+        "5": {
+          "sessions": {
+            "sess-4": {
+              "id": "sess-4",
+              "userId": "5",
+              "examId": "exam-11",
+              "snapshot": {
+                "examId": "exam-11",
+                "title": "Fruit Tree Pruning Fundamentals",
+                "questionCount": 5,
+                "durationSec": 1200,
+                "accessWindowDays": 14,
+                "passPct": 60,
+                "attemptsAllowed": 3,
+                "certValidMonths": 24,
+                "certTemplate": "sunrise",
+                "pricing": {
+                  "mode": "free",
+                  "priceRol": 0
+                },
+                "ownerUnitId": "unit-4",
+                "unitName": "Orchard & Vine Guild",
+                "payoutUserId": "5"
+              },
+              "seed": "seed-4exam-11",
+              "answers": {
+                "e11-q1": "a",
+                "e11-q2": [
+                  "d"
+                ],
+                "e11-q3": "d",
+                "e11-q4": "d",
+                "e11-q5": [
+                  "d"
+                ]
+              },
+              "questions": [
+                {
+                  "id": "e11-q1",
+                  "type": "single",
+                  "text": "The main goal of pruning a fruit tree is to:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Improve structure, light, and fruiting"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Remove as much wood as possible"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Make it as tall as possible"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Damage the tree"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e11-q2",
+                  "type": "multi",
+                  "text": "Which cuts/removals are commonly made? (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Dead, diseased, or damaged wood"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Crossing or rubbing branches"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Strong healthy scaffold limbs at random"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Water shoots and suckers"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "d"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e11-q3",
+                  "type": "single",
+                  "text": "Most pip fruit (apples/pears) are best pruned:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "In the dormant season"
+                    },
+                    {
+                      "id": "b",
+                      "text": "At peak flowering only"
+                    },
+                    {
+                      "id": "c",
+                      "text": "During a storm"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Never"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e11-q4",
+                  "type": "single",
+                  "text": "A pruning cut should be made:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Just above an outward-facing bud or at the branch collar"
+                    },
+                    {
+                      "id": "b",
+                      "text": "In the middle of an internode leaving a long stub"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Flush, cutting into the trunk"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Anywhere at random"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e11-q5",
+                  "type": "multi",
+                  "text": "Good pruning hygiene includes: (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Using sharp, clean tools"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Disinfecting tools between diseased trees"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Removing prunings from around the tree"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Tearing branches by hand"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "c"
+                  ],
+                  "weight": 1
+                }
+              ],
+              "entitledAt": "2026-06-18T16:05:00.000Z",
+              "accessExpiresAt": "2026-07-02T16:05:00.000Z",
+              "startedAt": "2026-06-20T16:05:00.000Z",
+              "expiresAt": "2026-06-20T16:25:00.000Z",
+              "submittedAt": "2026-06-20T16:17:00.000Z",
+              "finalReason": "submit",
+              "result": {
+                "scorePct": 22,
+                "passed": false,
+                "perQuestion": [
+                  {
+                    "question_id": "e11-q1",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e11-q2",
+                    "correct": false,
+                    "awarded": 1,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e11-q3",
+                    "correct": false,
+                    "awarded": 0,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e11-q4",
+                    "correct": false,
+                    "awarded": 0,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e11-q5",
+                    "correct": false,
+                    "awarded": 0,
+                    "max": 3
+                  }
+                ],
+                "finalizedAt": "2026-06-20T16:17:00.000Z",
+                "certNo": null
+              },
+              "state": "scored"
+            }
+          },
+          "attempts": {
+            "exam-11": 1
+          },
+          "locks": {}
+        },
+        "9": {
+          "sessions": {
+            "sess-7": {
+              "id": "sess-7",
+              "userId": "9",
+              "examId": "exam-6",
+              "snapshot": {
+                "examId": "exam-6",
+                "title": "Organic Farming Certification",
+                "questionCount": 8,
+                "durationSec": 2400,
+                "accessWindowDays": 30,
+                "passPct": 75,
+                "attemptsAllowed": 2,
+                "certValidMonths": 36,
+                "certTemplate": "classic-green",
+                "pricing": {
+                  "mode": "paid",
+                  "priceRol": 25
+                },
+                "ownerUnitId": "unit-1",
+                "unitName": "Green Acres Training Co-op",
+                "payoutUserId": "2"
+              },
+              "seed": null,
+              "answers": {},
+              "questions": null,
+              "entitledAt": "2026-07-18T12:00:00.000Z",
+              "accessExpiresAt": "2026-08-17T12:00:00.000Z",
+              "startedAt": null,
+              "expiresAt": null,
+              "submittedAt": null,
+              "finalReason": null,
+              "result": null,
+              "state": "entitled"
+            }
+          },
+          "attempts": {},
+          "locks": {}
+        },
+        "10": {
+          "sessions": {
+            "sess-5": {
+              "id": "sess-5",
+              "userId": "10",
+              "examId": "exam-7",
+              "snapshot": {
+                "examId": "exam-7",
+                "title": "Combine Harvester Operation",
+                "questionCount": 7,
+                "durationSec": 2100,
+                "accessWindowDays": 21,
+                "passPct": 75,
+                "attemptsAllowed": 3,
+                "certValidMonths": 24,
+                "certTemplate": "rustic-kraft",
+                "pricing": {
+                  "mode": "paid",
+                  "priceRol": 40
+                },
+                "ownerUnitId": "unit-2",
+                "unitName": "Ironfield Machinery School",
+                "payoutUserId": "3"
+              },
+              "seed": "seed-5exam-7",
+              "answers": {
+                "e7-q1": "a",
+                "e7-q2": [
+                  "a",
+                  "b",
+                  "c"
+                ],
+                "e7-q3": "a",
+                "e7-q4": "a",
+                "e7-q5": [
+                  "a",
+                  "b",
+                  "d"
+                ],
+                "e7-q6": "a",
+                "e7-q7": "b"
+              },
+              "questions": [
+                {
+                  "id": "e7-q1",
+                  "type": "single",
+                  "text": "Before harvesting, the combine header height should be set to:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Suit the crop and cut cleanly without picking up soil"
+                    },
+                    {
+                      "id": "b",
+                      "text": "The maximum at all times"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Below ground level"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Whatever is fastest"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e7-q2",
+                  "type": "multi",
+                  "text": "Pre-harvest combine checks include: (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Fire extinguisher present and charged"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Belts, chains, and bearings inspected"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Grain tank and unloading auger clear"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Radio station tuned"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "c"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e7-q3",
+                  "type": "single",
+                  "text": "Excessive grain loss out the back of the combine often indicates:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Incorrect fan speed or concave settings"
+                    },
+                    {
+                      "id": "b",
+                      "text": "The paint is wrong"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Too much daylight"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Nothing adjustable"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e7-q4",
+                  "type": "single",
+                  "text": "Combine fires are most commonly caused by:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Chaff build-up near hot engine and bearing surfaces"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Cold weather only"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Clean machines"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Low fuel exclusively"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e7-q5",
+                  "type": "multi",
+                  "text": "Safe unblocking of a plugged combine requires: (select all that apply)",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Engine off and key removed"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Moving parts fully stopped"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Reaching in while it runs"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Following lockout procedure"
+                    }
+                  ],
+                  "correct": [
+                    "a",
+                    "b",
+                    "d"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e7-q6",
+                  "type": "single",
+                  "text": "Higher drum/rotor speed than needed tends to:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Increase grain damage and cracking"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Improve germination"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Reduce fuel use to zero"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Have no effect"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                },
+                {
+                  "id": "e7-q7",
+                  "type": "single",
+                  "text": "When moving a combine on a public road you should:",
+                  "options": [
+                    {
+                      "id": "a",
+                      "text": "Fit lights/markers and remove or secure the header per rules"
+                    },
+                    {
+                      "id": "b",
+                      "text": "Drive on the header"
+                    },
+                    {
+                      "id": "c",
+                      "text": "Travel at full field speed"
+                    },
+                    {
+                      "id": "d",
+                      "text": "Ignore other traffic"
+                    }
+                  ],
+                  "correct": [
+                    "a"
+                  ],
+                  "weight": 1
+                }
+              ],
+              "entitledAt": "2026-06-26T08:45:00.000Z",
+              "accessExpiresAt": "2026-07-17T08:45:00.000Z",
+              "startedAt": "2026-06-28T08:45:00.000Z",
+              "expiresAt": "2026-06-28T09:20:00.000Z",
+              "submittedAt": "2026-06-28T09:06:00.000Z",
+              "finalReason": "submit",
+              "result": {
+                "scorePct": 91,
+                "passed": true,
+                "perQuestion": [
+                  {
+                    "question_id": "e7-q1",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e7-q2",
+                    "correct": true,
+                    "awarded": 3,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e7-q3",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e7-q4",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e7-q5",
+                    "correct": true,
+                    "awarded": 3,
+                    "max": 3
+                  },
+                  {
+                    "question_id": "e7-q6",
+                    "correct": true,
+                    "awarded": 1,
+                    "max": 1
+                  },
+                  {
+                    "question_id": "e7-q7",
+                    "correct": false,
+                    "awarded": 0,
+                    "max": 1
+                  }
+                ],
+                "finalizedAt": "2026-06-28T09:06:00.000Z",
+                "certNo": "AA-2026-000004",
+                "certificateStatus": "issued"
+              },
+              "state": "scored",
+              "payment": {
+                "priceRol": 40,
+                "ownerUnitId": "unit-2",
+                "paid": true
+              }
+            }
+          },
+          "attempts": {
+            "exam-7": 1
+          },
+          "locks": {}
+        }
+      }
+    },
+    "agriAcademyQuestionBank": {
+      "version": 1,
+      "pools": {
+        "pesticide-basics": [
+          {
+            "id": "pb-q1",
+            "type": "single",
+            "text": "Which item is essential personal protective equipment when handling pesticides?",
+            "options": [
+              {
+                "id": "a",
+                "text": "Chemical-resistant gloves"
+              },
+              {
+                "id": "b",
+                "text": "Open sandals"
+              },
+              {
+                "id": "c",
+                "text": "Sunglasses"
+              },
+              {
+                "id": "d",
+                "text": "Shorts"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q2",
+            "type": "multi",
+            "text": "Which of the following are safe pesticide-handling practices? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Read the product label before use"
+              },
+              {
+                "id": "b",
+                "text": "Mix indoors with no ventilation"
+              },
+              {
+                "id": "c",
+                "text": "Wear an approved respirator when required"
+              },
+              {
+                "id": "d",
+                "text": "Eat or drink while spraying"
+              }
+            ],
+            "correct": [
+              "a",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q3",
+            "type": "single",
+            "text": "Where should pesticides be stored?",
+            "options": [
+              {
+                "id": "a",
+                "text": "In a locked, ventilated cabinet away from food and feed"
+              },
+              {
+                "id": "b",
+                "text": "In the kitchen"
+              },
+              {
+                "id": "c",
+                "text": "In a child's bedroom"
+              },
+              {
+                "id": "d",
+                "text": "Loose in a car boot"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q4",
+            "type": "multi",
+            "text": "What should you do with empty pesticide containers? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Triple-rinse them"
+              },
+              {
+                "id": "b",
+                "text": "Reuse them for drinking water"
+              },
+              {
+                "id": "c",
+                "text": "Dispose of them per local regulations"
+              },
+              {
+                "id": "d",
+                "text": "Burn them in an open pile"
+              }
+            ],
+            "correct": [
+              "a",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q5",
+            "type": "single",
+            "text": "When should you read the product label?",
+            "options": [
+              {
+                "id": "a",
+                "text": "Before buying, mixing, and applying the product"
+              },
+              {
+                "id": "b",
+                "text": "Only if you start to feel unwell"
+              },
+              {
+                "id": "c",
+                "text": "After the job is finished"
+              },
+              {
+                "id": "d",
+                "text": "Never — labels are optional"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q6",
+            "type": "single",
+            "text": "What does a label's \"re-entry interval\" tell you?",
+            "options": [
+              {
+                "id": "a",
+                "text": "How long to wait before re-entering a treated area"
+              },
+              {
+                "id": "b",
+                "text": "The product's shelf life"
+              },
+              {
+                "id": "c",
+                "text": "The dilution ratio"
+              },
+              {
+                "id": "d",
+                "text": "The container size"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q7",
+            "type": "multi",
+            "text": "Which conditions increase spray drift? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Strong wind"
+              },
+              {
+                "id": "b",
+                "text": "Very fine droplet size"
+              },
+              {
+                "id": "c",
+                "text": "Nozzle held at the correct low height"
+              },
+              {
+                "id": "d",
+                "text": "High temperature with low humidity"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q8",
+            "type": "single",
+            "text": "Pesticide is splashed into someone's eye. What is the correct first response?",
+            "options": [
+              {
+                "id": "a",
+                "text": "Rinse with clean water for at least 15 minutes and seek medical help"
+              },
+              {
+                "id": "b",
+                "text": "Rub the eye vigorously"
+              },
+              {
+                "id": "c",
+                "text": "Wait to see if it clears on its own"
+              },
+              {
+                "id": "d",
+                "text": "Apply more product to neutralise it"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q9",
+            "type": "multi",
+            "text": "Good personal hygiene after handling pesticides includes: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Washing hands and face before eating"
+              },
+              {
+                "id": "b",
+                "text": "Changing out of contaminated clothing"
+              },
+              {
+                "id": "c",
+                "text": "Eating immediately without washing"
+              },
+              {
+                "id": "d",
+                "text": "Showering at the end of the day"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q10",
+            "type": "single",
+            "text": "Where should you mix and load to limit point-source contamination?",
+            "options": [
+              {
+                "id": "a",
+                "text": "On an impermeable, bunded area away from water sources"
+              },
+              {
+                "id": "b",
+                "text": "Next to an open stream"
+              },
+              {
+                "id": "c",
+                "text": "Directly over a storm drain"
+              },
+              {
+                "id": "d",
+                "text": "In the middle of the crop"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q11",
+            "type": "multi",
+            "text": "A pesticide application record should include: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Product name and application rate"
+              },
+              {
+                "id": "b",
+                "text": "Date and location"
+              },
+              {
+                "id": "c",
+                "text": "Weather conditions at the time"
+              },
+              {
+                "id": "d",
+                "text": "The operator's favourite colour"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q12",
+            "type": "single",
+            "text": "The signal word \"DANGER\" on a pesticide label means the product is:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Highly toxic — requires the greatest caution"
+              },
+              {
+                "id": "b",
+                "text": "Completely harmless"
+              },
+              {
+                "id": "c",
+                "text": "Exempt from PPE requirements"
+              },
+              {
+                "id": "d",
+                "text": "Past its expiry date"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q13",
+            "type": "single",
+            "text": "Why is it important to calibrate a sprayer?",
+            "options": [
+              {
+                "id": "a",
+                "text": "To apply the correct rate — not too much or too little"
+              },
+              {
+                "id": "b",
+                "text": "To make the tractor go faster"
+              },
+              {
+                "id": "c",
+                "text": "So the tank never needs cleaning"
+              },
+              {
+                "id": "d",
+                "text": "To avoid reading the label"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q14",
+            "type": "multi",
+            "text": "Which can be early signs of pesticide poisoning? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Headache and nausea"
+              },
+              {
+                "id": "b",
+                "text": "Excessive sweating"
+              },
+              {
+                "id": "c",
+                "text": "Improved eyesight"
+              },
+              {
+                "id": "d",
+                "text": "Dizziness"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q15",
+            "type": "single",
+            "text": "A no-spray buffer zone next to a watercourse exists mainly to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Protect water from contamination"
+              },
+              {
+                "id": "b",
+                "text": "Mark where to park"
+              },
+              {
+                "id": "c",
+                "text": "Allow a higher dose"
+              },
+              {
+                "id": "d",
+                "text": "Speed up drying"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "pb-q16",
+            "type": "single",
+            "text": "Checking tank-mix compatibility before combining products helps to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Avoid mixtures that clog nozzles or react badly"
+              },
+              {
+                "id": "b",
+                "text": "Create more foam"
+              },
+              {
+                "id": "c",
+                "text": "Change the spray colour"
+              },
+              {
+                "id": "d",
+                "text": "Make PPE unnecessary"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          }
+        ],
+        "tractor-safety": [
+          {
+            "id": "ts-q1",
+            "type": "single",
+            "text": "Before starting a tractor you should first:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Walk around it and check for hazards and bystanders"
+              },
+              {
+                "id": "b",
+                "text": "Rev the engine to maximum"
+              },
+              {
+                "id": "c",
+                "text": "Remove the seatbelt"
+              },
+              {
+                "id": "d",
+                "text": "Disable the brakes"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q2",
+            "type": "multi",
+            "text": "Which are recommended safety measures? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Use the roll-over protection structure (ROPS)"
+              },
+              {
+                "id": "b",
+                "text": "Fasten the seatbelt when ROPS is fitted"
+              },
+              {
+                "id": "c",
+                "text": "Carry extra riders on the drawbar"
+              },
+              {
+                "id": "d",
+                "text": "Keep bystanders clear of the working area"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q3",
+            "type": "single",
+            "text": "On a steep slope you should:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Drive straight up or down rather than across where possible"
+              },
+              {
+                "id": "b",
+                "text": "Turn sharply at speed"
+              },
+              {
+                "id": "c",
+                "text": "Raise heavy implements as high as possible"
+              },
+              {
+                "id": "d",
+                "text": "Disengage the handbrake and coast"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q4",
+            "type": "multi",
+            "text": "Which pre-operation checks are important? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Tyre pressure and condition"
+              },
+              {
+                "id": "b",
+                "text": "Brake and steering function"
+              },
+              {
+                "id": "c",
+                "text": "Whether the radio works"
+              },
+              {
+                "id": "d",
+                "text": "Guards and PTO shields in place"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q5",
+            "type": "single",
+            "text": "What is the safest way to mount or dismount a tractor?",
+            "options": [
+              {
+                "id": "a",
+                "text": "Maintain three points of contact, facing the machine"
+              },
+              {
+                "id": "b",
+                "text": "Jump off while it is still moving"
+              },
+              {
+                "id": "c",
+                "text": "Step down onto the rear tyre only"
+              },
+              {
+                "id": "d",
+                "text": "Climb out over the rear linkage"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q6",
+            "type": "multi",
+            "text": "Which are correct power take-off (PTO) safety rules? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Keep the PTO shields in place"
+              },
+              {
+                "id": "b",
+                "text": "Stop the PTO before dismounting"
+              },
+              {
+                "id": "c",
+                "text": "Wear loose clothing near the shaft"
+              },
+              {
+                "id": "d",
+                "text": "Never step over a rotating shaft"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q7",
+            "type": "single",
+            "text": "Carrying an extra rider on a tractor is:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Not allowed unless a proper instructor/passenger seat is fitted"
+              },
+              {
+                "id": "b",
+                "text": "Fine on the drawbar"
+              },
+              {
+                "id": "c",
+                "text": "Fine on the mudguard"
+              },
+              {
+                "id": "d",
+                "text": "Encouraged for company"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q8",
+            "type": "single",
+            "text": "If a tractor fitted with ROPS begins to roll over, you should:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Stay in the seat with the seatbelt fastened"
+              },
+              {
+                "id": "b",
+                "text": "Jump clear immediately"
+              },
+              {
+                "id": "c",
+                "text": "Stand up and grip the wheel harder"
+              },
+              {
+                "id": "d",
+                "text": "Turn sharply downhill"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q9",
+            "type": "multi",
+            "text": "Which are correct hitching practices? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Hitch towed loads only to the drawbar"
+              },
+              {
+                "id": "b",
+                "text": "Hitch high onto the axle for heavy pulls"
+              },
+              {
+                "id": "c",
+                "text": "Use the correct pins and safety chains"
+              },
+              {
+                "id": "d",
+                "text": "Keep others clear while hitching"
+              }
+            ],
+            "correct": [
+              "a",
+              "c",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q10",
+            "type": "single",
+            "text": "Before leaving the tractor you should:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Lower implements, apply the park brake, stop the engine, and remove the key"
+              },
+              {
+                "id": "b",
+                "text": "Leave it idling in gear"
+              },
+              {
+                "id": "c",
+                "text": "Leave raised implements up"
+              },
+              {
+                "id": "d",
+                "text": "Leave the key in for the next person"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q11",
+            "type": "multi",
+            "text": "Which apply when travelling on a public road? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Use lights and a slow-moving-vehicle emblem"
+              },
+              {
+                "id": "b",
+                "text": "Secure or lock mounted implements"
+              },
+              {
+                "id": "c",
+                "text": "Travel at full speed regardless of the load"
+              },
+              {
+                "id": "d",
+                "text": "Ensure the brakes are balanced"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q12",
+            "type": "single",
+            "text": "Correct ballast and tyre pressure matter mainly because they affect:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Stability and traction"
+              },
+              {
+                "id": "b",
+                "text": "Only fuel economy"
+              },
+              {
+                "id": "c",
+                "text": "Nothing important"
+              },
+              {
+                "id": "d",
+                "text": "Only the paintwork"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q13",
+            "type": "single",
+            "text": "A slow-moving-vehicle (SMV) emblem warns other road users that the vehicle:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Travels well below normal traffic speed"
+              },
+              {
+                "id": "b",
+                "text": "Is for sale"
+              },
+              {
+                "id": "c",
+                "text": "Always has right of way"
+              },
+              {
+                "id": "d",
+                "text": "Is about to stop permanently"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q14",
+            "type": "multi",
+            "text": "To reduce run-over risk when children may be nearby: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Know where everyone is before moving off"
+              },
+              {
+                "id": "b",
+                "text": "Keep children out of the work area"
+              },
+              {
+                "id": "c",
+                "text": "Let them ride in the loader bucket"
+              },
+              {
+                "id": "d",
+                "text": "Use a spotter when reversing"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q15",
+            "type": "single",
+            "text": "The differential lock is best used when:",
+            "options": [
+              {
+                "id": "a",
+                "text": "One wheel loses traction, at low speed in a straight line"
+              },
+              {
+                "id": "b",
+                "text": "Cornering fast on the road"
+              },
+              {
+                "id": "c",
+                "text": "Left engaged at all times"
+              },
+              {
+                "id": "d",
+                "text": "Parking on a slope"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "ts-q16",
+            "type": "single",
+            "text": "Refuelling a tractor should be done:",
+            "options": [
+              {
+                "id": "a",
+                "text": "With the engine off and away from ignition sources"
+              },
+              {
+                "id": "b",
+                "text": "While smoking"
+              },
+              {
+                "id": "c",
+                "text": "With the engine running to save time"
+              },
+              {
+                "id": "d",
+                "text": "In a sealed shed with no ventilation"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          }
+        ],
+        "demo-quiz": [
+          {
+            "id": "dq-q1",
+            "type": "single",
+            "text": "What should you always do before operating farm machinery?",
+            "options": [
+              {
+                "id": "a",
+                "text": "Read the operator's manual and check the controls"
+              },
+              {
+                "id": "b",
+                "text": "Remove all the safety guards"
+              },
+              {
+                "id": "c",
+                "text": "Skip the pre-start checks to save time"
+              },
+              {
+                "id": "d",
+                "text": "Disable the brakes"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "dq-q2",
+            "type": "multi",
+            "text": "Which are good general farm-safety habits? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Wear appropriate protective equipment"
+              },
+              {
+                "id": "b",
+                "text": "Keep bystanders clear of moving equipment"
+              },
+              {
+                "id": "c",
+                "text": "Store chemicals together with food"
+              },
+              {
+                "id": "d",
+                "text": "Report and fix hazards promptly"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          }
+        ],
+        "exam-5": [
+          {
+            "id": "e5-q1",
+            "type": "single",
+            "text": "What does a standard soil test most commonly measure?",
+            "options": [
+              {
+                "id": "a",
+                "text": "pH and available nutrients"
+              },
+              {
+                "id": "b",
+                "text": "The colour of the sky"
+              },
+              {
+                "id": "c",
+                "text": "Ambient noise"
+              },
+              {
+                "id": "d",
+                "text": "Wind speed"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e5-q2",
+            "type": "single",
+            "text": "Why is soil organic matter valuable?",
+            "options": [
+              {
+                "id": "a",
+                "text": "It improves structure, water-holding, and nutrient supply"
+              },
+              {
+                "id": "b",
+                "text": "It makes soil heavier for no reason"
+              },
+              {
+                "id": "c",
+                "text": "It repels all earthworms"
+              },
+              {
+                "id": "d",
+                "text": "It has no effect"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e5-q3",
+            "type": "multi",
+            "text": "Which practices help build organic matter? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Adding compost or manure"
+              },
+              {
+                "id": "b",
+                "text": "Growing cover crops"
+              },
+              {
+                "id": "c",
+                "text": "Continuous bare fallow"
+              },
+              {
+                "id": "d",
+                "text": "Returning crop residues"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e5-q4",
+            "type": "single",
+            "text": "A soil pH of 4.5 is best described as:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Strongly acidic"
+              },
+              {
+                "id": "b",
+                "text": "Neutral"
+              },
+              {
+                "id": "c",
+                "text": "Strongly alkaline"
+              },
+              {
+                "id": "d",
+                "text": "Not measurable"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e5-q5",
+            "type": "multi",
+            "text": "Which are macronutrients essential for crops? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Nitrogen"
+              },
+              {
+                "id": "b",
+                "text": "Phosphorus"
+              },
+              {
+                "id": "c",
+                "text": "Potassium"
+              },
+              {
+                "id": "d",
+                "text": "Neon"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e5-q6",
+            "type": "single",
+            "text": "Applying nutrients based on a soil test rather than a fixed recipe helps to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Match supply to crop need and reduce waste"
+              },
+              {
+                "id": "b",
+                "text": "Guarantee lodging"
+              },
+              {
+                "id": "c",
+                "text": "Increase runoff on purpose"
+              },
+              {
+                "id": "d",
+                "text": "Skip the growing season"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e5-q7",
+            "type": "single",
+            "text": "Compaction in soil primarily reduces:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Root growth and water infiltration"
+              },
+              {
+                "id": "b",
+                "text": "The price of grain"
+              },
+              {
+                "id": "c",
+                "text": "Daylight hours"
+              },
+              {
+                "id": "d",
+                "text": "Seed colour"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e5-q8",
+            "type": "multi",
+            "text": "Which reduce nutrient loss to water? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Buffer strips near watercourses"
+              },
+              {
+                "id": "b",
+                "text": "Applying fertiliser before heavy rain"
+              },
+              {
+                "id": "c",
+                "text": "Incorporating fertiliser into the soil"
+              },
+              {
+                "id": "d",
+                "text": "Matching rate to crop demand"
+              }
+            ],
+            "correct": [
+              "a",
+              "c",
+              "d"
+            ],
+            "weight": 1
+          }
+        ],
+        "exam-6": [
+          {
+            "id": "e6-q1",
+            "type": "single",
+            "text": "In certified organic systems, synthetic nitrogen fertiliser is:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Prohibited"
+              },
+              {
+                "id": "b",
+                "text": "Required"
+              },
+              {
+                "id": "c",
+                "text": "Unlimited"
+              },
+              {
+                "id": "d",
+                "text": "Only used indoors"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e6-q2",
+            "type": "single",
+            "text": "The main purpose of the organic conversion period is to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Allow soil and system to meet organic standards before certified sale"
+              },
+              {
+                "id": "b",
+                "text": "Increase pesticide use"
+              },
+              {
+                "id": "c",
+                "text": "Skip inspections"
+              },
+              {
+                "id": "d",
+                "text": "Raise prices instantly"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e6-q3",
+            "type": "multi",
+            "text": "Which records are typically required for organic certification? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Input purchases and use"
+              },
+              {
+                "id": "b",
+                "text": "Field and crop histories"
+              },
+              {
+                "id": "c",
+                "text": "Harvest and sales records"
+              },
+              {
+                "id": "d",
+                "text": "Staff lunch preferences"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e6-q4",
+            "type": "single",
+            "text": "For organic weed control a grower would prefer:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Cultivation, mulching, and rotation"
+              },
+              {
+                "id": "b",
+                "text": "Broad-spectrum synthetic herbicide"
+              },
+              {
+                "id": "c",
+                "text": "Ignoring weeds entirely"
+              },
+              {
+                "id": "d",
+                "text": "Salting the whole field"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e6-q5",
+            "type": "multi",
+            "text": "Acceptable organic soil-fertility inputs often include: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Well-rotted compost"
+              },
+              {
+                "id": "b",
+                "text": "Approved animal manures"
+              },
+              {
+                "id": "c",
+                "text": "Green manures / legumes"
+              },
+              {
+                "id": "d",
+                "text": "Untested industrial sludge"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e6-q6",
+            "type": "single",
+            "text": "Buffer zones between organic and conventional land exist to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Prevent contamination and spray drift onto organic crops"
+              },
+              {
+                "id": "b",
+                "text": "Mark parking"
+              },
+              {
+                "id": "c",
+                "text": "Store fuel"
+              },
+              {
+                "id": "d",
+                "text": "Grow more weeds"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e6-q7",
+            "type": "single",
+            "text": "An organic inspection is usually carried out:",
+            "options": [
+              {
+                "id": "a",
+                "text": "At least annually by an approved certifier"
+              },
+              {
+                "id": "b",
+                "text": "Never"
+              },
+              {
+                "id": "c",
+                "text": "Only by the farmer themselves"
+              },
+              {
+                "id": "d",
+                "text": "Once a decade"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e6-q8",
+            "type": "multi",
+            "text": "Crop rotation in organic systems helps to: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Break pest and disease cycles"
+              },
+              {
+                "id": "b",
+                "text": "Manage soil fertility"
+              },
+              {
+                "id": "c",
+                "text": "Reduce weed pressure"
+              },
+              {
+                "id": "d",
+                "text": "Eliminate the need for any planning"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e6-q9",
+            "type": "single",
+            "text": "GMO seed in a certified organic crop is:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Not permitted"
+              },
+              {
+                "id": "b",
+                "text": "Encouraged"
+              },
+              {
+                "id": "c",
+                "text": "Mandatory"
+              },
+              {
+                "id": "d",
+                "text": "Only allowed at night"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e6-q10",
+            "type": "single",
+            "text": "Split, non-organic parallel production must be:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Clearly separated and documented"
+              },
+              {
+                "id": "b",
+                "text": "Hidden from the certifier"
+              },
+              {
+                "id": "c",
+                "text": "Mixed freely"
+              },
+              {
+                "id": "d",
+                "text": "Ignored"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          }
+        ],
+        "exam-7": [
+          {
+            "id": "e7-q1",
+            "type": "single",
+            "text": "Before harvesting, the combine header height should be set to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Suit the crop and cut cleanly without picking up soil"
+              },
+              {
+                "id": "b",
+                "text": "The maximum at all times"
+              },
+              {
+                "id": "c",
+                "text": "Below ground level"
+              },
+              {
+                "id": "d",
+                "text": "Whatever is fastest"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e7-q2",
+            "type": "multi",
+            "text": "Pre-harvest combine checks include: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Fire extinguisher present and charged"
+              },
+              {
+                "id": "b",
+                "text": "Belts, chains, and bearings inspected"
+              },
+              {
+                "id": "c",
+                "text": "Grain tank and unloading auger clear"
+              },
+              {
+                "id": "d",
+                "text": "Radio station tuned"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e7-q3",
+            "type": "single",
+            "text": "Excessive grain loss out the back of the combine often indicates:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Incorrect fan speed or concave settings"
+              },
+              {
+                "id": "b",
+                "text": "The paint is wrong"
+              },
+              {
+                "id": "c",
+                "text": "Too much daylight"
+              },
+              {
+                "id": "d",
+                "text": "Nothing adjustable"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e7-q4",
+            "type": "single",
+            "text": "Combine fires are most commonly caused by:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Chaff build-up near hot engine and bearing surfaces"
+              },
+              {
+                "id": "b",
+                "text": "Cold weather only"
+              },
+              {
+                "id": "c",
+                "text": "Clean machines"
+              },
+              {
+                "id": "d",
+                "text": "Low fuel exclusively"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e7-q5",
+            "type": "multi",
+            "text": "Safe unblocking of a plugged combine requires: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Engine off and key removed"
+              },
+              {
+                "id": "b",
+                "text": "Moving parts fully stopped"
+              },
+              {
+                "id": "c",
+                "text": "Reaching in while it runs"
+              },
+              {
+                "id": "d",
+                "text": "Following lockout procedure"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e7-q6",
+            "type": "single",
+            "text": "Higher drum/rotor speed than needed tends to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Increase grain damage and cracking"
+              },
+              {
+                "id": "b",
+                "text": "Improve germination"
+              },
+              {
+                "id": "c",
+                "text": "Reduce fuel use to zero"
+              },
+              {
+                "id": "d",
+                "text": "Have no effect"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e7-q7",
+            "type": "single",
+            "text": "When moving a combine on a public road you should:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Fit lights/markers and remove or secure the header per rules"
+              },
+              {
+                "id": "b",
+                "text": "Drive on the header"
+              },
+              {
+                "id": "c",
+                "text": "Travel at full field speed"
+              },
+              {
+                "id": "d",
+                "text": "Ignore other traffic"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e7-q8",
+            "type": "multi",
+            "text": "Signs the concave clearance is too tight include: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Cracked or broken grain"
+              },
+              {
+                "id": "b",
+                "text": "High power demand and slugging"
+              },
+              {
+                "id": "c",
+                "text": "Perfectly clean sample with no losses"
+              },
+              {
+                "id": "d",
+                "text": "Excess straw breakup"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          }
+        ],
+        "exam-8": [
+          {
+            "id": "e8-q1",
+            "type": "single",
+            "text": "Engine oil should be checked:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Regularly, with the machine level and engine off"
+              },
+              {
+                "id": "b",
+                "text": "Only when it seizes"
+              },
+              {
+                "id": "c",
+                "text": "Never"
+              },
+              {
+                "id": "d",
+                "text": "While driving"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e8-q2",
+            "type": "multi",
+            "text": "A good pre-season service includes: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Changing filters and fluids"
+              },
+              {
+                "id": "b",
+                "text": "Greasing points per the manual"
+              },
+              {
+                "id": "c",
+                "text": "Checking tyres and lights"
+              },
+              {
+                "id": "d",
+                "text": "Repainting the seat"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e8-q3",
+            "type": "single",
+            "text": "Grease points should be lubricated:",
+            "options": [
+              {
+                "id": "a",
+                "text": "At the intervals in the operator's manual"
+              },
+              {
+                "id": "b",
+                "text": "Once in the machine's lifetime"
+              },
+              {
+                "id": "c",
+                "text": "Only if they squeak loudly"
+              },
+              {
+                "id": "d",
+                "text": "Never, to save grease"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e8-q4",
+            "type": "single",
+            "text": "A slack drive belt will typically cause:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Slipping and poor power transfer"
+              },
+              {
+                "id": "b",
+                "text": "More horsepower"
+              },
+              {
+                "id": "c",
+                "text": "Better fuel economy"
+              },
+              {
+                "id": "d",
+                "text": "Nothing"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e8-q5",
+            "type": "multi",
+            "text": "Before working under a raised implement you should: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Use proper stands or locks"
+              },
+              {
+                "id": "b",
+                "text": "Rely only on hydraulics"
+              },
+              {
+                "id": "c",
+                "text": "Stop the engine and remove the key"
+              },
+              {
+                "id": "d",
+                "text": "Chock the wheels"
+              }
+            ],
+            "correct": [
+              "a",
+              "c",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e8-q6",
+            "type": "single",
+            "text": "Checking tyre pressures matters because it affects:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Traction, wear, and fuel use"
+              },
+              {
+                "id": "b",
+                "text": "Only the colour"
+              },
+              {
+                "id": "c",
+                "text": "The radio signal"
+              },
+              {
+                "id": "d",
+                "text": "Nothing measurable"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e8-q7",
+            "type": "single",
+            "text": "Old or contaminated hydraulic fluid can lead to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Component wear and poor performance"
+              },
+              {
+                "id": "b",
+                "text": "Improved lifespan"
+              },
+              {
+                "id": "c",
+                "text": "Faster ploughing guaranteed"
+              },
+              {
+                "id": "d",
+                "text": "No change at all"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e8-q8",
+            "type": "multi",
+            "text": "Keeping a maintenance log helps to: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Track service intervals"
+              },
+              {
+                "id": "b",
+                "text": "Spot recurring faults"
+              },
+              {
+                "id": "c",
+                "text": "Support resale value"
+              },
+              {
+                "id": "d",
+                "text": "Predict the weather"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          }
+        ],
+        "exam-9": [
+          {
+            "id": "e9-q1",
+            "type": "single",
+            "text": "Low-stress stock handling relies mainly on:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Understanding the animal's flight zone and point of balance"
+              },
+              {
+                "id": "b",
+                "text": "Shouting and hitting"
+              },
+              {
+                "id": "c",
+                "text": "Sudden loud noises"
+              },
+              {
+                "id": "d",
+                "text": "Chasing at speed"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e9-q2",
+            "type": "multi",
+            "text": "The 'five freedoms' of animal welfare include: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Freedom from hunger and thirst"
+              },
+              {
+                "id": "b",
+                "text": "Freedom from discomfort"
+              },
+              {
+                "id": "c",
+                "text": "Freedom to express normal behaviour"
+              },
+              {
+                "id": "d",
+                "text": "Freedom from ever being weighed"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e9-q3",
+            "type": "single",
+            "text": "A sick animal is often best managed by:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Isolating and observing it, and seeking veterinary advice"
+              },
+              {
+                "id": "b",
+                "text": "Mixing it with the whole herd"
+              },
+              {
+                "id": "c",
+                "text": "Ignoring it"
+              },
+              {
+                "id": "d",
+                "text": "Releasing it to roam"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e9-q4",
+            "type": "multi",
+            "text": "Signs of ill health in livestock include: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Off feed / not ruminating"
+              },
+              {
+                "id": "b",
+                "text": "Isolation from the group"
+              },
+              {
+                "id": "c",
+                "text": "Lameness"
+              },
+              {
+                "id": "d",
+                "text": "A shiny ear tag"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e9-q5",
+            "type": "single",
+            "text": "Good race and yard design should:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Use curves and solid sides to encourage smooth flow"
+              },
+              {
+                "id": "b",
+                "text": "Have sharp blind corners"
+              },
+              {
+                "id": "c",
+                "text": "Be as slippery as possible"
+              },
+              {
+                "id": "d",
+                "text": "Face directly into the sun"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e9-q6",
+            "type": "single",
+            "text": "Clean, fresh water for livestock should be:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Available at all times"
+              },
+              {
+                "id": "b",
+                "text": "Offered once a week"
+              },
+              {
+                "id": "c",
+                "text": "Only after work"
+              },
+              {
+                "id": "d",
+                "text": "Optional"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e9-q7",
+            "type": "multi",
+            "text": "Before transporting animals you should check: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "They are fit to travel"
+              },
+              {
+                "id": "b",
+                "text": "The vehicle is clean and safe"
+              },
+              {
+                "id": "c",
+                "text": "Stocking density is appropriate"
+              },
+              {
+                "id": "d",
+                "text": "The colour of the driver's hat"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          }
+        ],
+        "exam-10": [
+          {
+            "id": "e10-q1",
+            "type": "single",
+            "text": "Before attaching the cluster, teats should be:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Cleaned and, where used, fore-milked and pre-dipped"
+              },
+              {
+                "id": "b",
+                "text": "Left muddy"
+              },
+              {
+                "id": "c",
+                "text": "Painted"
+              },
+              {
+                "id": "d",
+                "text": "Ignored"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e10-q2",
+            "type": "multi",
+            "text": "Good milking hygiene includes: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Clean hands and gloves"
+              },
+              {
+                "id": "b",
+                "text": "Clean, dry teats before attaching"
+              },
+              {
+                "id": "c",
+                "text": "Post-milking teat disinfection"
+              },
+              {
+                "id": "d",
+                "text": "Skipping all cleaning to save time"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e10-q3",
+            "type": "single",
+            "text": "Rapid cooling of milk after collection is important to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Limit bacterial growth and protect quality"
+              },
+              {
+                "id": "b",
+                "text": "Change its colour"
+              },
+              {
+                "id": "c",
+                "text": "Increase somatic cells"
+              },
+              {
+                "id": "d",
+                "text": "Warm the parlour"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e10-q4",
+            "type": "single",
+            "text": "A high somatic cell count in milk often indicates:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Udder infection such as mastitis"
+              },
+              {
+                "id": "b",
+                "text": "Excellent udder health"
+              },
+              {
+                "id": "c",
+                "text": "Cold weather only"
+              },
+              {
+                "id": "d",
+                "text": "Nothing at all"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e10-q5",
+            "type": "multi",
+            "text": "Cleaning-in-place (CIP) of milking equipment typically uses: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "A warm detergent wash"
+              },
+              {
+                "id": "b",
+                "text": "An acid rinse cycle"
+              },
+              {
+                "id": "c",
+                "text": "Adequate water temperature and flow"
+              },
+              {
+                "id": "d",
+                "text": "Milk as the only cleaner"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e10-q6",
+            "type": "single",
+            "text": "Bulk tank milk temperature should generally be held:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Chilled to the required storage temperature"
+              },
+              {
+                "id": "b",
+                "text": "At room temperature"
+              },
+              {
+                "id": "c",
+                "text": "Near boiling"
+              },
+              {
+                "id": "d",
+                "text": "However is convenient"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          }
+        ],
+        "exam-11": [
+          {
+            "id": "e11-q1",
+            "type": "single",
+            "text": "The main goal of pruning a fruit tree is to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Improve structure, light, and fruiting"
+              },
+              {
+                "id": "b",
+                "text": "Remove as much wood as possible"
+              },
+              {
+                "id": "c",
+                "text": "Make it as tall as possible"
+              },
+              {
+                "id": "d",
+                "text": "Damage the tree"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e11-q2",
+            "type": "multi",
+            "text": "Which cuts/removals are commonly made? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Dead, diseased, or damaged wood"
+              },
+              {
+                "id": "b",
+                "text": "Crossing or rubbing branches"
+              },
+              {
+                "id": "c",
+                "text": "Strong healthy scaffold limbs at random"
+              },
+              {
+                "id": "d",
+                "text": "Water shoots and suckers"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e11-q3",
+            "type": "single",
+            "text": "Most pip fruit (apples/pears) are best pruned:",
+            "options": [
+              {
+                "id": "a",
+                "text": "In the dormant season"
+              },
+              {
+                "id": "b",
+                "text": "At peak flowering only"
+              },
+              {
+                "id": "c",
+                "text": "During a storm"
+              },
+              {
+                "id": "d",
+                "text": "Never"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e11-q4",
+            "type": "single",
+            "text": "A pruning cut should be made:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Just above an outward-facing bud or at the branch collar"
+              },
+              {
+                "id": "b",
+                "text": "In the middle of an internode leaving a long stub"
+              },
+              {
+                "id": "c",
+                "text": "Flush, cutting into the trunk"
+              },
+              {
+                "id": "d",
+                "text": "Anywhere at random"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e11-q5",
+            "type": "multi",
+            "text": "Good pruning hygiene includes: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Using sharp, clean tools"
+              },
+              {
+                "id": "b",
+                "text": "Disinfecting tools between diseased trees"
+              },
+              {
+                "id": "c",
+                "text": "Removing prunings from around the tree"
+              },
+              {
+                "id": "d",
+                "text": "Tearing branches by hand"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          }
+        ],
+        "exam-12": [
+          {
+            "id": "e12-q1",
+            "type": "single",
+            "text": "Integrated Pest Management (IPM) prioritises:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Monitoring and combining methods, using chemicals as a last resort"
+              },
+              {
+                "id": "b",
+                "text": "Spraying on a fixed calendar regardless of pests"
+              },
+              {
+                "id": "c",
+                "text": "Never inspecting the crop"
+              },
+              {
+                "id": "d",
+                "text": "Only chemical control"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e12-q2",
+            "type": "single",
+            "text": "Powdery mildew on grapevines typically appears as:",
+            "options": [
+              {
+                "id": "a",
+                "text": "A white-grey powdery coating on leaves and berries"
+              },
+              {
+                "id": "b",
+                "text": "Bright red spots only"
+              },
+              {
+                "id": "c",
+                "text": "Blue fuzzy cubes"
+              },
+              {
+                "id": "d",
+                "text": "No visible sign"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e12-q3",
+            "type": "multi",
+            "text": "Cultural controls that reduce vine disease include: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Canopy management for airflow"
+              },
+              {
+                "id": "b",
+                "text": "Removing infected material"
+              },
+              {
+                "id": "c",
+                "text": "Appropriate row orientation and spacing"
+              },
+              {
+                "id": "d",
+                "text": "Leaving the canopy as dense as possible"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e12-q4",
+            "type": "single",
+            "text": "Scouting the vineyard regularly allows you to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Detect pests and disease early and act in time"
+              },
+              {
+                "id": "b",
+                "text": "Waste time"
+              },
+              {
+                "id": "c",
+                "text": "Guarantee no pests ever appear"
+              },
+              {
+                "id": "d",
+                "text": "Avoid all decisions"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e12-q5",
+            "type": "multi",
+            "text": "When applying an approved plant-protection product you should: (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Follow the label rate and interval"
+              },
+              {
+                "id": "b",
+                "text": "Wear the specified PPE"
+              },
+              {
+                "id": "c",
+                "text": "Observe the pre-harvest interval"
+              },
+              {
+                "id": "d",
+                "text": "Spray in strong wind for wider coverage"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "e12-q6",
+            "type": "single",
+            "text": "Rotating chemical mode-of-action groups helps to:",
+            "options": [
+              {
+                "id": "a",
+                "text": "Slow the development of resistance"
+              },
+              {
+                "id": "b",
+                "text": "Speed up resistance"
+              },
+              {
+                "id": "c",
+                "text": "Change berry colour"
+              },
+              {
+                "id": "d",
+                "text": "Do nothing useful"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          }
+        ]
+      }
+    },
+    "agriAcademyCertificates": {
+      "version": 1,
+      "seq": 5,
+      "certificates": {
+        "AA-2026-000001": {
+          "certNo": "AA-2026-000001",
+          "examId": "exam-5",
+          "examTitle": "Soil Health & Nutrient Management",
+          "ownerUnitId": "unit-1",
+          "unitName": "Green Acres Training Co-op",
+          "holder": "3",
+          "sessionId": "sess-1",
+          "scorePct": 90,
+          "template": "botanical",
+          "issuedAt": "2026-06-02T09:28:00.000Z",
+          "expiresAt": "2028-06-02T09:28:00.000Z",
+          "revoked": false,
+          "revokedReason": null
+        },
+        "AA-2026-000002": {
+          "certNo": "AA-2026-000002",
+          "examId": "exam-8",
+          "examTitle": "Farm Machinery Maintenance",
+          "ownerUnitId": "unit-2",
+          "unitName": "Ironfield Machinery School",
+          "holder": "4",
+          "sessionId": "sess-2",
+          "scorePct": 100,
+          "template": "slate-minimal",
+          "issuedAt": "2026-06-09T11:15:00.000Z",
+          "expiresAt": "2027-12-09T11:15:00.000Z",
+          "revoked": false,
+          "revokedReason": null
+        },
+        "AA-2026-000003": {
+          "certNo": "AA-2026-000003",
+          "examId": "exam-9",
+          "examTitle": "Livestock Welfare & Handling",
+          "ownerUnitId": "unit-3",
+          "unitName": "Meadowbrook Livestock & Welfare",
+          "holder": "2",
+          "sessionId": "sess-3",
+          "scorePct": 77,
+          "template": "modern-teal",
+          "issuedAt": "2026-06-15T14:48:00.000Z",
+          "expiresAt": "2028-06-15T14:48:00.000Z",
+          "revoked": false,
+          "revokedReason": null
+        },
+        "AA-2026-000004": {
+          "certNo": "AA-2026-000004",
+          "examId": "exam-7",
+          "examTitle": "Combine Harvester Operation",
+          "ownerUnitId": "unit-2",
+          "unitName": "Ironfield Machinery School",
+          "holder": "10",
+          "sessionId": "sess-5",
+          "scorePct": 91,
+          "template": "rustic-kraft",
+          "issuedAt": "2026-06-28T09:06:00.000Z",
+          "expiresAt": "2028-06-28T09:06:00.000Z",
+          "revoked": false,
+          "revokedReason": null
+        },
+        "AA-2026-000005": {
+          "certNo": "AA-2026-000005",
+          "examId": "exam-10",
+          "examTitle": "Dairy Hygiene & Milk Quality",
+          "ownerUnitId": "unit-3",
+          "unitName": "Meadowbrook Livestock & Welfare",
+          "holder": "4",
+          "sessionId": "sess-6",
+          "scorePct": 100,
+          "template": "midnight",
+          "issuedAt": "2026-07-03T10:35:00.000Z",
+          "expiresAt": "2028-01-03T10:35:00.000Z",
+          "revoked": false,
+          "revokedReason": null
+        }
+      }
     }
   }
 }

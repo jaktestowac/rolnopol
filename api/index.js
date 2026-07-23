@@ -111,7 +111,7 @@ const { PORT } = require("../data/settings");
 const { logDebug, logInfo, logError } = require("../helpers/logger-api");
 const { initializeDatabases, cleanupDatabases } = require("../data/database-init");
 const versionMiddleware = require("../middleware/version.middleware");
-const { restoreAllDatabasesFromBaseState } = require("../services/debug-database-restore.service");
+const { restoreAllDatabasesFromBaseState, seedMissingDatabasesFromBaseState } = require("../services/debug-database-restore.service");
 const packageJson = require("../package.json");
 const notFoundStatsModule = require("../helpers/notfound-stats");
 const prometheusMetrics = require("../helpers/prometheus-metrics");
@@ -146,6 +146,25 @@ try {
 app.set("etag", false);
 
 let easterBreadcrumbCounter = 0;
+
+// Seed sample data for any MISSING databases before initialization, so a fresh
+// environment boots with realistic predefined data instead of empty stores.
+// Existing databases are never overwritten. Runs synchronously so the files are
+// present before the databases are loaded into memory below.
+try {
+  const seedResult = seedMissingDatabasesFromBaseState();
+  if (seedResult.seeded.length > 0) {
+    logInfo("Seeded sample data for missing databases from base state", {
+      seeded: seedResult.seeded,
+      count: seedResult.seeded.length,
+    });
+  }
+  if (seedResult.errors.length > 0) {
+    logError("Some databases could not be seeded from base state", { errors: seedResult.errors });
+  }
+} catch (error) {
+  logError("Failed to seed missing databases from base state:", { error: error.message });
+}
 
 // Initialize databases on startup
 initializeDatabases().catch((error) => {
@@ -620,6 +639,43 @@ app.get(["/farm-stay-analytics", "/farm-stay-analytics.html"], async (req, res, 
     return next();
   }
 });
+
+// Feature-gate the AgriAcademy pages before static serving. `/agri-academy` is
+// the friendly entry point that redirects to the main "certification units"
+// directory (the page linked from the navbar). The taker, unit-profile, and unit
+// console pages are gated by the same flag; their APIs are flag-gated too.
+app.get(
+  [
+    "/agri-academy",
+    "/agri-academy-units.html",
+    "/agri-academy-unit.html",
+    "/agri-academy-leaderboard.html",
+    "/agri-academy.html",
+    "/agri-academy-authoring.html",
+    "/agri-academy-certificate.html",
+    "/agri-academy-status.html",
+  ],
+  async (req, res, next) => {
+    try {
+      const data = await featureFlagsService.getFeatureFlags();
+      const enabled = data?.flags?.agriAcademyEnabled === true;
+
+      if (!enabled) {
+        notFoundStatsModule.incrementHtml(req.originalUrl);
+        return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+      }
+
+      if (req.path === "/agri-academy") {
+        return res.redirect(302, "/agri-academy-units.html");
+      }
+
+      return next();
+    } catch (error) {
+      logError("AgriAcademy feature gate check failed", { error });
+      return next();
+    }
+  },
+);
 
 // Feature-gate Farmlog UI pages before static serving
 app.get(

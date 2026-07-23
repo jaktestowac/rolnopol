@@ -1,0 +1,317 @@
+{
+  "version": 1,
+  "seq": 12,
+  "units": {
+    "unit-demo": {
+      "unitId": "unit-demo",
+      "ownerUserId": "demo-owner",
+      "name": "Rolnopol Demo Certification Unit",
+      "description": "A built-in demo unit showcasing free farm-skill certifications. Register your own unit to author exams.",
+      "contactEmail": "demo@agri-academy.example",
+      "tags": [
+        "pesticides",
+        "tractors",
+        "safety"
+      ],
+      "color": "#3fae6b",
+      "icon": "wheat-awn",
+      "payoutUserId": "demo-owner",
+      "createdAt": "2026-07-21T20:43:37.454Z",
+      "status": "active"
+    },
+    "unit-1": {
+      "unitId": "unit-1",
+      "ownerUserId": "2",
+      "name": "Green Acres Training Co-op",
+      "description": "Farmer-led co-operative delivering practical certifications in soil health, nutrient management, and organic production.",
+      "contactEmail": "training@greenacres.coop",
+      "tags": [
+        "soil",
+        "crops",
+        "organic",
+        "nutrients"
+      ],
+      "color": "#2e8f55",
+      "icon": "seedling",
+      "payoutUserId": "2",
+      "createdAt": "2026-04-12T09:15:00.000Z",
+      "status": "active"
+    },
+    "unit-2": {
+      "unitId": "unit-2",
+      "ownerUserId": "3",
+      "name": "Ironfield Machinery School",
+      "description": "Hands-on operator training and safety certification for tractors, combines, and powered farm equipment.",
+      "contactEmail": "enrol@ironfield-machinery.example",
+      "tags": [
+        "machinery",
+        "tractors",
+        "safety",
+        "maintenance"
+      ],
+      "color": "#c9743a",
+      "icon": "tractor",
+      "payoutUserId": "3",
+      "createdAt": "2026-04-28T13:40:00.000Z",
+      "status": "active"
+    },
+    "unit-3": {
+      "unitId": "unit-3",
+      "ownerUserId": "4",
+      "name": "Meadowbrook Livestock & Welfare",
+      "description": "Animal-welfare and husbandry certifications for dairy, beef, and mixed livestock holdings.",
+      "contactEmail": "welfare@meadowbrook.example",
+      "tags": [
+        "livestock",
+        "dairy",
+        "welfare",
+        "animals"
+      ],
+      "color": "#4a90d9",
+      "icon": "cow",
+      "payoutUserId": "4",
+      "createdAt": "2026-05-06T08:05:00.000Z",
+      "status": "active"
+    },
+    "unit-4": {
+      "unitId": "unit-4",
+      "ownerUserId": "5",
+      "name": "Orchard & Vine Guild",
+      "description": "Horticulture certifications covering fruit-tree management, pruning, and vineyard pest control.",
+      "contactEmail": "guild@orchardandvine.example",
+      "tags": [
+        "orchard",
+        "vineyard",
+        "pruning",
+        "horticulture"
+      ],
+      "color": "#8b5cf6",
+      "icon": "apple-whole",
+      "payoutUserId": "5",
+      "createdAt": "2026-05-19T15:22:00.000Z",
+      "status": "active"
+    }
+  },
+  "exams": {
+    "pesticide-basics": {
+      "id": "pesticide-basics",
+      "ownerUnitId": "unit-demo",
+      "title": "Pesticide Handling Basics",
+      "description": "Core safety rules for storing, mixing, and applying agricultural pesticides.",
+      "questionCount": 3,
+      "durationSec": 1800,
+      "accessWindowDays": 7,
+      "passPct": 60,
+      "attemptsAllowed": 3,
+      "certValidMonths": 24,
+      "certTemplate": "botanical",
+      "pricing": {
+        "mode": "free",
+        "priceRol": 0
+      },
+      "status": "published",
+      "createdAt": "2026-07-21T20:43:37.454Z",
+      "updatedAt": "2026-07-21T20:43:37.454Z"
+    },
+    "tractor-safety": {
+      "id": "tractor-safety",
+      "ownerUnitId": "unit-demo",
+      "title": "Tractor Safety",
+      "description": "Safe operation, maintenance checks, and hazard awareness for farm tractors.",
+      "questionCount": 3,
+      "durationSec": 1200,
+      "accessWindowDays": 14,
+      "passPct": 70,
+      "attemptsAllowed": 3,
+      "certValidMonths": 24,
+      "certTemplate": "gold-formal",
+      "pricing": {
+        "mode": "free",
+        "priceRol": 0
+      },
+      "status": "published",
+      "createdAt": "2026-07-21T20:43:37.454Z",
+      "updatedAt": "2026-07-21T20:43:37.454Z"
+    },
+    "demo-quiz": {
+      "id": "demo-quiz",
+      "ownerUnitId": "unit-demo",
+      "title": "Farm Safety Quick Check",
+      "description": "A quick two-question taster covering everyday farm-safety basics.",
+      "questionCount": 2,
+      "durationSec": 600,
+      "accessWindowDays": 7,
+      "passPct": 50,
+      "attemptsAllowed": 3,
+      "certValidMonths": 24,
+      "certTemplate": "classic-green",
+      "pricing": {
+        "mode": "free",
+        "priceRol": 0
+      },
+      "status": "published",
+      "createdAt": "2026-07-21T20:43:37.454Z",
+      "updatedAt": "2026-07-21T20:43:37.454Z"
+    },
+    "exam-5": {
+      "id": "exam-5",
+      "ownerUnitId": "unit-1",
+      "title": "Soil Health & Nutrient Management",
+      "description": "Understanding soil structure, testing, organic matter, and balanced nutrient application.",
+      "questionCount": 6,
+      "durationSec": 1800,
+      "accessWindowDays": 14,
+      "passPct": 60,
+      "attemptsAllowed": 3,
+      "certValidMonths": 24,
+      "certTemplate": "botanical",
+      "pricing": {
+        "mode": "free",
+        "priceRol": 0
+      },
+      "status": "published",
+      "createdAt": "2026-04-15T10:00:00.000Z",
+      "updatedAt": "2026-04-15T10:00:00.000Z"
+    },
+    "exam-6": {
+      "id": "exam-6",
+      "ownerUnitId": "unit-1",
+      "title": "Organic Farming Certification",
+      "description": "Standards, record-keeping, and prohibited inputs for certified organic crop production.",
+      "questionCount": 8,
+      "durationSec": 2400,
+      "accessWindowDays": 30,
+      "passPct": 75,
+      "attemptsAllowed": 2,
+      "certValidMonths": 36,
+      "certTemplate": "classic-green",
+      "pricing": {
+        "mode": "paid",
+        "priceRol": 25
+      },
+      "status": "published",
+      "createdAt": "2026-04-20T11:30:00.000Z",
+      "updatedAt": "2026-04-20T11:30:00.000Z"
+    },
+    "exam-7": {
+      "id": "exam-7",
+      "ownerUnitId": "unit-2",
+      "title": "Combine Harvester Operation",
+      "description": "Safe set-up, in-field operation, and settings for grain and oilseed harvesting.",
+      "questionCount": 7,
+      "durationSec": 2100,
+      "accessWindowDays": 21,
+      "passPct": 75,
+      "attemptsAllowed": 3,
+      "certValidMonths": 24,
+      "certTemplate": "rustic-kraft",
+      "pricing": {
+        "mode": "paid",
+        "priceRol": 40
+      },
+      "status": "published",
+      "createdAt": "2026-05-01T09:00:00.000Z",
+      "updatedAt": "2026-05-01T09:00:00.000Z"
+    },
+    "exam-8": {
+      "id": "exam-8",
+      "ownerUnitId": "unit-2",
+      "title": "Farm Machinery Maintenance",
+      "description": "Routine servicing, lubrication, and pre-season checks for common farm machinery.",
+      "questionCount": 6,
+      "durationSec": 1500,
+      "accessWindowDays": 14,
+      "passPct": 70,
+      "attemptsAllowed": 3,
+      "certValidMonths": 18,
+      "certTemplate": "slate-minimal",
+      "pricing": {
+        "mode": "free",
+        "priceRol": 0
+      },
+      "status": "published",
+      "createdAt": "2026-05-03T14:10:00.000Z",
+      "updatedAt": "2026-05-03T14:10:00.000Z"
+    },
+    "exam-9": {
+      "id": "exam-9",
+      "ownerUnitId": "unit-3",
+      "title": "Livestock Welfare & Handling",
+      "description": "Low-stress handling, the five freedoms, and recognising signs of ill health.",
+      "questionCount": 7,
+      "durationSec": 1800,
+      "accessWindowDays": 21,
+      "passPct": 70,
+      "attemptsAllowed": 3,
+      "certValidMonths": 24,
+      "certTemplate": "modern-teal",
+      "pricing": {
+        "mode": "paid",
+        "priceRol": 30
+      },
+      "status": "published",
+      "createdAt": "2026-05-08T09:45:00.000Z",
+      "updatedAt": "2026-05-08T09:45:00.000Z"
+    },
+    "exam-10": {
+      "id": "exam-10",
+      "ownerUnitId": "unit-3",
+      "title": "Dairy Hygiene & Milk Quality",
+      "description": "Milking routine, udder health, cleaning-in-place, and cold-chain basics.",
+      "questionCount": 6,
+      "durationSec": 1500,
+      "accessWindowDays": 14,
+      "passPct": 65,
+      "attemptsAllowed": 3,
+      "certValidMonths": 18,
+      "certTemplate": "midnight",
+      "pricing": {
+        "mode": "free",
+        "priceRol": 0
+      },
+      "status": "published",
+      "createdAt": "2026-05-11T08:20:00.000Z",
+      "updatedAt": "2026-05-11T08:20:00.000Z"
+    },
+    "exam-11": {
+      "id": "exam-11",
+      "ownerUnitId": "unit-4",
+      "title": "Fruit Tree Pruning Fundamentals",
+      "description": "Timing, cut types, and shaping for healthy, productive fruit trees.",
+      "questionCount": 5,
+      "durationSec": 1200,
+      "accessWindowDays": 14,
+      "passPct": 60,
+      "attemptsAllowed": 3,
+      "certValidMonths": 24,
+      "certTemplate": "sunrise",
+      "pricing": {
+        "mode": "free",
+        "priceRol": 0
+      },
+      "status": "published",
+      "createdAt": "2026-05-21T10:30:00.000Z",
+      "updatedAt": "2026-05-21T10:30:00.000Z"
+    },
+    "exam-12": {
+      "id": "exam-12",
+      "ownerUnitId": "unit-4",
+      "title": "Vineyard Pest & Disease Management",
+      "description": "Identifying and managing common vine pests and fungal diseases with an IPM approach.",
+      "questionCount": 6,
+      "durationSec": 1800,
+      "accessWindowDays": 21,
+      "passPct": 70,
+      "attemptsAllowed": 2,
+      "certValidMonths": 24,
+      "certTemplate": "royal-purple",
+      "pricing": {
+        "mode": "paid",
+        "priceRol": 20
+      },
+      "status": "published",
+      "createdAt": "2026-05-25T13:00:00.000Z",
+      "updatedAt": "2026-05-25T13:00:00.000Z"
+    }
+  }
+}

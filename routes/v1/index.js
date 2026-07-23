@@ -85,6 +85,24 @@ try {
   logError("[routes/v1] Failed to load farm-stay.route — farm-stay endpoints unavailable:", err.message);
   farmStayRoute = express.Router();
 }
+// Defensive loading — agri-academy routes dial the standalone AgriAcademy
+// gateways; if they fail to load, the rest of the app must still start. The
+// admin (authoring) route is registered before the taker route so its literal
+// paths (/units/me, /exams/mine) win over the taker plane's param routes.
+let agriAcademyAdminRoute;
+try {
+  agriAcademyAdminRoute = require("./agri-academy-admin.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load agri-academy-admin.route — agri-academy authoring unavailable:", err.message);
+  agriAcademyAdminRoute = express.Router();
+}
+let agriAcademyRoute;
+try {
+  agriAcademyRoute = require("./agri-academy.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load agri-academy.route — agri-academy endpoints unavailable:", err.message);
+  agriAcademyRoute = express.Router();
+}
 
 const router = express.Router();
 
@@ -245,6 +263,8 @@ router.use("/", harvestArchiveRoute);
 router.use("/", greenhouseRoute);
 router.use("/", tasklabRoute);
 router.use("/", farmStayRoute);
+router.use("/", agriAcademyAdminRoute);
+router.use("/", agriAcademyRoute);
 router.use("/", servicesMonitorRoute);
 router.use("/contact", contactRoute);
 router.use("/", blogRoute);

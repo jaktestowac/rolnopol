@@ -61,7 +61,16 @@ class NavigationComponent {
       const greenhouseControlRoomEnabled = await this.featureFlagsService.isEnabled("greenhouseControlRoomEnabled", false);
       const taskLabEnabled = await this.featureFlagsService.isEnabled("taskLabEnabled", false);
       const farmStayEnabled = await this.featureFlagsService.isEnabled("farmStayEnabled", false);
-      return { alertsEnabled, rolnopolMapEnabled, rolnopolFarmlogEnabled, greenhouseControlRoomEnabled, taskLabEnabled, farmStayEnabled };
+      const agriAcademyEnabled = await this.featureFlagsService.isEnabled("agriAcademyEnabled", false);
+      return {
+        alertsEnabled,
+        rolnopolMapEnabled,
+        rolnopolFarmlogEnabled,
+        greenhouseControlRoomEnabled,
+        taskLabEnabled,
+        farmStayEnabled,
+        agriAcademyEnabled,
+      };
     } catch (error) {
       return { alertsEnabled: true, rolnopolMapEnabled: true, rolnopolFarmlogEnabled: false, greenhouseControlRoomEnabled: false };
     }
@@ -233,6 +242,14 @@ class NavigationComponent {
       `
       : "";
 
+    const agriAcademyLink = flagState?.agriAcademyEnabled
+      ? `
+        <a href="/agri-academy-units.html" class="nav__item">
+          <i class="fa-solid fa-graduation-cap"></i> AgriAcademy
+        </a>
+      `
+      : "";
+
     this.navElement.innerHTML = `
       <span class="nav__welcome">
         Welcome, <span class="nav__username">${username}</span>
@@ -266,6 +283,7 @@ class NavigationComponent {
         ${greenhouseLink}
         ${tasklabLink}
         ${farmStayLink}
+        ${agriAcademyLink}
         <a href="/docs.html" class="nav__item">
           <i class="fa-solid fa-book"></i> Documentation
         </a>
@@ -302,6 +320,13 @@ class NavigationComponent {
         </a>
       `
       : "";
+    const agriAcademyLink = flagState?.agriAcademyEnabled
+      ? `
+        <a href="/agri-academy-units.html" class="nav__item">
+          <i class="fa-solid fa-graduation-cap"></i> AgriAcademy
+        </a>
+      `
+      : "";
     this.navElement.innerHTML = `
       <div class="nav__auth-buttons">
         <a href="/login.html" class="nav__button">Login</a>
@@ -322,6 +347,7 @@ class NavigationComponent {
         ${farmlogLink}
         ${greenhouseLink}
         ${farmStayLink}
+        ${agriAcademyLink}
         <a href="/docs.html" class="nav__item">
           <i class="fa-solid fa-book"></i> Documentation
         </a>

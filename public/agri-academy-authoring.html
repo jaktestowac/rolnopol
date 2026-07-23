@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgriAcademy — Unit console</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/agri-academy.css" />
+    <style>
+      :root {
+        --bg: #0f1a14;
+        --card: #16241b;
+        --ink: #eaf3ec;
+        --muted: #9bb3a4;
+        --accent: #3fae6b;
+        --accent-2: #7bd4a0;
+        --border: #24382b;
+        --danger: #ff8a8a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: radial-gradient(1200px 600px at 80% -10%, #1c3326 0%, var(--bg) 55%);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      .wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      a.back {
+        color: var(--accent-2);
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      h1 {
+        margin: 8px 0 4px;
+        font-size: 30px;
+      }
+      h2 {
+        font-size: 18px;
+        margin: 28px 0 12px;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0 0 8px;
+      }
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin: 10px 0 4px;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        background: #0f1a14;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 9px 11px;
+        font-size: 14px;
+        font-family: inherit;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--accent);
+        background: linear-gradient(180deg, var(--accent), #2e8f55);
+        color: #06170d;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 14px;
+      }
+      .btn--ghost {
+        background: #1e3527;
+        color: var(--ink);
+        border-color: var(--border);
+        font-weight: 600;
+      }
+      .btn--sm {
+        padding: 6px 12px;
+        font-size: 13px;
+        margin-top: 0;
+      }
+      .exam {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 10px;
+      }
+      .exam-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .tag {
+        font-size: 12px;
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 10px;
+        color: var(--accent-2);
+      }
+      .tag.draft {
+        color: #ffd98a;
+      }
+      .tag.published {
+        color: var(--accent-2);
+      }
+      .tag.disabled {
+        color: var(--danger);
+        border-color: #4a2626;
+        background: #2a1515;
+      }
+      .opt-row {
+        display: grid;
+        grid-template-columns: 28px 1fr 90px;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+      .opt-row .cid {
+        color: var(--muted);
+        text-align: center;
+      }
+      .banner {
+        margin: 14px 0;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #16241b;
+      }
+      .banner.err {
+        color: var(--danger);
+        border-color: #4a2626;
+        background: #2a1515;
+      }
+      .banner.ok {
+        color: var(--accent-2);
+      }
+      .hidden {
+        display: none;
+      }
+      .state {
+        color: var(--muted);
+        padding: 24px 0;
+      }
+      .inline-check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: center;
+      }
+      .inline-check input {
+        width: auto;
+      }
+      .brand-label {
+        margin-top: 14px;
+      }
+      .swatches {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 6px 0;
+      }
+      .swatch {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: 2px solid var(--border);
+        cursor: pointer;
+        padding: 0;
+        transition: transform 0.1s ease;
+      }
+      .swatch:hover {
+        transform: scale(1.12);
+      }
+      input[type="color"] {
+        width: 54px;
+        height: 34px;
+        padding: 2px;
+        cursor: pointer;
+      }
+      .icon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+        gap: 8px;
+        margin: 6px 0;
+      }
+      .icon-choice {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 44px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #0f1a14;
+        color: var(--muted);
+        font-size: 18px;
+        cursor: pointer;
+      }
+      .icon-choice:hover {
+        border-color: var(--accent);
+        color: var(--ink);
+      }
+      .icon-choice.selected {
+        border-color: var(--accent);
+        color: #06170d;
+        background: var(--accent-2);
+      }
+      .brand-head {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .unit-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        font-size: 24px;
+        color: #06170d;
+        flex-shrink: 0;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .chip {
+        font-size: 12px;
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 10px;
+        color: var(--accent-2);
+      }
+      .cert-preview {
+        margin: 10px 0 4px;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        border: 2px solid var(--border);
+      }
+      .cert-preview .cp-motif {
+        font-size: 26px;
+      }
+      .cert-preview .cp-title {
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+      .cert-preview .cp-name {
+        font-size: 20px;
+        font-weight: 800;
+        margin: 4px 0 2px;
+      }
+      .cert-preview .cp-sub {
+        font-size: 12px;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 8px 0 18px;
+        border-bottom: 1px solid var(--border);
+      }
+      .tab {
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 600;
+        padding: 10px 14px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .tab:hover {
+        color: var(--ink);
+      }
+      .tab.is-active {
+        color: var(--accent-2);
+        border-bottom-color: var(--accent);
+      }
+      .qlist-item {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 10px;
+      }
+      .qlist-item h4 {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+      .qlist-item .qopt {
+        font-size: 13px;
+        color: var(--muted);
+        padding: 2px 0;
+      }
+      .qlist-item .qopt.correct {
+        color: var(--accent-2);
+        font-weight: 600;
+      }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .kpi {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .kpi .num {
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--ink);
+      }
+      .kpi .lbl {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 4px;
+      }
+      .kpi.accent .num {
+        color: var(--accent-2);
+      }
+      .atable {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .atable th,
+      .atable td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      .atable th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .atable td {
+        color: var(--ink);
+      }
+      .atable-wrap {
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body class="agri-academy-page">
+    <div id="header-component"></div>
+    <div class="wrap">
+      <a class="back" href="/agri-academy-units.html">← All certification units</a>
+      <header>
+        <div class="eyebrow">🏛️ AgriAcademy</div>
+        <h1>Unit console</h1>
+        <p class="sub">Register your certification unit, author typed exams, and publish them for takers.</p>
+      </header>
+
+      <div id="banner" class="banner hidden"></div>
+      <div id="loginState" class="state hidden"></div>
+
+      <!-- Tabs -->
+      <div id="tabs" class="tabs hidden">
+        <button class="tab is-active" data-tab="unit"><i class="fa-solid fa-building-columns"></i> Unit</button>
+        <button class="tab" data-tab="exams"><i class="fa-solid fa-file-lines"></i> Exams</button>
+        <button class="tab" data-tab="questions"><i class="fa-solid fa-list-check"></i> Questions</button>
+        <button class="tab" data-tab="analytics"><i class="fa-solid fa-chart-line"></i> Analytics</button>
+      </div>
+
+      <!-- Unit tab -->
+      <section id="tab-unit" class="tabpanel">
+        <div id="createSection" class="hidden">
+          <div class="panel">
+            <h2 style="margin-top: 0">Create your certification unit</h2>
+            <p class="sub">One unit per account. This becomes your public profile.</p>
+            <label>Unit name</label>
+            <input id="uName" placeholder="e.g. Mazovian Agronomy Board" />
+            <label>Description</label>
+            <textarea id="uDesc" rows="3" placeholder="What certifications do you issue?"></textarea>
+            <label>Contact email (optional)</label>
+            <input id="uEmail" placeholder="unit@example.com" />
+            <label class="brand-label">Tags (comma-separated)</label>
+            <input id="cTags" placeholder="pesticides, safety, tractors" />
+            <label class="brand-label">Brand colour</label>
+            <div id="cPalette" class="swatches"></div>
+            <input type="color" id="cColor" value="#3fae6b" />
+            <label class="brand-label">Icon</label>
+            <div id="cIcons" class="icon-grid"></div>
+            <button id="createUnitBtn" class="btn">Create unit</button>
+          </div>
+        </div>
+        <div class="panel hidden" id="unitPanel"></div>
+      </section>
+
+      <!-- Exams tab -->
+      <section id="tab-exams" class="tabpanel hidden">
+        <div id="examsGate" class="state hidden">Register your certification unit first (the <strong>Unit</strong> tab).</div>
+        <div id="examsBody" class="hidden">
+          <h2 style="margin-top: 4px">Your exams</h2>
+          <div id="examList"></div>
+
+          <div class="panel">
+            <h2 style="margin-top: 0">Create an exam</h2>
+            <label>Title</label>
+            <input id="eTitle" placeholder="Pesticide Handling Basics" />
+            <label>Description</label>
+            <textarea id="eDesc" rows="2"></textarea>
+            <div class="row">
+              <div>
+                <label>Duration (min)</label>
+                <input id="eDuration" type="number" value="30" min="1" />
+              </div>
+              <div>
+                <label>Access window (days)</label>
+                <input id="eAccess" type="number" value="7" min="1" />
+              </div>
+              <div>
+                <label>Pass %</label>
+                <input id="ePass" type="number" value="60" min="1" max="100" />
+              </div>
+              <div>
+                <label>Attempts</label>
+                <input id="eAttempts" type="number" value="3" min="1" />
+              </div>
+              <div>
+                <label>Questions needed</label>
+                <input id="eQCount" type="number" value="2" min="1" />
+              </div>
+              <div>
+                <label>Cert valid (months)</label>
+                <input id="eValid" type="number" value="24" min="1" />
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label>Pricing</label>
+                <select id="ePricing">
+                  <option value="free">Free</option>
+                  <option value="paid">Paid (ROL)</option>
+                </select>
+              </div>
+              <div>
+                <label>Price (ROL, if paid)</label>
+                <input id="ePrice" type="number" value="0" min="0" />
+              </div>
+            </div>
+            <label class="brand-label">Certificate template</label>
+            <select id="eCertTemplate"></select>
+            <div id="eTemplatePreview" class="cert-preview"></div>
+            <button id="createExamBtn" class="btn">Create exam (draft)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Questions tab -->
+      <section id="tab-questions" class="tabpanel hidden">
+        <div id="questionsGate" class="state hidden">Create an exam first (the <strong>Exams</strong> tab).</div>
+        <div id="questionsBody" class="hidden">
+          <div class="panel">
+            <label style="margin-top: 0">Exam</label>
+            <select id="qExam"></select>
+            <h3 style="margin: 18px 0 8px; font-size: 15px">Questions in this exam</h3>
+            <div id="questionList"></div>
+          </div>
+
+          <div class="panel">
+            <h2 style="margin-top: 0">Add a question</h2>
+            <div class="row">
+              <div>
+                <label>Type</label>
+                <select id="qType">
+                  <option value="single">Single answer</option>
+                  <option value="multi">Multiple answers</option>
+                </select>
+              </div>
+              <div>
+                <label>Weight</label>
+                <input id="qWeight" type="number" value="1" min="1" />
+              </div>
+            </div>
+            <label>Question text</label>
+            <input id="qText" placeholder="Which of these…" />
+            <label>Options (leave blank to skip; tick the correct ones)</label>
+            <div id="optRows"></div>
+            <button id="addQBtn" class="btn">Add question</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics tab -->
+      <section id="tab-analytics" class="tabpanel hidden">
+        <div id="analyticsGate" class="state hidden">Register your certification unit first (the <strong>Unit</strong> tab).</div>
+        <div id="analyticsBody"></div>
+      </section>
+    </div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("agri-academy");
+    </script>
+    <script>
+      (() => {
+        const API = "/api/v1/agri-academy";
+        const $ = (id) => document.getElementById(id);
+        const esc = (s) =>
+          String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+        async function api(method, path, body) {
+          const opts = { method, credentials: "include" };
+          if (body) {
+            opts.headers = { "Content-Type": "application/json" };
+            opts.body = JSON.stringify(body);
+          }
+          let res;
+          try {
+            res = await fetch(`${API}${path}`, opts);
+          } catch {
+            return { ok: false, status: 0, body: { error: "AGRI_ACADEMY_OFFLINE" } };
+          }
+          const json = await res.json().catch(() => ({}));
+          return { ok: res.ok, status: res.status, body: json };
+        }
+
+        function banner(msg, kind) {
+          const el = $("banner");
+          el.textContent = msg;
+          el.className = "banner" + (kind ? " " + kind : "");
+          el.classList.remove("hidden");
+        }
+
+        // ── Branding presets + pickers ────────────────────────────────────────────
+        let presets = { icons: ["graduation-cap"], palette: ["#3fae6b"], defaultIcon: "graduation-cap", defaultColor: "#3fae6b" };
+        async function loadPresets() {
+          const r = await api("GET", "/unit-presets");
+          if (r.ok && Array.isArray(r.body.icons)) presets = r.body;
+        }
+        // Populate the colour swatches + icon grid for a given field scope ("c" | "eu").
+        function mountPickers(scope, current = {}) {
+          $(scope + "Color").value = current.color || presets.defaultColor || presets.palette[0];
+          const pal = $(scope + "Palette");
+          pal.innerHTML = (presets.palette || [])
+            .map((c) => `<button type="button" class="swatch" data-c="${c}" style="background:${c}" title="${c}"></button>`)
+            .join("");
+          pal.querySelectorAll(".swatch").forEach((sw) => sw.addEventListener("click", () => ($(scope + "Color").value = sw.dataset.c)));
+
+          const iconWrap = $(scope + "Icons");
+          const selIcon = current.icon || presets.defaultIcon || presets.icons[0];
+          iconWrap.dataset.icon = selIcon;
+          iconWrap.innerHTML = (presets.icons || [])
+            .map(
+              (k) =>
+                `<button type="button" class="icon-choice${k === selIcon ? " selected" : ""}" data-k="${k}" title="${k}"><i class="fa-solid fa-${k}"></i></button>`,
+            )
+            .join("");
+          iconWrap.querySelectorAll(".icon-choice").forEach((btn) =>
+            btn.addEventListener("click", () => {
+              iconWrap.dataset.icon = btn.dataset.k;
+              iconWrap.querySelectorAll(".icon-choice").forEach((b) => b.classList.remove("selected"));
+              btn.classList.add("selected");
+            }),
+          );
+          if ($(scope + "Tags")) $(scope + "Tags").value = (current.tags || []).join(", ");
+        }
+        function readBranding(scope) {
+          return {
+            tags: $(scope + "Tags")
+              .value.split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+            color: $(scope + "Color").value,
+            icon: $(scope + "Icons").dataset.icon || presets.defaultIcon,
+          };
+        }
+
+        let currentUnit = null; // the owner's unit (set once loaded) — drives the Analytics tab.
+
+        // ── Certificate templates (exam-creation picker + live preview) ─────────────
+        let certTemplates = [];
+        let certDefault = "classic-green";
+        async function loadCertTemplates() {
+          const r = await api("GET", "/cert-templates");
+          if (r.ok && Array.isArray(r.body.templates)) {
+            certTemplates = r.body.templates;
+            certDefault = r.body.defaultTemplate || certTemplates[0]?.id;
+          }
+          const sel = $("eCertTemplate");
+          sel.innerHTML = certTemplates.map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join("");
+          if (certDefault) sel.value = certDefault;
+          sel.addEventListener("change", renderTemplatePreview);
+          renderTemplatePreview();
+        }
+        function renderTemplatePreview() {
+          const t = certTemplates.find((x) => x.id === $("eCertTemplate").value) || certTemplates[0];
+          const box = $("eTemplatePreview");
+          if (!t) {
+            box.innerHTML = "";
+            return;
+          }
+          box.style.background = t.panel;
+          box.style.borderColor = t.accent;
+          box.style.fontFamily = t.font;
+          box.innerHTML = `
+            <div class="cp-motif">${t.motif || "🎓"}</div>
+            <div class="cp-title" style="color:${t.accent}">Certificate of Achievement</div>
+            <div class="cp-name" style="color:${t.ink}">Sample Holder</div>
+            <div class="cp-sub" style="color:${t.sub}">${esc(t.name)} preview</div>`;
+        }
+
+        const OPT_IDS = ["a", "b", "c", "d"];
+        function renderOptRows() {
+          $("optRows").innerHTML = OPT_IDS.map(
+            (id) => `
+          <div class="opt-row">
+            <div class="cid">${id})</div>
+            <input data-opt="${id}" placeholder="Option ${id}" />
+            <div class="inline-check"><input type="checkbox" data-correct="${id}" /> correct</div>
+          </div>`,
+          ).join("");
+        }
+
+        // ── Tabs ────────────────────────────────────────────────────────────────────
+        function setupTabs() {
+          document.querySelectorAll("#tabs .tab").forEach((btn) => btn.addEventListener("click", () => showTab(btn.dataset.tab)));
+          $("qExam").addEventListener("change", () => loadQuestionList($("qExam").value));
+        }
+        function showTab(name) {
+          document.querySelectorAll("#tabs .tab").forEach((b) => b.classList.toggle("is-active", b.dataset.tab === name));
+          for (const t of ["unit", "exams", "questions", "analytics"]) $("tab-" + t).classList.toggle("hidden", t !== name);
+          if (name === "analytics") loadAnalytics();
+        }
+        function showNoUnit() {
+          $("createSection").classList.remove("hidden");
+          $("unitPanel").classList.add("hidden");
+          $("examsGate").classList.remove("hidden");
+          $("examsBody").classList.add("hidden");
+          $("questionsGate").classList.remove("hidden");
+          $("questionsBody").classList.add("hidden");
+          $("analyticsGate").classList.remove("hidden");
+          $("analyticsBody").innerHTML = "";
+          mountPickers("c");
+          showTab("unit");
+        }
+
+        // ── Boot: who am I? ───────────────────────────────────────────────────────────
+        async function boot() {
+          renderOptRows();
+          setupTabs();
+          await loadPresets();
+          await loadCertTemplates();
+          const r = await api("GET", "/units/me");
+          if (r.status === 401) {
+            $("loginState").classList.remove("hidden");
+            $("loginState").innerHTML = `Please <a class="back" href="/login.html">log in</a> to manage a certification unit.`;
+            return;
+          }
+          $("tabs").classList.remove("hidden");
+          if (r.status === 404) {
+            showNoUnit();
+            if (new URLSearchParams(location.search).get("new")) $("uName").focus();
+            return;
+          }
+          if (r.ok) {
+            showManage(r.body);
+          } else {
+            banner(r.body.error || "Could not load your unit.", "err");
+          }
+        }
+
+        function showManage(unit) {
+          currentUnit = unit;
+          $("createSection").classList.add("hidden");
+          $("unitPanel").classList.remove("hidden");
+          $("examsGate").classList.add("hidden");
+          $("examsBody").classList.remove("hidden");
+          $("analyticsGate").classList.add("hidden");
+          const color = unit.color || presets.defaultColor;
+          const icon = unit.icon || presets.defaultIcon;
+          const disabled = unit.status === "disabled";
+          $("unitPanel").innerHTML = `
+          <div class="brand-head">
+            <div class="unit-badge" style="background:${esc(color)}"><i class="fa-solid fa-${esc(icon)}"></i></div>
+            <div>
+              <div class="eyebrow">Your unit</div>
+              <h2 style="margin:4px 0">${esc(unit.name)} <span class="tag ${disabled ? "disabled" : "published"}">${disabled ? "Disabled" : "Active"}</span></h2>
+            </div>
+          </div>
+          <p class="sub" style="margin-top:10px">${esc(unit.description || "")}</p>
+          <div class="chips">${(unit.tags || []).map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</div>
+          ${
+            disabled
+              ? `<div class="banner warn" style="margin-top:12px">This unit is disabled — none of its exams appear in the catalog and nobody can enroll. Enable it to make its published exams takeable again.</div>`
+              : ""
+          }
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <a class="tag" style="display:inline-block" href="/agri-academy-unit.html?unit=${encodeURIComponent(unit.unitId)}">View public profile →</a>
+            <button id="unitToggleBtn" class="btn ${disabled ? "" : "btn--ghost"} btn--sm">${disabled ? "Enable unit" : "Disable unit"}</button>
+          </div>
+
+          <h3 style="margin:22px 0 8px;font-size:15px">Edit unit &amp; branding</h3>
+          <label>Name</label>
+          <input id="euName" />
+          <label>Description</label>
+          <textarea id="euDesc" rows="2"></textarea>
+          <label class="brand-label">Tags (comma-separated)</label>
+          <input id="euTags" />
+          <label class="brand-label">Brand colour</label>
+          <div id="euPalette" class="swatches"></div>
+          <input type="color" id="euColor" value="#3fae6b" />
+          <label class="brand-label">Icon</label>
+          <div id="euIcons" class="icon-grid"></div>
+          <button id="euSaveBtn" class="btn">Save changes</button>`;
+          $("euName").value = unit.name || "";
+          $("euDesc").value = unit.description || "";
+          mountPickers("eu", unit);
+          $("euSaveBtn").addEventListener("click", saveUnit);
+          $("unitToggleBtn").addEventListener("click", () => toggleUnit(unit.status !== "disabled"));
+          loadExams();
+        }
+
+        // Enable/disable the whole unit. `disable === true` switches it off.
+        async function toggleUnit(disable) {
+          const r = await api("POST", `/units/me/${disable ? "disable" : "enable"}`);
+          if (!r.ok) return banner(r.body?.message || r.body?.error || "Could not update the unit.", "err");
+          banner(disable ? "Unit disabled — its exams are no longer takeable." : "Unit enabled — its published exams are takeable again.", "ok");
+          showManage(r.body);
+        }
+
+        async function saveUnit() {
+          const name = $("euName").value.trim();
+          if (!name) return banner("Unit name is required.", "err");
+          const r = await api("PATCH", "/units/me", { name, description: $("euDesc").value.trim(), ...readBranding("eu") });
+          if (!r.ok) return banner(r.body.message || r.body.error || "Could not save changes.", "err");
+          banner("Unit updated.", "ok");
+          showManage(r.body);
+        }
+
+        // ── Analytics (owner-only) ────────────────────────────────────────────────────
+        async function loadAnalytics() {
+          if (!currentUnit) return;
+          const body = $("analyticsBody");
+          body.innerHTML = `<div class="state">Loading analytics…</div>`;
+          const r = await api("GET", `/units/${encodeURIComponent(currentUnit.unitId)}/analytics`);
+          if (!r.ok) {
+            body.innerHTML = `<div class="state">${esc(r.body?.message || r.body?.error || "Could not load analytics.")}</div>`;
+            return;
+          }
+          renderAnalytics(r.body);
+        }
+        function kpi(num, label, accent) {
+          return `<div class="kpi${accent ? " accent" : ""}"><div class="num">${num}</div><div class="lbl">${label}</div></div>`;
+        }
+        function renderAnalytics(a) {
+          const inc = a.income || { netRol: 0, grossRol: 0, payouts: 0, currency: "ROL" };
+          const tiles = [
+            kpi(a.enrollments, "Enrollments"),
+            kpi(a.uniqueTakers, "Unique takers"),
+            kpi(a.inProgress, "In progress"),
+            kpi(a.completed, "Completed"),
+            kpi(a.passRate + "%", "Pass rate", true),
+            kpi(a.certificates, "Certificates", true),
+            kpi(a.avgScore + "%", "Avg score"),
+            kpi(inc.netRol + " ROL", "Net income", true),
+          ].join("");
+
+          const stateOrder = [
+            "entitled",
+            "active",
+            "submitted",
+            "scored",
+            "expired_scored",
+            "expired_unstarted",
+            "awaiting_payment",
+            "abandoned",
+          ];
+          const stateChips = stateOrder
+            .filter((s) => a.byState && a.byState[s])
+            .map((s) => `<span class="chip">${esc(s.replace(/_/g, " "))}: ${a.byState[s]}</span>`)
+            .join("");
+
+          const rows = (a.exams || [])
+            .map(
+              (e) => `
+              <tr>
+                <td>${esc(e.title)}</td>
+                <td>${e.enrollments}</td>
+                <td>${e.uniqueTakers}</td>
+                <td>${e.completed}</td>
+                <td>${e.passRate}%</td>
+                <td>${e.avgScore}%</td>
+                <td>${e.certificates}</td>
+                <td>${e.pricing?.mode === "paid" ? e.priceRol + " ROL" : "Free"}</td>
+              </tr>`,
+            )
+            .join("");
+          const table = (a.exams || []).length
+            ? `<div class="atable-wrap"><table class="atable">
+                <thead><tr><th>Exam</th><th>Enroll</th><th>Unique</th><th>Completed</th><th>Pass</th><th>Avg</th><th>Certs</th><th>Price</th></tr></thead>
+                <tbody>${rows}</tbody></table></div>`
+            : `<div class="state">No published exams yet.</div>`;
+
+          $("analyticsBody").innerHTML = `
+            <div class="panel">
+              <div class="eyebrow">Overview — ${esc(a.unit?.name || currentUnit.name)}</div>
+              <div class="kpis" style="margin-top:12px">${tiles}</div>
+              <div class="sub">Income: gross ${inc.grossRol} ROL · net ${inc.netRol} ROL over ${inc.payouts} payout${inc.payouts === 1 ? "" : "s"}. Passed ${a.passed} · Failed ${a.failed} · Paid enrollments ${a.paidEnrollments}.</div>
+              ${stateChips ? `<div class="chips" style="margin-top:12px">${stateChips}</div>` : ""}
+            </div>
+            <div class="panel">
+              <h2 style="margin-top:0">Per-exam breakdown</h2>
+              ${table}
+            </div>`;
+        }
+
+        async function loadExams() {
+          const r = await api("GET", "/exams/mine");
+          if (!r.ok) {
+            $("examList").innerHTML = `<div class="state">Could not load exams.</div>`;
+            return;
+          }
+          const exams = r.body.exams || [];
+          // Populate the question-exam selector (preserving the current selection).
+          const prev = $("qExam").value;
+          $("qExam").innerHTML = exams.map((e) => `<option value="${esc(e.id)}">${esc(e.title)}</option>`).join("");
+          if (prev && exams.some((e) => e.id === prev)) $("qExam").value = prev;
+          if (!exams.length) {
+            $("examList").innerHTML = `<div class="state">No exams yet — create one below.</div>`;
+            $("questionsGate").classList.remove("hidden");
+            $("questionsBody").classList.add("hidden");
+            return;
+          }
+          $("questionsGate").classList.add("hidden");
+          $("questionsBody").classList.remove("hidden");
+          loadQuestionList($("qExam").value);
+          // Fetch question counts in parallel.
+          const counts = await Promise.all(
+            exams.map((e) => api("GET", `/exams/${encodeURIComponent(e.id)}/questions`).then((qr) => (qr.ok ? qr.body.total || 0 : 0))),
+          );
+          $("examList").innerHTML = exams
+            .map((e, i) => {
+              const n = counts[i];
+              const enough = n >= e.questionCount;
+              const isPub = e.status === "published";
+              const isDisabled = e.enabled === false;
+              const pubAction = isPub
+                ? `<button class="btn btn--ghost btn--sm" data-unpub="${esc(e.id)}">Unpublish</button>`
+                : `<button class="btn btn--sm" data-pub="${esc(e.id)}" ${enough ? "" : "disabled title='Add more questions first'"}>Publish</button>`;
+              // Enable/disable only matters for a published exam (a draft isn't takeable anyway).
+              const toggleAction = isPub
+                ? `<button class="btn ${isDisabled ? "" : "btn--ghost"} btn--sm" data-toggle="${esc(e.id)}" data-on="${isDisabled ? "1" : "0"}">${isDisabled ? "Enable" : "Disable"}</button>`
+                : "";
+              return `
+              <div class="exam">
+                <div class="exam-head">
+                  <strong>${esc(e.title)}</strong>
+                  <span class="tag ${isPub ? "published" : "draft"}">${e.status}</span>
+                  ${isDisabled ? `<span class="tag disabled">disabled</span>` : ""}
+                </div>
+                <div class="exam-head" style="margin-top:8px">
+                  <span class="sub">${n}/${e.questionCount} questions · pass ${e.passPct}% · ${e.pricing?.mode === "paid" ? e.pricing.priceRol + " ROL" : "free"}</span>
+                  <span style="display:flex;gap:8px">${toggleAction}${pubAction}</span>
+                </div>
+              </div>`;
+            })
+            .join("");
+          document
+            .querySelectorAll("[data-pub]")
+            .forEach((b) => b.addEventListener("click", () => publish(b.getAttribute("data-pub"), true)));
+          document
+            .querySelectorAll("[data-unpub]")
+            .forEach((b) => b.addEventListener("click", () => publish(b.getAttribute("data-unpub"), false)));
+          document
+            .querySelectorAll("[data-toggle]")
+            .forEach((b) => b.addEventListener("click", () => toggleExam(b.getAttribute("data-toggle"), b.getAttribute("data-on") === "1")));
+        }
+
+        // Enable/disable a single published exam. `enable === true` turns it back on.
+        async function toggleExam(examId, enable) {
+          const r = await api("POST", `/exams/${encodeURIComponent(examId)}/${enable ? "enable" : "disable"}`);
+          if (!r.ok) return banner(r.body?.message || r.body?.error || "Could not update the exam.", "err");
+          banner(enable ? "Exam enabled — it's takeable again." : "Exam disabled — it's hidden from the catalog.", "ok");
+          loadExams();
+        }
+
+        // Render the questions of the exam selected in the Questions tab (owner view — shows keys).
+        async function loadQuestionList(examId) {
+          if (!examId) {
+            $("questionList").innerHTML = "";
+            return;
+          }
+          const r = await api("GET", `/exams/${encodeURIComponent(examId)}/questions`);
+          if (!r.ok) {
+            $("questionList").innerHTML = `<div class="state">Could not load questions.</div>`;
+            return;
+          }
+          const qs = r.body.questions || [];
+          if (!qs.length) {
+            $("questionList").innerHTML = `<div class="state">No questions yet — add one below.</div>`;
+            return;
+          }
+          $("questionList").innerHTML = qs
+            .map((q, i) => {
+              const correct = q.correct || [];
+              const opts = (q.options || [])
+                .map((o) => {
+                  const ok = correct.includes(o.id);
+                  return `<div class="qopt${ok ? " correct" : ""}">${ok ? "✓" : "○"} ${esc(o.text)}</div>`;
+                })
+                .join("");
+              return `<div class="qlist-item"><h4>${i + 1}. ${esc(q.text)} <span class="tag">${esc(q.type)}</span></h4>${opts}</div>`;
+            })
+            .join("");
+        }
+
+        // ── Actions ───────────────────────────────────────────────────────────────────
+        $("createUnitBtn").addEventListener("click", async () => {
+          const name = $("uName").value.trim();
+          if (!name) return banner("Unit name is required.", "err");
+          const r = await api("POST", "/units", {
+            name,
+            description: $("uDesc").value.trim(),
+            contactEmail: $("uEmail").value.trim(),
+            ...readBranding("c"),
+          });
+          if (r.status === 401) return banner("Please log in first.", "err");
+          if (!r.ok) return banner(r.body.message || r.body.error || "Could not create the unit.", "err");
+          banner("Unit created.", "ok");
+          showManage(r.body);
+        });
+
+        $("createExamBtn").addEventListener("click", async () => {
+          const mode = $("ePricing").value;
+          const payload = {
+            title: $("eTitle").value.trim(),
+            description: $("eDesc").value.trim(),
+            durationSec: Math.max(1, Number($("eDuration").value)) * 60,
+            accessWindowDays: Number($("eAccess").value),
+            passPct: Number($("ePass").value),
+            attemptsAllowed: Number($("eAttempts").value),
+            questionCount: Number($("eQCount").value),
+            certValidMonths: Number($("eValid").value),
+            certTemplate: $("eCertTemplate").value || certDefault,
+            pricing: mode === "paid" ? { mode: "paid", priceRol: Number($("ePrice").value) } : { mode: "free" },
+          };
+          if (!payload.title) return banner("Exam title is required.", "err");
+          const r = await api("POST", "/exams", payload);
+          if (!r.ok) return banner(r.body.message || r.body.error || "Could not create the exam.", "err");
+          banner("Exam created (draft). Add questions, then publish.", "ok");
+          $("eTitle").value = "";
+          $("eDesc").value = "";
+          loadExams();
+        });
+
+        $("addQBtn").addEventListener("click", async () => {
+          const examId = $("qExam").value;
+          if (!examId) return banner("Create an exam first.", "err");
+          const options = [];
+          const correct = [];
+          for (const id of OPT_IDS) {
+            const text = document.querySelector(`[data-opt="${id}"]`).value.trim();
+            if (!text) continue;
+            options.push({ id, text });
+            if (document.querySelector(`[data-correct="${id}"]`).checked) correct.push(id);
+          }
+          const payload = { type: $("qType").value, text: $("qText").value.trim(), options, correct, weight: Number($("qWeight").value) };
+          if (!payload.text) return banner("Question text is required.", "err");
+          if (options.length < 2) return banner("Provide at least two options.", "err");
+          if (!correct.length) return banner("Mark at least one correct option.", "err");
+          const r = await api("POST", `/exams/${encodeURIComponent(examId)}/questions`, payload);
+          if (!r.ok) return banner(r.body.message || r.body.error || "Could not add the question.", "err");
+          banner("Question added.", "ok");
+          $("qText").value = "";
+          renderOptRows();
+          loadExams();
+        });
+
+        async function publish(examId, on) {
+          const r = await api("POST", `/exams/${encodeURIComponent(examId)}/${on ? "publish" : "unpublish"}`);
+          if (!r.ok) return banner(r.body.message || r.body.error || "Action failed.", "err");
+          banner(on ? "Exam published — it's now takeable." : "Exam unpublished.", "ok");
+          loadExams();
+        }
+
+        boot();
+      })();
+    </script>
+  </body>
+</html>

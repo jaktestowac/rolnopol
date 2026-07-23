@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgriAcademy — Certification Unit</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/agri-academy.css" />
+    <style>
+      :root {
+        --bg: #0f1a14;
+        --card: #16241b;
+        --ink: #eaf3ec;
+        --muted: #9bb3a4;
+        --accent: #3fae6b;
+        --accent-2: #7bd4a0;
+        --border: #24382b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: radial-gradient(1200px 600px at 80% -10%, #1c3326 0%, var(--bg) 55%);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      a.back {
+        color: var(--accent-2);
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .hero {
+        margin: 24px 0 8px;
+        padding: 32px;
+        background: linear-gradient(180deg, var(--card), #12201800);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      h1 {
+        margin: 8px 0;
+        font-size: 32px;
+      }
+      .desc {
+        color: var(--muted);
+        line-height: 1.6;
+        margin: 0;
+        max-width: 60ch;
+      }
+      h2.section {
+        margin: 28px 0 14px;
+        font-size: 18px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+      }
+      .exam {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px;
+      }
+      .exam h3 {
+        margin: 0 0 6px;
+        font-size: 17px;
+      }
+      .exam p {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 0 0 14px;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .tag {
+        font-size: 12px;
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 10px;
+        color: var(--accent-2);
+      }
+      .tag.free {
+        color: #cfe9d7;
+      }
+      .tag.paid {
+        color: #ffd98a;
+        border-color: #4a3d1e;
+        background: #2a2313;
+      }
+      .state {
+        color: var(--muted);
+        padding: 40px 0;
+        text-align: center;
+      }
+      .enroll {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 14px;
+        border: 1px solid var(--accent);
+        background: linear-gradient(180deg, var(--accent), #2e8f55);
+        color: #06170d;
+        border-radius: 9px;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .brand-head {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .ubadge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        font-size: 26px;
+        color: #06170d;
+        flex-shrink: 0;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+      }
+      .chip {
+        font-size: 12px;
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 10px;
+        color: var(--accent-2);
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin: 0 0 16px;
+      }
+      .ex-search {
+        flex: 1 1 240px;
+        background: #0f1a14;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 9px 12px;
+        font-size: 14px;
+      }
+      .ex-select {
+        background: #0f1a14;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 9px 12px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 22px 0 4px;
+      }
+      .page-btn {
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 8px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color 0.15s ease;
+      }
+      .page-btn:hover:not(:disabled) {
+        border-color: var(--accent);
+      }
+      .page-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .page-info {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .hidden {
+        display: none;
+      }
+      .tag.rated {
+        color: #ffce54;
+        border-color: #4a3d1e;
+        background: #241f12;
+      }
+      .hero-rating {
+        margin-top: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #ffce54;
+      }
+      .hero-rating .muted {
+        color: var(--muted);
+        font-weight: 400;
+      }
+    </style>
+  </head>
+  <body class="agri-academy-page">
+    <div id="header-component"></div>
+    <div class="wrap">
+      <a class="back" href="/agri-academy-units.html">← All units</a>
+      <div id="content"></div>
+      <div id="state" class="state">Loading…</div>
+    </div>
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("agri-academy");
+    </script>
+    <script>
+      (() => {
+        const content = document.getElementById("content");
+        const state = document.getElementById("state");
+        const esc = (s) =>
+          String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+        const unitId = new URLSearchParams(location.search).get("unit");
+        const mins = (s) => Math.round((s || 0) / 60);
+        const priceOf = (e) => (e.pricing && e.pricing.mode === "paid" ? Number(e.pricing.priceRol) || 0 : 0);
+
+        // ── Available certifications: search / sort / paginate ────────────────────────
+        let exams = [];
+        let examQuery = "";
+        let examSort = "title-asc";
+        let examPage = 1;
+        const EXAMS_PER_PAGE = 6;
+
+        const ratingTag = (rating, count) =>
+          count
+            ? `<span class="tag rated" title="${count} rating${count === 1 ? "" : "s"}">★ ${Number(rating).toFixed(1)} (${count})</span>`
+            : `<span class="tag">☆ Unrated</span>`;
+
+        function examCard(e) {
+          const price =
+            e.pricing && e.pricing.mode === "paid"
+              ? `<span class="tag paid">${e.pricing.priceRol} ROL</span>`
+              : `<span class="tag free">Free</span>`;
+          return `
+            <div class="exam">
+              <h3>${esc(e.title)}</h3>
+              <p>${esc(e.description || "")}</p>
+              <div class="meta">
+                ${price}
+                ${ratingTag(e.rating, e.ratings)}
+                <span class="tag">${mins(e.durationSec)} min</span>
+                <span class="tag">Pass ${e.passPct}%</span>
+                <span class="tag">${e.accessWindowDays}-day access</span>
+              </div>
+              <a class="enroll" href="/agri-academy.html?exam=${encodeURIComponent(e.id)}">Enroll &amp; take →</a>
+            </div>`;
+        }
+
+        // Renders prev/next pagination into `containerId`; stays hidden when there's a single page.
+        function renderPager(containerId, page, totalPages, totalItems, noun, onGo) {
+          const el = document.getElementById(containerId);
+          if (totalPages <= 1) {
+            el.classList.add("hidden");
+            el.innerHTML = "";
+            return;
+          }
+          el.classList.remove("hidden");
+          el.innerHTML = `
+            <button class="page-btn" data-go="prev" ${page <= 1 ? "disabled" : ""}>← Prev</button>
+            <span class="page-info">Page ${page} of ${totalPages} · ${totalItems} ${noun}${totalItems === 1 ? "" : "s"}</span>
+            <button class="page-btn" data-go="next" ${page >= totalPages ? "disabled" : ""}>Next →</button>`;
+          el.querySelector('[data-go="prev"]').onclick = () => page > 1 && onGo(page - 1);
+          el.querySelector('[data-go="next"]').onclick = () => page < totalPages && onGo(page + 1);
+        }
+
+        function renderExams() {
+          const q = examQuery.trim().toLowerCase();
+          const filtered = exams.filter((e) => !q || [e.title, e.description].join(" ").toLowerCase().includes(q));
+          filtered.sort((a, b) => {
+            switch (examSort) {
+              case "title-desc":
+                return (b.title || "").localeCompare(a.title || "");
+              case "price-asc":
+                return priceOf(a) - priceOf(b) || (a.title || "").localeCompare(b.title || "");
+              case "price-desc":
+                return priceOf(b) - priceOf(a) || (a.title || "").localeCompare(b.title || "");
+              case "duration-asc":
+                return (a.durationSec || 0) - (b.durationSec || 0) || (a.title || "").localeCompare(b.title || "");
+              case "pass-asc":
+                return (a.passPct || 0) - (b.passPct || 0) || (a.title || "").localeCompare(b.title || "");
+              case "rating-desc":
+                return (b.rating || 0) - (a.rating || 0) || (b.ratings || 0) - (a.ratings || 0) || (a.title || "").localeCompare(b.title || "");
+              default:
+                return (a.title || "").localeCompare(b.title || "");
+            }
+          });
+          const totalPages = Math.max(1, Math.ceil(filtered.length / EXAMS_PER_PAGE));
+          if (examPage > totalPages) examPage = totalPages;
+          const start = (examPage - 1) * EXAMS_PER_PAGE;
+          const pageItems = filtered.slice(start, start + EXAMS_PER_PAGE);
+          document.getElementById("examGrid").innerHTML = pageItems.length
+            ? pageItems.map(examCard).join("")
+            : `<div class="state" style="grid-column:1/-1">No certifications match “${esc(examQuery)}”.</div>`;
+          renderPager("examPager", examPage, totalPages, filtered.length, "certification", (p) => {
+            examPage = p;
+            renderExams();
+          });
+        }
+
+        if (!unitId) {
+          state.textContent = "No unit specified.";
+        } else {
+          fetch("/api/v1/agri-academy/units/" + encodeURIComponent(unitId))
+            .then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))))
+            .then((u) => {
+              state.style.display = "none";
+              exams = u.exams || [];
+              const color = u.color || "#3fae6b";
+              const icon = u.icon || "graduation-cap";
+              const chips = (u.tags || []).map((t) => `<span class="chip">${esc(t)}</span>`).join("");
+              content.innerHTML = `
+              <div class="hero" style="border-color:${esc(color)}">
+                <div class="brand-head">
+                  <div class="ubadge" style="background:${esc(color)}"><i class="fa-solid fa-${esc(icon)}"></i></div>
+                  <div>
+                    <div class="eyebrow">Certification Unit</div>
+                    <h1 style="margin:4px 0">${esc(u.name)}</h1>
+                  </div>
+                </div>
+                <p class="desc" style="margin-top:12px">${esc(u.description || "")}</p>
+                ${chips ? `<div class="chips">${chips}</div>` : ""}
+                <div class="hero-rating">
+                  ${
+                    u.ratings
+                      ? `★ ${Number(u.rating).toFixed(1)} <span class="muted">· average of ${u.ratings} exam rating${u.ratings === 1 ? "" : "s"}</span>`
+                      : `<span class="muted">Not yet rated</span>`
+                  }
+                </div>
+              </div>
+              <h2 class="section">Available certifications</h2>
+              ${
+                exams.length
+                  ? `<div class="toolbar">
+                      <input id="examSearch" class="ex-search" type="search" placeholder="Search certifications…" />
+                      <select id="examSort" class="ex-select" aria-label="Sort certifications">
+                        <option value="title-asc">Name (A–Z)</option>
+                        <option value="title-desc">Name (Z–A)</option>
+                        <option value="price-asc">Price (low → high)</option>
+                        <option value="price-desc">Price (high → low)</option>
+                        <option value="duration-asc">Shortest first</option>
+                        <option value="pass-asc">Easiest pass %</option>
+                        <option value="rating-desc">Top rated</option>
+                      </select>
+                    </div>`
+                  : ""
+              }
+              <div id="examGrid" class="grid"></div>
+              <div id="examPager" class="pager hidden"></div>`;
+
+              if (!exams.length) {
+                document.getElementById("examGrid").innerHTML = `<div class="state" style="grid-column:1/-1">No published exams yet.</div>`;
+                return;
+              }
+              document.getElementById("examSearch").addEventListener("input", (e) => {
+                examQuery = e.target.value;
+                examPage = 1;
+                renderExams();
+              });
+              document.getElementById("examSort").addEventListener("change", (e) => {
+                examSort = e.target.value;
+                examPage = 1;
+                renderExams();
+              });
+              renderExams();
+            })
+            .catch(() => {
+              state.textContent = "This unit could not be loaded.";
+            });
+        }
+      })();
+    </script>
+  </body>
+</html>

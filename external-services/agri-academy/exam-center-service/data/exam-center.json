@@ -1,0 +1,1724 @@
+{
+  "version": 1,
+  "seq": 8,
+  "users": {
+    "2": {
+      "sessions": {
+        "sess-3": {
+          "id": "sess-3",
+          "userId": "2",
+          "examId": "exam-9",
+          "snapshot": {
+            "examId": "exam-9",
+            "title": "Livestock Welfare & Handling",
+            "questionCount": 7,
+            "durationSec": 1800,
+            "accessWindowDays": 21,
+            "passPct": 70,
+            "attemptsAllowed": 3,
+            "certValidMonths": 24,
+            "certTemplate": "modern-teal",
+            "pricing": {
+              "mode": "paid",
+              "priceRol": 30
+            },
+            "ownerUnitId": "unit-3",
+            "unitName": "Meadowbrook Livestock & Welfare",
+            "payoutUserId": "4"
+          },
+          "seed": "seed-3exam-9",
+          "answers": {
+            "e9-q1": "a",
+            "e9-q2": [
+              "a",
+              "b",
+              "c"
+            ],
+            "e9-q3": "a",
+            "e9-q4": [
+              "a",
+              "b",
+              "c"
+            ],
+            "e9-q5": "a",
+            "e9-q6": "a",
+            "e9-q7": [
+              "d"
+            ]
+          },
+          "questions": [
+            {
+              "id": "e9-q1",
+              "type": "single",
+              "text": "Low-stress stock handling relies mainly on:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Understanding the animal's flight zone and point of balance"
+                },
+                {
+                  "id": "b",
+                  "text": "Shouting and hitting"
+                },
+                {
+                  "id": "c",
+                  "text": "Sudden loud noises"
+                },
+                {
+                  "id": "d",
+                  "text": "Chasing at speed"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e9-q2",
+              "type": "multi",
+              "text": "The 'five freedoms' of animal welfare include: (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Freedom from hunger and thirst"
+                },
+                {
+                  "id": "b",
+                  "text": "Freedom from discomfort"
+                },
+                {
+                  "id": "c",
+                  "text": "Freedom to express normal behaviour"
+                },
+                {
+                  "id": "d",
+                  "text": "Freedom from ever being weighed"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "c"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e9-q3",
+              "type": "single",
+              "text": "A sick animal is often best managed by:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Isolating and observing it, and seeking veterinary advice"
+                },
+                {
+                  "id": "b",
+                  "text": "Mixing it with the whole herd"
+                },
+                {
+                  "id": "c",
+                  "text": "Ignoring it"
+                },
+                {
+                  "id": "d",
+                  "text": "Releasing it to roam"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e9-q4",
+              "type": "multi",
+              "text": "Signs of ill health in livestock include: (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Off feed / not ruminating"
+                },
+                {
+                  "id": "b",
+                  "text": "Isolation from the group"
+                },
+                {
+                  "id": "c",
+                  "text": "Lameness"
+                },
+                {
+                  "id": "d",
+                  "text": "A shiny ear tag"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "c"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e9-q5",
+              "type": "single",
+              "text": "Good race and yard design should:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Use curves and solid sides to encourage smooth flow"
+                },
+                {
+                  "id": "b",
+                  "text": "Have sharp blind corners"
+                },
+                {
+                  "id": "c",
+                  "text": "Be as slippery as possible"
+                },
+                {
+                  "id": "d",
+                  "text": "Face directly into the sun"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e9-q6",
+              "type": "single",
+              "text": "Clean, fresh water for livestock should be:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Available at all times"
+                },
+                {
+                  "id": "b",
+                  "text": "Offered once a week"
+                },
+                {
+                  "id": "c",
+                  "text": "Only after work"
+                },
+                {
+                  "id": "d",
+                  "text": "Optional"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e9-q7",
+              "type": "multi",
+              "text": "Before transporting animals you should check: (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "They are fit to travel"
+                },
+                {
+                  "id": "b",
+                  "text": "The vehicle is clean and safe"
+                },
+                {
+                  "id": "c",
+                  "text": "Stocking density is appropriate"
+                },
+                {
+                  "id": "d",
+                  "text": "The colour of the driver's hat"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "c"
+              ],
+              "weight": 1
+            }
+          ],
+          "entitledAt": "2026-06-13T14:30:00.000Z",
+          "accessExpiresAt": "2026-07-04T14:30:00.000Z",
+          "startedAt": "2026-06-15T14:30:00.000Z",
+          "expiresAt": "2026-06-15T15:00:00.000Z",
+          "submittedAt": "2026-06-15T14:48:00.000Z",
+          "finalReason": "submit",
+          "result": {
+            "scorePct": 77,
+            "passed": true,
+            "perQuestion": [
+              {
+                "question_id": "e9-q1",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e9-q2",
+                "correct": true,
+                "awarded": 3,
+                "max": 3
+              },
+              {
+                "question_id": "e9-q3",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e9-q4",
+                "correct": true,
+                "awarded": 3,
+                "max": 3
+              },
+              {
+                "question_id": "e9-q5",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e9-q6",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e9-q7",
+                "correct": false,
+                "awarded": 0,
+                "max": 3
+              }
+            ],
+            "finalizedAt": "2026-06-15T14:48:00.000Z",
+            "certNo": "AA-2026-000003",
+            "certificateStatus": "issued"
+          },
+          "state": "scored",
+          "payment": {
+            "priceRol": 30,
+            "ownerUnitId": "unit-3",
+            "paid": true
+          }
+        },
+        "sess-8": {
+          "id": "sess-8",
+          "userId": "2",
+          "examId": "exam-12",
+          "snapshot": {
+            "examId": "exam-12",
+            "title": "Vineyard Pest & Disease Management",
+            "questionCount": 6,
+            "durationSec": 1800,
+            "accessWindowDays": 21,
+            "passPct": 70,
+            "attemptsAllowed": 2,
+            "certValidMonths": 24,
+            "certTemplate": "royal-purple",
+            "pricing": {
+              "mode": "paid",
+              "priceRol": 20
+            },
+            "ownerUnitId": "unit-4",
+            "unitName": "Orchard & Vine Guild",
+            "payoutUserId": "5"
+          },
+          "seed": null,
+          "answers": {},
+          "questions": null,
+          "entitledAt": "2026-07-19T09:30:00.000Z",
+          "accessExpiresAt": "2026-08-09T09:30:00.000Z",
+          "startedAt": null,
+          "expiresAt": null,
+          "submittedAt": null,
+          "finalReason": null,
+          "result": null,
+          "state": "entitled"
+        }
+      },
+      "attempts": {
+        "exam-9": 1
+      },
+      "locks": {}
+    },
+    "3": {
+      "sessions": {
+        "sess-1": {
+          "id": "sess-1",
+          "userId": "3",
+          "examId": "exam-5",
+          "snapshot": {
+            "examId": "exam-5",
+            "title": "Soil Health & Nutrient Management",
+            "questionCount": 6,
+            "durationSec": 1800,
+            "accessWindowDays": 14,
+            "passPct": 60,
+            "attemptsAllowed": 3,
+            "certValidMonths": 24,
+            "certTemplate": "botanical",
+            "pricing": {
+              "mode": "free",
+              "priceRol": 0
+            },
+            "ownerUnitId": "unit-1",
+            "unitName": "Green Acres Training Co-op",
+            "payoutUserId": "2"
+          },
+          "seed": "seed-1exam-5",
+          "answers": {
+            "e5-q1": "a",
+            "e5-q2": "a",
+            "e5-q3": [
+              "a",
+              "b",
+              "d"
+            ],
+            "e5-q4": "a",
+            "e5-q5": [
+              "a",
+              "b",
+              "c"
+            ],
+            "e5-q6": "b"
+          },
+          "questions": [
+            {
+              "id": "e5-q1",
+              "type": "single",
+              "text": "What does a standard soil test most commonly measure?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "pH and available nutrients"
+                },
+                {
+                  "id": "b",
+                  "text": "The colour of the sky"
+                },
+                {
+                  "id": "c",
+                  "text": "Ambient noise"
+                },
+                {
+                  "id": "d",
+                  "text": "Wind speed"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e5-q2",
+              "type": "single",
+              "text": "Why is soil organic matter valuable?",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "It improves structure, water-holding, and nutrient supply"
+                },
+                {
+                  "id": "b",
+                  "text": "It makes soil heavier for no reason"
+                },
+                {
+                  "id": "c",
+                  "text": "It repels all earthworms"
+                },
+                {
+                  "id": "d",
+                  "text": "It has no effect"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e5-q3",
+              "type": "multi",
+              "text": "Which practices help build organic matter? (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Adding compost or manure"
+                },
+                {
+                  "id": "b",
+                  "text": "Growing cover crops"
+                },
+                {
+                  "id": "c",
+                  "text": "Continuous bare fallow"
+                },
+                {
+                  "id": "d",
+                  "text": "Returning crop residues"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "d"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e5-q4",
+              "type": "single",
+              "text": "A soil pH of 4.5 is best described as:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Strongly acidic"
+                },
+                {
+                  "id": "b",
+                  "text": "Neutral"
+                },
+                {
+                  "id": "c",
+                  "text": "Strongly alkaline"
+                },
+                {
+                  "id": "d",
+                  "text": "Not measurable"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e5-q5",
+              "type": "multi",
+              "text": "Which are macronutrients essential for crops? (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Nitrogen"
+                },
+                {
+                  "id": "b",
+                  "text": "Phosphorus"
+                },
+                {
+                  "id": "c",
+                  "text": "Potassium"
+                },
+                {
+                  "id": "d",
+                  "text": "Neon"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "c"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e5-q6",
+              "type": "single",
+              "text": "Applying nutrients based on a soil test rather than a fixed recipe helps to:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Match supply to crop need and reduce waste"
+                },
+                {
+                  "id": "b",
+                  "text": "Guarantee lodging"
+                },
+                {
+                  "id": "c",
+                  "text": "Increase runoff on purpose"
+                },
+                {
+                  "id": "d",
+                  "text": "Skip the growing season"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            }
+          ],
+          "entitledAt": "2026-05-31T09:10:00.000Z",
+          "accessExpiresAt": "2026-06-14T09:10:00.000Z",
+          "startedAt": "2026-06-02T09:10:00.000Z",
+          "expiresAt": "2026-06-02T09:40:00.000Z",
+          "submittedAt": "2026-06-02T09:28:00.000Z",
+          "finalReason": "submit",
+          "result": {
+            "scorePct": 90,
+            "passed": true,
+            "perQuestion": [
+              {
+                "question_id": "e5-q1",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e5-q2",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e5-q3",
+                "correct": true,
+                "awarded": 3,
+                "max": 3
+              },
+              {
+                "question_id": "e5-q4",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e5-q5",
+                "correct": true,
+                "awarded": 3,
+                "max": 3
+              },
+              {
+                "question_id": "e5-q6",
+                "correct": false,
+                "awarded": 0,
+                "max": 1
+              }
+            ],
+            "finalizedAt": "2026-06-02T09:28:00.000Z",
+            "certNo": "AA-2026-000001",
+            "certificateStatus": "issued"
+          },
+          "state": "scored"
+        }
+      },
+      "attempts": {
+        "exam-5": 1
+      },
+      "locks": {}
+    },
+    "4": {
+      "sessions": {
+        "sess-2": {
+          "id": "sess-2",
+          "userId": "4",
+          "examId": "exam-8",
+          "snapshot": {
+            "examId": "exam-8",
+            "title": "Farm Machinery Maintenance",
+            "questionCount": 6,
+            "durationSec": 1500,
+            "accessWindowDays": 14,
+            "passPct": 70,
+            "attemptsAllowed": 3,
+            "certValidMonths": 18,
+            "certTemplate": "slate-minimal",
+            "pricing": {
+              "mode": "free",
+              "priceRol": 0
+            },
+            "ownerUnitId": "unit-2",
+            "unitName": "Ironfield Machinery School",
+            "payoutUserId": "3"
+          },
+          "seed": "seed-2exam-8",
+          "answers": {
+            "e8-q1": "a",
+            "e8-q2": [
+              "a",
+              "b",
+              "c"
+            ],
+            "e8-q3": "a",
+            "e8-q4": "a",
+            "e8-q5": [
+              "a",
+              "c",
+              "d"
+            ],
+            "e8-q6": "a"
+          },
+          "questions": [
+            {
+              "id": "e8-q1",
+              "type": "single",
+              "text": "Engine oil should be checked:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Regularly, with the machine level and engine off"
+                },
+                {
+                  "id": "b",
+                  "text": "Only when it seizes"
+                },
+                {
+                  "id": "c",
+                  "text": "Never"
+                },
+                {
+                  "id": "d",
+                  "text": "While driving"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e8-q2",
+              "type": "multi",
+              "text": "A good pre-season service includes: (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Changing filters and fluids"
+                },
+                {
+                  "id": "b",
+                  "text": "Greasing points per the manual"
+                },
+                {
+                  "id": "c",
+                  "text": "Checking tyres and lights"
+                },
+                {
+                  "id": "d",
+                  "text": "Repainting the seat"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "c"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e8-q3",
+              "type": "single",
+              "text": "Grease points should be lubricated:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "At the intervals in the operator's manual"
+                },
+                {
+                  "id": "b",
+                  "text": "Once in the machine's lifetime"
+                },
+                {
+                  "id": "c",
+                  "text": "Only if they squeak loudly"
+                },
+                {
+                  "id": "d",
+                  "text": "Never, to save grease"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e8-q4",
+              "type": "single",
+              "text": "A slack drive belt will typically cause:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Slipping and poor power transfer"
+                },
+                {
+                  "id": "b",
+                  "text": "More horsepower"
+                },
+                {
+                  "id": "c",
+                  "text": "Better fuel economy"
+                },
+                {
+                  "id": "d",
+                  "text": "Nothing"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e8-q5",
+              "type": "multi",
+              "text": "Before working under a raised implement you should: (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Use proper stands or locks"
+                },
+                {
+                  "id": "b",
+                  "text": "Rely only on hydraulics"
+                },
+                {
+                  "id": "c",
+                  "text": "Stop the engine and remove the key"
+                },
+                {
+                  "id": "d",
+                  "text": "Chock the wheels"
+                }
+              ],
+              "correct": [
+                "a",
+                "c",
+                "d"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e8-q6",
+              "type": "single",
+              "text": "Checking tyre pressures matters because it affects:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Traction, wear, and fuel use"
+                },
+                {
+                  "id": "b",
+                  "text": "Only the colour"
+                },
+                {
+                  "id": "c",
+                  "text": "The radio signal"
+                },
+                {
+                  "id": "d",
+                  "text": "Nothing measurable"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            }
+          ],
+          "entitledAt": "2026-06-07T11:00:00.000Z",
+          "accessExpiresAt": "2026-06-21T11:00:00.000Z",
+          "startedAt": "2026-06-09T11:00:00.000Z",
+          "expiresAt": "2026-06-09T11:25:00.000Z",
+          "submittedAt": "2026-06-09T11:15:00.000Z",
+          "finalReason": "submit",
+          "result": {
+            "scorePct": 100,
+            "passed": true,
+            "perQuestion": [
+              {
+                "question_id": "e8-q1",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e8-q2",
+                "correct": true,
+                "awarded": 3,
+                "max": 3
+              },
+              {
+                "question_id": "e8-q3",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e8-q4",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e8-q5",
+                "correct": true,
+                "awarded": 3,
+                "max": 3
+              },
+              {
+                "question_id": "e8-q6",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              }
+            ],
+            "finalizedAt": "2026-06-09T11:15:00.000Z",
+            "certNo": "AA-2026-000002",
+            "certificateStatus": "issued"
+          },
+          "state": "scored"
+        },
+        "sess-6": {
+          "id": "sess-6",
+          "userId": "4",
+          "examId": "exam-10",
+          "snapshot": {
+            "examId": "exam-10",
+            "title": "Dairy Hygiene & Milk Quality",
+            "questionCount": 6,
+            "durationSec": 1500,
+            "accessWindowDays": 14,
+            "passPct": 65,
+            "attemptsAllowed": 3,
+            "certValidMonths": 18,
+            "certTemplate": "midnight",
+            "pricing": {
+              "mode": "free",
+              "priceRol": 0
+            },
+            "ownerUnitId": "unit-3",
+            "unitName": "Meadowbrook Livestock & Welfare",
+            "payoutUserId": "4"
+          },
+          "seed": "seed-6exam-10",
+          "answers": {
+            "e10-q1": "a",
+            "e10-q2": [
+              "a",
+              "b",
+              "c"
+            ],
+            "e10-q3": "a",
+            "e10-q4": "a",
+            "e10-q5": [
+              "a",
+              "b",
+              "c"
+            ],
+            "e10-q6": "a"
+          },
+          "questions": [
+            {
+              "id": "e10-q1",
+              "type": "single",
+              "text": "Before attaching the cluster, teats should be:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Cleaned and, where used, fore-milked and pre-dipped"
+                },
+                {
+                  "id": "b",
+                  "text": "Left muddy"
+                },
+                {
+                  "id": "c",
+                  "text": "Painted"
+                },
+                {
+                  "id": "d",
+                  "text": "Ignored"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e10-q2",
+              "type": "multi",
+              "text": "Good milking hygiene includes: (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Clean hands and gloves"
+                },
+                {
+                  "id": "b",
+                  "text": "Clean, dry teats before attaching"
+                },
+                {
+                  "id": "c",
+                  "text": "Post-milking teat disinfection"
+                },
+                {
+                  "id": "d",
+                  "text": "Skipping all cleaning to save time"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "c"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e10-q3",
+              "type": "single",
+              "text": "Rapid cooling of milk after collection is important to:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Limit bacterial growth and protect quality"
+                },
+                {
+                  "id": "b",
+                  "text": "Change its colour"
+                },
+                {
+                  "id": "c",
+                  "text": "Increase somatic cells"
+                },
+                {
+                  "id": "d",
+                  "text": "Warm the parlour"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e10-q4",
+              "type": "single",
+              "text": "A high somatic cell count in milk often indicates:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Udder infection such as mastitis"
+                },
+                {
+                  "id": "b",
+                  "text": "Excellent udder health"
+                },
+                {
+                  "id": "c",
+                  "text": "Cold weather only"
+                },
+                {
+                  "id": "d",
+                  "text": "Nothing at all"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e10-q5",
+              "type": "multi",
+              "text": "Cleaning-in-place (CIP) of milking equipment typically uses: (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "A warm detergent wash"
+                },
+                {
+                  "id": "b",
+                  "text": "An acid rinse cycle"
+                },
+                {
+                  "id": "c",
+                  "text": "Adequate water temperature and flow"
+                },
+                {
+                  "id": "d",
+                  "text": "Milk as the only cleaner"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "c"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e10-q6",
+              "type": "single",
+              "text": "Bulk tank milk temperature should generally be held:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Chilled to the required storage temperature"
+                },
+                {
+                  "id": "b",
+                  "text": "At room temperature"
+                },
+                {
+                  "id": "c",
+                  "text": "Near boiling"
+                },
+                {
+                  "id": "d",
+                  "text": "However is convenient"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            }
+          ],
+          "entitledAt": "2026-07-01T10:20:00.000Z",
+          "accessExpiresAt": "2026-07-15T10:20:00.000Z",
+          "startedAt": "2026-07-03T10:20:00.000Z",
+          "expiresAt": "2026-07-03T10:45:00.000Z",
+          "submittedAt": "2026-07-03T10:35:00.000Z",
+          "finalReason": "submit",
+          "result": {
+            "scorePct": 100,
+            "passed": true,
+            "perQuestion": [
+              {
+                "question_id": "e10-q1",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e10-q2",
+                "correct": true,
+                "awarded": 3,
+                "max": 3
+              },
+              {
+                "question_id": "e10-q3",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e10-q4",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e10-q5",
+                "correct": true,
+                "awarded": 3,
+                "max": 3
+              },
+              {
+                "question_id": "e10-q6",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              }
+            ],
+            "finalizedAt": "2026-07-03T10:35:00.000Z",
+            "certNo": "AA-2026-000005",
+            "certificateStatus": "issued"
+          },
+          "state": "scored"
+        }
+      },
+      "attempts": {
+        "exam-8": 1,
+        "exam-10": 1
+      },
+      "locks": {}
+    },
+    "5": {
+      "sessions": {
+        "sess-4": {
+          "id": "sess-4",
+          "userId": "5",
+          "examId": "exam-11",
+          "snapshot": {
+            "examId": "exam-11",
+            "title": "Fruit Tree Pruning Fundamentals",
+            "questionCount": 5,
+            "durationSec": 1200,
+            "accessWindowDays": 14,
+            "passPct": 60,
+            "attemptsAllowed": 3,
+            "certValidMonths": 24,
+            "certTemplate": "sunrise",
+            "pricing": {
+              "mode": "free",
+              "priceRol": 0
+            },
+            "ownerUnitId": "unit-4",
+            "unitName": "Orchard & Vine Guild",
+            "payoutUserId": "5"
+          },
+          "seed": "seed-4exam-11",
+          "answers": {
+            "e11-q1": "a",
+            "e11-q2": [
+              "d"
+            ],
+            "e11-q3": "d",
+            "e11-q4": "d",
+            "e11-q5": [
+              "d"
+            ]
+          },
+          "questions": [
+            {
+              "id": "e11-q1",
+              "type": "single",
+              "text": "The main goal of pruning a fruit tree is to:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Improve structure, light, and fruiting"
+                },
+                {
+                  "id": "b",
+                  "text": "Remove as much wood as possible"
+                },
+                {
+                  "id": "c",
+                  "text": "Make it as tall as possible"
+                },
+                {
+                  "id": "d",
+                  "text": "Damage the tree"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e11-q2",
+              "type": "multi",
+              "text": "Which cuts/removals are commonly made? (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Dead, diseased, or damaged wood"
+                },
+                {
+                  "id": "b",
+                  "text": "Crossing or rubbing branches"
+                },
+                {
+                  "id": "c",
+                  "text": "Strong healthy scaffold limbs at random"
+                },
+                {
+                  "id": "d",
+                  "text": "Water shoots and suckers"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "d"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e11-q3",
+              "type": "single",
+              "text": "Most pip fruit (apples/pears) are best pruned:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "In the dormant season"
+                },
+                {
+                  "id": "b",
+                  "text": "At peak flowering only"
+                },
+                {
+                  "id": "c",
+                  "text": "During a storm"
+                },
+                {
+                  "id": "d",
+                  "text": "Never"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e11-q4",
+              "type": "single",
+              "text": "A pruning cut should be made:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Just above an outward-facing bud or at the branch collar"
+                },
+                {
+                  "id": "b",
+                  "text": "In the middle of an internode leaving a long stub"
+                },
+                {
+                  "id": "c",
+                  "text": "Flush, cutting into the trunk"
+                },
+                {
+                  "id": "d",
+                  "text": "Anywhere at random"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e11-q5",
+              "type": "multi",
+              "text": "Good pruning hygiene includes: (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Using sharp, clean tools"
+                },
+                {
+                  "id": "b",
+                  "text": "Disinfecting tools between diseased trees"
+                },
+                {
+                  "id": "c",
+                  "text": "Removing prunings from around the tree"
+                },
+                {
+                  "id": "d",
+                  "text": "Tearing branches by hand"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "c"
+              ],
+              "weight": 1
+            }
+          ],
+          "entitledAt": "2026-06-18T16:05:00.000Z",
+          "accessExpiresAt": "2026-07-02T16:05:00.000Z",
+          "startedAt": "2026-06-20T16:05:00.000Z",
+          "expiresAt": "2026-06-20T16:25:00.000Z",
+          "submittedAt": "2026-06-20T16:17:00.000Z",
+          "finalReason": "submit",
+          "result": {
+            "scorePct": 22,
+            "passed": false,
+            "perQuestion": [
+              {
+                "question_id": "e11-q1",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e11-q2",
+                "correct": false,
+                "awarded": 1,
+                "max": 3
+              },
+              {
+                "question_id": "e11-q3",
+                "correct": false,
+                "awarded": 0,
+                "max": 1
+              },
+              {
+                "question_id": "e11-q4",
+                "correct": false,
+                "awarded": 0,
+                "max": 1
+              },
+              {
+                "question_id": "e11-q5",
+                "correct": false,
+                "awarded": 0,
+                "max": 3
+              }
+            ],
+            "finalizedAt": "2026-06-20T16:17:00.000Z",
+            "certNo": null
+          },
+          "state": "scored"
+        }
+      },
+      "attempts": {
+        "exam-11": 1
+      },
+      "locks": {}
+    },
+    "9": {
+      "sessions": {
+        "sess-7": {
+          "id": "sess-7",
+          "userId": "9",
+          "examId": "exam-6",
+          "snapshot": {
+            "examId": "exam-6",
+            "title": "Organic Farming Certification",
+            "questionCount": 8,
+            "durationSec": 2400,
+            "accessWindowDays": 30,
+            "passPct": 75,
+            "attemptsAllowed": 2,
+            "certValidMonths": 36,
+            "certTemplate": "classic-green",
+            "pricing": {
+              "mode": "paid",
+              "priceRol": 25
+            },
+            "ownerUnitId": "unit-1",
+            "unitName": "Green Acres Training Co-op",
+            "payoutUserId": "2"
+          },
+          "seed": null,
+          "answers": {},
+          "questions": null,
+          "entitledAt": "2026-07-18T12:00:00.000Z",
+          "accessExpiresAt": "2026-08-17T12:00:00.000Z",
+          "startedAt": null,
+          "expiresAt": null,
+          "submittedAt": null,
+          "finalReason": null,
+          "result": null,
+          "state": "entitled"
+        }
+      },
+      "attempts": {},
+      "locks": {}
+    },
+    "10": {
+      "sessions": {
+        "sess-5": {
+          "id": "sess-5",
+          "userId": "10",
+          "examId": "exam-7",
+          "snapshot": {
+            "examId": "exam-7",
+            "title": "Combine Harvester Operation",
+            "questionCount": 7,
+            "durationSec": 2100,
+            "accessWindowDays": 21,
+            "passPct": 75,
+            "attemptsAllowed": 3,
+            "certValidMonths": 24,
+            "certTemplate": "rustic-kraft",
+            "pricing": {
+              "mode": "paid",
+              "priceRol": 40
+            },
+            "ownerUnitId": "unit-2",
+            "unitName": "Ironfield Machinery School",
+            "payoutUserId": "3"
+          },
+          "seed": "seed-5exam-7",
+          "answers": {
+            "e7-q1": "a",
+            "e7-q2": [
+              "a",
+              "b",
+              "c"
+            ],
+            "e7-q3": "a",
+            "e7-q4": "a",
+            "e7-q5": [
+              "a",
+              "b",
+              "d"
+            ],
+            "e7-q6": "a",
+            "e7-q7": "b"
+          },
+          "questions": [
+            {
+              "id": "e7-q1",
+              "type": "single",
+              "text": "Before harvesting, the combine header height should be set to:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Suit the crop and cut cleanly without picking up soil"
+                },
+                {
+                  "id": "b",
+                  "text": "The maximum at all times"
+                },
+                {
+                  "id": "c",
+                  "text": "Below ground level"
+                },
+                {
+                  "id": "d",
+                  "text": "Whatever is fastest"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e7-q2",
+              "type": "multi",
+              "text": "Pre-harvest combine checks include: (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Fire extinguisher present and charged"
+                },
+                {
+                  "id": "b",
+                  "text": "Belts, chains, and bearings inspected"
+                },
+                {
+                  "id": "c",
+                  "text": "Grain tank and unloading auger clear"
+                },
+                {
+                  "id": "d",
+                  "text": "Radio station tuned"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "c"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e7-q3",
+              "type": "single",
+              "text": "Excessive grain loss out the back of the combine often indicates:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Incorrect fan speed or concave settings"
+                },
+                {
+                  "id": "b",
+                  "text": "The paint is wrong"
+                },
+                {
+                  "id": "c",
+                  "text": "Too much daylight"
+                },
+                {
+                  "id": "d",
+                  "text": "Nothing adjustable"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e7-q4",
+              "type": "single",
+              "text": "Combine fires are most commonly caused by:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Chaff build-up near hot engine and bearing surfaces"
+                },
+                {
+                  "id": "b",
+                  "text": "Cold weather only"
+                },
+                {
+                  "id": "c",
+                  "text": "Clean machines"
+                },
+                {
+                  "id": "d",
+                  "text": "Low fuel exclusively"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e7-q5",
+              "type": "multi",
+              "text": "Safe unblocking of a plugged combine requires: (select all that apply)",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Engine off and key removed"
+                },
+                {
+                  "id": "b",
+                  "text": "Moving parts fully stopped"
+                },
+                {
+                  "id": "c",
+                  "text": "Reaching in while it runs"
+                },
+                {
+                  "id": "d",
+                  "text": "Following lockout procedure"
+                }
+              ],
+              "correct": [
+                "a",
+                "b",
+                "d"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e7-q6",
+              "type": "single",
+              "text": "Higher drum/rotor speed than needed tends to:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Increase grain damage and cracking"
+                },
+                {
+                  "id": "b",
+                  "text": "Improve germination"
+                },
+                {
+                  "id": "c",
+                  "text": "Reduce fuel use to zero"
+                },
+                {
+                  "id": "d",
+                  "text": "Have no effect"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            },
+            {
+              "id": "e7-q7",
+              "type": "single",
+              "text": "When moving a combine on a public road you should:",
+              "options": [
+                {
+                  "id": "a",
+                  "text": "Fit lights/markers and remove or secure the header per rules"
+                },
+                {
+                  "id": "b",
+                  "text": "Drive on the header"
+                },
+                {
+                  "id": "c",
+                  "text": "Travel at full field speed"
+                },
+                {
+                  "id": "d",
+                  "text": "Ignore other traffic"
+                }
+              ],
+              "correct": [
+                "a"
+              ],
+              "weight": 1
+            }
+          ],
+          "entitledAt": "2026-06-26T08:45:00.000Z",
+          "accessExpiresAt": "2026-07-17T08:45:00.000Z",
+          "startedAt": "2026-06-28T08:45:00.000Z",
+          "expiresAt": "2026-06-28T09:20:00.000Z",
+          "submittedAt": "2026-06-28T09:06:00.000Z",
+          "finalReason": "submit",
+          "result": {
+            "scorePct": 91,
+            "passed": true,
+            "perQuestion": [
+              {
+                "question_id": "e7-q1",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e7-q2",
+                "correct": true,
+                "awarded": 3,
+                "max": 3
+              },
+              {
+                "question_id": "e7-q3",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e7-q4",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e7-q5",
+                "correct": true,
+                "awarded": 3,
+                "max": 3
+              },
+              {
+                "question_id": "e7-q6",
+                "correct": true,
+                "awarded": 1,
+                "max": 1
+              },
+              {
+                "question_id": "e7-q7",
+                "correct": false,
+                "awarded": 0,
+                "max": 1
+              }
+            ],
+            "finalizedAt": "2026-06-28T09:06:00.000Z",
+            "certNo": "AA-2026-000004",
+            "certificateStatus": "issued"
+          },
+          "state": "scored",
+          "payment": {
+            "priceRol": 40,
+            "ownerUnitId": "unit-2",
+            "paid": true
+          }
+        }
+      },
+      "attempts": {
+        "exam-7": 1
+      },
+      "locks": {}
+    }
+  }
+}

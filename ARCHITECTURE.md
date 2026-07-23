@@ -469,9 +469,11 @@ rolnopol-jt/
 │   ├── notification-center/  # pub/sub hub + event log
 │   ├── plugin-runtime/       # plugin discovery & lifecycle
 │   ├── farm-stay/            # app-side HTTP client of the FarmStay gateway (gateway URL only)
+│   ├── agri-academy/         # app-side HTTP clients of the AgriAcademy gateways (exam-center + authoring)
 │   └── greenhouse/ · tasklab/ # app-side clients of the gRPC external services
 ├── external-services/        # standalone microservice ecosystems, independent of the app
 │   ├── farm-stay/            # 5 services (REST gateway + inventory/pricing/reservation/review leaves)
+│   ├── agri-academy/         # 5 services (exam-center + authoring REST gateways; question-bank/grading gRPC + certificate-issuer REST leaves)
 │   ├── greenhouse/           # gRPC crop-simulation service
 │   └── tasklab/              # gRPC task-board service
 ├── plugins/                  # optional plugins + plugins.manifest.json
@@ -488,6 +490,8 @@ rolnopol-jt/
 ### External-service ecosystems
 
 `external-services/` holds self-contained microservice ecosystems that **do not import from the Rolnopol app** — the app talks to each only over the wire (gRPC or REST) via a thin app-side client under `modules/`, all gated by feature flags. The largest is **FarmStay** (`farmStayEnabled`): a booking.com-style stays marketplace of five services — a thin REST **stay-gateway** (owns no data) orchestrating four leaves (**inventory** + **reservation** over gRPC, **pricing** + **review-desk** over REST). The gateway is the only service Rolnopol dials; see [`external-services/farm-stay/README.md`](./external-services/farm-stay/README.md) and its `PRD.md` for the full design (atomic date-range holds, TTL expiry, the price-change handshake, cancellation refund windows, and cross-service release repair). Run it with `npm run farmstay`; test it with `npm run farmstay:test`.
+
+**AgriAcademy** (`agriAcademyEnabled`) is a timed-certification-exam ecosystem of **five** services that deliberately **mixes protocols**: two REST gateways Rolnopol dials — the **exam-center** (taking exams: sessions, two server-side clocks, attempt limits, grading + certificate orchestration) and the **authoring-service** (certification units, exam definitions, typed-question authoring, public unit pages) — orchestrating three leaves: **question-bank** and **grading** over gRPC and a **certificate-issuer** over REST. Money is never in the ecosystem: a paid exam is settled in ROL by the Rolnopol taker bridge (`routes/v1/agri-academy.route.js`) against `services/financial.service` — charge-the-taker/pay-the-unit/refund keyed by `referenceId`, with a `POST /reconcile` backstop (the farm-stay model). See [`external-services/agri-academy/README.md`](./external-services/agri-academy/README.md) and its `PRD.md` for the full design (pay-before-exam, the access-window + completion-window clocks, attempt cooldown locks, typed-question registry, idempotent certificate issuance, and aggregate health). Run it with `npm run academy`; test it with `npm run academy:test`.
 
 ---
 

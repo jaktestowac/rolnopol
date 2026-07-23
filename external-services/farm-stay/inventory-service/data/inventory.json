@@ -11,7 +11,11 @@
       "capacity": 4,
       "basePrice": 120,
       "policy": "moderate",
-      "amenities": ["kitchen", "fireplace", "parking"],
+      "amenities": [
+        "kitchen",
+        "fireplace",
+        "parking"
+      ],
       "photoRef": "forest",
       "active": true
     },
@@ -24,7 +28,10 @@
       "capacity": 2,
       "basePrice": 60,
       "policy": "flexible",
-      "amenities": ["breakfast", "wifi"],
+      "amenities": [
+        "breakfast",
+        "wifi"
+      ],
       "photoRef": "meadow",
       "active": true
     },
@@ -37,7 +44,11 @@
       "capacity": 6,
       "basePrice": 35,
       "policy": "strict",
-      "amenities": ["firepit", "water", "kayaks"],
+      "amenities": [
+        "firepit",
+        "water",
+        "kayaks"
+      ],
       "photoRef": "lakeside",
       "active": true
     },
@@ -50,7 +61,11 @@
       "capacity": 3,
       "basePrice": 95,
       "policy": "moderate",
-      "amenities": ["wifi", "parking", "animals"],
+      "amenities": [
+        "wifi",
+        "parking",
+        "animals"
+      ],
       "photoRef": "barn",
       "active": true
     },
@@ -63,7 +78,12 @@
       "capacity": 5,
       "basePrice": 155,
       "policy": "moderate",
-      "amenities": ["kitchen", "wifi", "garden", "parking"],
+      "amenities": [
+        "kitchen",
+        "wifi",
+        "garden",
+        "parking"
+      ],
       "photoRef": "meadow",
       "active": true
     },
@@ -76,7 +96,12 @@
       "capacity": 6,
       "basePrice": 175,
       "policy": "moderate",
-      "amenities": ["fireplace", "kayaks", "fishing", "parking"],
+      "amenities": [
+        "fireplace",
+        "kayaks",
+        "fishing",
+        "parking"
+      ],
       "photoRef": "lakeside",
       "active": true
     },
@@ -89,7 +114,11 @@
       "capacity": 2,
       "basePrice": 110,
       "policy": "flexible",
-      "amenities": ["breakfast", "wifi", "spa"],
+      "amenities": [
+        "breakfast",
+        "wifi",
+        "spa"
+      ],
       "photoRef": "vineyard",
       "active": true
     },
@@ -102,7 +131,12 @@
       "capacity": 8,
       "basePrice": 45,
       "policy": "strict",
-      "amenities": ["firepit", "beach-access", "water", "shower"],
+      "amenities": [
+        "firepit",
+        "beach-access",
+        "water",
+        "shower"
+      ],
       "photoRef": "lakeside",
       "active": true
     },
@@ -115,7 +149,12 @@
       "capacity": 2,
       "basePrice": 130,
       "policy": "flexible",
-      "amenities": ["wifi", "gym", "parking", "breakfast"],
+      "amenities": [
+        "wifi",
+        "gym",
+        "parking",
+        "breakfast"
+      ],
       "photoRef": "orchard",
       "active": true
     },
@@ -128,7 +167,13 @@
       "capacity": 8,
       "basePrice": 195,
       "policy": "moderate",
-      "amenities": ["kitchen", "fireplace", "garden", "animals", "parking"],
+      "amenities": [
+        "kitchen",
+        "fireplace",
+        "garden",
+        "animals",
+        "parking"
+      ],
       "photoRef": "barn",
       "active": true
     },
@@ -141,7 +186,11 @@
       "capacity": 4,
       "basePrice": 30,
       "policy": "strict",
-      "amenities": ["firepit", "mountain-views", "water"],
+      "amenities": [
+        "firepit",
+        "mountain-views",
+        "water"
+      ],
       "photoRef": "forest",
       "active": true
     },
@@ -154,7 +203,12 @@
       "capacity": 3,
       "basePrice": 85,
       "policy": "moderate",
-      "amenities": ["breakfast", "garden", "wifi", "parking"],
+      "amenities": [
+        "breakfast",
+        "garden",
+        "wifi",
+        "parking"
+      ],
       "photoRef": "orchard",
       "active": true
     },
@@ -167,7 +221,12 @@
       "capacity": 4,
       "basePrice": 140,
       "policy": "moderate",
-      "amenities": ["kitchen", "wine-cellar", "garden", "parking"],
+      "amenities": [
+        "kitchen",
+        "wine-cellar",
+        "garden",
+        "parking"
+      ],
       "photoRef": "vineyard",
       "active": true
     },
@@ -180,7 +239,11 @@
       "capacity": 2,
       "basePrice": 75,
       "policy": "flexible",
-      "amenities": ["breakfast", "wifi", "garden"],
+      "amenities": [
+        "breakfast",
+        "wifi",
+        "garden"
+      ],
       "photoRef": "orchard",
       "active": true
     },
@@ -193,7 +256,11 @@
       "capacity": 2,
       "basePrice": 90,
       "policy": "strict",
-      "amenities": ["fireplace", "mountain-views", "animals"],
+      "amenities": [
+        "fireplace",
+        "mountain-views",
+        "animals"
+      ],
       "photoRef": "mountain",
       "active": true
     },
@@ -206,7 +273,13 @@
       "capacity": 5,
       "basePrice": 165,
       "policy": "moderate",
-      "amenities": ["kitchen", "fireplace", "animals", "parking", "terrace"],
+      "amenities": [
+        "kitchen",
+        "fireplace",
+        "animals",
+        "parking",
+        "terrace"
+      ],
       "photoRef": "forest",
       "active": true
     },
@@ -219,7 +292,12 @@
       "capacity": 2,
       "basePrice": 145,
       "policy": "flexible",
-      "amenities": ["wifi", "beach-access", "breakfast", "shower"],
+      "amenities": [
+        "wifi",
+        "beach-access",
+        "breakfast",
+        "shower"
+      ],
       "photoRef": "lakeside",
       "active": true
     },
@@ -232,7 +310,11 @@
       "capacity": 4,
       "basePrice": 38,
       "policy": "strict",
-      "amenities": ["firepit", "water", "animals"],
+      "amenities": [
+        "firepit",
+        "water",
+        "animals"
+      ],
       "photoRef": "meadow",
       "active": true
     },
@@ -245,7 +327,13 @@
       "capacity": 6,
       "basePrice": 180,
       "policy": "moderate",
-      "amenities": ["kitchen", "wine-cellar", "terrace", "garden", "parking"],
+      "amenities": [
+        "kitchen",
+        "wine-cellar",
+        "terrace",
+        "garden",
+        "parking"
+      ],
       "photoRef": "vineyard",
       "active": true
     },
@@ -258,7 +346,12 @@
       "capacity": 3,
       "basePrice": 160,
       "policy": "flexible",
-      "amenities": ["breakfast", "wifi", "spa", "mountain-views"],
+      "amenities": [
+        "breakfast",
+        "wifi",
+        "spa",
+        "mountain-views"
+      ],
       "photoRef": "mountain",
       "active": true
     },
@@ -271,7 +364,12 @@
       "capacity": 6,
       "basePrice": 42,
       "policy": "moderate",
-      "amenities": ["firepit", "kayaks", "fishing", "water"],
+      "amenities": [
+        "firepit",
+        "kayaks",
+        "fishing",
+        "water"
+      ],
       "photoRef": "lakeside",
       "active": true
     }

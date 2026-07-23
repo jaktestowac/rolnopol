@@ -44,7 +44,8 @@
     "taskLabEnabled": false,
     "greenhouseControlRoomEnabled": false,
     "farmStayEnabled": false,
+    "agriAcademyEnabled": false,
     "observatoryEnabled": false
   },
-  "updatedAt": "2026-07-19T15:37:40.407Z"
+  "updatedAt": "2026-07-21T22:11:46.935Z"
 }
