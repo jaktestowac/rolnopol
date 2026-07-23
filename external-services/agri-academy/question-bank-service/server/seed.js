@@ -365,6 +365,37 @@ function buildTractorPool() {
   ];
 }
 
+// A tiny 2-question demo pool for the built-in "Farm Safety Quick Check" (exam id
+// "demo-quiz"), owned by the Rolnopol Demo Certification Unit. One single + one
+// multi, so a fresh ecosystem has a minimal takeable quiz alongside the two
+// larger demo exams.
+function buildDemoQuizPool() {
+  return [
+    single(
+      "dq-q1",
+      "What should you always do before operating farm machinery?",
+      [
+        opt("a", "Read the operator's manual and check the controls"),
+        opt("b", "Remove all the safety guards"),
+        opt("c", "Skip the pre-start checks to save time"),
+        opt("d", "Disable the brakes"),
+      ],
+      "a",
+    ),
+    multi(
+      "dq-q2",
+      "Which are good general farm-safety habits? (select all that apply)",
+      [
+        opt("a", "Wear appropriate protective equipment"),
+        opt("b", "Keep bystanders clear of moving equipment"),
+        opt("c", "Store chemicals together with food"),
+        opt("d", "Report and fix hazards promptly"),
+      ],
+      ["a", "b", "d"],
+    ),
+  ];
+}
+
 // ── Catalogue pools (match authoring's seeded exams "exam-5" … "exam-12") ──────
 // Kept in sync with the `agriAcademyQuestionBank` snapshot in
 // data/database-base-state.json — the restore endpoint and the test bootstrap
@@ -474,6 +505,7 @@ function buildSeed() {
     pools: {
       "pesticide-basics": buildPesticidePool(),
       "tractor-safety": buildTractorPool(),
+      "demo-quiz": buildDemoQuizPool(),
       "exam-5": buildSoilHealthPool(),
       "exam-6": buildOrganicPool(),
       "exam-7": buildCombinePool(),

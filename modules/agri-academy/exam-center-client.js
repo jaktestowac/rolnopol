@@ -57,6 +57,8 @@ module.exports = {
   // Public unit directory / profile (no identity needed).
   listUnits: () => call("GET", "/v1/units"),
   getUnit: (unitId) => call("GET", `/v1/units/${encodeURIComponent(unitId)}`),
+  // Public, anonymized leaderboards (no identity needed).
+  leaderboard: () => call("GET", "/v1/leaderboard"),
   // Owner-only unit analytics (ownership enforced upstream by the exam center).
   getUnitAnalytics: (userId, unitId) => call("GET", `/v1/units/${encodeURIComponent(unitId)}/analytics`, { userId }),
   createSession: (userId, body) => call("POST", "/v1/sessions", { userId, body }),
@@ -68,6 +70,7 @@ module.exports = {
   saveAnswer: (userId, id, qid, body) =>
     call("PUT", `/v1/sessions/${encodeURIComponent(id)}/answers/${encodeURIComponent(qid)}`, { userId, body }),
   submitSession: (userId, id) => call("POST", `/v1/sessions/${encodeURIComponent(id)}/submit`, { userId }),
+  rateSession: (userId, id, body) => call("POST", `/v1/sessions/${encodeURIComponent(id)}/rating`, { userId, body }),
   listCertificates: (userId) => call("GET", "/v1/certificates", { userId }),
   verify: (certNo) => call("GET", `/v1/verify/${encodeURIComponent(certNo)}`),
   revokeCertificate: (userId, certNo, body) => call("POST", `/v1/certificates/${encodeURIComponent(certNo)}/revoke`, { userId, body }),

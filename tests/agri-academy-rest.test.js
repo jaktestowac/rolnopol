@@ -132,7 +132,20 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     const dir = await request(app).get("/api/v1/agri-academy/units").expect(200);
     expect(dir.body.units.find((u) => u.unitId === "unit-demo")).toBeTruthy();
     const profile = await request(app).get("/api/v1/agri-academy/units/unit-demo").expect(200);
-    expect(profile.body.exams.length).toBe(2);
+    expect(profile.body.exams.length).toBe(3);
+  });
+
+  it("serves anonymized leaderboards UNAUTHENTICATED", async () => {
+    const res = await request(app).get("/api/v1/agri-academy/leaderboard").expect(200);
+    expect(Array.isArray(res.body.units)).toBe(true);
+    expect(Array.isArray(res.body.learners)).toBe(true);
+    expect(Array.isArray(res.body.exams)).toBe(true);
+    expect(res.body.totals).toBeTruthy();
+    // Learner rows are anonymized to "<FirstName> *" and never leak a raw userId.
+    for (const l of res.body.learners) {
+      expect(l.alias).toMatch(/ \*$/);
+      expect(l.userId).toBeUndefined();
+    }
   });
 
   it("proxies the published catalog (200) and never leaks keys", async () => {
@@ -229,6 +242,24 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     expect(row).toBeTruthy();
     expect(row.examTitle).toBe("REST Exam");
     expect(row.state).toBe("scored");
+    expect(row.rating).toBe(null); // not yet rated
+
+    // Rate the passed exam 1–5 stars (idempotent). Out-of-range is rejected; the
+    // value round-trips onto the "My exams" session view.
+    await request(app).post(`/api/v1/agri-academy/sessions/${sid}/rating`).set("token", token).send({ stars: 9 }).expect(400);
+    const rated = await request(app).post(`/api/v1/agri-academy/sessions/${sid}/rating`).set("token", token).send({ stars: 4 }).expect(200);
+    expect(rated.body.rating).toBe(4);
+    const afterRate = await request(app).get("/api/v1/agri-academy/sessions").set("token", token).expect(200);
+    expect(afterRate.body.sessions.find((s) => s.sessionId === sid).rating).toBe(4);
+
+    // The rating overlays onto the public unit profile: the exam card carries its
+    // own rating, and the unit's rating is the average across its exams.
+    const ratedProfile = await request(app).get(`/api/v1/agri-academy/units/${unitId}`).expect(200);
+    expect(ratedProfile.body.rating).toBe(4);
+    expect(ratedProfile.body.ratings).toBe(1);
+    const ratedExam = ratedProfile.body.exams.find((e) => e.id === examId);
+    expect(ratedExam.rating).toBe(4);
+    expect(ratedExam.ratings).toBe(1);
 
     // Owner-only unit analytics (with ROL income overlaid by the bridge).
     const stats = await request(app).get(`/api/v1/agri-academy/units/${unitId}/analytics`).set("token", token).expect(200);

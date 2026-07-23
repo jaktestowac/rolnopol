@@ -218,6 +218,24 @@
       .hidden {
         display: none;
       }
+      .tag.rated {
+        color: #ffce54;
+        border-color: #4a3d1e;
+        background: #241f12;
+      }
+      .hero-rating {
+        margin-top: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #ffce54;
+      }
+      .hero-rating .muted {
+        color: var(--muted);
+        font-weight: 400;
+      }
     </style>
   </head>
   <body class="agri-academy-page">
@@ -262,6 +280,11 @@
         let examPage = 1;
         const EXAMS_PER_PAGE = 6;
 
+        const ratingTag = (rating, count) =>
+          count
+            ? `<span class="tag rated" title="${count} rating${count === 1 ? "" : "s"}">★ ${Number(rating).toFixed(1)} (${count})</span>`
+            : `<span class="tag">☆ Unrated</span>`;
+
         function examCard(e) {
           const price =
             e.pricing && e.pricing.mode === "paid"
@@ -273,6 +296,7 @@
               <p>${esc(e.description || "")}</p>
               <div class="meta">
                 ${price}
+                ${ratingTag(e.rating, e.ratings)}
                 <span class="tag">${mins(e.durationSec)} min</span>
                 <span class="tag">Pass ${e.passPct}%</span>
                 <span class="tag">${e.accessWindowDays}-day access</span>
@@ -313,6 +337,8 @@
                 return (a.durationSec || 0) - (b.durationSec || 0) || (a.title || "").localeCompare(b.title || "");
               case "pass-asc":
                 return (a.passPct || 0) - (b.passPct || 0) || (a.title || "").localeCompare(b.title || "");
+              case "rating-desc":
+                return (b.rating || 0) - (a.rating || 0) || (b.ratings || 0) - (a.ratings || 0) || (a.title || "").localeCompare(b.title || "");
               default:
                 return (a.title || "").localeCompare(b.title || "");
             }
@@ -352,6 +378,13 @@
                 </div>
                 <p class="desc" style="margin-top:12px">${esc(u.description || "")}</p>
                 ${chips ? `<div class="chips">${chips}</div>` : ""}
+                <div class="hero-rating">
+                  ${
+                    u.ratings
+                      ? `★ ${Number(u.rating).toFixed(1)} <span class="muted">· average of ${u.ratings} exam rating${u.ratings === 1 ? "" : "s"}</span>`
+                      : `<span class="muted">Not yet rated</span>`
+                  }
+                </div>
               </div>
               <h2 class="section">Available certifications</h2>
               ${
@@ -365,6 +398,7 @@
                         <option value="price-desc">Price (high → low)</option>
                         <option value="duration-asc">Shortest first</option>
                         <option value="pass-asc">Easiest pass %</option>
+                        <option value="rating-desc">Top rated</option>
                       </select>
                     </div>`
                   : ""

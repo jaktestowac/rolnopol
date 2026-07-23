@@ -110,6 +110,7 @@ function sessionView(session) {
     case "expired_scored":
       base.result = session.result;
       base.expiresAt = session.expiresAt;
+      base.rating = session.rating?.stars ?? null; // the taker's own 1–5 star rating (passed exams only)
       break;
     case "expired_unstarted":
       base.accessExpiresAt = session.accessExpiresAt;
@@ -247,6 +248,193 @@ function aggregateUnitAnalytics(data, unitId, unitName, publishedExams) {
     byState,
     exams: perExam,
   };
+}
+
+// Farm-themed word lists for stable, non-reversible learner pseudonyms. A userId
+// is hashed to one adjective + one noun + a 2-digit suffix, so the same learner
+// always shows the same alias on the board but the real identity never leaks.
+const ALIAS_ADJ = [
+  "Golden", "Silent", "Rolling", "Misty", "Hardy", "Sunlit", "Verdant", "Rugged",
+  "Amber", "Frosty", "Wild", "Nimble", "Quiet", "Bright", "Ancient", "Hidden",
+];
+const ALIAS_NOUN = [
+  "Harvester", "Shepherd", "Plowman", "Vintner", "Grower", "Rancher", "Orchardist", "Sower",
+  "Reaper", "Herder", "Farmhand", "Steward", "Grazier", "Miller", "Beekeeper", "Forager",
+];
+
+/** Deterministic farm-themed alias for a userId (anonymizes the leaderboard). */
+function learnerAlias(userId) {
+  const s = String(userId);
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  const adj = ALIAS_ADJ[h % ALIAS_ADJ.length];
+  const noun = ALIAS_NOUN[Math.floor(h / ALIAS_ADJ.length) % ALIAS_NOUN.length];
+  return `${adj} ${noun} #${(h % 89) + 10}`;
+}
+
+/**
+ * Public, anonymized cross-ecosystem leaderboards for the showcase page. Rolls up
+ * every user's sessions into three ranked boards — units, (aliased) learners, and
+ * exams — each with enrollments, completions, passes, certificates, pass rate, and
+ * average score. `units`/`exams` (from authoring) seed display metadata + let a
+ * zero-activity entry still appear. Learner identity is never leaked — each userId
+ * becomes a stable pseudonym via learnerAlias. Pure (no I/O) so it is unit-testable.
+ * @returns {{units:object[], learners:object[], exams:object[], totals:object}}
+ */
+function computeLeaderboards(data, units = [], exams = [], limit = 50) {
+  const unitMeta = new Map(units.map((u) => [u.unitId, u]));
+  const examMeta = new Map(exams.map((e) => [e.id, e]));
+  const unitNameOf = (unitId, fallback) => unitMeta.get(unitId)?.name || fallback || unitId || null;
+  const blank = () => ({ enrollments: 0, completed: 0, passed: 0, certificates: 0, scoreSum: 0, scoreCount: 0, ratingSum: 0, ratingCount: 0 });
+
+  const unitAgg = new Map();
+  const learnerAgg = new Map();
+  const examAgg = new Map();
+
+  const ensureUnit = (unitId, name) => {
+    if (!unitAgg.has(unitId)) {
+      const m = unitMeta.get(unitId);
+      unitAgg.set(unitId, { unitId, name: unitNameOf(unitId, name), icon: m?.icon || "graduation-cap", color: m?.color || "#3fae6b", learners: new Set(), ...blank() });
+    }
+    return unitAgg.get(unitId);
+  };
+  const ensureExam = (examId, title, ownerUnitId, pricing) => {
+    if (!examAgg.has(examId)) {
+      const m = examMeta.get(examId);
+      const owner = m?.ownerUnitId || ownerUnitId;
+      const pr = m?.pricing || pricing;
+      examAgg.set(examId, { examId, title: m?.title || title || examId, unitName: unitNameOf(owner), mode: pr?.mode || "free", priceRol: pr?.mode === "paid" ? pr.priceRol : 0, learners: new Set(), ...blank() });
+    }
+    return examAgg.get(examId);
+  };
+  const ensureLearner = (userId) => {
+    if (!learnerAgg.has(userId)) learnerAgg.set(userId, { userId, alias: learnerAlias(userId), bestScore: 0, units: new Set(), ...blank() });
+    return learnerAgg.get(userId);
+  };
+
+  // Seed from the catalog so units/exams with no enrollments still appear.
+  for (const u of units) ensureUnit(u.unitId, u.name);
+  for (const e of exams) ensureExam(e.id, e.title, e.ownerUnitId, e.pricing);
+
+  for (const [uid, u] of Object.entries(data.users || {})) {
+    for (const s of Object.values(u.sessions || {})) {
+      const unitId = s.snapshot?.ownerUnitId;
+      if (!unitId) continue;
+      const unit = ensureUnit(unitId, s.snapshot?.unitName);
+      const exam = ensureExam(s.examId, s.snapshot?.title, unitId, s.snapshot?.pricing);
+      const learner = ensureLearner(uid);
+
+      unit.enrollments += 1;
+      unit.learners.add(uid);
+      exam.enrollments += 1;
+      exam.learners.add(uid);
+      learner.enrollments += 1;
+      learner.units.add(unitId);
+
+      if ((s.state === "scored" || s.state === "expired_scored") && s.result) {
+        const pct = s.result.scorePct || 0;
+        for (const a of [unit, exam, learner]) {
+          a.completed += 1;
+          a.scoreSum += pct;
+          a.scoreCount += 1;
+        }
+        if (s.result.passed) {
+          unit.passed += 1;
+          exam.passed += 1;
+          learner.passed += 1;
+        }
+        if (s.result.certNo) {
+          unit.certificates += 1;
+          exam.certificates += 1;
+          learner.certificates += 1;
+        }
+        if (pct > learner.bestScore) learner.bestScore = pct;
+      }
+      // Star rating (only ever set on a passed exam) folds into the unit + exam averages.
+      const stars = s.rating?.stars;
+      if (Number.isInteger(stars)) {
+        unit.ratingSum += stars;
+        unit.ratingCount += 1;
+        exam.ratingSum += stars;
+        exam.ratingCount += 1;
+      }
+    }
+  }
+
+  const avg = (a) => (a.scoreCount ? Math.round(a.scoreSum / a.scoreCount) : 0);
+  const rate = (a) => (a.completed ? Math.round((a.passed / a.completed) * 100) : 0);
+  const rating = (a) => (a.ratingCount ? Math.round((a.ratingSum / a.ratingCount) * 10) / 10 : 0);
+  const ranked = (arr, cmp) => arr.sort(cmp).slice(0, limit).map((x, i) => ({ rank: i + 1, ...x }));
+
+  const units_ = ranked(
+    [...unitAgg.values()].map((u) => ({
+      unitId: u.unitId, name: u.name, icon: u.icon, color: u.color,
+      enrollments: u.enrollments, learners: u.learners.size, completed: u.completed,
+      passed: u.passed, certificates: u.certificates, passRate: rate(u), avgScore: avg(u),
+      avgRating: rating(u), ratings: u.ratingCount,
+    })),
+    (a, b) => b.certificates - a.certificates || b.enrollments - a.enrollments || b.avgScore - a.avgScore || a.name.localeCompare(b.name),
+  );
+  const learners_ = ranked(
+    [...learnerAgg.values()].map((l) => ({
+      userId: l.userId, alias: l.alias, enrollments: l.enrollments, completed: l.completed, passed: l.passed,
+      certificates: l.certificates, avgScore: avg(l), bestScore: l.bestScore, units: l.units.size,
+    })),
+    (a, b) => b.certificates - a.certificates || b.avgScore - a.avgScore || b.passed - a.passed || a.alias.localeCompare(b.alias),
+  );
+  const exams_ = ranked(
+    [...examAgg.values()].map((e) => ({
+      examId: e.examId, title: e.title, unitName: e.unitName, mode: e.mode, priceRol: e.priceRol,
+      enrollments: e.enrollments, learners: e.learners.size, completed: e.completed, passRate: rate(e), avgScore: avg(e),
+      avgRating: rating(e), ratings: e.ratingCount,
+    })),
+    (a, b) =>
+      b.avgRating - a.avgRating || b.ratings - a.ratings || b.avgScore - a.avgScore || b.enrollments - a.enrollments || a.title.localeCompare(b.title),
+  );
+
+  return {
+    totals: {
+      units: unitAgg.size,
+      learners: learnerAgg.size,
+      exams: examAgg.size,
+      certificates: [...unitAgg.values()].reduce((n, u) => n + u.certificates, 0),
+    },
+    units: units_,
+    learners: learners_,
+    exams: exams_,
+  };
+}
+
+/**
+ * Roll up taker star ratings from every session into per-exam and per-unit averages
+ * (rounded to 1 dp) with a count. A unit's rating pools ALL ratings across its exams
+ * (so a busier exam weighs more), matching the leaderboard's unit rating. Pure — used
+ * to overlay ratings onto the public unit directory / profile, which are otherwise
+ * authoring-only. Returns `{ exams: {examId:{rating,ratings}}, units: {unitId:{...}} }`.
+ */
+function aggregateRatings(data) {
+  const exams = {};
+  const units = {};
+  const bump = (map, key, stars) => {
+    const a = (map[key] = map[key] || { sum: 0, count: 0 });
+    a.sum += stars;
+    a.count += 1;
+  };
+  for (const u of Object.values(data.users || {})) {
+    for (const s of Object.values(u.sessions || {})) {
+      const stars = s.rating?.stars;
+      if (!Number.isInteger(stars)) continue;
+      bump(exams, s.examId, stars);
+      const unitId = s.snapshot?.ownerUnitId;
+      if (unitId) bump(units, unitId, stars);
+    }
+  }
+  const finalize = (map) => {
+    const out = {};
+    for (const [k, a] of Object.entries(map)) out[k] = { rating: Math.round((a.sum / a.count) * 10) / 10, ratings: a.count };
+    return out;
+  };
+  return { exams: finalize(exams), units: finalize(units) };
 }
 
 /**
@@ -429,17 +617,74 @@ function buildApp({
     res.status(r.status).json(r.body);
   });
 
-  // Public unit directory / profile — proxied from authoring.
+  // Public unit directory / profile — proxied from authoring, then overlaid with
+  // taker star ratings (owned here, in the session store). Each unit gets an overall
+  // `rating`/`ratings`; on the profile, each exam card gets its own `rating`/`ratings`.
   app.get("/v1/units", async (req, res) => {
     const r = await authoring.listPublicUnits();
     if (r.status === 503) return res.status(503).json({ error: "AUTHORING_UNAVAILABLE" });
+    if (r.status === 200 && Array.isArray(r.body?.units)) {
+      try {
+        const { units } = aggregateRatings(await db.getAll());
+        for (const u of r.body.units) {
+          const ur = units[u.unitId] || { rating: 0, ratings: 0 };
+          u.rating = ur.rating;
+          u.ratings = ur.ratings;
+        }
+      } catch (err) {
+        log.warn("units: rating overlay failed", { error: err.message });
+      }
+    }
     res.status(r.status).json(r.body);
   });
   app.get("/v1/units/:unitId", async (req, res) => {
     const r = await authoring.getPublicUnit(req.params.unitId);
     if (r.status === 503) return res.status(503).json({ error: "AUTHORING_UNAVAILABLE" });
     if (r.status === 404) return res.status(404).json({ error: "UNIT_NOT_FOUND" });
+    if (r.status === 200 && r.body) {
+      try {
+        const { exams, units } = aggregateRatings(await db.getAll());
+        const ur = units[req.params.unitId] || { rating: 0, ratings: 0 };
+        r.body.rating = ur.rating;
+        r.body.ratings = ur.ratings;
+        for (const e of r.body.exams || []) {
+          const er = exams[e.id] || { rating: 0, ratings: 0 };
+          e.rating = er.rating;
+          e.ratings = er.ratings;
+        }
+      } catch (err) {
+        log.warn("unit profile: rating overlay failed", { error: err.message });
+      }
+    }
     res.status(r.status).json(r.body);
+  });
+
+  // Public, anonymized leaderboards for the showcase page — cross-unit rankings of
+  // units, (aliased) learners, and exams. Seeded from authoring's public units +
+  // published exams so the boards render even before much activity. No identity;
+  // degrades gracefully (empty catalog) if authoring is unavailable.
+  app.get("/v1/leaderboard", async (req, res) => {
+    let units = [];
+    let exams = [];
+    try {
+      const r = await authoring.listPublicUnits();
+      if (r.status === 200) units = r.body?.units || [];
+    } catch {
+      /* degrade: derive units from sessions only */
+    }
+    try {
+      const r = await authoring.listPublishedExams();
+      if (r.status === 200) exams = r.body?.exams || [];
+    } catch {
+      /* degrade: derive exams from sessions only */
+    }
+    try {
+      const data = await db.getAll();
+      res.status(200).json({ generatedAt: new Date(clock.now()).toISOString(), ...computeLeaderboards(data, units, exams, 50) });
+    } catch (err) {
+      log.error("leaderboard failed", { error: err.message });
+      res.status(500).json({ error: "INTERNAL" });
+    }
   });
 
   // Owner-only unit analytics — enrollments, completions, passes, certificates,
@@ -838,6 +1083,36 @@ function buildApp({
     }
   });
 
+  // Rate a passed exam 1–5 stars (idempotent — re-rating overwrites the previous
+  // value). Only the taker of a scored, PASSED session may rate it; anything else
+  // is rejected. Feeds the "highest-rated certifications" leaderboard.
+  app.post("/v1/sessions/:id/rating", async (req, res) => {
+    const userId = req.academyUser;
+    const stars = Number(req.body?.stars);
+    if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
+      return res.status(400).json({ error: "INVALID_RATING", message: "stars must be an integer 1–5" });
+    }
+    try {
+      const outcome = await db.mutate((data) => {
+        const session = findSession(data, userId, req.params.id);
+        if (!session) return { value: { code: "NOT_FOUND" } };
+        const scored = (session.state === "scored" || session.state === "expired_scored") && session.result;
+        if (!scored || !session.result.passed) return { next: data, value: { code: "NOT_RATEABLE", state: session.state } };
+        session.rating = { stars, ratedAt: new Date(clock.now()).toISOString() };
+        return { next: data, value: { code: "OK", session } };
+      });
+      if (!outcome || outcome.code === "NOT_FOUND") return res.status(404).json({ error: "SESSION_NOT_FOUND" });
+      if (outcome.code === "NOT_RATEABLE") {
+        return res.status(409).json({ error: "NOT_RATEABLE", message: "only a passed exam can be rated", state: outcome.state });
+      }
+      log.info("session rated", { id: outcome.session.id, stars });
+      res.status(200).json(sessionView(outcome.session));
+    } catch (err) {
+      log.error("rate session failed", { error: err.message });
+      res.status(500).json({ error: "INTERNAL" });
+    }
+  });
+
   // ── Certificates ─────────────────────────────────────────────────────────────
 
   // The caller's earned certificates, gathered from their scored sessions. The
@@ -921,4 +1196,4 @@ async function start() {
 
 if (require.main === module) start();
 
-module.exports = { buildApp, start, publicQuestion, settle, buildGradeItems, aggregateUnitAnalytics };
+module.exports = { buildApp, start, publicQuestion, settle, buildGradeItems, aggregateUnitAnalytics, computeLeaderboards, learnerAlias, aggregateRatings };

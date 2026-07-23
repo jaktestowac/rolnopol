@@ -62,12 +62,12 @@ describe("authoring — public surfaces (seeded)", () => {
     const res = await request(app).get("/v1/public/units").expect(200);
     const demo = res.body.units.find((u) => u.unitId === "unit-demo");
     expect(demo).toBeTruthy();
-    expect(demo.examCount).toBe(2);
+    expect(demo.examCount).toBe(3);
   });
   it("serves the demo unit's public profile with exam cards", async () => {
     const res = await request(app).get("/v1/public/units/unit-demo").expect(200);
     expect(res.body.name).toMatch(/Demo/);
-    expect(res.body.exams.map((e) => e.id).sort()).toEqual(["pesticide-basics", "tractor-safety"]);
+    expect(res.body.exams.map((e) => e.id).sort()).toEqual(["demo-quiz", "pesticide-basics", "tractor-safety"]);
   });
   it("exposes the published read surface for the exam center", async () => {
     const res = await request(app).get("/v1/published/exams").expect(200);

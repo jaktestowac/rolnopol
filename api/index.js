@@ -649,6 +649,7 @@ app.get(
     "/agri-academy",
     "/agri-academy-units.html",
     "/agri-academy-unit.html",
+    "/agri-academy-leaderboard.html",
     "/agri-academy.html",
     "/agri-academy-authoring.html",
     "/agri-academy-certificate.html",

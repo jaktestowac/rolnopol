@@ -29,6 +29,7 @@ const { authenticateSessionUser } = require("../../middleware/auth.middleware");
 const { examCenter } = require("../../modules/agri-academy");
 const { withIdempotency } = require("../../modules/agri-academy/idempotency");
 const financialService = require("../../services/financial.service");
+const userService = require("../../services/user.service");
 const { logError } = require("../../helpers/logger-api");
 
 const router = express.Router();
@@ -167,6 +168,31 @@ async function unitIncome(userId) {
 router.get("/agri-academy/units", gate, apiLimiter, (req, res) => proxy(res, examCenter.listUnits()));
 router.get("/agri-academy/units/:unitId", gate, apiLimiter, (req, res) => proxy(res, examCenter.getUnit(req.params.unitId)));
 
+/**
+ * Public, anonymized leaderboards for the showcase page (flag-gated, NO auth).
+ * The exam center is identity-agnostic, so it returns each learner's round-tripped
+ * Rolnopol `userId`; naming is Rolnopol's job, so the bridge resolves that id to a
+ * privacy-preserving display alias — the user's FIRST name plus a "*" surname
+ * (e.g. "John *") — and strips the raw userId before it ever reaches the browser.
+ */
+router.get("/agri-academy/leaderboard", gate, apiLimiter, async (req, res) => {
+  const r = await examCenter.leaderboard();
+  if (r.status !== 200 || !r.body || !Array.isArray(r.body.learners)) return forward(res, r);
+  let nameById = new Map();
+  try {
+    const users = await userService.getAllUsers();
+    nameById = new Map((users || []).map((u) => [String(u.id), u.displayedName || u.username || null]));
+  } catch (err) {
+    logError("[agri-academy] leaderboard name resolution failed", { error: err.message });
+  }
+  const learners = r.body.learners.map(({ userId, alias, ...rest }) => {
+    const name = nameById.get(String(userId));
+    const first = name ? String(name).trim().split(/\s+/)[0] : null;
+    return { ...rest, alias: first ? `${first} *` : "Learner *" };
+  });
+  res.status(200).json({ ...r.body, learners });
+});
+
 // Public certificate verification — flag-gated but unauthenticated (third-party).
 router.get("/agri-academy/verify/:certNo", gate, apiLimiter, (req, res) => proxy(res, examCenter.verify(req.params.certNo)));
 
@@ -300,6 +326,12 @@ router.put("/agri-academy/sessions/:id/answers/:qid", (req, res) =>
   proxy(res, examCenter.saveAnswer(userOf(req), req.params.id, req.params.qid, req.body)),
 );
 router.post("/agri-academy/sessions/:id/submit", (req, res) => proxy(res, examCenter.submitSession(userOf(req), req.params.id)));
+
+// Rate a passed exam 1–5 stars (idempotent). The exam center enforces that only
+// the taker of a passed session may rate it.
+router.post("/agri-academy/sessions/:id/rating", (req, res) =>
+  proxy(res, examCenter.rateSession(userOf(req), req.params.id, req.body)),
+);
 
 // ── Certificates ───────────────────────────────────────────────────────────────
 router.get("/agri-academy/certificates", (req, res) => proxy(res, examCenter.listCertificates(userOf(req))));

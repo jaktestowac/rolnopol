@@ -19,6 +19,7 @@ async function setEnabled(enabled) {
 const PAGES = [
   "/agri-academy-units.html",
   "/agri-academy-unit.html",
+  "/agri-academy-leaderboard.html",
   "/agri-academy.html",
   "/agri-academy-authoring.html",
   "/agri-academy-certificate.html",
@@ -48,6 +49,8 @@ describe("AgriAcademy HTML page gating", () => {
     await setEnabled(true);
     const units = await request(app).get("/agri-academy-units.html").expect(200);
     expect(units.text).toContain("Certification Units");
+    const leaderboard = await request(app).get("/agri-academy-leaderboard.html").expect(200);
+    expect(leaderboard.text).toContain("Leaderboards");
     const taker = await request(app).get("/agri-academy.html").expect(200);
     expect(taker.text).toContain("Take an exam");
     const authoringPage = await request(app).get("/agri-academy-authoring.html").expect(200);

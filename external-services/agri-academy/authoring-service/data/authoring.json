@@ -133,6 +133,26 @@
       "createdAt": "2026-07-21T20:43:37.454Z",
       "updatedAt": "2026-07-21T20:43:37.454Z"
     },
+    "demo-quiz": {
+      "id": "demo-quiz",
+      "ownerUnitId": "unit-demo",
+      "title": "Farm Safety Quick Check",
+      "description": "A quick two-question taster covering everyday farm-safety basics.",
+      "questionCount": 2,
+      "durationSec": 600,
+      "accessWindowDays": 7,
+      "passPct": 50,
+      "attemptsAllowed": 3,
+      "certValidMonths": 24,
+      "certTemplate": "classic-green",
+      "pricing": {
+        "mode": "free",
+        "priceRol": 0
+      },
+      "status": "published",
+      "createdAt": "2026-07-21T20:43:37.454Z",
+      "updatedAt": "2026-07-21T20:43:37.454Z"
+    },
     "exam-5": {
       "id": "exam-5",
       "ownerUnitId": "unit-1",

@@ -195,9 +195,9 @@ class UserService {
    * Get all users (admin only)
    */
   async getAllUsers() {
-    const users = await this.userDataInstance.getAllUsers();
+    const users = await this.userDataInstance.getUsers();
 
-    return users.map((user) => toPublicUser(user));
+    return (users || []).map((user) => toPublicUser(user));
   }
 
   /**

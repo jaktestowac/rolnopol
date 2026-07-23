@@ -3336,6 +3336,26 @@
           "createdAt": "2026-07-21T20:43:37.454Z",
           "updatedAt": "2026-07-21T20:43:37.454Z"
         },
+        "demo-quiz": {
+          "id": "demo-quiz",
+          "ownerUnitId": "unit-demo",
+          "title": "Farm Safety Quick Check",
+          "description": "A quick two-question taster covering everyday farm-safety basics.",
+          "questionCount": 2,
+          "durationSec": 600,
+          "accessWindowDays": 7,
+          "passPct": 50,
+          "attemptsAllowed": 3,
+          "certValidMonths": 24,
+          "certTemplate": "classic-green",
+          "pricing": {
+            "mode": "free",
+            "priceRol": 0
+          },
+          "status": "published",
+          "createdAt": "2026-07-21T20:43:37.454Z",
+          "updatedAt": "2026-07-21T20:43:37.454Z"
+        },
         "exam-5": {
           "id": "exam-5",
           "ownerUnitId": "unit-1",
@@ -6111,6 +6131,64 @@
             ],
             "correct": [
               "a"
+            ],
+            "weight": 1
+          }
+        ],
+        "demo-quiz": [
+          {
+            "id": "dq-q1",
+            "type": "single",
+            "text": "What should you always do before operating farm machinery?",
+            "options": [
+              {
+                "id": "a",
+                "text": "Read the operator's manual and check the controls"
+              },
+              {
+                "id": "b",
+                "text": "Remove all the safety guards"
+              },
+              {
+                "id": "c",
+                "text": "Skip the pre-start checks to save time"
+              },
+              {
+                "id": "d",
+                "text": "Disable the brakes"
+              }
+            ],
+            "correct": [
+              "a"
+            ],
+            "weight": 1
+          },
+          {
+            "id": "dq-q2",
+            "type": "multi",
+            "text": "Which are good general farm-safety habits? (select all that apply)",
+            "options": [
+              {
+                "id": "a",
+                "text": "Wear appropriate protective equipment"
+              },
+              {
+                "id": "b",
+                "text": "Keep bystanders clear of moving equipment"
+              },
+              {
+                "id": "c",
+                "text": "Store chemicals together with food"
+              },
+              {
+                "id": "d",
+                "text": "Report and fix hazards promptly"
+              }
+            ],
+            "correct": [
+              "a",
+              "b",
+              "d"
             ],
             "weight": 1
           }

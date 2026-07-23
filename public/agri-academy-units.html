@@ -98,6 +98,12 @@
         font-size: 12px;
         font-weight: 600;
       }
+      .pill.rating {
+        margin-left: 6px;
+        color: #ffce54;
+        border-color: #4a3d1e;
+        background: #241f12;
+      }
       .state {
         color: var(--muted);
         padding: 40px 0;
@@ -313,6 +319,30 @@
       .ex-link:hover {
         text-decoration: underline;
       }
+      .stars {
+        display: inline-flex;
+        gap: 1px;
+      }
+      .star {
+        background: none;
+        border: none;
+        padding: 0 1px;
+        margin: 0;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+        color: #3a4a40;
+        transition: color 0.1s ease;
+      }
+      .star.on {
+        color: #ffce54;
+      }
+      .star:hover {
+        color: #ffd98a;
+      }
+      .rating-none {
+        color: var(--muted);
+      }
       .toolbar {
         display: flex;
         flex-wrap: wrap;
@@ -373,6 +403,7 @@
       <p class="sub">Earn verifiable farm-skill certifications — or open your own certification unit and author exams.</p>
       <div class="actions">
         <a class="btn btn--primary" href="/agri-academy.html"><i>🎓</i> Browse &amp; enroll in exams</a>
+        <a class="btn" href="/agri-academy-leaderboard.html"><i>🏆</i> Leaderboards</a>
         <a class="btn" href="/agri-academy-authoring.html?new=1"><i>➕</i> Create a new unit</a>
         <a class="btn" href="/agri-academy-authoring.html"><i>🏛️</i> Manage my unit</a>
         <a class="btn" href="/agri-academy-status.html"><i>📡</i> Service status</a>
@@ -392,6 +423,7 @@
             <option value="name-desc">Name (Z–A)</option>
             <option value="exams-desc">Most exams</option>
             <option value="exams-asc">Fewest exams</option>
+            <option value="rating-desc">Top rated</option>
           </select>
         </div>
         <div id="grid" class="grid"></div>
@@ -409,6 +441,7 @@
                   <th data-sort="exam">Exam</th>
                   <th data-sort="status">Status</th>
                   <th data-sort="score">Score</th>
+                  <th data-sort="rating">Your rating</th>
                   <th data-sort="date">Date</th>
                   <th></th>
                 </tr>
@@ -481,6 +514,21 @@
             return { ok: false, status: 0, body: null };
           }
         }
+        // Authenticated write (session cookie) → { ok, status, body }.
+        async function apiSend(method, path, payload) {
+          try {
+            const r = await fetch("/api/v1/agri-academy" + path, {
+              method,
+              credentials: "include",
+              headers: { "content-type": "application/json" },
+              body: payload != null ? JSON.stringify(payload) : undefined,
+            });
+            const body = await r.json().catch(() => null);
+            return { ok: r.ok, status: r.status, body };
+          } catch {
+            return { ok: false, status: 0, body: null };
+          }
+        }
 
         // ── Units (public) ──────────────────────────────────────────────────────────
         let allUnits = [];
@@ -505,6 +553,7 @@
               <p>${esc(u.description || "")}</p>
               ${chips ? `<div class="chips">${chips}</div>` : ""}
               <span class="pill">${u.examCount} exam${u.examCount === 1 ? "" : "s"}</span>
+              ${u.ratings ? `<span class="pill rating" title="Average of ${u.ratings} exam rating${u.ratings === 1 ? "" : "s"}">★ ${Number(u.rating).toFixed(1)}</span>` : ""}
             </a>`;
         }
 
@@ -523,6 +572,8 @@
                 return (b.examCount || 0) - (a.examCount || 0) || (a.name || "").localeCompare(b.name || "");
               case "exams-asc":
                 return (a.examCount || 0) - (b.examCount || 0) || (a.name || "").localeCompare(b.name || "");
+              case "rating-desc":
+                return (b.rating || 0) - (a.rating || 0) || (b.ratings || 0) - (a.ratings || 0) || (a.name || "").localeCompare(b.name || "");
               default:
                 return (a.name || "").localeCompare(b.name || "");
             }
@@ -599,6 +650,17 @@
         let sortKey = "date";
         let sortDir = -1; // newest first by default
         const scoreOf = (s) => (s.result && typeof s.result.scorePct === "number" ? s.result.scorePct : null);
+        const ratingOf = (s) => (typeof s.rating === "number" ? s.rating : 0);
+        const isPassed = (s) => !!(s.result && s.result.passed);
+        // 5-star widget for a passed exam; buttons carry the session id + star value
+        // and are handled by one delegated listener on the table body.
+        function starWidget(sid, current) {
+          let out = `<span class="stars" data-sid="${enc(sid)}">`;
+          for (let i = 1; i <= 5; i++) {
+            out += `<button type="button" class="star${i <= current ? " on" : ""}" data-stars="${i}" title="${i} star${i === 1 ? "" : "s"}" aria-label="${i} star${i === 1 ? "" : "s"}">★</button>`;
+          }
+          return out + `</span>`;
+        }
 
         function renderSessions() {
           const q = sessQuery.trim().toLowerCase();
@@ -616,6 +678,9 @@
             } else if (sortKey === "score") {
               av = scoreOf(a) ?? -1;
               bv = scoreOf(b) ?? -1;
+            } else if (sortKey === "rating") {
+              av = ratingOf(a);
+              bv = ratingOf(b);
             } else {
               av = a.date || 0;
               bv = b.date || 0;
@@ -631,15 +696,19 @@
                 const action = certNo
                   ? `<a class="ex-link" href="/agri-academy-certificate.html?cert=${enc(certNo)}" target="_blank">Certificate</a>`
                   : `<a class="ex-link" href="/agri-academy.html?exam=${enc(s.examId)}">Open</a>`;
+                const ratingCell = isPassed(s)
+                  ? starWidget(s.sessionId, ratingOf(s))
+                  : `<span class="rating-none">—</span>`;
                 return `<tr>
                   <td>${esc(s.examTitle || s.examId)}</td>
                   <td><span class="badge badge--${st.tone}">${esc(st.label)}</span></td>
                   <td>${sc == null ? "—" : sc + "%"}</td>
+                  <td>${ratingCell}</td>
                   <td>${fmtDate(s.date)}</td>
                   <td>${action}</td>
                 </tr>`;
               })
-              .join("") || `<tr><td colspan="5" class="state" style="padding:16px 12px">No matching exams.</td></tr>`;
+              .join("") || `<tr><td colspan="6" class="state" style="padding:16px 12px">No matching exams.</td></tr>`;
           document.querySelectorAll("#sessTable th[data-sort]").forEach((th) => {
             th.classList.toggle("sort-asc", sortKey === th.dataset.sort && sortDir === 1);
             th.classList.toggle("sort-desc", sortKey === th.dataset.sort && sortDir === -1);
@@ -676,11 +745,33 @@
               if (sortKey === k) sortDir = -sortDir;
               else {
                 sortKey = k;
-                sortDir = k === "date" || k === "score" ? -1 : 1;
+                sortDir = k === "date" || k === "score" || k === "rating" ? -1 : 1;
               }
               renderSessions();
             }),
           );
+          // One delegated listener handles every star click (rows are re-rendered often).
+          $("sessTableBody").addEventListener("click", async (e) => {
+            const btn = e.target.closest(".star");
+            if (!btn) return;
+            const wrap = btn.closest(".stars");
+            const sid = wrap && wrap.dataset.sid;
+            const stars = Number(btn.dataset.stars);
+            const sess = sessions.find((x) => x.sessionId === sid);
+            if (!sess || !stars) return;
+            const prev = sess.rating;
+            sess.rating = stars; // optimistic
+            renderSessions();
+            const res = await apiSend("POST", `/sessions/${enc(sid)}/rating`, { stars });
+            if (res.ok) {
+              sess.rating = typeof res.body?.rating === "number" ? res.body.rating : stars;
+              if (window.showNotification) showNotification(`Thanks — you rated this exam ${sess.rating}★`, "success");
+            } else {
+              sess.rating = prev; // roll back
+              if (window.showNotification) showNotification("Could not save your rating. Please try again.", "error");
+            }
+            renderSessions();
+          });
           renderSessions();
         }
 
