@@ -1,12 +1,9 @@
 {
   "name": "rolnopol-app",
-  "version": "1.71.0",
+  "version": "1.72.0",
   "description": "A Rolnopol app with JSON database, authentication, and admin panel",
   "main": "api/index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test vitest run --dir tests",
-    "unit": "vitest run --dir tests/unit",
-    "pbt": "cross-env NODE_ENV=test vitest run --environment=node --project property",
     "start": "node ./api/index.js",
     "start-debug": "cross-env DEBUG_MODE=true node ./api/index.js",
     "dev": "node ./api/index.js",
@@ -42,7 +39,10 @@
     "academy:certs": "node ./external-services/agri-academy/certificate-issuer-service/server/index.js",
     "academy:test": "cross-env NODE_ENV=test vitest run tests/unit/agri-academy.question-bank.test.js tests/unit/agri-academy.question-types.test.js tests/unit/agri-academy.grading.test.js tests/unit/agri-academy.certificates.test.js tests/unit/agri-academy.authoring.test.js tests/unit/agri-academy.exam-center.test.js tests/agri-academy-rest.test.js tests/agri-academy-payment.test.js tests/agri-academy-health.test.js tests/agri-academy-pages-gating.test.js tests/agri-academy-independence.test.js",
     "format": "npx prettier --write .",
-    "bump-version": "node bump-version.js minor"
+    "bump-version": "node bump-version.js minor",
+    "test": "cross-env NODE_ENV=test vitest run --dir tests",
+    "unit": "cross-env NODE_ENV=test vitest run --project unit",
+    "pbt": "cross-env NODE_ENV=test vitest run --environment=node --project property"
   },
   "keywords": [
     "express",

@@ -89,7 +89,7 @@ describe("user.service", () => {
   });
 
   it("should get all users and remove passwords", async () => {
-    userDataInstance.getAllUsers = vi.fn().mockResolvedValue([
+    vi.spyOn(userDataInstance, "getUsers").mockResolvedValue([
       { id: 1, username: "user1", password: "pass1" },
       { id: 2, username: "user2", password: "pass2" },
     ]);
