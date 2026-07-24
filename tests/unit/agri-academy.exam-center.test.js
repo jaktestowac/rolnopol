@@ -11,7 +11,7 @@ process.env.AGRI_ACADEMY_LOG = "silent";
 
 const AA = path.join(__dirname, "..", "..", "external-services", "agri-academy", "exam-center-service");
 const db = require(path.join(AA, "server", "db.js"));
-const { buildApp, aggregateUnitAnalytics, publicQuestion, settle, buildGradeItems } = require(path.join(AA, "server", "index.js"));
+const { buildApp, aggregateUnitAnalytics, aggregatePublicStats, publicQuestion, settle, buildGradeItems } = require(path.join(AA, "server", "index.js"));
 // The grading fake scores with the REAL grading registry so the exam-center
 // wiring is exercised without booting the gRPC leaf.
 const gradingRegistry = require(
@@ -761,6 +761,31 @@ describe("exam-center — public unit directory (proxied)", () => {
   });
   it("404 for an unknown unit", async () => {
     await request(app).get("/v1/units/ghost").expect(404);
+  });
+});
+
+describe("exam-center — public stats overlays", () => {
+  it("counts unique learners who passed per unit and per exam", () => {
+    const stats = aggregatePublicStats({
+      users: {
+        u1: {
+          sessions: {
+            s1: { examId: "e1", state: "scored", snapshot: { ownerUnitId: "unit-1" }, result: { passed: true }, rating: { stars: 5 } },
+            s2: { examId: "e1", state: "scored", snapshot: { ownerUnitId: "unit-1" }, result: { passed: true } },
+            s3: { examId: "e2", state: "scored", snapshot: { ownerUnitId: "unit-1" }, result: { passed: false } },
+          },
+        },
+        u2: {
+          sessions: {
+            s4: { examId: "e1", state: "expired_scored", snapshot: { ownerUnitId: "unit-1" }, result: { passed: true } },
+          },
+        },
+      },
+    });
+    expect(stats.exams.e1.passedCount).toBe(2);
+    expect(stats.units["unit-1"].passedCount).toBe(2);
+    expect(stats.exams.e1.rating).toBe(5);
+    expect(stats.exams.e1.ratings).toBe(1);
   });
 });
 

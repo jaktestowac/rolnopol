@@ -257,9 +257,11 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     const ratedProfile = await request(app).get(`/api/v1/agri-academy/units/${unitId}`).expect(200);
     expect(ratedProfile.body.rating).toBe(4);
     expect(ratedProfile.body.ratings).toBe(1);
+    expect(ratedProfile.body.passedCount).toBeGreaterThanOrEqual(1);
     const ratedExam = ratedProfile.body.exams.find((e) => e.id === examId);
     expect(ratedExam.rating).toBe(4);
     expect(ratedExam.ratings).toBe(1);
+    expect(ratedExam.passedCount).toBeGreaterThanOrEqual(1);
 
     // Owner-only unit analytics (with ROL income overlaid by the bridge).
     const stats = await request(app).get(`/api/v1/agri-academy/units/${unitId}/analytics`).set("token", token).expect(200);

@@ -553,6 +553,7 @@
               <p>${esc(u.description || "")}</p>
               ${chips ? `<div class="chips">${chips}</div>` : ""}
               <span class="pill">${u.examCount} exam${u.examCount === 1 ? "" : "s"}</span>
+              <span class="pill" title="People who passed at least one exam from this unit">${Number(u.passedCount || 0)} graduate${Number(u.passedCount || 0) === 1 ? "" : "s"}</span>
               ${u.ratings ? `<span class="pill rating" title="Average of ${u.ratings} exam rating${u.ratings === 1 ? "" : "s"}">★ ${Number(u.rating).toFixed(1)}</span>` : ""}
             </a>`;
         }

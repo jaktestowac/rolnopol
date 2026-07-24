@@ -407,12 +407,12 @@ function computeLeaderboards(data, units = [], exams = [], limit = 50) {
 
 /**
  * Roll up taker star ratings from every session into per-exam and per-unit averages
- * (rounded to 1 dp) with a count. A unit's rating pools ALL ratings across its exams
- * (so a busier exam weighs more), matching the leaderboard's unit rating. Pure — used
- * to overlay ratings onto the public unit directory / profile, which are otherwise
- * authoring-only. Returns `{ exams: {examId:{rating,ratings}}, units: {unitId:{...}} }`.
+ * (rounded to 1 dp) with a count, plus unique passed-learner counts. A unit's
+ * rating pools ALL ratings across its exams (so a busier exam weighs more),
+ * matching the leaderboard's unit rating. Pure — used to overlay runtime data onto
+ * the public unit directory / profile, which are otherwise authoring-only.
  */
-function aggregateRatings(data) {
+function aggregatePublicStats(data) {
   const exams = {};
   const units = {};
   const bump = (map, key, stars) => {
@@ -420,22 +420,43 @@ function aggregateRatings(data) {
     a.sum += stars;
     a.count += 1;
   };
-  for (const u of Object.values(data.users || {})) {
+  const passExamSets = {};
+  const passUnitSets = {};
+  const markPassed = (map, key, userId) => {
+    if (!key) return;
+    if (!map[key]) map[key] = new Set();
+    map[key].add(userId);
+  };
+  for (const [userId, u] of Object.entries(data.users || {})) {
     for (const s of Object.values(u.sessions || {})) {
+      const unitId = s.snapshot?.ownerUnitId;
+      if ((s.state === "scored" || s.state === "expired_scored") && s.result?.passed) {
+        markPassed(passExamSets, s.examId, userId);
+        markPassed(passUnitSets, unitId, userId);
+      }
       const stars = s.rating?.stars;
       if (!Number.isInteger(stars)) continue;
       bump(exams, s.examId, stars);
-      const unitId = s.snapshot?.ownerUnitId;
       if (unitId) bump(units, unitId, stars);
     }
   }
-  const finalize = (map) => {
+  const finalize = (map, passedSets) => {
     const out = {};
-    for (const [k, a] of Object.entries(map)) out[k] = { rating: Math.round((a.sum / a.count) * 10) / 10, ratings: a.count };
+    const keys = new Set([...Object.keys(map), ...Object.keys(passedSets)]);
+    for (const k of keys) {
+      const a = map[k];
+      out[k] = {
+        rating: a ? Math.round((a.sum / a.count) * 10) / 10 : 0,
+        ratings: a ? a.count : 0,
+        passedCount: passedSets[k]?.size || 0,
+      };
+    }
     return out;
   };
-  return { exams: finalize(exams), units: finalize(units) };
+  return { exams: finalize(exams, passExamSets), units: finalize(units, passUnitSets) };
 }
+
+const aggregateRatings = aggregatePublicStats;
 
 /**
  * Grade a session that is parked in `submitted` (either an explicit submit or an
@@ -607,6 +628,16 @@ function buildApp({
   app.get("/v1/exams", async (req, res) => {
     const r = await authoring.listPublishedExams();
     if (r.status === 503) return res.status(503).json({ error: "AUTHORING_UNAVAILABLE" });
+    if (r.status === 200 && Array.isArray(r.body?.exams)) {
+      try {
+        const { exams } = aggregatePublicStats(await db.getAll());
+        for (const e of r.body.exams) {
+          e.passedCount = exams[e.id]?.passedCount || 0;
+        }
+      } catch (err) {
+        log.warn("exams: passed-count overlay failed", { error: err.message });
+      }
+    }
     res.status(r.status).json(r.body);
   });
 
@@ -614,22 +645,32 @@ function buildApp({
     const r = await authoring.getPublishedExam(req.params.examId);
     if (r.status === 503) return res.status(503).json({ error: "AUTHORING_UNAVAILABLE" });
     if (r.status === 404) return res.status(404).json({ error: "EXAM_NOT_FOUND" });
+    if (r.status === 200 && r.body) {
+      try {
+        const { exams } = aggregatePublicStats(await db.getAll());
+        r.body.passedCount = exams[req.params.examId]?.passedCount || 0;
+      } catch (err) {
+        log.warn("exam: passed-count overlay failed", { error: err.message });
+      }
+    }
     res.status(r.status).json(r.body);
   });
 
   // Public unit directory / profile — proxied from authoring, then overlaid with
-  // taker star ratings (owned here, in the session store). Each unit gets an overall
-  // `rating`/`ratings`; on the profile, each exam card gets its own `rating`/`ratings`.
+  // taker star ratings + passed-learner counts (owned here, in the session store).
+  // Each unit gets overall `rating`/`ratings`/`passedCount`; on the profile, each
+  // exam card gets its own runtime stats.
   app.get("/v1/units", async (req, res) => {
     const r = await authoring.listPublicUnits();
     if (r.status === 503) return res.status(503).json({ error: "AUTHORING_UNAVAILABLE" });
     if (r.status === 200 && Array.isArray(r.body?.units)) {
       try {
-        const { units } = aggregateRatings(await db.getAll());
+        const { units } = aggregatePublicStats(await db.getAll());
         for (const u of r.body.units) {
-          const ur = units[u.unitId] || { rating: 0, ratings: 0 };
+          const ur = units[u.unitId] || { rating: 0, ratings: 0, passedCount: 0 };
           u.rating = ur.rating;
           u.ratings = ur.ratings;
+          u.passedCount = ur.passedCount;
         }
       } catch (err) {
         log.warn("units: rating overlay failed", { error: err.message });
@@ -643,14 +684,16 @@ function buildApp({
     if (r.status === 404) return res.status(404).json({ error: "UNIT_NOT_FOUND" });
     if (r.status === 200 && r.body) {
       try {
-        const { exams, units } = aggregateRatings(await db.getAll());
-        const ur = units[req.params.unitId] || { rating: 0, ratings: 0 };
+        const { exams, units } = aggregatePublicStats(await db.getAll());
+        const ur = units[req.params.unitId] || { rating: 0, ratings: 0, passedCount: 0 };
         r.body.rating = ur.rating;
         r.body.ratings = ur.ratings;
+        r.body.passedCount = ur.passedCount;
         for (const e of r.body.exams || []) {
-          const er = exams[e.id] || { rating: 0, ratings: 0 };
+          const er = exams[e.id] || { rating: 0, ratings: 0, passedCount: 0 };
           e.rating = er.rating;
           e.ratings = er.ratings;
+          e.passedCount = er.passedCount;
         }
       } catch (err) {
         log.warn("unit profile: rating overlay failed", { error: err.message });
@@ -1196,4 +1239,4 @@ async function start() {
 
 if (require.main === module) start();
 
-module.exports = { buildApp, start, publicQuestion, settle, buildGradeItems, aggregateUnitAnalytics, computeLeaderboards, learnerAlias, aggregateRatings };
+module.exports = { buildApp, start, publicQuestion, settle, buildGradeItems, aggregateUnitAnalytics, computeLeaderboards, learnerAlias, aggregateRatings, aggregatePublicStats };

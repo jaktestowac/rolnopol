@@ -359,6 +359,7 @@
                 <p>${esc(e.description || "")}</p>
                 <div class="meta">
                   ${price}
+                  <span class="tag" title="People who passed this exam">${Number(e.passedCount || 0)} graduate${Number(e.passedCount || 0) === 1 ? "" : "s"}</span>
                   <span class="tag">${mins(e.durationSec)} min</span>
                   <span class="tag">Pass ${e.passPct}%</span>
                   <span class="tag">${e.attemptsAllowed} attempts</span>
