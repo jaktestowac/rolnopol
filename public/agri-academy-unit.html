@@ -293,6 +293,92 @@
         color: var(--muted);
         font-weight: 400;
       }
+
+      .exam-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      /* A secondary (ghost) variant of the enroll button, for "Preview". */
+      .enroll.ghost {
+        background: #1e3527;
+        color: var(--ink);
+        border-color: var(--border);
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      /* Exam preview modal — full details before enrolling. */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(6, 15, 10, 0.72);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 50;
+      }
+      .modal-overlay.hidden {
+        display: none;
+      }
+      .aa-modal {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 520px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      }
+      .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .aa-modal h3 {
+        margin: 0 0 4px;
+        font-size: 22px;
+      }
+      .aa-modal .close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0 4px;
+      }
+      .aa-modal .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .aa-modal .desc {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 8px 0;
+      }
+      .aa-modal dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 16px;
+        margin: 16px 0;
+        font-size: 14px;
+      }
+      .aa-modal dt {
+        color: var(--muted);
+      }
+      .aa-modal dd {
+        margin: 0;
+        text-align: right;
+      }
     </style>
   </head>
 
@@ -302,6 +388,23 @@
       <a class="back" href="/agri-academy-units.html">← All units</a>
       <div id="content"></div>
       <div id="state" class="state">Loading…</div>
+    </div>
+
+    <!-- Exam preview modal — full details before enrolling -->
+    <div id="previewModal" class="modal-overlay hidden">
+      <div class="aa-modal" role="dialog" aria-modal="true" aria-labelledby="pvTitle">
+        <div class="modal-head">
+          <div>
+            <div class="eyebrow">Exam preview</div>
+            <h3 id="pvTitle"></h3>
+          </div>
+          <button class="close" id="pvClose" aria-label="Close">&times;</button>
+        </div>
+        <p id="pvDesc" class="desc"></p>
+        <div id="pvBadges" class="meta"></div>
+        <dl id="pvDetails"></dl>
+        <a id="pvEnroll" class="enroll"></a>
+      </div>
     </div>
     <script src="/js/core/event-bus.js"></script>
     <script src="/js/core/storage.js"></script>
@@ -373,8 +476,45 @@
                 <span class="tag">Pass ${e.passPct}%</span>
                 <span class="tag">${e.accessWindowDays}-day access</span>
               </div>
-              <a class="enroll" href="/agri-academy.html?exam=${encodeURIComponent(e.id)}">Enroll &amp; take →</a>
+              <div class="exam-actions">
+                <a class="enroll" href="/agri-academy.html?exam=${encodeURIComponent(e.id)}">Enroll &amp; take →</a>
+                <button class="enroll ghost" type="button" data-preview="${esc(e.id)}">Preview</button>
+              </div>
             </div>`;
+        }
+
+        // ── Exam preview modal ───────────────────────────────────────────────────────
+        const titleCase = (s) =>
+          String(s || "")
+            .split("-")
+            .filter(Boolean)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ");
+
+        function openPreview(examId) {
+          const e = exams.find((x) => x.id === examId);
+          if (!e) return;
+          const paid = e.pricing && e.pricing.mode === "paid";
+          document.getElementById("pvTitle").textContent = e.title;
+          document.getElementById("pvDesc").textContent = e.description || "";
+          document.getElementById("pvBadges").innerHTML = badges(e) || `<span class="tag" style="visibility:hidden">–</span>`;
+          const rows = [
+            ["Price", paid ? `${e.pricing.priceRol} ROL` : "Free"],
+            ["Duration", `${mins(e.durationSec)} min`],
+            ["Access window", `${e.accessWindowDays} day${e.accessWindowDays === 1 ? "" : "s"}`],
+            ["Pass mark", `${e.passPct}%`],
+            ["Graduates", `${Number(e.passedCount || 0)}`],
+          ];
+          if (e.ratings) rows.push(["Rating", `★ ${Number(e.rating).toFixed(1)} (${e.ratings})`]);
+          if (e.certTemplate) rows.push(["Certificate", titleCase(e.certTemplate)]);
+          document.getElementById("pvDetails").innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+          const enrollLink = document.getElementById("pvEnroll");
+          enrollLink.innerHTML = "Enroll &amp; take →";
+          enrollLink.href = `/agri-academy.html?exam=${encodeURIComponent(e.id)}`;
+          document.getElementById("previewModal").classList.remove("hidden");
+        }
+        function closePreview() {
+          document.getElementById("previewModal").classList.add("hidden");
         }
 
         // Renders prev/next pagination into `containerId`; stays hidden when there's a single page.
@@ -424,11 +564,23 @@
           document.getElementById("examGrid").innerHTML = pageItems.length
             ? pageItems.map(examCard).join("")
             : `<div class="state" style="grid-column:1/-1">No certifications match “${esc(examQuery)}”.</div>`;
+          document
+            .querySelectorAll("[data-preview]")
+            .forEach((b) => b.addEventListener("click", () => openPreview(b.getAttribute("data-preview"))));
           renderPager("examPager", examPage, totalPages, filtered.length, "certification", (p) => {
             examPage = p;
             renderExams();
           });
         }
+
+        // Preview modal close: the ✕, backdrop click, and Escape.
+        document.getElementById("pvClose").addEventListener("click", closePreview);
+        document.getElementById("previewModal").addEventListener("click", (ev) => {
+          if (ev.target === document.getElementById("previewModal")) closePreview();
+        });
+        document.addEventListener("keydown", (ev) => {
+          if (ev.key === "Escape") closePreview();
+        });
 
         if (!unitId) {
           state.textContent = "No unit specified.";

@@ -141,17 +141,35 @@
         color: #b23a3a;
         border-color: #b23a3a;
       }
+      /* Print / Save-as-PDF: a single landscape page sized to the certificate,
+         with the template's colours forced on (browsers drop backgrounds by
+         default) so the saved PDF looks exactly like the on-screen document. */
+      @page {
+        size: A4 landscape;
+        margin: 12mm;
+      }
       @media print {
+        html,
         body {
-          background: #fff;
+          background: #fff !important;
+          margin: 0;
           padding: 0;
         }
         .toolbar {
-          display: none;
+          display: none !important;
         }
         .cert {
           box-shadow: none;
           max-width: none;
+          width: 100%;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .cert::after,
+        .stamp,
+        .rule {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
       }
     </style>
@@ -159,7 +177,7 @@
   <body>
     <div class="toolbar">
       <a href="/agri-academy-units.html">← AgriAcademy</a>
-      <button id="printBtn">🖨️ Print / Save PDF</button>
+      <button id="downloadBtn" title="Opens your browser's print dialog — choose “Save as PDF”">⬇️ Download PDF</button>
     </div>
     <div id="mount"></div>
     <div id="state" class="state">Loading certificate…</div>
@@ -174,7 +192,10 @@
         return isNaN(d) ? "—" : d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
       };
 
-      $("printBtn").addEventListener("click", () => window.print());
+      // Download PDF = the browser's print-to-PDF path. Only enabled once a real
+      // certificate has rendered, so you can't "download" an error/empty page.
+      $("downloadBtn").disabled = true;
+      $("downloadBtn").addEventListener("click", () => window.print());
 
       const certNo = new URLSearchParams(location.search).get("cert");
 
@@ -198,6 +219,7 @@
             <div class="meta certno" style="color:${esc(t.sub || "#9bb3a4")}">${esc(v.certNo || certNo || "")}</div>
             ${revokedNote}
           </div>`;
+        $("downloadBtn").disabled = false; // a real certificate is on screen — allow the PDF download
       }
 
       if (!certNo) {

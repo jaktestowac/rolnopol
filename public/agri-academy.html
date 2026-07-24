@@ -183,6 +183,71 @@
         font-weight: 600;
       }
 
+      .card-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      /* Exam preview modal — full details before enrolling. */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(6, 15, 10, 0.72);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 50;
+      }
+      .modal-overlay.hidden {
+        display: none;
+      }
+      .aa-modal {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 520px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      }
+      .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .aa-modal h3 {
+        margin: 0 0 4px;
+        font-size: 22px;
+      }
+      .aa-modal .close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0 4px;
+      }
+      .aa-modal dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 16px;
+        margin: 16px 0;
+        font-size: 14px;
+      }
+      .aa-modal dt {
+        color: var(--muted);
+      }
+      .aa-modal dd {
+        margin: 0;
+        text-align: right;
+      }
+
       .q {
         background: var(--card);
         border: 1px solid var(--border);
@@ -311,6 +376,23 @@
         <div id="grid" class="grid"></div>
         <div id="catalogState" class="state">Loading exams…</div>
       </section>
+
+      <!-- Exam preview modal — full details before enrolling -->
+      <div id="previewModal" class="modal-overlay hidden">
+        <div class="aa-modal" role="dialog" aria-modal="true" aria-labelledby="pvTitle">
+          <div class="modal-head">
+            <div>
+              <div class="eyebrow">Exam preview</div>
+              <h3 id="pvTitle"></h3>
+            </div>
+            <button class="close" id="pvClose" aria-label="Close">&times;</button>
+          </div>
+          <p id="pvDesc" class="sub"></p>
+          <div id="pvBadges" class="meta"></div>
+          <dl id="pvDetails"></dl>
+          <button class="btn" id="pvEnroll"></button>
+        </div>
+      </div>
 
       <!-- Attempt view -->
       <section id="attempt" class="hidden">
@@ -446,13 +528,57 @@
                   <span class="tag">Pass ${e.passPct}%</span>
                   <span class="tag">${e.attemptsAllowed} attempts</span>
                 </div>
-                <button class="btn" data-enroll="${esc(e.id)}">${paid ? "Pay &amp; enroll" : "Enroll"}</button>
+                <div class="card-actions">
+                  <button class="btn" data-enroll="${esc(e.id)}">${paid ? "Pay &amp; enroll" : "Enroll"}</button>
+                  <button class="btn btn--ghost" data-preview="${esc(e.id)}">Preview</button>
+                </div>
               </div>`;
             })
             .join("");
           document
             .querySelectorAll("[data-enroll]")
             .forEach((b) => b.addEventListener("click", () => enroll(b.getAttribute("data-enroll"))));
+          document
+            .querySelectorAll("[data-preview]")
+            .forEach((b) => b.addEventListener("click", () => openPreview(b.getAttribute("data-preview"))));
+        }
+
+        // ── Exam preview modal ───────────────────────────────────────────────────────
+        // A friendly title-case of the certificate-template id (e.g. "gold-formal" → "Gold Formal").
+        const titleCase = (s) =>
+          String(s || "")
+            .split("-")
+            .filter(Boolean)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ");
+
+        function openPreview(examId) {
+          const e = catalogExams.find((x) => x.id === examId);
+          if (!e) return;
+          const paid = e.pricing && e.pricing.mode === "paid";
+          $("pvTitle").textContent = e.title;
+          $("pvDesc").textContent = e.description || "";
+          $("pvBadges").innerHTML = badges(e) || `<span class="tag" style="visibility:hidden">–</span>`;
+          const rows = [
+            ["Price", paid ? `${e.pricing.priceRol} ROL` : "Free"],
+            ["Duration", `${mins(e.durationSec)} min`],
+            ["Access window", `${e.accessWindowDays} day${e.accessWindowDays === 1 ? "" : "s"}`],
+            ["Pass mark", `${e.passPct}%`],
+            ["Attempts allowed", `${e.attemptsAllowed}`],
+            ["Graduates", `${Number(e.passedCount || 0)}`],
+          ];
+          if (e.certTemplate) rows.push(["Certificate", titleCase(e.certTemplate)]);
+          $("pvDetails").innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+          const enrollBtn = $("pvEnroll");
+          enrollBtn.innerHTML = paid ? "Pay &amp; enroll" : "Enroll";
+          enrollBtn.onclick = () => {
+            closePreview();
+            enroll(e.id);
+          };
+          $("previewModal").classList.remove("hidden");
+        }
+        function closePreview() {
+          $("previewModal").classList.add("hidden");
         }
 
         // Restore the catalog view after a failed/aborted enroll so the loading
@@ -487,8 +613,17 @@
             banner(r.body.error || "Could not enroll.", "err");
             return;
           }
-          banner(r.body.charged ? `Enrolled — charged ${r.body.charged} ROL. Starting…` : "Enrolled. Starting…", "ok");
-          await startAttempt(r.body.sessionId);
+          // Enrolled — but DON'T auto-start. Land on a "ready" panel so the taker
+          // begins the timed attempt when they choose: the completion clock and the
+          // attempt are consumed only at start (the two-clock model).
+          if (r.body.state === "active") {
+            // A reused, already-started session — resume straight into the questions.
+            banner("Resuming your attempt…", "ok");
+            await startAttempt(r.body.sessionId);
+            return;
+          }
+          banner(r.body.charged ? `Enrolled — charged ${r.body.charged} ROL.` : "Enrolled.", "ok");
+          await showReady(examId, r.body);
         }
 
         // Friendly, non-scary text for an attempt lock (with the cooldown if known).
@@ -512,6 +647,40 @@
           $("attemptTimer").textContent = "";
           $("questions").innerHTML = "";
           $("submitBtn").classList.add("hidden");
+        }
+
+        // "Ready to start" panel shown after enrolling. The taker reviews what's about
+        // to happen, then clicks Start to draw questions + begin the completion clock.
+        async function showReady(examId, body) {
+          clearBanner();
+          $("catalog").classList.add("hidden");
+          $("result").classList.add("hidden");
+          $("attempt").classList.remove("hidden");
+          $("submitBtn").classList.add("hidden");
+          // Catalog may be empty on a deep-link (?exam=…) — fetch the exam if needed.
+          let e = catalogExams.find((x) => x.id === examId);
+          if (!e) {
+            const er = await api("GET", "/exams/" + encodeURIComponent(examId));
+            if (er.ok) e = er.body;
+          }
+          e = e || {};
+          $("attemptTitle").textContent = e.title ? `Ready to start: ${e.title}` : "Ready to start";
+          $("attemptTimer").textContent = "";
+          const dur = e.durationSec ? `${mins(e.durationSec)} minutes` : "the allotted time";
+          const attempts = e.attemptsAllowed ? `${e.attemptsAllowed}` : "a limited number of";
+          $("questions").innerHTML = `
+            <div class="q">
+              <p>You're enrolled${body && body.charged ? ` — charged <strong>${Number(body.charged)} ROL</strong>` : ""}. Start whenever you're ready.</p>
+              <p class="sub">Once you start, the timer begins (${dur}) and it uses one of your ${attempts} attempt${attempts === "1" ? "" : "s"}.</p>
+              <div class="card-actions">
+                <button class="btn" id="startBtn">Start exam →</button>
+                <a class="btn btn--ghost" href="/agri-academy.html">Back to exams</a>
+              </div>
+            </div>`;
+          $("startBtn").addEventListener("click", () => {
+            $("startBtn").disabled = true;
+            startAttempt(body.sessionId);
+          });
         }
 
         async function startAttempt(sessionId) {
@@ -659,6 +828,14 @@
         (async function () {
           $("categoryFilter").addEventListener("change", renderCatalog);
           $("difficultyFilter").addEventListener("change", renderCatalog);
+          // Preview modal: close on the ✕, on backdrop click, and on Escape.
+          $("pvClose").addEventListener("click", closePreview);
+          $("previewModal").addEventListener("click", (ev) => {
+            if (ev.target === $("previewModal")) closePreview();
+          });
+          document.addEventListener("keydown", (ev) => {
+            if (ev.key === "Escape") closePreview();
+          });
           const preselect = new URLSearchParams(location.search).get("exam");
           if (preselect) {
             // Arriving from an "enroll & take" link. Hide the catalog up front and go
