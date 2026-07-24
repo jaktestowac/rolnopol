@@ -43,6 +43,8 @@ async function proxy(res, promise) {
 router.get("/agri-academy/unit-presets", guards, (req, res) => proxy(res, authoring.getUnitPresets()));
 // The ten certificate templates, for the exam-creation picker + preview.
 router.get("/agri-academy/cert-templates", guards, (req, res) => proxy(res, authoring.getCertTemplates()));
+// The fixed difficulty set, for the exam-creation picker + catalog filters.
+router.get("/agri-academy/exam-difficulties", guards, (req, res) => proxy(res, authoring.getExamDifficulties()));
 router.get("/agri-academy/units/me", guards, (req, res) => proxy(res, authoring.getMyUnit(userOf(req))));
 router.post("/agri-academy/units", guards, (req, res) => proxy(res, authoring.registerUnit(userOf(req), req.body)));
 router.patch("/agri-academy/units/me", guards, (req, res) => proxy(res, authoring.updateMyUnit(userOf(req), req.body)));

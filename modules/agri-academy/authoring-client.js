@@ -48,6 +48,7 @@ module.exports = {
   // Units
   getUnitPresets: () => call("GET", "/v1/unit-presets"),
   getCertTemplates: () => call("GET", "/v1/cert-templates"),
+  getExamDifficulties: () => call("GET", "/v1/exam-difficulties"),
   getMyUnit: (userId) => call("GET", "/v1/units/me", { userId }),
   registerUnit: (userId, body) => call("POST", "/v1/units", { userId, body }),
   updateMyUnit: (userId, body) => call("PATCH", "/v1/units/me", { userId, body }),

@@ -360,6 +360,107 @@ describe("authoring — certificate templates", () => {
   });
 });
 
+describe("authoring — exam difficulty & category badges", () => {
+  const OWN = "diff-owner";
+  const asOwn = (req) => req.set("x-academy-user", OWN);
+  const baseExam = (over) => ({
+    title: "Badged Exam",
+    description: "d",
+    durationSec: 600,
+    accessWindowDays: 5,
+    passPct: 60,
+    attemptsAllowed: 2,
+    certValidMonths: 12,
+    questionCount: 1,
+    pricing: { mode: "free" },
+    ...over,
+  });
+  let unitId;
+  beforeAll(async () => {
+    const u = await asOwn(request(app).post("/v1/units")).send({ name: "Badge Unit" }).expect(201);
+    unitId = u.body.unitId;
+  });
+
+  it("exposes the fixed difficulty set", async () => {
+    const res = await request(app).get("/v1/exam-difficulties").expect(200);
+    expect(res.body.difficulties).toEqual(["beginner", "intermediate", "advanced"]);
+  });
+
+  it("stores difficulty + category on the exam (normalising difficulty case, trimming category)", async () => {
+    const res = await asOwn(request(app).post("/v1/exams"))
+      .send(baseExam({ difficulty: "Intermediate", category: "  Machinery  " }))
+      .expect(201);
+    expect(res.body.difficulty).toBe("intermediate");
+    expect(res.body.category).toBe("Machinery");
+  });
+
+  it("treats difficulty + category as optional (absent → null / empty on the card)", async () => {
+    const res = await asOwn(request(app).post("/v1/exams")).send(baseExam()).expect(201);
+    expect(res.body.difficulty ?? null).toBeNull();
+    expect(res.body.category ?? "").toBe("");
+  });
+
+  it("rejects an unknown difficulty", async () => {
+    const res = await asOwn(request(app).post("/v1/exams"))
+      .send(baseExam({ difficulty: "expert" }))
+      .expect(400);
+    expect(res.body.message).toMatch(/difficulty/);
+  });
+
+  it("caps a category at 40 characters", async () => {
+    const long = "x".repeat(80);
+    const res = await asOwn(request(app).post("/v1/exams"))
+      .send(baseExam({ category: long }))
+      .expect(201);
+    expect(res.body.category.length).toBe(40);
+  });
+
+  it("PATCH clears the difficulty when sent empty / null", async () => {
+    const made = await asOwn(request(app).post("/v1/exams"))
+      .send(baseExam({ difficulty: "advanced", category: "Soil" }))
+      .expect(201);
+    const cleared = await asOwn(request(app).patch(`/v1/exams/${made.body.id}`))
+      .send({ difficulty: "" })
+      .expect(200);
+    expect(cleared.body.difficulty).toBeNull();
+    expect(cleared.body.category).toBe("Soil"); // untouched
+  });
+
+  it("surfaces the badges on the published read surface and public unit profile", async () => {
+    // Author + publish a badged exam so it reaches both surfaces.
+    const made = await asOwn(request(app).post("/v1/exams"))
+      .send(baseExam({ difficulty: "beginner", category: "Orchard" }))
+      .expect(201);
+    await asOwn(request(app).post(`/v1/exams/${made.body.id}/questions`))
+      .send({
+        type: "single",
+        text: "Q",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["a"],
+      })
+      .expect(201);
+    await asOwn(request(app).post(`/v1/exams/${made.body.id}/publish`)).expect(200);
+
+    const surface = await request(app).get(`/v1/published/exams/${made.body.id}`).expect(200);
+    expect(surface.body.difficulty).toBe("beginner");
+    expect(surface.body.category).toBe("Orchard");
+
+    const profile = await request(app).get(`/v1/public/units/${unitId}`).expect(200);
+    const card = profile.body.exams.find((e) => e.id === made.body.id);
+    expect(card.difficulty).toBe("beginner");
+    expect(card.category).toBe("Orchard");
+  });
+
+  it("the seeded demo exam ships a difficulty + category", async () => {
+    const res = await request(app).get("/v1/published/exams/pesticide-basics").expect(200);
+    expect(res.body.difficulty).toBe("beginner");
+    expect(res.body.category).toBe("Crop Protection");
+  });
+});
+
 describe("authoring — enable/disable gating (unit + exam)", () => {
   const TOG = "toggle-owner";
   const asTog = (req) => req.set("x-academy-user", TOG);
@@ -384,7 +485,15 @@ describe("authoring — enable/disable gating (unit + exam)", () => {
     examId = exam.body.id;
     expect(exam.body.enabled).toBe(true); // new exams default to enabled
     await asTog(request(app).post(`/v1/exams/${examId}/questions`))
-      .send({ type: "single", text: "Q", options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correct: ["a"] })
+      .send({
+        type: "single",
+        text: "Q",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["a"],
+      })
       .expect(201);
     await asTog(request(app).post(`/v1/exams/${examId}/publish`)).expect(200);
     await request(app).get(`/v1/published/exams/${examId}`).expect(200); // takeable once published
@@ -471,10 +580,27 @@ describe("authoring — enable/disable gating (unit + exam)", () => {
   it("individually disabling one exam decrements the unit's public examCount", async () => {
     // TOG has one published exam; add a second, then disable it.
     const two = await asTog(request(app).post("/v1/exams"))
-      .send({ title: "Second", durationSec: 60, accessWindowDays: 1, passPct: 50, attemptsAllowed: 1, certValidMonths: 1, questionCount: 1, pricing: { mode: "free" } })
+      .send({
+        title: "Second",
+        durationSec: 60,
+        accessWindowDays: 1,
+        passPct: 50,
+        attemptsAllowed: 1,
+        certValidMonths: 1,
+        questionCount: 1,
+        pricing: { mode: "free" },
+      })
       .expect(201);
     await asTog(request(app).post(`/v1/exams/${two.body.id}/questions`))
-      .send({ type: "single", text: "Q", options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correct: ["a"] })
+      .send({
+        type: "single",
+        text: "Q",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["a"],
+      })
       .expect(201);
     await asTog(request(app).post(`/v1/exams/${two.body.id}/publish`)).expect(200);
     const before = await request(app).get("/v1/public/units").expect(200);
@@ -527,6 +653,23 @@ describe("authoring — validateExamInput (pure, all branches)", () => {
   it("rejects an unknown certTemplate", () => {
     expect(bad({ certTemplate: "neon-glow" })).toMatch(/certTemplate/);
   });
+  it("normalises a valid difficulty and rejects an unknown one", () => {
+    expect(validateExamInput({ ...base(), difficulty: "ADVANCED" }).value.difficulty).toBe("advanced");
+    expect(bad({ difficulty: "expert" })).toMatch(/difficulty/);
+  });
+  it("treats an empty/null difficulty as a clear (null)", () => {
+    expect(validateExamInput({ ...base(), difficulty: "" }).value.difficulty).toBeNull();
+    expect(validateExamInput({ ...base(), difficulty: null }).value.difficulty).toBeNull();
+  });
+  it("trims and caps a category at 40 chars", () => {
+    expect(validateExamInput({ ...base(), category: "  Soil & Nutrients  " }).value.category).toBe("Soil & Nutrients");
+    expect(validateExamInput({ ...base(), category: "x".repeat(50) }).value.category.length).toBe(40);
+  });
+  it("omits difficulty/category from the parsed value when absent (no defaulting)", () => {
+    const r = validateExamInput(base());
+    expect(r.value).not.toHaveProperty("difficulty");
+    expect(r.value).not.toHaveProperty("category");
+  });
   it("floors fractional numeric input", () => {
     const r = validateExamInput({ ...base(), durationSec: "600.9" });
     expect(r.value.durationSec).toBe(600);
@@ -547,21 +690,42 @@ describe("authoring — exam PATCH / unpublish / publish negatives", () => {
   beforeAll(async () => {
     await asOwn(request(app).post("/v1/units")).send({ name: "Patch Unit" }).expect(201);
     const e = await asOwn(request(app).post("/v1/exams"))
-      .send({ title: "P", durationSec: 600, accessWindowDays: 5, passPct: 60, attemptsAllowed: 2, certValidMonths: 12, questionCount: 1, pricing: { mode: "free" } })
+      .send({
+        title: "P",
+        durationSec: 600,
+        accessWindowDays: 5,
+        passPct: 60,
+        attemptsAllowed: 2,
+        certValidMonths: 12,
+        questionCount: 1,
+        pricing: { mode: "free" },
+      })
       .expect(201);
     examId = e.body.id;
     await asOwn(request(app).post(`/v1/exams/${examId}/questions`))
-      .send({ type: "single", text: "Q", options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correct: ["a"] })
+      .send({
+        type: "single",
+        text: "Q",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["a"],
+      })
       .expect(201);
   });
 
   it("PATCH updates a single field and leaves the rest unchanged", async () => {
-    const r = await asOwn(request(app).patch(`/v1/exams/${examId}`)).send({ passPct: 80 }).expect(200);
+    const r = await asOwn(request(app).patch(`/v1/exams/${examId}`))
+      .send({ passPct: 80 })
+      .expect(200);
     expect(r.body.passPct).toBe(80);
     expect(r.body.title).toBe("P"); // untouched
   });
   it("PATCH still validates supplied fields (durationSec 0 → 400)", async () => {
-    await asOwn(request(app).patch(`/v1/exams/${examId}`)).send({ durationSec: 0 }).expect(400);
+    await asOwn(request(app).patch(`/v1/exams/${examId}`))
+      .send({ durationSec: 0 })
+      .expect(400);
   });
   it("PATCH an unknown exam → 404", async () => {
     await asOwn(request(app).patch(`/v1/exams/ghost`)).send({ passPct: 70 }).expect(404);
@@ -588,17 +752,43 @@ describe("authoring — question PATCH / DELETE", () => {
   beforeAll(async () => {
     await asOwn(request(app).post("/v1/units")).send({ name: "Q Unit" }).expect(201);
     const e = await asOwn(request(app).post("/v1/exams"))
-      .send({ title: "Q", durationSec: 600, accessWindowDays: 5, passPct: 60, attemptsAllowed: 2, certValidMonths: 12, questionCount: 1, pricing: { mode: "free" } })
+      .send({
+        title: "Q",
+        durationSec: 600,
+        accessWindowDays: 5,
+        passPct: 60,
+        attemptsAllowed: 2,
+        certValidMonths: 12,
+        questionCount: 1,
+        pricing: { mode: "free" },
+      })
       .expect(201);
     examId = e.body.id;
     await asOwn(request(app).post(`/v1/exams/${examId}/questions`))
-      .send({ id: "q1", type: "single", text: "Q1", options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correct: ["a"] })
+      .send({
+        id: "q1",
+        type: "single",
+        text: "Q1",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["a"],
+      })
       .expect(201);
   });
 
   it("PATCH a question returns 200 (vs 201 on create)", async () => {
     const r = await asOwn(request(app).patch(`/v1/exams/${examId}/questions/q1`))
-      .send({ type: "single", text: "Q1 edited", options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correct: ["b"] })
+      .send({
+        type: "single",
+        text: "Q1 edited",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["b"],
+      })
       .expect(200);
     expect(r.body.correct).toEqual(["b"]);
   });
@@ -623,7 +813,16 @@ describe("authoring — question-bank unavailable (503 degradation)", () => {
     // Create the unit + a draft exam on the REAL app (create needs no bank)…
     await asOwn(request(app).post("/v1/units")).send({ name: "Down Unit" }).expect(201);
     const e = await asOwn(request(app).post("/v1/exams"))
-      .send({ title: "D", durationSec: 600, accessWindowDays: 5, passPct: 60, attemptsAllowed: 2, certValidMonths: 12, questionCount: 1, pricing: { mode: "free" } })
+      .send({
+        title: "D",
+        durationSec: 600,
+        accessWindowDays: 5,
+        passPct: 60,
+        attemptsAllowed: 2,
+        certValidMonths: 12,
+        questionCount: 1,
+        pricing: { mode: "free" },
+      })
       .expect(201);
     examId = e.body.id;
     downApp = downBankApp(); // …then drive bank-dependent routes against a failing bank
@@ -635,7 +834,15 @@ describe("authoring — question-bank unavailable (503 degradation)", () => {
   });
   it("question upsert / list / delete → 503", async () => {
     await asOwn(request(downApp).post(`/v1/exams/${examId}/questions`))
-      .send({ type: "single", text: "Q", options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correct: ["a"] })
+      .send({
+        type: "single",
+        text: "Q",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["a"],
+      })
       .expect(503);
     await asOwn(request(downApp).get(`/v1/exams/${examId}/questions`)).expect(503);
     await asOwn(request(downApp).delete(`/v1/exams/${examId}/questions/q1`)).expect(503);
@@ -670,11 +877,28 @@ describe("authoring — read-surface field contract (no payout leak)", () => {
     const u = await asOwn(request(app).post("/v1/units")).send({ name: "Leak Unit" }).expect(201);
     unitId = u.body.unitId;
     const e = await asOwn(request(app).post("/v1/exams"))
-      .send({ title: "L", durationSec: 600, accessWindowDays: 5, passPct: 60, attemptsAllowed: 2, certValidMonths: 12, questionCount: 1, pricing: { mode: "paid", priceRol: 10 } })
+      .send({
+        title: "L",
+        durationSec: 600,
+        accessWindowDays: 5,
+        passPct: 60,
+        attemptsAllowed: 2,
+        certValidMonths: 12,
+        questionCount: 1,
+        pricing: { mode: "paid", priceRol: 10 },
+      })
       .expect(201);
     examId = e.body.id;
     await asOwn(request(app).post(`/v1/exams/${examId}/questions`))
-      .send({ type: "single", text: "Q", options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correct: ["a"] })
+      .send({
+        type: "single",
+        text: "Q",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["a"],
+      })
       .expect(201);
     await asOwn(request(app).post(`/v1/exams/${examId}/publish`)).expect(200);
   });

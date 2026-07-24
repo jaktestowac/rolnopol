@@ -35,6 +35,12 @@ const log = createLogger("authoring");
 const SERVICE_VERSION = "1.0.0";
 const startedAt = Date.now();
 
+// Optional discoverability metadata on an exam: a fixed-set difficulty badge and a
+// free-text category (used for badges + catalog filtering). Both are optional; an
+// exam without them simply shows no badge.
+const DIFFICULTIES = ["beginner", "intermediate", "advanced"];
+const CATEGORY_MAX = 40;
+
 // ── shapes ───────────────────────────────────────────────────────────────────
 
 function publishedExamDef(exam, unit) {
@@ -54,6 +60,8 @@ function publishedExamDef(exam, unit) {
     attemptsAllowed: exam.attemptsAllowed,
     certValidMonths: exam.certValidMonths,
     certTemplate: exam.certTemplate || DEFAULT_TEMPLATE,
+    difficulty: exam.difficulty || null,
+    category: exam.category || "",
     pricing: exam.pricing,
   };
 }
@@ -64,6 +72,8 @@ function publicExamCard(exam) {
     title: exam.title,
     description: exam.description,
     certTemplate: exam.certTemplate || DEFAULT_TEMPLATE,
+    difficulty: exam.difficulty || null,
+    category: exam.category || "",
     durationSec: exam.durationSec,
     accessWindowDays: exam.accessWindowDays,
     passPct: exam.passPct,
@@ -147,6 +157,22 @@ function validateExamInput(body, { partial = false } = {}) {
   } else if (!partial) {
     out.certTemplate = DEFAULT_TEMPLATE;
   }
+  // Difficulty badge: fixed set, optional. An empty string / null clears it (partial edits).
+  if (b.difficulty !== undefined) {
+    if (b.difficulty === null || b.difficulty === "") {
+      out.difficulty = null;
+    } else {
+      const d = String(b.difficulty).trim().toLowerCase();
+      if (!DIFFICULTIES.includes(d)) return { error: `difficulty must be one of ${DIFFICULTIES.join("|")}` };
+      out.difficulty = d;
+    }
+  }
+  // Category: free text, trimmed and length-capped. Optional.
+  if (b.category !== undefined) {
+    out.category = String(b.category || "")
+      .trim()
+      .slice(0, CATEGORY_MAX);
+  }
   return { value: out };
 }
 
@@ -177,20 +203,25 @@ function buildApp({ questionBank = require("../clients/question-bank-client") } 
     res.json({ templates: TEMPLATES, defaultTemplate: DEFAULT_TEMPLATE });
   });
 
+  // The fixed difficulty set, for the exam-creation picker + catalog filters.
+  app.get("/v1/exam-difficulties", (req, res) => {
+    res.json({ difficulties: DIFFICULTIES });
+  });
+
   // ── Public: unit directory + profile (no identity) ──────────────────────────
   app.get("/v1/public/units", async (req, res) => {
     const data = await db.getAll();
     const units = Object.values(data.units || {})
       .filter((u) => !isUnitDisabled(u)) // a disabled unit disappears from the public directory
       .map((u) => ({
-      unitId: u.unitId,
-      name: u.name,
-      description: u.description,
-      tags: u.tags || [],
-      color: u.color || DEFAULT_COLOR,
-      icon: u.icon || DEFAULT_ICON,
-      examCount: publishedExamsOfUnit(data, u.unitId).length,
-    }));
+        unitId: u.unitId,
+        name: u.name,
+        description: u.description,
+        tags: u.tags || [],
+        color: u.color || DEFAULT_COLOR,
+        icon: u.icon || DEFAULT_ICON,
+        examCount: publishedExamsOfUnit(data, u.unitId).length,
+      }));
     res.json({ units });
   });
 
@@ -550,4 +581,4 @@ async function start() {
 
 if (require.main === module) start();
 
-module.exports = { buildApp, start, validateExamInput };
+module.exports = { buildApp, start, validateExamInput, DIFFICULTIES };

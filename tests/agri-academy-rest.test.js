@@ -154,6 +154,16 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     expect(JSON.stringify(res.body)).not.toContain("correct");
   });
 
+  it("flows exam difficulty + category through the catalog, and proxies the difficulty set", async () => {
+    const diffs = await request(app).get("/api/v1/agri-academy/exam-difficulties").set("token", token).expect(200);
+    expect(diffs.body.difficulties).toEqual(["beginner", "intermediate", "advanced"]);
+
+    const res = await request(app).get("/api/v1/agri-academy/exams").set("token", token).expect(200);
+    const seeded = res.body.exams.find((e) => e.id === "pesticide-basics");
+    expect(seeded.difficulty).toBe("beginner");
+    expect(seeded.category).toBe("Crop Protection");
+  });
+
   it("author → publish → take → submit → pass, end to end over both bridges", async () => {
     // Authoring plane (admin bridge)
     const unit = await request(app)
@@ -298,11 +308,29 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     const unit = await admin("post", "/units").send({ name: "Toggle Unit", description: "e2e gating" }).expect(201);
     const unitId = unit.body.unitId;
     const exam = await admin("post", "/exams")
-      .send({ title: "Toggle Exam", durationSec: 300, accessWindowDays: 3, passPct: 50, attemptsAllowed: 2, certValidMonths: 12, questionCount: 1, pricing: { mode: "free" } })
+      .send({
+        title: "Toggle Exam",
+        durationSec: 300,
+        accessWindowDays: 3,
+        passPct: 50,
+        attemptsAllowed: 2,
+        certValidMonths: 12,
+        questionCount: 1,
+        pricing: { mode: "free" },
+      })
       .expect(201);
     const examId = exam.body.id;
     await admin("post", `/exams/${examId}/questions`)
-      .send({ id: "q1", type: "single", text: "Q1", options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correct: ["a"] })
+      .send({
+        id: "q1",
+        type: "single",
+        text: "Q1",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["a"],
+      })
       .expect(201);
     await admin("post", `/exams/${examId}/publish`).expect(200);
 

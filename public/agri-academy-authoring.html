@@ -495,6 +495,21 @@
                 <input id="ePrice" type="number" value="0" min="0" />
               </div>
             </div>
+            <div class="row">
+              <div>
+                <label>Difficulty</label>
+                <select id="eDifficulty">
+                  <option value="">— none —</option>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </div>
+              <div>
+                <label>Category</label>
+                <input id="eCategory" placeholder="e.g. Machinery" maxlength="40" />
+              </div>
+            </div>
             <label class="brand-label">Certificate template</label>
             <select id="eCertTemplate"></select>
             <div id="eTemplatePreview" class="cert-preview"></div>
@@ -786,7 +801,10 @@
         async function toggleUnit(disable) {
           const r = await api("POST", `/units/me/${disable ? "disable" : "enable"}`);
           if (!r.ok) return banner(r.body?.message || r.body?.error || "Could not update the unit.", "err");
-          banner(disable ? "Unit disabled — its exams are no longer takeable." : "Unit enabled — its published exams are takeable again.", "ok");
+          banner(
+            disable ? "Unit disabled — its exams are no longer takeable." : "Unit enabled — its published exams are takeable again.",
+            "ok",
+          );
           showManage(r.body);
         }
 
@@ -935,7 +953,9 @@
             .forEach((b) => b.addEventListener("click", () => publish(b.getAttribute("data-unpub"), false)));
           document
             .querySelectorAll("[data-toggle]")
-            .forEach((b) => b.addEventListener("click", () => toggleExam(b.getAttribute("data-toggle"), b.getAttribute("data-on") === "1")));
+            .forEach((b) =>
+              b.addEventListener("click", () => toggleExam(b.getAttribute("data-toggle"), b.getAttribute("data-on") === "1")),
+            );
         }
 
         // Enable/disable a single published exam. `enable === true` turns it back on.
@@ -1004,6 +1024,8 @@
             questionCount: Number($("eQCount").value),
             certValidMonths: Number($("eValid").value),
             certTemplate: $("eCertTemplate").value || certDefault,
+            difficulty: $("eDifficulty").value || null,
+            category: $("eCategory").value.trim(),
             pricing: mode === "paid" ? { mode: "paid", priceRol: Number($("ePrice").value) } : { mode: "free" },
           };
           if (!payload.title) return banner("Exam title is required.", "err");
@@ -1012,6 +1034,8 @@
           banner("Exam created (draft). Add questions, then publish.", "ok");
           $("eTitle").value = "";
           $("eDesc").value = "";
+          $("eCategory").value = "";
+          $("eDifficulty").value = "";
           loadExams();
         });
 
