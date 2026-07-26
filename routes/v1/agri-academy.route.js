@@ -196,6 +196,12 @@ router.get("/agri-academy/leaderboard", gate, apiLimiter, async (req, res) => {
 // Public certificate verification — flag-gated but unauthenticated (third-party).
 router.get("/agri-academy/verify/:certNo", gate, apiLimiter, (req, res) => proxy(res, examCenter.verify(req.params.certNo)));
 
+// Public share resolution — anyone with the holder-generated token sees the rich
+// certificate + Open-Badge assertion. Flag-gated but unauthenticated (a share link
+// is meant to be opened by anyone). The private certificate stays holder-only; only
+// a generated token unlocks a public view.
+router.get("/agri-academy/shared/:token", gate, apiLimiter, (req, res) => proxy(res, examCenter.getSharedCertificate(req.params.token)));
+
 // Public system-status surface for the status page — flag-gated but unauthenticated
 // (a GitHub-style status page is viewable without logging in). Same aggregate as the
 // authenticated `/health` below, proxied from the exam center's /health/all.
@@ -329,12 +335,24 @@ router.post("/agri-academy/sessions/:id/submit", (req, res) => proxy(res, examCe
 
 // Rate a passed exam 1–5 stars (idempotent). The exam center enforces that only
 // the taker of a passed session may rate it.
-router.post("/agri-academy/sessions/:id/rating", (req, res) =>
-  proxy(res, examCenter.rateSession(userOf(req), req.params.id, req.body)),
-);
+router.post("/agri-academy/sessions/:id/rating", (req, res) => proxy(res, examCenter.rateSession(userOf(req), req.params.id, req.body)));
+
+// ── Bookmarks ("save for later") ─────────────────────────────────────────────
+router.get("/agri-academy/bookmarks", (req, res) => proxy(res, examCenter.listBookmarks(userOf(req))));
+router.put("/agri-academy/bookmarks/:examId", (req, res) => proxy(res, examCenter.addBookmark(userOf(req), req.params.examId)));
+router.delete("/agri-academy/bookmarks/:examId", (req, res) => proxy(res, examCenter.removeBookmark(userOf(req), req.params.examId)));
 
 // ── Certificates ───────────────────────────────────────────────────────────────
 router.get("/agri-academy/certificates", (req, res) => proxy(res, examCenter.listCertificates(userOf(req))));
+// Holder-only private certificate detail (rich view + share status).
+router.get("/agri-academy/certificates/:certNo", (req, res) => proxy(res, examCenter.getCertificate(userOf(req), req.params.certNo)));
+// Generate / revoke the public share link (holder only).
+router.post("/agri-academy/certificates/:certNo/share", (req, res) =>
+  proxy(res, examCenter.shareCertificate(userOf(req), req.params.certNo)),
+);
+router.delete("/agri-academy/certificates/:certNo/share", (req, res) =>
+  proxy(res, examCenter.unshareCertificate(userOf(req), req.params.certNo)),
+);
 router.post("/agri-academy/certificates/:certNo/revoke", (req, res) =>
   proxy(res, examCenter.revokeCertificate(userOf(req), req.params.certNo, req.body)),
 );

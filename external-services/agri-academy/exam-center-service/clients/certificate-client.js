@@ -43,4 +43,10 @@ module.exports = {
   issue: (payload) => req("POST", "/v1/certificates", payload),
   verify: (certNo) => req("GET", `/v1/verify/${encodeURIComponent(certNo)}`),
   revoke: (certNo, reason) => req("POST", `/v1/certificates/${encodeURIComponent(certNo)}/revoke`, { reason }),
+  // Sharing: the holder mints/revokes an unguessable public share token; anyone
+  // with the token can resolve the rich cert + Open-Badge assertion (no identity).
+  shareStatus: (certNo) => req("GET", `/v1/certificates/${encodeURIComponent(certNo)}/share`),
+  share: (certNo) => req("POST", `/v1/certificates/${encodeURIComponent(certNo)}/share`),
+  unshare: (certNo) => req("DELETE", `/v1/certificates/${encodeURIComponent(certNo)}/share`),
+  getShared: (token) => req("GET", `/v1/shared/${encodeURIComponent(token)}`),
 };

@@ -141,6 +141,79 @@
         color: #b23a3a;
         border-color: #b23a3a;
       }
+      /* Share panel — holder-only controls to mint / copy / revoke a public link. */
+      .share-panel {
+        width: 100%;
+        max-width: 860px;
+        background: #16241b;
+        border: 1px solid #24382b;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+        color: #cfe9d7;
+        font-size: 14px;
+      }
+      .share-panel .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .share-panel .title {
+        font-weight: 700;
+        color: #eaf3ec;
+        margin-right: auto;
+      }
+      .share-panel button {
+        font-size: 13px;
+        color: #eaf3ec;
+        background: #1e3527;
+        border: 1px solid #2f5540;
+        border-radius: 8px;
+        padding: 7px 12px;
+        cursor: pointer;
+      }
+      .share-panel button.primary {
+        background: #2e8f55;
+        border-color: #2e8f55;
+      }
+      .share-panel button.danger {
+        background: #3a201f;
+        border-color: #6b2f2f;
+      }
+      .share-panel input {
+        flex: 1 1 260px;
+        min-width: 0;
+        font-size: 12px;
+        font-family: "Courier New", monospace;
+        color: #cfe9d7;
+        background: #0f1a14;
+        border: 1px solid #24382b;
+        border-radius: 8px;
+        padding: 8px 10px;
+      }
+      .share-panel .hint {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #9bb3a4;
+      }
+      .share-panel .links {
+        margin-top: 10px;
+      }
+      .share-panel .links.hidden {
+        display: none;
+      }
+      .private-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #9bb3a4;
+        border: 1px solid #2f5540;
+        border-radius: 6px;
+        padding: 2px 7px;
+      }
       /* Print / Save-as-PDF: a single landscape page sized to the certificate,
          with the template's colours forced on (browsers drop backgrounds by
          default) so the saved PDF looks exactly like the on-screen document. */
@@ -155,7 +228,8 @@
           margin: 0;
           padding: 0;
         }
-        .toolbar {
+        .toolbar,
+        .share-panel {
           display: none !important;
         }
         .cert {
@@ -179,6 +253,29 @@
       <a href="/agri-academy-units.html">← AgriAcademy</a>
       <button id="downloadBtn" title="Opens your browser's print dialog — choose “Save as PDF”">⬇️ Download PDF</button>
     </div>
+    <div id="sharePanel" class="share-panel" style="display: none">
+      <div class="row">
+        <span class="title">Share this certificate</span>
+        <span id="shareStatus" class="private-badge">Private</span>
+        <button id="createShareBtn" class="primary">🔗 Create share link</button>
+        <button id="stopShareBtn" class="danger" style="display: none">Stop sharing</button>
+      </div>
+      <div id="shareLinks" class="links hidden">
+        <div class="row">
+          <input id="shareUrl" type="text" readonly />
+          <button id="copyShareBtn">Copy link</button>
+        </div>
+        <div class="row" style="margin-top: 8px">
+          <input id="badgeUrl" type="text" readonly />
+          <button id="copyBadgeBtn">Copy Open-Badge link</button>
+        </div>
+        <div class="hint">
+          Anyone with the share link can view this certificate. The Open-Badge link returns a machine-readable assertion third parties (e.g.
+          a profile page) can verify. Revoke sharing any time to disable both.
+        </div>
+      </div>
+      <div id="privateHint" class="hint">Only you can see this certificate until you create a share link.</div>
+    </div>
     <div id="mount"></div>
     <div id="state" class="state">Loading certificate…</div>
 
@@ -197,7 +294,9 @@
       $("downloadBtn").disabled = true;
       $("downloadBtn").addEventListener("click", () => window.print());
 
-      const certNo = new URLSearchParams(location.search).get("cert");
+      const params = new URLSearchParams(location.search);
+      const shareToken = params.get("share"); // public share view (anyone)
+      const certNo = params.get("cert"); // private holder view (authenticated)
 
       function render(v) {
         const t = v.templateStyle || {};
@@ -222,21 +321,94 @@
         $("downloadBtn").disabled = false; // a real certificate is on screen — allow the PDF download
       }
 
-      if (!certNo) {
-        $("state").textContent = "No certificate specified.";
-      } else {
-        fetch("/api/v1/agri-academy/verify/" + encodeURIComponent(certNo))
+      // ── Share controls (holder-only) ───────────────────────────────────────────
+      const shareUrlFor = (tok) => `${location.origin}/agri-academy-certificate.html?share=${encodeURIComponent(tok)}`;
+      const badgeUrlFor = (tok) => `${location.origin}/api/v1/agri-academy/shared/${encodeURIComponent(tok)}`;
+
+      function paintShare(token) {
+        const on = !!token;
+        $("shareStatus").textContent = on ? "Shared" : "Private";
+        $("shareStatus").style.color = on ? "#8fe0ad" : "#9bb3a4";
+        $("createShareBtn").style.display = on ? "none" : "";
+        $("stopShareBtn").style.display = on ? "" : "none";
+        $("privateHint").style.display = on ? "none" : "";
+        $("shareLinks").classList.toggle("hidden", !on);
+        if (on) {
+          $("shareUrl").value = shareUrlFor(token);
+          $("badgeUrl").value = badgeUrlFor(token);
+        }
+      }
+      async function copyFrom(inputId, btn) {
+        const el = $(inputId);
+        el.select();
+        try {
+          await navigator.clipboard.writeText(el.value);
+        } catch {
+          document.execCommand("copy");
+        }
+        const old = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => (btn.textContent = old), 1500);
+      }
+      $("copyShareBtn").addEventListener("click", (e) => copyFrom("shareUrl", e.currentTarget));
+      $("copyBadgeBtn").addEventListener("click", (e) => copyFrom("badgeUrl", e.currentTarget));
+      $("createShareBtn").addEventListener("click", async () => {
+        $("createShareBtn").disabled = true;
+        try {
+          const r = await fetch("/api/v1/agri-academy/certificates/" + encodeURIComponent(certNo) + "/share", { method: "POST" });
+          const b = await r.json();
+          if (r.ok && b.shareToken) paintShare(b.shareToken);
+        } finally {
+          $("createShareBtn").disabled = false;
+        }
+      });
+      $("stopShareBtn").addEventListener("click", async () => {
+        $("stopShareBtn").disabled = true;
+        try {
+          const r = await fetch("/api/v1/agri-academy/certificates/" + encodeURIComponent(certNo) + "/share", { method: "DELETE" });
+          if (r.ok) paintShare(null);
+        } finally {
+          $("stopShareBtn").disabled = false;
+        }
+      });
+
+      // ── Load: public share view, private holder view, or nothing ────────────────
+      function fail(msg) {
+        $("state").textContent = msg;
+      }
+      function loaded(v) {
+        if (!v || v.status === "unknown") return fail("Certificate not found.");
+        render(v);
+      }
+
+      if (shareToken) {
+        // Public share link — anyone can view; no share controls.
+        fetch("/api/v1/agri-academy/shared/" + encodeURIComponent(shareToken))
           .then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))))
+          .then(loaded)
+          .catch(() => fail("This shared certificate could not be loaded — the link may have been revoked."));
+      } else if (certNo) {
+        // Private holder view — requires the holder's session; shows share controls.
+        fetch("/api/v1/agri-academy/certificates/" + encodeURIComponent(certNo))
+          .then(async (r) => {
+            if (r.status === 401) throw new Error("AUTH");
+            if (r.status === 403) throw new Error("FORBIDDEN");
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.json();
+          })
           .then((v) => {
-            if (!v || v.status === "unknown") {
-              $("state").textContent = "Certificate not found.";
-              return;
-            }
+            if (!v || v.status === "unknown") return fail("Certificate not found.");
+            $("sharePanel").style.display = "";
+            paintShare(v.shareToken || null);
             render(v);
           })
-          .catch(() => {
-            $("state").textContent = "This certificate could not be loaded.";
+          .catch((e) => {
+            if (e.message === "AUTH") return fail("Please sign in to view your certificate.");
+            if (e.message === "FORBIDDEN") return fail("This certificate is private to its holder.");
+            fail("This certificate could not be loaded.");
           });
+      } else {
+        fail("No certificate specified.");
       }
     </script>
   </body>

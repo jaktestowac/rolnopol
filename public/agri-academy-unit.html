@@ -308,6 +308,11 @@
         cursor: pointer;
         font-family: inherit;
       }
+      .enroll.ghost.bookmark.is-saved {
+        background: #3a3413;
+        border-color: #b8912e;
+        color: #f0d98a;
+      }
 
       /* Exam preview modal — full details before enrolling. */
       .modal-overlay {
@@ -441,6 +446,58 @@
         let examPage = 1;
         const EXAMS_PER_PAGE = 6;
 
+        // ── Bookmarks ("save for later") ─────────────────────────────────────────────
+        // The profile is public, but a signed-in visitor can save exams. If the visitor
+        // isn't logged in, the save endpoint answers 401 → we send them to log in.
+        const bookmarked = new Set();
+        let canBookmark = true;
+        async function loadBookmarks() {
+          try {
+            const r = await fetch("/api/v1/agri-academy/bookmarks", { credentials: "include" });
+            if (r.status === 401) {
+              canBookmark = false;
+              return;
+            }
+            const b = await r.json().catch(() => null);
+            bookmarked.clear();
+            if (r.ok && Array.isArray(b && b.bookmarks)) for (const x of b.bookmarks) bookmarked.add(x.examId);
+          } catch {
+            /* leave bookmarks empty; the button still renders */
+          }
+        }
+        function paintBookmarkBtn(examId, btn) {
+          const saved = bookmarked.has(examId);
+          btn.classList.toggle("is-saved", saved);
+          btn.setAttribute("aria-pressed", saved ? "true" : "false");
+          btn.title = saved ? "Remove from saved" : "Save for later";
+          btn.innerHTML = saved ? "★ Saved" : "☆ Save";
+        }
+        async function toggleBookmark(examId, btn) {
+          if (!canBookmark) {
+            location.href = "/login.html?next=" + encodeURIComponent(location.pathname + location.search);
+            return;
+          }
+          const saved = bookmarked.has(examId);
+          btn.disabled = true;
+          try {
+            const r = await fetch("/api/v1/agri-academy/bookmarks/" + encodeURIComponent(examId), {
+              method: saved ? "DELETE" : "PUT",
+              credentials: "include",
+            });
+            if (r.status === 401) {
+              canBookmark = false;
+              location.href = "/login.html?next=" + encodeURIComponent(location.pathname + location.search);
+              return;
+            }
+            if (!r.ok) return;
+            if (saved) bookmarked.delete(examId);
+            else bookmarked.add(examId);
+            paintBookmarkBtn(examId, btn);
+          } finally {
+            btn.disabled = false;
+          }
+        }
+
         const ratingTag = (rating, count) =>
           count
             ? `<span class="tag rated" title="${count} rating${count === 1 ? "" : "s"}">★ ${Number(rating).toFixed(1)} (${count})</span>`
@@ -479,6 +536,7 @@
               <div class="exam-actions">
                 <a class="enroll" href="/agri-academy.html?exam=${encodeURIComponent(e.id)}">Enroll &amp; take →</a>
                 <button class="enroll ghost" type="button" data-preview="${esc(e.id)}">Preview</button>
+                <button class="enroll ghost bookmark" type="button" data-bookmark="${esc(e.id)}" aria-pressed="false">☆ Save</button>
               </div>
             </div>`;
         }
@@ -567,6 +625,10 @@
           document
             .querySelectorAll("[data-preview]")
             .forEach((b) => b.addEventListener("click", () => openPreview(b.getAttribute("data-preview"))));
+          document.querySelectorAll("[data-bookmark]").forEach((b) => {
+            paintBookmarkBtn(b.getAttribute("data-bookmark"), b);
+            b.addEventListener("click", () => toggleBookmark(b.getAttribute("data-bookmark"), b));
+          });
           renderPager("examPager", examPage, totalPages, filtered.length, "certification", (p) => {
             examPage = p;
             renderExams();
@@ -647,6 +709,8 @@
                 renderExams();
               });
               renderExams();
+              // Load the visitor's saved exams, then repaint so the toggles reflect state.
+              loadBookmarks().then(renderExams);
             })
             .catch(() => {
               state.textContent = "This unit could not be loaded.";

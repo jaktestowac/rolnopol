@@ -182,6 +182,11 @@
         border-color: var(--border);
         font-weight: 600;
       }
+      .btn.bookmark.is-saved {
+        background: #3a3413;
+        border-color: #b8912e;
+        color: #f0d98a;
+      }
 
       .card-actions {
         display: flex;
@@ -474,6 +479,32 @@
 
         let session = null; // active attempt session
         let catalogExams = []; // full published catalog, filtered client-side by the badges
+        const bookmarked = new Set(); // examIds the taker saved ("save for later")
+
+        // Load the caller's saved exams so the catalog can show the toggle state.
+        async function loadBookmarks() {
+          const r = await api("GET", "/bookmarks");
+          bookmarked.clear();
+          if (r.ok && Array.isArray(r.body.bookmarks)) for (const b of r.body.bookmarks) bookmarked.add(b.examId);
+        }
+        // Toggle a bookmark, then repaint just that card's button.
+        async function toggleBookmark(examId, btn) {
+          const saved = bookmarked.has(examId);
+          btn.disabled = true;
+          const r = await api(saved ? "DELETE" : "PUT", "/bookmarks/" + encodeURIComponent(examId));
+          btn.disabled = false;
+          if (!r.ok) return;
+          if (saved) bookmarked.delete(examId);
+          else bookmarked.add(examId);
+          paintBookmarkBtn(examId, btn);
+        }
+        function paintBookmarkBtn(examId, btn) {
+          const saved = bookmarked.has(examId);
+          btn.classList.toggle("is-saved", saved);
+          btn.setAttribute("aria-pressed", saved ? "true" : "false");
+          btn.title = saved ? "Remove from saved" : "Save for later";
+          btn.innerHTML = saved ? "★ Saved" : "☆ Save";
+        }
 
         const DIFF_LABEL = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" };
         // A coloured difficulty pill (only when set) + a category chip (only when set).
@@ -494,6 +525,7 @@
             return;
           }
           catalogExams = r.body.exams || [];
+          await loadBookmarks();
           // Populate the category filter from the categories actually present.
           const cats = [...new Set(catalogExams.map((e) => e.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
           const sel = $("categoryFilter");
@@ -531,6 +563,7 @@
                 <div class="card-actions">
                   <button class="btn" data-enroll="${esc(e.id)}">${paid ? "Pay &amp; enroll" : "Enroll"}</button>
                   <button class="btn btn--ghost" data-preview="${esc(e.id)}">Preview</button>
+                  <button class="btn btn--ghost bookmark" data-bookmark="${esc(e.id)}" aria-pressed="false">☆ Save</button>
                 </div>
               </div>`;
             })
@@ -541,6 +574,10 @@
           document
             .querySelectorAll("[data-preview]")
             .forEach((b) => b.addEventListener("click", () => openPreview(b.getAttribute("data-preview"))));
+          document.querySelectorAll("[data-bookmark]").forEach((b) => {
+            paintBookmarkBtn(b.getAttribute("data-bookmark"), b);
+            b.addEventListener("click", () => toggleBookmark(b.getAttribute("data-bookmark"), b));
+          });
         }
 
         // ── Exam preview modal ───────────────────────────────────────────────────────

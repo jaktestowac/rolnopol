@@ -72,6 +72,17 @@ module.exports = {
   submitSession: (userId, id) => call("POST", `/v1/sessions/${encodeURIComponent(id)}/submit`, { userId }),
   rateSession: (userId, id, body) => call("POST", `/v1/sessions/${encodeURIComponent(id)}/rating`, { userId, body }),
   listCertificates: (userId) => call("GET", "/v1/certificates", { userId }),
+  // Holder-only private certificate detail (rich view + current share status).
+  getCertificate: (userId, certNo) => call("GET", `/v1/certificates/${encodeURIComponent(certNo)}`, { userId }),
+  // Sharing: the holder mints/revokes a public share link; anyone with the token
+  // resolves the rich cert + Open-Badge assertion (no identity).
+  shareCertificate: (userId, certNo) => call("POST", `/v1/certificates/${encodeURIComponent(certNo)}/share`, { userId }),
+  unshareCertificate: (userId, certNo) => call("DELETE", `/v1/certificates/${encodeURIComponent(certNo)}/share`, { userId }),
+  getSharedCertificate: (token) => call("GET", `/v1/shared/${encodeURIComponent(token)}`),
   verify: (certNo) => call("GET", `/v1/verify/${encodeURIComponent(certNo)}`),
   revokeCertificate: (userId, certNo, body) => call("POST", `/v1/certificates/${encodeURIComponent(certNo)}/revoke`, { userId, body }),
+  // Bookmarks ("save for later") — pure per-user state.
+  listBookmarks: (userId) => call("GET", "/v1/bookmarks", { userId }),
+  addBookmark: (userId, examId) => call("PUT", `/v1/bookmarks/${encodeURIComponent(examId)}`, { userId }),
+  removeBookmark: (userId, examId) => call("DELETE", `/v1/bookmarks/${encodeURIComponent(examId)}`, { userId }),
 };

@@ -11,7 +11,9 @@ process.env.AGRI_ACADEMY_LOG = "silent";
 
 const AA = path.join(__dirname, "..", "..", "external-services", "agri-academy", "exam-center-service");
 const db = require(path.join(AA, "server", "db.js"));
-const { buildApp, aggregateUnitAnalytics, aggregatePublicStats, publicQuestion, settle, buildGradeItems } = require(path.join(AA, "server", "index.js"));
+const { buildApp, aggregateUnitAnalytics, aggregatePublicStats, publicQuestion, settle, buildGradeItems } = require(
+  path.join(AA, "server", "index.js"),
+);
 // The grading fake scores with the REAL grading registry so the exam-center
 // wiring is exercised without booting the gRPC leaf.
 const gradingRegistry = require(
@@ -127,6 +129,8 @@ function fakeGrading({ down = false } = {}) {
 }
 function fakeCertificates({ down = false, seq = { n: 0 } } = {}) {
   const minted = new Map(); // idempotency key → certNo
+  const tokens = new Map(); // certNo → shareToken
+  let tokSeq = 0;
   return {
     target: "http://fake-issuer",
     health: async () => (down ? { status: 503, body: {} } : { status: 200, body: { version: "1.0.0", uptime_ms: 1 } }),
@@ -139,6 +143,24 @@ function fakeCertificates({ down = false, seq = { n: 0 } } = {}) {
     verify: async (certNo) => (down ? { status: 503, body: {} } : { status: 200, body: { status: "valid", certNo, unit: "u1" } }),
     revoke: async (certNo, reason) =>
       down ? { status: 503, body: {} } : { status: 200, body: { status: "revoked", certNo, revokedReason: reason } },
+    shareStatus: async (certNo) =>
+      down ? { status: 503, body: {} } : { status: 200, body: { certNo, shareToken: tokens.get(certNo) || null } },
+    share: async (certNo) => {
+      if (down) return { status: 503, body: {} };
+      if (!tokens.has(certNo)) tokens.set(certNo, `tok-${++tokSeq}`);
+      return { status: 200, body: { certNo, shareToken: tokens.get(certNo) } };
+    },
+    unshare: async (certNo) => {
+      if (down) return { status: 503, body: {} };
+      tokens.delete(certNo);
+      return { status: 200, body: { certNo, shareToken: null } };
+    },
+    getShared: async (token) => {
+      if (down) return { status: 503, body: {} };
+      const certNo = [...tokens.entries()].find(([, t]) => t === token)?.[0];
+      if (!certNo) return { status: 404, body: { status: "unknown" } };
+      return { status: 200, body: { status: "valid", certNo, shared: true, openBadge: { type: "Assertion", certNo } } };
+    },
   };
 }
 
@@ -501,6 +523,112 @@ describe("exam-center — certificate issuance", () => {
   });
 });
 
+describe("exam-center — bookmarks (save for later)", () => {
+  const asU = (req, u) => req.set("x-academy-user", u);
+
+  it("401 without identity", async () => {
+    await request(appWith()).get("/v1/bookmarks").expect(401);
+    await request(appWith()).put("/v1/bookmarks/e1").expect(401);
+  });
+
+  it("adds, lists (resolved to catalog cards) and removes — idempotently", async () => {
+    const app = appWith();
+    const user = "bm-user-1";
+    const empty = await asU(request(app).get("/v1/bookmarks"), user).expect(200);
+    expect(empty.body.bookmarks).toEqual([]);
+
+    const added = await asU(request(app).put("/v1/bookmarks/e1"), user).expect(200);
+    expect(added.body.bookmarks).toEqual(["e1"]);
+    // Idempotent — a repeat add does not duplicate.
+    const again = await asU(request(app).put("/v1/bookmarks/e1"), user).expect(200);
+    expect(again.body.bookmarks).toEqual(["e1"]);
+
+    const listed = await asU(request(app).get("/v1/bookmarks"), user).expect(200);
+    expect(listed.body.bookmarks).toHaveLength(1);
+    expect(listed.body.bookmarks[0]).toMatchObject({ examId: "e1", available: true, title: "Test Exam" });
+
+    const removed = await asU(request(app).delete("/v1/bookmarks/e1"), user).expect(200);
+    expect(removed.body.bookmarks).toEqual([]);
+  });
+
+  it("degrades gracefully for a saved-but-unavailable exam", async () => {
+    const app = appWith();
+    const user = "bm-user-2";
+    await asU(request(app).put("/v1/bookmarks/does-not-exist"), user).expect(200);
+    const listed = await asU(request(app).get("/v1/bookmarks"), user).expect(200);
+    expect(listed.body.bookmarks[0]).toEqual({ examId: "does-not-exist", available: false });
+  });
+
+  it("is per-user (one taker's bookmarks never leak to another)", async () => {
+    const app = appWith();
+    await asU(request(app).put("/v1/bookmarks/e1"), "bm-a").expect(200);
+    const other = await asU(request(app).get("/v1/bookmarks"), "bm-b").expect(200);
+    expect(other.body.bookmarks).toEqual([]);
+  });
+});
+
+describe("exam-center — shareable certificates (holder-only + public share link)", () => {
+  const asU = (req, u) => req.set("x-academy-user", u);
+  async function passToCert(app, user) {
+    const created = await asU(request(app).post("/v1/sessions"), user).send({ examId: "e1" }).expect(201);
+    const sid = created.body.sessionId;
+    await asU(request(app).post(`/v1/sessions/${sid}/start`), user).expect(200);
+    for (const [qid, answer] of Object.entries(CORRECT)) {
+      await asU(request(app).put(`/v1/sessions/${sid}/answers/${qid}`), user)
+        .send({ answer })
+        .expect(200);
+    }
+    const res = await asU(request(app).post(`/v1/sessions/${sid}/submit`), user).expect(200);
+    return res.body.result.certNo;
+  }
+
+  it("holder can view their cert privately; a non-holder is forbidden", async () => {
+    const app = appWith();
+    const certNo = await passToCert(app, "holder-1");
+    const mine = await asU(request(app).get(`/v1/certificates/${certNo}`), "holder-1").expect(200);
+    expect(mine.body.certNo).toBe(certNo);
+    expect(mine.body.shared).toBe(false);
+    expect(mine.body.shareToken).toBeNull();
+    // Another user cannot open the private detail.
+    await asU(request(app).get(`/v1/certificates/${certNo}`), "someone-else").expect(403);
+    // Missing identity → 401.
+    await request(app).get(`/v1/certificates/${certNo}`).expect(401);
+  });
+
+  it("holder generates a share link that resolves publicly; revoke makes it private", async () => {
+    const app = appWith();
+    const certNo = await passToCert(app, "holder-2");
+    const shared = await asU(request(app).post(`/v1/certificates/${certNo}/share`), "holder-2").expect(200);
+    expect(shared.body.shareToken).toBeTruthy();
+    const token = shared.body.shareToken;
+
+    // Detail now reflects the share state.
+    const mine = await asU(request(app).get(`/v1/certificates/${certNo}`), "holder-2").expect(200);
+    expect(mine.body.shared).toBe(true);
+    expect(mine.body.shareToken).toBe(token);
+
+    // Public resolution — no identity needed.
+    const pub = await request(app).get(`/v1/shared/${token}`).expect(200);
+    expect(pub.body.certNo).toBe(certNo);
+    expect(pub.body.openBadge).toBeTruthy();
+
+    // Revoke → the link stops resolving.
+    await asU(request(app).delete(`/v1/certificates/${certNo}/share`), "holder-2").expect(200);
+    await request(app).get(`/v1/shared/${token}`).expect(404);
+  });
+
+  it("a non-holder cannot generate or revoke a share link", async () => {
+    const app = appWith();
+    const certNo = await passToCert(app, "holder-3");
+    await asU(request(app).post(`/v1/certificates/${certNo}/share`), "intruder").expect(403);
+    await asU(request(app).delete(`/v1/certificates/${certNo}/share`), "intruder").expect(403);
+  });
+
+  it("an unknown share token 404s publicly", async () => {
+    await request(appWith()).get("/v1/shared/nope-nope").expect(404);
+  });
+});
+
 describe("exam-center — aggregate health", () => {
   it("SERVING (200) when all probes are up", async () => {
     const res = await request(appWith()).get("/health/all").expect(200);
@@ -686,7 +814,9 @@ describe("exam-center — save-answer wrong-state", () => {
     const a = appWith({ authoring: { exams: { paid1: PAID } } });
     const created = await as(request(a).post("/v1/sessions")).send({ examId: "paid1" }).expect(201);
     expect(created.body.state).toBe("awaiting_payment");
-    const res = await as(request(a).put(`/v1/sessions/${created.body.sessionId}/answers/q1`)).send({ answer: ["a"] }).expect(409);
+    const res = await as(request(a).put(`/v1/sessions/${created.body.sessionId}/answers/q1`))
+      .send({ answer: ["a"] })
+      .expect(409);
     expect(res.body.error).toBe("PAYMENT_REQUIRED");
   });
   it("409 ALREADY_SUBMITTED saving after a scored submit", async () => {
@@ -694,11 +824,15 @@ describe("exam-center — save-answer wrong-state", () => {
     const sid = created.body.sessionId;
     await as(request(app).post(`/v1/sessions/${sid}/start`)).expect(200);
     await as(request(app).post(`/v1/sessions/${sid}/submit`)).expect(200); // → scored
-    const res = await as(request(app).put(`/v1/sessions/${sid}/answers/q1`)).send({ answer: ["a"] }).expect(409);
+    const res = await as(request(app).put(`/v1/sessions/${sid}/answers/q1`))
+      .send({ answer: ["a"] })
+      .expect(409);
     expect(res.body.error).toBe("ALREADY_SUBMITTED");
   });
   it("404 saving on an unknown session", async () => {
-    await as(request(app).put("/v1/sessions/sess-nope/answers/q1")).send({ answer: ["a"] }).expect(404);
+    await as(request(app).put("/v1/sessions/sess-nope/answers/q1"))
+      .send({ answer: ["a"] })
+      .expect(404);
   });
 });
 
@@ -833,7 +967,10 @@ describe("exam-center — revoke certificate (ownership + degradation)", () => {
   it("503 when authoring is down (can't confirm ownership)", async () => {
     const a = buildApp({
       authoring: { getMyUnit: async () => ({ status: 503, body: {} }) },
-      certificates: { verify: async () => ({ status: 200, body: { status: "valid", unit: "u1" } }), revoke: async () => ({ status: 200, body: {} }) },
+      certificates: {
+        verify: async () => ({ status: 200, body: { status: "valid", unit: "u1" } }),
+        revoke: async () => ({ status: 200, body: {} }),
+      },
     });
     await as(request(a).post("/v1/certificates/AA-2026-000001/revoke")).send({ reason: "x" }).expect(503);
   });

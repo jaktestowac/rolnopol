@@ -413,6 +413,7 @@
       <div class="tabs">
         <button class="tab is-active" data-tab="units"><i class="fa-solid fa-building-columns"></i> Units</button>
         <button class="tab" data-tab="exams"><i class="fa-solid fa-file-lines"></i> My exams</button>
+        <button class="tab" data-tab="saved"><i class="fa-solid fa-bookmark"></i> Saved</button>
         <button class="tab" data-tab="certs"><i class="fa-solid fa-award"></i> My certificates</button>
       </div>
       <section id="tab-units" class="tabpanel">
@@ -440,6 +441,7 @@
                 <tr>
                   <th data-sort="exam">Exam</th>
                   <th data-sort="status">Status</th>
+                  <th data-sort="deadline">Take by</th>
                   <th data-sort="score">Score</th>
                   <th data-sort="rating">Your rating</th>
                   <th data-sort="date">Date</th>
@@ -450,6 +452,10 @@
             </table>
           </div>
         </div>
+      </section>
+      <section id="tab-saved" class="tabpanel hidden">
+        <div id="savedGrid" class="grid"></div>
+        <div id="savedState" class="state">Loading…</div>
       </section>
       <section id="tab-certs" class="tabpanel hidden">
         <div id="certGrid" class="grid"></div>
@@ -574,7 +580,9 @@
               case "exams-asc":
                 return (a.examCount || 0) - (b.examCount || 0) || (a.name || "").localeCompare(b.name || "");
               case "rating-desc":
-                return (b.rating || 0) - (a.rating || 0) || (b.ratings || 0) - (a.ratings || 0) || (a.name || "").localeCompare(b.name || "");
+                return (
+                  (b.rating || 0) - (a.rating || 0) || (b.ratings || 0) - (a.ratings || 0) || (a.name || "").localeCompare(b.name || "")
+                );
               default:
                 return (a.name || "").localeCompare(b.name || "");
             }
@@ -653,6 +661,30 @@
         const scoreOf = (s) => (s.result && typeof s.result.scorePct === "number" ? s.result.scorePct : null);
         const ratingOf = (s) => (typeof s.rating === "number" ? s.rating : 0);
         const isPassed = (s) => !!(s.result && s.result.passed);
+        // The next actionable deadline — until when the taker can still act on the exam:
+        //   pay by (awaiting_payment) · start by (entitled, access window) · finish by
+        //   (active, completion clock). Terminal/done states have no upcoming deadline.
+        function deadlineInfo(s) {
+          switch (s.state) {
+            case "awaiting_payment":
+              return { label: "Pay by", ts: s.activationExpiresAt };
+            case "entitled":
+              return { label: "Start by", ts: s.accessExpiresAt };
+            case "active":
+              return { label: "Finish by", ts: s.expiresAt };
+            default:
+              return null;
+          }
+        }
+        const deadlineOf = (s) => {
+          const d = deadlineInfo(s);
+          return d && d.ts ? d.ts : Infinity; // no deadline sorts last (ascending = soonest first)
+        };
+        // A deadline shows date + time (a completion window can be minutes away).
+        const fmtWhen = (ms) =>
+          !ms || isNaN(new Date(ms))
+            ? "—"
+            : new Date(ms).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
         // 5-star widget for a passed exam; buttons carry the session id + star value
         // and are handled by one delegated listener on the table body.
         function starWidget(sid, current) {
@@ -682,6 +714,9 @@
             } else if (sortKey === "rating") {
               av = ratingOf(a);
               bv = ratingOf(b);
+            } else if (sortKey === "deadline") {
+              av = deadlineOf(a);
+              bv = deadlineOf(b);
             } else {
               av = a.date || 0;
               bv = b.date || 0;
@@ -697,19 +732,20 @@
                 const action = certNo
                   ? `<a class="ex-link" href="/agri-academy-certificate.html?cert=${enc(certNo)}" target="_blank">Certificate</a>`
                   : `<a class="ex-link" href="/agri-academy.html?exam=${enc(s.examId)}">Open</a>`;
-                const ratingCell = isPassed(s)
-                  ? starWidget(s.sessionId, ratingOf(s))
-                  : `<span class="rating-none">—</span>`;
+                const ratingCell = isPassed(s) ? starWidget(s.sessionId, ratingOf(s)) : `<span class="rating-none">—</span>`;
+                const dl = deadlineInfo(s);
+                const deadlineCell = dl && dl.ts ? `${esc(dl.label)} ${esc(fmtWhen(dl.ts))}` : `<span class="rating-none">—</span>`;
                 return `<tr>
                   <td>${esc(s.examTitle || s.examId)}</td>
                   <td><span class="badge badge--${st.tone}">${esc(st.label)}</span></td>
+                  <td>${deadlineCell}</td>
                   <td>${sc == null ? "—" : sc + "%"}</td>
                   <td>${ratingCell}</td>
                   <td>${fmtDate(s.date)}</td>
                   <td>${action}</td>
                 </tr>`;
               })
-              .join("") || `<tr><td colspan="6" class="state" style="padding:16px 12px">No matching exams.</td></tr>`;
+              .join("") || `<tr><td colspan="7" class="state" style="padding:16px 12px">No matching exams.</td></tr>`;
           document.querySelectorAll("#sessTable th[data-sort]").forEach((th) => {
             th.classList.toggle("sort-asc", sortKey === th.dataset.sort && sortDir === 1);
             th.classList.toggle("sort-desc", sortKey === th.dataset.sort && sortDir === -1);
@@ -776,6 +812,70 @@
           renderSessions();
         }
 
+        // ── Saved exams (auth) — "save for later" bookmarks ───────────────────────────
+        // Reloads each time the tab is opened so a just-unsaved exam disappears without
+        // a full page refresh. An unpublished/removed saved exam degrades to a muted
+        // "no longer available" card instead of vanishing silently.
+        async function loadSaved() {
+          $("savedState").style.display = "";
+          $("savedState").textContent = "Loading…";
+          $("savedGrid").innerHTML = "";
+          const r = await api("/bookmarks");
+          if (r.status === 401) {
+            $("savedState").innerHTML = loginPrompt("save exams for later");
+            return;
+          }
+          if (!r.ok) {
+            $("savedState").textContent = "Could not load your saved exams.";
+            return;
+          }
+          const saved = (r.body && r.body.bookmarks) || [];
+          if (!saved.length) {
+            $("savedState").innerHTML =
+              `Nothing saved yet. Tap <strong>☆ Save</strong> on any exam to keep it here. <a class="back" href="/agri-academy.html">Browse exams →</a>`;
+            return;
+          }
+          $("savedState").style.display = "none";
+          $("savedGrid").innerHTML = saved
+            .map((b) => {
+              if (!b.available) {
+                return `
+                <div class="card" style="opacity:.7">
+                  <div class="card-head"><h2 style="margin:0;font-size:18px">${esc(b.examId)}</h2></div>
+                  <p class="muted">This exam is no longer available.</p>
+                  <button class="btn btn--sm" data-unsave="${esc(b.examId)}">Remove</button>
+                </div>`;
+              }
+              const paid = b.pricing && b.pricing.mode === "paid";
+              const price = paid ? `${b.pricing.priceRol} ROL` : "Free";
+              return `
+                <div class="card">
+                  <div class="card-head"><h2 style="margin:0;font-size:18px">${esc(b.title || b.examId)}</h2></div>
+                  <p>${esc(b.description || "")}</p>
+                  <div class="chips" style="margin-bottom:6px">
+                    <span class="chip">${esc(price)}</span>
+                    ${b.difficulty ? `<span class="chip">${esc(b.difficulty)}</span>` : ""}
+                    ${b.category ? `<span class="chip">${esc(b.category)}</span>` : ""}
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <a class="btn btn--primary btn--sm" href="/agri-academy.html?exam=${enc(b.examId)}">Enroll &amp; take</a>
+                    <button class="btn btn--sm" data-unsave="${esc(b.examId)}">Remove</button>
+                  </div>
+                </div>`;
+            })
+            .join("");
+          $("savedGrid")
+            .querySelectorAll("[data-unsave]")
+            .forEach((btn) =>
+              btn.addEventListener("click", async () => {
+                btn.disabled = true;
+                const res = await apiSend("DELETE", "/bookmarks/" + enc(btn.getAttribute("data-unsave")));
+                if (res.ok) loadSaved();
+                else btn.disabled = false;
+              }),
+            );
+        }
+
         // ── My certificates (auth) ────────────────────────────────────────────────────
         let certLoaded = false;
         async function loadCerts() {
@@ -814,8 +914,9 @@
           btn.addEventListener("click", () => {
             const name = btn.dataset.tab;
             document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("is-active", b === btn));
-            for (const t of ["units", "exams", "certs"]) $("tab-" + t).classList.toggle("hidden", t !== name);
+            for (const t of ["units", "exams", "saved", "certs"]) $("tab-" + t).classList.toggle("hidden", t !== name);
             if (name === "exams") loadSessions();
+            if (name === "saved") loadSaved();
             if (name === "certs") loadCerts();
           }),
         );

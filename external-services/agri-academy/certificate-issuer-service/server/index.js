@@ -13,6 +13,7 @@
  * certificate is always `valid`; expiry is applied lazily at verify time.
  */
 const express = require("express");
+const crypto = require("crypto");
 const { HOST, PORT, CERT_PREFIX, DEFAULT_VALID_MONTHS } = require("../config");
 const db = require("./db");
 const clock = require("../../shared/clock");
@@ -39,6 +40,42 @@ function addMonthsIso(fromMs, months) {
 
 function idemKeyOf(c) {
   return `${c.examId}::${c.holder}::${c.sessionId}`;
+}
+
+/** An unguessable, URL-safe share token (holder generates it to share a cert). */
+function newShareToken() {
+  return crypto.randomBytes(16).toString("hex");
+}
+
+/**
+ * An Open-Badge-style, machine-readable assertion third parties can consume
+ * (the spirit of Open Badges v2 — no external context fetch, no new dependency).
+ * Only ever carries the same PUBLIC fields as the verify view; never internal
+ * ids (sessionId / idem key) or the private share token.
+ */
+function openBadgeAssertion(cert, nowMs, { verifyUrl } = {}) {
+  const v = verifyView(cert, nowMs);
+  if (v.status === "unknown") return { status: "unknown" };
+  return {
+    "@context": "https://w3id.org/openbadges/v2",
+    type: "Assertion",
+    id: verifyUrl || null,
+    status: v.status,
+    recipient: { type: "id", identity: v.holder },
+    issuedOn: v.issuedAt,
+    expires: v.expiresAt || null,
+    badge: {
+      type: "BadgeClass",
+      name: v.examTitle,
+      description: `AgriAcademy certification — ${v.examTitle}`,
+      criteria: { narrative: `Passed the ${v.examTitle} exam with a score of ${v.scorePct}%.` },
+      issuer: { type: "Profile", id: v.unit, name: v.unitName || v.unit },
+    },
+    verification: { type: "HostedBadge", url: verifyUrl || null },
+    certNo: v.certNo,
+    scorePct: v.scorePct,
+    ...(v.status === "revoked" ? { revokedReason: v.revokedReason } : {}),
+  };
 }
 
 /** Public verify view — never leaks internal fields. */
@@ -113,6 +150,7 @@ function buildApp() {
           expiresAt: addMonthsIso(nowMs, validMonths),
           revoked: false,
           revokedReason: null,
+          shareToken: null,
         };
         return { next: { ...data, seq, certificates: { ...data.certificates, [cert.certNo]: cert } }, value: cert };
       });
@@ -129,6 +167,84 @@ function buildApp() {
     const data = await db.getAll();
     const cert = data.certificates?.[req.params.certNo] || null;
     res.status(200).json(verifyView(cert, clock.now()));
+  });
+
+  // Machine-readable Open-Badge assertion by certNo — public, CORS-open so a
+  // third party's page can fetch it. Same public shape as verify; no private
+  // fields (sessionId / idem key / share token) ever appear.
+  app.get("/v1/verify/:certNo/badge.json", async (req, res) => {
+    const data = await db.getAll();
+    const cert = data.certificates?.[req.params.certNo] || null;
+    res.set("Access-Control-Allow-Origin", "*");
+    const verifyUrl = `${req.protocol}://${req.get("host")}/v1/verify/${encodeURIComponent(req.params.certNo)}/badge.json`;
+    res.status(200).json(openBadgeAssertion(cert, clock.now(), { verifyUrl }));
+  });
+
+  // Read-only share status for a certificate — the current token (or null). Holder-
+  // ownership is enforced UPSTREAM; the issuer is a leaf dialed only by the exam
+  // center, never routed publicly.
+  app.get("/v1/certificates/:certNo/share", async (req, res) => {
+    const data = await db.getAll();
+    const cert = data.certificates?.[req.params.certNo];
+    if (!cert) return res.status(404).json({ error: "CERTIFICATE_NOT_FOUND" });
+    res.status(200).json({ certNo: cert.certNo, shareToken: cert.shareToken || null });
+  });
+
+  // Generate (or return the existing) share token for a certificate — the holder
+  // uses this to mint an unguessable public share link. Idempotent: a cert that
+  // already has a token keeps it. Holder-ownership is enforced UPSTREAM (the exam
+  // center only proxies this for a cert the caller actually earned).
+  app.post("/v1/certificates/:certNo/share", async (req, res) => {
+    try {
+      const outcome = await db.mutate((data) => {
+        const cert = data.certificates?.[req.params.certNo];
+        if (!cert) return { value: { code: "NOT_FOUND" } };
+        if (cert.shareToken) return { next: data, value: { code: "OK", cert } }; // idempotent
+        const next = { ...cert, shareToken: newShareToken() };
+        return { next: { ...data, certificates: { ...data.certificates, [cert.certNo]: next } }, value: { code: "OK", cert: next } };
+      });
+      if (outcome.code === "NOT_FOUND") return res.status(404).json({ error: "CERTIFICATE_NOT_FOUND" });
+      log.info("certificate share enabled", { certNo: outcome.cert.certNo });
+      res.status(200).json({ certNo: outcome.cert.certNo, shareToken: outcome.cert.shareToken });
+    } catch (err) {
+      log.error("share failed", { error: err.message });
+      res.status(500).json({ error: "INTERNAL" });
+    }
+  });
+
+  // Revoke the share link (stop sharing). The cert stays valid; only the public
+  // token is cleared so existing links stop resolving. Idempotent.
+  app.delete("/v1/certificates/:certNo/share", async (req, res) => {
+    try {
+      const outcome = await db.mutate((data) => {
+        const cert = data.certificates?.[req.params.certNo];
+        if (!cert) return { value: { code: "NOT_FOUND" } };
+        if (!cert.shareToken) return { next: data, value: { code: "OK", cert } }; // already private
+        const next = { ...cert, shareToken: null };
+        return { next: { ...data, certificates: { ...data.certificates, [cert.certNo]: next } }, value: { code: "OK", cert: next } };
+      });
+      if (outcome.code === "NOT_FOUND") return res.status(404).json({ error: "CERTIFICATE_NOT_FOUND" });
+      log.info("certificate share revoked", { certNo: outcome.cert.certNo });
+      res.status(200).json({ certNo: outcome.cert.certNo, shareToken: null });
+    } catch (err) {
+      log.error("unshare failed", { error: err.message });
+      res.status(500).json({ error: "INTERNAL" });
+    }
+  });
+
+  // Public share resolution by token — the rich, renderable certificate view plus
+  // an embedded Open-Badge assertion. Only resolves while a share token exists
+  // (revoking share → 404). CORS-open for third-party fetch. No token = no leak:
+  // the sequential certNo is never enough to reach this endpoint.
+  app.get("/v1/shared/:shareToken", async (req, res) => {
+    res.set("Access-Control-Allow-Origin", "*");
+    const token = String(req.params.shareToken || "");
+    const data = await db.getAll();
+    const cert = token ? Object.values(data.certificates || {}).find((c) => c.shareToken === token) : null;
+    if (!cert) return res.status(404).json({ status: "unknown", error: "SHARE_NOT_FOUND" });
+    const now = clock.now();
+    const verifyUrl = `${req.protocol}://${req.get("host")}/v1/shared/${encodeURIComponent(token)}`;
+    res.status(200).json({ ...verifyView(cert, now), shared: true, openBadge: openBadgeAssertion(cert, now, { verifyUrl }) });
   });
 
   // Revoke — admin path (proxied through the exam center). Idempotent.
@@ -170,4 +286,4 @@ async function start() {
 
 if (require.main === module) start();
 
-module.exports = { buildApp, start, verifyView, certNumber, addMonthsIso };
+module.exports = { buildApp, start, verifyView, certNumber, addMonthsIso, openBadgeAssertion, newShareToken };

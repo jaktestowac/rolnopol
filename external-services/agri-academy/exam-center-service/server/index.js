@@ -125,6 +125,13 @@ function findSession(data, userId, sessionId) {
   return data.users?.[userId]?.sessions?.[sessionId] || null;
 }
 
+/** True if `userId` earned `certNo` (has a scored session that minted it). */
+function ownsCertificate(data, userId, certNo) {
+  const user = data.users?.[userId];
+  if (!user) return false;
+  return Object.values(user.sessions || {}).some((s) => s.result?.certNo === certNo);
+}
+
 function newSeed() {
   return Math.floor(Math.random() * 2147483647);
 }
@@ -254,12 +261,40 @@ function aggregateUnitAnalytics(data, unitId, unitName, publishedExams) {
 // is hashed to one adjective + one noun + a 2-digit suffix, so the same learner
 // always shows the same alias on the board but the real identity never leaks.
 const ALIAS_ADJ = [
-  "Golden", "Silent", "Rolling", "Misty", "Hardy", "Sunlit", "Verdant", "Rugged",
-  "Amber", "Frosty", "Wild", "Nimble", "Quiet", "Bright", "Ancient", "Hidden",
+  "Golden",
+  "Silent",
+  "Rolling",
+  "Misty",
+  "Hardy",
+  "Sunlit",
+  "Verdant",
+  "Rugged",
+  "Amber",
+  "Frosty",
+  "Wild",
+  "Nimble",
+  "Quiet",
+  "Bright",
+  "Ancient",
+  "Hidden",
 ];
 const ALIAS_NOUN = [
-  "Harvester", "Shepherd", "Plowman", "Vintner", "Grower", "Rancher", "Orchardist", "Sower",
-  "Reaper", "Herder", "Farmhand", "Steward", "Grazier", "Miller", "Beekeeper", "Forager",
+  "Harvester",
+  "Shepherd",
+  "Plowman",
+  "Vintner",
+  "Grower",
+  "Rancher",
+  "Orchardist",
+  "Sower",
+  "Reaper",
+  "Herder",
+  "Farmhand",
+  "Steward",
+  "Grazier",
+  "Miller",
+  "Beekeeper",
+  "Forager",
 ];
 
 /** Deterministic farm-themed alias for a userId (anonymizes the leaderboard). */
@@ -285,7 +320,16 @@ function computeLeaderboards(data, units = [], exams = [], limit = 50) {
   const unitMeta = new Map(units.map((u) => [u.unitId, u]));
   const examMeta = new Map(exams.map((e) => [e.id, e]));
   const unitNameOf = (unitId, fallback) => unitMeta.get(unitId)?.name || fallback || unitId || null;
-  const blank = () => ({ enrollments: 0, completed: 0, passed: 0, certificates: 0, scoreSum: 0, scoreCount: 0, ratingSum: 0, ratingCount: 0 });
+  const blank = () => ({
+    enrollments: 0,
+    completed: 0,
+    passed: 0,
+    certificates: 0,
+    scoreSum: 0,
+    scoreCount: 0,
+    ratingSum: 0,
+    ratingCount: 0,
+  });
 
   const unitAgg = new Map();
   const learnerAgg = new Map();
@@ -294,7 +338,14 @@ function computeLeaderboards(data, units = [], exams = [], limit = 50) {
   const ensureUnit = (unitId, name) => {
     if (!unitAgg.has(unitId)) {
       const m = unitMeta.get(unitId);
-      unitAgg.set(unitId, { unitId, name: unitNameOf(unitId, name), icon: m?.icon || "graduation-cap", color: m?.color || "#3fae6b", learners: new Set(), ...blank() });
+      unitAgg.set(unitId, {
+        unitId,
+        name: unitNameOf(unitId, name),
+        icon: m?.icon || "graduation-cap",
+        color: m?.color || "#3fae6b",
+        learners: new Set(),
+        ...blank(),
+      });
     }
     return unitAgg.get(unitId);
   };
@@ -303,12 +354,21 @@ function computeLeaderboards(data, units = [], exams = [], limit = 50) {
       const m = examMeta.get(examId);
       const owner = m?.ownerUnitId || ownerUnitId;
       const pr = m?.pricing || pricing;
-      examAgg.set(examId, { examId, title: m?.title || title || examId, unitName: unitNameOf(owner), mode: pr?.mode || "free", priceRol: pr?.mode === "paid" ? pr.priceRol : 0, learners: new Set(), ...blank() });
+      examAgg.set(examId, {
+        examId,
+        title: m?.title || title || examId,
+        unitName: unitNameOf(owner),
+        mode: pr?.mode || "free",
+        priceRol: pr?.mode === "paid" ? pr.priceRol : 0,
+        learners: new Set(),
+        ...blank(),
+      });
     }
     return examAgg.get(examId);
   };
   const ensureLearner = (userId) => {
-    if (!learnerAgg.has(userId)) learnerAgg.set(userId, { userId, alias: learnerAlias(userId), bestScore: 0, units: new Set(), ...blank() });
+    if (!learnerAgg.has(userId))
+      learnerAgg.set(userId, { userId, alias: learnerAlias(userId), bestScore: 0, units: new Set(), ...blank() });
     return learnerAgg.get(userId);
   };
 
@@ -364,32 +424,65 @@ function computeLeaderboards(data, units = [], exams = [], limit = 50) {
   const avg = (a) => (a.scoreCount ? Math.round(a.scoreSum / a.scoreCount) : 0);
   const rate = (a) => (a.completed ? Math.round((a.passed / a.completed) * 100) : 0);
   const rating = (a) => (a.ratingCount ? Math.round((a.ratingSum / a.ratingCount) * 10) / 10 : 0);
-  const ranked = (arr, cmp) => arr.sort(cmp).slice(0, limit).map((x, i) => ({ rank: i + 1, ...x }));
+  const ranked = (arr, cmp) =>
+    arr
+      .sort(cmp)
+      .slice(0, limit)
+      .map((x, i) => ({ rank: i + 1, ...x }));
 
   const units_ = ranked(
     [...unitAgg.values()].map((u) => ({
-      unitId: u.unitId, name: u.name, icon: u.icon, color: u.color,
-      enrollments: u.enrollments, learners: u.learners.size, completed: u.completed,
-      passed: u.passed, certificates: u.certificates, passRate: rate(u), avgScore: avg(u),
-      avgRating: rating(u), ratings: u.ratingCount,
+      unitId: u.unitId,
+      name: u.name,
+      icon: u.icon,
+      color: u.color,
+      enrollments: u.enrollments,
+      learners: u.learners.size,
+      completed: u.completed,
+      passed: u.passed,
+      certificates: u.certificates,
+      passRate: rate(u),
+      avgScore: avg(u),
+      avgRating: rating(u),
+      ratings: u.ratingCount,
     })),
     (a, b) => b.certificates - a.certificates || b.enrollments - a.enrollments || b.avgScore - a.avgScore || a.name.localeCompare(b.name),
   );
   const learners_ = ranked(
     [...learnerAgg.values()].map((l) => ({
-      userId: l.userId, alias: l.alias, enrollments: l.enrollments, completed: l.completed, passed: l.passed,
-      certificates: l.certificates, avgScore: avg(l), bestScore: l.bestScore, units: l.units.size,
+      userId: l.userId,
+      alias: l.alias,
+      enrollments: l.enrollments,
+      completed: l.completed,
+      passed: l.passed,
+      certificates: l.certificates,
+      avgScore: avg(l),
+      bestScore: l.bestScore,
+      units: l.units.size,
     })),
     (a, b) => b.certificates - a.certificates || b.avgScore - a.avgScore || b.passed - a.passed || a.alias.localeCompare(b.alias),
   );
   const exams_ = ranked(
     [...examAgg.values()].map((e) => ({
-      examId: e.examId, title: e.title, unitName: e.unitName, mode: e.mode, priceRol: e.priceRol,
-      enrollments: e.enrollments, learners: e.learners.size, completed: e.completed, passRate: rate(e), avgScore: avg(e),
-      avgRating: rating(e), ratings: e.ratingCount,
+      examId: e.examId,
+      title: e.title,
+      unitName: e.unitName,
+      mode: e.mode,
+      priceRol: e.priceRol,
+      enrollments: e.enrollments,
+      learners: e.learners.size,
+      completed: e.completed,
+      passRate: rate(e),
+      avgScore: avg(e),
+      avgRating: rating(e),
+      ratings: e.ratingCount,
     })),
     (a, b) =>
-      b.avgRating - a.avgRating || b.ratings - a.ratings || b.avgScore - a.avgScore || b.enrollments - a.enrollments || a.title.localeCompare(b.title),
+      b.avgRating - a.avgRating ||
+      b.ratings - a.ratings ||
+      b.avgScore - a.avgScore ||
+      b.enrollments - a.enrollments ||
+      a.title.localeCompare(b.title),
   );
 
   return {
@@ -766,6 +859,92 @@ function buildApp({
       res.status(200).json(aggregateUnitAnalytics(data, unitId, myUnit.name, publishedExams));
     } catch (err) {
       log.error("analytics failed", { error: err.message });
+      res.status(500).json({ error: "INTERNAL" });
+    }
+  });
+
+  // ── Bookmarks ("save for later") ─────────────────────────────────────────────
+  // Pure per-user state: a list of examIds the taker saved. No catalog or money
+  // change. GET resolves each saved id back to a catalog card (proxied from
+  // authoring); a removed/unpublished exam degrades gracefully to
+  // `{ available: false }` instead of dropping silently.
+  app.use("/v1/bookmarks", (req, res, next) => {
+    const u = req.get("x-academy-user");
+    if (!u) return res.status(401).json({ error: "MISSING_IDENTITY" });
+    req.academyUser = String(u);
+    next();
+  });
+
+  app.get("/v1/bookmarks", async (req, res) => {
+    const userId = req.academyUser;
+    try {
+      const data = await db.getAll();
+      const ids = data.users?.[userId]?.bookmarks || [];
+      const bookmarks = await Promise.all(
+        ids.map(async (examId) => {
+          try {
+            const r = await authoring.getPublishedExam(examId);
+            if (r.status === 200 && r.body) {
+              const e = r.body;
+              return {
+                examId,
+                available: true,
+                title: e.title,
+                description: e.description,
+                ownerUnitId: e.ownerUnitId,
+                unitName: e.unit?.name || null,
+                durationSec: e.durationSec,
+                passPct: e.passPct,
+                pricing: e.pricing,
+                difficulty: e.difficulty || null,
+                category: e.category || null,
+              };
+            }
+          } catch {
+            /* treat as unavailable below */
+          }
+          return { examId, available: false };
+        }),
+      );
+      res.status(200).json({ bookmarks });
+    } catch (err) {
+      log.error("list bookmarks failed", { error: err.message });
+      res.status(500).json({ error: "INTERNAL" });
+    }
+  });
+
+  app.put("/v1/bookmarks/:examId", async (req, res) => {
+    const userId = req.academyUser;
+    const examId = String(req.params.examId);
+    try {
+      const ids = await db.mutate((data) => {
+        const user = data.users[userId] || { sessions: {}, attempts: {}, locks: {}, bookmarks: [] };
+        const bookmarks = user.bookmarks || [];
+        const next = bookmarks.includes(examId) ? bookmarks : [...bookmarks, examId];
+        const nextUser = { ...user, bookmarks: next };
+        return { next: { ...data, users: { ...data.users, [userId]: nextUser } }, value: next };
+      });
+      res.status(200).json({ bookmarks: ids, saved: true, examId });
+    } catch (err) {
+      log.error("add bookmark failed", { error: err.message });
+      res.status(500).json({ error: "INTERNAL" });
+    }
+  });
+
+  app.delete("/v1/bookmarks/:examId", async (req, res) => {
+    const userId = req.academyUser;
+    const examId = String(req.params.examId);
+    try {
+      const ids = await db.mutate((data) => {
+        const user = data.users[userId];
+        if (!user) return { next: data, value: [] };
+        const next = (user.bookmarks || []).filter((id) => id !== examId);
+        const nextUser = { ...user, bookmarks: next };
+        return { next: { ...data, users: { ...data.users, [userId]: nextUser } }, value: next };
+      });
+      res.status(200).json({ bookmarks: ids, removed: true, examId });
+    } catch (err) {
+      log.error("remove bookmark failed", { error: err.message });
       res.status(500).json({ error: "INTERNAL" });
     }
   });
@@ -1182,6 +1361,71 @@ function buildApp({
     res.status(200).json({ certificates: list });
   });
 
+  // Holder-only private certificate detail. The rich, renderable cert is visible
+  // ONLY to the taker who earned it (verified against their own sessions), plus the
+  // current share status so the page can show "sharing on/off". To let others see
+  // it, the holder generates a share link (POST …/share) — verify-by-certNo stays
+  // the public primitive, but the full document is private by default.
+  app.get("/v1/certificates/:certNo", async (req, res) => {
+    const userId = req.get("x-academy-user");
+    if (!userId) return res.status(401).json({ error: "MISSING_IDENTITY" });
+    const certNo = req.params.certNo;
+    const data = await db.getAll();
+    if (!ownsCertificate(data, String(userId), certNo)) {
+      return res.status(403).json({ error: "FORBIDDEN", message: "only the certificate holder can view it privately" });
+    }
+    const ver = await certificates.verify(certNo);
+    if (ver.status === 503) return res.status(503).json({ error: "CERTIFICATE_ISSUER_UNAVAILABLE" });
+    if (ver.status !== 200 || !ver.body || ver.body.status === "unknown") {
+      return res.status(404).json({ error: "CERTIFICATE_NOT_FOUND" });
+    }
+    let shareToken = null;
+    try {
+      const st = await certificates.shareStatus(certNo);
+      if (st.status === 200) shareToken = st.body?.shareToken || null;
+    } catch {
+      /* share status is best-effort */
+    }
+    res.status(200).json({ ...ver.body, shared: !!shareToken, shareToken });
+  });
+
+  // Generate a public share link for a certificate — holder only. Returns the
+  // unguessable token the caller can turn into a shareable URL. Idempotent.
+  app.post("/v1/certificates/:certNo/share", async (req, res) => {
+    const userId = req.get("x-academy-user");
+    if (!userId) return res.status(401).json({ error: "MISSING_IDENTITY" });
+    const certNo = req.params.certNo;
+    const data = await db.getAll();
+    if (!ownsCertificate(data, String(userId), certNo)) {
+      return res.status(403).json({ error: "FORBIDDEN", message: "only the certificate holder can share it" });
+    }
+    const r = await certificates.share(certNo);
+    if (r.status === 503) return res.status(503).json({ error: "CERTIFICATE_ISSUER_UNAVAILABLE" });
+    res.status(r.status).json(r.body);
+  });
+
+  // Revoke a certificate's share link (make it private again) — holder only.
+  app.delete("/v1/certificates/:certNo/share", async (req, res) => {
+    const userId = req.get("x-academy-user");
+    if (!userId) return res.status(401).json({ error: "MISSING_IDENTITY" });
+    const certNo = req.params.certNo;
+    const data = await db.getAll();
+    if (!ownsCertificate(data, String(userId), certNo)) {
+      return res.status(403).json({ error: "FORBIDDEN", message: "only the certificate holder can unshare it" });
+    }
+    const r = await certificates.unshare(certNo);
+    if (r.status === 503) return res.status(503).json({ error: "CERTIFICATE_ISSUER_UNAVAILABLE" });
+    res.status(r.status).json(r.body);
+  });
+
+  // Public share resolution — anyone with the token sees the rich cert + Open-Badge
+  // assertion. No identity (that's the point of a share link). Proxied to the issuer.
+  app.get("/v1/shared/:token", async (req, res) => {
+    const r = await certificates.getShared(req.params.token);
+    if (r.status === 503) return res.status(503).json({ error: "CERTIFICATE_ISSUER_UNAVAILABLE" });
+    res.status(r.status).json(r.body);
+  });
+
   // Public verification — proxied to the issuer (no identity).
   app.get("/v1/verify/:certNo", async (req, res) => {
     const r = await certificates.verify(req.params.certNo);
@@ -1239,4 +1483,16 @@ async function start() {
 
 if (require.main === module) start();
 
-module.exports = { buildApp, start, publicQuestion, settle, buildGradeItems, aggregateUnitAnalytics, computeLeaderboards, learnerAlias, aggregateRatings, aggregatePublicStats };
+module.exports = {
+  buildApp,
+  start,
+  publicQuestion,
+  settle,
+  buildGradeItems,
+  aggregateUnitAnalytics,
+  computeLeaderboards,
+  learnerAlias,
+  aggregateRatings,
+  aggregatePublicStats,
+  ownsCertificate,
+};

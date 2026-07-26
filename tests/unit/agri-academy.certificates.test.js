@@ -80,10 +80,22 @@ describe("certificate-issuer — mint", () => {
   });
 
   it("400s when ANY of examId / holder / sessionId is missing", async () => {
-    await request(app).post("/v1/certificates").send(mintBody({ examId: undefined })).expect(400);
-    await request(app).post("/v1/certificates").send(mintBody({ holder: undefined })).expect(400);
-    await request(app).post("/v1/certificates").send(mintBody({ sessionId: undefined })).expect(400);
-    await request(app).post("/v1/certificates").send(mintBody({ holder: "" })).expect(400);
+    await request(app)
+      .post("/v1/certificates")
+      .send(mintBody({ examId: undefined }))
+      .expect(400);
+    await request(app)
+      .post("/v1/certificates")
+      .send(mintBody({ holder: undefined }))
+      .expect(400);
+    await request(app)
+      .post("/v1/certificates")
+      .send(mintBody({ sessionId: undefined }))
+      .expect(400);
+    await request(app)
+      .post("/v1/certificates")
+      .send(mintBody({ holder: "" }))
+      .expect(400);
   });
 
   it("coerces a non-string but present holder (0) to a string rather than rejecting", async () => {
@@ -208,6 +220,80 @@ describe("certificate-issuer — health count + pure helpers", () => {
       .expect(201);
     const futureYear = Number(future.body.certNo.split("-")[1]);
     expect(futureYear).toBeGreaterThanOrEqual(baseYear + 1);
+  });
+});
+
+describe("certificate-issuer — shareable links + Open-Badge", () => {
+  async function mint(over) {
+    return (await request(app).post("/v1/certificates").send(mintBody(over)).expect(201)).body;
+  }
+
+  it("mints with no share token (private by default)", async () => {
+    const c = await mint({ holder: "u-share-a", sessionId: "s-share-a" });
+    expect(c.shareToken).toBeNull();
+    const status = await request(app).get(`/v1/certificates/${c.certNo}/share`).expect(200);
+    expect(status.body.shareToken).toBeNull();
+  });
+
+  it("generates an unguessable share token, idempotently", async () => {
+    const c = await mint({ holder: "u-share-b", sessionId: "s-share-b" });
+    const first = await request(app).post(`/v1/certificates/${c.certNo}/share`).expect(200);
+    expect(first.body.shareToken).toMatch(/^[a-f0-9]{32}$/);
+    const second = await request(app).post(`/v1/certificates/${c.certNo}/share`).expect(200);
+    expect(second.body.shareToken).toBe(first.body.shareToken); // idempotent — same token
+  });
+
+  it("resolves a shared certificate by token (rich view + Open-Badge assertion)", async () => {
+    const c = await mint({ holder: "u-share-c", sessionId: "s-share-c", template: "midnight", unitName: "Acme Board" });
+    const { shareToken } = (await request(app).post(`/v1/certificates/${c.certNo}/share`).expect(200)).body;
+    const res = await request(app).get(`/v1/shared/${shareToken}`).expect(200);
+    expect(res.body.status).toBe("valid");
+    expect(res.body.shared).toBe(true);
+    expect(res.body.certNo).toBe(c.certNo);
+    expect(res.body.templateStyle.id).toBe("midnight");
+    // Open-Badge assertion shape
+    expect(res.body.openBadge["@context"]).toBe("https://w3id.org/openbadges/v2");
+    expect(res.body.openBadge.type).toBe("Assertion");
+    expect(res.body.openBadge.badge.name).toBe("Pesticide Basics");
+    expect(res.body.openBadge.recipient.identity).toBe("u-share-c");
+    // No private ids leak into the shared payload.
+    expect(JSON.stringify(res.body)).not.toContain("s-share-c");
+  });
+
+  it("404s an unknown or revoked share token", async () => {
+    await request(app).get("/v1/shared/deadbeefdeadbeefdeadbeefdeadbeef").expect(404);
+    const c = await mint({ holder: "u-share-d", sessionId: "s-share-d" });
+    const { shareToken } = (await request(app).post(`/v1/certificates/${c.certNo}/share`).expect(200)).body;
+    await request(app).get(`/v1/shared/${shareToken}`).expect(200);
+    await request(app).delete(`/v1/certificates/${c.certNo}/share`).expect(200);
+    await request(app).get(`/v1/shared/${shareToken}`).expect(404); // link no longer resolves
+    const status = await request(app).get(`/v1/certificates/${c.certNo}/share`).expect(200);
+    expect(status.body.shareToken).toBeNull();
+  });
+
+  it("serves a public Open-Badge JSON assertion by certNo (CORS-open)", async () => {
+    const c = await mint({ holder: "u-badge", sessionId: "s-badge" });
+    const res = await request(app).get(`/v1/verify/${c.certNo}/badge.json`).expect(200);
+    expect(res.headers["access-control-allow-origin"]).toBe("*");
+    expect(res.body["@context"]).toBe("https://w3id.org/openbadges/v2");
+    expect(res.body.certNo).toBe(c.certNo);
+    expect(res.body.status).toBe("valid");
+    expect(res.body.verification.type).toBe("HostedBadge");
+  });
+
+  it("badge assertion reflects revoked status and unknown for a bad certNo", async () => {
+    const c = await mint({ holder: "u-badge-rev", sessionId: "s-badge-rev" });
+    await request(app).post(`/v1/certificates/${c.certNo}/revoke`).send({ reason: "err" }).expect(200);
+    const res = await request(app).get(`/v1/verify/${c.certNo}/badge.json`).expect(200);
+    expect(res.body.status).toBe("revoked");
+    const unknown = await request(app).get(`/v1/verify/AA-2099-999999/badge.json`).expect(200);
+    expect(unknown.body.status).toBe("unknown");
+  });
+
+  it("404s share ops on an unknown certificate", async () => {
+    await request(app).post("/v1/certificates/AA-2099-000000/share").expect(404);
+    await request(app).delete("/v1/certificates/AA-2099-000000/share").expect(404);
+    await request(app).get("/v1/certificates/AA-2099-000000/share").expect(404);
   });
 });
 

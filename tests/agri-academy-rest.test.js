@@ -300,6 +300,53 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     expect(verify.body.status).toBe("valid");
   });
 
+  it("bookmarks: add / list (resolved) / remove through the bridge, auth required", async () => {
+    // Auth required.
+    await request(app).get("/api/v1/agri-academy/bookmarks").expect(401);
+
+    const add = await request(app).put("/api/v1/agri-academy/bookmarks/pesticide-basics").set("token", token).expect(200);
+    expect(add.body.bookmarks).toContain("pesticide-basics");
+
+    const list = await request(app).get("/api/v1/agri-academy/bookmarks").set("token", token).expect(200);
+    const card = list.body.bookmarks.find((b) => b.examId === "pesticide-basics");
+    expect(card).toBeTruthy();
+    expect(card.available).toBe(true);
+    expect(card.title).toBeTruthy();
+
+    const remove = await request(app).delete("/api/v1/agri-academy/bookmarks/pesticide-basics").set("token", token).expect(200);
+    expect(remove.body.bookmarks).not.toContain("pesticide-basics");
+  });
+
+  it("shareable certificate: private by default, holder shares a public link + Open-Badge", async () => {
+    const certs = await request(app).get("/api/v1/agri-academy/certificates").set("token", token).expect(200);
+    const certNo = certs.body.certificates[0].certNo;
+
+    // Private detail is holder-only.
+    const mine = await request(app).get(`/api/v1/agri-academy/certificates/${certNo}`).set("token", token).expect(200);
+    expect(mine.body.certNo).toBe(certNo);
+    expect(mine.body.shared).toBe(false);
+    const otherToken = tokenHelpers.generateToken("aa-not-the-holder");
+    await request(app).get(`/api/v1/agri-academy/certificates/${certNo}`).set("token", otherToken).expect(403);
+
+    // Holder generates a public share link.
+    const shared = await request(app).post(`/api/v1/agri-academy/certificates/${certNo}/share`).set("token", token).expect(200);
+    const shareToken = shared.body.shareToken;
+    expect(shareToken).toMatch(/^[a-f0-9]{32}$/);
+
+    // Anyone (unauthenticated) can resolve the share link → rich view + Open-Badge.
+    const pub = await request(app).get(`/api/v1/agri-academy/shared/${shareToken}`).expect(200);
+    expect(pub.body.certNo).toBe(certNo);
+    expect(pub.body.shared).toBe(true);
+    expect(pub.body.openBadge["@context"]).toBe("https://w3id.org/openbadges/v2");
+
+    // A non-holder cannot share/unshare.
+    await request(app).post(`/api/v1/agri-academy/certificates/${certNo}/share`).set("token", otherToken).expect(403);
+
+    // Revoke the link → it stops resolving publicly.
+    await request(app).delete(`/api/v1/agri-academy/certificates/${certNo}/share`).set("token", token).expect(200);
+    await request(app).get(`/api/v1/agri-academy/shared/${shareToken}`).expect(404);
+  });
+
   it("a disabled exam — and every exam of a disabled unit — cannot be enrolled or seen in the catalog", async () => {
     const ownerToken = tokenHelpers.generateToken("aa-toggle-owner");
     const takerToken = tokenHelpers.generateToken("aa-toggle-taker");
