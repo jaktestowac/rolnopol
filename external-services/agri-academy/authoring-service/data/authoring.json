@@ -105,6 +105,8 @@
       "attemptsAllowed": 3,
       "certValidMonths": 24,
       "certTemplate": "botanical",
+      "difficulty": "beginner",
+      "category": "Crop Protection",
       "pricing": {
         "mode": "free",
         "priceRol": 0
@@ -125,6 +127,8 @@
       "attemptsAllowed": 3,
       "certValidMonths": 24,
       "certTemplate": "gold-formal",
+      "difficulty": "intermediate",
+      "category": "Machinery",
       "pricing": {
         "mode": "free",
         "priceRol": 0
@@ -145,6 +149,8 @@
       "attemptsAllowed": 3,
       "certValidMonths": 24,
       "certTemplate": "classic-green",
+      "difficulty": "beginner",
+      "category": "Safety",
       "pricing": {
         "mode": "free",
         "priceRol": 0
@@ -165,6 +171,8 @@
       "attemptsAllowed": 3,
       "certValidMonths": 24,
       "certTemplate": "botanical",
+      "difficulty": "beginner",
+      "category": "Soil & Nutrients",
       "pricing": {
         "mode": "free",
         "priceRol": 0
@@ -185,6 +193,8 @@
       "attemptsAllowed": 2,
       "certValidMonths": 36,
       "certTemplate": "classic-green",
+      "difficulty": "advanced",
+      "category": "Organic Production",
       "pricing": {
         "mode": "paid",
         "priceRol": 25
@@ -205,6 +215,8 @@
       "attemptsAllowed": 3,
       "certValidMonths": 24,
       "certTemplate": "rustic-kraft",
+      "difficulty": "intermediate",
+      "category": "Machinery",
       "pricing": {
         "mode": "paid",
         "priceRol": 40
@@ -225,6 +237,8 @@
       "attemptsAllowed": 3,
       "certValidMonths": 18,
       "certTemplate": "slate-minimal",
+      "difficulty": "beginner",
+      "category": "Machinery",
       "pricing": {
         "mode": "free",
         "priceRol": 0
@@ -245,6 +259,8 @@
       "attemptsAllowed": 3,
       "certValidMonths": 24,
       "certTemplate": "modern-teal",
+      "difficulty": "intermediate",
+      "category": "Livestock",
       "pricing": {
         "mode": "paid",
         "priceRol": 30
@@ -265,6 +281,8 @@
       "attemptsAllowed": 3,
       "certValidMonths": 18,
       "certTemplate": "midnight",
+      "difficulty": "beginner",
+      "category": "Livestock",
       "pricing": {
         "mode": "free",
         "priceRol": 0
@@ -285,6 +303,8 @@
       "attemptsAllowed": 3,
       "certValidMonths": 24,
       "certTemplate": "sunrise",
+      "difficulty": "beginner",
+      "category": "Horticulture",
       "pricing": {
         "mode": "free",
         "priceRol": 0
@@ -305,6 +325,8 @@
       "attemptsAllowed": 2,
       "certValidMonths": 24,
       "certTemplate": "royal-purple",
+      "difficulty": "advanced",
+      "category": "Horticulture",
       "pricing": {
         "mode": "paid",
         "priceRol": 20

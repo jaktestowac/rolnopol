@@ -1631,11 +1631,7 @@
         "errorInjection": {
           "enabled": true,
           "probability": 0.06,
-          "statusCodes": [
-            500,
-            502,
-            503
-          ],
+          "statusCodes": [500, 502, 503],
           "randomStatus": false,
           "message": "[Chaos Engine] Injected a synthetic backend error."
         },
@@ -1649,21 +1645,8 @@
           "targetUrl": ""
         },
         "scope": {
-          "methods": [
-            "GET",
-            "POST",
-            "PUT",
-            "PATCH",
-            "DELETE"
-          ],
-          "excludePaths": [
-            "/v1/chaos-engine*",
-            "/v1/healthcheck",
-            "/version",
-            "/metrics",
-            "/admin",
-            "/feature-flags"
-          ],
+          "methods": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+          "excludePaths": ["/v1/chaos-engine*", "/v1/healthcheck", "/version", "/metrics", "/admin", "/feature-flags"],
           "includePaths": [],
           "queryParams": {},
           "headers": {},
@@ -1811,11 +1794,7 @@
         "title": "My Voyage Blog",
         "slug": "my-voyage-blog",
         "visibility": "public",
-        "tags": [
-          "voyage",
-          "travel",
-          "adventure"
-        ],
+        "tags": ["voyage", "travel", "adventure"],
         "createdAt": "2026-04-11T12:12:09.916Z",
         "updatedAt": "2026-04-11T12:12:09.916Z",
         "deletedAt": null,
@@ -1827,11 +1806,7 @@
         "title": "Test Automation and AI in Testing",
         "slug": "test-automation-and-ai-in-testing",
         "visibility": "public",
-        "tags": [
-          "test automation",
-          "quality",
-          "testers"
-        ],
+        "tags": ["test automation", "quality", "testers"],
         "createdAt": "2026-04-12T12:12:09.916Z",
         "updatedAt": "2026-04-12T12:12:09.916Z",
         "deletedAt": null,
@@ -1843,11 +1818,7 @@
         "title": "Industrial Memory and Autonomous Infrastructure",
         "slug": "industrial-memory-and-autonomous-infrastructure",
         "visibility": "public",
-        "tags": [
-          "infrastructure",
-          "automation",
-          "systems"
-        ],
+        "tags": ["infrastructure", "automation", "systems"],
         "createdAt": "2026-04-21T09:42:17.204Z",
         "updatedAt": "2026-04-21T09:42:17.204Z",
         "deletedAt": null,
@@ -2136,11 +2107,7 @@
           "capacity": 4,
           "basePrice": 120,
           "policy": "moderate",
-          "amenities": [
-            "kitchen",
-            "fireplace",
-            "parking"
-          ],
+          "amenities": ["kitchen", "fireplace", "parking"],
           "photoRef": "forest",
           "active": true
         },
@@ -2153,10 +2120,7 @@
           "capacity": 2,
           "basePrice": 60,
           "policy": "flexible",
-          "amenities": [
-            "breakfast",
-            "wifi"
-          ],
+          "amenities": ["breakfast", "wifi"],
           "photoRef": "meadow",
           "active": true
         },
@@ -2169,11 +2133,7 @@
           "capacity": 6,
           "basePrice": 35,
           "policy": "strict",
-          "amenities": [
-            "firepit",
-            "water",
-            "kayaks"
-          ],
+          "amenities": ["firepit", "water", "kayaks"],
           "photoRef": "lakeside",
           "active": true
         },
@@ -2186,11 +2146,7 @@
           "capacity": 3,
           "basePrice": 95,
           "policy": "moderate",
-          "amenities": [
-            "wifi",
-            "parking",
-            "animals"
-          ],
+          "amenities": ["wifi", "parking", "animals"],
           "photoRef": "barn",
           "active": true
         },
@@ -2203,12 +2159,7 @@
           "capacity": 5,
           "basePrice": 155,
           "policy": "moderate",
-          "amenities": [
-            "kitchen",
-            "wifi",
-            "garden",
-            "parking"
-          ],
+          "amenities": ["kitchen", "wifi", "garden", "parking"],
           "photoRef": "meadow",
           "active": true
         },
@@ -2221,12 +2172,7 @@
           "capacity": 6,
           "basePrice": 175,
           "policy": "moderate",
-          "amenities": [
-            "fireplace",
-            "kayaks",
-            "fishing",
-            "parking"
-          ],
+          "amenities": ["fireplace", "kayaks", "fishing", "parking"],
           "photoRef": "lakeside",
           "active": true
         },
@@ -2239,11 +2185,7 @@
           "capacity": 2,
           "basePrice": 110,
           "policy": "flexible",
-          "amenities": [
-            "breakfast",
-            "wifi",
-            "spa"
-          ],
+          "amenities": ["breakfast", "wifi", "spa"],
           "photoRef": "vineyard",
           "active": true
         },
@@ -2256,12 +2198,7 @@
           "capacity": 8,
           "basePrice": 45,
           "policy": "strict",
-          "amenities": [
-            "firepit",
-            "beach-access",
-            "water",
-            "shower"
-          ],
+          "amenities": ["firepit", "beach-access", "water", "shower"],
           "photoRef": "lakeside",
           "active": true
         },
@@ -2274,12 +2211,7 @@
           "capacity": 2,
           "basePrice": 130,
           "policy": "flexible",
-          "amenities": [
-            "wifi",
-            "gym",
-            "parking",
-            "breakfast"
-          ],
+          "amenities": ["wifi", "gym", "parking", "breakfast"],
           "photoRef": "orchard",
           "active": true
         },
@@ -2292,13 +2224,7 @@
           "capacity": 8,
           "basePrice": 195,
           "policy": "moderate",
-          "amenities": [
-            "kitchen",
-            "fireplace",
-            "garden",
-            "animals",
-            "parking"
-          ],
+          "amenities": ["kitchen", "fireplace", "garden", "animals", "parking"],
           "photoRef": "barn",
           "active": true
         },
@@ -2311,11 +2237,7 @@
           "capacity": 4,
           "basePrice": 30,
           "policy": "strict",
-          "amenities": [
-            "firepit",
-            "mountain-views",
-            "water"
-          ],
+          "amenities": ["firepit", "mountain-views", "water"],
           "photoRef": "forest",
           "active": true
         },
@@ -2328,12 +2250,7 @@
           "capacity": 3,
           "basePrice": 85,
           "policy": "moderate",
-          "amenities": [
-            "breakfast",
-            "garden",
-            "wifi",
-            "parking"
-          ],
+          "amenities": ["breakfast", "garden", "wifi", "parking"],
           "photoRef": "orchard",
           "active": true
         },
@@ -2346,12 +2263,7 @@
           "capacity": 4,
           "basePrice": 140,
           "policy": "moderate",
-          "amenities": [
-            "kitchen",
-            "wine-cellar",
-            "garden",
-            "parking"
-          ],
+          "amenities": ["kitchen", "wine-cellar", "garden", "parking"],
           "photoRef": "vineyard",
           "active": true
         },
@@ -2364,11 +2276,7 @@
           "capacity": 2,
           "basePrice": 75,
           "policy": "flexible",
-          "amenities": [
-            "breakfast",
-            "wifi",
-            "garden"
-          ],
+          "amenities": ["breakfast", "wifi", "garden"],
           "photoRef": "orchard",
           "active": true
         },
@@ -2381,11 +2289,7 @@
           "capacity": 2,
           "basePrice": 90,
           "policy": "strict",
-          "amenities": [
-            "fireplace",
-            "mountain-views",
-            "animals"
-          ],
+          "amenities": ["fireplace", "mountain-views", "animals"],
           "photoRef": "mountain",
           "active": true
         },
@@ -2398,13 +2302,7 @@
           "capacity": 5,
           "basePrice": 165,
           "policy": "moderate",
-          "amenities": [
-            "kitchen",
-            "fireplace",
-            "animals",
-            "parking",
-            "terrace"
-          ],
+          "amenities": ["kitchen", "fireplace", "animals", "parking", "terrace"],
           "photoRef": "forest",
           "active": true
         },
@@ -2417,12 +2315,7 @@
           "capacity": 2,
           "basePrice": 145,
           "policy": "flexible",
-          "amenities": [
-            "wifi",
-            "beach-access",
-            "breakfast",
-            "shower"
-          ],
+          "amenities": ["wifi", "beach-access", "breakfast", "shower"],
           "photoRef": "lakeside",
           "active": true
         },
@@ -2435,11 +2328,7 @@
           "capacity": 4,
           "basePrice": 38,
           "policy": "strict",
-          "amenities": [
-            "firepit",
-            "water",
-            "animals"
-          ],
+          "amenities": ["firepit", "water", "animals"],
           "photoRef": "meadow",
           "active": true
         },
@@ -2452,13 +2341,7 @@
           "capacity": 6,
           "basePrice": 180,
           "policy": "moderate",
-          "amenities": [
-            "kitchen",
-            "wine-cellar",
-            "terrace",
-            "garden",
-            "parking"
-          ],
+          "amenities": ["kitchen", "wine-cellar", "terrace", "garden", "parking"],
           "photoRef": "vineyard",
           "active": true
         },
@@ -2471,12 +2354,7 @@
           "capacity": 3,
           "basePrice": 160,
           "policy": "flexible",
-          "amenities": [
-            "breakfast",
-            "wifi",
-            "spa",
-            "mountain-views"
-          ],
+          "amenities": ["breakfast", "wifi", "spa", "mountain-views"],
           "photoRef": "mountain",
           "active": true
         },
@@ -2489,12 +2367,7 @@
           "capacity": 6,
           "basePrice": 42,
           "policy": "moderate",
-          "amenities": [
-            "firepit",
-            "kayaks",
-            "fishing",
-            "water"
-          ],
+          "amenities": ["firepit", "kayaks", "fishing", "water"],
           "photoRef": "lakeside",
           "active": true
         }
@@ -3211,11 +3084,7 @@
           "name": "Rolnopol Demo Certification Unit",
           "description": "A built-in demo unit showcasing free farm-skill certifications. Register your own unit to author exams.",
           "contactEmail": "demo@agri-academy.example",
-          "tags": [
-            "pesticides",
-            "tractors",
-            "safety"
-          ],
+          "tags": ["pesticides", "tractors", "safety"],
           "color": "#3fae6b",
           "icon": "wheat-awn",
           "payoutUserId": "demo-owner",
@@ -3228,12 +3097,7 @@
           "name": "Green Acres Training Co-op",
           "description": "Farmer-led co-operative delivering practical certifications in soil health, nutrient management, and organic production.",
           "contactEmail": "training@greenacres.coop",
-          "tags": [
-            "soil",
-            "crops",
-            "organic",
-            "nutrients"
-          ],
+          "tags": ["soil", "crops", "organic", "nutrients"],
           "color": "#2e8f55",
           "icon": "seedling",
           "payoutUserId": "2",
@@ -3246,12 +3110,7 @@
           "name": "Ironfield Machinery School",
           "description": "Hands-on operator training and safety certification for tractors, combines, and powered farm equipment.",
           "contactEmail": "enrol@ironfield-machinery.example",
-          "tags": [
-            "machinery",
-            "tractors",
-            "safety",
-            "maintenance"
-          ],
+          "tags": ["machinery", "tractors", "safety", "maintenance"],
           "color": "#c9743a",
           "icon": "tractor",
           "payoutUserId": "3",
@@ -3264,12 +3123,7 @@
           "name": "Meadowbrook Livestock & Welfare",
           "description": "Animal-welfare and husbandry certifications for dairy, beef, and mixed livestock holdings.",
           "contactEmail": "welfare@meadowbrook.example",
-          "tags": [
-            "livestock",
-            "dairy",
-            "welfare",
-            "animals"
-          ],
+          "tags": ["livestock", "dairy", "welfare", "animals"],
           "color": "#4a90d9",
           "icon": "cow",
           "payoutUserId": "4",
@@ -3282,12 +3136,7 @@
           "name": "Orchard & Vine Guild",
           "description": "Horticulture certifications covering fruit-tree management, pruning, and vineyard pest control.",
           "contactEmail": "guild@orchardandvine.example",
-          "tags": [
-            "orchard",
-            "vineyard",
-            "pruning",
-            "horticulture"
-          ],
+          "tags": ["orchard", "vineyard", "pruning", "horticulture"],
           "color": "#8b5cf6",
           "icon": "apple-whole",
           "payoutUserId": "5",
@@ -3308,6 +3157,8 @@
           "attemptsAllowed": 3,
           "certValidMonths": 24,
           "certTemplate": "botanical",
+          "difficulty": "beginner",
+          "category": "Crop Protection",
           "pricing": {
             "mode": "free",
             "priceRol": 0
@@ -3328,6 +3179,8 @@
           "attemptsAllowed": 3,
           "certValidMonths": 24,
           "certTemplate": "gold-formal",
+          "difficulty": "intermediate",
+          "category": "Machinery",
           "pricing": {
             "mode": "free",
             "priceRol": 0
@@ -3348,6 +3201,8 @@
           "attemptsAllowed": 3,
           "certValidMonths": 24,
           "certTemplate": "classic-green",
+          "difficulty": "beginner",
+          "category": "Safety",
           "pricing": {
             "mode": "free",
             "priceRol": 0
@@ -3368,6 +3223,8 @@
           "attemptsAllowed": 3,
           "certValidMonths": 24,
           "certTemplate": "botanical",
+          "difficulty": "beginner",
+          "category": "Soil & Nutrients",
           "pricing": {
             "mode": "free",
             "priceRol": 0
@@ -3388,6 +3245,8 @@
           "attemptsAllowed": 2,
           "certValidMonths": 36,
           "certTemplate": "classic-green",
+          "difficulty": "advanced",
+          "category": "Organic Production",
           "pricing": {
             "mode": "paid",
             "priceRol": 25
@@ -3408,6 +3267,8 @@
           "attemptsAllowed": 3,
           "certValidMonths": 24,
           "certTemplate": "rustic-kraft",
+          "difficulty": "intermediate",
+          "category": "Machinery",
           "pricing": {
             "mode": "paid",
             "priceRol": 40
@@ -3428,6 +3289,8 @@
           "attemptsAllowed": 3,
           "certValidMonths": 18,
           "certTemplate": "slate-minimal",
+          "difficulty": "beginner",
+          "category": "Machinery",
           "pricing": {
             "mode": "free",
             "priceRol": 0
@@ -3448,6 +3311,8 @@
           "attemptsAllowed": 3,
           "certValidMonths": 24,
           "certTemplate": "modern-teal",
+          "difficulty": "intermediate",
+          "category": "Livestock",
           "pricing": {
             "mode": "paid",
             "priceRol": 30
@@ -3468,6 +3333,8 @@
           "attemptsAllowed": 3,
           "certValidMonths": 18,
           "certTemplate": "midnight",
+          "difficulty": "beginner",
+          "category": "Livestock",
           "pricing": {
             "mode": "free",
             "priceRol": 0
@@ -3488,6 +3355,8 @@
           "attemptsAllowed": 3,
           "certValidMonths": 24,
           "certTemplate": "sunrise",
+          "difficulty": "beginner",
+          "category": "Horticulture",
           "pricing": {
             "mode": "free",
             "priceRol": 0
@@ -3508,6 +3377,8 @@
           "attemptsAllowed": 2,
           "certValidMonths": 24,
           "certTemplate": "royal-purple",
+          "difficulty": "advanced",
+          "category": "Horticulture",
           "pricing": {
             "mode": "paid",
             "priceRol": 20
@@ -3549,22 +3420,12 @@
               "seed": "seed-3exam-9",
               "answers": {
                 "e9-q1": "a",
-                "e9-q2": [
-                  "a",
-                  "b",
-                  "c"
-                ],
+                "e9-q2": ["a", "b", "c"],
                 "e9-q3": "a",
-                "e9-q4": [
-                  "a",
-                  "b",
-                  "c"
-                ],
+                "e9-q4": ["a", "b", "c"],
                 "e9-q5": "a",
                 "e9-q6": "a",
-                "e9-q7": [
-                  "d"
-                ]
+                "e9-q7": ["d"]
               },
               "questions": [
                 {
@@ -3589,9 +3450,7 @@
                       "text": "Chasing at speed"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -3616,11 +3475,7 @@
                       "text": "Freedom from ever being weighed"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "c"
-                  ],
+                  "correct": ["a", "b", "c"],
                   "weight": 1
                 },
                 {
@@ -3645,9 +3500,7 @@
                       "text": "Releasing it to roam"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -3672,11 +3525,7 @@
                       "text": "A shiny ear tag"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "c"
-                  ],
+                  "correct": ["a", "b", "c"],
                   "weight": 1
                 },
                 {
@@ -3701,9 +3550,7 @@
                       "text": "Face directly into the sun"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -3728,9 +3575,7 @@
                       "text": "Optional"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -3755,11 +3600,7 @@
                       "text": "The colour of the driver's hat"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "c"
-                  ],
+                  "correct": ["a", "b", "c"],
                   "weight": 1
                 }
               ],
@@ -3895,17 +3736,9 @@
               "answers": {
                 "e5-q1": "a",
                 "e5-q2": "a",
-                "e5-q3": [
-                  "a",
-                  "b",
-                  "d"
-                ],
+                "e5-q3": ["a", "b", "d"],
                 "e5-q4": "a",
-                "e5-q5": [
-                  "a",
-                  "b",
-                  "c"
-                ],
+                "e5-q5": ["a", "b", "c"],
                 "e5-q6": "b"
               },
               "questions": [
@@ -3931,9 +3764,7 @@
                       "text": "Wind speed"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -3958,9 +3789,7 @@
                       "text": "It has no effect"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -3985,11 +3814,7 @@
                       "text": "Returning crop residues"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "d"
-                  ],
+                  "correct": ["a", "b", "d"],
                   "weight": 1
                 },
                 {
@@ -4014,9 +3839,7 @@
                       "text": "Not measurable"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -4041,11 +3864,7 @@
                       "text": "Neon"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "c"
-                  ],
+                  "correct": ["a", "b", "c"],
                   "weight": 1
                 },
                 {
@@ -4070,9 +3889,7 @@
                       "text": "Skip the growing season"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 }
               ],
@@ -4162,18 +3979,10 @@
               "seed": "seed-2exam-8",
               "answers": {
                 "e8-q1": "a",
-                "e8-q2": [
-                  "a",
-                  "b",
-                  "c"
-                ],
+                "e8-q2": ["a", "b", "c"],
                 "e8-q3": "a",
                 "e8-q4": "a",
-                "e8-q5": [
-                  "a",
-                  "c",
-                  "d"
-                ],
+                "e8-q5": ["a", "c", "d"],
                 "e8-q6": "a"
               },
               "questions": [
@@ -4199,9 +4008,7 @@
                       "text": "While driving"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -4226,11 +4033,7 @@
                       "text": "Repainting the seat"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "c"
-                  ],
+                  "correct": ["a", "b", "c"],
                   "weight": 1
                 },
                 {
@@ -4255,9 +4058,7 @@
                       "text": "Never, to save grease"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -4282,9 +4083,7 @@
                       "text": "Nothing"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -4309,11 +4108,7 @@
                       "text": "Chock the wheels"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "c",
-                    "d"
-                  ],
+                  "correct": ["a", "c", "d"],
                   "weight": 1
                 },
                 {
@@ -4338,9 +4133,7 @@
                       "text": "Nothing measurable"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 }
               ],
@@ -4422,18 +4215,10 @@
               "seed": "seed-6exam-10",
               "answers": {
                 "e10-q1": "a",
-                "e10-q2": [
-                  "a",
-                  "b",
-                  "c"
-                ],
+                "e10-q2": ["a", "b", "c"],
                 "e10-q3": "a",
                 "e10-q4": "a",
-                "e10-q5": [
-                  "a",
-                  "b",
-                  "c"
-                ],
+                "e10-q5": ["a", "b", "c"],
                 "e10-q6": "a"
               },
               "questions": [
@@ -4459,9 +4244,7 @@
                       "text": "Ignored"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -4486,11 +4269,7 @@
                       "text": "Skipping all cleaning to save time"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "c"
-                  ],
+                  "correct": ["a", "b", "c"],
                   "weight": 1
                 },
                 {
@@ -4515,9 +4294,7 @@
                       "text": "Warm the parlour"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -4542,9 +4319,7 @@
                       "text": "Nothing at all"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -4569,11 +4344,7 @@
                       "text": "Milk as the only cleaner"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "c"
-                  ],
+                  "correct": ["a", "b", "c"],
                   "weight": 1
                 },
                 {
@@ -4598,9 +4369,7 @@
                       "text": "However is convenient"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 }
               ],
@@ -4691,14 +4460,10 @@
               "seed": "seed-4exam-11",
               "answers": {
                 "e11-q1": "a",
-                "e11-q2": [
-                  "d"
-                ],
+                "e11-q2": ["d"],
                 "e11-q3": "d",
                 "e11-q4": "d",
-                "e11-q5": [
-                  "d"
-                ]
+                "e11-q5": ["d"]
               },
               "questions": [
                 {
@@ -4723,9 +4488,7 @@
                       "text": "Damage the tree"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -4750,11 +4513,7 @@
                       "text": "Water shoots and suckers"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "d"
-                  ],
+                  "correct": ["a", "b", "d"],
                   "weight": 1
                 },
                 {
@@ -4779,9 +4538,7 @@
                       "text": "Never"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -4806,9 +4563,7 @@
                       "text": "Anywhere at random"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -4833,11 +4588,7 @@
                       "text": "Tearing branches by hand"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "c"
-                  ],
+                  "correct": ["a", "b", "c"],
                   "weight": 1
                 }
               ],
@@ -4960,18 +4711,10 @@
               "seed": "seed-5exam-7",
               "answers": {
                 "e7-q1": "a",
-                "e7-q2": [
-                  "a",
-                  "b",
-                  "c"
-                ],
+                "e7-q2": ["a", "b", "c"],
                 "e7-q3": "a",
                 "e7-q4": "a",
-                "e7-q5": [
-                  "a",
-                  "b",
-                  "d"
-                ],
+                "e7-q5": ["a", "b", "d"],
                 "e7-q6": "a",
                 "e7-q7": "b"
               },
@@ -4998,9 +4741,7 @@
                       "text": "Whatever is fastest"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -5025,11 +4766,7 @@
                       "text": "Radio station tuned"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "c"
-                  ],
+                  "correct": ["a", "b", "c"],
                   "weight": 1
                 },
                 {
@@ -5054,9 +4791,7 @@
                       "text": "Nothing adjustable"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -5081,9 +4816,7 @@
                       "text": "Low fuel exclusively"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -5108,11 +4841,7 @@
                       "text": "Following lockout procedure"
                     }
                   ],
-                  "correct": [
-                    "a",
-                    "b",
-                    "d"
-                  ],
+                  "correct": ["a", "b", "d"],
                   "weight": 1
                 },
                 {
@@ -5137,9 +4866,7 @@
                       "text": "Have no effect"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 },
                 {
@@ -5164,9 +4891,7 @@
                       "text": "Ignore other traffic"
                     }
                   ],
-                  "correct": [
-                    "a"
-                  ],
+                  "correct": ["a"],
                   "weight": 1
                 }
               ],
@@ -5268,9 +4993,7 @@
                 "text": "Shorts"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5295,10 +5018,7 @@
                 "text": "Eat or drink while spraying"
               }
             ],
-            "correct": [
-              "a",
-              "c"
-            ],
+            "correct": ["a", "c"],
             "weight": 1
           },
           {
@@ -5323,9 +5043,7 @@
                 "text": "Loose in a car boot"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5350,10 +5068,7 @@
                 "text": "Burn them in an open pile"
               }
             ],
-            "correct": [
-              "a",
-              "c"
-            ],
+            "correct": ["a", "c"],
             "weight": 1
           },
           {
@@ -5378,9 +5093,7 @@
                 "text": "Never — labels are optional"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5405,9 +5118,7 @@
                 "text": "The container size"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5432,11 +5143,7 @@
                 "text": "High temperature with low humidity"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -5461,9 +5168,7 @@
                 "text": "Apply more product to neutralise it"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5488,11 +5193,7 @@
                 "text": "Showering at the end of the day"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -5517,9 +5218,7 @@
                 "text": "In the middle of the crop"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5544,11 +5243,7 @@
                 "text": "The operator's favourite colour"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -5573,9 +5268,7 @@
                 "text": "Past its expiry date"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5600,9 +5293,7 @@
                 "text": "To avoid reading the label"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5627,11 +5318,7 @@
                 "text": "Dizziness"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -5656,9 +5343,7 @@
                 "text": "Speed up drying"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5683,9 +5368,7 @@
                 "text": "Make PPE unnecessary"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           }
         ],
@@ -5712,9 +5395,7 @@
                 "text": "Disable the brakes"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5739,11 +5420,7 @@
                 "text": "Keep bystanders clear of the working area"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -5768,9 +5445,7 @@
                 "text": "Disengage the handbrake and coast"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5795,11 +5470,7 @@
                 "text": "Guards and PTO shields in place"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -5824,9 +5495,7 @@
                 "text": "Climb out over the rear linkage"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5851,11 +5520,7 @@
                 "text": "Never step over a rotating shaft"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -5880,9 +5545,7 @@
                 "text": "Encouraged for company"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5907,9 +5570,7 @@
                 "text": "Turn sharply downhill"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5934,11 +5595,7 @@
                 "text": "Keep others clear while hitching"
               }
             ],
-            "correct": [
-              "a",
-              "c",
-              "d"
-            ],
+            "correct": ["a", "c", "d"],
             "weight": 1
           },
           {
@@ -5963,9 +5620,7 @@
                 "text": "Leave the key in for the next person"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -5990,11 +5645,7 @@
                 "text": "Ensure the brakes are balanced"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -6019,9 +5670,7 @@
                 "text": "Only the paintwork"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6046,9 +5695,7 @@
                 "text": "Is about to stop permanently"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6073,11 +5720,7 @@
                 "text": "Use a spotter when reversing"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -6102,9 +5745,7 @@
                 "text": "Parking on a slope"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6129,9 +5770,7 @@
                 "text": "In a sealed shed with no ventilation"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           }
         ],
@@ -6158,9 +5797,7 @@
                 "text": "Disable the brakes"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6185,11 +5822,7 @@
                 "text": "Report and fix hazards promptly"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           }
         ],
@@ -6216,9 +5849,7 @@
                 "text": "Wind speed"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6243,9 +5874,7 @@
                 "text": "It has no effect"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6270,11 +5899,7 @@
                 "text": "Returning crop residues"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -6299,9 +5924,7 @@
                 "text": "Not measurable"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6326,11 +5949,7 @@
                 "text": "Neon"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -6355,9 +5974,7 @@
                 "text": "Skip the growing season"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6382,9 +5999,7 @@
                 "text": "Seed colour"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6409,11 +6024,7 @@
                 "text": "Matching rate to crop demand"
               }
             ],
-            "correct": [
-              "a",
-              "c",
-              "d"
-            ],
+            "correct": ["a", "c", "d"],
             "weight": 1
           }
         ],
@@ -6440,9 +6051,7 @@
                 "text": "Only used indoors"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6467,9 +6076,7 @@
                 "text": "Raise prices instantly"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6494,11 +6101,7 @@
                 "text": "Staff lunch preferences"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -6523,9 +6126,7 @@
                 "text": "Salting the whole field"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6550,11 +6151,7 @@
                 "text": "Untested industrial sludge"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -6579,9 +6176,7 @@
                 "text": "Grow more weeds"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6606,9 +6201,7 @@
                 "text": "Once a decade"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6633,11 +6226,7 @@
                 "text": "Eliminate the need for any planning"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -6662,9 +6251,7 @@
                 "text": "Only allowed at night"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6689,9 +6276,7 @@
                 "text": "Ignored"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           }
         ],
@@ -6718,9 +6303,7 @@
                 "text": "Whatever is fastest"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6745,11 +6328,7 @@
                 "text": "Radio station tuned"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -6774,9 +6353,7 @@
                 "text": "Nothing adjustable"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6801,9 +6378,7 @@
                 "text": "Low fuel exclusively"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6828,11 +6403,7 @@
                 "text": "Following lockout procedure"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -6857,9 +6428,7 @@
                 "text": "Have no effect"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6884,9 +6453,7 @@
                 "text": "Ignore other traffic"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6911,11 +6478,7 @@
                 "text": "Excess straw breakup"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           }
         ],
@@ -6942,9 +6505,7 @@
                 "text": "While driving"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -6969,11 +6530,7 @@
                 "text": "Repainting the seat"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -6998,9 +6555,7 @@
                 "text": "Never, to save grease"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7025,9 +6580,7 @@
                 "text": "Nothing"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7052,11 +6605,7 @@
                 "text": "Chock the wheels"
               }
             ],
-            "correct": [
-              "a",
-              "c",
-              "d"
-            ],
+            "correct": ["a", "c", "d"],
             "weight": 1
           },
           {
@@ -7081,9 +6630,7 @@
                 "text": "Nothing measurable"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7108,9 +6655,7 @@
                 "text": "No change at all"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7135,11 +6680,7 @@
                 "text": "Predict the weather"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           }
         ],
@@ -7166,9 +6707,7 @@
                 "text": "Chasing at speed"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7193,11 +6732,7 @@
                 "text": "Freedom from ever being weighed"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -7222,9 +6757,7 @@
                 "text": "Releasing it to roam"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7249,11 +6782,7 @@
                 "text": "A shiny ear tag"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -7278,9 +6807,7 @@
                 "text": "Face directly into the sun"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7305,9 +6832,7 @@
                 "text": "Optional"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7332,11 +6857,7 @@
                 "text": "The colour of the driver's hat"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           }
         ],
@@ -7363,9 +6884,7 @@
                 "text": "Ignored"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7390,11 +6909,7 @@
                 "text": "Skipping all cleaning to save time"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -7419,9 +6934,7 @@
                 "text": "Warm the parlour"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7446,9 +6959,7 @@
                 "text": "Nothing at all"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7473,11 +6984,7 @@
                 "text": "Milk as the only cleaner"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -7502,9 +7009,7 @@
                 "text": "However is convenient"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           }
         ],
@@ -7531,9 +7036,7 @@
                 "text": "Damage the tree"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7558,11 +7061,7 @@
                 "text": "Water shoots and suckers"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "d"
-            ],
+            "correct": ["a", "b", "d"],
             "weight": 1
           },
           {
@@ -7587,9 +7086,7 @@
                 "text": "Never"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7614,9 +7111,7 @@
                 "text": "Anywhere at random"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7641,11 +7136,7 @@
                 "text": "Tearing branches by hand"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           }
         ],
@@ -7672,9 +7163,7 @@
                 "text": "Only chemical control"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7699,9 +7188,7 @@
                 "text": "No visible sign"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7726,11 +7213,7 @@
                 "text": "Leaving the canopy as dense as possible"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -7755,9 +7238,7 @@
                 "text": "Avoid all decisions"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           },
           {
@@ -7782,11 +7263,7 @@
                 "text": "Spray in strong wind for wider coverage"
               }
             ],
-            "correct": [
-              "a",
-              "b",
-              "c"
-            ],
+            "correct": ["a", "b", "c"],
             "weight": 1
           },
           {
@@ -7811,9 +7288,7 @@
                 "text": "Do nothing useful"
               }
             ],
-            "correct": [
-              "a"
-            ],
+            "correct": ["a"],
             "weight": 1
           }
         ]
