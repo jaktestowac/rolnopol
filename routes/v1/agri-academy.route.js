@@ -214,6 +214,11 @@ router.use("/agri-academy", gate, apiLimiter, authenticateSessionUser);
 router.get("/agri-academy/health", (req, res) => proxy(res, examCenter.healthAll()));
 
 router.get("/agri-academy/exams", (req, res) => proxy(res, examCenter.listExams(userOf(req))));
+// Popular / trending row — ranked by enrollment count (registered before `/:examId`
+// so "popular" isn't matched as an exam id).
+router.get("/agri-academy/exams/popular", (req, res) =>
+  proxy(res, examCenter.listPopularExams(userOf(req), { windowDays: req.query.windowDays, limit: req.query.limit })),
+);
 router.get("/agri-academy/exams/:examId", (req, res) => proxy(res, examCenter.getExam(userOf(req), req.params.examId)));
 
 // The caller's own sessions (enrolled / in-progress / completed) for the "My exams" tab.

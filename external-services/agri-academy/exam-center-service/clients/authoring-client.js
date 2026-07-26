@@ -43,4 +43,8 @@ module.exports = {
   listPublicUnits: () => get("/v1/public/units"),
   // Identity-scoped: the caller's own unit (used for revoke ownership checks).
   getMyUnit: (userId) => get("/v1/units/me", { userId }),
+  // Identity-scoped: the caller's own exam def, including drafts (used by the
+  // owner "preview as taker" dry-run). Authoring enforces ownership: a non-owner
+  // gets 403, an unknown exam 404.
+  getOwnedExam: (id, userId) => get(`/v1/exams/${encodeURIComponent(id)}`, { userId }),
 };

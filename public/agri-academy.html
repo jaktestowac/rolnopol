@@ -363,6 +363,12 @@
 
       <div id="banner" class="banner hidden"></div>
 
+      <!-- Popular / trending row — ranked by enrollments over the last 30 days -->
+      <section id="popular" class="hidden" style="margin-bottom: 28px">
+        <h2 style="font-size: 18px">🔥 Popular this month</h2>
+        <div id="popularRow" class="grid"></div>
+      </section>
+
       <!-- Catalog view -->
       <section id="catalog">
         <div id="filterBar" class="filter-bar hidden">
@@ -578,6 +584,50 @@
             paintBookmarkBtn(b.getAttribute("data-bookmark"), b);
             b.addEventListener("click", () => toggleBookmark(b.getAttribute("data-bookmark"), b));
           });
+        }
+
+        // ── Popular / trending row ───────────────────────────────────────────────────
+        // Read-only social-proof row (top exams by enrollment over the last 30 days).
+        // Hidden entirely when nothing is trending yet. Reuses the enroll/preview flow.
+        async function loadPopular() {
+          const r = await api("GET", "/exams/popular");
+          const exams = r.ok && r.body ? r.body.exams || [] : [];
+          const section = $("popular");
+          if (!exams.length) {
+            section.classList.add("hidden");
+            return;
+          }
+          $("popularRow").innerHTML = exams
+            .map((e) => {
+              const paid = e.pricing && e.pricing.mode === "paid";
+              const price = paid ? `<span class="tag paid">${e.pricing.priceRol} ROL</span>` : `<span class="tag">Free</span>`;
+              const takers = Number(e.enrollments || 0);
+              return `
+              <div class="card">
+                <h3>${esc(e.title)}</h3>
+                <p>${esc(e.description || "")}</p>
+                <div class="meta">
+                  ${price}
+                  ${badges(e)}
+                  <span class="tag" title="Enrollments in the last 30 days">🔥 ${takers} enrolled</span>
+                  <span class="tag">${mins(e.durationSec)} min</span>
+                </div>
+                <div class="card-actions">
+                  <button class="btn" data-pop-enroll="${esc(e.id)}">${paid ? "Pay &amp; enroll" : "Enroll"}</button>
+                  <button class="btn btn--ghost" data-pop-preview="${esc(e.id)}">Preview</button>
+                </div>
+              </div>`;
+            })
+            .join("");
+          // Distinct attributes so these don't collide with the catalog's global
+          // [data-enroll] handler wiring (which re-runs on every filter change).
+          $("popularRow")
+            .querySelectorAll("[data-pop-enroll]")
+            .forEach((b) => b.addEventListener("click", () => enroll(b.getAttribute("data-pop-enroll"))));
+          $("popularRow")
+            .querySelectorAll("[data-pop-preview]")
+            .forEach((b) => b.addEventListener("click", () => openPreview(b.getAttribute("data-pop-preview"))));
+          section.classList.remove("hidden");
         }
 
         // ── Exam preview modal ───────────────────────────────────────────────────────
@@ -884,6 +934,7 @@
             await enroll(preselect);
           }
           await loadCatalog();
+          await loadPopular();
           await loadCerts();
         })();
       })();

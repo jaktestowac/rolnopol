@@ -53,7 +53,11 @@ module.exports = {
   health: () => call("GET", "/health"),
   healthAll: () => call("GET", "/health/all"),
   listExams: (userId) => call("GET", "/v1/exams", { userId }),
+  // Popular / trending exams row (ranked by enrollment count over a trailing window).
+  listPopularExams: (userId, { windowDays, limit } = {}) => call("GET", "/v1/exams/popular", { userId, query: { windowDays, limit } }),
   getExam: (userId, examId) => call("GET", `/v1/exams/${encodeURIComponent(examId)}`, { userId }),
+  // Owner "preview as taker" dry-run (key-stripped draw, no side effects; ownership enforced upstream).
+  previewExam: (userId, examId) => call("GET", `/v1/exams/${encodeURIComponent(examId)}/preview`, { userId }),
   // Public unit directory / profile (no identity needed).
   listUnits: () => call("GET", "/v1/units"),
   getUnit: (unitId) => call("GET", `/v1/units/${encodeURIComponent(unitId)}`),

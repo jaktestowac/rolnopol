@@ -450,6 +450,32 @@
           <h2 style="margin-top: 4px">Your exams</h2>
           <div id="examList"></div>
 
+          <!-- Preview-as-taker modal: a real key-stripped draw, no attempt/money/cert. -->
+          <div
+            id="pvOverlay"
+            class="hidden"
+            style="
+              position: fixed;
+              inset: 0;
+              background: rgba(0, 0, 0, 0.5);
+              display: flex;
+              align-items: flex-start;
+              justify-content: center;
+              padding: 40px 16px;
+              overflow: auto;
+              z-index: 50;
+            "
+          >
+            <div class="panel" style="max-width: 640px; width: 100%; margin: 0">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+                <h2 id="pvHead" style="margin: 0">Preview as taker</h2>
+                <button class="btn btn--ghost btn--sm" id="pvCloseBtn">Close</button>
+              </div>
+              <p id="pvMeta" class="sub"></p>
+              <div id="pvBody"></div>
+            </div>
+          </div>
+
           <div class="panel">
             <h2 style="margin-top: 0">Create an exam</h2>
             <label>Title</label>
@@ -702,6 +728,11 @@
         function setupTabs() {
           document.querySelectorAll("#tabs .tab").forEach((btn) => btn.addEventListener("click", () => showTab(btn.dataset.tab)));
           $("qExam").addEventListener("change", () => loadQuestionList($("qExam").value));
+          // Preview-as-taker modal dismissal (Close button + backdrop click).
+          $("pvCloseBtn").addEventListener("click", closePreviewModal);
+          $("pvOverlay").addEventListener("click", (ev) => {
+            if (ev.target === $("pvOverlay")) closePreviewModal();
+          });
         }
         function showTab(name) {
           document.querySelectorAll("#tabs .tab").forEach((b) => b.classList.toggle("is-active", b.dataset.tab === name));
@@ -940,7 +971,10 @@
                 </div>
                 <div class="exam-head" style="margin-top:8px">
                   <span class="sub">${n}/${e.questionCount} questions · pass ${e.passPct}% · ${e.pricing?.mode === "paid" ? e.pricing.priceRol + " ROL" : "free"}</span>
-                  <span style="display:flex;gap:8px">${toggleAction}${pubAction}</span>
+                  <span style="display:flex;gap:8px">
+                    <button class="btn btn--ghost btn--sm" data-preview="${esc(e.id)}" ${enough ? "" : "disabled title='Add more questions first'"}>Preview as taker</button>
+                    ${toggleAction}${pubAction}
+                  </span>
                 </div>
               </div>`;
             })
@@ -956,6 +990,44 @@
             .forEach((b) =>
               b.addEventListener("click", () => toggleExam(b.getAttribute("data-toggle"), b.getAttribute("data-on") === "1")),
             );
+          document
+            .querySelectorAll("[data-preview]")
+            .forEach((b) => b.addEventListener("click", () => previewAsTaker(b.getAttribute("data-preview"))));
+        }
+
+        // ── Preview as taker ─────────────────────────────────────────────────────────
+        // Dry-run the owner's own exam exactly as a taker sees it (real randomized draw,
+        // answer keys stripped) with no session/attempt/money/certificate side effects.
+        function closePreviewModal() {
+          $("pvOverlay").classList.add("hidden");
+          $("pvBody").innerHTML = "";
+        }
+        async function previewAsTaker(examId) {
+          $("pvHead").textContent = "Preview as taker";
+          $("pvMeta").textContent = "Drawing questions…";
+          $("pvBody").innerHTML = "";
+          $("pvOverlay").classList.remove("hidden");
+          const r = await api("GET", `/exams/${encodeURIComponent(examId)}/preview`);
+          if (!r.ok) {
+            $("pvMeta").textContent = r.body?.message || r.body?.error || "Could not build the preview.";
+            return;
+          }
+          const p = r.body;
+          $("pvHead").textContent = `Preview — ${p.exam?.title || examId}`;
+          $("pvMeta").textContent =
+            `${p.questions.length} question${p.questions.length === 1 ? "" : "s"} · ${Math.round((p.exam?.durationSec || 0) / 60)} min · pass ${p.exam?.passPct}% · answer keys hidden (exactly as a taker sees it)`;
+          $("pvBody").innerHTML = p.questions
+            .map((q, i) => {
+              const inputType = q.type === "multi" ? "checkbox" : "radio";
+              const opts = (q.options || [])
+                .map(
+                  (o) =>
+                    `<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="${inputType}" name="pv-${esc(q.id)}" disabled /> ${esc(o.text ?? o.id)}</label>`,
+                )
+                .join("");
+              return `<div class="panel" style="margin:12px 0"><strong>${i + 1}. ${esc(q.text)}</strong><div style="margin-top:8px">${opts}</div></div>`;
+            })
+            .join("");
         }
 
         // Enable/disable a single published exam. `enable === true` turns it back on.

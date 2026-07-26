@@ -11,7 +11,7 @@ process.env.AGRI_ACADEMY_LOG = "silent";
 
 const AA = path.join(__dirname, "..", "..", "external-services", "agri-academy", "exam-center-service");
 const db = require(path.join(AA, "server", "db.js"));
-const { buildApp, aggregateUnitAnalytics, aggregatePublicStats, publicQuestion, settle, buildGradeItems } = require(
+const { buildApp, aggregateUnitAnalytics, aggregatePublicStats, computePopularExams, publicQuestion, settle, buildGradeItems } = require(
   path.join(AA, "server", "index.js"),
 );
 // The grading fake scores with the REAL grading registry so the exam-center
@@ -83,7 +83,7 @@ const POOL = [
 const CORRECT = { q1: ["a"], q2: ["a", "c"], q3: ["b"] };
 const PAID = { ...EXAM, id: "paid1", pricing: { mode: "paid", priceRol: 25 }, payoutUserId: "unit-owner-1", certValidMonths: 24 };
 
-function fakeAuthoring({ down = false, exams = { e1: EXAM }, myUnit = null } = {}) {
+function fakeAuthoring({ down = false, exams = { e1: EXAM }, myUnit = null, ownedBy = {} } = {}) {
   const wrap =
     (fn) =>
     async (...a) =>
@@ -96,6 +96,15 @@ function fakeAuthoring({ down = false, exams = { e1: EXAM }, myUnit = null } = {
     getPublishedExam: wrap(async (id) =>
       exams[id] ? { status: 200, body: exams[id] } : { status: 404, body: { error: "EXAM_NOT_FOUND" } },
     ),
+    // Owner-scoped read (mirrors authoring's `GET /v1/exams/:id`): includes drafts;
+    // `ownedBy[id]` names the owner, so a mismatched caller gets 403 (else the exam is
+    // treated as the caller's). Used by the "preview as taker" dry-run.
+    getOwnedExam: wrap(async (id, userId) => {
+      const exam = exams[id];
+      if (!exam) return { status: 404, body: { error: "EXAM_NOT_FOUND" } };
+      if (ownedBy[id] && ownedBy[id] !== userId) return { status: 403, body: { error: "FORBIDDEN" } };
+      return { status: 200, body: exam };
+    }),
     getPublicUnit: wrap(async () => ({ status: 404, body: { error: "UNIT_NOT_FOUND" } })),
     listPublicUnits: wrap(async () => ({ status: 200, body: { units: [] } })),
   };
@@ -1038,5 +1047,209 @@ describe("exam-center — pure helpers", () => {
     const fresh = { state: "entitled", accessExpiresAt: t + 1000 };
     settle(fresh, t);
     expect(fresh.state).toBe("entitled"); // still within window → unchanged
+  });
+});
+
+// ── Popular / trending exams (#31) ────────────────────────────────────────────
+describe("exam-center — computePopularExams (pure)", () => {
+  const catalog = [
+    {
+      id: "px1",
+      title: "Beta",
+      description: "b",
+      ownerUnitId: "u1",
+      unit: { name: "Unit One" },
+      durationSec: 60,
+      passPct: 60,
+      pricing: { mode: "free", priceRol: 0 },
+    },
+    {
+      id: "px2",
+      title: "Alpha",
+      description: "a",
+      ownerUnitId: "u1",
+      unit: { name: "Unit One" },
+      durationSec: 60,
+      passPct: 60,
+      pricing: { mode: "paid", priceRol: 5 },
+    },
+    {
+      id: "px3",
+      title: "Gamma",
+      description: "g",
+      ownerUnitId: "u2",
+      unit: { name: "Unit Two" },
+      durationSec: 60,
+      passPct: 60,
+      pricing: { mode: "free", priceRol: 0 },
+    },
+  ];
+  const NOW = 10_000_000_000;
+  // px1: 3 enrollments (2 unique takers), px2: 1, px3: 0 → px3 excluded.
+  const data = {
+    users: {
+      a: { sessions: { s1: { examId: "px1", enrolledAt: NOW - 1000 }, s2: { examId: "px2", enrolledAt: NOW - 2000 } } },
+      b: { sessions: { s3: { examId: "px1", enrolledAt: NOW - 3000 }, s4: { examId: "px1", enrolledAt: NOW - 4000 } } },
+    },
+  };
+
+  it("ranks by enrollment count and excludes zero-enrollment exams", () => {
+    const out = computePopularExams(data, catalog, { now: NOW, windowMs: 0, limit: 10 });
+    expect(out.map((e) => e.id)).toEqual(["px1", "px2"]); // px3 (0) dropped
+    expect(out[0]).toMatchObject({ id: "px1", enrollments: 3, uniqueTakers: 2, unitName: "Unit One" });
+    expect(out[1]).toMatchObject({ id: "px2", enrollments: 1, uniqueTakers: 1 });
+  });
+
+  it("honors the trailing window (older enrollments fall out)", () => {
+    // Only enrollments newer than NOW-2500ms count → px1 keeps 1 (s1), px2 keeps 1 (s2).
+    const out = computePopularExams(data, catalog, { now: NOW, windowMs: 2500, limit: 10 });
+    const byId = Object.fromEntries(out.map((e) => [e.id, e.enrollments]));
+    expect(byId).toEqual({ px1: 1, px2: 1 });
+  });
+
+  it("windows legacy ISO-string timestamps (entitledAt) as well as numeric enrolledAt", () => {
+    // Older sessions have no numeric `enrolledAt`; their time is an ISO `entitledAt`.
+    const iso = (ms) => new Date(ms).toISOString();
+    const legacy = {
+      users: {
+        a: { sessions: { s1: { examId: "px1", entitledAt: iso(NOW - 1000) } } }, // in window
+        b: { sessions: { s2: { examId: "px2", entitledAt: iso(NOW - 9000) } } }, // out of window
+      },
+    };
+    const out = computePopularExams(legacy, catalog, { now: NOW, windowMs: 2500, limit: 10 });
+    expect(out.map((e) => e.id)).toEqual(["px1"]); // px2's ISO date is older than the window
+    // All-time counts both regardless of format.
+    const all = computePopularExams(legacy, catalog, { now: NOW, windowMs: 0, limit: 10 });
+    expect(all.map((e) => e.id).sort()).toEqual(["px1", "px2"]);
+  });
+
+  it("drops exams no longer in the published catalog", () => {
+    const out = computePopularExams(data, [catalog[1]], { now: NOW, windowMs: 0, limit: 10 });
+    expect(out.map((e) => e.id)).toEqual(["px2"]); // px1 has enrollments but isn't published
+  });
+
+  it("breaks ties deterministically by uniqueTakers then title", () => {
+    const tie = {
+      users: {
+        a: { sessions: { s1: { examId: "px1", enrolledAt: NOW }, s2: { examId: "px2", enrolledAt: NOW } } },
+        b: { sessions: { s3: { examId: "px2", enrolledAt: NOW } } }, // px2: 2 enroll / 2 takers, px1: 1/1
+      },
+    };
+    const out = computePopularExams(tie, catalog, { now: NOW, windowMs: 0, limit: 10 });
+    expect(out.map((e) => e.id)).toEqual(["px2", "px1"]);
+  });
+
+  it("respects the limit", () => {
+    const out = computePopularExams(data, catalog, { now: NOW, windowMs: 0, limit: 1 });
+    expect(out).toHaveLength(1);
+    expect(out[0].id).toBe("px1");
+  });
+});
+
+describe("exam-center — GET /v1/exams/popular", () => {
+  // Dedicated exam ids only this suite enrolls in, so counts are isolated from the
+  // shared DB other suites write to. Catalog is scoped to just these three.
+  const mk = (id, title) => ({
+    id,
+    title,
+    description: "d",
+    ownerUnitId: "pu",
+    unit: { name: "Pop Unit" },
+    questionCount: 3,
+    durationSec: 60,
+    accessWindowDays: 7,
+    passPct: 60,
+    attemptsAllowed: 5,
+    certValidMonths: 24,
+    pricing: { mode: "free", priceRol: 0 },
+  });
+  // Keyed by exam id (the fake authoring indexes its `exams` map by key).
+  const POP = { "pop-hot": mk("pop-hot", "Hot Exam"), "pop-warm": mk("pop-warm", "Warm Exam"), "pop-cold": mk("pop-cold", "Cold Exam") };
+  const popApp = () => appWith({ authoring: { exams: POP } });
+
+  it("ranks the row by enrollment count and omits zero-enrollment exams", async () => {
+    const app2 = popApp();
+    // 3 enrollments on hot, 1 on warm, 0 on cold (distinct users → distinct sessions).
+    for (const u of ["ph1", "ph2", "ph3"])
+      await request(app2).post("/v1/sessions").set("x-academy-user", u).send({ examId: "pop-hot" }).expect(201);
+    await request(app2).post("/v1/sessions").set("x-academy-user", "pw1").send({ examId: "pop-warm" }).expect(201);
+
+    const res = await request(app2).get("/v1/exams/popular").set("x-academy-user", "viewer").expect(200);
+    const ids = res.body.exams.map((e) => e.id);
+    expect(ids).toEqual(["pop-hot", "pop-warm"]); // cold excluded, hot first
+    expect(res.body.exams[0]).toMatchObject({ enrollments: 3, uniqueTakers: 3, unitName: "Pop Unit" });
+    expect(res.body.windowDays).toBe(30);
+    expect(res.body.generatedAt).toBeTypeOf("string");
+  });
+
+  it("respects ?limit=", async () => {
+    const app2 = popApp();
+    for (const u of ["pl1", "pl2"])
+      await request(app2).post("/v1/sessions").set("x-academy-user", u).send({ examId: "pop-hot" }).expect(201);
+    await request(app2).post("/v1/sessions").set("x-academy-user", "pl3").send({ examId: "pop-warm" }).expect(201);
+    const res = await request(app2).get("/v1/exams/popular?limit=1").set("x-academy-user", "viewer").expect(200);
+    expect(res.body.exams).toHaveLength(1);
+    expect(res.body.exams[0].id).toBe("pop-hot");
+  });
+
+  it("503s when authoring is down", async () => {
+    const res = await request(appWith({ authoring: { down: true } }))
+      .get("/v1/exams/popular")
+      .set("x-academy-user", "viewer")
+      .expect(503);
+    expect(res.body.error).toBe("AUTHORING_UNAVAILABLE");
+  });
+
+  it("does not shadow the /:examId route", async () => {
+    // "popular" must not be treated as an exam id.
+    await request(app).get("/v1/exams/popular").set("x-academy-user", "viewer").expect(200);
+  });
+});
+
+// ── Author "preview as taker" mode (#42) ──────────────────────────────────────
+describe("exam-center — GET /v1/exams/:id/preview", () => {
+  const OWNER = "owner-1";
+  const previewApp = (over = {}) => appWith({ authoring: { exams: { e1: EXAM }, ...over } });
+
+  it("draws the key-stripped taker view with no side effects", async () => {
+    const app2 = previewApp();
+    const res = await request(app2).get("/v1/exams/e1/preview").set("x-academy-user", OWNER).expect(200);
+    expect(res.body.preview).toBe(true);
+    expect(res.body.exam).toMatchObject({ title: "Test Exam", durationSec: 1800, passPct: 60, questionCount: 3 });
+    expect(res.body.questions).toHaveLength(3);
+    for (const q of res.body.questions) expect(q.correct).toBeUndefined();
+    expect(JSON.stringify(res.body)).not.toContain("correct"); // same choke point as a real taker
+
+    // No session/attempt/money side effects: the owner has no sessions.
+    const sessions = await request(app2).get("/v1/sessions").set("x-academy-user", OWNER).expect(200);
+    expect(sessions.body.sessions).toEqual([]);
+  });
+
+  it("401s without identity", async () => {
+    await request(previewApp()).get("/v1/exams/e1/preview").expect(401);
+  });
+
+  it("404s an unknown exam", async () => {
+    await request(previewApp()).get("/v1/exams/nope/preview").set("x-academy-user", OWNER).expect(404);
+  });
+
+  it("403s a non-owner", async () => {
+    const app2 = previewApp({ ownedBy: { e1: "someone-else" } });
+    const res = await request(app2).get("/v1/exams/e1/preview").set("x-academy-user", OWNER).expect(403);
+    expect(res.body.error).toBe("FORBIDDEN");
+  });
+
+  it("503s when the question bank is down", async () => {
+    const app2 = appWith({ authoring: { exams: { e1: EXAM } }, bank: { down: true } });
+    const res = await request(app2).get("/v1/exams/e1/preview").set("x-academy-user", OWNER).expect(503);
+    expect(res.body.error).toBe("QUESTION_BANK_UNAVAILABLE");
+  });
+
+  it("503s when authoring is down", async () => {
+    const res = await request(appWith({ authoring: { down: true } }))
+      .get("/v1/exams/e1/preview")
+      .set("x-academy-user", OWNER)
+      .expect(503);
+    expect(res.body.error).toBe("AUTHORING_UNAVAILABLE");
   });
 });

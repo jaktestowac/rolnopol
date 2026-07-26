@@ -16,7 +16,7 @@ const express = require("express");
 const { createRateLimiter } = require("../../middleware/rate-limit.middleware");
 const { requireFeatureFlag } = require("../../middleware/feature-flag.middleware");
 const { authenticateSessionUser } = require("../../middleware/auth.middleware");
-const { authoring } = require("../../modules/agri-academy");
+const { authoring, examCenter } = require("../../modules/agri-academy");
 const { logError } = require("../../helpers/logger-api");
 
 const router = express.Router();
@@ -60,6 +60,10 @@ router.post("/agri-academy/exams/:id/publish", guards, (req, res) => proxy(res, 
 router.post("/agri-academy/exams/:id/unpublish", guards, (req, res) => proxy(res, authoring.unpublishExam(userOf(req), req.params.id)));
 router.post("/agri-academy/exams/:id/disable", guards, (req, res) => proxy(res, authoring.disableExam(userOf(req), req.params.id)));
 router.post("/agri-academy/exams/:id/enable", guards, (req, res) => proxy(res, authoring.enableExam(userOf(req), req.params.id)));
+// "Preview as taker" — dry-run the owner's own exam (real key-stripped draw, no side
+// effects). Proxied to the exam center (which holds the question-bank draw); ownership
+// is enforced upstream against the caller's unit.
+router.get("/agri-academy/exams/:id/preview", guards, (req, res) => proxy(res, examCenter.previewExam(userOf(req), req.params.id)));
 
 // ── Questions (authoring; proxied to the bank upstream) ───────────────────────
 router.get("/agri-academy/exams/:id/questions", guards, (req, res) => proxy(res, authoring.listQuestions(userOf(req), req.params.id)));

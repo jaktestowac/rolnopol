@@ -35,6 +35,13 @@ const SERVICE_VERSION = "1.0.0";
 const startedAt = Date.now();
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// "Popular this month" defaults: rank published exams by enrollments over a
+// trailing window (overridable per-request via ?windowDays=), capped at a small
+// row. `windowDays=0` means all-time.
+const DEFAULT_POPULAR_WINDOW_DAYS = 30;
+const DEFAULT_POPULAR_LIMIT = 8;
+const MAX_POPULAR_LIMIT = 50;
+
 // States that count as an OPEN enrollment: the taker already has (or is paying
 // for) access to this exam, so a repeat enroll must reuse the session rather than
 // mint a duplicate. Terminal/dead states (scored, expired_*, abandoned) are NOT
@@ -552,6 +559,69 @@ function aggregatePublicStats(data) {
 const aggregateRatings = aggregatePublicStats;
 
 /**
+ * Rank published exams by popularity — how many times they were enrolled in over a
+ * trailing window (a social-proof signal distinct from rating/newest). Pure over
+ * the session store: counts one enrollment per session whose `enrolledAt` falls in
+ * `[now - windowMs, now]` (a session with no known enrollment time is skipped when
+ * windowed; `windowMs <= 0` means all-time and counts everything). Only exams still
+ * in `publishedExams` appear, joined to their catalog card, so an unpublished exam
+ * drops out. Zero-enrollment exams are excluded (a "trending" row shows what's hot).
+ * Ties break deterministically by uniqueTakers then title then id for a stable order.
+ * @returns {object[]} ranked cards `{ ...card, enrollments, uniqueTakers }`
+ */
+function computePopularExams(data, publishedExams, { now = Date.now(), windowMs = 0, limit = DEFAULT_POPULAR_LIMIT } = {}) {
+  const windowed = windowMs > 0;
+  const cutoff = now - windowMs;
+  // Enrollment time can be epoch millis (new `enrolledAt`) or an ISO string (legacy
+  // `entitledAt`/`startedAt` on older sessions) — normalize to millis so the window
+  // compares like-for-like instead of silently mis-comparing a string to a number.
+  const toMs = (v) => {
+    if (v == null) return null;
+    if (typeof v === "number") return Number.isFinite(v) ? v : null;
+    const t = Date.parse(v);
+    return Number.isNaN(t) ? null : t;
+  };
+  const counts = new Map(); // examId → { enrollments, takers:Set }
+  for (const [uid, u] of Object.entries(data.users || {})) {
+    for (const s of Object.values(u.sessions || {})) {
+      const at = toMs(s.enrolledAt ?? s.entitledAt ?? s.startedAt ?? s.submittedAt);
+      if (windowed && (at == null || at < cutoff || at > now)) continue;
+      let c = counts.get(s.examId);
+      if (!c) counts.set(s.examId, (c = { enrollments: 0, takers: new Set() }));
+      c.enrollments += 1;
+      c.takers.add(uid);
+    }
+  }
+  return (publishedExams || [])
+    .map((e) => {
+      const c = counts.get(e.id);
+      return {
+        id: e.id,
+        title: e.title,
+        description: e.description,
+        ownerUnitId: e.ownerUnitId,
+        unitName: e.unit?.name || null,
+        difficulty: e.difficulty || null,
+        category: e.category || "",
+        durationSec: e.durationSec,
+        passPct: e.passPct,
+        pricing: e.pricing,
+        enrollments: c ? c.enrollments : 0,
+        uniqueTakers: c ? c.takers.size : 0,
+      };
+    })
+    .filter((e) => e.enrollments > 0)
+    .sort(
+      (a, b) =>
+        b.enrollments - a.enrollments ||
+        b.uniqueTakers - a.uniqueTakers ||
+        String(a.title).localeCompare(String(b.title)) ||
+        String(a.id).localeCompare(String(b.id)),
+    )
+    .slice(0, limit);
+}
+
+/**
  * Grade a session that is parked in `submitted` (either an explicit submit or an
  * expiry auto-submit). Calls the grading service outside the mutate; on success
  * commits the result and finalizes (`scored` / `expired_scored`) and applies the
@@ -732,6 +802,78 @@ function buildApp({
       }
     }
     res.status(r.status).json(r.body);
+  });
+
+  // Popular / trending row — published exams ranked by enrollment count over a
+  // trailing window (default 30 days; ?windowDays=0 = all-time). Read-only aggregate
+  // over the session store, joined to the proxied catalog. Registered BEFORE the
+  // `/:examId` param route so "popular" isn't captured as an exam id.
+  app.get("/v1/exams/popular", async (req, res) => {
+    const r = await authoring.listPublishedExams();
+    if (r.status === 503) return res.status(503).json({ error: "AUTHORING_UNAVAILABLE" });
+    if (r.status !== 200 || !Array.isArray(r.body?.exams)) return res.status(502).json({ error: "AUTHORING_BAD_RESPONSE" });
+
+    const wd = Number(req.query.windowDays);
+    const windowDays = Number.isFinite(wd) && wd >= 0 ? wd : DEFAULT_POPULAR_WINDOW_DAYS;
+    const lim = Number(req.query.limit);
+    const limit = Number.isFinite(lim) && lim > 0 ? Math.min(Math.floor(lim), MAX_POPULAR_LIMIT) : DEFAULT_POPULAR_LIMIT;
+    try {
+      const data = await db.getAll();
+      const exams = computePopularExams(data, r.body.exams, { now: clock.now(), windowMs: windowDays * DAY_MS, limit });
+      res.status(200).json({ exams, windowDays, generatedAt: new Date(clock.now()).toISOString() });
+    } catch (err) {
+      log.error("popular exams failed", { error: err.message });
+      res.status(500).json({ error: "INTERNAL" });
+    }
+  });
+
+  // Author "preview as taker" — an owner dry-runs their own exam exactly as a taker
+  // would see it (real randomized draw, answer keys stripped) with NO side effects:
+  // no session, no attempt consumed, no money, no certificate. Ownership is enforced
+  // upstream by authoring (owner-scoped exam read, includes drafts). Reuses the exact
+  // `publicQuestion` key-stripping choke point so preview can never leak keys.
+  app.get("/v1/exams/:examId/preview", async (req, res) => {
+    const userId = req.get("x-academy-user");
+    if (!userId) return res.status(401).json({ error: "MISSING_IDENTITY" });
+    const examId = req.params.examId;
+
+    let exam;
+    try {
+      const r = await authoring.getOwnedExam(examId, userId);
+      if (r.status === 503) return res.status(503).json({ error: "AUTHORING_UNAVAILABLE" });
+      if (r.status === 404) return res.status(404).json({ error: "EXAM_NOT_FOUND" });
+      if (r.status === 403) return res.status(403).json({ error: "FORBIDDEN", message: "only the owning unit can preview this exam" });
+      if (r.status !== 200 || !r.body) return res.status(502).json({ error: "AUTHORING_BAD_RESPONSE" });
+      exam = r.body;
+    } catch (err) {
+      log.warn("preview: authoring unavailable", { exam: examId, error: err.message });
+      return res.status(503).json({ error: "AUTHORING_UNAVAILABLE" });
+    }
+
+    let drawn;
+    try {
+      const reply = await questionBank.draw(examId, exam.questionCount, newSeed());
+      drawn = reply.questions || [];
+    } catch (err) {
+      log.warn("preview: bank unavailable", { exam: examId, error: err.message });
+      return res.status(503).json({ error: "QUESTION_BANK_UNAVAILABLE" });
+    }
+    if (!drawn.length) return res.status(502).json({ error: "NO_QUESTIONS" });
+
+    const questions = drawn.map(publicQuestion); // same choke point takers get — never leaks keys
+    res.status(200).json({
+      examId,
+      preview: true,
+      exam: {
+        title: exam.title,
+        description: exam.description,
+        durationSec: exam.durationSec,
+        passPct: exam.passPct,
+        questionCount: exam.questionCount,
+        attemptsAllowed: exam.attemptsAllowed,
+      },
+      questions,
+    });
   });
 
   app.get("/v1/exams/:examId", async (req, res) => {
@@ -1014,6 +1156,9 @@ function buildApp({
           seed: null,
           answers: {},
           questions: null,
+          // Enrollment timestamp (any state) — powers the popularity window; the
+          // per-state clocks (entitledAt/startedAt/…) are set as the session moves.
+          enrolledAt: now,
           entitledAt: null,
           accessExpiresAt: null,
           startedAt: null,
@@ -1491,6 +1636,7 @@ module.exports = {
   buildGradeItems,
   aggregateUnitAnalytics,
   computeLeaderboards,
+  computePopularExams,
   learnerAlias,
   aggregateRatings,
   aggregatePublicStats,

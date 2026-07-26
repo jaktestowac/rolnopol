@@ -347,6 +347,84 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     await request(app).get(`/api/v1/agri-academy/shared/${shareToken}`).expect(404);
   });
 
+  it("popular / trending row ranks by enrollment count through the bridge (no keys)", async () => {
+    // Two distinct takers enroll in a seeded exam so it has a popularity signal.
+    for (const uid of ["aa-pop-1", "aa-pop-2"]) {
+      const t = tokenHelpers.generateToken(uid);
+      await request(app).post("/api/v1/agri-academy/sessions").set("token", t).send({ examId: "pesticide-basics" }).expect(201);
+    }
+    const res = await request(app).get("/api/v1/agri-academy/exams/popular").set("token", token).expect(200);
+    expect(Array.isArray(res.body.exams)).toBe(true);
+    expect(res.body.windowDays).toBe(30);
+    const hot = res.body.exams.find((e) => e.id === "pesticide-basics");
+    expect(hot).toBeTruthy();
+    expect(hot.enrollments).toBeGreaterThanOrEqual(2);
+    // Ranked by enrollments descending; never leaks answer keys.
+    const counts = res.body.exams.map((e) => e.enrollments);
+    expect(counts).toEqual([...counts].sort((a, b) => b - a));
+    expect(JSON.stringify(res.body)).not.toContain("correct");
+  });
+
+  it("owner previews their own exam as a taker (key-stripped, no side effects); non-owner is 403", async () => {
+    const ownerToken = tokenHelpers.generateToken("aa-preview-owner");
+    const admin = (method, p) => request(app)[method](`/api/v1/agri-academy${p}`).set("token", ownerToken);
+
+    await admin("post", "/units").send({ name: "Preview Unit", description: "preview" }).expect(201);
+    const exam = await admin("post", "/exams")
+      .send({
+        title: "Preview Exam",
+        description: "d",
+        durationSec: 600,
+        accessWindowDays: 3,
+        passPct: 60,
+        attemptsAllowed: 2,
+        certValidMonths: 12,
+        questionCount: 2,
+        pricing: { mode: "free" },
+      })
+      .expect(201);
+    const examId = exam.body.id;
+    for (const q of [
+      {
+        id: "q1",
+        type: "single",
+        text: "Q1",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["a"],
+      },
+      {
+        id: "q2",
+        type: "single",
+        text: "Q2",
+        options: [
+          { id: "a", text: "A" },
+          { id: "b", text: "B" },
+        ],
+        correct: ["b"],
+      },
+    ]) {
+      await admin("post", `/exams/${examId}/questions`).send(q).expect(201);
+    }
+
+    // Preview works even on a DRAFT (pre-publish sanity check), key-stripped.
+    const preview = await admin("get", `/exams/${examId}/preview`).expect(200);
+    expect(preview.body.preview).toBe(true);
+    expect(preview.body.exam.title).toBe("Preview Exam");
+    expect(preview.body.questions).toHaveLength(2);
+    expect(JSON.stringify(preview.body)).not.toContain("correct");
+
+    // No side effects: previewing minted no session for the owner.
+    const sessions = await admin("get", "/sessions").expect(200);
+    expect(sessions.body.sessions.find((s) => s.examId === examId)).toBeUndefined();
+
+    // A different user does not own this exam → 403.
+    const otherToken = tokenHelpers.generateToken("aa-preview-other");
+    await request(app).get(`/api/v1/agri-academy/exams/${examId}/preview`).set("token", otherToken).expect(403);
+  });
+
   it("a disabled exam — and every exam of a disabled unit — cannot be enrolled or seen in the catalog", async () => {
     const ownerToken = tokenHelpers.generateToken("aa-toggle-owner");
     const takerToken = tokenHelpers.generateToken("aa-toggle-taker");
