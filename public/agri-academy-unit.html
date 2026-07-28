@@ -23,6 +23,9 @@
         box-sizing: border-box;
       }
 
+      .footer {
+        border-top: 1px solid var(--border);
+      }
       body {
         margin: 0;
         font-family:
@@ -384,6 +387,127 @@
         margin: 0;
         text-align: right;
       }
+
+      /* ── Activity panel: this unit's slice of the exam-events log ───────────── */
+      .activity {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--card);
+        overflow: hidden;
+      }
+      .activity .scroll {
+        overflow-x: auto;
+      }
+      .activity table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        min-width: 560px;
+      }
+      .activity th,
+      .activity td {
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      .activity th {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        color: var(--muted);
+        background: #121d16;
+      }
+      .activity tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .activity tbody tr:hover {
+        background: #1a2b20;
+      }
+      .activity .mono {
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .activity td.wrap {
+        white-space: normal;
+        max-width: 220px;
+      }
+      /* Live tail: a dot next to the heading, and a flash on a streamed-in row */
+      .live-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--border);
+        vertical-align: middle;
+        margin-left: 6px;
+      }
+      .live-dot--on {
+        background: var(--up);
+        animation: pulse 1.8s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        50% {
+          opacity: 0.35;
+        }
+      }
+      .activity tbody tr.is-new {
+        animation: landed 2.4s ease-out;
+      }
+      @keyframes landed {
+        0% {
+          background: rgba(63, 191, 107, 0.28);
+        }
+        100% {
+          background: transparent;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .live-dot--on,
+        .activity tbody tr.is-new {
+          animation: none;
+        }
+      }
+      .badge {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+      .badge--pay,
+      .badge--submitted {
+        color: #ffce6b;
+        border-color: #4b3d1c;
+      }
+      .badge--entitled {
+        color: #7fb8ff;
+        border-color: #234058;
+      }
+      .badge--active,
+      .badge--scored {
+        color: var(--accent-2);
+        border-color: #23533a;
+      }
+      .badge--dead {
+        color: #ff8a8a;
+        border-color: #52292d;
+      }
+      .all-events {
+        margin: 14px 0 0;
+        text-align: right;
+        font-size: 14px;
+      }
+      .all-events a {
+        color: var(--accent-2);
+        text-decoration: none;
+      }
+      .all-events a:hover {
+        text-decoration: underline;
+      }
     </style>
   </head>
 
@@ -411,6 +535,9 @@
         <a id="pvEnroll" class="enroll"></a>
       </div>
     </div>
+
+    <div id="footer-component"></div>
+
     <script src="/js/core/event-bus.js"></script>
     <script src="/js/core/storage.js"></script>
     <script src="/js/core/app.js"></script>
@@ -495,6 +622,123 @@
             paintBookmarkBtn(examId, btn);
           } finally {
             btn.disabled = false;
+          }
+        }
+
+        // ── Activity panel (exam-events log, scoped to this unit) ────────────────────
+        // Read-only and best-effort: the panel degrades to a one-line note rather than
+        // failing the page, because a unit profile is useful without its log.
+        const ACTIVITY_LIMIT = 12;
+        const STATE_META = {
+          awaiting_payment: { label: "Awaiting payment", cls: "badge--pay" },
+          entitled: { label: "Entitled", cls: "badge--entitled" },
+          active: { label: "Active", cls: "badge--active" },
+          submitted: { label: "Submitted", cls: "badge--submitted" },
+          scored: { label: "Scored", cls: "badge--scored" },
+          expired_scored: { label: "Expired (scored)", cls: "badge--scored" },
+          expired_unstarted: { label: "Expired (unstarted)", cls: "badge--dead" },
+          abandoned: { label: "Abandoned", cls: "badge--dead" },
+        };
+        function stateBadge(state) {
+          const meta = STATE_META[state] || { label: state || "unknown", cls: "" };
+          return `<span class="badge ${meta.cls}">${esc(meta.label)}</span>`;
+        }
+        function activityNote(text) {
+          const el = document.getElementById("activityState");
+          if (!el) return;
+          el.style.display = "block";
+          el.textContent = text;
+        }
+        function activityRow(ev, isNew) {
+          return `
+                  <tr${isNew ? ' class="is-new"' : ""}>
+                    <td class="mono">${Number(ev.sequence) || 0}</td>
+                    <td>${esc(Number(ev.at) > 0 ? new Date(Number(ev.at)).toLocaleString() : "—")}</td>
+                    <td class="wrap">${esc(ev.examTitle || ev.examId || "—")}</td>
+                    <td class="mono">${esc(ev.sessionId || "—")}</td>
+                    <td>${stateBadge(ev.state)}</td>
+                  </tr>`;
+        }
+
+        // The panel's live tail: one bounded read, then an SSE subscription from that
+        // read's high-water mark, so this unit's timeline extends itself while the
+        // profile is open. Best-effort like the read — a tail that cannot open leaves
+        // a static panel, never a broken page.
+        let activityStream = null;
+        let activityCursor = 0;
+
+        function markLive(on) {
+          const dot = document.getElementById("activityLive");
+          if (dot) dot.className = on ? "live-dot live-dot--on" : "live-dot";
+        }
+
+        function openActivityStream() {
+          if (activityStream) activityStream.close();
+          const url =
+            "/api/v1/agri-academy/units/" + encodeURIComponent(unitId) + "/events/stream?since=" + encodeURIComponent(activityCursor);
+          let framed = false;
+          let failures = 0;
+          activityStream = new EventSource(url, { withCredentials: true });
+          const alive = () => {
+            framed = true;
+            failures = 0;
+            markLive(true);
+          };
+          activityStream.addEventListener("ping", alive);
+          activityStream.addEventListener("entry", (e) => {
+            alive();
+            let ev = null;
+            try {
+              ev = JSON.parse(e.data);
+            } catch {
+              return;
+            }
+            if (!ev || Number(ev.sequence) <= activityCursor) return; // duplicate after a reconnect
+            activityCursor = Number(ev.sequence);
+            const rows = document.getElementById("activityRows");
+            if (!rows) return;
+            const state = document.getElementById("activityState");
+            if (state) state.style.display = "none";
+            rows.insertAdjacentHTML("afterbegin", activityRow(ev, true));
+            while (rows.rows.length > ACTIVITY_LIMIT) rows.deleteRow(-1);
+          });
+          activityStream.addEventListener("error", () => markLive(false));
+          activityStream.onerror = () => {
+            failures += 1;
+            markLive(false);
+            // Nothing on this panel polls, so a connection the browser has abandoned
+            // (non-2xx → readyState CLOSED) is just over. Release it rather than let it
+            // re-report the same failure forever; the rows already read stay put.
+            if (activityStream.readyState === EventSource.CLOSED || (!framed && failures >= 3)) activityStream.close();
+          };
+          window.addEventListener("beforeunload", () => activityStream && activityStream.close());
+        }
+
+        async function loadActivity() {
+          const rows = document.getElementById("activityRows");
+          if (!rows) return;
+          try {
+            const r = await fetch("/api/v1/agri-academy/units/" + encodeURIComponent(unitId) + "/events?limit=" + ACTIVITY_LIMIT, {
+              credentials: "include",
+            });
+            const body = await r.json().catch(() => null);
+            if (!r.ok || !body || !Array.isArray(body.events)) {
+              return activityNote(r.status === 503 ? "The exam-events service is unavailable right now." : "Activity could not be loaded.");
+            }
+            activityCursor = Number(body.latestSequence) || 0;
+            // An empty log is still worth tailing: the next enrollment fills the panel.
+            if (!body.events.length) activityNote("No exam activity recorded for this unit yet.");
+            else {
+              document.getElementById("activityState").style.display = "none";
+              rows.innerHTML = body.events.map((ev) => activityRow(ev, false)).join("");
+              const total = Number(body.total) || body.events.length;
+              if (total > body.events.length) {
+                activityNote(`Showing the latest ${body.events.length} of ${total} entries.`);
+              }
+            }
+            openActivityStream();
+          } catch {
+            activityNote("Activity could not be loaded.");
           }
         }
 
@@ -692,7 +936,34 @@
                   : ""
               }
               <div id="examGrid" class="grid"></div>
-              <div id="examPager" class="pager hidden"></div>`;
+              <div id="examPager" class="pager hidden"></div>
+              <h2 class="section">Recent activity <i id="activityLive" class="live-dot" title="Live — new entries appear on their own"></i></h2>
+              <div class="activity">
+                <div class="scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>When</th>
+                        <th>Exam</th>
+                        <th>Session</th>
+                        <th>State</th>
+                      </tr>
+                    </thead>
+                    <tbody id="activityRows"></tbody>
+                  </table>
+                </div>
+                <div id="activityState" class="state">Loading activity…</div>
+              </div>
+              <p class="all-events">
+                <a href="/agri-academy-events.html?unit=${encodeURIComponent(unitId)}">View the full activity log for this unit →</a>
+                &nbsp;·&nbsp;
+                <a href="/agri-academy-events.html">Activity across all units →</a>
+              </p>`;
+
+              // The activity panel is independent of the exam grid: a unit with no
+              // published exams can still have a history worth showing.
+              loadActivity();
 
               if (!exams.length) {
                 document.getElementById("examGrid").innerHTML = `<div class="state" style="grid-column:1/-1">No published exams yet.</div>`;

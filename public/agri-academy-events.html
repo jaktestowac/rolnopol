@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgriAcademy — Exam Activity</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/agri-academy.css" />
+    <style>
+      :root {
+        --bg: #0f1a14;
+        --card: #16241b;
+        --ink: #eaf3ec;
+        --muted: #9bb3a4;
+        --accent: #3fae6b;
+        --accent-2: #7bd4a0;
+        --border: #24382b;
+        --up: #3fbf6b;
+        --down: #ff8a8a;
+        --warn: #ffce6b;
+        --info: #7fb8ff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      .footer {
+        border-top: 1px solid var(--border);
+      }
+      body {
+        margin: 0;
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: radial-gradient(1200px 600px at 80% -10%, #1c3326 0%, var(--bg) 55%);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      .topbar {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 20px 24px 0;
+      }
+      .topbar a {
+        color: var(--accent-2);
+        text-decoration: none;
+        font-size: 14px;
+      }
+      header {
+        padding: 24px 24px 8px;
+        max-width: 1080px;
+        margin: 0 auto;
+      }
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      h1 {
+        margin: 6px 0 4px;
+        font-size: 32px;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0;
+        max-width: 70ch;
+      }
+      main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 16px 24px 64px;
+      }
+      /* Filters */
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin: 18px 0 12px;
+      }
+      .toolbar label {
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      select,
+      .refresh {
+        background: var(--card);
+        color: var(--ink);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font: inherit;
+        font-size: 14px;
+      }
+      .refresh {
+        cursor: pointer;
+      }
+      .refresh:hover {
+        border-color: var(--accent);
+      }
+      .refresh:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .count {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      /* Live-tail pill: click to stop/resume the SSE stream */
+      .live {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--card);
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 7px 13px;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .live:hover {
+        border-color: var(--accent);
+      }
+      .live .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+      .live--on {
+        color: var(--accent-2);
+      }
+      .live--on .dot {
+        background: var(--up);
+        animation: pulse 1.8s ease-in-out infinite;
+      }
+      .live--wait {
+        color: var(--warn);
+      }
+      .live--wait .dot {
+        background: var(--warn);
+      }
+      @keyframes pulse {
+        50% {
+          opacity: 0.35;
+        }
+      }
+      /* A row that arrived over the stream, so the eye can find it */
+      tbody tr.is-new {
+        animation: landed 2.4s ease-out;
+      }
+      @keyframes landed {
+        0% {
+          background: rgba(63, 191, 107, 0.28);
+        }
+        100% {
+          background: transparent;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .live--on .dot,
+        tbody tr.is-new {
+          animation: none;
+        }
+      }
+      /* Log table */
+      .log {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--card);
+        overflow: hidden;
+      }
+      .scroll {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        min-width: 720px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      th {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        color: var(--muted);
+        background: #121d16;
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      tbody tr:hover {
+        background: #1a2b20;
+      }
+      td.wrap {
+        white-space: normal;
+        max-width: 260px;
+      }
+      .seq {
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .mono {
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      a.unit-link {
+        color: var(--accent-2);
+        text-decoration: none;
+      }
+      a.unit-link:hover {
+        text-decoration: underline;
+      }
+      /* One badge per session state, coloured by what it means for the taker */
+      .badge {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+      .badge--pay {
+        color: var(--warn);
+        border-color: #4b3d1c;
+      }
+      .badge--entitled {
+        color: var(--info);
+        border-color: #234058;
+      }
+      .badge--active {
+        color: var(--accent-2);
+        border-color: #23533a;
+      }
+      .badge--submitted {
+        color: var(--warn);
+        border-color: #4b3d1c;
+      }
+      .badge--scored {
+        color: var(--up);
+        border-color: #23533a;
+      }
+      .badge--dead {
+        color: var(--down);
+        border-color: #52292d;
+      }
+      .win {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .state {
+        padding: 26px 18px;
+        text-align: center;
+        color: var(--muted);
+      }
+      .footnote {
+        margin-top: 22px;
+        padding-top: 18px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .footnote a {
+        color: var(--accent-2);
+        text-decoration: none;
+      }
+      .footnote a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body class="agri-academy-page">
+    <div id="header-component"></div>
+    <div class="topbar"><a href="/agri-academy-units.html">← Certification units</a></div>
+    <header>
+      <div class="eyebrow">📜 AgriAcademy</div>
+      <h1>Exam Activity</h1>
+    </header>
+    <main>
+      <div class="toolbar">
+        <label>
+          Unit
+          <select id="unitFilter" aria-label="Filter by certification unit">
+            <option value="">All units</option>
+          </select>
+        </label>
+        <label>
+          State
+          <select id="stateFilter" aria-label="Filter by session state">
+            <option value="">All states</option>
+            <option value="awaiting_payment">Awaiting payment</option>
+            <option value="entitled">Entitled</option>
+            <option value="active">Active</option>
+            <option value="submitted">Submitted</option>
+            <option value="scored">Scored</option>
+            <option value="expired_scored">Expired (scored)</option>
+            <option value="expired_unstarted">Expired (unstarted)</option>
+            <option value="abandoned">Abandoned</option>
+          </select>
+        </label>
+        <label>
+          Show
+          <select id="limitFilter" aria-label="Number of entries">
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="250">250</option>
+          </select>
+        </label>
+        <div class="spacer"></div>
+        <span class="count" id="count">—</span>
+        <button id="liveBtn" class="live" aria-pressed="true" title="Stream new entries as they happen">
+          <i class="dot"></i> <span id="liveLabel">Connecting…</span>
+        </button>
+        <button id="refreshBtn" class="refresh"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+      </div>
+
+      <div class="log">
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>When</th>
+                <th>Unit</th>
+                <th>Exam</th>
+                <th>Session</th>
+                <th>State</th>
+                <th>Clock</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div id="logState" class="state">Loading activity…</div>
+      </div>
+
+      <p class="footnote">
+        This table is <strong>live</strong>: it loads the latest entries once, then streams every new one as it happens (the pill toggles
+        the stream off if you would rather hold the view still). The <code>state</code> filter is applied in this page; the unit filter and
+        the entry count are applied by the service. Entries appear only when a session's clock actually changes, so consecutive identical
+        snapshots collapse — this is a timeline, not a poll trace.
+        <br />
+        Looking for one unit in particular? Open its profile from the <a href="/agri-academy-units.html">certification units</a> directory —
+        every unit page carries its own activity panel.
+      </p>
+    </main>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("agri-academy");
+    </script>
+    <script>
+      (() => {
+        const $ = (id) => document.getElementById(id);
+        const esc = (s) =>
+          String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+        // Deep link support: /agri-academy-events.html?unit=unit-3 lands pre-filtered,
+        // which is what the per-unit panels link to.
+        const params = new URLSearchParams(location.search);
+        let unitFilter = params.get("unit") || "";
+
+        let stream = null; // the open EventSource, when the tail is running
+        let cursor = 0; // highest sequence this page has rendered (the tail's cursor)
+        let total = 0; // matching entries the service reported, kept in step live
+        let liveOn = true;
+
+        const STATE_META = {
+          awaiting_payment: { label: "Awaiting payment", cls: "badge--pay" },
+          entitled: { label: "Entitled", cls: "badge--entitled" },
+          active: { label: "Active", cls: "badge--active" },
+          submitted: { label: "Submitted", cls: "badge--submitted" },
+          scored: { label: "Scored", cls: "badge--scored" },
+          expired_scored: { label: "Expired (scored)", cls: "badge--scored" },
+          expired_unstarted: { label: "Expired (unstarted)", cls: "badge--dead" },
+          abandoned: { label: "Abandoned", cls: "badge--dead" },
+        };
+        const WINDOW_LABEL = { access: "Access window", completion: "Completion window", none: "Stopped" };
+
+        const when = (ms) => (Number(ms) > 0 ? new Date(Number(ms)).toLocaleString() : "—");
+        const deadline = (ms) => (Number(ms) > 0 ? new Date(Number(ms)).toLocaleString() : null);
+
+        function badge(state) {
+          const meta = STATE_META[state] || { label: state || "unknown", cls: "" };
+          return `<span class="badge ${meta.cls}">${esc(meta.label)}</span>`;
+        }
+
+        function clockCell(ev) {
+          const label = WINDOW_LABEL[ev.window] || ev.window || "—";
+          const at = deadline(ev.deadlineAt);
+          return `<div class="win">${esc(label)}</div>${at ? `<div class="mono">→ ${esc(at)}</div>` : ""}`;
+        }
+
+        function rowHtml(ev, isNew) {
+          const unitCell = ev.unitId
+            ? `<a class="unit-link" href="/agri-academy-unit.html?unit=${encodeURIComponent(ev.unitId)}">${esc(ev.unitName || ev.unitId)}</a>`
+            : `<span class="mono">—</span>`;
+          return `
+                <tr${isNew ? ' class="is-new"' : ""}>
+                  <td class="seq">${Number(ev.sequence) || 0}</td>
+                  <td>${esc(when(ev.at))}</td>
+                  <td class="wrap">${unitCell}</td>
+                  <td class="wrap">${esc(ev.examTitle || ev.examId || "—")}</td>
+                  <td class="mono">${esc(ev.sessionId || "—")}</td>
+                  <td>${badge(ev.state)}</td>
+                  <td>${clockCell(ev)}</td>
+                </tr>`;
+        }
+
+        function setCount() {
+          const rows = $("rows").rows.length;
+          $("count").textContent = `Showing ${rows} of ${total} ${total === 1 ? "entry" : "entries"}`;
+        }
+
+        function render(events, shownTotal, filteredOut) {
+          const tbody = $("rows");
+          total = shownTotal;
+          if (!events.length) {
+            tbody.innerHTML = "";
+            $("logState").style.display = "block";
+            $("logState").textContent = filteredOut ? "No entries match this filter." : "No exam activity recorded yet.";
+            setCount();
+            return;
+          }
+          $("logState").style.display = "none";
+          tbody.innerHTML = events.map((ev) => rowHtml(ev, false)).join("");
+          setCount();
+        }
+
+        // ── The live tail ─────────────────────────────────────────────────────────
+        //
+        // The page loads one bounded page over REST, then subscribes from that page's
+        // `latestSequence`, so an entry appears when it happens rather than when the
+        // visitor thinks to click Refresh. EventSource reconnects on its own and
+        // replays its last id, so a dropped connection resumes without gaps — the
+        // sequence guard below only has to catch a duplicate.
+        function setLive(mode, label) {
+          $("liveBtn").className = `live live--${mode}`;
+          $("liveLabel").textContent = label;
+          $("liveBtn").setAttribute("aria-pressed", String(liveOn));
+        }
+
+        function onEntry(ev) {
+          if (!ev || Number(ev.sequence) <= cursor) return; // already rendered
+          cursor = Number(ev.sequence);
+          // The state filter is this page's own, so an entry it excludes is not part
+          // of the view at all — neither rendered nor counted (`total` mirrors what
+          // the initial render counted, which is also filtered).
+          const stateWanted = $("stateFilter").value;
+          if (stateWanted && ev.state !== stateWanted) return;
+          total += 1;
+          const tbody = $("rows");
+          $("logState").style.display = "none";
+          tbody.insertAdjacentHTML("afterbegin", rowHtml(ev, true));
+          // The newest N is what this view promises, so the oldest row makes room.
+          const limit = Number($("limitFilter").value) || 50;
+          while (tbody.rows.length > limit) tbody.deleteRow(-1);
+          setCount();
+        }
+
+        function stopLive() {
+          if (stream) stream.close();
+          stream = null;
+        }
+
+        function startLive() {
+          stopLive();
+          if (!liveOn) return setLive("off", "Live off");
+          setLive("wait", "Connecting…");
+          const query = new URLSearchParams({ since: String(cursor) });
+          if (unitFilter) query.set("unitId", unitFilter);
+          let framed = false;
+          let failures = 0;
+          stream = new EventSource("/api/v1/agri-academy/events/stream?" + query.toString(), { withCredentials: true });
+          const alive = () => {
+            framed = true;
+            failures = 0;
+            setLive("on", "Live");
+          };
+          // `ping` is the idle heartbeat: it proves the tail is alive when the log is
+          // quiet, which is most of the time.
+          stream.addEventListener("ping", alive);
+          stream.addEventListener("entry", (e) => {
+            alive();
+            try {
+              onEntry(JSON.parse(e.data));
+            } catch {
+              /* a frame we cannot read is not worth breaking the tail over */
+            }
+          });
+          // The bridge's own `error` frame: upstream broke, the connection did not.
+          stream.addEventListener("error", () => setLive("wait", "Reconnecting…"));
+          stream.onerror = () => {
+            failures += 1;
+            // A non-2xx (flag off, an app that predates this route) fails the connection
+            // for good: readyState is CLOSED and no retry is coming. Saying
+            // "Reconnecting…" there is a lie, and holding the stream repeats one console
+            // error on a timer — so drop it and say so. The table keeps what it read,
+            // Refresh still works, and the pill re-opens the tail on click.
+            if (stream.readyState === EventSource.CLOSED || (!framed && failures >= 3)) {
+              stopLive();
+              return setLive("off", "Live unavailable");
+            }
+            setLive("wait", "Reconnecting…");
+          };
+        }
+
+        // The unit dropdown is built from the public directory, so it only ever offers
+        // units a visitor can actually open.
+        async function loadUnits() {
+          try {
+            const res = await fetch("/api/v1/agri-academy/units", { credentials: "include" });
+            if (!res.ok) return;
+            const body = await res.json().catch(() => null);
+            const units = (body && body.units) || [];
+            const sel = $("unitFilter");
+            for (const u of units.sort((a, b) => String(a.name).localeCompare(String(b.name)))) {
+              const opt = document.createElement("option");
+              opt.value = u.unitId;
+              opt.textContent = u.name || u.unitId;
+              sel.appendChild(opt);
+            }
+            sel.value = unitFilter;
+          } catch {
+            /* the log still loads without the dropdown */
+          }
+        }
+
+        // A reload re-reads the page AND re-opens the tail: the unit filter is applied
+        // by the service, so the subscription itself has to change with it, and the
+        // fresh page's high-water mark becomes the new cursor.
+        async function load() {
+          const btn = $("refreshBtn");
+          btn.disabled = true;
+          stopLive();
+          const limit = $("limitFilter").value;
+          const stateWanted = $("stateFilter").value;
+          const query = new URLSearchParams({ limit });
+          if (unitFilter) query.set("unitId", unitFilter);
+          try {
+            const res = await fetch("/api/v1/agri-academy/events?" + query.toString(), { credentials: "include" });
+            const body = await res.json().catch(() => null);
+            if (!res.ok || !body || !Array.isArray(body.events)) {
+              $("rows").innerHTML = "";
+              $("logState").style.display = "block";
+              $("logState").textContent =
+                res.status === 503 ? "The exam-events service is unavailable right now." : "Could not load exam activity.";
+              $("count").textContent = "—";
+              setLive("off", "Live unavailable");
+              return;
+            }
+            cursor = Number(body.latestSequence) || 0;
+            const shown = stateWanted ? body.events.filter((e) => e.state === stateWanted) : body.events;
+            render(shown, stateWanted ? shown.length : body.total, !!stateWanted && !shown.length);
+            startLive();
+          } catch {
+            $("rows").innerHTML = "";
+            $("logState").style.display = "block";
+            $("logState").textContent = "Could not reach the AgriAcademy service.";
+            $("count").textContent = "—";
+            setLive("off", "Live unavailable");
+          } finally {
+            btn.disabled = false;
+          }
+        }
+
+        $("unitFilter").addEventListener("change", (e) => {
+          unitFilter = e.target.value;
+          // Keep the URL shareable as the filter moves.
+          const next = new URL(location.href);
+          if (unitFilter) next.searchParams.set("unit", unitFilter);
+          else next.searchParams.delete("unit");
+          history.replaceState(null, "", next);
+          load();
+        });
+        $("stateFilter").addEventListener("change", load);
+        $("limitFilter").addEventListener("change", load);
+        $("refreshBtn").addEventListener("click", load);
+        $("liveBtn").addEventListener("click", () => {
+          // A tail that gave up leaves the pill "on" with no stream, so the obvious
+          // click is a retry — not a toggle into a state it is already in.
+          if (liveOn && !stream) return startLive();
+          liveOn = !liveOn;
+          if (liveOn) startLive();
+          else {
+            stopLive();
+            setLive("off", "Live off");
+          }
+        });
+        // Leaving the page open in a background tab keeps one stream per visitor, so
+        // it is closed on unload rather than left for the leaf to notice.
+        window.addEventListener("beforeunload", stopLive);
+
+        loadUnits().then(load);
+      })();
+    </script>
+  </body>
+</html>

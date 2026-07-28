@@ -21,6 +21,8 @@ const QUESTION_BANK_PROTO = path.join(__dirname, "..", "question-bank-service", 
 const GRADING_TARGET = process.env.GRADING_GRPC_TARGET || `localhost:${process.env.GRADING_GRPC_PORT || 50075}`;
 const GRADING_PROTO = path.join(__dirname, "..", "grading-service", "protos", "grading.proto");
 const CERTIFICATE_TARGET = process.env.CERTIFICATE_ISSUER_TARGET || `http://localhost:${process.env.CERTIFICATE_ISSUER_PORT || 4351}`;
+const EXAM_EVENTS_TARGET = process.env.EXAM_EVENTS_TARGET || `localhost:${process.env.EXAM_EVENTS_GRPC_PORT || 50076}`;
+const EXAM_EVENTS_PROTO = path.join(__dirname, "..", "exam-events-service", "protos", "exam-events.proto");
 
 const PROTO_LOADER_OPTIONS = {
   keepCase: true,
@@ -40,6 +42,26 @@ const ACTIVATION_TTL_MS =
     ? Number(process.env.EXAM_CENTER_ACTIVATION_TTL_MS)
     : 15 * 60 * 1000;
 
+// Default cadence the SSE clock bridge asks the exam-events leaf for. The leaf
+// clamps whatever it is given, so this is a hint, not a guarantee. One second is
+// what a countdown needs; the page tweens between ticks.
+const CLOCK_TICK_MS =
+  process.env.EXAM_CENTER_CLOCK_TICK_MS != null && process.env.EXAM_CENTER_CLOCK_TICK_MS !== ""
+    ? Number(process.env.EXAM_CENTER_CLOCK_TICK_MS)
+    : 1000;
+
+// How often the shared health monitor dials the ecosystem for `/health/all/stream`.
+// One cycle serves every subscriber, so this is the ecosystem's total probe rate —
+// not a per-viewer one. Floored, because a probe loop is real load on five services.
+// Floored only against 0/negative — this is an operator env knob, not something a
+// request can set, and the suites turn it right down to observe several cycles.
+const HEALTH_STREAM_MS = Math.max(
+  10,
+  process.env.EXAM_CENTER_HEALTH_STREAM_MS != null && process.env.EXAM_CENTER_HEALTH_STREAM_MS !== ""
+    ? Number(process.env.EXAM_CENTER_HEALTH_STREAM_MS)
+    : 5000,
+);
+
 // Attempt-policy cooldown: after a taker exhausts `attemptsAllowed` on an exam,
 // the exam is locked for this long before attempts reset. Default 10 minutes.
 const COOLDOWN_MS =
@@ -57,9 +79,13 @@ module.exports = {
   GRADING_TARGET,
   GRADING_PROTO,
   CERTIFICATE_TARGET,
+  EXAM_EVENTS_TARGET,
+  EXAM_EVENTS_PROTO,
   PROTO_LOADER_OPTIONS,
   GRPC_DEADLINE_MS,
   HTTP_TIMEOUT_MS,
   ACTIVATION_TTL_MS,
   COOLDOWN_MS,
+  CLOCK_TICK_MS,
+  HEALTH_STREAM_MS,
 };

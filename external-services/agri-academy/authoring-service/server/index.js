@@ -561,6 +561,81 @@ function buildApp({ questionBank = require("../clients/question-bank-client") } 
     }
   });
 
+  /**
+   * NDJSON bridge over the bank's StreamQuestionPool — the pool tab renders rows
+   * as they arrive instead of waiting for a whole pool. No page speaks gRPC.
+   *
+   * The bridge RE-STREAMS: one `res.write()` per upstream message. Buffering the
+   * stream and answering once would silently delete the whole point, so the test
+   * suite asserts a line reaches the client while the upstream stream is still open.
+   *
+   * Framing (one JSON object per line):
+   *   {"type":"question","index":0,"question":{…}}
+   *   …
+   *   {"type":"end","count":N}          ← terminal: the stream COMPLETED
+   *   {"type":"error","error":"…"}      ← terminal: the stream was TRUNCATED
+   * HTTP cannot distinguish a clean close from a dropped connection, so that
+   * footer is how a consumer knows which of the two it got.
+   *
+   * Owner-only, so keys are included by default (authoring owns its own keys);
+   * `?withKeys=0` opts out. Bank unreachable before the first byte → the same
+   * 503 shape as the unary sibling above, so the console can fall back to it.
+   */
+  app.get("/v1/exams/:id/questions/stream", async (req, res) => {
+    const own = await ownedExam(req.academyUser, req.params.id);
+    if (own.code === "NOT_FOUND") return res.status(404).json({ error: "EXAM_NOT_FOUND" });
+    if (own.code === "FORBIDDEN") return res.status(403).json({ error: "FORBIDDEN" });
+
+    const withKeys = req.query.withKeys !== "0" && req.query.withKeys !== "false";
+    const limit = Number(req.query.limit) || 0;
+
+    let stream;
+    try {
+      stream = questionBank.streamPool(req.params.id, { withKeys, limit });
+    } catch (e) {
+      log.warn("question stream: bank unavailable", { exam: req.params.id, error: e.message });
+      return res.status(503).json({ error: "QUESTION_BANK_UNAVAILABLE" });
+    }
+
+    let started = false;
+    let count = 0;
+    const begin = () => {
+      if (started) return;
+      started = true;
+      res.writeHead(200, {
+        "content-type": "application/x-ndjson",
+        "cache-control": "no-cache, no-transform",
+        // Chunked (no content-length) — the length is unknown until the pool ends.
+        "x-accel-buffering": "no",
+      });
+      res.flushHeaders();
+    };
+    const line = (obj) => res.write(`${JSON.stringify(obj)}\n`);
+
+    // Consumer hung up → stop the upstream stream so the bank stops reading.
+    res.on("close", () => {
+      if (!res.writableEnded) stream.cancel();
+    });
+
+    stream.on("data", (question) => {
+      begin();
+      line({ type: "question", index: count, question });
+      count += 1;
+    });
+    stream.on("end", () => {
+      begin();
+      line({ type: "end", count });
+      res.end();
+    });
+    stream.on("error", (err) => {
+      if (err.code === questionBank.CANCELLED) return; // we cancelled it (consumer left)
+      log.warn("question stream: upstream error", { exam: req.params.id, code: err.code, error: err.message });
+      if (!started) return res.status(503).json({ error: "QUESTION_BANK_UNAVAILABLE" });
+      line({ type: "error", error: "QUESTION_BANK_UNAVAILABLE", count });
+      res.end();
+    });
+  });
+
   return app;
 }
 

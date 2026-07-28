@@ -24,6 +24,7 @@ const PAGES = [
   "/agri-academy-authoring.html",
   "/agri-academy-certificate.html",
   "/agri-academy-status.html",
+  "/agri-academy-events.html",
 ];
 
 describe("AgriAcademy HTML page gating", () => {
@@ -59,6 +60,23 @@ describe("AgriAcademy HTML page gating", () => {
     expect(certPage.text).toContain("Certificate of Achievement");
     const statusPage = await request(app).get("/agri-academy-status.html").expect(200);
     expect(statusPage.text).toContain("System Status");
+    const eventsPage = await request(app).get("/agri-academy-events.html").expect(200);
+    expect(eventsPage.text).toContain("Exam Activity");
+  });
+
+  it("the activity page ships its filters and the unit pages link to it", async () => {
+    await setEnabled(true);
+    const events = await request(app).get("/agri-academy-events.html").expect(200);
+    for (const id of ['id="unitFilter"', 'id="stateFilter"', 'id="limitFilter"', 'id="rows"']) {
+      expect(events.text).toContain(id);
+    }
+    expect(events.text).toContain("/api/v1/agri-academy/events");
+    // Every unit profile carries its own activity panel plus the link out to the
+    // all-units page — that pairing is the whole navigation contract here.
+    const unit = await request(app).get("/agri-academy-unit.html").expect(200);
+    expect(unit.text).toContain("Recent activity");
+    expect(unit.text).toContain('id="activityRows"');
+    expect(unit.text).toContain("/agri-academy-events.html");
   });
 
   it("the certificate page ships the print-to-PDF download control + colour-exact print CSS", async () => {

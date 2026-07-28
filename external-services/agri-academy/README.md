@@ -36,6 +36,7 @@ flowchart LR
         QBK["question-bank-service<br/>gRPC :50074<br/>typed questions (read + write)"]
         GRD["grading-service<br/>gRPC :50075<br/>STATELESS scorer"]
         CRT["certificate-issuer-service<br/>REST :4351<br/>mint / verify / revoke"]
+        EVT["exam-events-service<br/>gRPC :50076<br/>append-only log + clock ticks"]
         Shared["shared/ (logger, json-database, clock)"]
     end
 
@@ -51,43 +52,133 @@ flowchart LR
     EXC -- "gRPC: DrawQuestions / GetAnswerKey" --> QBK
     EXC -- "gRPC: GradeAttempt" --> GRD
     EXC -- "HTTP: issue / verify / revoke" --> CRT
+    EXC -- "gRPC: RecordSessionClock / stream WatchSessionClock + WatchEvents" --> EVT
     AUT -- "gRPC: Upsert/Delete/ListQuestion" --> QBK
+    AUT -- "gRPC: stream StreamQuestionPool" --> QBK
     EXC --> Shared
     AUT --> Shared
     QBK --> Shared
     GRD --> Shared
     CRT --> Shared
+    EVT --> Shared
 ```
 
-**Two orchestrators, three leaves.** Only `exam-center` and `authoring` hold clients.
-`question-bank`, `grading`, and `certificate-issuer` are leaves that dial no one. The
-question bank is dialed by **both** gateways (reads from the exam center, writes from
-authoring). Rolnopol dials **only the two gateways**, never a leaf.
+**Two orchestrators, four leaves.** Only `exam-center` and `authoring` hold clients.
+`question-bank`, `grading`, `certificate-issuer` and `exam-events` are leaves that dial
+no one. The question bank is dialed by **both** gateways (reads from the exam center,
+writes from authoring). Rolnopol dials **only the two gateways**, never a leaf.
+
+**Streaming lives on the leaves; the gateways stay REST to the outside.** The three
+server-streaming RPCs (`StreamQuestionPool`, `WatchSessionClock`, `WatchEvents`) are
+consumed by a gateway acting as a gRPC client and re-streamed to the browser as NDJSON /
+SSE. No page ever speaks gRPC, and a bridge **re-streams rather than buffers** — a bridge
+that collects a whole stream before responding is a bug, and the suite asserts against it.
 
 ---
 
 ## Services
 
-| Service                      | Runtime |    Port | Owns data                 | Responsibility                                                                                           |
-| ---------------------------- | ------- | ------: | ------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `exam-center-service`        | REST    |  `4350` | `data/exam-center.json`   | Sessions, two server-side clocks, attempt limits/locks; orchestrates draw → grade → issue.               |
-| `certificate-issuer-service` | REST    |  `4351` | `data/certificates.json`  | Mint (sequential `AA-<year>-<000123>`, idempotent per session) / verify / revoke. Always issues `valid`. |
-| `authoring-service`          | REST    |  `4352` | `data/authoring.json`     | Certification units, exam definitions, typed-question authoring, public unit pages + published surface.  |
-| `question-bank-service`      | gRPC    | `50074` | `data/question-bank.json` | Typed question pools; seeded draw + option shuffle, answer keys, write RPCs.                             |
-| `grading-service`            | gRPC    | `50075` | _none (stateless)_        | Per-type scoring (`single` exact, `multi` partial credit) → score % + pass verdict.                      |
+| Service                      | Runtime |    Port | Owns data                 | Responsibility                                                                                                                         |
+| ---------------------------- | ------- | ------: | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `exam-center-service`        | REST    |  `4350` | `data/exam-center.json`   | Sessions, two server-side clocks, attempt limits/locks; orchestrates draw → grade → issue.                                             |
+| `certificate-issuer-service` | REST    |  `4351` | `data/certificates.json`  | Mint (sequential `AA-<year>-<000123>`, idempotent per session) / verify / revoke. Always issues `valid`.                               |
+| `authoring-service`          | REST    |  `4352` | `data/authoring.json`     | Certification units, exam definitions, typed-question authoring, public unit pages + published surface.                                |
+| `question-bank-service`      | gRPC    | `50074` | `data/question-bank.json` | Typed question pools; seeded draw + option shuffle, answer keys, write RPCs.                                                           |
+| `grading-service`            | gRPC    | `50075` | _none (stateless)_        | Per-type scoring (`single` exact, `multi` partial credit) → score % + pass verdict.                                                    |
+| `exam-events-service`        | gRPC    | `50076` | `data/exam-events.json`   | Append-only session-clock log; streams the countdown (`WatchSessionClock`), pages the log (`ListEvents`) and tails it (`WatchEvents`). |
 
 All ports, targets, and DB paths are env-overridable (`EXAM_CENTER_PORT`,
 `AUTHORING_PORT`, `CERTIFICATE_ISSUER_PORT`, `QUESTION_BANK_GRPC_PORT`,
-`GRADING_GRPC_PORT`, the matching `*_TARGET`s, and `*_DB_PATH`s). Use `0` for an
+`GRADING_GRPC_PORT`, `EXAM_EVENTS_GRPC_PORT`, the matching `*_TARGET`s, and
+`*_DB_PATH`s). Use `0` for an
 ephemeral gRPC port in tests. The injectable clock reads `AGRI_ACADEMY_TIME_OFFSET_MS`
-(test-mode only) so deadline tests cross clocks without sleeping.
+(test-mode only) so deadline tests cross clocks without sleeping. The log tail's cadence
+and catch-up bounds are `EXAM_EVENTS_WATCH_POLL_MS` (+ `_MIN_`/`_MAX_`),
+`EXAM_EVENTS_WATCH_BACKLOG_MAX` and `EXAM_EVENTS_WATCH_HEARTBEAT_MS`.
+
+### Streaming RPCs & their browser bridges
+
+| RPC (leaf)                                   | Cardinality      | Bridge (gateway)                                                        | Wire   |
+| -------------------------------------------- | ---------------- | ----------------------------------------------------------------------- | ------ |
+| `QuestionBank.StreamQuestionPool` (`:50074`) | server streaming | `GET /v1/exams/:id/questions/stream` (authoring, owner-only)            | NDJSON |
+| `ExamEvents.WatchSessionClock` (`:50076`)    | server streaming | `GET /v1/sessions/:id/clock` (exam-center, taker-only)                  | SSE    |
+| `ExamEvents.WatchEvents` (`:50076`)          | server streaming | `GET /v1/events/stream`, `GET /v1/units/:unitId/events/stream` (public) | SSE    |
+
+Every bridge re-streams one write per upstream message and cancels upstream when the
+consumer hangs up, so a client that stops reading stops the leaf working.
+
+- **NDJSON framing.** `{type:"question",index,question}` per row, then exactly one
+  terminal line: `{type:"end",count}` (the stream **completed**) or
+  `{type:"error",error,count}` (it was **truncated**). HTTP cannot distinguish a clean
+  close from a dropped connection, so that footer is the contract.
+- **SSE framing (clock).** A `retry:` hint, then `event: tick` per `ClockTick`, closed by
+  `event: end`. A tick with `terminal: true` is always the last one.
+- **SSE framing (activity tail).** A `retry:` hint, then `event: entry` per log entry
+  (`id:` = its sequence) and `event: ping` while the log is quiet, plus `event: error` /
+  `event: end` if upstream breaks or stops. Unlike the clock there is **no terminal
+  frame** — an append-only log has no last entry, so the tail lives until the browser
+  leaves. A page therefore reads one unary page and tails from its `latestSequence`;
+  on reconnect the browser replays `Last-Event-ID`, which **beats `?since=`**, so a
+  dropped connection resumes without duplicating or skipping rows.
+- **Degradation.** Leaf unreachable _before_ the first byte → the same `503` shape as the
+  unary sibling route (`QUESTION_BANK_UNAVAILABLE` / `EXAM_EVENTS_UNAVAILABLE`), so a
+  console can fall back to unary `ListQuestions`, a taker keeps a local timer, and an
+  activity view stays on the page it already read. After the first byte → the terminal
+  error frame above.
+- **Keys stay off taker streams.** `StreamQuestionPool` strips `correct` from **every**
+  message unless `with_keys` is set, and only the owner-only authoring route sets it.
+
+### The activity log (reading what the clock feed wrote)
+
+`RecordSessionClock` is idempotent, so the log only grows when a session's clock
+actually changes. That makes it a **timeline** (`entitled` -> `active` -> `scored`)
+rather than a poll trace, and it is what the activity views read via `ListEvents` and
+then **subscribe to** via `WatchEvents`:
+
+| Surface (exam center)                 | Scope      | Auth | Page                                        |
+| ------------------------------------- | ---------- | ---- | ------------------------------------------- |
+| `GET /v1/units/:unitId/events`        | one unit   | none | `agri-academy-unit.html` -> Recent activity |
+| `GET /v1/events`                      | every unit | none | `agri-academy-events.html`                  |
+| `GET /v1/units/:unitId/events/stream` | one unit   | none | the same panel, live                        |
+| `GET /v1/events/stream`               | every unit | none | `agri-academy-events.html`, `-status.html`  |
+
+The unary reads accept `?limit=` (clamped server-side -- an unbounded log read is never
+allowed), `?examId=`, and `?since=` (only entries above that sequence). `total` is the
+match count _before_ the limit, so a view can honestly say "showing 50 of 812".
+
+**Read a page, then tail it.** `latest_sequence` means the same thing to both RPCs, so a
+view hands the page's high-water mark to the stream (`?since=`) and receives exactly what
+came after it -- one bounded read plus a subscription, never a repeated read. The tail is
+oldest-first (a timeline extends forward; the page is newest-first because a table shows
+the recent end). Entries that already existed above the cursor arrive first as
+`backlog: true` and are **capped** -- a very stale cursor is fast-forwarded rather than
+replaying a whole log into a live stream. The per-unit stream resolves the unit through
+authoring's public profile before subscribing, so a hidden unit's tail 404s exactly as
+its page does, with nothing ever opened upstream.
+
+The three pages carry it differently: the all-units log streams into its table with a
+clickable **Live** pill (the toggle is there for anyone who wants the view to hold
+still), a unit profile's panel grows itself with a live dot next to the heading, and the
+status page runs a six-row ticker beside the health grid -- the grid polls because a
+probe is a question you have to ask, while the log is pushed.
+
+**Why these are public.** An entry records what happened to a _session_ -- `sess-12`
+went `active`, counting down to a deadline -- and carries **no taker identity**, because
+none is recorded. That is a property of `SessionClockSnapshot`, not a filter applied on
+the way out, and the suites assert it at the leaf, the gateway, and the bridge. Adding
+an identity to the snapshot means revisiting all three. The per-unit route additionally
+resolves the unit through authoring's _public_ profile first, so a disabled unit's log
+is as hidden as its page.
+
+The gateway overlays exam titles and unit names (the leaf resolves nothing -- it stores
+ids and dials no one); if authoring is unavailable the log still renders with bare ids.
 
 ---
 
 ## Running the ecosystem
 
 ```bash
-npm run academy            # supervisor: starts ALL five (leaves + issuer + authoring, then exam center)
+npm run academy            # supervisor: starts ALL six (leaves + issuer + authoring, then exam center)
                            # Ctrl-C stops the whole ecosystem cleanly
 
 # …or run any service standalone:
@@ -96,6 +187,7 @@ npm run academy:authoring
 npm run academy:questions
 npm run academy:grading
 npm run academy:certs
+npm run academy:exam-events
 ```
 
 Every stateful service **self-seeds** on first boot: authoring ships a demo unit +
@@ -107,12 +199,40 @@ two published exams (`pesticide-basics`, `tractor-safety`), the question bank sh
 ```
 GET http://localhost:4350/health/all
 → { overall: "SERVING" | "DEGRADED" | "DOWN",
-    services: [ exam-center, authoring, question-bank, grading, certificate-issuer ] }
+    services: [ exam-center, authoring, question-bank, grading, certificate-issuer,
+                exam-events ] }
 ```
 
 An unreachable service is reported `UNREACHABLE` (never a thrown error); the report
-always lists all five. In Rolnopol: `GET /api/v1/agri-academy/health` (200 all-up,
-503 when any is down).
+always lists all six. In Rolnopol: `GET /api/v1/agri-academy/health` (200 all-up,
+503 when any is down) and the public `GET /api/v1/agri-academy/status` (no auth).
+
+**Live health (`GET /health/all/stream`, SSE).** Probing is the one thing here that
+genuinely must be polled — a service that has died cannot announce it — but the browser
+should not be the one doing it. The exam center runs **one probe cycle for every
+subscriber** (`EXAM_CENTER_HEALTH_STREAM_MS`, default 5s) and pushes each report as
+`event: status`, carrying the same `{ overall, services }` body as the unary route plus
+`changed` (a service's _status_ moved, never merely its uptime) and `at`. So five
+services get dialed once per cycle no matter how many pages are watching — the opposite
+of what N polling browsers do — and the loop only exists while somebody is subscribed:
+the last subscriber out stops it. A joining subscriber is served the cached reading
+immediately rather than staring at "Checking status…" for a cadence.
+
+In Rolnopol: `GET /api/v1/agri-academy/status/stream` (public, flag-gated). Two surfaces
+read it — the **status page** (which keeps the 5s poll only as a fallback for a client
+that will not hold a connection open) and the **Service status button** on the units
+directory, which restyles itself (green / amber / red, plus "2 down" and the names in its
+tooltip) the moment the aggregate moves. There is no terminal frame: health has no end
+state, so the stream lives until the browser leaves.
+
+**An unreachable exam center is an outage, not an unknown.** Both the stream and its
+unary sibling answer `503 { error: "AGRI_ACADEMY_OFFLINE" }` — a body with no `services` —
+when the gateway itself is down. Every status surface renders that as red: the exam
+center is one of the six, and with it gone nothing can be enrolled, taken or graded.
+Grey is reserved for "not read yet". A subscriber that loses the stream reads the unary
+route **immediately** (waiting out a poll interval would leave a stale green on screen),
+polls while it is degraded, and reopens the stream once the gateway answers again —
+retrying on evidence rather than on a timer, so recovery costs one request, not a storm.
 
 ### Demos (run the ecosystem first)
 
@@ -134,19 +254,25 @@ isolation**. The suites use isolated temp DBs, ephemeral/fixed ports per pid,
 `AGRI_ACADEMY_LOG=silent`, deterministic seeds, and the injectable clock (no
 `setTimeout`-based waiting).
 
-| Suite                                 | Covers                                                                                   |
-| ------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `agri-academy.question-bank.test.js`  | seeded draw determinism, option shuffle, exhaustion, key fetch, write RPCs, unknown-type |
-| `agri-academy.question-types.test.js` | authoring validation registry + extensibility seam                                       |
-| `agri-academy.grading.test.js`        | per-type scoring math, pass-threshold boundary, extensibility seam                       |
-| `agri-academy.certificates.test.js`   | mint / sequential numbering / idempotent per session / verify states / revoke            |
-| `agri-academy.authoring.test.js`      | unit CRUD, ownership `403`, publish validation, public/published surfaces                |
-| `agri-academy.exam-center.test.js`    | session lifecycle, two clocks, attempt lock, grading_pending, cert issuance, health/all  |
-| `agri-academy-rest.test.js`           | both bridges end to end (author → publish → take → pass → certificate)                   |
-| `agri-academy-payment.test.js`        | pay-before-exam: charge/payout → entitle; `402`; refund+clawback; reconcile              |
-| `agri-academy-health.test.js`         | `/health/all` SERVING → DEGRADED when one service is killed                              |
-| `agri-academy-pages-gating.test.js`   | HTML pages 404 when the flag is off; `/agri-academy` → units directory                   |
-| `agri-academy-independence.test.js`   | no service imports from Rolnopol (incl. `financial.service`); no new deps                |
+| Suite                                  | Covers                                                                                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `agri-academy.question-bank.test.js`   | seeded draw determinism, option shuffle, exhaustion, key fetch, write RPCs, unknown-type   |
+| `agri-academy.question-types.test.js`  | authoring validation registry + extensibility seam                                         |
+| `agri-academy.grading.test.js`         | per-type scoring math, pass-threshold boundary, extensibility seam                         |
+| `agri-academy.certificates.test.js`    | mint / sequential numbering / idempotent per session / verify states / revoke              |
+| `agri-academy.authoring.test.js`       | unit CRUD, ownership `403`, publish validation, public/published surfaces                  |
+| `agri-academy.exam-center.test.js`     | session lifecycle, two clocks, attempt lock, grading_pending, cert issuance, health/all    |
+| `agri-academy-rest.test.js`            | both bridges end to end (author → publish → take → pass → certificate)                     |
+| `agri-academy-payment.test.js`         | pay-before-exam: charge/payout → entitle; `402`; refund+clawback; reconcile                |
+| `agri-academy-health.test.js`          | `/health/all` SERVING → DEGRADED when one service is killed; an OPEN status stream sees it |
+| `agri-academy-pages-gating.test.js`    | HTML pages 404 when the flag is off; `/agri-academy` → units directory                     |
+| `agri-academy-independence.test.js`    | no service imports from Rolnopol (incl. `financial.service`); no new deps                  |
+| `agri-academy.exam-events.test.js`     | clock projection (pure), idempotent feed, tick cadence, terminal tick, cancel cleanup      |
+| `agri-academy.exam-events.test.js`     | `ListEvents` ordering / filters / clamping / cursor; historical entries never reclassified |
+| `agri-academy.exam-events.test.js`     | `WatchEvents`: opening heartbeat, live vs `backlog` frames, scoping, never self-terminates |
+| `agri-academy.streaming-question-pool` | `StreamQuestionPool`: order, per-message key strip, limit, cancel stops the handler        |
+| `agri-academy-streaming-bridges`       | NDJSON + SSE bridges **re-stream** (frame N out before the upstream stream ends)           |
+| `agri-academy-rest.test.js`            | the activity tail end to end through the app proxy: entry lands on an open stream          |
 
 ---
 
@@ -216,7 +342,16 @@ stateDiagram-v2
   that exhausts the allowance locks the exam for a cooldown (`COOLDOWN_MS`, default
   10 min); starting while locked → `403 EXAM_LOCKED`; the cooldown lapsing resets the count.
 
-Both clocks are server-authoritative; the UI countdown is cosmetic.
+Both clocks are server-authoritative, and the countdown is a **projection of the server
+clock** rather than a local guess: `GET /v1/sessions/:id/clock` (SSE) re-streams the
+`exam-events` leaf's `WatchSessionClock` ticks, so drift and tab-throttling stop
+mattering and the page keeps a local timer only as a tween between ticks.
+
+The tick stream is **advisory**. A `terminal` tick means "the server's clock says this
+window has lapsed" — it does **not** mean the session was finalized. The REST
+submit / lazy-finalize path stays the only writer of session state; every session touch
+feeds the leaf a fresh snapshot (best-effort, so a dead leaf costs a countdown and
+nothing else).
 
 ---
 
@@ -250,5 +385,10 @@ charges/payouts/refunds. Free exams move no money.
 
 Reached from the navbar (when the flag is on): **`/agri-academy-units.html`** (the main
 directory + entry point), **`/agri-academy.html`** (taker), **`/agri-academy-unit.html`**
-(public unit profile), **`/agri-academy-authoring.html`** (unit console). All share the
-site header re-themed to the AgriAcademy green palette (`css/pages/agri-academy.css`).
+(public unit profile), **`/agri-academy-authoring.html`** (unit console),
+**`/agri-academy-status.html`** (system status, with a live activity ticker) and
+**`/agri-academy-events.html`** (the all-units **Exam Activity** log, linked from the
+bottom of every unit's activity panel and from the status page). The public unit profile
+carries that unit's own **Recent activity** panel. All three activity surfaces are
+**live** — they stream new entries in over SSE instead of waiting for a refresh. All share the site header re-themed to the AgriAcademy green palette
+(`css/pages/agri-academy.css`).

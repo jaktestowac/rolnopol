@@ -18,9 +18,15 @@
         --accent-2: #7bd4a0;
         --border: #24382b;
       }
+
       * {
         box-sizing: border-box;
       }
+
+      .footer {
+        border-top: 1px solid var(--border);
+      }
+
       body {
         margin: 0;
         font-family:
@@ -32,11 +38,13 @@
         color: var(--ink);
         min-height: 100vh;
       }
+
       header {
         padding: 40px 24px 8px;
         max-width: 1040px;
         margin: 0 auto;
       }
+
       .eyebrow {
         text-transform: uppercase;
         letter-spacing: 0.15em;
@@ -44,24 +52,29 @@
         font-size: 12px;
         font-weight: 700;
       }
+
       h1 {
         margin: 6px 0 4px;
         font-size: 34px;
       }
+
       .sub {
         color: var(--muted);
         margin: 0 0 8px;
       }
+
       main {
         max-width: 1040px;
         margin: 0 auto;
         padding: 16px 24px 64px;
       }
+
       .grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 18px;
       }
+
       .card {
         background: linear-gradient(180deg, var(--card), #12201800);
         border: 1px solid var(--border);
@@ -74,20 +87,24 @@
           border-color 0.15s ease;
         display: block;
       }
+
       .card:hover {
         transform: translateY(-3px);
         border-color: var(--accent);
       }
+
       .card h2 {
         margin: 0 0 8px;
         font-size: 20px;
       }
+
       .card p {
         color: var(--muted);
         margin: 0 0 16px;
         font-size: 14px;
         line-height: 1.5;
       }
+
       .pill {
         display: inline-block;
         background: #1e3527;
@@ -98,26 +115,31 @@
         font-size: 12px;
         font-weight: 600;
       }
+
       .pill.rating {
         margin-left: 6px;
         color: #ffce54;
         border-color: #4a3d1e;
         background: #241f12;
       }
+
       .state {
         color: var(--muted);
         padding: 40px 0;
         text-align: center;
       }
+
       .card-head {
         display: flex;
         align-items: center;
         gap: 12px;
         margin-bottom: 8px;
       }
+
       .card-head h2 {
         margin: 0;
       }
+
       .ubadge {
         display: inline-flex;
         align-items: center;
@@ -129,12 +151,14 @@
         color: #06170d;
         flex-shrink: 0;
       }
+
       .chips {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
         margin: 0 0 14px;
       }
+
       .chip {
         font-size: 12px;
         background: #1e3527;
@@ -143,22 +167,26 @@
         padding: 3px 10px;
         color: var(--accent-2);
       }
+
       .topbar {
         max-width: 1040px;
         margin: 0 auto;
         padding: 20px 24px 0;
       }
+
       .topbar a {
         color: var(--accent-2);
         text-decoration: none;
         font-size: 14px;
       }
+
       .actions {
         display: flex;
         flex-wrap: wrap;
         gap: 12px;
         margin: 18px 0 4px;
       }
+
       .btn {
         display: inline-flex;
         align-items: center;
@@ -176,15 +204,91 @@
           transform 0.15s ease,
           border-color 0.15s ease;
       }
+
       .btn:hover {
         transform: translateY(-2px);
         border-color: var(--accent);
       }
+
       .btn--primary {
         background: linear-gradient(180deg, var(--accent), #2e8f55);
         border-color: var(--accent);
         color: #06170d;
       }
+
+      /* ── The Service status button, styled by what it is reporting ───────────────
+       It is a link to the status page that already knows what that page will say:
+       one live stream drives the dot, the border and the trailing summary, so an
+       outage is visible from the directory without opening anything. */
+      .btn--status .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--muted);
+        flex-shrink: 0;
+      }
+
+      .btn--status .note {
+        font-weight: 500;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .btn--status.is-ok {
+        border-color: #2f6b45;
+      }
+
+      .btn--status.is-ok .dot {
+        background: #3fbf6b;
+        box-shadow: 0 0 0 3px rgba(63, 191, 107, 0.16);
+      }
+
+      .btn--status.is-ok .note {
+        color: var(--accent-2);
+      }
+
+      .btn--status.is-degraded {
+        border-color: #6b5a24;
+        background: #2c2716;
+      }
+
+      .btn--status.is-degraded .dot {
+        background: #ffce6b;
+        box-shadow: 0 0 0 3px rgba(255, 206, 107, 0.16);
+        animation: statusPulse 1.6s ease-in-out infinite;
+      }
+
+      .btn--status.is-degraded .note {
+        color: #ffce6b;
+      }
+
+      .btn--status.is-down {
+        border-color: #7a3438;
+        background: #2e191b;
+      }
+
+      .btn--status.is-down .dot {
+        background: #ff8a8a;
+        box-shadow: 0 0 0 3px rgba(255, 138, 138, 0.18);
+        animation: statusPulse 1.6s ease-in-out infinite;
+      }
+
+      .btn--status.is-down .note {
+        color: #ff8a8a;
+      }
+
+      @keyframes statusPulse {
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .btn--status .dot {
+          animation: none;
+        }
+      }
+
       .section-title {
         max-width: 1040px;
         margin: 8px auto 0;
@@ -192,9 +296,11 @@
         font-size: 18px;
         color: var(--ink);
       }
+
       .hidden {
         display: none;
       }
+
       .tabs {
         display: flex;
         gap: 6px;
@@ -202,6 +308,7 @@
         margin: 0 0 20px;
         border-bottom: 1px solid var(--border);
       }
+
       .tab {
         background: none;
         border: none;
@@ -215,13 +322,16 @@
         align-items: center;
         gap: 8px;
       }
+
       .tab:hover {
         color: var(--ink);
       }
+
       .tab.is-active {
         color: var(--accent-2);
         border-bottom-color: var(--accent);
       }
+
       .badge {
         display: inline-block;
         font-size: 12px;
@@ -231,39 +341,47 @@
         color: var(--accent-2);
         font-weight: 600;
       }
+
       .badge--pass {
         color: #8ee6ab;
         border-color: #2f5b41;
         background: #12281c;
       }
+
       .badge--fail {
         color: #ff9c9c;
         border-color: #4a2626;
         background: #2a1515;
       }
+
       .badge--warn {
         color: #ffd98a;
         border-color: #4a3d1e;
         background: #2a2313;
       }
+
       .badge--active {
         color: #8bc4ff;
         border-color: #25405f;
         background: #12203a;
       }
+
       .badge--pending {
         color: #cfe9d7;
         border-color: var(--border);
         background: #16241b;
       }
+
       .badge--muted {
         color: var(--muted);
         border-color: var(--border);
         background: transparent;
       }
+
       .btn--sm {
         margin-top: 12px;
       }
+
       .ex-search {
         width: 100%;
         max-width: 360px;
@@ -275,14 +393,17 @@
         padding: 9px 12px;
         font-size: 14px;
       }
+
       .atable-wrap {
         overflow-x: auto;
       }
+
       .ex-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 13px;
       }
+
       .ex-table th,
       .ex-table td {
         text-align: left;
@@ -290,39 +411,48 @@
         border-bottom: 1px solid var(--border);
         white-space: nowrap;
       }
+
       .ex-table th[data-sort] {
         cursor: pointer;
         color: var(--muted);
         user-select: none;
         font-weight: 600;
       }
+
       .ex-table th[data-sort]:hover {
         color: var(--ink);
       }
+
       .ex-table th.sort-asc::after {
         content: " ▲";
         font-size: 10px;
         color: var(--accent-2);
       }
+
       .ex-table th.sort-desc::after {
         content: " ▼";
         font-size: 10px;
         color: var(--accent-2);
       }
+
       .ex-table td {
         color: var(--ink);
       }
+
       .ex-link {
         color: var(--accent-2);
         text-decoration: none;
       }
+
       .ex-link:hover {
         text-decoration: underline;
       }
+
       .stars {
         display: inline-flex;
         gap: 1px;
       }
+
       .star {
         background: none;
         border: none;
@@ -334,15 +464,19 @@
         color: #3a4a40;
         transition: color 0.1s ease;
       }
+
       .star.on {
         color: #ffce54;
       }
+
       .star:hover {
         color: #ffd98a;
       }
+
       .rating-none {
         color: var(--muted);
       }
+
       .toolbar {
         display: flex;
         flex-wrap: wrap;
@@ -350,10 +484,12 @@
         align-items: center;
         margin: 0 0 18px;
       }
+
       .toolbar .ex-search {
         margin-bottom: 0;
         flex: 1 1 260px;
       }
+
       .ex-select {
         background: #0f1a14;
         border: 1px solid var(--border);
@@ -363,6 +499,7 @@
         font-size: 14px;
         cursor: pointer;
       }
+
       .pager {
         display: flex;
         align-items: center;
@@ -370,6 +507,7 @@
         gap: 10px;
         margin: 24px 0 4px;
       }
+
       .page-btn {
         background: #1e3527;
         border: 1px solid var(--border);
@@ -381,19 +519,23 @@
         cursor: pointer;
         transition: border-color 0.15s ease;
       }
+
       .page-btn:hover:not(:disabled) {
         border-color: var(--accent);
       }
+
       .page-btn:disabled {
         opacity: 0.4;
         cursor: default;
       }
+
       .page-info {
         color: var(--muted);
         font-size: 13px;
       }
     </style>
   </head>
+
   <body class="agri-academy-page">
     <div id="header-component"></div>
     <div class="topbar"><a href="/index.html">← Rolnopol home</a></div>
@@ -406,7 +548,10 @@
         <a class="btn" href="/agri-academy-leaderboard.html"><i>🏆</i> Leaderboards</a>
         <a class="btn" href="/agri-academy-authoring.html?new=1"><i>➕</i> Create a new unit</a>
         <a class="btn" href="/agri-academy-authoring.html"><i>🏛️</i> Manage my unit</a>
-        <a class="btn" href="/agri-academy-status.html"><i>📡</i> Service status</a>
+        <a id="statusBtn" class="btn btn--status" href="/agri-academy-status.html" title="Checking the AgriAcademy service ecosystem…">
+          <i class="dot" aria-hidden="true"></i> Status:
+          <span class="note" id="statusNote">checking…</span>
+        </a>
       </div>
     </header>
     <main>
@@ -462,6 +607,9 @@
         <div id="certState" class="state">Loading…</div>
       </section>
     </main>
+
+    <div id="footer-component"></div>
+
     <script src="/js/core/event-bus.js"></script>
     <script src="/js/core/storage.js"></script>
     <script src="/js/core/app.js"></script>
@@ -921,7 +1069,121 @@
           }),
         );
 
+        // ── The live Service status button ───────────────────────────────────────────
+        //
+        // Subscribes to the exam center's shared health monitor over SSE, so the button
+        // reports the ecosystem's state rather than merely linking to it — and it costs
+        // no extra probing: one cycle serves every watcher.
+        //
+        // A one-shot read runs first so the button is honest immediately, and a slow
+        // poll is the fallback for a client that will not hold the stream open. The
+        // status page renders the same reports in full.
+        const STATUS_LOOK = {
+          SERVING: { cls: "is-ok", note: "operational", title: "All AgriAcademy services are operational" },
+          DEGRADED: { cls: "is-degraded", note: "degraded", title: "Some AgriAcademy services are unreachable" },
+          DOWN: { cls: "is-down", note: "outage", title: "The AgriAcademy ecosystem is unavailable" },
+          // No report at all — the exam center is not answering. That is the MOST total
+          // outage there is (nothing can be enrolled, taken or graded), so it reads red
+          // like one. Grey would be a lie, and it would contradict the status page,
+          // which paints this same case as an outage.
+          OFFLINE: { cls: "is-down", note: "unavailable", title: "The AgriAcademy exam center is not answering — no exams can run" },
+          // Reserved for "we genuinely do not know yet": before the first reading, or a
+          // gateway that answered with a shape we do not recognise.
+          UNKNOWN: { cls: "", note: "unknown", title: "The AgriAcademy status could not be read" },
+        };
+
+        function paintStatus(report) {
+          const btn = $("statusBtn");
+          const note = $("statusNote");
+          if (!btn || !note) return;
+          // An aggregate always carries `services`; an error body (503
+          // AGRI_ACADEMY_OFFLINE, a proxy failure, no body at all) never does.
+          const reported = report && Array.isArray(report.services);
+          const key = !reported ? "OFFLINE" : STATUS_LOOK[report.overall] ? report.overall : "UNKNOWN";
+          const look = STATUS_LOOK[key];
+          btn.className = `btn btn--status ${look.cls}`.trim();
+          // When something IS wrong, say how much — "degraded" alone sends the visitor
+          // to the status page just to learn whether it matters.
+          const down = reported ? report.services.filter((s) => s.status !== "SERVING") : [];
+          note.textContent = down.length ? `${look.note} · ${down.length} down` : look.note;
+          btn.title = down.length ? `${look.title}: ${down.map((s) => s.name).join(", ")}` : look.title;
+        }
+
+        let statusStream = null;
+        let statusPoll = null;
+
+        /** Read the aggregate once. Resolves true when the gateway actually reported. */
+        async function readStatusOnce() {
+          try {
+            // A 503 still carries { overall, services } when the ecosystem is merely
+            // degraded — that IS the report. It carries an error body instead when the
+            // exam center itself is unreachable, which paintStatus renders as an outage.
+            const res = await fetch("/api/v1/agri-academy/status", { credentials: "include" });
+            const body = await res.json().catch(() => null);
+            paintStatus(body);
+            return !!body && Array.isArray(body.services);
+          } catch {
+            paintStatus(null);
+            return false;
+          }
+        }
+
+        function startStatusPoll() {
+          if (statusPoll) return;
+          statusPoll = setInterval(async () => {
+            const reported = await readStatusOnce();
+            // The gateway is answering again, so the stream endpoint almost certainly
+            // works too — reopen it. Retrying on EVIDENCE rather than on a blind timer
+            // is what keeps recovery from turning into a reconnect storm.
+            if (reported && !statusStream) watchStatus();
+          }, 15000);
+        }
+        function stopStatusPoll() {
+          if (statusPoll) clearInterval(statusPoll);
+          statusPoll = null;
+        }
+
+        function watchStatus() {
+          let streamed = false;
+          let failures = 0;
+          const stream = new EventSource("/api/v1/agri-academy/status/stream", { withCredentials: true });
+          statusStream = stream;
+          stream.addEventListener("status", (e) => {
+            streamed = true;
+            failures = 0;
+            stopStatusPoll(); // the stream is authoritative while it is up
+            try {
+              paintStatus(JSON.parse(e.data));
+            } catch {
+              /* an unreadable frame changes nothing */
+            }
+          });
+          stream.onerror = () => {
+            failures += 1;
+            // Paint the truth NOW. The stream dying is itself news — usually that the
+            // exam center went away — and waiting out a poll interval to say so would
+            // leave a stale green button on screen for as long as that interval.
+            readStatusOnce();
+            startStatusPoll();
+            // An endpoint that answers non-2xx (the flag off, an app that predates this
+            // route, a dead gateway) fails the connection outright: readyState is CLOSED
+            // and the browser will not retry. Neither should we — a stream kept alive
+            // there just repeats one console error on a timer. A transient drop leaves
+            // it CONNECTING, where auto-reconnect is exactly right, so it is kept — but
+            // only while there is reason to believe a frame will ever arrive.
+            if (stream.readyState === EventSource.CLOSED || (!streamed && failures >= 3)) {
+              stream.close();
+              if (statusStream === stream) statusStream = null; // let a poll reopen it
+            }
+          };
+          setTimeout(() => {
+            if (!streamed) startStatusPoll();
+          }, 8000);
+          window.addEventListener("beforeunload", () => stream.close());
+        }
+
         loadUnits();
+        readStatusOnce().then(watchStatus);
       })();
     </script>
   </body>

@@ -1,0 +1,157 @@
+syntax = "proto3";
+
+package examevents;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Exam events — an append-only log leaf for the AgriAcademy ecosystem. Dials no
+// one: the exam center FEEDS it (RecordSessionClock) and SUBSCRIBES to it
+// (WatchSessionClock). It owns data/exam-events.json.
+//
+// Its first job is the server-authoritative clock. Both AgriAcademy windows are
+// server-owned already (`accessWindowDays` and `durationSec`) but the browser's
+// countdown was a local guess that drifts and stalls when a tab is throttled.
+// WatchSessionClock makes the countdown a PROJECTION of the server's clock.
+//
+// ADVISORY BY CONSTRUCTION. A tick reports what the server's clock implies; it
+// never writes session state. The exam center's REST submit / lazy-finalize path
+// remains the only thing that finalizes a session, so a subscriber that misses
+// every tick still gets the same outcome — just less promptly displayed.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service Health {
+  rpc Check(HealthRequest) returns (HealthReply);
+}
+
+message HealthRequest {}
+message HealthReply {
+  string status = 1; // "SERVING" | "NOT_SERVING"
+  bool db_initialized = 2;
+  int32 session_count = 3; // sessions with a recorded clock snapshot
+  int32 event_count = 4; // entries in the append-only log
+  int32 active_clock_streams = 5; // open WatchSessionClock subscriptions
+  string version = 6;
+  int64 uptime_ms = 7;
+  int32 active_event_streams = 8; // open WatchEvents (log tail) subscriptions
+}
+
+service ExamEvents {
+  // Feed (exam center → leaf). Idempotent: recording an unchanged snapshot is a
+  // no-op, so the exam center can call it freely on every session touch.
+  rpc RecordSessionClock(SessionClockSnapshot) returns (RecordReply);
+  // Server streaming — the authoritative countdown for one session.
+  rpc WatchSessionClock(WatchRequest) returns (stream ClockTick);
+  // Read the append-only log, newest first, optionally scoped to one unit or exam.
+  rpc ListEvents(EventQuery) returns (EventList);
+  // Server streaming — a LIVE TAIL of the same log, oldest first, from a cursor.
+  //
+  // The sibling of ListEvents, not a replacement for it: a table view wants "the
+  // newest N and how many there are" (one bounded unary message), and then wants
+  // to be TOLD about entry N+1 rather than asking every few seconds. So a page
+  // reads one page, then tails from `latest_sequence`.
+  //
+  // Unlike WatchSessionClock this stream has NO terminal condition — an
+  // append-only log never finishes — so it lives until the subscriber hangs up.
+  rpc WatchEvents(WatchEventsRequest) returns (stream EventFrame);
+}
+
+// The clock-relevant facts about one session, exactly as the exam center holds
+// them. Deadlines are epoch millis on the exam center's injectable clock; the
+// leaf reads the same clock, so a test offset moves both together.
+message SessionClockSnapshot {
+  string session_id = 1;
+  string exam_id = 2;
+  string state = 3; // the exam center's session state machine, verbatim
+  int64 activation_expires_at = 4; // awaiting_payment: payment TTL
+  int64 access_expires_at = 5; // entitled: accessWindowDays window
+  int64 expires_at = 6; // active: durationSec completion window
+  // The exam's owning unit, snapshotted onto the session at enroll. Carried so the
+  // log can be read per-unit without the leaf dialing authoring to resolve it.
+  string unit_id = 7;
+}
+
+message RecordReply {
+  bool recorded = 1; // false when the snapshot was already current (idempotent)
+  int64 sequence = 2; // position in the append-only log (0 when nothing appended)
+}
+
+message WatchRequest {
+  string session_id = 1;
+  int32 tick_ms = 2; // cadence hint; clamped server-side
+}
+
+// ── Reading the log ──────────────────────────────────────────────────────────
+//
+// One entry per clock-relevant change the exam center reported. Because the feed
+// is idempotent, consecutive identical snapshots collapse — so the log reads as
+// the session's actual timeline (entitled → active → scored), not as a poll trace.
+//
+// Carries NO taker identity: an entry says what happened to a session, never who
+// was sitting it. That is what makes a per-unit and an all-units view publishable.
+message ExamEvent {
+  int64 sequence = 1; // monotonic; the log's own ordering
+  int64 at = 2; // when it was recorded, on the injectable clock
+  string kind = 3; // "session_clock" (more kinds arrive with later features)
+  string session_id = 4;
+  string exam_id = 5;
+  string unit_id = 6;
+  string state = 7;
+  // The window this state was counting down and the deadline it was counting to,
+  // resolved AT RECORD TIME. Reading them back later must not re-derive them from
+  // "now" — a historical entry describes the clock as it was, not as it is.
+  string window = 8; // "access" | "completion" | "none"
+  int64 deadline_at = 9;
+}
+
+message EventQuery {
+  string unit_id = 1; // "" = every unit
+  string exam_id = 2; // "" = every exam
+  int32 limit = 3; // 0 = server default; clamped to a maximum
+  int64 since_sequence = 4; // 0 = from the start; else only entries ABOVE it
+}
+
+message EventList {
+  repeated ExamEvent events = 1; // newest first
+  int32 total = 2; // entries matching the filter, BEFORE the limit
+  int64 latest_sequence = 3; // the log's high-water mark (a poll cursor)
+  int32 returned = 4;
+}
+
+message WatchEventsRequest {
+  string unit_id = 1; // "" = every unit
+  string exam_id = 2; // "" = every exam
+  // Only entries ABOVE it — the SAME meaning the field has in EventQuery, so a
+  // page can hand the `latest_sequence` it just read straight to the tail and
+  // receive exactly the entries it has not seen. 0 = catch up from the start of
+  // the retained log (bounded — see EventFrame.backlog).
+  int64 since_sequence = 3;
+  int32 poll_ms = 4; // cadence hint; clamped server-side
+}
+
+// One frame of the tail: either an entry, or a heartbeat carrying no entry.
+//
+// The heartbeat exists because an idle log and a dead connection look identical
+// otherwise, and everything between the leaf and a browser (the SSE bridge, the
+// app proxy, any reverse proxy) is entitled to drop a silent stream. The FIRST
+// frame of a caught-up tail is always a heartbeat, so a subscriber learns it is
+// subscribed without waiting for the next exam to happen.
+message EventFrame {
+  ExamEvent event = 1; // unset when heartbeat is true
+  bool heartbeat = 2; // no entry — the tail is alive and idle
+  // True for entries that already existed when the tail opened (catch-up), false
+  // for entries observed live. Catch-up is CAPPED: a tail opened at a very stale
+  // cursor is fast-forwarded to the newest N, because a stream still replaying
+  // history is not a tail. Read a page with ListEvents for real history.
+  bool backlog = 3;
+  int64 latest_sequence = 4; // the log's high-water mark when this frame was written
+}
+
+message ClockTick {
+  string session_id = 1;
+  string window = 2; // "access" | "completion" | "none" (terminal)
+  int64 remaining_ms = 3; // 0 on a terminal tick, never negative
+  int64 deadline_at = 4; // the deadline this window is counting down to
+  string state = 5; // mirrors the session state machine (PROJECTED when lapsed)
+  bool terminal = 6; // last message on this stream
+  int64 tick = 7; // 1-based sequence within this stream
+  int64 server_now = 8; // the server's own clock reading — the authority
+}

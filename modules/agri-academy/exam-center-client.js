@@ -10,6 +10,8 @@
  * to translate it (mostly passthrough). A network error / timeout surfaces as
  * `{ status: 503, body: { error: "AGRI_ACADEMY_OFFLINE" } }`.
  */
+const { Readable } = require("stream");
+
 const BASE = process.env.AGRI_ACADEMY_TARGET || `http://localhost:${process.env.EXAM_CENTER_PORT || 4350}`;
 const TIMEOUT_MS = Number(process.env.AGRI_ACADEMY_CLIENT_TIMEOUT_MS || 4000);
 
@@ -48,6 +50,51 @@ async function call(method, path, { userId, body, query } = {}) {
   return { status: res.status, body: parsed };
 }
 
+/**
+ * Open a STREAMING GET and hand back the upstream body so a route can re-stream it.
+ *
+ * Deliberately not `call`: that one buffers the whole body and aborts after
+ * TIMEOUT_MS, which are both exactly wrong for an SSE tail — it is meant to stay
+ * open indefinitely and to deliver each frame as it arrives. A non-200 (or a
+ * response that is not an event stream) is read to completion and returned in the
+ * same `{ status, body }` shape as `call`, so a route can forward it unchanged.
+ *
+ * `cancel()` aborts the upstream request, which is how a browser hanging up
+ * propagates all the way down to the gRPC tail at the leaf.
+ */
+async function openStream(path, { query, headers = {} } = {}) {
+  const url = new URL(`${BASE}${path}`);
+  if (query) for (const [k, v] of Object.entries(query)) if (v != null && v !== "") url.searchParams.set(k, v);
+
+  const controller = new AbortController();
+  const cancel = () => controller.abort();
+  let res;
+  try {
+    res = await fetch(url, { headers: { accept: "text/event-stream", ...headers }, signal: controller.signal });
+  } catch {
+    return {
+      status: 503,
+      body: { error: "AGRI_ACADEMY_OFFLINE", detail: "AgriAcademy exam center offline — run `npm run academy:exam-center`" },
+      cancel,
+    };
+  }
+
+  const isStream = String(res.headers.get("content-type") || "").includes("text/event-stream");
+  if (!res.ok || !isStream || !res.body) {
+    const text = await res.text().catch(() => "");
+    let parsed = null;
+    if (text) {
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        parsed = { raw: text };
+      }
+    }
+    return { status: res.status, body: parsed, cancel };
+  }
+  return { status: res.status, stream: Readable.fromWeb(res.body), cancel };
+}
+
 module.exports = {
   base: BASE,
   health: () => call("GET", "/health"),
@@ -63,6 +110,28 @@ module.exports = {
   getUnit: (unitId) => call("GET", `/v1/units/${encodeURIComponent(unitId)}`),
   // Public, anonymized leaderboards (no identity needed).
   leaderboard: () => call("GET", "/v1/leaderboard"),
+  // Public activity log from the exam-events leaf, newest first. Carries no taker
+  // identity (see the exam center's activity routes), so no identity is needed to
+  // read it — per-unit for a unit profile, unscoped for the all-units page.
+  listUnitEvents: (unitId, { limit, examId, since } = {}) =>
+    call("GET", `/v1/units/${encodeURIComponent(unitId)}/events`, { query: { limit, examId, since } }),
+  listEvents: ({ limit, unitId, examId, since } = {}) => call("GET", "/v1/events", { query: { limit, unitId, examId, since } }),
+  // The streaming siblings of the two reads above: a live SSE tail of the same log,
+  // from the cursor a page just read. `lastEventId` is the browser's own reconnect
+  // cursor and is forwarded verbatim so a dropped connection resumes without gaps.
+  openEventStream: ({ unitId, examId, since, pollMs, lastEventId } = {}) =>
+    openStream("/v1/events/stream", {
+      query: { unitId, examId, since, pollMs },
+      headers: lastEventId ? { "last-event-id": String(lastEventId) } : {},
+    }),
+  openUnitEventStream: (unitId, { examId, since, pollMs, lastEventId } = {}) =>
+    openStream(`/v1/units/${encodeURIComponent(unitId)}/events/stream`, {
+      query: { examId, since, pollMs },
+      headers: lastEventId ? { "last-event-id": String(lastEventId) } : {},
+    }),
+  // Live aggregate health. The exam center runs ONE probe cycle for all watchers, so
+  // this is also how a page avoids adding its own load to the five probed services.
+  openStatusStream: () => openStream("/health/all/stream"),
   // Owner-only unit analytics (ownership enforced upstream by the exam center).
   getUnitAnalytics: (userId, unitId) => call("GET", `/v1/units/${encodeURIComponent(unitId)}/analytics`, { userId }),
   createSession: (userId, body) => call("POST", "/v1/sessions", { userId, body }),

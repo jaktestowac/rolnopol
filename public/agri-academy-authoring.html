@@ -178,6 +178,25 @@
       .hidden {
         display: none;
       }
+      /* Preview-as-taker overlay. The `display` lives here (not inline) so the
+         `.hidden` class can actually hide it — an inline style would always win. */
+      .pv-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 40px 16px;
+        overflow: auto;
+        z-index: 1200;
+      }
+      .pv-overlay.hidden {
+        display: none;
+      }
+      .footer {
+        border-top: 1px solid var(--border);
+      }
       .state {
         color: var(--muted);
         padding: 24px 0;
@@ -451,21 +470,7 @@
           <div id="examList"></div>
 
           <!-- Preview-as-taker modal: a real key-stripped draw, no attempt/money/cert. -->
-          <div
-            id="pvOverlay"
-            class="hidden"
-            style="
-              position: fixed;
-              inset: 0;
-              background: rgba(0, 0, 0, 0.5);
-              display: flex;
-              align-items: flex-start;
-              justify-content: center;
-              padding: 40px 16px;
-              overflow: auto;
-              z-index: 50;
-            "
-          >
+          <div id="pvOverlay" class="pv-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pvHead">
             <div class="panel" style="max-width: 640px; width: 100%; margin: 0">
               <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
                 <h2 id="pvHead" style="margin: 0">Preview as taker</h2>
@@ -585,6 +590,8 @@
         <div id="analyticsBody"></div>
       </section>
     </div>
+
+    <div id="footer-component"></div>
 
     <script src="/js/core/event-bus.js"></script>
     <script src="/js/core/storage.js"></script>
@@ -732,6 +739,9 @@
           $("pvCloseBtn").addEventListener("click", closePreviewModal);
           $("pvOverlay").addEventListener("click", (ev) => {
             if (ev.target === $("pvOverlay")) closePreviewModal();
+          });
+          document.addEventListener("keydown", (ev) => {
+            if (ev.key === "Escape" && !$("pvOverlay").classList.contains("hidden")) closePreviewModal();
           });
         }
         function showTab(name) {

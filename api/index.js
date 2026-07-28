@@ -654,6 +654,7 @@ app.get(
     "/agri-academy-authoring.html",
     "/agri-academy-certificate.html",
     "/agri-academy-status.html",
+    "/agri-academy-events.html",
   ],
   async (req, res, next) => {
     try {

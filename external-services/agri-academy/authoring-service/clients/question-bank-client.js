@@ -104,5 +104,15 @@ module.exports = {
     }),
   remove: (examId, questionId) => unary("DeleteQuestion", { exam_id: examId, question_id: questionId }),
   list: (examId) => unary("ListQuestions", { exam_id: examId }),
+  /**
+   * Server-streaming pool walk. Returns the raw gRPC call so the caller can
+   * re-stream it (the NDJSON bridge must never buffer) and `cancel()` it when the
+   * consumer goes away. Deliberately NO deadline: a pool walk is as long as the
+   * pool, and a deadline here would truncate a legitimate large stream.
+   */
+  streamPool: (examId, { withKeys = false, limit = 0 } = {}) =>
+    getClient().StreamQuestionPool({ exam_id: examId, with_keys: !!withKeys, limit: Number(limit) || 0 }),
+  /** The one status code a bridge must treat as "we cancelled it", not "it broke". */
+  CANCELLED: grpc.status.CANCELLED,
   _reset: reset,
 };

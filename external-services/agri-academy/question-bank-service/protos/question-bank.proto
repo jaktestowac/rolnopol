@@ -34,6 +34,11 @@ service QuestionBank {
   rpc UpsertQuestion(UpsertRequest) returns (Question);
   rpc DeleteQuestion(DeleteRequest) returns (DeleteReply);
   rpc ListQuestions(ListRequest) returns (QuestionList);
+  // Read, server streaming (authoring console's pool tab). `ListQuestions`
+  // buffers a whole pool into one message; this walks it one question at a time
+  // so a long pool renders row-by-row and the consumer can cancel early. The
+  // unary RPC stays for backward compatibility — this is purely additive.
+  rpc StreamQuestionPool(PoolStreamRequest) returns (stream Question);
 }
 
 message Option {
@@ -60,6 +65,16 @@ message DrawRequest {
 
 message ListRequest {
   string exam_id = 1;
+}
+
+// Streamed walk of one exam's pool, in pool (insertion) order — NOT shuffled:
+// this is the authoring browse path, not a draw. `with_keys` is the per-message
+// key choke point: authoring sets it, the exam center never does, and when it is
+// false every streamed Question leaves with an empty `correct`.
+message PoolStreamRequest {
+  string exam_id = 1;
+  bool with_keys = 2; // authoring only; the exam center never sets it
+  int32 limit = 3; // 0 (or negative) = whole pool
 }
 
 message QuestionList {

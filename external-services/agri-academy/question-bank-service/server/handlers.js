@@ -186,6 +186,93 @@ async function listQuestions(call, callback) {
   }
 }
 
+// ── Read, server streaming (authoring) ───────────────────────────────────────
+
+// Counters for the streaming contract: `writes` proves the handler stopped
+// producing after a cancel (asserting on behaviour, not on elapsed time), and
+// `cancels`/`opens` are cheap operational instrumentation for the same thing.
+const poolStreamCounters = { opens: 0, writes: 0, cancels: 0, completes: 0 };
+
+/**
+ * StreamQuestionPool — walk one exam's pool, one Question per message.
+ *
+ * Three things this exists to get right:
+ *  - **backpressure**: `call.write()` returning false means the send buffer is
+ *    full; we wait for `drain` instead of piling the whole pool into memory
+ *    (which is exactly what unary ListQuestions does).
+ *  - **cancellation**: a client that stops reading must stop the server working.
+ *    `cancelled` flips the flag the write loop checks between messages.
+ *  - **the key choke point, per message**: `with_keys=false` strips `correct`
+ *    from every message, not just from a final payload.
+ *
+ * Stream end is `call.end()` — there is no terminal message on the wire, so a
+ * consumer distinguishes "ended" from "truncated" via the gRPC status. The
+ * NDJSON bridge in authoring adds an explicit footer line because HTTP cannot.
+ */
+async function streamQuestionPool(call) {
+  const { exam_id, with_keys, limit } = call.request;
+  let cancelled = false;
+  let finished = false;
+  // grpc-js also emits `cancelled` once a *completed* stream tears down, so only a
+  // cancel that arrives while we are still producing counts as "the consumer left".
+  call.on("cancelled", () => {
+    cancelled = true;
+    if (finished) return;
+    poolStreamCounters.cancels += 1;
+    log.info("StreamQuestionPool cancelled", { exam_id });
+  });
+
+  if (!exam_id) {
+    call.emit("error", { code: grpc.status.INVALID_ARGUMENT, details: "exam_id required" });
+    return;
+  }
+
+  poolStreamCounters.opens += 1;
+  let pool;
+  try {
+    const data = await db.getAll();
+    // Snapshot the pool at stream open: a mutation mid-walk must not shift the
+    // rows a consumer is already halfway through.
+    pool = [...(data.pools?.[exam_id] || [])];
+  } catch (e) {
+    log.error("StreamQuestionPool failed", { exam_id, error: e.message });
+    call.emit("error", { code: grpc.status.INTERNAL, details: e.message });
+    return;
+  }
+
+  const take = limit && limit > 0 ? Math.min(limit, pool.length) : pool.length;
+  for (let i = 0; i < take; i++) {
+    if (cancelled) return; // the consumer left — stop reading the pool
+    const q = toQuestion(pool[i]);
+    if (!with_keys) q.correct = []; // per-message key strip
+    if (!call.write(q)) {
+      await once(call, "drain", () => cancelled);
+      if (cancelled) return;
+    }
+    poolStreamCounters.writes += 1;
+  }
+  if (cancelled) return;
+  finished = true;
+  poolStreamCounters.completes += 1;
+  call.end();
+}
+
+/** Resolve on the next `event` from `emitter`, or immediately if `abort()` is true. */
+function once(emitter, event, abort) {
+  return new Promise((resolve) => {
+    if (abort()) return resolve();
+    const done = () => {
+      emitter.removeListener(event, done);
+      emitter.removeListener("cancelled", done);
+      emitter.removeListener("error", done);
+      resolve();
+    };
+    emitter.once(event, done);
+    emitter.once("cancelled", done);
+    emitter.once("error", done);
+  });
+}
+
 module.exports = {
   SERVICE_VERSION,
   health: { Check: check },
@@ -195,6 +282,14 @@ module.exports = {
     UpsertQuestion: upsertQuestion,
     DeleteQuestion: deleteQuestion,
     ListQuestions: listQuestions,
+    StreamQuestionPool: streamQuestionPool,
   },
-  _internals: { mulberry32, shuffle, validateQuestion, VALID_TYPES },
+  _internals: {
+    mulberry32,
+    shuffle,
+    validateQuestion,
+    VALID_TYPES,
+    poolStreamCounters: () => ({ ...poolStreamCounters }),
+    resetPoolStreamCounters: () => Object.keys(poolStreamCounters).forEach((k) => (poolStreamCounters[k] = 0)),
+  },
 };

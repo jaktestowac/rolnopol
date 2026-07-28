@@ -52,6 +52,38 @@ async function proxy(res, promise) {
   }
 }
 
+/**
+ * Passthrough for a Server-Sent-Events response from the exam center.
+ *
+ * The one rule that matters: it must RE-STREAM. The upstream body is piped straight
+ * through rather than collected, so an activity entry reaches the browser as the
+ * leaf observes it — a proxy that buffers the body deletes the whole feature while
+ * still looking correct. A failure before the stream opens (gateway down, unknown
+ * unit) comes back as the same JSON error shape as the unary sibling routes.
+ */
+async function proxyEventStream(req, res, opening) {
+  let upstream;
+  try {
+    upstream = await opening;
+  } catch (err) {
+    logError("[agri-academy] stream proxy failed", { error: err.message });
+    return res.status(500).json({ error: "INTERNAL", message: err.message });
+  }
+  if (!upstream.stream) return res.status(upstream.status).json(upstream.body);
+
+  res.writeHead(200, {
+    "content-type": "text/event-stream",
+    "cache-control": "no-cache, no-transform",
+    connection: "keep-alive",
+    "x-accel-buffering": "no",
+  });
+  res.flushHeaders?.();
+  // Browser left → abort upstream, which cancels the gRPC tail at the leaf.
+  res.on("close", () => upstream.cancel());
+  upstream.stream.on("error", () => res.end());
+  upstream.stream.pipe(res);
+}
+
 // ── ROL money helpers (idempotent by referenceId) ─────────────────────────────
 
 async function ensureAccount(userId) {
@@ -193,6 +225,57 @@ router.get("/agri-academy/leaderboard", gate, apiLimiter, async (req, res) => {
   res.status(200).json({ ...r.body, learners });
 });
 
+/**
+ * Public activity log from the exam-events leaf (flag-gated, NO auth) — one unit's
+ * timeline for its profile page, and the unscoped log for the all-units page.
+ *
+ * No identity is forwarded and none is needed: an entry records what happened to a
+ * session, never who was sitting it, so unlike the leaderboards there is nothing
+ * here for the bridge to anonymize.
+ */
+router.get("/agri-academy/units/:unitId/events", gate, apiLimiter, (req, res) =>
+  proxy(res, examCenter.listUnitEvents(req.params.unitId, { limit: req.query.limit, examId: req.query.examId, since: req.query.since })),
+);
+router.get("/agri-academy/events", gate, apiLimiter, (req, res) =>
+  proxy(res, examCenter.listEvents({ limit: req.query.limit, unitId: req.query.unitId, examId: req.query.examId, since: req.query.since })),
+);
+
+/**
+ * Live SSE tail of the same log — what makes the activity views update themselves
+ * instead of waiting for a Refresh click. Flag-gated and unauthenticated for the
+ * same reason the two reads above are: an entry names a session, never a taker.
+ *
+ * The proxy RE-STREAMS (see proxyEventStream): an entry reaches the browser as the
+ * leaf observes it, and a browser that hangs up cancels the whole chain back to the
+ * leaf's poll interval. A page reads one unary page first and tails from its
+ * `latestSequence`; `Last-Event-ID` carries the cursor across reconnects.
+ */
+router.get("/agri-academy/events/stream", gate, apiLimiter, (req, res) =>
+  proxyEventStream(
+    req,
+    res,
+    examCenter.openEventStream({
+      unitId: req.query.unitId,
+      examId: req.query.examId,
+      since: req.query.since,
+      pollMs: req.query.pollMs,
+      lastEventId: req.headers["last-event-id"],
+    }),
+  ),
+);
+router.get("/agri-academy/units/:unitId/events/stream", gate, apiLimiter, (req, res) =>
+  proxyEventStream(
+    req,
+    res,
+    examCenter.openUnitEventStream(req.params.unitId, {
+      examId: req.query.examId,
+      since: req.query.since,
+      pollMs: req.query.pollMs,
+      lastEventId: req.headers["last-event-id"],
+    }),
+  ),
+);
+
 // Public certificate verification — flag-gated but unauthenticated (third-party).
 router.get("/agri-academy/verify/:certNo", gate, apiLimiter, (req, res) => proxy(res, examCenter.verify(req.params.certNo)));
 
@@ -206,6 +289,17 @@ router.get("/agri-academy/shared/:token", gate, apiLimiter, (req, res) => proxy(
 // (a GitHub-style status page is viewable without logging in). Same aggregate as the
 // authenticated `/health` below, proxied from the exam center's /health/all.
 router.get("/agri-academy/status", gate, apiLimiter, (req, res) => proxy(res, examCenter.healthAll()));
+
+/**
+ * The same aggregate as an SSE stream, so the status page and the "Service status"
+ * button restyle themselves the moment a service drops instead of on the next poll.
+ *
+ * The probe loop lives in the exam center and is shared by every subscriber: five
+ * services get dialed once per cycle no matter how many browsers are watching, which
+ * is the opposite of what N polling pages do. `/status` above stays the fallback for
+ * a client that cannot hold a connection open, and answers the same body.
+ */
+router.get("/agri-academy/status/stream", gate, apiLimiter, (req, res) => proxyEventStream(req, res, examCenter.openStatusStream()));
 
 // ── Authenticated taker plane ─────────────────────────────────────────────────
 router.use("/agri-academy", gate, apiLimiter, authenticateSessionUser);

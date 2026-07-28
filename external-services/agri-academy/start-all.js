@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * AgriAcademy supervisor — spawns all five services, prefixes their logs, and
+ * AgriAcademy supervisor — spawns all six services, prefixes their logs, and
  * forwards SIGINT/SIGTERM so Ctrl-C stops the whole ecosystem cleanly.
  *
- * Leaves (question-bank, grading, certificate-issuer) + authoring start BEFORE
- * the exam center so the aggregate health (`GET /health/all` on :4350) is green
- * as soon as the runtime gateway is up. Dependency-free: only Node built-ins.
+ * Leaves (question-bank, grading, certificate-issuer, exam-events) + authoring
+ * start BEFORE the exam center so the aggregate health (`GET /health/all` on
+ * :4350) is green as soon as the runtime gateway is up. Dependency-free: only
+ * Node built-ins.
  *
  *     npm run academy
  */
@@ -17,6 +18,7 @@ const SERVICES = [
   { name: "question-bank", entry: path.join(ROOT, "question-bank-service", "server", "index.js") },
   { name: "grading", entry: path.join(ROOT, "grading-service", "server", "index.js") },
   { name: "certificate-issuer", entry: path.join(ROOT, "certificate-issuer-service", "server", "index.js") },
+  { name: "exam-events", entry: path.join(ROOT, "exam-events-service", "server", "index.js") },
   { name: "authoring", entry: path.join(ROOT, "authoring-service", "server", "index.js") },
   { name: "exam-center", entry: path.join(ROOT, "exam-center-service", "server", "index.js") },
 ];
@@ -25,6 +27,7 @@ const COLORS = {
   "question-bank": "\x1b[36m",
   grading: "\x1b[33m",
   "certificate-issuer": "\x1b[35m",
+  "exam-events": "\x1b[95m",
   authoring: "\x1b[32m",
   "exam-center": "\x1b[34m",
   supervisor: "\x1b[90m",

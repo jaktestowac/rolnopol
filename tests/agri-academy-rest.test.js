@@ -13,6 +13,7 @@ const EC_DB = path.join(os.tmpdir(), `aa-ec-rest-${process.pid}.json`);
 const AU_DB = path.join(os.tmpdir(), `aa-au-rest-${process.pid}.json`);
 const QB_DB = path.join(os.tmpdir(), `aa-qb-rest-${process.pid}.json`);
 const CI_DB = path.join(os.tmpdir(), `aa-ci-rest-${process.pid}.json`);
+const EE_DB = path.join(os.tmpdir(), `aa-ee-rest-${process.pid}.json`);
 
 process.env.AGRI_ACADEMY_TARGET = `http://localhost:${EC_PORT}`;
 process.env.AGRI_ACADEMY_AUTHORING_TARGET = `http://localhost:${AU_PORT}`;
@@ -23,12 +24,15 @@ process.env.EXAM_CENTER_DB_PATH = EC_DB;
 process.env.AUTHORING_DB_PATH = AU_DB;
 process.env.QUESTION_BANK_DB_PATH = QB_DB;
 process.env.CERTIFICATES_DB_PATH = CI_DB;
+process.env.EXAM_EVENTS_DB_PATH = EE_DB;
 process.env.QUESTION_BANK_GRPC_PORT = "0";
 process.env.GRADING_GRPC_PORT = "0";
+process.env.EXAM_EVENTS_GRPC_PORT = "0";
 process.env.AGRI_ACADEMY_LOG = "silent";
 
 const app = require("../api/index.js");
 const tokenHelpers = require("../helpers/token.helpers.js");
+const { openStream, waitUntil } = require("./helpers/stream-http");
 const ROOT = path.join(__dirname, "..", "external-services", "agri-academy");
 
 const FLAG = "agriAcademyEnabled";
@@ -59,7 +63,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (originalFlags) await request(app).put("/api/v1/feature-flags").send({ flags: originalFlags });
-  for (const f of [EC_DB, AU_DB, QB_DB, CI_DB]) {
+  for (const f of [EC_DB, AU_DB, QB_DB, CI_DB, EE_DB]) {
     try {
       fs.unlinkSync(f);
     } catch {
@@ -85,14 +89,30 @@ describe("agri-academy REST bridge — gateways offline", () => {
     const res = await request(app).get("/api/v1/agri-academy/exams").set("token", token).expect(503);
     expect(res.body.error).toBe("AGRI_ACADEMY_OFFLINE");
   });
+
+  it("the SSE routes 503 with the SAME error shape — never a half-open stream", async () => {
+    // What a page keys its degradation off: a dead gateway answers a JSON error
+    // promptly, so a subscriber can fall back instead of holding an empty connection.
+    // The body carries NO `services`, which is why a status surface must render that
+    // shape as an outage rather than as "unknown" — the exam center is one of the six.
+    await setFlag(true);
+    for (const path of ["/api/v1/agri-academy/status/stream", "/api/v1/agri-academy/events/stream"]) {
+      const res = await request(app).get(path).expect(503);
+      expect(res.body.error).toBe("AGRI_ACADEMY_OFFLINE");
+      expect(res.body.services).toBeUndefined();
+      expect(res.headers["content-type"]).toMatch(/application\/json/);
+    }
+  });
 });
 
 describe("agri-academy REST bridge — full ecosystem up", () => {
   let bank;
   let grader;
+  let examEvents;
   let authServer;
   let ecServer;
   let certServer;
+  let eeInternals;
 
   beforeAll(async () => {
     // Leaves + authoring first, then the exam center (so it can dial them).
@@ -104,6 +124,11 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     const gr = await require(path.join(ROOT, "grading-service", "server", "index.js")).start();
     grader = gr.server;
     process.env.GRADING_GRPC_TARGET = `localhost:${gr.port}`;
+
+    const ee = await require(path.join(ROOT, "exam-events-service", "server", "index.js")).start();
+    examEvents = ee.server;
+    process.env.EXAM_EVENTS_TARGET = `localhost:${ee.port}`;
+    eeInternals = require(path.join(ROOT, "exam-events-service", "server", "handlers.js"))._internals;
 
     const cdb = require(path.join(ROOT, "certificate-issuer-service", "server", "db.js"));
     await cdb.init();
@@ -126,6 +151,7 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     if (certServer) await new Promise((r) => certServer.close(r));
     if (bank) bank.forceShutdown();
     if (grader) grader.forceShutdown();
+    if (examEvents) examEvents.forceShutdown();
   });
 
   it("serves the public unit directory + profile UNAUTHENTICATED", async () => {
@@ -145,6 +171,144 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     for (const l of res.body.learners) {
       expect(l.alias).toMatch(/ \*$/);
       expect(l.userId).toBeUndefined();
+    }
+  });
+
+  it("serves the exam-events activity log UNAUTHENTICATED, per-unit and across all units", async () => {
+    // Enroll + start so the exam center actually feeds the leaf, then read the log
+    // back through the bridge exactly as the two pages do.
+    const actor = tokenHelpers.generateToken("user-aa-events");
+    const created = await request(app)
+      .post("/api/v1/agri-academy/sessions")
+      .set("token", actor)
+      .send({ examId: "pesticide-basics" })
+      .expect(201);
+    const sid = created.body.sessionId;
+    await request(app).post(`/api/v1/agri-academy/sessions/${sid}/start`).set("token", actor).expect(200);
+
+    // Per-unit — no token, because an entry names a session, never a taker.
+    const unitLog = await request(app).get("/api/v1/agri-academy/units/unit-demo/events").expect(200);
+    expect(unitLog.body.total).toBeGreaterThanOrEqual(2); // entitled → active
+    expect(unitLog.body.events.every((e) => e.unitId === "unit-demo")).toBe(true);
+    const mine = unitLog.body.events.filter((e) => e.sessionId === sid);
+    expect(mine.map((e) => e.state)).toContain("active");
+    // Newest first, and the ids are resolved to readable labels by the gateway.
+    expect(unitLog.body.events[0].sequence).toBeGreaterThanOrEqual(unitLog.body.events[unitLog.body.events.length - 1].sequence);
+    expect(mine.find((e) => e.state === "active").examTitle).toBeTruthy();
+    expect(mine.find((e) => e.state === "active").window).toBe("completion");
+    // No taker identity anywhere in the payload — the property the public surface rests on.
+    expect(JSON.stringify(unitLog.body)).not.toContain("user-aa-events");
+
+    // All units.
+    const allLog = await request(app).get("/api/v1/agri-academy/events?limit=100").expect(200);
+    expect(allLog.body.events.some((e) => e.sessionId === sid)).toBe(true);
+    expect(allLog.body.total).toBeGreaterThanOrEqual(unitLog.body.total);
+
+    // Filters and paging pass through to the leaf.
+    const one = await request(app).get("/api/v1/agri-academy/events?limit=1").expect(200);
+    expect(one.body.events).toHaveLength(1);
+    expect(one.body.total).toBeGreaterThan(1);
+    const byUnit = await request(app).get("/api/v1/agri-academy/events?unitId=unit-demo&examId=pesticide-basics").expect(200);
+    expect(byUnit.body.events.every((e) => e.examId === "pesticide-basics")).toBe(true);
+    // `since` is a poll cursor: nothing is newer than the high-water mark.
+    const caughtUp = await request(app).get(`/api/v1/agri-academy/events?since=${allLog.body.latestSequence}`).expect(200);
+    expect(caughtUp.body.events).toEqual([]);
+
+    // A unit with no public profile 404s rather than exposing its log.
+    await request(app).get("/api/v1/agri-academy/units/no-such-unit/events").expect(404);
+  });
+
+  it("tails the activity log over SSE, RE-STREAMING each entry as it happens", async () => {
+    // The streaming sibling of the read above, through the whole chain: browser →
+    // Rolnopol proxy → exam-center bridge → leaf tail. Driven with a raw
+    // incremental reader, because supertest buffers and so cannot tell a
+    // re-streaming proxy from one that collects the stream and answers once.
+    const server = await listen(app, 0);
+    const port = server.address().port;
+    const actor = tokenHelpers.generateToken("user-aa-tail");
+    try {
+      const page = await request(app).get("/api/v1/agri-academy/events?limit=1").expect(200);
+      const cursor = page.body.latestSequence;
+
+      const s = await openStream({ port, path: `/api/v1/agri-academy/events/stream?since=${cursor}&pollMs=20` });
+      expect(s.status).toBe(200);
+      expect(s.headers["content-type"]).toBe("text/event-stream");
+      expect(s.headers["content-length"]).toBeUndefined();
+      expect((await s.nextBlock()).retry).toBeGreaterThanOrEqual(1000);
+      // Nothing has happened since the page was read, and the tail says so rather
+      // than staying silent (which a proxy is entitled to mistake for a dead peer).
+      expect((await s.nextEvent()).event).toBe("ping");
+
+      // Now make something happen. The entry must arrive on the OPEN stream.
+      const created = await request(app)
+        .post("/api/v1/agri-academy/sessions")
+        .set("token", actor)
+        .send({ examId: "pesticide-basics" })
+        .expect(201);
+      const frame = await s.nextEvent();
+      expect(frame.event).toBe("entry");
+      expect(frame.json).toMatchObject({ sessionId: created.body.sessionId, state: "entitled", unitId: "unit-demo", backlog: false });
+      // Labels are overlaid by the gateway (the leaf stores ids and resolves nothing).
+      expect(frame.json.examTitle).toBeTruthy();
+      expect(frame.json.unitName).toBeTruthy();
+      // `id:` is the browser's reconnect cursor, and no taker identity rides along.
+      expect(frame.id).toBe(String(frame.json.sequence));
+      expect(s.buffered()).not.toContain("user-aa-tail");
+      expect(s.ended).toBe(false);
+
+      // Starting the attempt moves the clock, so the same open stream reports it.
+      await request(app).post(`/api/v1/agri-academy/sessions/${created.body.sessionId}/start`).set("token", actor).expect(200);
+      const next = await s.nextEvent();
+      expect(next.json).toMatchObject({ sessionId: created.body.sessionId, state: "active", window: "completion" });
+      expect(next.json.sequence).toBeGreaterThan(frame.json.sequence);
+
+      s.close();
+      // The browser leaving must reach the leaf: no tail may outlive this test.
+      await waitUntil(() => eeInternals.activeEventStreams() === 0, { label: "the leaf to clear the cancelled tail" });
+    } finally {
+      await new Promise((r) => server.close(r));
+    }
+  });
+
+  it("tails ONE unit's log, and 404s a unit with no public profile before opening a tail", async () => {
+    const server = await listen(app, 0);
+    const port = server.address().port;
+    const actor = tokenHelpers.generateToken("user-aa-unit-tail");
+    try {
+      await request(app).get("/api/v1/agri-academy/units/no-such-unit/events/stream").expect(404, { error: "UNIT_NOT_FOUND" });
+      expect(eeInternals.activeEventStreams()).toBe(0);
+
+      const page = await request(app).get("/api/v1/agri-academy/units/unit-demo/events?limit=1").expect(200);
+      const s = await openStream({
+        port,
+        path: `/api/v1/agri-academy/units/unit-demo/events/stream?since=${page.body.latestSequence}&pollMs=20`,
+      });
+      expect(s.status).toBe(200);
+      await s.nextBlock();
+      expect((await s.nextEvent()).event).toBe("ping");
+
+      const created = await request(app)
+        .post("/api/v1/agri-academy/sessions")
+        .set("token", actor)
+        .send({ examId: "pesticide-basics" })
+        .expect(201);
+      const frame = await s.nextEvent();
+      expect(frame.json).toMatchObject({ sessionId: created.body.sessionId, unitId: "unit-demo" });
+
+      s.close();
+      await waitUntil(() => eeInternals.activeEventStreams() === 0, { label: "the leaf to clear the cancelled tail" });
+    } finally {
+      await new Promise((r) => server.close(r));
+    }
+  });
+
+  it("404s the activity tail when the feature flag is off", async () => {
+    await setFlag(false);
+    try {
+      await request(app).get("/api/v1/agri-academy/events/stream").expect(404);
+      await request(app).get("/api/v1/agri-academy/units/unit-demo/events/stream").expect(404);
+    } finally {
+      await setFlag(true);
     }
   });
 
@@ -285,10 +449,10 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     await request(app).get(`/api/v1/agri-academy/units/${unitId}/analytics`).set("token", otherToken).expect(403);
   });
 
-  it("aggregate health proxies through the bridge (all five up)", async () => {
+  it("aggregate health proxies through the bridge (all six up)", async () => {
     const res = await request(app).get("/api/v1/agri-academy/health").set("token", token).expect(200);
     expect(res.body.overall).toBe("SERVING");
-    expect(res.body.services).toHaveLength(5);
+    expect(res.body.services).toHaveLength(6);
   });
 
   it("mints a certificate on the e2e pass and lists it", async () => {

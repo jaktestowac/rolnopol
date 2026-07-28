@@ -83,7 +83,7 @@ const POOL = [
 const CORRECT = { q1: ["a"], q2: ["a", "c"], q3: ["b"] };
 const PAID = { ...EXAM, id: "paid1", pricing: { mode: "paid", priceRol: 25 }, payoutUserId: "unit-owner-1", certValidMonths: 24 };
 
-function fakeAuthoring({ down = false, exams = { e1: EXAM }, myUnit = null, ownedBy = {} } = {}) {
+function fakeAuthoring({ down = false, exams = { e1: EXAM }, myUnit = null, ownedBy = {}, publicUnits = {} } = {}) {
   const wrap =
     (fn) =>
     async (...a) =>
@@ -105,8 +105,13 @@ function fakeAuthoring({ down = false, exams = { e1: EXAM }, myUnit = null, owne
       if (ownedBy[id] && ownedBy[id] !== userId) return { status: 403, body: { error: "FORBIDDEN" } };
       return { status: 200, body: exam };
     }),
-    getPublicUnit: wrap(async () => ({ status: 404, body: { error: "UNIT_NOT_FOUND" } })),
-    listPublicUnits: wrap(async () => ({ status: 200, body: { units: [] } })),
+    // `publicUnits` is the publicly VISIBLE set (a disabled unit is simply absent),
+    // so a 404 here means "there is no such public unit" — which is what the
+    // activity route relies on to keep a hidden unit's log hidden too.
+    getPublicUnit: wrap(async (unitId) =>
+      publicUnits[unitId] ? { status: 200, body: publicUnits[unitId] } : { status: 404, body: { error: "UNIT_NOT_FOUND" } },
+    ),
+    listPublicUnits: wrap(async () => ({ status: 200, body: { units: Object.values(publicUnits) } })),
   };
 }
 function fakeBank({ down = false, pool = POOL } = {}) {
@@ -133,6 +138,55 @@ function fakeGrading({ down = false } = {}) {
     gradeAttempt: async (items, passPct) => {
       if (down) throw Object.assign(new Error("unavailable"), { code: 14 });
       return gradingRegistry.grade(items, passPct);
+    },
+  };
+}
+// The exam-events leaf. Every session touch feeds it a clock snapshot, so this
+// stub also records what it was told — which is how the feed is asserted without
+// booting a gRPC leaf. `log` holds wire-shaped (snake_case, int64-as-string)
+// entries so the exam center's own view mapping is exercised, not bypassed.
+// `seed` pre-loads entries for the activity routes.
+function fakeExamEvents({ down = false, fed = [], seed = [] } = {}) {
+  const log = seed.map((e, i) => ({
+    sequence: String(i + 1),
+    at: String(1700000000000 + i * 1000),
+    kind: "session_clock",
+    session_id: e.sessionId,
+    exam_id: e.examId || "",
+    unit_id: e.unitId || "",
+    state: e.state,
+    window: e.window || "none",
+    deadline_at: String(e.deadlineAt || 0),
+  }));
+  return {
+    target: "localhost:0",
+    fed,
+    log,
+    CANCELLED: 1,
+    NOT_FOUND: 5,
+    health: async () => {
+      if (down) throw Object.assign(new Error("unavailable"), { code: 14 });
+      return { version: "1.0.0", uptime_ms: 1 };
+    },
+    record: async (session) => {
+      if (down) throw Object.assign(new Error("unavailable"), { code: 14 });
+      fed.push({ id: session.id, state: session.state, unitId: session.snapshot?.ownerUnitId });
+      return { recorded: true, sequence: fed.length };
+    },
+    watchSessionClock: () => {
+      throw Object.assign(new Error("unavailable"), { code: 14 });
+    },
+    listEvents: async ({ unitId = "", examId = "", limit = 0 } = {}) => {
+      if (down) throw Object.assign(new Error("unavailable"), { code: 14 });
+      const matching = log.filter((e) => (!unitId || e.unit_id === unitId) && (!examId || e.exam_id === examId));
+      const newestFirst = [...matching].reverse();
+      const page = newestFirst.slice(0, Number(limit) > 0 ? Number(limit) : 50);
+      return {
+        events: page,
+        total: matching.length,
+        returned: page.length,
+        latest_sequence: String(log.length),
+      };
     },
   };
 }
@@ -179,6 +233,7 @@ function appWith(opts = {}) {
     questionBank: fakeBank(opts.bank),
     grading: fakeGrading(opts.grading),
     certificates: fakeCertificates(opts.certificates),
+    examEvents: fakeExamEvents(opts.examEvents),
   });
 }
 
@@ -643,7 +698,7 @@ describe("exam-center — aggregate health", () => {
     const res = await request(appWith()).get("/health/all").expect(200);
     expect(res.body.overall).toBe("SERVING");
     expect(res.body.services.map((s) => s.name)).toEqual(
-      expect.arrayContaining(["exam-center", "authoring", "question-bank", "grading", "certificate-issuer"]),
+      expect.arrayContaining(["exam-center", "authoring", "question-bank", "grading", "certificate-issuer", "exam-events"]),
     );
   });
 
@@ -653,6 +708,135 @@ describe("exam-center — aggregate health", () => {
       .expect(503);
     expect(res.body.overall).toBe("DEGRADED");
     expect(res.body.services.find((s) => s.name === "certificate-issuer").status).toBe("UNREACHABLE");
+  });
+
+  it("DEGRADED (503) when the exam-events leaf is down, and every other route still works", async () => {
+    const app = appWith({ examEvents: { down: true } });
+    const res = await request(app).get("/health/all").expect(503);
+    expect(res.body.services.find((s) => s.name === "exam-events").status).toBe("UNREACHABLE");
+    // The clock is advisory: a dead leaf must not break enroll/start/submit.
+    const created = await as(request(app).post("/v1/sessions").send({ examId: "e1" })).expect(201);
+    await as(request(app).post(`/v1/sessions/${created.body.sessionId}/start`)).expect(200);
+    await as(request(app).post(`/v1/sessions/${created.body.sessionId}/submit`)).expect(200);
+    // …but the clock stream itself degrades rather than pretending.
+    await as(request(app).get(`/v1/sessions/${created.body.sessionId}/clock`)).expect(503, { error: "EXAM_EVENTS_UNAVAILABLE" });
+  });
+});
+
+describe("exam-center — public activity log", () => {
+  const UNIT = { unitId: "u1", name: "Green Valley Unit" };
+  const SEED = [
+    { sessionId: "s-1", examId: "e1", unitId: "u1", state: "entitled", window: "access", deadlineAt: 1700009999000 },
+    { sessionId: "s-1", examId: "e1", unitId: "u1", state: "active", window: "completion", deadlineAt: 1700001800000 },
+    { sessionId: "s-2", examId: "e2", unitId: "u2", state: "entitled", window: "access", deadlineAt: 1700009999000 },
+  ];
+  const activityApp = (opts = {}) =>
+    appWith({
+      authoring: { publicUnits: { u1: UNIT }, exams: { e1: EXAM }, ...(opts.authoring || {}) },
+      examEvents: { seed: SEED, ...(opts.examEvents || {}) },
+    });
+
+  it("GET /v1/events spans every unit, newest first, in the browser-facing shape", async () => {
+    const res = await request(activityApp()).get("/v1/events").expect(200);
+    expect(res.body.total).toBe(3);
+    expect(res.body.returned).toBe(3);
+    expect(res.body.latestSequence).toBe(3);
+    expect(res.body.events[0].sessionId).toBe("s-2"); // newest
+    // int64s arrive as strings on the wire and must not reach the page that way.
+    expect(typeof res.body.events[0].sequence).toBe("number");
+    expect(typeof res.body.events[0].at).toBe("number");
+    expect(typeof res.body.events[0].deadlineAt).toBe("number");
+  });
+
+  it("overlays readable exam titles and unit names (the leaf resolves nothing)", async () => {
+    const res = await request(activityApp()).get("/v1/events").expect(200);
+    const e1 = res.body.events.find((e) => e.examId === "e1");
+    expect(e1.examTitle).toBe(EXAM.title);
+    expect(e1.unitName).toBe(UNIT.name);
+    // An id with no published exam / public unit behind it degrades to null, not "".
+    const e2 = res.body.events.find((e) => e.examId === "e2");
+    expect(e2.examTitle).toBeNull();
+    expect(e2.unitName).toBeNull();
+  });
+
+  it("still serves the log when authoring is down — just with bare ids", async () => {
+    // The overlay is cosmetic, so losing authoring must not lose the activity.
+    const res = await request(activityApp({ authoring: { down: true } }))
+      .get("/v1/events")
+      .expect(200);
+    expect(res.body.events).toHaveLength(3);
+    expect(res.body.events.every((e) => e.examTitle === null && e.unitName === null)).toBe(true);
+  });
+
+  it("GET /v1/units/:unitId/events scopes to that unit", async () => {
+    const res = await request(activityApp()).get("/v1/units/u1/events").expect(200);
+    expect(res.body.total).toBe(2);
+    expect(res.body.events.every((e) => e.unitId === "u1")).toBe(true);
+    expect(res.body.events.some((e) => e.sessionId === "s-2")).toBe(false);
+  });
+
+  it("a unit that is not publicly visible 404s — its log stays as hidden as its profile", async () => {
+    // u2 HAS entries, but no public unit, so the log must not become a back door
+    // onto a disabled or nonexistent unit.
+    await request(activityApp()).get("/v1/units/u2/events").expect(404, { error: "UNIT_NOT_FOUND" });
+    await request(activityApp()).get("/v1/units/ghost/events").expect(404, { error: "UNIT_NOT_FOUND" });
+  });
+
+  it("authoring down on the per-unit route is AUTHORING_UNAVAILABLE (the unit cannot be resolved)", async () => {
+    await request(activityApp({ authoring: { down: true } }))
+      .get("/v1/units/u1/events")
+      .expect(503, { error: "AUTHORING_UNAVAILABLE" });
+  });
+
+  it("both surfaces degrade to 503 when the leaf is unreachable", async () => {
+    const app = activityApp({ examEvents: { down: true } });
+    await request(app).get("/v1/events").expect(503, { error: "EXAM_EVENTS_UNAVAILABLE" });
+    await request(app).get("/v1/units/u1/events").expect(503, { error: "EXAM_EVENTS_UNAVAILABLE" });
+  });
+
+  it("needs no identity — the log records sessions, not takers", async () => {
+    const res = await request(activityApp()).get("/v1/events").expect(200);
+    const FIELDS = ["sequence", "at", "kind", "sessionId", "examId", "unitId", "state", "window", "deadlineAt", "examTitle", "unitName"];
+    for (const ev of res.body.events) expect(Object.keys(ev).sort()).toEqual([...FIELDS].sort());
+    expect(JSON.stringify(res.body)).not.toMatch(/userId|holder/i);
+  });
+
+  it("passes the caller's limit and exam filter through to the leaf", async () => {
+    const capped = await request(activityApp()).get("/v1/events?limit=1").expect(200);
+    expect(capped.body.events).toHaveLength(1);
+    expect(capped.body.total).toBe(3); // total is the whole match, not the page
+    const byExam = await request(activityApp()).get("/v1/events?examId=e1").expect(200);
+    expect(byExam.body.events.every((e) => e.examId === "e1")).toBe(true);
+    const scoped = await request(activityApp()).get("/v1/units/u1/events?examId=e1").expect(200);
+    expect(scoped.body.total).toBe(2);
+  });
+});
+
+describe("exam-center — clock feed (#94)", () => {
+  it("feeds the exam-events leaf a snapshot at every state transition", async () => {
+    const fed = [];
+    const app = appWith({ examEvents: { fed } });
+    const created = await as(request(app).post("/v1/sessions").send({ examId: "e1" })).expect(201);
+    const id = created.body.sessionId;
+    await as(request(app).post(`/v1/sessions/${id}/start`)).expect(200);
+    await as(request(app).post(`/v1/sessions/${id}/submit`)).expect(200);
+
+    const states = fed.filter((f) => f.id === id).map((f) => f.state);
+    // enroll → entitled, start → active, submit → scored. The leaf dials no one,
+    // so if the exam center does not tell it, nothing does.
+    expect(states.slice(0, 3)).toEqual(["entitled", "active", "scored"]);
+  });
+
+  it("feeds a lapsed session's settled state on a plain read", async () => {
+    const fed = [];
+    const app = appWith({ examEvents: { fed } });
+    const created = await as(request(app).post("/v1/sessions").send({ examId: "e1" })).expect(201);
+    const id = created.body.sessionId;
+    await as(request(app).post(`/v1/sessions/${id}/start`)).expect(200);
+
+    process.env.AGRI_ACADEMY_TIME_OFFSET_MS = String(2 * 60 * 60 * 1000); // past durationSec
+    await as(request(app).get(`/v1/sessions/${id}`)).expect(200);
+    expect(fed.filter((f) => f.id === id).map((f) => f.state)).toContain("expired_scored");
   });
 });
 
@@ -987,7 +1171,13 @@ describe("exam-center — revoke certificate (ownership + degradation)", () => {
 
 describe("exam-center — aggregate health DOWN", () => {
   it("overall DOWN (503) when every downstream is unreachable", async () => {
-    const a = appWith({ authoring: { down: true }, bank: { down: true }, grading: { down: true }, certificates: { down: true } });
+    const a = appWith({
+      authoring: { down: true },
+      bank: { down: true },
+      grading: { down: true },
+      certificates: { down: true },
+      examEvents: { down: true },
+    });
     const res = await request(a).get("/health/all").expect(503);
     expect(res.body.overall).toBe("DOWN");
   });
