@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgriAcademy — Certificate</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+      body {
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        background: #0f1a14;
+      }
+      .toolbar {
+        width: 100%;
+        max-width: 860px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .toolbar a,
+      .toolbar button {
+        font-size: 14px;
+        color: #eaf3ec;
+        background: #1e3527;
+        border: 1px solid #24382b;
+        border-radius: 9px;
+        padding: 8px 14px;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .state {
+        color: #cfe9d7;
+        padding: 60px 20px;
+        text-align: center;
+      }
+      /* The certificate document — styled entirely from the template descriptor. */
+      .cert {
+        width: 100%;
+        max-width: 860px;
+        aspect-ratio: 1.414 / 1;
+        border-radius: 16px;
+        border: 3px solid;
+        padding: 48px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      }
+      .cert::after {
+        content: "";
+        position: absolute;
+        inset: 14px;
+        border: 1px solid currentColor;
+        opacity: 0.28;
+        border-radius: 10px;
+        pointer-events: none;
+      }
+      .motif {
+        font-size: 46px;
+        line-height: 1;
+      }
+      .kicker {
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        font-size: 14px;
+        font-weight: 700;
+        margin-top: 10px;
+      }
+      .holder {
+        font-size: clamp(28px, 6vw, 46px);
+        font-weight: 800;
+        margin: 14px 0 4px;
+      }
+      .lead,
+      .exam,
+      .issuer,
+      .meta {
+        margin: 2px 0;
+      }
+      .exam {
+        font-size: clamp(18px, 3vw, 24px);
+        font-weight: 700;
+      }
+      .rule {
+        width: 120px;
+        height: 3px;
+        border-radius: 2px;
+        margin: 16px 0;
+      }
+      .meta {
+        font-size: 13px;
+        margin-top: 8px;
+      }
+      .certno {
+        font-family: "Courier New", monospace;
+        letter-spacing: 0.08em;
+      }
+      .stamp {
+        position: absolute;
+        top: 26px;
+        right: 26px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        border: 2px solid;
+        border-radius: 8px;
+        padding: 6px 10px;
+        transform: rotate(6deg);
+      }
+      .stamp.valid {
+        color: #2e8f55;
+        border-color: #2e8f55;
+      }
+      .stamp.expired {
+        color: #b8912e;
+        border-color: #b8912e;
+      }
+      .stamp.revoked {
+        color: #b23a3a;
+        border-color: #b23a3a;
+      }
+      /* Share panel — holder-only controls to mint / copy / revoke a public link. */
+      .share-panel {
+        width: 100%;
+        max-width: 860px;
+        background: #16241b;
+        border: 1px solid #24382b;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+        color: #cfe9d7;
+        font-size: 14px;
+      }
+      .share-panel .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .share-panel .title {
+        font-weight: 700;
+        color: #eaf3ec;
+        margin-right: auto;
+      }
+      .share-panel button {
+        font-size: 13px;
+        color: #eaf3ec;
+        background: #1e3527;
+        border: 1px solid #2f5540;
+        border-radius: 8px;
+        padding: 7px 12px;
+        cursor: pointer;
+      }
+      .share-panel button.primary {
+        background: #2e8f55;
+        border-color: #2e8f55;
+      }
+      .share-panel button.danger {
+        background: #3a201f;
+        border-color: #6b2f2f;
+      }
+      .share-panel input {
+        flex: 1 1 260px;
+        min-width: 0;
+        font-size: 12px;
+        font-family: "Courier New", monospace;
+        color: #cfe9d7;
+        background: #0f1a14;
+        border: 1px solid #24382b;
+        border-radius: 8px;
+        padding: 8px 10px;
+      }
+      .share-panel .hint {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #9bb3a4;
+      }
+      .share-panel .links {
+        margin-top: 10px;
+      }
+      .share-panel .links.hidden {
+        display: none;
+      }
+      .private-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #9bb3a4;
+        border: 1px solid #2f5540;
+        border-radius: 6px;
+        padding: 2px 7px;
+      }
+      /* Print / Save-as-PDF: a single landscape page sized to the certificate,
+         with the template's colours forced on (browsers drop backgrounds by
+         default) so the saved PDF looks exactly like the on-screen document. */
+      @page {
+        size: A4 landscape;
+        margin: 12mm;
+      }
+      @media print {
+        html,
+        body {
+          background: #fff !important;
+          margin: 0;
+          padding: 0;
+        }
+        .toolbar,
+        .share-panel {
+          display: none !important;
+        }
+        .cert {
+          box-shadow: none;
+          max-width: none;
+          width: 100%;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .cert::after,
+        .stamp,
+        .rule {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <a href="/agri-academy-units.html">← AgriAcademy</a>
+      <button id="downloadBtn" title="Opens your browser's print dialog — choose “Save as PDF”">⬇️ Download PDF</button>
+    </div>
+    <div id="sharePanel" class="share-panel" style="display: none">
+      <div class="row">
+        <span class="title">Share this certificate</span>
+        <span id="shareStatus" class="private-badge">Private</span>
+        <button id="createShareBtn" class="primary">🔗 Create share link</button>
+        <button id="stopShareBtn" class="danger" style="display: none">Stop sharing</button>
+      </div>
+      <div id="shareLinks" class="links hidden">
+        <div class="row">
+          <input id="shareUrl" type="text" readonly />
+          <button id="copyShareBtn">Copy link</button>
+        </div>
+        <div class="row" style="margin-top: 8px">
+          <input id="badgeUrl" type="text" readonly />
+          <button id="copyBadgeBtn">Copy Open-Badge link</button>
+        </div>
+        <div class="hint">
+          Anyone with the share link can view this certificate. The Open-Badge link returns a machine-readable assertion third parties (e.g.
+          a profile page) can verify. Revoke sharing any time to disable both.
+        </div>
+      </div>
+      <div id="privateHint" class="hint">Only you can see this certificate until you create a share link.</div>
+    </div>
+    <div id="mount"></div>
+    <div id="state" class="state">Loading certificate…</div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) =>
+        String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+      const fmtDate = (iso) => {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        return isNaN(d) ? "—" : d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+      };
+
+      // Download PDF = the browser's print-to-PDF path. Only enabled once a real
+      // certificate has rendered, so you can't "download" an error/empty page.
+      $("downloadBtn").disabled = true;
+      $("downloadBtn").addEventListener("click", () => window.print());
+
+      const params = new URLSearchParams(location.search);
+      const shareToken = params.get("share"); // public share view (anyone)
+      const certNo = params.get("cert"); // private holder view (authenticated)
+
+      function render(v) {
+        const t = v.templateStyle || {};
+        document.body.style.background = t.bg || "#0f1a14";
+        const statusStamp = v.status === "valid" ? "" : `<div class="stamp ${esc(v.status)}">${esc(v.status)}</div>`;
+        const revokedNote = v.status === "revoked" && v.revokedReason ? `<div class="meta">Reason: ${esc(v.revokedReason)}</div>` : "";
+        $("state").style.display = "none";
+        $("mount").innerHTML = `
+          <div class="cert" style="background:${esc(t.panel || "#16241b")};border-color:${esc(t.accent || "#3fae6b")};color:${esc(t.ink || "#eaf3ec")};font-family:${t.font || "Georgia, serif"}">
+            ${statusStamp}
+            <div class="motif">${t.motif || "🎓"}</div>
+            <div class="kicker" style="color:${esc(t.accent || "#3fae6b")}">Certificate of Achievement</div>
+            <div class="holder">${esc(v.holder || "—")}</div>
+            <div class="lead" style="color:${esc(t.sub || "#9bb3a4")}">has successfully completed</div>
+            <div class="exam">${esc(v.examTitle || v.examId || "")}</div>
+            <div class="rule" style="background:${esc(t.accent || "#3fae6b")}"></div>
+            <div class="issuer" style="color:${esc(t.sub || "#9bb3a4")}">Issued by ${esc(v.unitName || v.unit || "AgriAcademy")}</div>
+            <div class="meta" style="color:${esc(t.sub || "#9bb3a4")}">Score ${v.scorePct != null ? v.scorePct + "%" : "—"} · Issued ${fmtDate(v.issuedAt)} · Valid until ${fmtDate(v.expiresAt)}</div>
+            <div class="meta certno" style="color:${esc(t.sub || "#9bb3a4")}">${esc(v.certNo || certNo || "")}</div>
+            ${revokedNote}
+          </div>`;
+        $("downloadBtn").disabled = false; // a real certificate is on screen — allow the PDF download
+      }
+
+      // ── Share controls (holder-only) ───────────────────────────────────────────
+      const shareUrlFor = (tok) => `${location.origin}/agri-academy-certificate.html?share=${encodeURIComponent(tok)}`;
+      const badgeUrlFor = (tok) => `${location.origin}/api/v1/agri-academy/shared/${encodeURIComponent(tok)}`;
+
+      function paintShare(token) {
+        const on = !!token;
+        $("shareStatus").textContent = on ? "Shared" : "Private";
+        $("shareStatus").style.color = on ? "#8fe0ad" : "#9bb3a4";
+        $("createShareBtn").style.display = on ? "none" : "";
+        $("stopShareBtn").style.display = on ? "" : "none";
+        $("privateHint").style.display = on ? "none" : "";
+        $("shareLinks").classList.toggle("hidden", !on);
+        if (on) {
+          $("shareUrl").value = shareUrlFor(token);
+          $("badgeUrl").value = badgeUrlFor(token);
+        }
+      }
+      async function copyFrom(inputId, btn) {
+        const el = $(inputId);
+        el.select();
+        try {
+          await navigator.clipboard.writeText(el.value);
+        } catch {
+          document.execCommand("copy");
+        }
+        const old = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => (btn.textContent = old), 1500);
+      }
+      $("copyShareBtn").addEventListener("click", (e) => copyFrom("shareUrl", e.currentTarget));
+      $("copyBadgeBtn").addEventListener("click", (e) => copyFrom("badgeUrl", e.currentTarget));
+      $("createShareBtn").addEventListener("click", async () => {
+        $("createShareBtn").disabled = true;
+        try {
+          const r = await fetch("/api/v1/agri-academy/certificates/" + encodeURIComponent(certNo) + "/share", { method: "POST" });
+          const b = await r.json();
+          if (r.ok && b.shareToken) paintShare(b.shareToken);
+        } finally {
+          $("createShareBtn").disabled = false;
+        }
+      });
+      $("stopShareBtn").addEventListener("click", async () => {
+        $("stopShareBtn").disabled = true;
+        try {
+          const r = await fetch("/api/v1/agri-academy/certificates/" + encodeURIComponent(certNo) + "/share", { method: "DELETE" });
+          if (r.ok) paintShare(null);
+        } finally {
+          $("stopShareBtn").disabled = false;
+        }
+      });
+
+      // ── Load: public share view, private holder view, or nothing ────────────────
+      function fail(msg) {
+        $("state").textContent = msg;
+      }
+      function loaded(v) {
+        if (!v || v.status === "unknown") return fail("Certificate not found.");
+        render(v);
+      }
+
+      if (shareToken) {
+        // Public share link — anyone can view; no share controls.
+        fetch("/api/v1/agri-academy/shared/" + encodeURIComponent(shareToken))
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))))
+          .then(loaded)
+          .catch(() => fail("This shared certificate could not be loaded — the link may have been revoked."));
+      } else if (certNo) {
+        // Private holder view — requires the holder's session; shows share controls.
+        fetch("/api/v1/agri-academy/certificates/" + encodeURIComponent(certNo))
+          .then(async (r) => {
+            if (r.status === 401) throw new Error("AUTH");
+            if (r.status === 403) throw new Error("FORBIDDEN");
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.json();
+          })
+          .then((v) => {
+            if (!v || v.status === "unknown") return fail("Certificate not found.");
+            $("sharePanel").style.display = "";
+            paintShare(v.shareToken || null);
+            render(v);
+          })
+          .catch((e) => {
+            if (e.message === "AUTH") return fail("Please sign in to view your certificate.");
+            if (e.message === "FORBIDDEN") return fail("This certificate is private to its holder.");
+            fail("This certificate could not be loaded.");
+          });
+      } else {
+        fail("No certificate specified.");
+      }
+    </script>
+  </body>
+</html>

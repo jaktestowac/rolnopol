@@ -211,6 +211,7 @@ async function getNavFeatureFlagState() {
       taskLabEnabled,
       greenhouseControlRoomEnabled,
       farmStayEnabled,
+      agriAcademyEnabled,
       observatoryEnabled,
     ] = await Promise.all([
       featureFlagsService.isEnabled("alertsEnabled", true),
@@ -225,6 +226,7 @@ async function getNavFeatureFlagState() {
       featureFlagsService.isEnabled("taskLabEnabled", false),
       featureFlagsService.isEnabled("greenhouseControlRoomEnabled", false),
       featureFlagsService.isEnabled("farmStayEnabled", false),
+      featureFlagsService.isEnabled("agriAcademyEnabled", false),
       featureFlagsService.isEnabled("observatoryEnabled", false),
     ]);
     return {
@@ -240,6 +242,7 @@ async function getNavFeatureFlagState() {
       taskLabEnabled,
       greenhouseControlRoomEnabled,
       farmStayEnabled,
+      agriAcademyEnabled,
       observatoryEnabled,
     };
   } catch (error) {
@@ -460,6 +463,7 @@ async function updateHeaderNav(username = "") {
     taskLabEnabled,
     greenhouseControlRoomEnabled,
     farmStayEnabled,
+    agriAcademyEnabled,
     observatoryEnabled,
   } = await getNavFeatureFlagState();
   const mapLink = rolnopolMapEnabled
@@ -498,6 +502,9 @@ async function updateHeaderNav(username = "") {
   const farmStayLink = farmStayEnabled
     ? '<li><a href="/farm-stay.html" class="nav-link" title="FarmStay" aria-label="FarmStay" data-testid="nav-farm-stay"><i class="fa-solid fa-tractor"></i><span class="nav-text">FarmStay</span></a></li>'
     : "";
+  const agriAcademyLink = agriAcademyEnabled
+    ? '<li><a href="/agri-academy-units.html" class="nav-link" title="AgriAcademy" aria-label="AgriAcademy" data-testid="nav-agri-academy"><i class="fa-solid fa-graduation-cap"></i><span class="nav-text">AgriAcademy</span></a></li>'
+    : "";
   const observatoryLink = observatoryEnabled
     ? '<li><a href="/operator/observatory.html" class="nav-link" title="Observatory" aria-label="Observatory" data-testid="nav-observatory"><i class="fa-solid fa-star"></i><span class="nav-text">Observatory</span></a></li>'
     : "";
@@ -525,6 +532,7 @@ async function updateHeaderNav(username = "") {
       ${buddyLink}
       ${greenhouseLink}
       ${farmStayLink}
+      ${agriAcademyLink}
       ${observatoryLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
@@ -551,6 +559,7 @@ async function updateHeaderNav(username = "") {
       ${weatherLiveLink}
       ${greenhouseLink}
       ${farmStayLink}
+      ${agriAcademyLink}
       ${observatoryLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Documentation</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>

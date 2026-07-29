@@ -1,0 +1,69 @@
+/* AgriAcademy — re-theme the shared site header (components/header.html) with the
+   ecosystem's dark-green palette, scoped to `body.agri-academy-page` so the rest
+   of the site keeps its default chrome. Mirrors the observatory-page approach. */
+:root {
+  --aa-bg: #0f1a14;
+  --aa-card: #16241b;
+  --aa-ink: #eaf3ec;
+  --aa-muted: #9bb3a4;
+  --aa-accent: #3fae6b;
+  --aa-accent-2: #7bd4a0;
+  --aa-border: #24382b;
+  --aa-accent-soft: rgba(63, 174, 107, 0.16);
+  --aa-shadow: 0 18px 42px rgba(0, 0, 0, 0.38);
+}
+
+/* Push page content below the fixed navbar. */
+body.agri-academy-page {
+  padding-top: var(--navbar-height, 64px);
+}
+
+body.agri-academy-page .navbar {
+  background: rgba(15, 26, 20, 0.86);
+  border-bottom: 1px solid var(--aa-border);
+  box-shadow: var(--aa-shadow);
+  backdrop-filter: blur(8px);
+}
+
+body.agri-academy-page .navbar-brand {
+  color: var(--aa-ink);
+}
+body.agri-academy-page .navbar-brand:hover {
+  color: var(--aa-accent-2);
+}
+
+body.agri-academy-page .nav-link {
+  color: var(--aa-muted);
+}
+body.agri-academy-page .nav-link:hover {
+  color: var(--aa-accent-2);
+  background-color: var(--aa-accent-soft);
+}
+body.agri-academy-page .nav-link.active {
+  color: var(--aa-accent-2);
+  background-color: var(--aa-accent-soft);
+}
+
+body.agri-academy-page .mobile-menu-toggle {
+  color: var(--aa-ink);
+}
+body.agri-academy-page .hamburger-line {
+  background-color: var(--aa-ink);
+}
+
+@media (max-width: 768px) {
+  body.agri-academy-page .navbar-nav {
+    background: var(--aa-card);
+    border-top: 1px solid var(--aa-border);
+    box-shadow: var(--aa-shadow);
+  }
+  body.agri-academy-page .navbar-nav.active {
+    border-bottom: 1px solid var(--aa-border);
+  }
+  body.agri-academy-page .nav-link {
+    border-bottom: 1px solid var(--aa-border);
+  }
+  body.agri-academy-page .mobile-menu-toggle:hover {
+    background-color: var(--aa-accent-soft);
+  }
+}

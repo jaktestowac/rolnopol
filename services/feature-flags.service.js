@@ -51,6 +51,8 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   greenhouseControlRoomEnabled:
     "Enable or disable the greenhouse control room module (gRPC client to the standalone greenhouse service, REST API, and dashboard)",
   farmStayEnabled: "Enable or disable the FarmStay module (gRPC client to the standalone FarmStay service, REST API, and dashboard)",
+  agriAcademyEnabled:
+    "Enable or disable the AgriAcademy module (HTTP client to the standalone AgriAcademy exam-center and authoring gateways, REST API, and pages) for logged-in users",
   observatoryEnabled:
     "Enable or disable the Observatory sky-dome page with stars and constellations tracking, and the observatory REST/SSE endpoints (public, no login required)",
 };
@@ -89,6 +91,7 @@ const FEATURE_FLAG_GROUPS = {
   productivity: ["taskManagerEnabled", "taskLabEnabled"],
   greenhouse: ["greenhouseControlRoomEnabled"],
   farmStay: ["farmStayEnabled"],
+  agriAcademy: ["agriAcademyEnabled"],
   observatory: ["observatoryEnabled"],
 };
 
@@ -127,6 +130,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "taskLabEnabled",
   "greenhouseControlRoomEnabled",
   "farmStayEnabled",
+  "agriAcademyEnabled",
   "observatoryEnabled",
 ];
 
@@ -175,6 +179,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   taskLabEnabled: false,
   greenhouseControlRoomEnabled: false,
   farmStayEnabled: false,
+  agriAcademyEnabled: false,
   observatoryEnabled: false,
 };
 

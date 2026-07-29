@@ -1014,6 +1014,69 @@ module.exports = [
     },
   },
   {
+    flag: "agriAcademyEnabled",
+    section: {
+      section: "agri-academy",
+      title: "AgriAcademy (External Service)",
+      content: [
+        heading("Overview", [
+          p(
+            "AgriAcademy is an online exam and certification platform backed by a standalone external ecosystem (a five-service exam-center gateway) reached over a thin REST proxy. The app never stores AgriAcademy data itself — but MONEY lives in Rolnopol, so paid exams are charged in ROL here. Browse units and take exams from the AgriAcademy pages (/agri-academy-units.html and friends).",
+          ),
+          ul([
+            "Public, no-login pages: the unit directory, unit profiles, the leaderboard, certificate verification, and a system-status page.",
+            "Taking exams, viewing your sessions, and managing certificates require login.",
+            "Passing an exam issues a verifiable certificate; a passed exam can be rated 1–5 stars.",
+          ]),
+        ]),
+        heading("Pay-before-exam & payment flow", [
+          flow([
+            { label: "Browse units and pick an exam", detail: "/agri-academy-units.html (public)" },
+            { label: "Enroll", detail: "POST /agri-academy/sessions" },
+            { label: "Free exam?", detail: "entitled immediately, no money moved", arrow: "free" },
+            { label: "Paid exam", detail: "taker charged ROL, unit paid out, access entitled", arrow: "paid" },
+            { label: "Start, answer, submit", detail: "the completion clock starts at 'start'" },
+            { label: "Pass → certificate issued", detail: "verifiable via /agri-academy/verify/:certNo" },
+          ]),
+        ]),
+        heading("Scenario: not enough ROL for a paid exam", [
+          scenario([
+            "Open a paid unit and enroll in its exam while your ROL balance is too low.",
+            "The charge is declined and the API responds with HTTP 402 (insufficient funds); the session stays 'awaiting_payment' and no attempt is drawn.",
+            "Top up ROL and re-enroll (or POST /agri-academy/reconcile) to repair any stuck charge/payout.",
+          ]),
+        ]),
+        heading("Endpoints", [
+          table(
+            ["Method", "Path", "Requires"],
+            [
+              ["GET", "/agri-academy/units", "agriAcademyEnabled (public)"],
+              ["GET", "/agri-academy/units/:unitId", "agriAcademyEnabled (public)"],
+              ["GET", "/agri-academy/leaderboard", "agriAcademyEnabled (public, anonymized)"],
+              ["GET", "/agri-academy/verify/:certNo", "agriAcademyEnabled (public)"],
+              ["GET", "/agri-academy/status", "agriAcademyEnabled (public)"],
+              ["POST", "/agri-academy/sessions", "agriAcademyEnabled + login (enroll / pay)"],
+              ["POST", "/agri-academy/sessions/:id/start", "agriAcademyEnabled + login"],
+              ["POST", "/agri-academy/sessions/:id/submit", "agriAcademyEnabled + login"],
+              ["POST", "/agri-academy/sessions/:id/rating", "agriAcademyEnabled + login (rate a passed exam)"],
+              ["GET", "/agri-academy/certificates", "agriAcademyEnabled + login"],
+            ],
+          ),
+          callout(
+            "info",
+            "Money & idempotency",
+            "Confirming a paid exam charges ROL and pays out the unit; insufficient funds → 402. Every ROL move is keyed by a stable referenceId and POST /agri-academy/sessions honours an Idempotency-Key. POST /agri-academy/reconcile repairs stuck charges, payouts, and refunds.",
+          ),
+          callout(
+            "warning",
+            "Service must be running",
+            "If the external AgriAcademy ecosystem is offline, endpoints return 503 — start it with `npm run academy`. When the feature is disabled, endpoints and pages return 404.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
     flag: "observatoryEnabled",
     section: {
       section: "observatory",

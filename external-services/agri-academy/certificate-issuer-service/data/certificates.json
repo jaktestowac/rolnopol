@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "seq": 5,
+  "certificates": {
+    "AA-2026-000001": {
+      "certNo": "AA-2026-000001",
+      "examId": "exam-5",
+      "examTitle": "Soil Health & Nutrient Management",
+      "ownerUnitId": "unit-1",
+      "unitName": "Green Acres Training Co-op",
+      "holder": "3",
+      "sessionId": "sess-1",
+      "scorePct": 90,
+      "template": "botanical",
+      "issuedAt": "2026-06-02T09:28:00.000Z",
+      "expiresAt": "2028-06-02T09:28:00.000Z",
+      "revoked": false,
+      "revokedReason": null
+    },
+    "AA-2026-000002": {
+      "certNo": "AA-2026-000002",
+      "examId": "exam-8",
+      "examTitle": "Farm Machinery Maintenance",
+      "ownerUnitId": "unit-2",
+      "unitName": "Ironfield Machinery School",
+      "holder": "4",
+      "sessionId": "sess-2",
+      "scorePct": 100,
+      "template": "slate-minimal",
+      "issuedAt": "2026-06-09T11:15:00.000Z",
+      "expiresAt": "2027-12-09T11:15:00.000Z",
+      "revoked": false,
+      "revokedReason": null
+    },
+    "AA-2026-000003": {
+      "certNo": "AA-2026-000003",
+      "examId": "exam-9",
+      "examTitle": "Livestock Welfare & Handling",
+      "ownerUnitId": "unit-3",
+      "unitName": "Meadowbrook Livestock & Welfare",
+      "holder": "2",
+      "sessionId": "sess-3",
+      "scorePct": 77,
+      "template": "modern-teal",
+      "issuedAt": "2026-06-15T14:48:00.000Z",
+      "expiresAt": "2028-06-15T14:48:00.000Z",
+      "revoked": false,
+      "revokedReason": null
+    },
+    "AA-2026-000004": {
+      "certNo": "AA-2026-000004",
+      "examId": "exam-7",
+      "examTitle": "Combine Harvester Operation",
+      "ownerUnitId": "unit-2",
+      "unitName": "Ironfield Machinery School",
+      "holder": "10",
+      "sessionId": "sess-5",
+      "scorePct": 91,
+      "template": "rustic-kraft",
+      "issuedAt": "2026-06-28T09:06:00.000Z",
+      "expiresAt": "2028-06-28T09:06:00.000Z",
+      "revoked": false,
+      "revokedReason": null
+    },
+    "AA-2026-000005": {
+      "certNo": "AA-2026-000005",
+      "examId": "exam-10",
+      "examTitle": "Dairy Hygiene & Milk Quality",
+      "ownerUnitId": "unit-3",
+      "unitName": "Meadowbrook Livestock & Welfare",
+      "holder": "4",
+      "sessionId": "sess-6",
+      "scorePct": 100,
+      "template": "midnight",
+      "issuedAt": "2026-07-03T10:35:00.000Z",
+      "expiresAt": "2028-01-03T10:35:00.000Z",
+      "revoked": false,
+      "revokedReason": null
+    }
+  }
+}

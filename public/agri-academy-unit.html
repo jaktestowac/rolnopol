@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AgriAcademy — Certification Unit</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/agri-academy.css" />
+    <style>
+      :root {
+        --bg: #0f1a14;
+        --card: #16241b;
+        --ink: #eaf3ec;
+        --muted: #9bb3a4;
+        --accent: #3fae6b;
+        --accent-2: #7bd4a0;
+        --border: #24382b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      .footer {
+        border-top: 1px solid var(--border);
+      }
+      body {
+        margin: 0;
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: radial-gradient(1200px 600px at 80% -10%, #1c3326 0%, var(--bg) 55%);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      a.back {
+        color: var(--accent-2);
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .hero {
+        margin: 24px 0 8px;
+        padding: 32px;
+        background: linear-gradient(180deg, var(--card), #12201800);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+      }
+
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      h1 {
+        margin: 8px 0;
+        font-size: 32px;
+      }
+
+      .desc {
+        color: var(--muted);
+        line-height: 1.6;
+        margin: 0;
+        max-width: 60ch;
+      }
+
+      h2.section {
+        margin: 28px 0 14px;
+        font-size: 18px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+      }
+
+      .exam {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px;
+      }
+
+      .exam h3 {
+        margin: 0 0 6px;
+        font-size: 17px;
+      }
+
+      .exam p {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 0 0 14px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .tag {
+        font-size: 12px;
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 10px;
+        color: var(--accent-2);
+      }
+
+      .tag.free {
+        color: #cfe9d7;
+      }
+
+      .tag.paid {
+        color: #ffd98a;
+        border-color: #4a3d1e;
+        background: #2a2313;
+      }
+
+      /* Discoverability badges: a coloured difficulty pill + a category chip. */
+      .tag.cat {
+        color: #cfe3ff;
+        border-color: #2b3f57;
+        background: #16283a;
+      }
+      .tag.diff-beginner {
+        color: #b9f0c9;
+        border-color: #2c5a3c;
+        background: #133224;
+      }
+      .tag.diff-intermediate {
+        color: #ffe0a3;
+        border-color: #5a4a1e;
+        background: #2e2713;
+      }
+      .tag.diff-advanced {
+        color: #ffc2c2;
+        border-color: #5a2c2c;
+        background: #331616;
+      }
+
+      .state {
+        color: var(--muted);
+        padding: 40px 0;
+        text-align: center;
+      }
+
+      .enroll {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 14px;
+        border: 1px solid var(--accent);
+        background: linear-gradient(180deg, var(--accent), #2e8f55);
+        color: #06170d;
+        border-radius: 9px;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .brand-head {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .ubadge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        font-size: 26px;
+        color: #06170d;
+        flex-shrink: 0;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+      }
+
+      .chip {
+        font-size: 12px;
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 10px;
+        color: var(--accent-2);
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin: 0 0 16px;
+      }
+
+      .ex-search {
+        flex: 1 1 240px;
+        background: #0f1a14;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 9px 12px;
+        font-size: 14px;
+      }
+
+      .ex-select {
+        background: #0f1a14;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 9px 12px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 22px 0 4px;
+      }
+
+      .page-btn {
+        background: #1e3527;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--ink);
+        padding: 8px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color 0.15s ease;
+      }
+
+      .page-btn:hover:not(:disabled) {
+        border-color: var(--accent);
+      }
+
+      .page-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+
+      .page-info {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .tag.rated {
+        color: #ffce54;
+        border-color: #4a3d1e;
+        background: #241f12;
+      }
+
+      .hero-rating {
+        margin-top: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #ffce54;
+      }
+
+      .hero-rating .muted {
+        color: var(--muted);
+        font-weight: 400;
+      }
+
+      .exam-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      /* A secondary (ghost) variant of the enroll button, for "Preview". */
+      .enroll.ghost {
+        background: #1e3527;
+        color: var(--ink);
+        border-color: var(--border);
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .enroll.ghost.bookmark.is-saved {
+        background: #3a3413;
+        border-color: #b8912e;
+        color: #f0d98a;
+      }
+
+      /* Exam preview modal — full details before enrolling. */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(6, 15, 10, 0.72);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 50;
+      }
+      .modal-overlay.hidden {
+        display: none;
+      }
+      .aa-modal {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 520px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      }
+      .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .aa-modal h3 {
+        margin: 0 0 4px;
+        font-size: 22px;
+      }
+      .aa-modal .close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0 4px;
+      }
+      .aa-modal .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--accent-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .aa-modal .desc {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 8px 0;
+      }
+      .aa-modal dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 16px;
+        margin: 16px 0;
+        font-size: 14px;
+      }
+      .aa-modal dt {
+        color: var(--muted);
+      }
+      .aa-modal dd {
+        margin: 0;
+        text-align: right;
+      }
+
+      /* ── Activity panel: this unit's slice of the exam-events log ───────────── */
+      .activity {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--card);
+        overflow: hidden;
+      }
+      .activity .scroll {
+        overflow-x: auto;
+      }
+      .activity table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        min-width: 560px;
+      }
+      .activity th,
+      .activity td {
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      .activity th {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        color: var(--muted);
+        background: #121d16;
+      }
+      .activity tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .activity tbody tr:hover {
+        background: #1a2b20;
+      }
+      .activity .mono {
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .activity td.wrap {
+        white-space: normal;
+        max-width: 220px;
+      }
+      /* Live tail: a dot next to the heading, and a flash on a streamed-in row */
+      .live-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--border);
+        vertical-align: middle;
+        margin-left: 6px;
+      }
+      .live-dot--on {
+        background: var(--up);
+        animation: pulse 1.8s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        50% {
+          opacity: 0.35;
+        }
+      }
+      .activity tbody tr.is-new {
+        animation: landed 2.4s ease-out;
+      }
+      @keyframes landed {
+        0% {
+          background: rgba(63, 191, 107, 0.28);
+        }
+        100% {
+          background: transparent;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .live-dot--on,
+        .activity tbody tr.is-new {
+          animation: none;
+        }
+      }
+      .badge {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+      .badge--pay,
+      .badge--submitted {
+        color: #ffce6b;
+        border-color: #4b3d1c;
+      }
+      .badge--entitled {
+        color: #7fb8ff;
+        border-color: #234058;
+      }
+      .badge--active,
+      .badge--scored {
+        color: var(--accent-2);
+        border-color: #23533a;
+      }
+      .badge--dead {
+        color: #ff8a8a;
+        border-color: #52292d;
+      }
+      .all-events {
+        margin: 14px 0 0;
+        text-align: right;
+        font-size: 14px;
+      }
+      .all-events a {
+        color: var(--accent-2);
+        text-decoration: none;
+      }
+      .all-events a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+
+  <body class="agri-academy-page">
+    <div id="header-component"></div>
+    <div class="wrap">
+      <a class="back" href="/agri-academy-units.html">← All units</a>
+      <div id="content"></div>
+      <div id="state" class="state">Loading…</div>
+    </div>
+
+    <!-- Exam preview modal — full details before enrolling -->
+    <div id="previewModal" class="modal-overlay hidden">
+      <div class="aa-modal" role="dialog" aria-modal="true" aria-labelledby="pvTitle">
+        <div class="modal-head">
+          <div>
+            <div class="eyebrow">Exam preview</div>
+            <h3 id="pvTitle"></h3>
+          </div>
+          <button class="close" id="pvClose" aria-label="Close">&times;</button>
+        </div>
+        <p id="pvDesc" class="desc"></p>
+        <div id="pvBadges" class="meta"></div>
+        <dl id="pvDetails"></dl>
+        <a id="pvEnroll" class="enroll"></a>
+      </div>
+    </div>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("agri-academy");
+    </script>
+    <script>
+      (() => {
+        const content = document.getElementById("content");
+        const state = document.getElementById("state");
+        const esc = (s) =>
+          String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+        const unitId = new URLSearchParams(location.search).get("unit");
+        const mins = (s) => Math.round((s || 0) / 60);
+        const priceOf = (e) => (e.pricing && e.pricing.mode === "paid" ? Number(e.pricing.priceRol) || 0 : 0);
+
+        // ── Available certifications: search / sort / paginate ────────────────────────
+        let exams = [];
+        let examQuery = "";
+        let examSort = "title-asc";
+        let examPage = 1;
+        const EXAMS_PER_PAGE = 6;
+
+        // ── Bookmarks ("save for later") ─────────────────────────────────────────────
+        // The profile is public, but a signed-in visitor can save exams. If the visitor
+        // isn't logged in, the save endpoint answers 401 → we send them to log in.
+        const bookmarked = new Set();
+        let canBookmark = true;
+        async function loadBookmarks() {
+          try {
+            const r = await fetch("/api/v1/agri-academy/bookmarks", { credentials: "include" });
+            if (r.status === 401) {
+              canBookmark = false;
+              return;
+            }
+            const b = await r.json().catch(() => null);
+            bookmarked.clear();
+            if (r.ok && Array.isArray(b && b.bookmarks)) for (const x of b.bookmarks) bookmarked.add(x.examId);
+          } catch {
+            /* leave bookmarks empty; the button still renders */
+          }
+        }
+        function paintBookmarkBtn(examId, btn) {
+          const saved = bookmarked.has(examId);
+          btn.classList.toggle("is-saved", saved);
+          btn.setAttribute("aria-pressed", saved ? "true" : "false");
+          btn.title = saved ? "Remove from saved" : "Save for later";
+          btn.innerHTML = saved ? "★ Saved" : "☆ Save";
+        }
+        async function toggleBookmark(examId, btn) {
+          if (!canBookmark) {
+            location.href = "/login.html?next=" + encodeURIComponent(location.pathname + location.search);
+            return;
+          }
+          const saved = bookmarked.has(examId);
+          btn.disabled = true;
+          try {
+            const r = await fetch("/api/v1/agri-academy/bookmarks/" + encodeURIComponent(examId), {
+              method: saved ? "DELETE" : "PUT",
+              credentials: "include",
+            });
+            if (r.status === 401) {
+              canBookmark = false;
+              location.href = "/login.html?next=" + encodeURIComponent(location.pathname + location.search);
+              return;
+            }
+            if (!r.ok) return;
+            if (saved) bookmarked.delete(examId);
+            else bookmarked.add(examId);
+            paintBookmarkBtn(examId, btn);
+          } finally {
+            btn.disabled = false;
+          }
+        }
+
+        // ── Activity panel (exam-events log, scoped to this unit) ────────────────────
+        // Read-only and best-effort: the panel degrades to a one-line note rather than
+        // failing the page, because a unit profile is useful without its log.
+        const ACTIVITY_LIMIT = 12;
+        const STATE_META = {
+          awaiting_payment: { label: "Awaiting payment", cls: "badge--pay" },
+          entitled: { label: "Entitled", cls: "badge--entitled" },
+          active: { label: "Active", cls: "badge--active" },
+          submitted: { label: "Submitted", cls: "badge--submitted" },
+          scored: { label: "Scored", cls: "badge--scored" },
+          expired_scored: { label: "Expired (scored)", cls: "badge--scored" },
+          expired_unstarted: { label: "Expired (unstarted)", cls: "badge--dead" },
+          abandoned: { label: "Abandoned", cls: "badge--dead" },
+        };
+        function stateBadge(state) {
+          const meta = STATE_META[state] || { label: state || "unknown", cls: "" };
+          return `<span class="badge ${meta.cls}">${esc(meta.label)}</span>`;
+        }
+        function activityNote(text) {
+          const el = document.getElementById("activityState");
+          if (!el) return;
+          el.style.display = "block";
+          el.textContent = text;
+        }
+        function activityRow(ev, isNew) {
+          return `
+                  <tr${isNew ? ' class="is-new"' : ""}>
+                    <td class="mono">${Number(ev.sequence) || 0}</td>
+                    <td>${esc(Number(ev.at) > 0 ? new Date(Number(ev.at)).toLocaleString() : "—")}</td>
+                    <td class="wrap">${esc(ev.examTitle || ev.examId || "—")}</td>
+                    <td class="mono">${esc(ev.sessionId || "—")}</td>
+                    <td>${stateBadge(ev.state)}</td>
+                  </tr>`;
+        }
+
+        // The panel's live tail: one bounded read, then an SSE subscription from that
+        // read's high-water mark, so this unit's timeline extends itself while the
+        // profile is open. Best-effort like the read — a tail that cannot open leaves
+        // a static panel, never a broken page.
+        let activityStream = null;
+        let activityCursor = 0;
+
+        function markLive(on) {
+          const dot = document.getElementById("activityLive");
+          if (dot) dot.className = on ? "live-dot live-dot--on" : "live-dot";
+        }
+
+        function openActivityStream() {
+          if (activityStream) activityStream.close();
+          const url =
+            "/api/v1/agri-academy/units/" + encodeURIComponent(unitId) + "/events/stream?since=" + encodeURIComponent(activityCursor);
+          let framed = false;
+          let failures = 0;
+          activityStream = new EventSource(url, { withCredentials: true });
+          const alive = () => {
+            framed = true;
+            failures = 0;
+            markLive(true);
+          };
+          activityStream.addEventListener("ping", alive);
+          activityStream.addEventListener("entry", (e) => {
+            alive();
+            let ev = null;
+            try {
+              ev = JSON.parse(e.data);
+            } catch {
+              return;
+            }
+            if (!ev || Number(ev.sequence) <= activityCursor) return; // duplicate after a reconnect
+            activityCursor = Number(ev.sequence);
+            const rows = document.getElementById("activityRows");
+            if (!rows) return;
+            const state = document.getElementById("activityState");
+            if (state) state.style.display = "none";
+            rows.insertAdjacentHTML("afterbegin", activityRow(ev, true));
+            while (rows.rows.length > ACTIVITY_LIMIT) rows.deleteRow(-1);
+          });
+          activityStream.addEventListener("error", () => markLive(false));
+          activityStream.onerror = () => {
+            failures += 1;
+            markLive(false);
+            // Nothing on this panel polls, so a connection the browser has abandoned
+            // (non-2xx → readyState CLOSED) is just over. Release it rather than let it
+            // re-report the same failure forever; the rows already read stay put.
+            if (activityStream.readyState === EventSource.CLOSED || (!framed && failures >= 3)) activityStream.close();
+          };
+          window.addEventListener("beforeunload", () => activityStream && activityStream.close());
+        }
+
+        async function loadActivity() {
+          const rows = document.getElementById("activityRows");
+          if (!rows) return;
+          try {
+            const r = await fetch("/api/v1/agri-academy/units/" + encodeURIComponent(unitId) + "/events?limit=" + ACTIVITY_LIMIT, {
+              credentials: "include",
+            });
+            const body = await r.json().catch(() => null);
+            if (!r.ok || !body || !Array.isArray(body.events)) {
+              return activityNote(r.status === 503 ? "The exam-events service is unavailable right now." : "Activity could not be loaded.");
+            }
+            activityCursor = Number(body.latestSequence) || 0;
+            // An empty log is still worth tailing: the next enrollment fills the panel.
+            if (!body.events.length) activityNote("No exam activity recorded for this unit yet.");
+            else {
+              document.getElementById("activityState").style.display = "none";
+              rows.innerHTML = body.events.map((ev) => activityRow(ev, false)).join("");
+              const total = Number(body.total) || body.events.length;
+              if (total > body.events.length) {
+                activityNote(`Showing the latest ${body.events.length} of ${total} entries.`);
+              }
+            }
+            openActivityStream();
+          } catch {
+            activityNote("Activity could not be loaded.");
+          }
+        }
+
+        const ratingTag = (rating, count) =>
+          count
+            ? `<span class="tag rated" title="${count} rating${count === 1 ? "" : "s"}">★ ${Number(rating).toFixed(1)} (${count})</span>`
+            : `<span class="tag">☆ Unrated</span>`;
+        const passedTag = (count) =>
+          `<span class="tag" title="People who passed this exam">${Number(count || 0)} graduate${count === 1 ? "" : "s"}</span>`;
+
+        const DIFF_LABEL = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" };
+        // A coloured difficulty pill (only when set) + a category chip (only when set).
+        function badges(e) {
+          const out = [];
+          if (e.difficulty && DIFF_LABEL[e.difficulty])
+            out.push(`<span class="tag diff-${esc(e.difficulty)}">${DIFF_LABEL[e.difficulty]}</span>`);
+          if (e.category) out.push(`<span class="tag cat">${esc(e.category)}</span>`);
+          return out.join("");
+        }
+
+        function examCard(e) {
+          const price =
+            e.pricing && e.pricing.mode === "paid"
+              ? `<span class="tag paid">${e.pricing.priceRol} ROL</span>`
+              : `<span class="tag free">Free</span>`;
+          return `
+            <div class="exam">
+              <h3>${esc(e.title)}</h3>
+              <p>${esc(e.description || "")}</p>
+              <div class="meta">
+                ${price}
+                ${badges(e)}
+                ${passedTag(e.passedCount)}
+                ${ratingTag(e.rating, e.ratings)}
+                <span class="tag">${mins(e.durationSec)} min</span>
+                <span class="tag">Pass ${e.passPct}%</span>
+                <span class="tag">${e.accessWindowDays}-day access</span>
+              </div>
+              <div class="exam-actions">
+                <a class="enroll" href="/agri-academy.html?exam=${encodeURIComponent(e.id)}">Enroll &amp; take →</a>
+                <button class="enroll ghost" type="button" data-preview="${esc(e.id)}">Preview</button>
+                <button class="enroll ghost bookmark" type="button" data-bookmark="${esc(e.id)}" aria-pressed="false">☆ Save</button>
+              </div>
+            </div>`;
+        }
+
+        // ── Exam preview modal ───────────────────────────────────────────────────────
+        const titleCase = (s) =>
+          String(s || "")
+            .split("-")
+            .filter(Boolean)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ");
+
+        function openPreview(examId) {
+          const e = exams.find((x) => x.id === examId);
+          if (!e) return;
+          const paid = e.pricing && e.pricing.mode === "paid";
+          document.getElementById("pvTitle").textContent = e.title;
+          document.getElementById("pvDesc").textContent = e.description || "";
+          document.getElementById("pvBadges").innerHTML = badges(e) || `<span class="tag" style="visibility:hidden">–</span>`;
+          const rows = [
+            ["Price", paid ? `${e.pricing.priceRol} ROL` : "Free"],
+            ["Duration", `${mins(e.durationSec)} min`],
+            ["Access window", `${e.accessWindowDays} day${e.accessWindowDays === 1 ? "" : "s"}`],
+            ["Pass mark", `${e.passPct}%`],
+            ["Graduates", `${Number(e.passedCount || 0)}`],
+          ];
+          if (e.ratings) rows.push(["Rating", `★ ${Number(e.rating).toFixed(1)} (${e.ratings})`]);
+          if (e.certTemplate) rows.push(["Certificate", titleCase(e.certTemplate)]);
+          document.getElementById("pvDetails").innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+          const enrollLink = document.getElementById("pvEnroll");
+          enrollLink.innerHTML = "Enroll &amp; take →";
+          enrollLink.href = `/agri-academy.html?exam=${encodeURIComponent(e.id)}`;
+          document.getElementById("previewModal").classList.remove("hidden");
+        }
+        function closePreview() {
+          document.getElementById("previewModal").classList.add("hidden");
+        }
+
+        // Renders prev/next pagination into `containerId`; stays hidden when there's a single page.
+        function renderPager(containerId, page, totalPages, totalItems, noun, onGo) {
+          const el = document.getElementById(containerId);
+          if (totalPages <= 1) {
+            el.classList.add("hidden");
+            el.innerHTML = "";
+            return;
+          }
+          el.classList.remove("hidden");
+          el.innerHTML = `
+            <button class="page-btn" data-go="prev" ${page <= 1 ? "disabled" : ""}>← Prev</button>
+            <span class="page-info">Page ${page} of ${totalPages} · ${totalItems} ${noun}${totalItems === 1 ? "" : "s"}</span>
+            <button class="page-btn" data-go="next" ${page >= totalPages ? "disabled" : ""}>Next →</button>`;
+          el.querySelector('[data-go="prev"]').onclick = () => page > 1 && onGo(page - 1);
+          el.querySelector('[data-go="next"]').onclick = () => page < totalPages && onGo(page + 1);
+        }
+
+        function renderExams() {
+          const q = examQuery.trim().toLowerCase();
+          const filtered = exams.filter((e) => !q || [e.title, e.description].join(" ").toLowerCase().includes(q));
+          filtered.sort((a, b) => {
+            switch (examSort) {
+              case "title-desc":
+                return (b.title || "").localeCompare(a.title || "");
+              case "price-asc":
+                return priceOf(a) - priceOf(b) || (a.title || "").localeCompare(b.title || "");
+              case "price-desc":
+                return priceOf(b) - priceOf(a) || (a.title || "").localeCompare(b.title || "");
+              case "duration-asc":
+                return (a.durationSec || 0) - (b.durationSec || 0) || (a.title || "").localeCompare(b.title || "");
+              case "pass-asc":
+                return (a.passPct || 0) - (b.passPct || 0) || (a.title || "").localeCompare(b.title || "");
+              case "rating-desc":
+                return (
+                  (b.rating || 0) - (a.rating || 0) || (b.ratings || 0) - (a.ratings || 0) || (a.title || "").localeCompare(b.title || "")
+                );
+              default:
+                return (a.title || "").localeCompare(b.title || "");
+            }
+          });
+          const totalPages = Math.max(1, Math.ceil(filtered.length / EXAMS_PER_PAGE));
+          if (examPage > totalPages) examPage = totalPages;
+          const start = (examPage - 1) * EXAMS_PER_PAGE;
+          const pageItems = filtered.slice(start, start + EXAMS_PER_PAGE);
+          document.getElementById("examGrid").innerHTML = pageItems.length
+            ? pageItems.map(examCard).join("")
+            : `<div class="state" style="grid-column:1/-1">No certifications match “${esc(examQuery)}”.</div>`;
+          document
+            .querySelectorAll("[data-preview]")
+            .forEach((b) => b.addEventListener("click", () => openPreview(b.getAttribute("data-preview"))));
+          document.querySelectorAll("[data-bookmark]").forEach((b) => {
+            paintBookmarkBtn(b.getAttribute("data-bookmark"), b);
+            b.addEventListener("click", () => toggleBookmark(b.getAttribute("data-bookmark"), b));
+          });
+          renderPager("examPager", examPage, totalPages, filtered.length, "certification", (p) => {
+            examPage = p;
+            renderExams();
+          });
+        }
+
+        // Preview modal close: the ✕, backdrop click, and Escape.
+        document.getElementById("pvClose").addEventListener("click", closePreview);
+        document.getElementById("previewModal").addEventListener("click", (ev) => {
+          if (ev.target === document.getElementById("previewModal")) closePreview();
+        });
+        document.addEventListener("keydown", (ev) => {
+          if (ev.key === "Escape") closePreview();
+        });
+
+        if (!unitId) {
+          state.textContent = "No unit specified.";
+        } else {
+          fetch("/api/v1/agri-academy/units/" + encodeURIComponent(unitId))
+            .then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))))
+            .then((u) => {
+              state.style.display = "none";
+              exams = u.exams || [];
+              const color = u.color || "#3fae6b";
+              const icon = u.icon || "graduation-cap";
+              const chips = (u.tags || []).map((t) => `<span class="chip">${esc(t)}</span>`).join("");
+              content.innerHTML = `
+              <div class="hero" style="border-color:${esc(color)}">
+                <div class="brand-head">
+                  <div class="ubadge" style="background:${esc(color)}"><i class="fa-solid fa-${esc(icon)}"></i></div>
+                  <div>
+                    <div class="eyebrow">Certification Unit</div>
+                    <h1 style="margin:4px 0">${esc(u.name)}</h1>
+                  </div>
+                </div>
+                <p class="desc" style="margin-top:12px">${esc(u.description || "")}</p>
+                ${chips ? `<div class="chips">${chips}</div>` : ""}
+                <div class="hero-rating">
+                  ${
+                    u.ratings
+                      ? `★ ${Number(u.rating).toFixed(1)} <span class="muted">· average of ${u.ratings} exam rating${u.ratings === 1 ? "" : "s"} · ${Number(u.passedCount || 0)} passed</span>`
+                      : `<span class="muted">${Number(u.passedCount || 0)} graduate${u.passedCount === 1 ? "" : "s"} · not yet rated</span>`
+                  }
+                </div>
+              </div>
+              <h2 class="section">Available certifications</h2>
+              ${
+                exams.length
+                  ? `<div class="toolbar">
+                      <input id="examSearch" class="ex-search" type="search" placeholder="Search certifications…" />
+                      <select id="examSort" class="ex-select" aria-label="Sort certifications">
+                        <option value="title-asc">Name (A–Z)</option>
+                        <option value="title-desc">Name (Z–A)</option>
+                        <option value="price-asc">Price (low → high)</option>
+                        <option value="price-desc">Price (high → low)</option>
+                        <option value="duration-asc">Shortest first</option>
+                        <option value="pass-asc">Easiest pass %</option>
+                        <option value="rating-desc">Top rated</option>
+                      </select>
+                    </div>`
+                  : ""
+              }
+              <div id="examGrid" class="grid"></div>
+              <div id="examPager" class="pager hidden"></div>
+              <h2 class="section">Recent activity <i id="activityLive" class="live-dot" title="Live — new entries appear on their own"></i></h2>
+              <div class="activity">
+                <div class="scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>When</th>
+                        <th>Exam</th>
+                        <th>Session</th>
+                        <th>State</th>
+                      </tr>
+                    </thead>
+                    <tbody id="activityRows"></tbody>
+                  </table>
+                </div>
+                <div id="activityState" class="state">Loading activity…</div>
+              </div>
+              <p class="all-events">
+                <a href="/agri-academy-events.html?unit=${encodeURIComponent(unitId)}">View the full activity log for this unit →</a>
+                &nbsp;·&nbsp;
+                <a href="/agri-academy-events.html">Activity across all units →</a>
+              </p>`;
+
+              // The activity panel is independent of the exam grid: a unit with no
+              // published exams can still have a history worth showing.
+              loadActivity();
+
+              if (!exams.length) {
+                document.getElementById("examGrid").innerHTML = `<div class="state" style="grid-column:1/-1">No published exams yet.</div>`;
+                return;
+              }
+              document.getElementById("examSearch").addEventListener("input", (e) => {
+                examQuery = e.target.value;
+                examPage = 1;
+                renderExams();
+              });
+              document.getElementById("examSort").addEventListener("change", (e) => {
+                examSort = e.target.value;
+                examPage = 1;
+                renderExams();
+              });
+              renderExams();
+              // Load the visitor's saved exams, then repaint so the toggles reflect state.
+              loadBookmarks().then(renderExams);
+            })
+            .catch(() => {
+              state.textContent = "This unit could not be loaded.";
+            });
+        }
+      })();
+    </script>
+  </body>
+</html>
