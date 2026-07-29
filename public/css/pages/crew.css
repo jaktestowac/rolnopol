@@ -1,0 +1,49 @@
+/*
+ * Crew Office — scoped stylesheet (PRD §10.2).
+ *
+ * Rules this file lives by, and the isolation they buy:
+ *   - Design TOKENS only. No new colour literals, no new `:root` block, no new
+ *     font, no CDN, no framework, no build step. Every value below resolves from
+ *     public/css/styles.css, so a token change reaches Crew Office for free.
+ *   - Every selector sits under `.crew-page` / `.crew-*`. This stylesheet is
+ *     loaded only by crew pages and cannot leak into another page even if it were.
+ *
+ * Phase 0 ships the shell the placeholder pages need. Phase 7 grows it into the
+ * roster, calendar, registry and explorer styles — additively, under the same
+ * scope rules.
+ */
+
+.crew-page .crew-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.crew-page .crew-title {
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+}
+
+.crew-page .crew-lede {
+  color: var(--text-secondary);
+  margin: 0 0 1.5rem;
+  max-width: 60ch;
+}
+
+.crew-page .crew-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--agri-green);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.crew-page .crew-placeholder i {
+  color: var(--agri-green-dark);
+}

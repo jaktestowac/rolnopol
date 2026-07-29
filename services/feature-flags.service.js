@@ -55,6 +55,15 @@ const FEATURE_FLAG_DESCRIPTIONS = {
     "Enable or disable the AgriAcademy module (HTTP client to the standalone AgriAcademy exam-center and authoring gateways, REST API, and pages) for logged-in users",
   observatoryEnabled:
     "Enable or disable the Observatory sky-dome page with stars and constellations tracking, and the observatory REST/SSE endpoints (public, no login required)",
+  crewOfficeEnabled:
+    "Enable or disable the Crew Office module (GraphQL crew management over the existing staff records — pages, graph endpoint, and module-owned stores) for logged-in users only. Master flag: with this off, every crew pillar flag below yields nothing",
+  crewWorkEnabled: "Enable or disable the Crew Office work pillar (duty types, shifts, work log). Requires crewOfficeEnabled",
+  crewLeaveEnabled:
+    "Enable or disable the Crew Office holidays pillar (leave policy, accrual, requests, approvals). Requires crewOfficeEnabled",
+  crewTrainingEnabled:
+    "Enable or disable the Crew Office training pillar (courses, enrollments, certifications with expiry). Requires crewOfficeEnabled",
+  crewToolsEnabled:
+    "Enable or disable the Crew Office tools pillar (tool registry, issue/return ledger, service schedule). Requires crewOfficeEnabled",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -93,6 +102,7 @@ const FEATURE_FLAG_GROUPS = {
   farmStay: ["farmStayEnabled"],
   agriAcademy: ["agriAcademyEnabled"],
   observatory: ["observatoryEnabled"],
+  crewOffice: ["crewOfficeEnabled", "crewWorkEnabled", "crewLeaveEnabled", "crewTrainingEnabled", "crewToolsEnabled"],
 };
 
 const EXPERIMENTAL_FEATURE_FLAGS = [
@@ -132,6 +142,11 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "farmStayEnabled",
   "agriAcademyEnabled",
   "observatoryEnabled",
+  "crewOfficeEnabled",
+  "crewWorkEnabled",
+  "crewLeaveEnabled",
+  "crewTrainingEnabled",
+  "crewToolsEnabled",
 ];
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -181,6 +196,11 @@ const PREDEFINED_FEATURE_FLAGS = {
   farmStayEnabled: false,
   agriAcademyEnabled: false,
   observatoryEnabled: false,
+  crewOfficeEnabled: false,
+  crewWorkEnabled: false,
+  crewLeaveEnabled: false,
+  crewTrainingEnabled: false,
+  crewToolsEnabled: false,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

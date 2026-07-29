@@ -103,6 +103,16 @@ try {
   logError("[routes/v1] Failed to load agri-academy.route — agri-academy endpoints unavailable:", err.message);
   agriAcademyRoute = express.Router();
 }
+// Defensive loading — Crew Office assembles its GraphQL schema from independently
+// flagged pillars; if any of that fails to load, the rest of the app must still
+// start and serve every existing endpoint (PRD §12 rule 6).
+let crewRoute;
+try {
+  crewRoute = require("./crew.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load crew.route — Crew Office endpoints unavailable:", err.message);
+  crewRoute = express.Router();
+}
 
 const router = express.Router();
 
@@ -265,6 +275,7 @@ router.use("/", tasklabRoute);
 router.use("/", farmStayRoute);
 router.use("/", agriAcademyAdminRoute);
 router.use("/", agriAcademyRoute);
+router.use("/", crewRoute);
 router.use("/", servicesMonitorRoute);
 router.use("/contact", contactRoute);
 router.use("/", blogRoute);

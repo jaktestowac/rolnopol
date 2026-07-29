@@ -1131,6 +1131,168 @@ module.exports = [
     },
   },
   {
+    flag: "crewOfficeEnabled",
+    section: {
+      section: "crew-office",
+      title: "Crew Office",
+      content: [
+        heading("Overview", [
+          p(
+            "Crew Office adds real crew management on top of the existing staff records — work, holidays, training and tools — for logged-in users only. It is Rolnopol's first GraphQL surface: one endpoint and one schema, assembled at boot from independently flagged 'pillars'.",
+          ),
+          ul([
+            "'crewOfficeEnabled' is the MASTER flag. With it off, the pages and every crew endpoint return 404, and no crew data file is created at all.",
+            "The four pillar flags below ('crewWorkEnabled', 'crewLeaveEnabled', 'crewTrainingEnabled', 'crewToolsEnabled') do nothing on their own — the master flag wins.",
+            "A disabled pillar is ABSENT from the GraphQL schema rather than erroring, so selecting its field is a validation error naming an unknown field, and introspection never mentions it.",
+          ]),
+        ]),
+        heading("Login is mandatory — pages and API", [
+          p(
+            "Crew Office is built entirely on user-owned staff data, so it has no meaningful anonymous view. Unusually for Rolnopol, the PAGES are gated on a valid session server-side, not just the API — and an anonymous visitor gets the same HTML 404 as if the module were switched off. The module's existence is never disclosed to someone who could not use it.",
+          ),
+          table(
+            ["Situation", "Response"],
+            [
+              ["Flag off (any caller)", "404 — checked before authentication"],
+              ["Flag on, no credentials", "401 'Access token required'"],
+              ["Flag on, invalid or expired token", "403 'Invalid or expired token' — not 401"],
+              ["Flag on, only an x-api-key", "401 — personal API keys are not accepted here"],
+              ["Flag on, valid session", "Proceed, scoped to your own crew"],
+            ],
+          ),
+          callout(
+            "info",
+            "Why personal API keys are refused",
+            "API key authentication resolves a required scope from the request, and no crew scope exists yet. Admitting keys would silently widen every already-issued key into a new data domain. Programmatic access arrives with dedicated 'crew:read' / 'crew:write' scopes.",
+          ),
+        ]),
+        heading("Endpoints", [
+          table(
+            ["Method", "Path", "Description"],
+            [
+              ["GET", "/crew/health", "Module status plus each pillar's enablement and store state (login required)"],
+              ["POST", "/graphql/crew", "The API — queries and mutations (login required)"],
+              ["GET", "/graphql/crew", "SDL of the currently assembled schema, as text/plain (login required)"],
+            ],
+          ),
+          p(
+            "There are deliberately no REST domain endpoints: everything the module reads or writes goes through the one graph endpoint. Middleware order is flag, then authentication, then rate limiting — so a disabled module reveals nothing, and anonymous traffic cannot consume a real user's quota.",
+          ),
+        ]),
+        heading("What it will never do", [
+          ul([
+            "It can HIRE — one operation creates the staff record and its employment profile — but it can never FIRE. There is no delete mutation of any kind; ending employment records an end date on the crew profile and leaves the staff record intact.",
+            "It never edits name, surname or age after hire. Those belong to the existing staff page.",
+            "It never creates, edits or removes a staff-to-field assignment. Assignments are read-only, for display.",
+            "No money: no ROL movement and no ledger access in v1.",
+          ]),
+          callout(
+            "warning",
+            "Under construction",
+            "The graph endpoint and the four pillars are still being built. With the flag on you currently get the crew pages and GET /crew/health; the health response reports 'graph: not-mounted' until the schema lands.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "crewWorkEnabled",
+    section: {
+      section: "crew-office-work",
+      title: "Crew Office — Work",
+      content: [
+        heading("Overview", [
+          p(
+            "The work pillar covers who is doing what, when, and what actually got done. It requires 'crewOfficeEnabled' — on its own this flag has no effect.",
+          ),
+          ul([
+            "Duty types (early milking, feeding, night watch, ...) with times, an optional required role, and a colour for the UI.",
+            "Shifts — a duty type assigned to a crew member on a date, moving planned → confirmed → completed or cancelled.",
+            "Work log — hours and activity against a shift or standalone, with weekly and monthly rollups. Corrections append rather than overwrite, so the original entry survives.",
+          ]),
+        ]),
+        heading("Cross-pillar checks", [
+          p(
+            "A shift overlapping approved leave is refused, and so are two overlapping shifts for the same person. A shift whose duty type wants a role the member's profile does not have is a warning, not a block. When the leave pillar is off, the leave check simply cannot run and degrades rather than failing the request.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "crewLeaveEnabled",
+    section: {
+      section: "crew-office-leave",
+      title: "Crew Office — Holidays",
+      content: [
+        heading("Overview", [
+          p(
+            "The holidays pillar handles leave policy, accrual, requests and approvals. It requires 'crewOfficeEnabled' — on its own this flag has no effect.",
+          ),
+          ul([
+            "Policy per farm: annual entitlement at full time, accrual mode, carry-over cap and expiry, leave-year start, public holidays, harvest blackout windows, and minimum notice.",
+            "Accrual is monthly and pro-rata to the member's FTE, pro-rated from their start date and stopped at their end date. Carry-over is granted explicitly and expires on the policy date.",
+            "Requests move requested → approved, rejected, cancelled or withdrawn, support half-day start/end, and exclude public holidays and non-working days from the working-day count.",
+          ]),
+          callout(
+            "tip",
+            "Balance is computed, never stored",
+            "Entitlement, accrued, carried over, taken, booked and remaining are all derived from the policy, the member's FTE, their requests and any manual adjustments, for whatever 'as of' date you ask about. Storing a balance is the classic drift bug; computing it keeps the arithmetic honest and testable.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "crewTrainingEnabled",
+    section: {
+      section: "crew-office-training",
+      title: "Crew Office — Training",
+      content: [
+        heading("Overview", [
+          p(
+            "The training pillar records what the crew is qualified to do, and when that lapses. It requires 'crewOfficeEnabled' — on its own this flag has no effect.",
+          ),
+          ul([
+            "Courses carry a validity period in months and the roles they are mandatory for.",
+            "Enrollments move planned → in progress → passed, failed or cancelled. A passed enrollment mints a certification whose expiry is the completion date plus the course validity.",
+            "Certification status (valid, expiring soon, expired, revoked) is computed from the clock, so it is correct at every boundary rather than at write time. Revocation is terminal.",
+            "Reports: a crew-by-course training matrix, certifications expiring within N days, and compliance gaps — mandatory courses missing for a member's role.",
+          ]),
+          callout(
+            "info",
+            "Optional AgriAcademy link",
+            "When 'agriAcademyEnabled' is also on, a course may reference an AgriAcademy exam and surface the certificate from it. That link is read-only and degrades to null when the academy is unavailable — it never fails the query.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "crewToolsEnabled",
+    section: {
+      section: "crew-office-tools",
+      title: "Crew Office — Tools",
+      content: [
+        heading("Overview", [
+          p(
+            "The tools pillar answers who has the chainsaw, and whether it is due a service. It requires 'crewOfficeEnabled' — on its own this flag has no effect.",
+          ),
+          ul([
+            "Tools carry an asset tag, category, service interval, storage location and status (available, on issue, in service, retired).",
+            "Issuance is an append-only ledger: issue with a due-back date, return with a condition. The current holder is DERIVED from the ledger rather than stored on the tool, so the two can never disagree.",
+            "Reports: tools on issue, overdue returns, and service status (ok, due soon, overdue).",
+          ]),
+          callout(
+            "warning",
+            "The certification gate fails closed",
+            "Issuing a tool that requires a certification to someone whose certification has expired is refused. If the training pillar is off, the check cannot be evaluated — and the request is still refused, with a distinct 'certification check unavailable' outcome. Failing open here would be a safety bug.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
     flag: "rolnopolFarmlogEnabled",
     section: {
       section: "farmlog",

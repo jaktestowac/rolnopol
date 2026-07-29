@@ -678,6 +678,79 @@ app.get(
   },
 );
 
+// Feature-gate the Crew Office pages before static serving. `/crew` is the
+// friendly entry point that redirects to the roster.
+//
+// TWO deliberate departures from every other page gate in this file, both from
+// PRD §9.1 — Crew Office is built entirely on user-owned `staff` data, so there
+// is no meaningful anonymous view of it:
+//
+//   1. The gate checks the FLAG *and* a valid SESSION, and fails both cases the
+//      same way — the HTML 404. To a visitor who could never use the module, an
+//      enabled Crew Office is indistinguishable from one that does not exist
+//      (§9.1.3, §12 rule 1b). No other module gates a page on auth server-side;
+//      this one does because the requirement is stronger, and it reuses the
+//      existing token extraction and the existing 404 path rather than adding a
+//      new mechanism.
+//   2. A failed flag read fails CLOSED (404), where the gates above fall through
+//      to `next()`. For a module whose contract is "when off, it does not exist",
+//      serving the page on an internal error would break that contract; a 404 on
+//      an unreadable flag store is the honest answer.
+//
+// The client-side `isLoggedIn()` redirect in the page controllers is UX only
+// (§9.1.4) — the barrier is here and in the router's `authenticateSessionUser`.
+const CREW_PAGES = ["/crew", "/crew.html", "/crew-member.html", "/crew-leave.html", "/crew-tools.html", "/crew-explorer.html"];
+
+// Mirrors `extractSessionToken` in middleware/auth.middleware.js. Duplicated
+// rather than imported because that helper is module-private and Crew Office
+// modifies no existing middleware (§12.1 — four touched files, and that is not
+// one of them). The cookie fallback is what makes a plain browser navigation
+// carry identity: `cookie-parser` is already mounted above and the login
+// controller already sets `rolnopolToken`.
+const crewSessionTokenOf = (req) => {
+  const authHeader = req.headers.authorization;
+  let token = req.headers.token;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1];
+  }
+  if (!token && req.cookies && req.cookies.rolnopolToken) {
+    token = req.cookies.rolnopolToken;
+  }
+
+  return typeof token === "string" && token.trim().length > 0 ? token.trim() : null;
+};
+
+app.get(CREW_PAGES, async (req, res, next) => {
+  const deny = () => {
+    notFoundStatsModule.incrementHtml(req.originalUrl);
+    return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+  };
+
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    if (data?.flags?.crewOfficeEnabled !== true) {
+      return deny();
+    }
+
+    const { isUserLogged } = require("../helpers/token.helpers");
+    const token = crewSessionTokenOf(req);
+    if (!token || !isUserLogged(token)) {
+      // Anonymous, expired, and forged all land here — same 404 as flag-off.
+      return deny();
+    }
+
+    if (req.path === "/crew") {
+      return res.redirect(302, "/crew.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Crew Office feature gate check failed", { error });
+    return deny();
+  }
+});
+
 // Feature-gate Farmlog UI pages before static serving
 app.get(
   ["/farmlog", "/farmlog.html", "/farmlog-blog", "/farmlog-blog.html", "/farmlog-post", "/farmlog-post.html"],
