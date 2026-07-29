@@ -74,13 +74,20 @@ describe("Crew Office HTML page gating", () => {
     expect(notFoundStats.getStats().html.paths["/crew.html"]).toBe(before + 1);
   });
 
-  it("a sub-pillar flag cannot resurrect the module while the master flag is off", async () => {
-    // §5.2 rule 1: master wins, enforced in code — not a partially-working module.
-    await request(app)
-      .patch("/api/v1/feature-flags")
-      .send({ flags: { crewOfficeEnabled: false, crewLeaveEnabled: true, crewToolsEnabled: true } })
-      .expect(200);
+  it("is gated by exactly one flag — no per-pillar sub-flags exist", async () => {
+    // The module is all-or-nothing on purpose: the pillars are separate code,
+    // stores and tests, but one release and one switch. This test is the guard
+    // against a sub-flag creeping back in and reintroducing a half-enabled Crew
+    // Office — a state with its own combinatorics and nothing to test against.
+    const flags = await getFlags();
+    expect(Object.keys(flags).filter((key) => key.startsWith("crew"))).toEqual([FLAG]);
+  });
 
+  it("takes the whole module down together — one flag, every surface", async () => {
+    await setEnabled(true);
+    await request(app).get("/api/v1/crew/health").set("Cookie", `rolnopolToken=${token}`).expect(200);
+
+    await setEnabled(false);
     for (const page of [...PAGES, "/crew"]) {
       await request(app).get(page).set("Cookie", `rolnopolToken=${token}`).expect(404);
     }

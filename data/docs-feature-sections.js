@@ -1138,12 +1138,12 @@ module.exports = [
       content: [
         heading("Overview", [
           p(
-            "Crew Office adds real crew management on top of the existing staff records — work, holidays, training and tools — for logged-in users only. It is Rolnopol's first GraphQL surface: one endpoint and one schema, assembled at boot from independently flagged 'pillars'.",
+            "Crew Office adds real crew management on top of the existing staff records — work, holidays, training and tools — for logged-in users only. It is Rolnopol's first GraphQL surface: one endpoint and one schema, assembled at boot from four 'pillars'.",
           ),
           ul([
-            "'crewOfficeEnabled' is the MASTER flag. With it off, the pages and every crew endpoint return 404, and no crew data file is created at all.",
-            "The four pillar flags below ('crewWorkEnabled', 'crewLeaveEnabled', 'crewTrainingEnabled', 'crewToolsEnabled') do nothing on their own — the master flag wins.",
-            "A disabled pillar is ABSENT from the GraphQL schema rather than erroring, so selecting its field is a validation error naming an unknown field, and introspection never mentions it.",
+            "'crewOfficeEnabled' is the module's ONLY flag, and it is all-or-nothing: with it off, the pages and every crew endpoint return 404 and no crew data file is created at all; with it on, all four pillars are live.",
+            "There are deliberately no per-pillar sub-flags. The pillars are separate code, separate stores and separate tests — but one release and one switch, so there is no half-enabled Crew Office to reason about.",
+            "The four sections that follow document the pillars; they appear alongside this one whenever the module is enabled.",
           ]),
         ]),
         heading("Login is mandatory — pages and API", [
@@ -1196,14 +1196,14 @@ module.exports = [
     },
   },
   {
-    flag: "crewWorkEnabled",
+    flag: "crewOfficeEnabled",
     section: {
       section: "crew-office-work",
       title: "Crew Office — Work",
       content: [
         heading("Overview", [
           p(
-            "The work pillar covers who is doing what, when, and what actually got done. It requires 'crewOfficeEnabled' — on its own this flag has no effect.",
+            "The work pillar covers who is doing what, when, and what actually got done. It is part of the Crew Office module and arrives with it — there is no separate flag for it.",
           ),
           ul([
             "Duty types (early milking, feeding, night watch, ...) with times, an optional required role, and a colour for the UI.",
@@ -1213,21 +1213,21 @@ module.exports = [
         ]),
         heading("Cross-pillar checks", [
           p(
-            "A shift overlapping approved leave is refused, and so are two overlapping shifts for the same person. A shift whose duty type wants a role the member's profile does not have is a warning, not a block. When the leave pillar is off, the leave check simply cannot run and degrades rather than failing the request.",
+            "A shift overlapping approved leave is refused, and so are two overlapping shifts for the same person. A shift whose duty type wants a role the member's profile does not have is a warning, not a block — the roster manager gets told, not stopped.",
           ),
         ]),
       ],
     },
   },
   {
-    flag: "crewLeaveEnabled",
+    flag: "crewOfficeEnabled",
     section: {
       section: "crew-office-leave",
       title: "Crew Office — Holidays",
       content: [
         heading("Overview", [
           p(
-            "The holidays pillar handles leave policy, accrual, requests and approvals. It requires 'crewOfficeEnabled' — on its own this flag has no effect.",
+            "The holidays pillar handles leave policy, accrual, requests and approvals. It is part of the Crew Office module and arrives with it — there is no separate flag for it.",
           ),
           ul([
             "Policy per farm: annual entitlement at full time, accrual mode, carry-over cap and expiry, leave-year start, public holidays, harvest blackout windows, and minimum notice.",
@@ -1244,14 +1244,14 @@ module.exports = [
     },
   },
   {
-    flag: "crewTrainingEnabled",
+    flag: "crewOfficeEnabled",
     section: {
       section: "crew-office-training",
       title: "Crew Office — Training",
       content: [
         heading("Overview", [
           p(
-            "The training pillar records what the crew is qualified to do, and when that lapses. It requires 'crewOfficeEnabled' — on its own this flag has no effect.",
+            "The training pillar records what the crew is qualified to do, and when that lapses. It is part of the Crew Office module and arrives with it — there is no separate flag for it.",
           ),
           ul([
             "Courses carry a validity period in months and the roles they are mandatory for.",
@@ -1269,14 +1269,14 @@ module.exports = [
     },
   },
   {
-    flag: "crewToolsEnabled",
+    flag: "crewOfficeEnabled",
     section: {
       section: "crew-office-tools",
       title: "Crew Office — Tools",
       content: [
         heading("Overview", [
           p(
-            "The tools pillar answers who has the chainsaw, and whether it is due a service. It requires 'crewOfficeEnabled' — on its own this flag has no effect.",
+            "The tools pillar answers who has the chainsaw, and whether it is due a service. It is part of the Crew Office module and arrives with it — there is no separate flag for it.",
           ),
           ul([
             "Tools carry an asset tag, category, service interval, storage location and status (available, on issue, in service, retired).",
@@ -1286,7 +1286,7 @@ module.exports = [
           callout(
             "warning",
             "The certification gate fails closed",
-            "Issuing a tool that requires a certification to someone whose certification has expired is refused. If the training pillar is off, the check cannot be evaluated — and the request is still refused, with a distinct 'certification check unavailable' outcome. Failing open here would be a safety bug.",
+            "Issuing a tool that requires a certification to someone whose certification is missing, expired or revoked is refused. If the check cannot be evaluated at all, the request is still refused rather than allowed — failing open on a chainsaw would be a safety bug.",
           ),
         ]),
       ],

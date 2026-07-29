@@ -26,7 +26,6 @@ const path = require("path");
 const { createRateLimiter } = require("../../middleware/rate-limit.middleware");
 const { requireFeatureFlag } = require("../../middleware/feature-flag.middleware");
 const { authenticateSessionUser } = require("../../middleware/auth.middleware");
-const featureFlagsService = require("../../services/feature-flags.service");
 const { formatResponseBody } = require("../../helpers/response-helper");
 const { logError } = require("../../helpers/logger-api");
 
@@ -38,20 +37,23 @@ const apiLimiter = createRateLimiter("api");
 const gate = requireFeatureFlag("crewOfficeEnabled", { resourceName: "Crew Office" });
 
 /**
- * The pillar set, as flags. Phase 2 replaces this literal with
- * `services/crew/registry.js` — the registry becomes the single source of truth
- * and this file stops knowing pillar names at all. Until pillars exist, health
- * still has to answer honestly, so the shape is right from the start.
+ * The pillar set. `crewOfficeEnabled` is the module's ONE flag — there are no
+ * per-pillar sub-flags, so reaching this handler means every pillar is live.
  *
- * `profiles` deliberately has no flag: it is part of the master flag because
- * every other pillar joins through `CrewMember` (§5.2 rule 4).
+ * Health still reports per-pillar rows, because the useful question a monitor
+ * asks is not "is this pillar switched on" but "has it got a store yet" — and
+ * that answer differs per pillar as the phases land.
+ *
+ * Phase 2 replaces this literal with `services/crew/registry.js`, after which
+ * the registry is the single source of truth and this file stops knowing pillar
+ * names at all.
  */
 const PILLARS = [
-  { name: "profiles", flag: null, file: "crew-profiles.json" },
-  { name: "work", flag: "crewWorkEnabled", file: "crew-work.json" },
-  { name: "leave", flag: "crewLeaveEnabled", file: "crew-leave.json" },
-  { name: "training", flag: "crewTrainingEnabled", file: "crew-training.json" },
-  { name: "tools", flag: "crewToolsEnabled", file: "crew-tools.json" },
+  { name: "profiles", file: "crew-profiles.json" },
+  { name: "work", file: "crew-work.json" },
+  { name: "leave", file: "crew-leave.json" },
+  { name: "training", file: "crew-training.json" },
+  { name: "tools", file: "crew-tools.json" },
 ];
 
 const DATA_DIR = path.join(__dirname, "..", "..", "data");
@@ -71,14 +73,11 @@ function storeStatusOf(file) {
 
 router.get("/crew/health", gate, authenticateSessionUser, apiLimiter, async (req, res) => {
   try {
-    const data = await featureFlagsService.getFeatureFlags();
-    const flags = data?.flags || {};
-
     const pillars = PILLARS.map((pillar) => ({
       name: pillar.name,
-      // Master-wins is already enforced by the gate above: reaching this handler
-      // means `crewOfficeEnabled` is true, so a pillar's own flag decides.
-      enabled: pillar.flag === null ? true : flags[pillar.flag] === true,
+      // The gate above already proved `crewOfficeEnabled` is true, and that flag
+      // is the only one there is: the module is all-or-nothing.
+      enabled: true,
       storeStatus: storeStatusOf(pillar.file),
     }));
 
