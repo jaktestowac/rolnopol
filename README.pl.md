@@ -17,6 +17,9 @@ Realistyczna aplikacja do zarządzania gospodarstwem rolnym zaprojektowana do **
 - 🐛 **Umyślne błędy i przypadki brzegowe** do ćwiczenia debugowania
 - 🧪 **Złożone przepływy** (finansowe, zasobów, autoryzacji)
 
+> [!NOTE]
+> 🏗️ Ciekawi Cię, jak to wszystko działa razem? Zobacz **[ARCHITECTURE.md](./ARCHITECTURE.md)** — diagramy komponentów, przepływu żądań, autoryzacji, WebSocketów i Farm Defence (renderowane przez Mermaid).
+
 # Spis treści
 
 - [Wprowadzenie](#wprowadzenie)
@@ -62,6 +65,52 @@ Do celów testowych i demonstracyjnych aplikacja zawiera kilka wstępnie skonfig
 ## Swagger UI
 
 Dokumentacja API jest dostępna pod adresem: **http://localhost:3000/api-docs**
+
+# Funkcje
+
+Rolnopol to nie tylko proste REST API - to **pełny poligon doświadczalny z różnymi protokołami i funkcjami do testowania**. Niemal każda technika, którą inżynier automatyzacji testów chce przećwiczyć, jest tu dostępna i jest zawarta w jednym `npm i && npm run start`.
+
+| Obszar                     | Co możesz przećwiczyć                                                                                                                                                 | Gdzie                                                                      |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **REST API**               | 45 modułów tras, wersjonowanie (`/api/v1`, `/api/v2`), znormalizowane koperty odpowiedzi, paginacja, filtrowanie, walidacja id, ograniczanie liczby żądań             | `/api-docs` (Swagger UI + schemat OpenAPI)                                 |
+| **GraphQL**                | Zapytania i mutacje, własne skalary, limity głębokości i kosztu, introspekcja SDL przez `GET`                                                                         | `POST /api/graphql/crew` (Crew Office)                                     |
+| **WebSockets**             | Trzy niezależne bramy z uwierzytelnianiem JWT przy upgrade, heartbeaty, limity rozmiaru payloadu i limity żądań per użytkownik                                        | `/api/v1/messages/ws`, `/api/v1/notifications/ws`, `/api/v1/greenhouse/ws` |
+| **Server-Sent Events**     | Długo żyjące strumienie, heartbeaty keep-alive, ponowne łączenie, strumieniowane odpowiedzi AI                                                                        | Weather Live, Observatory, zegar egzaminu AgriAcademy, streaming chatbota  |
+| **gRPC**                   | 7 usług `.proto`, RPC unary i **server-streaming** oraz mostki re-strumieniujące gRPC do przeglądarki jako SSE/NDJSON                                                 | Greenhouse, TaskLab, FarmStay, AgriAcademy (`npm run greenhouse`, …)       |
+| **Mikroserwisy**           | Niezależne usługi na własnych portach, orkiestracja przez gateway, agregacja health-checków, graceful degradation, wstrzykiwane awarie                                | FarmStay (5 usług), AgriAcademy (6 usług)                                  |
+| **Autoryzacja i security** | JWT użytkownika (nagłówek/cookie), JWT admina, **osobiste klucze API ze scope'ami**, **2FA (TOTP + QR + kody zapasowe)**, silna polityka haseł, unieważnianie tokenów | `/api/v1/login`, strona bezpieczeństwa konta, `x-api-key`                  |
+| **Webhooki**               | Wychodzące dostarczenia HTTP z licznikiem prób i logiem aktywności — plus wbudowany sink do odbierania własnych wywołań                                               | Strona Integracje, `POST /api/v1/testing/webhooks/sink`                    |
+| **Odporność / chaos**      | Wstrzykiwanie opóźnień, statusów błędów, awarii stanowych, mirroring żądań i reguły ruchu w czasie działania — bez restartu                                           | Chaos Engine UI (`/chaos-engine.html`)                                     |
+| **Feature flagi**          | 47 przełączników runtime blokujących strony, endpointy i całe moduły — przez UI, API lub trwały plik `.ini`                                                           | `/feature-flags.html` (patrz poniżej)                                      |
+| **Observability**          | Endpoint metryk Prometheus, podgląd logów w aplikacji z przełączaniem poziomu logowania w runtime, statystyki 404, monitor usług                                      | `/backend.html`, `GET /api/v1/metrics`                                     |
+| **Pliki i eksporty**       | Generowanie raportów PDF i CSV, upload obrazów w base64, eksport danych do JSON                                                                                       | Finanse, Pogoda, avatar w profilu                                          |
+| **AI / LLM**               | Asystenci czatu z dostawcami mock, Gemini lub OpenRouter, wywoływanie funkcji/narzędzi i strumieniowanie tokenów                                                      | Asystent Porky, widgety AI alertów i dokumentacji                          |
+| **Izolacja testów**        | Przywrócenie całej bazy JSON do znanego stanu bazowego między uruchomieniami                                                                                          | `POST /api/debug/database/restore-base`                                    |
+
+**A do tego znacznie więcej:** wewnętrzny messenger, centrum powiadomień (wielokanałowy pub/sub), marketplace i handel towarami, przestrzeń blogowa Farmlog, interaktywna mapa gospodarstwa, menedżer zadań, Pet Buddy, gra Farm Defence, Labirynt, Operator Terminal, kopuła nieba Observatory, runtime wtyczek z hookami żądań — plus **umyślne błędy, przypadki brzegowe i ukryte easter eggi** (tak, jest tam HTTP 418) czekające na odkrycie.
+
+## Trwałe feature flagi (`feature-flags.ini`)
+
+Feature flagi normalnie przełącza się w czasie działania na **http://localhost:3000/feature-flags.html**. Aby przypiąć niektóre z nich na stałe, skopiuj przykładowy plik z katalogu głównego projektu i edytuj go:
+
+```bash
+cp feature-flags.example.ini feature-flags.ini
+```
+
+```ini
+[settings]
+mode = enforce          ; enforce (domyślnie) | seed | off
+
+[flags]
+crewOfficeEnabled = true
+messengerEnabled = false
+```
+
+- Plik ma **wyższy priorytet** niż `data/feature-flags.json`, więc przypięte flagi przetrwają restarty, "Reset to defaults" i pełne przywrócenie bazy danych.
+- W domyślnym trybie `enforce` te flagi są tylko do odczytu: strona Feature Flags pokazuje je jako 🔒 **Pinned**, a API odpowiada `409` na próbę zmiany. Użyj `mode = seed`, aby ustawić wartości przy starcie, ale pozostawić je edytowalnymi, albo `mode = off`, aby zignorować plik.
+- Akceptowane wartości: `true`/`false`, `1`/`0`, `on`/`off`, `yes`/`no` (bez rozróżniania wielkości liter).
+- Aktywne nadpisania i wszelkie problemy z plikiem są logowane jako ostrzeżenia przy starcie i pokazywane na stronie Feature Flags. **Nieprawidłowy plik nigdy nie blokuje startu** — poprawne wpisy są stosowane, a reszta raportowana.
+- Plik jest ignorowany przez git i jest **całkowicie pomijany przy `NODE_ENV=test`**, więc nigdy nie wpływa na uruchomienia testów.
 
 # Wdrażanie
 

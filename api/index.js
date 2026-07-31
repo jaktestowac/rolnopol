@@ -108,7 +108,7 @@ const app = express();
 const path = require("path");
 const { formatResponseBody } = require("../helpers/response-helper");
 const { PORT } = require("../data/settings");
-const { logDebug, logInfo, logError } = require("../helpers/logger-api");
+const { logDebug, logInfo, logWarning, logError } = require("../helpers/logger-api");
 const { initializeDatabases, cleanupDatabases } = require("../data/database-init");
 const versionMiddleware = require("../middleware/version.middleware");
 const { restoreAllDatabasesFromBaseState, seedMissingDatabasesFromBaseState } = require("../services/debug-database-restore.service");
@@ -177,6 +177,18 @@ const dbManager = require("../data/database-manager");
 let dbInitializationPromise = null;
 let isDatabaseReady = false;
 
+// Apply the persistent feature-flag overrides from `feature-flags.ini` in the
+// repo root. The file outranks the JSON store: it is seeded into the store here
+// and re-applied on every read by feature-flags.service.js, so pinned flags
+// cannot be changed from the UI or the API. Skipped under NODE_ENV=test.
+//
+// The routine itself lives in feature-flags.service.js so it can be unit tested;
+// the loggers are injected because logWarning also feeds the in-memory log list
+// rendered on /backend.html — the override is visible in the application, not
+// only on the console. It never throws: an invalid file is a warning, and the
+// app boots normally on whatever the file got right.
+const applyFeatureFlagIniOverrides = () => featureFlagsService.applyIniOverridesAtBoot({ logWarning, logDebug });
+
 const initializeAllDatabases = async () => {
   try {
     const databases = [
@@ -213,6 +225,10 @@ const initializeAllDatabases = async () => {
         logError("Failed to restore database state in test environment", restoreError);
       }
     }
+
+    // Runs before the ready flag flips so no request can observe the store
+    // without its feature-flags.ini overrides applied.
+    await applyFeatureFlagIniOverrides();
 
     isDatabaseReady = true;
   } catch (error) {
@@ -339,7 +355,9 @@ app.use((req, res, next) => {
 try {
   // eslint-disable-next-line global-require
   const startupFlags = require("../data/feature-flags.json");
-  const isMetricsEnabled = startupFlags?.flags?.prometheusMetricsEnabled === true;
+  // feature-flags.ini outranks the persisted store, so resolve through it here too.
+  const effectiveStartupFlags = featureFlagsService.applyIniOverrides(startupFlags?.flags);
+  const isMetricsEnabled = effectiveStartupFlags?.prometheusMetricsEnabled === true;
 
   prometheusMetrics.setEnabled(isMetricsEnabled);
   logInfo(`Prometheus request observer hot-toggle initialized: ${isMetricsEnabled ? "enabled" : "disabled"}`);

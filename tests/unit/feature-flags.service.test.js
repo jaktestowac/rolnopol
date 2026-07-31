@@ -340,7 +340,10 @@ describe("feature-flags.service", () => {
       marketplaceEnabled: true,
     });
 
-    expect(result).toEqual(next);
+    // Reads also carry the feature-flags.ini projection (see feature-flags.service.ini.test.js).
+    expect(result).toMatchObject(next);
+    expect(result.storedFlags).toEqual(next.flags);
+    expect(result.overrides.active).toBe(false);
     expect(replaceSpy).toHaveBeenCalled();
     expect(getAllSpy).toHaveBeenCalled();
 
@@ -364,7 +367,9 @@ describe("feature-flags.service", () => {
 
     const result = await featureFlagsService.replaceAllFlags({});
 
-    expect(result).toEqual(next);
+    expect(result).toMatchObject(next);
+    expect(result.storedFlags).toEqual({});
+    expect(result.overrides.active).toBe(false);
     expect(replaceSpy).toHaveBeenCalled();
     expect(getAllSpy).toHaveBeenCalled();
 
