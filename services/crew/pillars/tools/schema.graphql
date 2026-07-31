@@ -1,0 +1,475 @@
+# Tools pillar — who has the chainsaw, and is it due a service (§8.5).
+#
+# Every root field EXTENDS what the core and the foundation pillar declared;
+# nothing here redeclares `Query`, `Mutation` or `CrewMember`. That is the whole
+# extension contract (§11), and it is why this pillar needed no edit to the
+# executor, the router, the controller, or the four pillars before it.
+#
+# Two things to notice in the types below.
+#
+#   1. There is **no `heldBy` field on `Tool`**. `currentHolder` and `ON_ISSUE` are
+#      computed from the issuance ledger every time they are asked for (§8.5). A
+#      stored holder is a second source of truth for possession, and the two drift
+#      the first time a write half-fails.
+#   2. `IssueToolResult` is §8.5's union, member for member. It has no
+#      `ToolNotFound`: a tool the caller cannot see is reported as `ToolUnavailable`
+#      with `reason: NOT_FOUND`, which answers the request without confirming
+#      whether the tool exists — the same line `MEMBER_NOT_FOUND` takes (§9).
+#
+# And one thing NOT to notice, because it is deliberately absent: nothing in this
+# file names a type the training pillar declares. `certificationStatus` is a
+# `String` rather than training's `CertificationStatus` enum, and there is no
+# `Certification` object anywhere below. That is the price of tools not depending on
+# training (§11, and the note at the top of `training/index.js`): if this SDL
+# referenced a training type, a training pillar that failed to load would take the
+# tools pillar down with it — and the one thing §8.5 insists on is that a missing
+# training pillar REFUSES the issue rather than removing the gate. A weaker field
+# type on one field buys a gate that cannot be switched off by absence. Callers that
+# want the certificate itself ask the training pillar for it in the same round trip.
+
+"Broad kinds, so a registry can be filtered without matching free text."
+enum ToolCategory {
+  HAND_TOOL
+  POWERED_HAND_TOOL
+  MACHINERY
+  VEHICLE
+  PPE
+  MEASURING
+  OTHER
+}
+
+"""
+What a tool is right now.
+
+`ON_ISSUE` is **never stored** — it is the ledger's answer overlaid on the tool's
+administrative status, and it wins over the other three because possession is the
+most actionable fact about a tool.
+"""
+enum ToolStatus {
+  AVAILABLE
+  "Somebody is holding it. Derived from the issuance ledger, never stored."
+  ON_ISSUE
+  "Off the run until a service is recorded. Reached by a DAMAGED or NEEDS_SERVICE return."
+  IN_SERVICE
+  "Terminal. Keeps its row, its ledger and its service history."
+  RETIRED
+}
+
+"""
+The glyph a tool is shown with, as a closed list (§8.5).
+
+An ENUM and not a String, deliberately. The value ends up in a `class` attribute on
+every page that draws it, so an open field would make an arbitrary string a styling
+injection — here the schema itself refuses anything not on this list, before a
+resolver runs. The keys are also library-agnostic: which glyph `TRACTOR` draws is the
+front end's business, so changing icon set is a change to one map and no data.
+
+Optional everywhere. A tool without one falls back to its category's glyph.
+"""
+enum ToolIcon {
+  WRENCH
+  SCREWDRIVER
+  HAMMER
+  TOOLBOX
+  CHAINSAW
+  TRACTOR
+  TRUCK
+  TRAILER
+  OIL_CAN
+  SPRAYER
+  SEEDLING
+  HELMET
+  VEST
+  RULER
+  SCALE
+  PLUG
+  BATTERY
+  FIRE_EXTINGUISHER
+}
+
+"Where a tool sits against its service interval."
+enum ServiceStatus {
+  OK
+  "Due inside the notice window."
+  DUE_SOON
+  "Past due — or never serviced at all, which is not the same as fine."
+  OVERDUE
+}
+
+"The state a tool came back in. Three of the four stop it going out again."
+enum ReturnCondition {
+  "Back on the shelf."
+  GOOD
+  "Off the run until serviced."
+  DAMAGED
+  "Off the run until serviced."
+  NEEDS_SERVICE
+  "Not coming back. Retires the tool, with the issuance named in the reason."
+  LOST
+}
+
+"Why a tool could not go out."
+enum ToolUnavailableReason {
+  "No tool with that id belongs to the caller. Existence is not disclosed."
+  NOT_FOUND
+  ON_ISSUE
+  IN_SERVICE
+  RETIRED
+}
+
+"""
+Why the certification gate could not be EVALUATED (§8.5).
+
+Every value here is a refusal, never a pass. The distinction between them is for a
+person reading the message, not for a client deciding whether to retry.
+"""
+enum CertificationCheckFailure {
+  "Training records are not available at all — the pillar did not load."
+  TRAINING_UNAVAILABLE
+  "No course answers to the code this tool requires, so there is nothing to check."
+  COURSE_NOT_DEFINED
+  "The training store could not be read."
+  STORE_UNREADABLE
+  "The tool names no usable certification code."
+  NO_COURSE_CODE
+  "The check threw, or answered with something this gate could not read."
+  CHECK_FAILED
+  "The check refused to answer for a reason this gate has no name for."
+  CERTIFICATION_CHECK_UNAVAILABLE
+}
+
+"A piece of kit the farm tracks."
+type Tool {
+  id: ID!
+  "Stencilled on the tool. Unique per owner — it is the handle a person uses."
+  assetTag: String!
+  name: String!
+  category: ToolCategory!
+  "Null when none was chosen — the caller falls back to the category's glyph."
+  icon: ToolIcon
+  """
+  The course code a holder must be certified on, or null.
+
+  Not checked against the course list when the tool is registered: §8.5 makes a
+  code no course answers to a `CertificationCheckUnavailable` at issue time, which
+  refuses rather than allows. So a tool may be registered before its course exists,
+  and simply cannot be issued until it is.
+  """
+  requiresCertification: String
+  "Null means the tool is never due anything — a shovel, a set of overalls."
+  serviceIntervalDays: Int
+  lastServicedOn: Date
+  "The LAST day a service may be done without being late. Null when none is due."
+  nextServiceDue: Date
+  "Computed from the clock, never stored."
+  serviceStatus: ServiceStatus!
+  "Negative once overdue, null when the tool needs no service."
+  daysUntilService: Int
+  "Computed: the ledger overlaid on the administrative status."
+  status: ToolStatus!
+  storageLocation: String
+  "The open issuance, or null. Derived from the ledger (§8.5)."
+  currentIssuance: Issuance
+  "Who is holding it. Derived — never a stored field."
+  currentHolder: CrewMember
+  "Every issuance ever, oldest first. Append-only, so this is the audit trail."
+  issuanceHistory: [Issuance!]!
+  serviceHistory: [ServiceRecord!]!
+  retiredOn: Date
+  retiredReason: String
+  createdAt: DateTime!
+  "Pass back as expectedVersion to make a service record or a retirement conditional."
+  version: Int!
+}
+
+"""
+One row of the append-only issuance ledger (§6.5, §6.6).
+
+A row is appended when a tool goes out and closed once when it comes back. Nothing
+ever rewrites `issuedAt`, and nothing rewrites `returnedAt` after it is stamped —
+which is what keeps "who had this in July?" answerable.
+"""
+type Issuance {
+  id: ID!
+  tool: Tool
+  staffId: ID!
+  "Null when the staff record has been deleted from under the ledger."
+  member: CrewMember
+  issuedAt: DateTime!
+  "The LAST day it may come back without being late."
+  dueBack: Date!
+  "Null while the tool is still out."
+  returnedAt: DateTime
+  conditionOnReturn: ReturnCondition
+  note: String
+  "True only for an OPEN row past its due date. History is not an alarm."
+  isOverdueBack: Boolean!
+  "Negative once late, counted from today. Null once returned."
+  daysUntilDueBack: Int
+  "True when a CLOSED row came back after its due date."
+  returnedLate: Boolean!
+  createdAt: DateTime!
+}
+
+"A service done on a tool. Append-only — a correction is another record."
+type ServiceRecord {
+  id: ID!
+  tool: Tool
+  servicedOn: Date!
+  performedBy: String
+  note: String
+  createdAt: DateTime!
+}
+
+"""
+Whether this member could be issued this tool right now, and why not (§8.5).
+
+The gate asked without writing anything, so a page can grey out a button rather
+than offer it and then refuse. `permitted` is the only value that means yes; the
+two failure shapes below it mirror `ToolRequiresCertification` and
+`CertificationCheckUnavailable` exactly, because it is the same function answering.
+"""
+type CertificationCheck {
+  "True only when the tool needs no certification, or the member holds a live one."
+  permitted: Boolean!
+  "Null when the tool requires nothing."
+  requiredCertification: String
+  """
+  The member's status on the required course, when the check could be run:
+  `valid`, `expiring_soon`, `expired`, `revoked`, or null for never certified.
+
+  A `String` and not training's `CertificationStatus` enum, on purpose — see the
+  note at the top of this file.
+  """
+  certificationStatus: String
+  "Set when the check could not be evaluated at all. Any value here is a refusal."
+  unavailableReason: CertificationCheckFailure
+  "A complete sentence, safe to show as-is."
+  message: String
+}
+
+"How the registry is narrowed (§8.5)."
+input ToolFilter {
+  status: ToolStatus
+  category: ToolCategory
+  serviceStatus: ServiceStatus
+  "Retired tools are hidden by default. Asking for status: RETIRED also shows them."
+  includeRetired: Boolean
+}
+
+"The tools pillar's contribution to CrewMember."
+type ToolSummary {
+  "Tools this member is holding right now."
+  onIssue: [Issuance!]!
+  "The subset of those that are past their due-back date."
+  overdue: [Issuance!]!
+  "Everything they have ever had out, newest first."
+  history(limit: Int): [Issuance!]!
+  "Whether this member could be issued a given tool right now."
+  certificationCheck(toolId: ID!): CertificationCheck
+}
+
+extend type CrewMember {
+  tools: ToolSummary
+}
+
+extend type Query {
+  tools(filter: ToolFilter): [Tool!]!
+  tool(id: ID!): Tool
+  "By the tag stencilled on it — how a person looks a tool up."
+  toolByAssetTag(assetTag: NonEmptyString!): Tool
+  "Tools somebody is holding right now."
+  toolsOnIssue: [Tool!]!
+  "Open issuances past their due date, most overdue first."
+  overdueReturns: [Issuance!]!
+  "Every open issuance, late or not."
+  openIssuances: [Issuance!]!
+}
+
+input RegisterToolInput {
+  "2–24 characters, upper-cased on the way in. Unique per owner."
+  assetTag: NonEmptyString!
+  name: NonEmptyString!
+  category: ToolCategory
+  "Omit to let the category decide how the tool is drawn."
+  icon: ToolIcon
+  "A Course.code. Not required to exist yet — see Tool.requiresCertification."
+  requiresCertification: String
+  "1–3650 whole days, or omit for a tool that is never due anything."
+  serviceIntervalDays: Int
+  "Omit for a tool with no service history — which reads as OVERDUE, not OK."
+  lastServicedOn: Date
+  storageLocation: String
+}
+
+input IssueToolInput {
+  toolId: ID!
+  staffId: ID!
+  """
+  Required, and deliberately so: an issuance with no return date can never appear
+  in `overdueReturns`, which is how a tool quietly stops being anybody's problem.
+  """
+  dueBack: Date!
+  note: String
+}
+
+input ReturnToolInput {
+  toolId: ID!
+  condition: ReturnCondition!
+  note: String
+}
+
+input RecordServiceInput {
+  toolId: ID!
+  "Defaults to today. A backdated record never moves lastServicedOn backwards."
+  servicedOn: Date
+  performedBy: String
+  note: String
+  expectedVersion: Int
+}
+
+type ToolValidationFailed {
+  fieldErrors: [FieldError!]!
+}
+
+"""
+A version conflict on a TOOL.
+
+Not the shared `VersionConflict`, which carries a `staffId`: a tool belongs to the
+farm, not to a person, so that field would have nothing true to put in it.
+"""
+type ToolVersionConflict {
+  toolId: ID!
+  expectedVersion: Int!
+  actualVersion: Int!
+}
+
+type ToolNotFound {
+  toolId: ID!
+}
+
+type ToolRegistered {
+  tool: Tool!
+}
+
+union RegisterToolResult = ToolRegistered | ToolValidationFailed
+
+"Issued. The ledger has one more row and the tool's holder is now derivable from it."
+type ToolIssued {
+  issuance: Issuance!
+  tool: Tool!
+}
+
+"""
+Refused: the tool cannot go out. `currentHolder` is set only for ON_ISSUE.
+
+Carries `toolId` rather than a `Tool`, unlike the other members of
+`IssueToolResult`. Two reasons, and they point the same way. `NOT_FOUND` has no tool
+to return, so the field would have to be nullable here and non-null everywhere else —
+and GraphQL's overlapping-field rule treats `Tool` and `Tool!` as conflicting shapes,
+so a client selecting `tool { … }` in this fragment AND in `... on ToolIssued` would
+fail validation rather than get an answer. The caller already knows which tool it
+asked for; a union that cannot be selected uniformly is worse than one that makes it
+say so.
+"""
+type ToolUnavailable {
+  toolId: ID!
+  reason: ToolUnavailableReason!
+  currentHolder: CrewMember
+}
+
+"Refused: the member is not certified for this tool. `certificationStatus` says why."
+type ToolRequiresCertification {
+  tool: Tool!
+  requiredCertification: String!
+  "Null when they were never certified; otherwise `expired` or `revoked`."
+  certificationStatus: String
+}
+
+"""
+Refused because the certification check could not be EVALUATED (§8.5).
+
+**This is a refusal, not a pass.** Failing open here would be a safety bug, so the
+gate proceeds on a positive answer alone and every other outcome — including ones
+it has never seen — lands here.
+"""
+type CertificationCheckUnavailable {
+  tool: Tool!
+  requiredCertification: String!
+  """
+  Why the check could not be run. Named `failure` and not `reason` deliberately:
+  `ToolUnavailable.reason` is in the same union with a different enum type, and two
+  same-named fields of different types force every client that branches on both to
+  invent aliases.
+  """
+  failure: CertificationCheckFailure!
+  "A complete sentence, safe to show as-is."
+  detail: String
+}
+
+# §8.5's union, member for member. See note 2 at the top of this file for why there
+# is no ToolNotFound in it.
+union IssueToolResult = ToolIssued | ToolUnavailable | ToolRequiresCertification | CertificationCheckUnavailable | MemberNotFound
+
+"Returned. `late` is a fact about this return, not a live alarm."
+type ToolReturned {
+  issuance: Issuance!
+  tool: Tool!
+  late: Boolean!
+}
+
+"Refused: nobody has it. `status` says what it is doing instead."
+type ToolNotOnIssue {
+  toolId: ID!
+  tool: Tool!
+  status: ToolStatus!
+}
+
+union ReturnToolResult = ToolReturned | ToolNotOnIssue | ToolNotFound | ToolValidationFailed
+
+type ServiceRecorded {
+  record: ServiceRecord!
+  tool: Tool!
+}
+
+"Refused: a tool that is out cannot be serviced, and a retired one has no point being."
+type ToolNotServiceable {
+  toolId: ID!
+  tool: Tool!
+  status: ToolStatus!
+  currentHolder: CrewMember
+}
+
+union RecordServiceResult = ServiceRecorded | ToolNotServiceable | ToolNotFound | ToolVersionConflict | ToolValidationFailed
+
+"Retired. Terminal — the row, its ledger and its service history all stay."
+type ToolRetired {
+  tool: Tool!
+}
+
+"Refused: it was already retired. Retirement is not repeatable and not reversible."
+type ToolAlreadyRetired {
+  toolId: ID!
+  retiredOn: Date
+  retiredReason: String
+}
+
+"Refused: it has to come back first. A LOST return is the path for one that will not."
+type ToolStillOnIssue {
+  toolId: ID!
+  tool: Tool!
+  currentHolder: CrewMember
+}
+
+union RetireToolResult = ToolRetired | ToolAlreadyRetired | ToolStillOnIssue | ToolNotFound | ToolVersionConflict | ToolValidationFailed
+
+extend type Mutation {
+  registerTool(input: RegisterToolInput!): RegisterToolResult!
+  "Gated on certification, FAIL-CLOSED (§8.5). Only a positive check lets a tool out."
+  issueTool(input: IssueToolInput!): IssueToolResult!
+  "The condition decides where the tool goes: the shelf, the workshop, or retirement."
+  returnTool(input: ReturnToolInput!): ReturnToolResult!
+  recordService(input: RecordServiceInput!): RecordServiceResult!
+  "Terminal. Nothing is deleted — the row keeps a date and a reason."
+  retireTool(toolId: ID!, reason: NonEmptyString!, expectedVersion: Int): RetireToolResult!
+}

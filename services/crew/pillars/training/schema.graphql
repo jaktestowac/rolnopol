@@ -1,0 +1,363 @@
+# Training pillar — what the crew is qualified to do, and when that lapses (§8.4).
+#
+# Every root field EXTENDS what the core and the foundation pillar declared;
+# nothing here redeclares `Query`, `Mutation` or `CrewMember`. That is the whole
+# extension contract (§11), and it is why this pillar needed no edit to the
+# executor, the router, the controller, or the three pillars before it.
+#
+# NOTE: no mutation deletes a course, an enrollment or a certificate. Revocation
+# sets a date and a reason; re-passing a course MINTS a new certificate beside the
+# old one. "Was Marek certified last August?" has to stay answerable after this
+# August's re-certification (§6.6).
+
+enum CertificationStatus {
+  VALID
+  "Still valid, but running out inside the notice window."
+  EXPIRING_SOON
+  "Past its last valid day."
+  EXPIRED
+  "Voided. Never counts as valid, whatever the dates say."
+  REVOKED
+}
+
+enum EnrollmentStatus {
+  PLANNED
+  IN_PROGRESS
+  PASSED
+  FAILED
+  CANCELLED
+}
+
+"The outcome being recorded. IN_PROGRESS starts a course; the rest end it."
+enum TrainingOutcome {
+  IN_PROGRESS
+  PASSED
+  FAILED
+  CANCELLED
+}
+
+"Why a member falls short on a course their role requires."
+enum ComplianceGapReason {
+  "Never certified."
+  MISSING
+  "Held a certificate; it ran out."
+  EXPIRED
+  "Held a certificate; it was voided."
+  REVOKED
+}
+
+"A qualification the farm tracks."
+type Course {
+  id: ID!
+  "lower_snake_case. The code the tools pillar's certification gate refers to."
+  code: String!
+  name: String!
+  provider: String
+  "How long a pass is good for. Null means a certificate for life."
+  validMonths: Int
+  "Roles that must hold this course. Drives complianceGaps."
+  mandatoryForRoles: [CrewRole!]!
+  """
+  An optional AgriAcademy exam this course maps to (§8.4).
+
+  A label only — Crew Office never asks the academy to do anything.
+  """
+  academyExamId: String
+  """
+  The account's AgriAcademy certificate for `academyExamId`.
+
+  **Degrades to null, never to an error**: the flag being off, the academy being
+  down, and there being no such certificate are all simply null. A training matrix
+  must render whether or not a separate ecosystem happens to be running.
+
+  Note the semantics: AgriAcademy knows Rolnopol accounts, not farm staff, so this
+  is the OWNER's certificate for the referenced exam. `crew-training.json` remains
+  the record of who on the crew is qualified.
+  """
+  academyCertificate: AcademyCertificate
+  createdAt: DateTime!
+}
+
+"A read-only slice of an AgriAcademy certificate. Present only when the link answers."
+type AcademyCertificate {
+  certificateNo: String
+  examId: String!
+  examTitle: String
+  issuedOn: Date
+  score: Float
+}
+
+"Why the optional AgriAcademy link is or is not answering."
+enum AcademyLinkState {
+  "The agriAcademyEnabled feature flag is off. Nothing was dialled."
+  DISABLED
+  "The flag is on, but no course references an academy exam, so there was nothing to ask about."
+  NOT_LINKED
+  "The academy did not answer, or refused."
+  OFFLINE
+  "The academy answered with something this app could not read."
+  UNREADABLE
+  "Linked and answering."
+  READY
+}
+
+"""
+The state of the optional AgriAcademy link, for a page to explain itself with.
+
+`Course.academyCertificate` deliberately collapses every failure to `null` — a
+cell in a matrix has nothing useful to do with the difference. This type is where
+the reason lives, asked for once by whoever is going to render a sentence about
+it. `message` is written to be shown VERBATIM, and every unavailable message says
+that Crew Office training records are unaffected: without that, "AgriAcademy is
+not responding" on a training page reads as "your certificates may be wrong",
+which is alarming and false.
+"""
+type AcademyLink {
+  state: AcademyLinkState!
+  "True only for READY."
+  available: Boolean!
+  "A complete sentence, safe to show as-is."
+  message: String!
+  "How many of the caller's courses carry an academyExamId. Zero ⇒ the link is moot."
+  linkedCourses: Int!
+}
+
+"A crew member booked on, sitting, or finished with a course."
+type Enrollment {
+  id: ID!
+  staffId: ID!
+  course: Course
+  status: EnrollmentStatus!
+  scheduledFor: Date
+  completedOn: Date
+  score: Float
+  note: String
+  "Set when a PASSED outcome minted a certificate."
+  certification: Certification
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  "Pass back as expectedVersion to make a transition conditional."
+  version: Int!
+}
+
+"Proof a member is qualified. Minted by a passed enrollment; never edited."
+type Certification {
+  id: ID!
+  staffId: ID!
+  course: Course
+  issuedOn: Date!
+  "The LAST valid day. Null for a certificate for life."
+  expiresOn: Date
+  reference: String
+  revokedOn: Date
+  revokedReason: String
+  "Computed from the clock, never stored."
+  status: CertificationStatus!
+  "Negative once past, null when it never expires."
+  daysUntilExpiry: Int
+  "True when a later certificate for the same course has replaced this one."
+  superseded: Boolean!
+  createdAt: DateTime!
+}
+
+"A member missing a course their role requires."
+type ComplianceGap {
+  staffId: ID!
+  name: String
+  surname: String
+  role: CrewRole
+  course: Course!
+  reason: ComplianceGapReason!
+  "The certificate that fell short, when there was one."
+  certification: Certification
+}
+
+"One member × one course in the training matrix."
+type TrainingMatrixCell {
+  course: Course!
+  "Null when the member has never been certified on this course."
+  status: CertificationStatus
+  certification: Certification
+  "True when this course is mandatory for this member's role."
+  mandatory: Boolean!
+  "The member's latest enrollment — what tells 'not certified' from 'booked on a course'."
+  enrollment: Enrollment
+  "False only when a MANDATORY course is not currently held."
+  compliant: Boolean!
+}
+
+type TrainingMatrixRow {
+  staffId: ID!
+  name: String
+  surname: String
+  role: CrewRole
+  cells: [TrainingMatrixCell!]!
+  "Mandatory courses this member is short of."
+  gapCount: Int!
+}
+
+"""
+The crew × course grid (§8.4).
+
+Every row carries a cell for every course, present or not — a grid with holes
+punched out of it is not a grid, and the whole value of the matrix is that a blank
+cell in a mandatory column is visible at a glance.
+"""
+type TrainingMatrix {
+  courses: [Course!]!
+  rows: [TrainingMatrixRow!]!
+  "How many mandatory courses are not currently held, across the whole crew."
+  totalGaps: Int!
+}
+
+"The training pillar's contribution to CrewMember."
+type TrainingSummary {
+  certifications(status: CertificationStatus, includeSuperseded: Boolean): [Certification!]!
+  enrollments(status: EnrollmentStatus): [Enrollment!]!
+  "Certificates running out inside `withinDays` (default: the notice window)."
+  expiringSoon(withinDays: Int): [Certification!]!
+  "Mandatory courses this member's role requires and they do not currently hold."
+  complianceGaps: [ComplianceGap!]!
+  "False when any mandatory course is missing, expired or revoked."
+  compliant: Boolean!
+}
+
+extend type CrewMember {
+  training: TrainingSummary
+}
+
+extend type Query {
+  courses: [Course!]!
+  course(code: NonEmptyString!): Course
+  """
+  The state of the optional AgriAcademy link (§8.4).
+
+  Never errors, whatever the academy is doing. Dials the academy only when at
+  least one course references an exam, so a farm that never uses the link does not
+  pay for a request to discover that.
+  """
+  academyLink: AcademyLink!
+  trainingMatrix: TrainingMatrix!
+  "Across the whole crew. Default window is the notice period used by EXPIRING_SOON."
+  expiringCertifications(withinDays: Int): [Certification!]!
+  "Every mandatory course any member's role requires and they do not currently hold."
+  complianceGaps: [ComplianceGap!]!
+  "Enrollments across the crew, or one member's when staffId is given."
+  enrollments(status: EnrollmentStatus, staffId: ID, courseId: ID): [Enrollment!]!
+}
+
+input CourseInput {
+  "lower_snake_case, 2–40 characters."
+  code: NonEmptyString!
+  name: NonEmptyString!
+  provider: String
+  "1–600 months, or omit for a certificate for life."
+  validMonths: Int
+  mandatoryForRoles: [CrewRole!]
+  academyExamId: String
+}
+
+input EnrollCrewMemberInput {
+  staffId: ID!
+  courseId: ID!
+  scheduledFor: Date
+  note: String
+}
+
+input RecordTrainingOutcomeInput {
+  enrollmentId: ID!
+  outcome: TrainingOutcome!
+  "Required for PASSED — it is the date the certificate's validity runs from."
+  completedOn: Date
+  score: Float
+  "Awarding body's certificate number, for a PASSED outcome."
+  reference: String
+  note: String
+  expectedVersion: Int
+}
+
+type TrainingValidationFailed {
+  fieldErrors: [FieldError!]!
+}
+
+type CourseDefined {
+  course: Course!
+}
+
+union DefineCourseResult = CourseDefined | TrainingValidationFailed
+
+type CrewMemberEnrolled {
+  enrollment: Enrollment!
+}
+
+type CourseNotFound {
+  courseId: ID
+  code: String
+}
+
+"Refused: the member already has a live enrollment on this course."
+type AlreadyEnrolled {
+  enrollmentId: ID!
+  status: EnrollmentStatus!
+}
+
+union EnrollCrewMemberResult = CrewMemberEnrolled | CourseNotFound | AlreadyEnrolled | MemberNotFound | TrainingValidationFailed
+
+"""
+Recorded. `certification` is set only for a PASSED outcome — that is the mint.
+
+A FAILED or CANCELLED outcome records the attempt and mints nothing, which is the
+difference between "did not qualify" and "was never assessed".
+"""
+type TrainingOutcomeRecorded {
+  enrollment: Enrollment!
+  certification: Certification
+}
+
+type EnrollmentNotFound {
+  enrollmentId: ID!
+}
+
+"Refused: that move is not part of the lifecycle. `allowed` lists what is."
+type IllegalEnrollmentTransition {
+  enrollmentId: ID!
+  from: EnrollmentStatus!
+  to: EnrollmentStatus!
+  allowed: [EnrollmentStatus!]!
+}
+
+union RecordTrainingOutcomeResult =
+  | TrainingOutcomeRecorded
+  | EnrollmentNotFound
+  | IllegalEnrollmentTransition
+  | VersionConflict
+  | TrainingValidationFailed
+
+"Voided. Terminal — a revoked certificate is never reinstated, only replaced."
+type CertificationRevoked {
+  certification: Certification!
+  "Mandatory courses this member is now short of, if revoking opened a gap."
+  gaps: [ComplianceGap!]!
+}
+
+type CertificationNotFound {
+  certificationId: ID!
+}
+
+"Refused: it was already revoked. Revocation is not repeatable."
+type CertificationAlreadyRevoked {
+  certificationId: ID!
+  revokedOn: Date!
+  revokedReason: String
+}
+
+union RevokeCertificationResult = CertificationRevoked | CertificationNotFound | CertificationAlreadyRevoked | TrainingValidationFailed
+
+extend type Mutation {
+  defineCourse(input: CourseInput!): DefineCourseResult!
+  enrollCrewMember(input: EnrollCrewMemberInput!): EnrollCrewMemberResult!
+  "Drives the whole enrollment lifecycle. A PASSED outcome mints the certificate."
+  recordTrainingOutcome(input: RecordTrainingOutcomeInput!): RecordTrainingOutcomeResult!
+  "Terminal. The row is kept with a date and a reason — nothing is deleted."
+  revokeCertification(certificationId: ID!, reason: NonEmptyString!): RevokeCertificationResult!
+}

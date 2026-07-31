@@ -1,0 +1,402 @@
+# Leave pillar — holidays, and the arithmetic behind them (PRD §8.3).
+#
+# Every root field EXTENDS what the core and the foundation pillar declared;
+# nothing here redeclares `Query`, `Mutation` or `CrewMember`. That is the whole
+# extension contract (§11), and it is why this pillar needed no edit to the
+# executor, the router, the controller, or either pillar that came before it.
+#
+# NOTE: no mutation here deletes a request. A pending one is WITHDRAWN, an
+# approved one is CANCELLED, and a rejection carries a reason — so "why is Marek
+# not off that week after all?" always has an answer in the store (§6.6).
+
+enum LeaveType {
+  "The only type with a budget. Everything else is recorded, not deducted."
+  ANNUAL
+  "Never deducted from the annual balance (§17 Q4), and allowed retrospectively."
+  SICK
+  UNPAID
+  PARENTAL
+  BEREAVEMENT
+}
+
+enum LeaveStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  "An approved holiday called off."
+  CANCELLED
+  "A pending request pulled by the requester before a decision."
+  WITHDRAWN
+}
+
+enum AccrualMode {
+  "One twelfth of the allowance per month, earned day by day across each month."
+  MONTHLY
+  "The whole allowance the moment the leave year opens."
+  UPFRONT
+}
+
+"A period nobody may book annual leave in — harvest, lambing, stocktake."
+type BlackoutWindow {
+  from: Date!
+  to: Date!
+  reason: String
+}
+
+"The owner's leave rules. One policy per account; there is no per-member policy."
+type LeavePolicy {
+  annualEntitlementDaysFullTime: Days!
+  accrualMode: AccrualMode!
+  carryOverCapDays: Days!
+  "MM-DD. Carried-over days are gone from the day after this one."
+  carryOverExpiresOn: String
+  "MM-DD, day 1–28 — every month slice of the leave year has to exist in February too."
+  leaveYearStart: String!
+  publicHolidays: [Date!]!
+  blackoutWindows: [BlackoutWindow!]!
+  minNoticeDays: Int!
+  updatedAt: DateTime!
+  version: Int!
+}
+
+type LeaveRequest {
+  id: ID!
+  staffId: ID!
+  type: LeaveType!
+  from: Date!
+  to: Date!
+  halfDayStart: Boolean!
+  halfDayEnd: Boolean!
+  "Computed at submit and SNAPSHOTTED, so a later policy change cannot re-price a booked holiday."
+  workingDays: Days!
+  status: LeaveStatus!
+  "The requester's note, or the decider's reason for a rejection."
+  reason: String
+  decidedAt: DateTime
+  createdAt: DateTime!
+  "Pass back as expectedVersion to make a decision conditional."
+  version: Int!
+}
+
+type LeaveRequestConnection {
+  nodes: [LeaveRequest!]!
+  totalCount: Int!
+  "True when `first` cut the list short."
+  hasMore: Boolean!
+}
+
+"Taken and booked days for one leave type — the separate counters §17 Q4 asks for."
+type LeaveTypeDays {
+  type: LeaveType!
+  taken: Days!
+  booked: Days!
+}
+
+"""
+Computed, never stored (§6.3).
+
+`remaining` is DEFINED as `accrued + carriedOver − taken − booked`; the property
+test in `crew-leave-accrual.pbt.test.js` exists to keep it that way. A request is
+counted where it ENDS, so a holiday in progress reads as `booked` until its last
+day has passed.
+"""
+type LeaveBalance {
+  leaveYear: Int!
+  "First day of the leave year this balance is for."
+  from: Date!
+  to: Date!
+  "A whole leave year at this contract's FTE. Not pro-rated for a mid-year start — accrual is."
+  entitlement: Days!
+  "Earned by asOf, plus any manual adjustment."
+  accrued: Days!
+  carriedOver: Days!
+  "Annual leave that is finished."
+  taken: Days!
+  "Annual leave agreed or awaiting a decision that has not finished yet."
+  booked: Days!
+  "Carried-over days still unspent that will die on carryOverExpiresOn."
+  expiringSoon: Days!
+  carryOverExpiresOn: Date
+  """
+  `accrued + carriedOver − taken − booked`, and nothing else (§8.3).
+
+  SIGNED, and deliberately so: booking October's holiday in July commits days
+  that have not accrued yet, so at an `asOf` in July this reads negative. That is
+  the honest number — "you are ahead of your accrual" — and clamping it at zero
+  would break the invariant the whole pillar is built on. The guard that matters
+  is elsewhere: a request is refused unless the balance on its LAST day covers
+  it, so the leave year can never END overdrawn.
+  """
+  remaining: SignedDays!
+  byType: [LeaveTypeDays!]!
+}
+
+"The leave pillar's contribution to CrewMember."
+type LeaveSummary {
+  """
+  Null-propagates to `leave: null` plus a LEAVE_POLICY_MISSING error when no
+  policy exists (§7.3) — the module says "not configured", never "zero days".
+  """
+  balance(asOf: Date!): LeaveBalance!
+  requests(status: LeaveStatus, type: LeaveType, first: Int): LeaveRequestConnection!
+  "The next approved or pending leave starting today or later."
+  nextBooked: LeaveRequest
+}
+
+"One crew member's absence on a calendar day."
+type LeaveAbsence {
+  staffId: ID!
+  name: String
+  surname: String
+  type: LeaveType!
+  status: LeaveStatus!
+  requestId: ID!
+  "True when only half of this day is taken."
+  halfDay: Boolean!
+}
+
+"A day on the team calendar, whoever is off and whatever the policy says about it."
+type LeaveCalendarDay {
+  date: Date!
+  weekend: Boolean!
+  publicHoliday: Boolean!
+  "Set when the day falls inside a declared blackout window."
+  blackoutReason: String
+  absences: [LeaveAbsence!]!
+}
+
+type TeamAbsence {
+  date: Date!
+  "Crew with a live request covering this date."
+  absent: [LeaveAbsence!]!
+  "Owned staff records with no leave on this date."
+  availableCount: Int!
+}
+
+extend type CrewMember {
+  leave: LeaveSummary
+}
+
+extend type Query {
+  leavePolicy: LeavePolicy
+  """
+  The team calendar, one entry per day in the range.
+
+  One read for the whole crew rather than one per person: a calendar is the query
+  this pillar exists to make cheap.
+  """
+  leaveCalendar(from: Date!, to: Date!): [LeaveCalendarDay!]!
+  "Every request still awaiting a decision, oldest first."
+  pendingLeaveApprovals: [LeaveRequest!]!
+  teamAbsence(date: Date!): TeamAbsence!
+  "Requests across the whole crew, or one member when staffId is given."
+  leaveRequests(status: LeaveStatus, type: LeaveType, staffId: ID, from: Date, to: Date): [LeaveRequest!]!
+}
+
+input BlackoutWindowInput {
+  from: Date!
+  to: Date!
+  reason: String
+}
+
+input LeavePolicyInput {
+  annualEntitlementDaysFullTime: Days!
+  accrualMode: AccrualMode!
+  carryOverCapDays: Days
+  "MM-DD. Omit for no expiry — carried-over days then last the whole leave year."
+  carryOverExpiresOn: String
+  "MM-DD, day 1–28. Defaults to 01-01."
+  leaveYearStart: String
+  publicHolidays: [Date!]
+  blackoutWindows: [BlackoutWindowInput!]
+  minNoticeDays: Int
+  expectedVersion: Int
+}
+
+input RequestLeaveInput {
+  staffId: ID!
+  type: LeaveType!
+  from: Date!
+  to: Date!
+  halfDayStart: Boolean
+  halfDayEnd: Boolean
+  reason: String
+}
+
+input AdjustLeaveBalanceInput {
+  staffId: ID!
+  leaveYear: Int!
+  "Negative corrects an over-credit. A correction that would overdraw the year is refused."
+  days: SignedDays!
+  reason: NonEmptyString!
+  """
+  True makes this a carry-over grant: capped by the policy and dead after
+  carryOverExpiresOn. False is a permanent manual correction.
+  """
+  carryOver: Boolean
+}
+
+type LeaveValidationFailed {
+  fieldErrors: [FieldError!]!
+}
+
+"Refused: no policy exists, so there is nothing to measure a request against."
+type LeavePolicyMissing {
+  message: String!
+}
+
+# --- requestLeave: the six-member union (§8.3) -------------------------------
+#
+# Exactly six members, and one of them is a success carrying a warning. A member
+# not being here is deliberate: an unknown or unowned staffId, and a malformed
+# input, are ERRORS with an `extensions.code` (§15) rather than union members —
+# putting them in would turn "the six outcomes of asking for leave" into "the nine
+# things that can go wrong", which is a different and much less useful type.
+
+"An advisory attached to a booked request — the office is told, not stopped."
+type LeaveWarning {
+  code: String!
+  message: String!
+}
+
+"Success. The request is in the store with status REQUESTED."
+type LeaveBooked {
+  request: LeaveRequest!
+  balance: LeaveBalance!
+}
+
+"""
+**SUCCESS.** The request IS booked; `warnings` says what the office should know —
+thin cover on a day, or shifts already rostered in the period.
+
+A client that treats this as a failure has misread the type, and so has an
+implementation that returns it without writing the request.
+"""
+type LeaveBookedWithWarning {
+  request: LeaveRequest!
+  balance: LeaveBalance!
+  warnings: [LeaveWarning!]!
+}
+
+"Refused: not enough annual leave, measured on the request's LAST day."
+type InsufficientBalance {
+  requested: Days!
+  "Signed for the same reason LeaveBalance.remaining is — it can already be overdrawn."
+  remaining: SignedDays!
+  shortfall: Days!
+  "The balance as it would stand on the request's last day, without this request."
+  asOf: Date!
+}
+
+"Refused: the member already has a live request covering part of this period."
+type OverlapsExistingLeave {
+  conflictingRequestId: ID!
+  from: Date!
+  to: Date!
+}
+
+"Refused: a chargeable day falls inside a declared blackout window."
+type BlackoutPeriod {
+  from: Date!
+  to: Date!
+  reason: String
+  "The first chargeable day that falls inside the window."
+  firstClash: Date!
+}
+
+"Refused: asked for too late. `earliestStart` is the first date that would pass."
+type InsufficientNotice {
+  minNoticeDays: Int!
+  requestedStart: Date!
+  earliestStart: Date!
+}
+
+union RequestLeaveResult =
+  | LeaveBooked
+  | LeaveBookedWithWarning
+  | InsufficientBalance
+  | OverlapsExistingLeave
+  | BlackoutPeriod
+  | InsufficientNotice
+
+# --- the decision mutations --------------------------------------------------
+
+type LeaveRequestNotFound {
+  requestId: ID!
+}
+
+"Refused: that move is not part of the lifecycle. `allowed` lists what is."
+type IllegalLeaveTransition {
+  requestId: ID!
+  from: LeaveStatus!
+  to: LeaveStatus!
+  allowed: [LeaveStatus!]!
+}
+
+type LeaveRequestDecided {
+  request: LeaveRequest!
+  balance: LeaveBalance
+}
+
+"""
+Approval re-checks the balance inside its own transaction, so a request that fit
+when it was made and no longer fits is refused at the decision rather than
+approved into an overdraft.
+"""
+union LeaveDecisionResult =
+  | LeaveRequestDecided
+  | LeaveRequestNotFound
+  | IllegalLeaveTransition
+  | InsufficientBalance
+  | VersionConflict
+  | LeaveValidationFailed
+
+type LeavePolicySet {
+  policy: LeavePolicy!
+}
+
+union SetLeavePolicyResult = LeavePolicySet | LeaveValidationFailed | VersionConflict
+
+type LeaveBalanceAdjusted {
+  adjustment: LeaveAdjustment!
+  balance: LeaveBalance!
+}
+
+"An append-only row. Manual corrections and carry-over grants both land here."
+type LeaveAdjustment {
+  id: ID!
+  staffId: ID!
+  leaveYear: Int!
+  "Negative for a correction that takes days away."
+  days: SignedDays!
+  "carry_over_grant or manual — the machine discriminator."
+  kind: String!
+  "The human sentence."
+  reason: String!
+  createdAt: DateTime!
+}
+
+union AdjustLeaveBalanceResult = LeaveBalanceAdjusted | InsufficientBalance | LeaveValidationFailed | LeavePolicyMissing
+
+"""
+Declared. Leave already APPROVED inside the window is left alone and listed in
+`affectedRequests` — declaring harvest does not un-approve a holiday somebody has
+already been promised.
+"""
+type BlackoutDeclared {
+  blackout: BlackoutWindow!
+  affectedRequests: [LeaveRequest!]!
+}
+
+union DeclareBlackoutResult = BlackoutDeclared | LeaveValidationFailed | LeavePolicyMissing
+
+extend type Mutation {
+  setLeavePolicy(input: LeavePolicyInput!): SetLeavePolicyResult!
+  requestLeave(input: RequestLeaveInput!): RequestLeaveResult!
+  approveLeave(requestId: ID!, expectedVersion: Int): LeaveDecisionResult!
+  rejectLeave(requestId: ID!, reason: NonEmptyString!, expectedVersion: Int): LeaveDecisionResult!
+  "WITHDRAWS a pending request; CANCELS an approved one. Both keep the row."
+  cancelLeave(requestId: ID!, reason: String, expectedVersion: Int): LeaveDecisionResult!
+  adjustLeaveBalance(input: AdjustLeaveBalanceInput!): AdjustLeaveBalanceResult!
+  declareBlackout(input: BlackoutWindowInput!): DeclareBlackoutResult!
+}

@@ -109,7 +109,9 @@ function setActiveNavLink(explicitPage = null) {
         (explicitPage === "feature-flags" && linkPath === "/feature-flags.html") ||
         (explicitPage === "messenger" && linkPath === "/messenger.html") ||
         (explicitPage === "weather" && linkPath === "/weather.html") ||
-        (explicitPage === "health" && linkPath === "/health.html")
+        (explicitPage === "health" && linkPath === "/health.html") ||
+        // Every crew page passes "crew", so they all highlight the one Crew link.
+        (explicitPage === "crew" && linkPath === "/crew.html")
       ) {
         link.classList.add("active");
         return;
@@ -213,6 +215,7 @@ async function getNavFeatureFlagState() {
       farmStayEnabled,
       agriAcademyEnabled,
       observatoryEnabled,
+      crewOfficeEnabled,
     ] = await Promise.all([
       featureFlagsService.isEnabled("alertsEnabled", true),
       featureFlagsService.isEnabled("rolnopolMapEnabled", true),
@@ -228,6 +231,7 @@ async function getNavFeatureFlagState() {
       featureFlagsService.isEnabled("farmStayEnabled", false),
       featureFlagsService.isEnabled("agriAcademyEnabled", false),
       featureFlagsService.isEnabled("observatoryEnabled", false),
+      featureFlagsService.isEnabled("crewOfficeEnabled", false),
     ]);
     return {
       alertsEnabled,
@@ -244,6 +248,7 @@ async function getNavFeatureFlagState() {
       farmStayEnabled,
       agriAcademyEnabled,
       observatoryEnabled,
+      crewOfficeEnabled,
     };
   } catch (error) {
     return DEFAULT_ON_ERROR;
@@ -465,6 +470,7 @@ async function updateHeaderNav(username = "") {
     farmStayEnabled,
     agriAcademyEnabled,
     observatoryEnabled,
+    crewOfficeEnabled,
   } = await getNavFeatureFlagState();
   const mapLink = rolnopolMapEnabled
     ? '<li><a href="/rolnopolmap.html" class="nav-link" title="Rolnopol Map" aria-label="Rolnopol Map" data-testid="nav-map"><i class="fas fa-map"></i><span class="nav-text">Map</span></a></li>'
@@ -508,6 +514,13 @@ async function updateHeaderNav(username = "") {
   const observatoryLink = observatoryEnabled
     ? '<li><a href="/operator/observatory.html" class="nav-link" title="Observatory" aria-label="Observatory" data-testid="nav-observatory"><i class="fa-solid fa-star"></i><span class="nav-text">Observatory</span></a></li>'
     : "";
+  // Crew Office is logged-in-only (PRD §9.1), so unlike every other gated link
+  // above this one is rendered ONLY in the authenticated branch below. To an
+  // anonymous visitor the module does not exist, and the nav must not hint that it
+  // does.
+  const crewLink = crewOfficeEnabled
+    ? '<li><a href="/crew.html" class="nav-link" title="Crew Office" aria-label="Crew Office" data-testid="nav-crew"><i class="fa-solid fa-people-group"></i><span class="nav-text">Crew</span></a></li>'
+    : "";
 
   // Check authentication using standardized cookie names
   const token = getCookie("rolnopolToken");
@@ -534,6 +547,7 @@ async function updateHeaderNav(username = "") {
       ${farmStayLink}
       ${agriAcademyLink}
       ${observatoryLink}
+      ${crewLink}
       <li><a href="/docs.html" class="nav-link" title="Documentation" aria-label="Documentation" data-testid="nav-docs"><i class="fas fa-book"></i><span class="nav-text">Docs</span></a></li>
       <li><a href="/swagger.html" class="nav-link" title="API Explorer (Swagger)" aria-label="API Explorer" data-testid="nav-api-explorer"><i class="fas fa-code"></i><span class="nav-text">API Explorer</span></a></li>
       <li class="nav-user" >

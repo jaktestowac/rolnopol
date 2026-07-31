@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crew Office — Work Board - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/crew.css" />
+  </head>
+  <!--
+    Crew Office work board — shift assignment and time tracking (PRD §8.2, Phase 3C).
+
+    One grid: crew members down the side, days across the top, each cell holding that
+    person's shifts and the hours they logged. It is deliberately RANGE-driven rather
+    than a fixed month view, because the two filters the roster manager actually wants
+    are "which person" and "which dates".
+
+    Everything on this page is one GraphQL round trip (CrewApi.OPERATIONS.WORK_BOARD):
+    the crew, the duty types, the shifts, the work log and the rollup. Four REST calls
+    collapsed into one query is the reason this module is graph-shaped at all.
+
+    Export is CLIENT-side on purpose. CSV is built from the data already loaded and
+    PDF is the browser's own print pipeline driven by the print rules in crew.css —
+    so there is no new REST endpoint (goal G2 keeps REST to health only) and no new
+    dependency.
+  -->
+  <body class="crew-page crew-page--crew-work">
+    <div id="header-component"></div>
+
+    <main class="crew-shell">
+      <header class="crew-header">
+        <h1 class="crew-title"><i class="fa-solid fa-calendar-days"></i> Work board</h1>
+        <p class="crew-lede">Assign shifts, track the hours actually worked, and see both on one calendar.</p>
+      </header>
+
+      <!-- One tab strip for the whole module, rendered by CrewApi.renderModuleTabs. -->
+      <nav id="crewTabs" class="crew-tabs crew-no-print" aria-label="Crew Office views"></nav>
+
+      <div class="crew-toolbar crew-no-print">
+        <label class="crew-control">
+          <span class="crew-label">Crew member</span>
+          <select id="boardMember" class="crew-select">
+            <option value="">Everyone</option>
+          </select>
+        </label>
+
+        <label class="crew-control">
+          <span class="crew-label">From</span>
+          <input id="boardFrom" class="crew-input" type="date" />
+        </label>
+
+        <label class="crew-control">
+          <span class="crew-label">To</span>
+          <input id="boardTo" class="crew-input" type="date" />
+        </label>
+
+        <div class="crew-form-actions">
+          <button id="boardThisWeek" class="crew-btn" type="button">This week</button>
+          <button id="boardThisMonth" class="crew-btn" type="button">This month</button>
+          <button id="boardReload" class="crew-btn" type="button"><i class="fa-solid fa-rotate"></i> Reload</button>
+        </div>
+      </div>
+
+      <div class="crew-toolbar crew-no-print">
+        <div class="crew-form-actions">
+          <button
+            id="boardAssignToggle"
+            class="crew-btn "
+            type="button"
+            aria-expanded="false"
+            aria-controls="boardAssignPanel"
+          >
+            <i class="fa-solid fa-calendar-plus"></i> Assign a shift
+          </button>
+          <button id="boardLogToggle" class="crew-btn" type="button" aria-expanded="false" aria-controls="boardLogPanel">
+            <i class="fa-solid fa-stopwatch"></i> Log time
+          </button>
+          <button id="boardDutyToggle" class="crew-btn" type="button" aria-expanded="false" aria-controls="boardDutyPanel">
+            <i class="fa-solid fa-list-check"></i> Define a duty type
+          </button>
+          <button id="boardExportCsv" class="crew-btn" type="button"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+          <button id="boardExportPdf" class="crew-btn" type="button"><i class="fa-solid fa-print"></i> Print / PDF</button>
+        </div>
+      </div>
+
+      <p id="boardSummary" class="crew-hint"></p>
+      <p id="boardStatus" class="crew-status" role="status" aria-live="polite"></p>
+
+      <!-- Assign a shift: the duty type carries the times, so the form only needs who, which duty, and when. -->
+      <section id="boardAssignPanel" class="crew-form-panel crew-no-print" hidden>
+        <h2 class="crew-subhead">Assign a shift</h2>
+        <form id="boardAssignForm" novalidate>
+          <div class="crew-form-grid">
+            <label class="crew-control">
+              <span class="crew-label">Crew member</span>
+              <select class="crew-select" id="assignStaffId" required></select>
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Duty type</span>
+              <select class="crew-select" id="assignDutyTypeId" required></select>
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Date</span>
+              <input class="crew-input" id="assignDate" type="date" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Field id <span class="crew-muted">(optional, read-only reference)</span></span>
+              <input class="crew-input" id="assignFieldId" type="number" min="1" step="1" />
+            </label>
+            <label class="crew-control crew-control--wide">
+              <span class="crew-label">Note</span>
+              <input class="crew-input" id="assignNote" type="text" maxlength="200" />
+            </label>
+          </div>
+          <p id="boardAssignErrors" class="crew-status crew-status--error" role="alert" aria-live="polite"></p>
+          <div class="crew-form-actions">
+            <button id="boardAssignSubmit" class="crew-btn crew-btn--primary" type="submit">
+              <i class="fa-solid fa-check"></i> Assign
+            </button>
+            <button id="boardAssignCancel" class="crew-btn" type="button">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Log time: a shift is optional, because standalone work happens. -->
+      <section id="boardLogPanel" class="crew-form-panel crew-no-print" hidden>
+        <h2 class="crew-subhead">Log time worked</h2>
+        <form id="boardLogForm" novalidate>
+          <div class="crew-form-grid">
+            <label class="crew-control">
+              <span class="crew-label">Crew member</span>
+              <select class="crew-select" id="logStaffId" required></select>
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Date</span>
+              <input class="crew-input" id="logDate" type="date" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Hours <span class="crew-muted">(0.25 steps)</span></span>
+              <input class="crew-input" id="logHours" type="number" min="0.25" max="24" step="0.25" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Activity</span>
+              <input class="crew-input" id="logActivity" type="text" maxlength="60" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Against shift <span class="crew-muted">(optional)</span></span>
+              <select class="crew-select" id="logShiftId">
+                <option value="">Standalone work</option>
+              </select>
+            </label>
+            <label class="crew-control crew-control--wide">
+              <span class="crew-label">Note</span>
+              <input class="crew-input" id="logNote" type="text" maxlength="200" />
+            </label>
+          </div>
+          <p id="boardLogErrors" class="crew-status crew-status--error" role="alert" aria-live="polite"></p>
+          <div class="crew-form-actions">
+            <button id="boardLogSubmit" class="crew-btn crew-btn--primary" type="submit"><i class="fa-solid fa-check"></i> Log</button>
+            <button id="boardLogCancel" class="crew-btn" type="button">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- A shift cannot be assigned without a duty type, so the page can create one. -->
+      <section id="boardDutyPanel" class="crew-form-panel crew-no-print" hidden>
+        <h2 class="crew-subhead">Define a duty type</h2>
+        <form id="boardDutyForm" novalidate>
+          <div class="crew-form-grid">
+            <label class="crew-control">
+              <span class="crew-label">Code <span class="crew-muted">(lower_snake_case)</span></span>
+              <input class="crew-input" id="dutyCode" type="text" maxlength="40" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Name</span>
+              <input class="crew-input" id="dutyName" type="text" maxlength="80" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Start time</span>
+              <input class="crew-input" id="dutyStartTime" type="time" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">End time <span class="crew-muted">(earlier = crosses midnight)</span></span>
+              <input class="crew-input" id="dutyEndTime" type="time" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Required role <span class="crew-muted">(advisory only)</span></span>
+              <select class="crew-select" id="dutyRequiredRole"></select>
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Colour</span>
+              <input class="crew-input" id="dutyColour" type="color" value="#22c55e" />
+            </label>
+          </div>
+          <p id="boardDutyErrors" class="crew-status crew-status--error" role="alert" aria-live="polite"></p>
+          <div class="crew-form-actions">
+            <button id="boardDutySubmit" class="crew-btn crew-btn--primary" type="submit"><i class="fa-solid fa-check"></i> Create</button>
+            <button id="boardDutyCancel" class="crew-btn" type="button">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- The calendar. Members down, days across; a wide range scrolls inside the box. -->
+      <div class="crew-table-wrap">
+        <table class="crew-table crew-board" id="boardTable">
+          <thead id="boardHead"></thead>
+          <tbody id="boardBody"></tbody>
+          <tfoot id="boardFoot"></tfoot>
+        </table>
+      </div>
+      <p id="boardEmpty" class="crew-notice" hidden>Nothing on the board for this range.</p>
+
+      <!-- Selected shift: status actions and the amendable entries for that day. -->
+      <section id="boardShiftPanel" class="crew-form-panel crew-no-print" hidden>
+        <h2 class="crew-subhead" id="boardShiftTitle">Shift</h2>
+        <div id="boardShiftDetail"></div>
+        <p id="boardShiftErrors" class="crew-status crew-status--error" role="alert" aria-live="polite"></p>
+        <div class="crew-form-actions">
+          <button id="boardConfirmShift" class="crew-btn" type="button">Confirm</button>
+          <button id="boardCompleteShift" class="crew-btn" type="button">Complete</button>
+          <input
+            id="boardCancelReason"
+            class="crew-input crew-input--inline"
+            type="text"
+            maxlength="200"
+            placeholder="Reason for cancelling"
+          />
+          <button id="boardCancelShift" class="crew-btn" type="button">Cancel shift</button>
+          <button id="boardShiftClose" class="crew-btn" type="button">Close</button>
+        </div>
+      </section>
+    </main>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/crew-api.js"></script>
+    <script src="/js/pages/crew-work.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("crew");
+    </script>
+  </body>
+</html>

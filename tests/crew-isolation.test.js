@@ -163,13 +163,18 @@ describe("Crew Office — the non-impact contract", () => {
   describe("rule 1 — flag off means no filesystem footprint", () => {
     it("creates no data/crew-*.json store after a full request sweep with the flag off", async () => {
       await setEnabled(false);
-      expect(crewStoreFiles()).toEqual([]);
+      // Snapshot rather than demand an empty data/ directory: once the module has
+      // ever been enabled its stores exist legitimately, and the rule being tested
+      // is that a disabled module creates NOTHING NEW — not that the files were
+      // never created at all.
+      const before = crewStoreFiles();
 
       // Everything the module would ever be asked for, while it does not exist.
       const paths = [
         "/crew",
         "/crew.html",
         "/crew-member.html",
+        "/crew-work.html",
         "/crew-leave.html",
         "/crew-tools.html",
         "/crew-explorer.html",
@@ -181,7 +186,18 @@ describe("Crew Office — the non-impact contract", () => {
       }
       await request(app).post("/api/graphql/crew").send({ query: "{ crew { staffId } }" }).expect(404);
 
-      expect(crewStoreFiles()).toEqual([]);
+      expect(crewStoreFiles()).toEqual(before);
+    });
+
+    it("404s the graph endpoint itself with the flag off, for POST and GET alike", async () => {
+      await setEnabled(false);
+      await request(app)
+        .post("/api/graphql/crew")
+        .set("Content-Type", "application/json")
+        .set("Cookie", `rolnopolToken=${token}`)
+        .send({ query: "{ crewInfo { pillars } }" })
+        .expect(404);
+      await request(app).get("/api/graphql/crew").set("Cookie", `rolnopolToken=${token}`).expect(404);
     });
 
     it("keeps crew stores out of the base-state seed and the debug restore (§6.6)", async () => {
@@ -209,9 +225,8 @@ describe("Crew Office — the non-impact contract", () => {
   describe("rule 7 — setup unchanged", () => {
     it("adds no runtime dependency beyond the documented set", () => {
       const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8"));
-      // Phase 0 adds nothing. Phase 1 adds exactly `graphql` (§7.2) and this list
-      // grows by one — deliberately, so a native or peer-service dependency can
-      // never arrive unreviewed.
+      // The pre-existing 10, plus exactly one: `graphql` (§7.2). This list is the
+      // tripwire that stops a native or peer-service dependency arriving unreviewed.
       const expected = [
         "@grpc/grpc-js",
         "@grpc/proto-loader",
@@ -223,8 +238,41 @@ describe("Crew Office — the non-impact contract", () => {
         "otpauth",
         "qrcode",
         "ws",
+        "graphql",
       ];
       expect(Object.keys(pkg.dependencies).sort()).toEqual(expected.sort());
+    });
+
+    it("keeps graphql on 16.x — pure JS, zero transitive deps, real CommonJS", () => {
+      // Not pedantry: 17.x was briefly installed here and it BROKE custom-scalar
+      // validation silently (parseValue is no longer consulted during variable
+      // coercion), while `require("graphql")` resolved to an .mjs entry that only
+      // loads on Node >= 22. Both are exactly what §7.2's "verify the module format
+      // before bumping" caveat exists for, so the major is pinned by test.
+      const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8"));
+      expect(pkg.dependencies.graphql).toMatch(/^\^?16\./);
+
+      const installed = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "node_modules", "graphql", "package.json"), "utf8"));
+      expect(installed.version).toMatch(/^16\./);
+      // The three properties the dependency decision rests on.
+      expect(installed.dependencies || {}).toEqual({});
+      expect(installed.type).toBeUndefined();
+      expect(installed.license).toBe("MIT");
+      // And require() must land on CommonJS, not on an ESM entry point.
+      expect(require.resolve("graphql").endsWith(".js")).toBe(true);
+      expect(require.resolve("graphql").endsWith(".mjs")).toBe(false);
+    });
+
+    it("still validates a custom scalar through the VARIABLE path — the 17.x tripwire", async () => {
+      // This is the assertion that caught the silent bump. If a future upgrade
+      // stops honouring parseValue during variable coercion, this fails loudly
+      // instead of the module quietly accepting 30 February.
+      const { assembleCrewSchema } = require("../services/crew/registry");
+      const { schema } = assembleCrewSchema();
+      const { coerceInputValue } = require("graphql");
+      const errors = [];
+      coerceInputValue("2026-02-30", schema.getType("Date"), (_path, _value, error) => errors.push(error.message));
+      expect(errors.join(" ")).toMatch(/not a real calendar date/);
     });
   });
 

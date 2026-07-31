@@ -14,7 +14,7 @@ const notFoundStats = require("../helpers/notfound-stats.js");
 
 const FLAG = "crewOfficeEnabled";
 
-const PAGES = ["/crew.html", "/crew-member.html", "/crew-leave.html", "/crew-tools.html", "/crew-explorer.html"];
+const PAGES = ["/crew.html", "/crew-member.html", "/crew-work.html", "/crew-leave.html", "/crew-tools.html", "/crew-explorer.html"];
 
 async function getFlags() {
   const res = await request(app).get("/api/v1/feature-flags").expect(200);
@@ -62,6 +62,19 @@ describe("Crew Office HTML page gating", () => {
     await setEnabled(true);
     const res = await request(app).get("/crew").set("Cookie", `rolnopolToken=${token}`).expect(302);
     expect(res.headers.location).toBe("/crew.html");
+  });
+
+  it("every crew page ships the app shell rather than a bespoke one", async () => {
+    // Phase 2B: the pages join the app instead of sitting beside it — same navbar,
+    // same footer, same page-controller shape as everywhere else (§10.2).
+    await setEnabled(true);
+    for (const page of PAGES) {
+      const res = await request(app).get(page).set("Cookie", `rolnopolToken=${token}`).expect(200);
+      expect(res.text, `${page} navbar`).toContain('<div id="header-component"></div>');
+      expect(res.text, `${page} footer`).toContain('<div id="footer-component"></div>');
+      expect(res.text, `${page} nav key`).toMatch(/initNavigation\("crew"\)/);
+      expect(res.text, `${page} client`).toContain("/js/pages/crew-api.js");
+    }
   });
 
   it("counts a gated crew page as an HTML not-found (stats parity with every other gate)", async () => {

@@ -699,7 +699,15 @@ app.get(
 //
 // The client-side `isLoggedIn()` redirect in the page controllers is UX only
 // (§9.1.4) — the barrier is here and in the router's `authenticateSessionUser`.
-const CREW_PAGES = ["/crew", "/crew.html", "/crew-member.html", "/crew-leave.html", "/crew-tools.html", "/crew-explorer.html"];
+const CREW_PAGES = [
+  "/crew",
+  "/crew.html",
+  "/crew-member.html",
+  "/crew-work.html",
+  "/crew-leave.html",
+  "/crew-tools.html",
+  "/crew-explorer.html",
+];
 
 // Mirrors `extractSessionToken` in middleware/auth.middleware.js. Duplicated
 // rather than imported because that helper is module-private and Crew Office
@@ -958,6 +966,21 @@ app.get("/api/notfound-stats", (req, res) => {
     },
   });
 });
+
+// Crew Office GraphQL endpoint — POST /api/graphql/crew (PRD §7.1).
+//
+// Mounted here rather than under /api/v1 because the path in the contract is
+// /api/graphql/crew, and routes/v1 is mounted at /api/v1. Loaded defensively for
+// the same reason every optional subsystem is: the app must boot and serve every
+// existing endpoint even if the graph module is broken (§12 rule 6).
+let crewGraphqlRoute;
+try {
+  crewGraphqlRoute = require("../routes/crew-graphql.route");
+} catch (error) {
+  logError("[startup] Failed to load crew-graphql.route — Crew Office graph unavailable:", error.message);
+  crewGraphqlRoute = express.Router();
+}
+app.use("/api/graphql", crewGraphqlRoute);
 
 // 404 handler for API routes
 app.use("/api", (req, res) => {

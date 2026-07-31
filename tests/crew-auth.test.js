@@ -15,7 +15,7 @@ const tokenHelpers = require("../helpers/token.helpers.js");
 
 const FLAG = "crewOfficeEnabled";
 const HEALTH = "/api/v1/crew/health";
-const PAGES = ["/crew.html", "/crew-member.html", "/crew-leave.html", "/crew-tools.html", "/crew-explorer.html"];
+const PAGES = ["/crew.html", "/crew-member.html", "/crew-work.html", "/crew-leave.html", "/crew-tools.html", "/crew-explorer.html"];
 
 async function getFlags() {
   const res = await request(app).get("/api/v1/feature-flags").expect(200);

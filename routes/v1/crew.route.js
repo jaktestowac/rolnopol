@@ -1,9 +1,12 @@
 /**
- * Crew Office — HTTP surface (PRD §7.1).
+ * Crew Office — health endpoint (PRD §7.1).
  *
- * Phase 0 ships the health endpoint only. The GraphQL endpoint lands in Phase 2
- * and mounts on the same middleware chain, which is the whole point of building
- * this router first: the gate is proven before there is anything behind it.
+ * This router carries `GET /api/v1/crew/health` and nothing else. The GraphQL
+ * endpoint lives in `routes/crew-graphql.route.js`, mounted at `/api/graphql` so
+ * the path is `/api/graphql/crew` as §7.1 specifies — this router is under
+ * `/api/v1`, which would have made it `/api/v1/graphql/crew`. Both share the
+ * middleware chain below, which was built here first precisely so the gate was
+ * proven before there was anything behind it.
  *
  * Middleware order is `flag → auth → rate limit`, and that order is load-bearing
  * (§9.1.2):
@@ -36,26 +39,6 @@ const router = express.Router();
 const apiLimiter = createRateLimiter("api");
 const gate = requireFeatureFlag("crewOfficeEnabled", { resourceName: "Crew Office" });
 
-/**
- * The pillar set. `crewOfficeEnabled` is the module's ONE flag — there are no
- * per-pillar sub-flags, so reaching this handler means every pillar is live.
- *
- * Health still reports per-pillar rows, because the useful question a monitor
- * asks is not "is this pillar switched on" but "has it got a store yet" — and
- * that answer differs per pillar as the phases land.
- *
- * Phase 2 replaces this literal with `services/crew/registry.js`, after which
- * the registry is the single source of truth and this file stops knowing pillar
- * names at all.
- */
-const PILLARS = [
-  { name: "profiles", file: "crew-profiles.json" },
-  { name: "work", file: "crew-work.json" },
-  { name: "leave", file: "crew-leave.json" },
-  { name: "training", file: "crew-training.json" },
-  { name: "tools", file: "crew-tools.json" },
-];
-
 const DATA_DIR = path.join(__dirname, "..", "..", "data");
 
 /**
@@ -73,21 +56,36 @@ function storeStatusOf(file) {
 
 router.get("/crew/health", gate, authenticateSessionUser, apiLimiter, async (req, res) => {
   try {
-    const pillars = PILLARS.map((pillar) => ({
-      name: pillar.name,
-      // The gate above already proved `crewOfficeEnabled` is true, and that flag
-      // is the only one there is: the module is all-or-nothing.
-      enabled: true,
-      storeStatus: storeStatusOf(pillar.file),
-    }));
+    // The pillar list comes from the registry, which is the single source of
+    // truth: a pillar that failed to load is absent here too, so health reports
+    // the module as it actually is rather than as it was configured to be.
+    const { getCrewSchema, pillarHealth } = require("../../services/crew/registry");
+    const { pillars: assembled } = getCrewSchema();
+    const health = await pillarHealth();
+    const healthByName = new Map(health.map((row) => [row.name, row]));
+
+    const pillars = assembled.map((pillar) => {
+      const storeFiles = (pillar.stores || []).map((store) => store.file);
+      return {
+        name: pillar.name,
+        // The gate above already proved `crewOfficeEnabled` is true, and that
+        // flag is the only one there is: the module is all-or-nothing.
+        enabled: true,
+        status: healthByName.get(pillar.name)?.status || "unknown",
+        detail: healthByName.get(pillar.name)?.detail || null,
+        storeStatus:
+          storeFiles.length === 0 ? "none" : storeFiles.every((file) => storeStatusOf(file) === "present") ? "present" : "absent",
+      };
+    });
+
+    const degraded = pillars.some((pillar) => pillar.status !== "ok");
 
     return res.status(200).json(
       formatResponseBody({
         data: {
-          status: "ok",
-          // Phase 0: the graph is not mounted yet. The field is present from the
-          // start so a monitor can watch it flip rather than watch it appear.
-          graph: "not-mounted",
+          status: degraded ? "degraded" : "ok",
+          graph: "mounted",
+          graphEndpoint: "/api/graphql/crew",
           pillars,
         },
       }),

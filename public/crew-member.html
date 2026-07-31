@@ -3,28 +3,126 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Crew Office — Crew Member</title>
+    <title>Crew Office — Crew Member - Rolnopol</title>
     <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="stylesheet" href="/css/pages/crew.css" />
   </head>
   <!--
-    Crew Office — Phase 0 placeholder.
+    Crew Office member detail (PRD §10.1).
 
-    This page exists so the server-side gate (feature flag AND session, PRD §9.1.3)
-    is provable end to end before any feature code lands. Phase 7 replaces the body
-    with the real controller; the shell, the `crew-page` scope class and the scoped
-    stylesheet stay as they are.
+    Tabs: Overview · Work · Holidays · Training · Tools. Only Overview has a pillar
+    behind it today; the rest say so rather than rendering an empty view that would
+    read as "this person has no shifts and no training".
   -->
   <body class="crew-page crew-page--crew-member">
+    <div id="header-component"></div>
+
     <main class="crew-shell">
-      <h1 class="crew-title">Crew member</h1>
-      <p class="crew-lede">One person: overview, work, holidays, training and tools. Tabs render only for enabled pillars.</p>
-      <p class="crew-placeholder">
-        <i class="fa-solid fa-helmet-safety"></i>
-        Crew Office is under construction — this page arrives in full with the frontend phase.
-      </p>
+      <header class="crew-header">
+        <h1 class="crew-title" id="crewMemberTitle">Crew member</h1>
+        <p class="crew-lede"><a class="crew-link" href="/crew.html">&larr; Back to the roster</a></p>
+      </header>
+
+      <p id="crewMemberStatus" class="crew-status" role="status" aria-live="polite"></p>
+
+      <div class="crew-tabs" role="tablist" aria-label="Crew member sections">
+        <button class="crew-tab crew-tab--active" data-crew-tab="overview" role="tab" aria-selected="true" tabindex="0" type="button">
+          Overview
+        </button>
+        <button class="crew-tab" data-crew-tab="work" role="tab" aria-selected="false" tabindex="-1" type="button">Work</button>
+        <button class="crew-tab" data-crew-tab="leave" role="tab" aria-selected="false" tabindex="-1" type="button">Holidays</button>
+        <button class="crew-tab" data-crew-tab="training" role="tab" aria-selected="false" tabindex="-1" type="button">Training</button>
+        <button class="crew-tab" data-crew-tab="tools" role="tab" aria-selected="false" tabindex="-1" type="button">Tools</button>
+      </div>
+
+      <section class="crew-panel" data-crew-panel="overview" role="tabpanel">
+        <div id="crewMemberOverview"></div>
+
+        <!--
+          Editing the employment overlay — role, employment type, FTE, hours, dates.
+          Base identity (name, surname, age) is deliberately NOT editable here: those
+          are set once at hire and thereafter owned by the staff page (§2.2, §17 Q8).
+
+          `expectedVersion` travels with the write, so a concurrent edit loses rather
+          than clobbering — GraphQL has no If-Match, so the version goes in the input.
+        -->
+        <section id="crewEditPanel" class="crew-form-panel" hidden>
+          <h3 class="crew-subhead" id="crewEditHeading">Edit employment</h3>
+          <form id="crewEditForm" novalidate>
+            <div class="crew-form-grid">
+              <label class="crew-control">
+                <span class="crew-label">Role</span>
+                <select class="crew-select" id="editRole" name="role" required></select>
+              </label>
+              <label class="crew-control">
+                <span class="crew-label">Employment type</span>
+                <select class="crew-select" id="editEmploymentType" name="employmentType" required></select>
+              </label>
+              <label class="crew-control">
+                <span class="crew-label">FTE <span class="crew-muted">(0.1–1.0)</span></span>
+                <input class="crew-input" id="editFte" name="fte" type="number" min="0.1" max="1" step="0.1" required />
+              </label>
+              <label class="crew-control">
+                <span class="crew-label">Contracted hours / week</span>
+                <input class="crew-input" id="editHours" name="contractedHoursPerWeek" type="number" min="1" max="80" step="1" />
+              </label>
+              <label class="crew-control">
+                <span class="crew-label">Start date</span>
+                <input class="crew-input" id="editStartDate" name="startDate" type="date" required />
+              </label>
+              <label class="crew-control crew-control--wide">
+                <span class="crew-label">Notes</span>
+                <input class="crew-input" id="editNotes" name="notes" type="text" maxlength="200" />
+              </label>
+            </div>
+
+            <p id="crewEditErrors" class="crew-status crew-status--error" role="alert" aria-live="polite"></p>
+
+            <div class="crew-form-actions">
+              <button id="crewEditSubmit" class="crew-btn crew-btn--primary" type="submit"><i class="fa-solid fa-check"></i> Save</button>
+              <button id="crewEditCancel" class="crew-btn" type="button">Cancel</button>
+            </div>
+          </form>
+        </section>
+
+        <div class="crew-form-actions">
+          <button id="crewEditToggle" class="crew-btn" type="button" aria-expanded="false" aria-controls="crewEditPanel">
+            <i class="fa-solid fa-pen"></i> <span id="crewEditToggleLabel">Edit employment</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="crewMemberWork" class="crew-panel" data-crew-panel="work" role="tabpanel" hidden></section>
+      <section id="crewMemberLeave" class="crew-panel" data-crew-panel="leave" role="tabpanel" hidden></section>
+      <section id="crewMemberTraining" class="crew-panel" data-crew-panel="training" role="tabpanel" hidden></section>
+      <section class="crew-panel" data-crew-panel="tools" role="tabpanel" hidden>
+        <p class="crew-notice">Issued tools and overdue returns arrive with the tools pillar (Phase 6).</p>
+      </section>
     </main>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/crew-api.js"></script>
+    <script src="/js/pages/crew-member.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("crew");
+    </script>
   </body>
 </html>

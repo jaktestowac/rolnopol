@@ -1143,6 +1143,7 @@ module.exports = [
           ul([
             "'crewOfficeEnabled' is the module's ONLY flag, and it is all-or-nothing: with it off, the pages and every crew endpoint return 404 and no crew data file is created at all; with it on, all four pillars are live.",
             "There are deliberately no per-pillar sub-flags. The pillars are separate code, separate stores and separate tests — but one release and one switch, so there is no half-enabled Crew Office to reason about.",
+            "The 'Crew' navbar link appears only when the flag is on AND you are logged in — unlike every other gated link, it is absent from the anonymous navbar, because to a visitor who could never use the module it must not exist at all.",
             "The four sections that follow document the pillars; they appear alongside this one whenever the module is enabled.",
           ]),
         ]),
@@ -1189,7 +1190,7 @@ module.exports = [
           callout(
             "warning",
             "Under construction",
-            "The graph endpoint and the four pillars are still being built. With the flag on you currently get the crew pages and GET /crew/health; the health response reports 'graph: not-mounted' until the schema lands.",
+            "The graph endpoint is live and serves the profiles and work pillars: the roster and hiring, plus duty types, shifts, the work log and rollups. The holidays, training and tools pillars are still being built, so their fields are not in the schema yet — GET /api/graphql/crew always prints the schema as it currently stands, and /crew/health lists the pillars that are actually assembled.",
           ),
         ]),
       ],
@@ -1208,7 +1209,9 @@ module.exports = [
           ul([
             "Duty types (early milking, feeding, night watch, ...) with times, an optional required role, and a colour for the UI.",
             "Shifts — a duty type assigned to a crew member on a date, moving planned → confirmed → completed or cancelled.",
-            "Work log — hours and activity against a shift or standalone, with weekly and monthly rollups. Corrections append rather than overwrite, so the original entry survives.",
+            "Work log — hours and activity against a shift or standalone, with weekly and monthly rollups. Corrections append rather than overwrite, so the original entry survives and the amended one is shown struck through with its reason.",
+            "Overlaps are refused, and the boundaries are deliberate: two shifts meeting exactly at an hour are a handover, not a clash, while a night watch running 22:00 to 06:00 does conflict with the next morning's early start.",
+            "The work board (/crew-work.html) puts the crew down the side and days across the top, filters by member and date range, and loads the whole grid in one GraphQL round trip. Export is client-side: CSV from the data already on screen, and PDF through the browser's own print pipeline — so no REST endpoint is added.",
           ]),
         ]),
         heading("Cross-pillar checks", [
