@@ -23,6 +23,8 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   financialCommoditiesEnabled: "Enable or disable commodities monitoring endpoints and UI",
   financialCommoditiesTradingEnabled:
     "Enable or disable commodities buy endpoint and trading UI actions (Requires financialCommoditiesEnabled to be enabled)",
+  financialCommoditiesMarketDeskEnabled:
+    "Enable or disable the Market desk on the commodities page: an embedded same-origin ticker iframe with a nested frame, plus the shadow-DOM converter and spread badge (Requires financialCommoditiesEnabled to be enabled)",
   prometheusMetricsEnabled: "Enable or disable Prometheus metrics collection endpoint",
   homeWelcomeVideoEnabled: "Enable or disable the homepage welcome promotional video",
   homeStatsSectionEnabled: "Enable or disable advanced statistics section on the homepage",
@@ -70,7 +72,7 @@ const FEATURE_FLAG_GROUPS = {
   security: ["twoFactorAuthEnabled"],
   contact: ["contactFormEnabled"],
   export: ["staffFieldsExportEnabled", "financialReportsEnabled", "financialCsvExportEnabled", "weatherWeatherDataExport"],
-  financial: ["financialCommoditiesEnabled", "financialCommoditiesTradingEnabled"],
+  financial: ["financialCommoditiesEnabled", "financialCommoditiesTradingEnabled", "financialCommoditiesMarketDeskEnabled"],
   monitoring: ["prometheusMetricsEnabled"],
   communication: ["messengerEnabled", "assistantChatEnabled", "terminalPorkySplitPersonalityEnabled"],
   notifications: ["notificationCenterEnabled"],
@@ -114,6 +116,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "twoFactorAuthEnabled",
   "financialCommoditiesEnabled",
   "financialCommoditiesTradingEnabled",
+  "financialCommoditiesMarketDeskEnabled",
   "prometheusMetricsEnabled",
   "messengerEnabled",
   "assistantChatEnabled",
@@ -158,6 +161,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   financialCsvExportEnabled: false,
   financialCommoditiesEnabled: false,
   financialCommoditiesTradingEnabled: false,
+  financialCommoditiesMarketDeskEnabled: false,
   prometheusMetricsEnabled: false,
   homeWelcomeVideoEnabled: false,
   homeStatsSectionEnabled: false,

@@ -850,6 +850,55 @@ module.exports = [
       ],
     },
   },
+  {
+    flag: "financialCommoditiesMarketDeskEnabled",
+    section: {
+      section: "financial-commodities-market-desk",
+      title: "Commodities Market Desk",
+      content: [
+        heading("Overview", [
+          p(
+            "Adds a 'Market desk' panel to the bottom of /financial-commodities.html. It adds no endpoints and no new data — it re-presents the prices the page already loads through two browser features the rest of Rolnopol does not use: an embedded iframe and shadow DOM.",
+          ),
+          ul([
+            "Embedded ticker board — a same-origin iframe at /widgets/commodity-ticker.html that fetches GET /commodities/prices itself using the session cookie, with its own Refresh button.",
+            "A nested srcdoc frame inside that board showing the market session (open on weekdays 06:00-18:00 UTC), written into by the outer frame's script.",
+            "'Quantity converter' — a <commodity-converter> custom element whose form lives in an OPEN shadow root, with a slot filled from the page.",
+            "'Widest spread' — a <commodity-spread-badge> custom element with a CLOSED shadow root.",
+          ]),
+        ]),
+        heading("Reading the widgets from outside", [
+          table(
+            ["Target", "How it is reachable"],
+            [
+              ["Ticker board contents", "Switch into the /widgets/commodity-ticker.html frame"],
+              ["Market session text", "Switch into the ticker frame, then into its nested srcdoc frame"],
+              ["Ticker load state", "<body data-frame-state> in the frame: loading / ready / error"],
+              ["Converter inputs and result", "Open shadow root — reachable by anything that pierces shadow DOM"],
+              ["Widest-spread value", "Closed shadow root — NOT reachable; read data-widest-spread on the host, or call getState()"],
+            ],
+          ),
+          callout(
+            "info",
+            "Why the closed root publishes its state",
+            "Nothing outside the element can read a closed shadow root — element.shadowRoot is null. The badge therefore mirrors what it knows onto the host element as 'data-widest-spread' and 'data-widest-spread-value', and exposes getState(). That mirror is the element's public contract; the shadow markup is not.",
+          ),
+        ]),
+        heading("Frame reload", [
+          p(
+            "The panel's reload button re-points the iframe's src. The previous document is torn down, so any handle taken into the old frame now refers to a detached document and must be re-acquired. Each successful load in the frame posts a message to the parent page, which updates the line under the board.",
+          ),
+        ]),
+        heading("Scenario: the spread badge cannot be read the usual way", [
+          scenario([
+            "Enable 'financialCommoditiesEnabled' and 'financialCommoditiesMarketDeskEnabled', then open the commodities page.",
+            "Try to read the text of the 'Widest spread' badge — the closed shadow root hides it.",
+            "Read the 'data-widest-spread' attribute on the <commodity-spread-badge> host instead, and confirm it names one of the symbols in the Current prices table.",
+          ]),
+        ]),
+      ],
+    },
+  },
 
   // ---------------------------------------------------------------------------
   // Modules (built-in + external services)
