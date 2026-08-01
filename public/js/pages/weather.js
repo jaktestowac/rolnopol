@@ -635,6 +635,13 @@ class WeatherPage {
     }
   }
 
+  /** Customizable metric deck (js/pages/weather-charts.js) over the forecast. */
+  _renderForecastCharts(daily, forecast) {
+    if (window.WeatherCharts && typeof window.WeatherCharts.setForecast === "function") {
+      window.WeatherCharts.setForecast(daily, forecast);
+    }
+  }
+
   _renderForecast(forecast) {
     const list = document.getElementById("weatherForecast");
     if (!list) return;
@@ -671,6 +678,7 @@ class WeatherPage {
 
       this._renderDaily(daily);
       this._renderTrendChart(daily, forecast);
+      this._renderForecastCharts(daily, forecast);
       this._renderForecast(forecast);
       await this._refreshUserInsights(selectedDate);
 

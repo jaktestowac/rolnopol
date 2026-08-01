@@ -13,6 +13,7 @@
   var STREAM_PATH = "/api/v1/weather/live/stream";
   var MAX_LOG_ENTRIES = 12;
   var MAX_ALERTS = 20;
+  var DEFAULT_INTERVAL_MS = 4000;
 
   var source = null;
   var paused = false;
@@ -20,6 +21,12 @@
 
   function $(id) {
     return document.getElementById(id);
+  }
+
+  // The charts module (js/pages/weather-live-charts.js) owns the rolling
+  // history + the user's chart preferences, including the stream cadence.
+  function charts() {
+    return window.WeatherLiveCharts || null;
   }
 
   function setConnection(state, label) {
@@ -195,7 +202,8 @@
     }
 
     var region = encodeURIComponent(currentRegion());
-    var url = STREAM_PATH + "?region=" + region + "&intervalMs=4000";
+    var intervalMs = charts() ? charts().getIntervalMs() : DEFAULT_INTERVAL_MS;
+    var url = STREAM_PATH + "?region=" + region + "&intervalMs=" + intervalMs;
 
     setConnection("connecting", "Connecting…");
     setStatus("Opening live weather stream for " + currentRegion() + "…");
@@ -217,6 +225,9 @@
       try {
         var data = JSON.parse(event.data);
         renderConditions(data);
+        if (charts()) {
+          charts().push(data);
+        }
         appendLog(
           "conditions",
           data.condition + " · " + Math.round(data.temperatureC) + "°C, wind " + data.windKmh + " km/h",
@@ -285,7 +296,23 @@
       pauseBtn.addEventListener("click", togglePause);
     }
     if (regionSelect) {
-      regionSelect.addEventListener("change", openStream);
+      regionSelect.addEventListener("change", function () {
+        // A different region is a different data series — start the charts over.
+        if (charts()) {
+          charts().clear();
+        }
+        openStream();
+      });
+    }
+
+    if (charts()) {
+      charts().init();
+      // Changing the cadence means re-opening the stream with a new intervalMs.
+      charts().onIntervalChange(function () {
+        if (!paused) {
+          openStream();
+        }
+      });
     }
 
     window.addEventListener("beforeunload", closeStream);

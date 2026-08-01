@@ -1,0 +1,390 @@
+/**
+ * ChartDeck — shared styling for the customizable metric-chart grids
+ * (js/utils/chart-kit.js + js/utils/chart-deck.js). Used by the Weather and
+ * Weather Live pages; the option panel markup lives in each page's HTML.
+ */
+
+.ck-deck-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.ck-deck-head h2 {
+  margin: 0 0 0.6rem;
+}
+
+.ck-deck-head .btn {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+/* ------------------------------------------------------------ option panel */
+
+.ck-opts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.6rem;
+  margin: 0.2rem 0 0.9rem;
+  padding: 0.7rem;
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(120, 140, 110, 0.25);
+}
+
+.ck-opts[hidden] {
+  display: none;
+}
+
+.ck-opts__group {
+  margin: 0;
+  padding: 0.4rem 0.6rem 0.6rem;
+  border: 1px solid rgba(120, 140, 110, 0.22);
+  border-radius: 0.6rem;
+  min-width: 0;
+}
+
+.ck-opts__group--wide {
+  grid-column: 1 / -1;
+}
+
+.ck-opts__group legend {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6a7b5e;
+  padding: 0 0.3rem;
+}
+
+.ck-opts__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ck-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 140, 110, 0.3);
+  background: rgba(255, 255, 255, 0.55);
+  font-size: 0.82rem;
+  color: #4a5345;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.ck-pill:hover {
+  border-color: rgba(46, 158, 91, 0.55);
+}
+
+.ck-pill:has(input:checked) {
+  background: rgba(46, 158, 91, 0.14);
+  border-color: rgba(46, 158, 91, 0.5);
+  color: #22572f;
+}
+
+.ck-pill input {
+  accent-color: #2e9e5b;
+  margin: 0;
+}
+
+.ck-opts__field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  color: #5d6459;
+}
+
+.ck-opts__field .form-input {
+  padding: 0.22rem 0.4rem;
+  font-size: 0.8rem;
+  height: auto;
+  max-width: 11rem;
+}
+
+.ck-opts__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+
+.ck-opts__actions .btn {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+/* -------------------------------------------------------------- chart grid */
+
+.ck-empty {
+  margin: 0;
+  color: #5d6459;
+  font-size: 0.9rem;
+}
+
+.ck-deck {
+  --ck-columns: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--ck-columns), minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.ck-chart {
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem 0.7rem 0.5rem;
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(120, 140, 110, 0.25);
+  box-shadow: 0 1px 6px rgba(40, 60, 35, 0.06);
+  min-width: 0;
+}
+
+/* Grid (not flex-wrap) so the style picker stays on the title row and every
+   card in a row keeps the same plot height, even in the 3-column layout. */
+.ck-chart__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ck-chart__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6a7b5e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ck-chart__now {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2f3e2c;
+  white-space: nowrap;
+}
+
+.ck-chart__trend {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.ck-chart__style {
+  padding: 0.15rem 0.3rem;
+  font-size: 0.72rem;
+  height: auto;
+  width: auto;
+  max-width: 5.4rem;
+}
+
+.ck-chart__plot {
+  position: relative;
+  margin-top: 0.35rem;
+}
+
+.ck-chart__svg-wrap {
+  display: block;
+}
+
+.ck-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.ck-chart__grid {
+  stroke: rgba(90, 110, 85, 0.16);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.ck-chart__axis {
+  fill: #8a9384;
+  font-size: 10px;
+}
+
+.ck-chart__line {
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ck-chart__line--ghost {
+  stroke-width: 1.4;
+  stroke-dasharray: 4 4;
+  opacity: 0.5;
+}
+
+.ck-chart__line--edge {
+  stroke-width: 1.2;
+  opacity: 0.45;
+}
+
+.ck-chart__band {
+  stroke: none;
+}
+
+.ck-chart__spark {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  opacity: 0.65;
+}
+
+.ck-chart__area {
+  stroke: none;
+}
+
+.ck-chart__bar {
+  stroke-width: 1.2;
+  opacity: 0.95;
+}
+
+.ck-chart__dot {
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 1;
+}
+
+.ck-chart__marker {
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 1.2;
+}
+
+.ck-chart__pulse {
+  opacity: 0.35;
+  animation: ck-chart-pulse 1.8s ease-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes ck-chart-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.ck-gauge__track {
+  fill: none;
+  stroke: rgba(90, 110, 85, 0.16);
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.ck-gauge__value {
+  fill: none;
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.ck-gauge__reading {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.ck-gauge__unit {
+  fill: #8a9384;
+  font-size: 11px;
+}
+
+.ck-chart__cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(60, 80, 55, 0.35);
+  pointer-events: none;
+}
+
+.ck-chart__tip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 0.4rem;
+  background: rgba(35, 48, 32, 0.92);
+  color: #f2f6ef;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* `display: flex` above would otherwise win over the UA's [hidden] rule. */
+.ck-chart__tip[hidden],
+.ck-chart__cursor[hidden] {
+  display: none;
+}
+
+.ck-chart__tip-time {
+  color: #b9c9b2;
+}
+
+.ck-chart__tip-value {
+  font-weight: 700;
+}
+
+.ck-chart__tip-extra {
+  color: #cddcc7;
+}
+
+.ck-chart__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.8rem;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: #6a7b5e;
+}
+
+.ck-chart__stats em {
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  margin-right: 0.2rem;
+}
+
+@media (max-width: 900px) {
+  .ck-deck {
+    --ck-columns: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .ck-opts__field {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ck-opts__field .form-input {
+    max-width: none;
+    width: 100%;
+  }
+}

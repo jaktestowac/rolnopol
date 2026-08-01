@@ -8,6 +8,7 @@
   <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
   <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/chart-deck.css" />
   <link rel="stylesheet" href="/css/pages/weather-live.css" />
 </head>
 
@@ -86,6 +87,116 @@
       <p id="weatherLiveBase" class="weather-live-now__base"></p>
     </section>
 
+    <section class="glass weather-live-section weather-live-charts-section">
+      <div class="ck-deck-head">
+        <h2><i class="fas fa-chart-line"></i> Live charts</h2>
+        <button id="weatherLiveChartOptionsBtn" class="btn btn-outline" type="button" aria-expanded="false" aria-controls="weatherLiveChartOptions">
+          <i class="fas fa-sliders"></i>&nbsp; Customize
+        </button>
+      </div>
+
+      <div id="weatherLiveChartOptions" class="ck-opts" hidden>
+        <fieldset class="ck-opts__group ck-opts__group--wide">
+          <legend>Series</legend>
+          <div class="ck-opts__pills">
+            <label class="ck-pill"><input type="checkbox" data-series-toggle="temp" checked /><i class="fas fa-temperature-half"></i> Temperature</label>
+            <label class="ck-pill"><input type="checkbox" data-series-toggle="wind" checked /><i class="fas fa-wind"></i> Wind speed</label>
+            <label class="ck-pill"><input type="checkbox" data-series-toggle="rain" checked /><i class="fas fa-cloud-showers-heavy"></i> Rainfall</label>
+            <label class="ck-pill"><input type="checkbox" data-series-toggle="humidity" checked /><i class="fas fa-droplet"></i> Humidity</label>
+            <label class="ck-pill"><input type="checkbox" data-series-toggle="pressure" /><i class="fas fa-gauge-high"></i> Pressure</label>
+            <label class="ck-pill"><input type="checkbox" data-series-toggle="cloud" /><i class="fas fa-cloud"></i> Cloud cover</label>
+          </div>
+        </fieldset>
+
+        <fieldset class="ck-opts__group">
+          <legend>Appearance</legend>
+          <label class="ck-opts__field">
+            <span>Default style</span>
+            <select id="weatherLiveChartStyle" class="form-input">
+              <option value="auto" selected>Auto (per metric)</option>
+              <option value="area">Area</option>
+              <option value="line">Line</option>
+              <option value="bars">Bars</option>
+              <option value="gauge">Gauge</option>
+            </select>
+          </label>
+          <label class="ck-opts__field">
+            <span>Palette</span>
+            <select id="weatherLivePalette" class="form-input">
+              <option value="meadow" selected>Meadow</option>
+              <option value="sunset">Sunset</option>
+              <option value="ocean">Ocean</option>
+              <option value="mono">Mono</option>
+            </select>
+          </label>
+          <label class="ck-opts__field">
+            <span>Columns</span>
+            <select id="weatherLiveChartColumns" class="form-input">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+            </select>
+          </label>
+          <label class="ck-opts__field">
+            <span>Card height</span>
+            <select id="weatherLiveChartHeight" class="form-input">
+              <option value="120">Compact</option>
+              <option value="160" selected>Regular</option>
+              <option value="220">Tall</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset class="ck-opts__group">
+          <legend>Data</legend>
+          <label class="ck-opts__field">
+            <span>History window</span>
+            <select id="weatherLiveHistorySize" class="form-input">
+              <option value="15">Last 15 readings</option>
+              <option value="30" selected>Last 30 readings</option>
+              <option value="60">Last 60 readings</option>
+              <option value="120">Last 120 readings</option>
+            </select>
+          </label>
+          <label class="ck-opts__field">
+            <span>Update every</span>
+            <select id="weatherLiveIntervalSelect" class="form-input">
+              <option value="1000">1 second</option>
+              <option value="2000">2 seconds</option>
+              <option value="4000" selected>4 seconds</option>
+              <option value="10000">10 seconds</option>
+            </select>
+          </label>
+          <label class="ck-opts__field">
+            <span>Y axis</span>
+            <select id="weatherLiveYScale" class="form-input">
+              <option value="auto" selected>Auto-fit range</option>
+              <option value="zero">Start at zero</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset class="ck-opts__group">
+          <legend>Extras</legend>
+          <div class="ck-opts__pills">
+            <label class="ck-pill"><input type="checkbox" id="weatherLiveSmooth" checked /> Smooth curves</label>
+            <label class="ck-pill"><input type="checkbox" id="weatherLivePoints" /> Point markers</label>
+            <label class="ck-pill"><input type="checkbox" id="weatherLiveGrid" checked /> Gridlines</label>
+            <label class="ck-pill"><input type="checkbox" id="weatherLiveFill" checked /> Gradient fill</label>
+            <label class="ck-pill"><input type="checkbox" id="weatherLiveAxis" checked /> Axis labels</label>
+            <label class="ck-pill"><input type="checkbox" id="weatherLiveSecondary" checked /> Feels-like / gusts</label>
+          </div>
+          <div class="ck-opts__actions">
+            <button id="weatherLiveChartsResetBtn" class="btn btn-outline" type="button"><i class="fas fa-rotate-left"></i>&nbsp; Reset options</button>
+            <button id="weatherLiveChartsClearBtn" class="btn btn-outline" type="button"><i class="fas fa-eraser"></i>&nbsp; Clear history</button>
+          </div>
+        </fieldset>
+      </div>
+
+      <p id="weatherLiveChartsEmpty" class="ck-empty">Collecting readings… charts appear with the first live frame.</p>
+      <div id="weatherLiveCharts" class="ck-deck"></div>
+    </section>
+
     <section class="glass weather-live-section">
       <h2><i class="fas fa-triangle-exclamation"></i> Severe-weather alerts</h2>
       <p id="weatherLiveAlertsEmpty" class="weather-live-alerts__empty">No active alerts. Conditions are within normal ranges.</p>
@@ -120,6 +231,9 @@
   <script src="/js/utils/router.js"></script>
   <script src="/js/utils/global-compat.js"></script>
 
+  <script src="/js/utils/chart-kit.js"></script>
+  <script src="/js/utils/chart-deck.js"></script>
+  <script src="/js/pages/weather-live-charts.js"></script>
   <script src="/js/pages/weather-live.js"></script>
 
   <script src="/js/app.js"></script>

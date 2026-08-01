@@ -715,7 +715,7 @@ module.exports = [
               ["intervalMs", "Cadence between conditions frames (250–60000, default 5000)"],
               ["variance", "Sub-daily jitter amplitude 0–3 (0 = base daily values verbatim)"],
               ["limit", "Close the stream after N conditions frames (bounded demos / tests)"],
-              ["seed", "Extra seed so parallel streams differ deterministically"],
+              ["seed", "Pins the jitter to a reproducible series; omitted = a fresh random seed per request/connection"],
             ],
           ),
           callout(
