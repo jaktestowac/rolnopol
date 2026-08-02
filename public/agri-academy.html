@@ -351,6 +351,71 @@
         border-radius: 6px;
         color: var(--accent-2);
       }
+
+      /* Popular list — one row per exam. Deliberately not `.grid`/`.card`: the
+         point of this section is that it costs a fraction of the vertical space
+         the catalog does, and does not read as a second catalog. */
+      .pop-list {
+        list-style: none;
+        margin: 14px 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .pop-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--card);
+      }
+      .pop-rank {
+        width: 20px;
+        flex: none;
+        text-align: right;
+        color: var(--muted);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .pop-main {
+        flex: 1;
+        min-width: 0;
+      }
+      .pop-title {
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .pop-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .pop-actions {
+        display: flex;
+        gap: 8px;
+        flex: none;
+      }
+      .pop-actions .btn {
+        padding: 7px 13px;
+        font-size: 13px;
+      }
+      @media (max-width: 640px) {
+        .pop-item {
+          flex-wrap: wrap;
+        }
+        .pop-actions {
+          width: 100%;
+        }
+        .pop-actions .btn {
+          flex: 1;
+        }
+      }
     </style>
   </head>
 
@@ -365,12 +430,6 @@
       </header>
 
       <div id="banner" class="banner hidden"></div>
-
-      <!-- Popular / trending row — ranked by enrollments over the last 30 days -->
-      <section id="popular" class="hidden" style="margin-bottom: 28px">
-        <h2 style="font-size: 18px">🔥 Popular this month</h2>
-        <div id="popularRow" class="grid"></div>
-      </section>
 
       <!-- Catalog view -->
       <section id="catalog">
@@ -426,6 +485,21 @@
         <h2 style="font-size: 18px">My certificates</h2>
         <div id="certs" class="grid"></div>
         <div id="certsState" class="state">—</div>
+      </section>
+
+      <!--
+        Popular / trending — ranked by enrollments over the last 30 days.
+
+        It sits BELOW the catalog and the taker's own certificates on purpose. As a
+        row of eight full cards at the top of the page it was a second catalog: it
+        pushed the real one under the fold, and it repeated exams the visitor was
+        already looking at. It is social proof, so it is a compact list here — one
+        line per exam, the same two actions, no duplicated descriptions.
+      -->
+      <section id="popular" class="hidden" style="margin-top: 40px">
+        <h2 style="font-size: 18px">🔥 Popular this month</h2>
+        <p class="sub" id="popularHint"></p>
+        <ol id="popularRow" class="pop-list"></ol>
       </section>
     </div>
 
@@ -491,6 +565,32 @@
         let session = null; // active attempt session
         let catalogExams = []; // full published catalog, filtered client-side by the badges
         const bookmarked = new Set(); // examIds the taker saved ("save for later")
+
+        // ── One place decides what is on screen ──────────────────────────────────────
+        //
+        // Every transition used to toggle #catalog / #attempt / #result by hand, and
+        // NOTHING ever toggled #popular or #certsSection. Enrolling from the popular
+        // row therefore looked like a dead button: the panel it opened rendered below
+        // a grid of eight cards that did not move, i.e. off-screen. The same omission
+        // left "Enroll" buttons for other exams on screen during a timed attempt.
+        //
+        // So: one function owns section visibility, and a switch always lands the new
+        // panel where the eye already is.
+        let currentView = "catalog";
+        let popularReady = false; // the popular list has rows worth showing
+
+        function showView(view) {
+          currentView = view;
+          const catalogView = view === "catalog";
+          $("catalog").classList.toggle("hidden", !catalogView);
+          $("certsSection").classList.toggle("hidden", !catalogView);
+          $("popular").classList.toggle("hidden", !catalogView || !popularReady);
+          $("attempt").classList.toggle("hidden", view !== "attempt");
+          $("result").classList.toggle("hidden", view !== "result");
+          // The page is long. A switch that happens below the fold reads as nothing
+          // happening at all — which is exactly the bug this replaced.
+          if (!catalogView) window.scrollTo({ top: 0, behavior: "smooth" });
+        }
 
         // Load the caller's saved exams so the catalog can show the toggle state.
         async function loadBookmarks() {
@@ -591,37 +691,42 @@
           });
         }
 
-        // ── Popular / trending row ───────────────────────────────────────────────────
-        // Read-only social-proof row (top exams by enrollment over the last 30 days).
+        // ── Popular / trending list ──────────────────────────────────────────────────
+        // Social proof (top exams by enrollment over the last 30 days), rendered as a
+        // compact list below the catalog rather than a second grid of cards above it.
         // Hidden entirely when nothing is trending yet. Reuses the enroll/preview flow.
         async function loadPopular() {
           const r = await api("GET", "/exams/popular");
           const exams = r.ok && r.body ? r.body.exams || [] : [];
-          const section = $("popular");
-          if (!exams.length) {
-            section.classList.add("hidden");
+          popularReady = exams.length > 0;
+          if (!popularReady) {
+            $("popular").classList.add("hidden");
             return;
           }
+          const days = Number(r.body.windowDays) || 30;
+          $("popularHint").textContent = `Most enrolled over the last ${days} days — enroll straight from here, or preview first.`;
           $("popularRow").innerHTML = exams
-            .map((e) => {
+            .map((e, i) => {
               const paid = e.pricing && e.pricing.mode === "paid";
               const price = paid ? `<span class="tag paid">${e.pricing.priceRol} ROL</span>` : `<span class="tag">Free</span>`;
               const takers = Number(e.enrollments || 0);
               return `
-              <div class="card">
-                <h3>${esc(e.title)}</h3>
-                <p>${esc(e.description || "")}</p>
-                <div class="meta">
-                  ${price}
-                  ${badges(e)}
-                  <span class="tag" title="Enrollments in the last 30 days">🔥 ${takers} enrolled</span>
-                  <span class="tag">${mins(e.durationSec)} min</span>
+              <li class="pop-item" data-testid="popular-item">
+                <span class="pop-rank">${i + 1}</span>
+                <div class="pop-main">
+                  <div class="pop-title" title="${esc(e.title)}">${esc(e.title)}</div>
+                  <div class="pop-meta">
+                    <span class="tag" title="Enrollments in the last ${days} days">🔥 ${takers} enrolled</span>
+                    ${price}
+                    ${badges(e)}
+                    <span class="tag">${mins(e.durationSec)} min</span>
+                  </div>
                 </div>
-                <div class="card-actions">
-                  <button class="btn" data-pop-enroll="${esc(e.id)}">${paid ? "Pay &amp; enroll" : "Enroll"}</button>
+                <div class="pop-actions">
                   <button class="btn btn--ghost" data-pop-preview="${esc(e.id)}">Preview</button>
+                  <button class="btn" data-pop-enroll="${esc(e.id)}">${paid ? "Pay &amp; enroll" : "Enroll"}</button>
                 </div>
-              </div>`;
+              </li>`;
             })
             .join("");
           // Distinct attributes so these don't collide with the catalog's global
@@ -632,7 +737,10 @@
           $("popularRow")
             .querySelectorAll("[data-pop-preview]")
             .forEach((b) => b.addEventListener("click", () => openPreview(b.getAttribute("data-pop-preview"))));
-          section.classList.remove("hidden");
+          // Never un-hide behind the taker's back: an attempt started from a deep link
+          // finishes loading the catalog underneath it, and the list must stay away
+          // until the catalog view is the one on screen.
+          showView(currentView);
         }
 
         // ── Exam preview modal ───────────────────────────────────────────────────────
@@ -644,9 +752,17 @@
             .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
             .join(" ");
 
-        function openPreview(examId) {
-          const e = catalogExams.find((x) => x.id === examId);
-          if (!e) return;
+        async function openPreview(examId) {
+          // The popular list can name an exam the catalog does not hold (a failed or
+          // still-running catalog load, a filtered-out draft). Returning silently there
+          // is a button that does nothing, so fall back to fetching the one exam.
+          let e = catalogExams.find((x) => x.id === examId);
+          if (!e) {
+            const r = await api("GET", "/exams/" + encodeURIComponent(examId));
+            if (r.status === 401) return needLogin();
+            if (!r.ok || !r.body || !r.body.title) return banner("Could not open that exam.", "err");
+            e = r.body;
+          }
           const paid = e.pricing && e.pricing.mode === "paid";
           $("pvTitle").textContent = e.title;
           $("pvDesc").textContent = e.description || "";
@@ -676,9 +792,7 @@
         // Restore the catalog view after a failed/aborted enroll so the loading
         // state never gets stuck on screen.
         function backToCatalog() {
-          $("attempt").classList.add("hidden");
-          $("result").classList.add("hidden");
-          $("catalog").classList.remove("hidden");
+          showView("catalog");
           $("submitBtn").classList.remove("hidden");
         }
 
@@ -732,9 +846,7 @@
         // deep-link never flashes the whole catalog before the attempt appears).
         function showStarting(msg) {
           clearBanner();
-          $("catalog").classList.add("hidden");
-          $("result").classList.add("hidden");
-          $("attempt").classList.remove("hidden");
+          showView("attempt");
           $("attemptTitle").textContent = msg;
           $("attemptTimer").textContent = "";
           $("questions").innerHTML = "";
@@ -744,10 +856,10 @@
         // "Ready to start" panel shown after enrolling. The taker reviews what's about
         // to happen, then clicks Start to draw questions + begin the completion clock.
         async function showReady(examId, body) {
-          clearBanner();
-          $("catalog").classList.add("hidden");
-          $("result").classList.add("hidden");
-          $("attempt").classList.remove("hidden");
+          // Deliberately does NOT clear the banner: its caller has just posted the
+          // "Enrolled — charged N ROL" confirmation, and wiping it here was throwing
+          // away the only proof the click did anything.
+          showView("attempt");
           $("submitBtn").classList.add("hidden");
           // Catalog may be empty on a deep-link (?exam=…) — fetch the exam if needed.
           let e = catalogExams.find((x) => x.id === examId);
@@ -799,9 +911,7 @@
         // ── Attempt ──────────────────────────────────────────────────────────────────
         function renderAttempt() {
           clearBanner();
-          $("catalog").classList.add("hidden");
-          $("result").classList.add("hidden");
-          $("attempt").classList.remove("hidden");
+          showView("attempt");
           $("submitBtn").classList.remove("hidden");
           $("attemptTitle").textContent = "Answer all questions";
           if (session.expiresAt) {
@@ -863,7 +973,6 @@
 
         function renderResult(result) {
           clearBanner();
-          $("attempt").classList.add("hidden");
           const passed = result.passed;
           const certLine =
             result.certNo != null
@@ -881,15 +990,10 @@
             ${passed || !examId ? "" : '<button class="btn" id="retryBtn">Try again</button>'}
             <a class="btn btn--ghost" href="/agri-academy.html">Back to exams</a>
           </div>`;
-          $("result").classList.remove("hidden");
+          showView("result");
           const retry = document.getElementById("retryBtn");
-          if (retry) {
-            retry.addEventListener("click", () => {
-              $("result").classList.add("hidden");
-              $("catalog").classList.remove("hidden");
-              enroll(examId);
-            });
-          }
+          // `enroll` switches the view itself, so retry does not have to guess.
+          if (retry) retry.addEventListener("click", () => enroll(examId));
           loadCerts();
         }
 
@@ -935,7 +1039,7 @@
             // flashes before the attempt appears. Drop ?exam from the URL so a
             // refresh (or the result screen) doesn't silently start another attempt.
             history.replaceState({}, "", location.pathname);
-            $("catalog").classList.add("hidden");
+            showView("attempt");
             await enroll(preselect);
           }
           await loadCatalog();

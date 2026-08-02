@@ -127,13 +127,20 @@ module.exports = {
       since_sequence: Number(sinceSequence) || 0,
       poll_ms: Number(pollMs) || 0,
     }),
-  /** A bounded, newest-first page of the log. Omit `unitId` for every unit. */
-  listEvents: ({ unitId = "", examId = "", limit = 0, sinceSequence = 0 } = {}) =>
+  /**
+   * A bounded, newest-first page of the log. Omit `unitId` for every unit.
+   *
+   * `sinceSequence` narrows the query to what is newer (a poll cursor);
+   * `beforeSequence` walks backwards through history from a page already read (a
+   * scroll-back bound, which `total` deliberately ignores).
+   */
+  listEvents: ({ unitId = "", examId = "", limit = 0, sinceSequence = 0, beforeSequence = 0 } = {}) =>
     unary("ListEvents", {
       unit_id: unitId || "",
       exam_id: examId || "",
       limit: Number(limit) || 0,
       since_sequence: Number(sinceSequence) || 0,
+      before_sequence: Number(beforeSequence) || 0,
     }),
   /** Status codes a bridge must distinguish from a genuine upstream failure. */
   CANCELLED: grpc.status.CANCELLED,

@@ -218,6 +218,67 @@ describe("agri-academy REST bridge — full ecosystem up", () => {
     await request(app).get("/api/v1/agri-academy/units/no-such-unit/events").expect(404);
   });
 
+  it("pages BACKWARDS through the activity log with `before`, and reports whether history remains", async () => {
+    // Scroll-back's contract, end to end: browser → proxy → exam center → leaf. Enough
+    // entries first that a two-at-a-time walk takes several pages.
+    for (const who of ["user-aa-back-1", "user-aa-back-2", "user-aa-back-3"]) {
+      const actor = tokenHelpers.generateToken(who);
+      const created = await request(app)
+        .post("/api/v1/agri-academy/sessions")
+        .set("token", actor)
+        .send({ examId: "pesticide-basics" })
+        .expect(201);
+      await request(app).post(`/api/v1/agri-academy/sessions/${created.body.sessionId}/start`).set("token", actor).expect(200);
+    }
+
+    // One page big enough to hold the log: nothing is left underneath it.
+    const whole = await request(app).get("/api/v1/agri-academy/events?limit=500").expect(200);
+    expect(whole.body.hasMore).toBe(false);
+    const everySequence = whole.body.events.map((e) => e.sequence);
+    expect(everySequence.length).toBeGreaterThanOrEqual(6);
+
+    // Walk the same log two at a time, handing back the lowest sequence each page
+    // returned — exactly what the activity page's sentinel does.
+    const walked = [];
+    let before = 0;
+    let body;
+    let guard = 0;
+    do {
+      const query = new URLSearchParams({ limit: "2" });
+      if (before) query.set("before", String(before));
+      ({ body } = await request(app).get(`/api/v1/agri-academy/events?${query.toString()}`).expect(200));
+      // `before` is a page bound, not a filter — so the total a view is counting
+      // against must not move while it pages into history.
+      expect(body.total).toBe(whole.body.total);
+      walked.push(...body.events.map((e) => e.sequence));
+      before = body.events.length ? body.events[body.events.length - 1].sequence : 0;
+    } while (body.hasMore && ++guard < 50);
+
+    expect(body.hasMore).toBe(false); // the last page says it is the last page
+    // The walk reconstructs the log exactly: same order, no gap, no entry twice.
+    expect(walked).toEqual(everySequence);
+
+    // The two cursors are NOT mirror images: `since` narrows the query, `before`
+    // only positions the window.
+    const pivot = everySequence[2];
+    const forwards = await request(app).get(`/api/v1/agri-academy/events?since=${pivot}`).expect(200);
+    expect(forwards.body.total).toBeLessThan(whole.body.total);
+    expect(forwards.body.events.every((e) => e.sequence > pivot)).toBe(true);
+    const backwards = await request(app).get(`/api/v1/agri-academy/events?before=${pivot}`).expect(200);
+    expect(backwards.body.total).toBe(whole.body.total);
+    expect(backwards.body.events.every((e) => e.sequence < pivot)).toBe(true);
+
+    // Scoping composes with paging: a unit's history stays that unit's history.
+    const unitPage = await request(app).get("/api/v1/agri-academy/units/unit-demo/events?limit=2").expect(200);
+    expect(unitPage.body.hasMore).toBe(true);
+    const unitOlder = await request(app)
+      .get(`/api/v1/agri-academy/units/unit-demo/events?limit=2&before=${unitPage.body.events[1].sequence}`)
+      .expect(200);
+    expect(unitOlder.body.events.every((e) => e.unitId === "unit-demo")).toBe(true);
+    expect(unitOlder.body.events.every((e) => e.sequence < unitPage.body.events[1].sequence)).toBe(true);
+    expect(unitOlder.body.total).toBe(unitPage.body.total);
+  });
+
   it("tails the activity log over SSE, RE-STREAMING each entry as it happens", async () => {
     // The streaming sibling of the read above, through the whole chain: browser →
     // Rolnopol proxy → exam-center bridge → leaf tail. Driven with a raw
