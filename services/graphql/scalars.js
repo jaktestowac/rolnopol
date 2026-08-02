@@ -150,12 +150,51 @@ const GraphQLNonEmptyString = makeScalar({
   },
 });
 
+/**
+ * A file, and the one scalar here that cannot be written down.
+ *
+ * Every other scalar coerces a JSON value. This one coerces nothing: its only
+ * legal input is an object the multipart layer produced, carrying a brand symbol
+ * that a JSON body has no way to forge. The three coercion paths therefore say
+ * three different noes, and each is a real defence rather than a formality:
+ *
+ *   parseLiteral  a file cannot be a literal — there is no syntax for bytes, and
+ *                 accepting a string here would make `file: "..."` look like an
+ *                 upload while smuggling caller-controlled text into a byte sink;
+ *   parseValue    a value that did not come from a multipart part is refused, so
+ *                 an `application/json` request cannot fabricate one;
+ *   serialize     an Upload is never returned. Bytes leave through the download
+ *                 route, with the headers and the ownership check that go with it.
+ *
+ * Note the deliberate lack of coercion parity here, which every scalar above is
+ * built to guarantee: literals and variables are NOT treated alike, because for
+ * this type "written as a literal" is not a spelling of the same value — it is a
+ * different, forged one.
+ */
+const UPLOAD_BRAND = Symbol.for("rolnopol.crew.upload");
+
+const GraphQLUpload = new GraphQLScalarType({
+  name: "Upload",
+  description:
+    "A file from a multipart/form-data request part, per the GraphQL multipart request specification. " +
+    "Input only: it cannot be written as a literal and is never returned in a response.",
+  parseValue: (value) => {
+    if (!value || typeof value !== "object" || value[UPLOAD_BRAND] !== true) {
+      fail("Upload must come from a multipart/form-data file part — see the GraphQL multipart request spec.");
+    }
+    return value;
+  },
+  parseLiteral: (node) => fail("Upload cannot be written as a literal; send it as a multipart file part.", node),
+  serialize: () => fail("Upload is an input-only scalar and is never serialized."),
+});
+
 const SCALARS = {
   Date: GraphQLDate,
   DateTime: GraphQLDateTime,
   Days: GraphQLDays,
   SignedDays: GraphQLSignedDays,
   NonEmptyString: GraphQLNonEmptyString,
+  Upload: GraphQLUpload,
 };
 
 // SDL for the scalar declarations, so a schema can be assembled from text.
@@ -172,4 +211,6 @@ module.exports = {
   GraphQLDays,
   GraphQLSignedDays,
   GraphQLNonEmptyString,
+  GraphQLUpload,
+  UPLOAD_BRAND,
 };

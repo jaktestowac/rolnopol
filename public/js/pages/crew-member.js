@@ -41,6 +41,12 @@
     elements.work = document.getElementById("crewMemberWork");
     elements.leave = document.getElementById("crewMemberLeave");
     elements.training = document.getElementById("crewMemberTraining");
+    elements.documents = document.getElementById("crewMemberDocuments");
+    elements.previewModal = document.getElementById("documentPreviewModal");
+    elements.previewTitle = document.getElementById("documentPreviewTitle");
+    elements.previewMeta = document.getElementById("documentPreviewMeta");
+    elements.previewBody = document.getElementById("documentPreviewBody");
+    elements.previewClose = document.getElementById("documentPreviewClose");
 
     elements.editToggle = document.getElementById("crewEditToggle");
     elements.editToggleLabel = document.getElementById("crewEditToggleLabel");
@@ -66,6 +72,7 @@
     if (name === "work") loadWork();
     if (name === "leave") loadLeave();
     if (name === "training") loadTraining();
+    if (name === "documents") loadDocuments();
   }
 
   /**
@@ -76,7 +83,7 @@
    * tab currently shown disappears, the page falls back to Overview rather than
    * leaving every panel hidden.
    */
-  const TAB_PILLARS = { overview: null, work: "work", leave: "leave", training: "training", tools: "tools" };
+  const TAB_PILLARS = { overview: null, work: "work", leave: "leave", training: "training", tools: "tools", documents: "documents" };
 
   function applyPillarTabs(pillars) {
     if (!Array.isArray(pillars)) return;
@@ -757,6 +764,557 @@
     renderTraining(training, result.data.academyLink);
   }
 
+  // ── Documents (#100) ────────────────────────────────────────────────────────
+
+  let documentsLoaded = false;
+  // The folder the table was last rendered from, so a preview can resolve an id.
+  let currentFolder = null;
+  // Whatever had focus when the preview dialog was opened.
+  let previewOpener = null;
+
+  const DOCUMENT_STATUS_BADGE = { AVAILABLE: "valid", PENDING: "pending", REJECTED: "expired", MISSING: "expired" };
+
+  /**
+   * What a failed document action means, in words a reader can act on.
+   *
+   * The server sends its own sentence in `error`, and that one wins — it is closer
+   * to what actually happened. This map is the fallback, and it exists because the
+   * alternative shape of this code is a bare status number in the UI, or worse, the
+   * browser navigating to the raw JSON of a 500 because the action was a plain link.
+   *
+   * `0` is not an HTTP status: it is how `fetch` rejecting is reported below.
+   */
+  const DOCUMENT_FAILURE_TEXT = {
+    0: "Crew Office could not be reached. Check your connection and try again.",
+    401: "Your session has expired.",
+    403: "Your session has expired.",
+    404: "That document is no longer available.",
+    409: "This document is still being scanned — try again in a moment.",
+    410: "The scan refused this document, so it cannot be opened.",
+    500: "This document's contents are missing on the server. The record is intact; the file itself is gone.",
+  };
+
+  function describeDocumentFailure(status, body) {
+    if (body && typeof body.error === "string" && body.error.trim()) return body.error;
+    return DOCUMENT_FAILURE_TEXT[status] || "That document could not be opened (" + status + ").";
+  }
+
+  /** Read a failed response's JSON without letting a non-JSON body throw. */
+  async function failureBodyOf(res) {
+    try {
+      return await res.json();
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Report a document action that failed, and re-read the folder.
+   *
+   * The refresh is the useful half: the row that just failed is almost always a row
+   * whose status has moved on — the scan finished, or the bytes went missing — and
+   * re-reading turns the table into an explanation instead of leaving a button that
+   * will fail the same way next time.
+   */
+  async function reportDocumentFailure(message) {
+    // Refresh FIRST, then write the message. The refresh re-renders the panel — and
+    // the status line lives inside it, so a message written beforehand is wiped by
+    // the very re-render that was supposed to explain it.
+    await refreshDocuments();
+    const status = window.document.getElementById("documentActionStatus");
+    if (status) window.CrewApi.setStatus(status, "error", message);
+  }
+
+  function formatBytes(bytes) {
+    const value = Number(bytes) || 0;
+    if (value < 1024) return value + " B";
+    if (value < 1024 * 1024) return (value / 1024).toFixed(1) + " KB";
+    return (value / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function renderDocumentRow(document) {
+    const escape = window.CrewApi.escapeHtml;
+    const badge = DOCUMENT_STATUS_BADGE[document.status] || "pending";
+    // A PENDING or REJECTED document has no link at all rather than a dead one:
+    // the download route would answer 409 or 410, and a link that reliably fails
+    // is worse than no link.
+    //
+    // Preview is offered only when the SERVER said the type is previewable — the
+    // page never decides that for itself, or it would be a second copy of the
+    // allow-list, drifting.
+    const preview =
+      document.status === "AVAILABLE" && document.previewable
+        ? '<button type="button" class="crew-btn crew-btn--small" data-preview-document="' +
+          escape(document.id) +
+          '" data-testid="document-preview">Preview</button> '
+        : "";
+    // Download is a BUTTON, not an <a download>. A link hands the response to the
+    // browser, so a 500 becomes either a downloaded blob of JSON or a page of raw
+    // error text — the page never finds out and cannot say anything useful. The
+    // button fetches, checks, and reports.
+    const unavailable =
+      document.status === "PENDING"
+        ? "scanning…"
+        : document.status === "MISSING"
+          ? "contents missing"
+          : escape(document.scanDetail || "refused");
+    const action =
+      document.status === "AVAILABLE"
+        ? preview +
+          '<button type="button" class="crew-btn crew-btn--small" data-download-document="' +
+          escape(document.id) +
+          '" data-testid="document-download">Download</button>'
+        : '<span class="crew-muted">' + unavailable + "</span>";
+
+    return (
+      '<tr data-document-id="' +
+      escape(document.id) +
+      '" data-status="' +
+      escape(document.status) +
+      '" data-testid="document-row">' +
+      "<td>" +
+      escape(document.filename) +
+      "</td>" +
+      "<td>" +
+      escape(document.kind) +
+      "</td>" +
+      "<td>" +
+      escape(formatBytes(document.sizeBytes)) +
+      "</td>" +
+      '<td><span class="crew-badge crew-badge--' +
+      badge +
+      '">' +
+      escape(document.status) +
+      "</span></td>" +
+      "<td>" +
+      escape(
+        String(document.uploadedAt || "")
+          .slice(0, 19)
+          .replace("T", " "),
+      ) +
+      "</td>" +
+      "<td>" +
+      action +
+      "</td>" +
+      "</tr>"
+    );
+  }
+
+  function renderDocuments(folder, outcome) {
+    const escape = window.CrewApi.escapeHtml;
+    // Kept so the preview can look a document up by id without re-querying — the
+    // rows the table was built from are exactly the rows a preview can open.
+    currentFolder = folder;
+
+    // Both halves of a partial success, always. A page that only listed what was
+    // accepted would leave a user certain they had uploaded five files.
+    const rejectedMarkup =
+      outcome && outcome.rejected && outcome.rejected.length
+        ? '<div class="crew-notice crew-notice--warning" data-testid="document-rejections">' +
+          "<strong>" +
+          outcome.rejected.length +
+          ' file(s) were not accepted:</strong><ul class="crew-list">' +
+          outcome.rejected.map((row) => "<li><strong>" + escape(row.filename) + "</strong> — " + escape(row.reason) + "</li>").join("") +
+          "</ul></div>"
+        : "";
+
+    const acceptedMarkup =
+      outcome && outcome.accepted && outcome.accepted.length
+        ? '<p class="crew-notice crew-notice--ok" data-testid="document-accepted">' +
+          outcome.accepted.length +
+          " file(s) filed. They stay <strong>PENDING</strong> until the scan finishes." +
+          "</p>"
+        : "";
+
+    elements.documents.innerHTML =
+      '<form id="documentUploadForm" class="crew-form" enctype="multipart/form-data">' +
+      '<h3 class="crew-subhead">Attach a document</h3>' +
+      '<div class="crew-field">' +
+      '<label class="crew-label" for="documentKind">Kind</label>' +
+      '<select id="documentKind" class="crew-select">' +
+      ["CONTRACT", "CERTIFICATE", "LICENCE", "IDENTITY", "OTHER"].map((k) => '<option value="' + k + '">' + k + "</option>").join("") +
+      "</select>" +
+      "</div>" +
+      '<div class="crew-field">' +
+      '<label class="crew-label" for="documentFiles">Files</label>' +
+      '<input id="documentFiles" class="crew-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.txt,.csv" data-testid="document-files" />' +
+      '<p class="crew-hint">Up to 5 files, 1 MB each. PDF, PNG, JPG, TXT or CSV.</p>' +
+      "</div>" +
+      '<div class="crew-form-actions">' +
+      '<button id="documentUploadSubmit" class="crew-btn crew-btn--primary" type="submit"><i class="fa-solid fa-upload"></i> Upload</button>' +
+      "</div>" +
+      '<p id="documentUploadStatus" class="crew-status" role="status" aria-live="polite"></p>' +
+      "</form>" +
+      acceptedMarkup +
+      rejectedMarkup +
+      '<p id="documentActionStatus" class="crew-status" role="status" aria-live="polite"></p>' +
+      '<h3 class="crew-subhead">Personnel file <span class="crew-muted">(' +
+      folder.totalCount +
+      " document(s), " +
+      escape(formatBytes(folder.totalBytes)) +
+      ")</span></h3>" +
+      (folder.items.length === 0
+        ? '<p class="crew-muted">Nothing filed yet.</p>'
+        : '<div class="crew-table-wrap"><table class="crew-table" data-testid="document-table"><thead><tr>' +
+          "<th>File</th><th>Kind</th><th>Size</th><th>Status</th><th>Uploaded</th><th></th>" +
+          "</tr></thead><tbody>" +
+          folder.items.map(renderDocumentRow).join("") +
+          "</tbody></table></div>");
+
+    wireDocumentForm();
+  }
+
+  function wireDocumentForm() {
+    const form = document.getElementById("documentUploadForm");
+    if (form) {
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        await submitDocuments();
+      });
+    }
+
+    // Delegated, so the Preview buttons keep working across every re-render of the
+    // table without being re-attached row by row.
+    const panel = elements.documents;
+    if (panel && !panel.dataset.previewWired) {
+      panel.dataset.previewWired = "true";
+      panel.addEventListener("click", function (event) {
+        const preview = event.target.closest("[data-preview-document]");
+        if (preview) {
+          event.preventDefault();
+          openDocumentPreview(preview.getAttribute("data-preview-document"));
+          return;
+        }
+        const download = event.target.closest("[data-download-document]");
+        if (download) {
+          event.preventDefault();
+          downloadDocument(download.getAttribute("data-download-document"), download);
+        }
+      });
+    }
+  }
+
+  /**
+   * Fetch a document and hand it to the browser as a save, reporting any failure.
+   *
+   * Doing this by hand rather than with `<a download>` costs a few lines and buys
+   * the only thing that matters here: the page sees the status. A link cannot —
+   * a 500 leaves the browser showing raw JSON and the app none the wiser.
+   *
+   * The object URL is revoked in a `finally`, because a blob that is never revoked
+   * keeps the whole file in memory for the life of the tab.
+   */
+  async function downloadDocument(documentId, trigger) {
+    const item = (currentFolder && currentFolder.items ? currentFolder.items : []).find(function (row) {
+      return String(row.id) === String(documentId);
+    });
+    if (!item) return;
+
+    if (trigger) trigger.disabled = true;
+    let url = null;
+    try {
+      const res = await fetch(item.downloadPath, { credentials: "same-origin" });
+      if (!res.ok) {
+        await reportDocumentFailure(describeDocumentFailure(res.status, await failureBodyOf(res)));
+        return;
+      }
+      url = URL.createObjectURL(await res.blob());
+      const anchor = window.document.createElement("a");
+      anchor.href = url;
+      // The server sent a Content-Disposition filename, but a blob URL does not
+      // carry it — so the name comes from the record the row was drawn from.
+      anchor.download = item.filename;
+      window.document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      const status = window.document.getElementById("documentActionStatus");
+      if (status) window.CrewApi.setStatus(status, "success", "Downloaded " + item.filename + ".");
+    } catch (error) {
+      await reportDocumentFailure(describeDocumentFailure(0, null));
+    } finally {
+      if (url) URL.revokeObjectURL(url);
+      if (trigger) trigger.disabled = false;
+    }
+  }
+
+  /**
+   * Wire the preview dialog once, at init.
+   *
+   * Separate from `wireDocumentForm` because the dialog is not part of the panel:
+   * it is declared in the page, it outlives every re-render, and it therefore needs
+   * wiring exactly once rather than each time the table is rebuilt.
+   */
+  function wireDocumentPreview() {
+    const modal = elements.previewModal;
+    if (!modal) return;
+
+    if (elements.previewClose) elements.previewClose.addEventListener("click", closeDocumentPreview);
+
+    // Clicking the backdrop — the dialog element itself, not its content box.
+    modal.addEventListener("click", function (event) {
+      if (event.target === modal) closeDocumentPreview();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (!isPreviewOpen()) return;
+      if (event.key === "Escape") {
+        closeDocumentPreview();
+        return;
+      }
+      if (event.key === "Tab") trapPreviewFocus(event);
+    });
+  }
+
+  function isPreviewOpen() {
+    return Boolean(elements.previewModal) && elements.previewModal.hidden === false;
+  }
+
+  /**
+   * Keep Tab inside the dialog while it is open.
+   *
+   * `aria-modal="true"` CLAIMS the rest of the page is inert; without a trap that
+   * claim is a lie, and a keyboard user tabs out of the dialog into a table they
+   * cannot see and cannot get back from. The elements are re-read on every Tab
+   * rather than cached, because the body's contents change with the document type.
+   */
+  function trapPreviewFocus(event) {
+    const focusable = elements.previewModal.querySelectorAll(
+      'a[href], button:not([disabled]), iframe, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+
+    if (event.shiftKey && (active === first || !elements.previewModal.contains(active))) {
+      event.preventDefault();
+      last.focus();
+      return;
+    }
+    if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  // ── Preview ─────────────────────────────────────────────────────────────────
+  //
+  // Three renderers, because "preview" means something different per type and a
+  // single <iframe> for all of them would be the lazy answer: an image in a frame
+  // loses its sizing, and a text file in a frame cannot be read by the page (or by
+  // a test) without reaching across a document boundary for no reason.
+  //
+  //   image/*      <img>, straightforwardly
+  //   application/pdf  <iframe>, because the PDF viewer IS a browser feature and
+  //                    there is no way to render one otherwise. `sandbox` is left
+  //                    off deliberately — Chrome's viewer needs same-origin to
+  //                    load, and the response carries its own CSP instead.
+  //   text/*       fetched and inserted as escaped text, so the bytes are visible
+  //                to the page and a test can assert on them directly.
+
+  function previewFrameFor(document) {
+    const escape = window.CrewApi.escapeHtml;
+    const type = String(document.contentType || "");
+    const src = escape(document.previewPath);
+
+    if (type.indexOf("image/") === 0) {
+      return '<img class="crew-preview__image" src="' + src + '" alt="' + escape(document.filename) + '" data-testid="preview-image" />';
+    }
+    if (type === "application/pdf") {
+      return (
+        '<iframe class="crew-preview__frame" src="' +
+        src +
+        '" title="' +
+        escape(document.filename) +
+        '" data-testid="preview-frame"></iframe>'
+      );
+    }
+    return '<pre class="crew-preview__text" data-testid="preview-text">Loading…</pre>';
+  }
+
+  async function fillTextPreview(document) {
+    const target = window.document.querySelector('[data-testid="preview-text"]');
+    if (!target) return;
+    try {
+      const res = await fetch(document.previewPath, { credentials: "same-origin" });
+      if (!res.ok) {
+        showPreviewProblem(describeDocumentFailure(res.status, await failureBodyOf(res)));
+        refreshDocuments();
+        return;
+      }
+      // `textContent`, never innerHTML. The bytes are whatever somebody uploaded,
+      // and the whole reason text/* is previewable is that it is treated as text
+      // at every step — including this one.
+      target.textContent = await res.text();
+    } catch (error) {
+      showPreviewProblem(describeDocumentFailure(0, null));
+    }
+  }
+
+  async function openDocumentPreview(documentId) {
+    const modal = elements.previewModal;
+    const body = elements.previewBody;
+    const item = (currentFolder && currentFolder.items ? currentFolder.items : []).find(function (row) {
+      return String(row.id) === String(documentId);
+    });
+    if (!modal || !body || !item || !item.previewPath) return;
+
+    // Remembered before anything is focused, so closing can put the caret back on
+    // the Preview button that opened this — a keyboard user dropped at the top of
+    // the document has no idea what they just closed.
+    previewOpener = document.activeElement;
+
+    if (elements.previewTitle) elements.previewTitle.textContent = item.filename;
+    if (elements.previewMeta) {
+      elements.previewMeta.textContent = item.contentType + " · " + formatBytes(item.sizeBytes);
+    }
+    body.innerHTML = '<p class="crew-muted crew-preview__notice" data-testid="preview-loading">Opening…</p>';
+    modal.hidden = false;
+    modal.setAttribute("data-document-id", String(item.id));
+    if (elements.previewClose) elements.previewClose.focus();
+
+    // Ask BEFORE rendering. An <img> whose src 404s shows a broken-image glyph and
+    // says nothing; an <iframe> renders the error JSON as if it were the document.
+    // A HEAD costs one round trip and no body, and gives the dialog something true
+    // to say instead.
+    let probe;
+    try {
+      probe = await fetch(item.previewPath, { method: "HEAD", credentials: "same-origin" });
+    } catch (error) {
+      showPreviewProblem(describeDocumentFailure(0, null));
+      return;
+    }
+    if (!probe.ok) {
+      // No body on a HEAD, so the status carries the whole message here.
+      showPreviewProblem(describeDocumentFailure(probe.status, null));
+      // The row that offered this preview is out of date — say so in the table too.
+      refreshDocuments();
+      return;
+    }
+    // Still the document the dialog was opened for? A slow probe and a fast Close
+    // would otherwise paint a preview into a dialog the reader has already dismissed.
+    if (modal.hidden || modal.getAttribute("data-document-id") !== String(item.id)) return;
+
+    body.innerHTML = previewFrameFor(item);
+
+    // The backstop for a file that disappears between the probe and the render.
+    // Wired here rather than as an `onerror` attribute: attribute JS is a string
+    // the CSP-minded reader has to audit, and this is a listener.
+    const image = body.querySelector('[data-testid="preview-image"]');
+    if (image) {
+      image.addEventListener("error", function () {
+        showPreviewProblem("This image could not be loaded.");
+      });
+    }
+
+    if (String(item.contentType || "").indexOf("text/") === 0) fillTextPreview(item);
+  }
+
+  /** Replace the dialog's contents with a readable explanation. */
+  function showPreviewProblem(message) {
+    if (!elements.previewBody) return;
+    elements.previewBody.innerHTML = '<p class="crew-notice crew-notice--warning crew-preview__notice" data-testid="preview-problem"></p>';
+    // textContent, so a server message can never be markup.
+    elements.previewBody.querySelector('[data-testid="preview-problem"]').textContent = message;
+  }
+
+  function closeDocumentPreview() {
+    const modal = elements.previewModal;
+    if (!modal || modal.hidden) return;
+
+    modal.hidden = true;
+    modal.removeAttribute("data-document-id");
+    // Emptied, not just hidden: an <iframe> left in the DOM keeps the document
+    // loaded and the request alive, and a closed preview should stop holding
+    // somebody's contract open.
+    if (elements.previewBody) elements.previewBody.innerHTML = "";
+
+    if (previewOpener && typeof previewOpener.focus === "function") previewOpener.focus();
+    previewOpener = null;
+  }
+
+  async function submitDocuments() {
+    const CrewApi = window.CrewApi;
+    const input = document.getElementById("documentFiles");
+    const kind = document.getElementById("documentKind");
+    const status = document.getElementById("documentUploadStatus");
+    const submit = document.getElementById("documentUploadSubmit");
+    const chosen = input && input.files ? Array.prototype.slice.call(input.files) : [];
+
+    if (chosen.length === 0) {
+      CrewApi.setStatus(status, "error", "Choose at least one file.");
+      return;
+    }
+
+    submit.disabled = true;
+    CrewApi.setStatus(status, "info", "Uploading " + chosen.length + " file(s)…");
+
+    // The variables carry `null` at each file position; `CrewApi.upload` builds the
+    // `map` that fills them. Keeping the placeholders here rather than inside the
+    // helper is what makes the spec visible at the call site.
+    const result = await CrewApi.upload(
+      CrewApi.OPERATIONS.UPLOAD_DOCUMENTS,
+      { input: { staffId: staffId, kind: kind.value, files: chosen.map(() => null) } },
+      chosen.map((file, index) => ({ path: "variables.input.files." + index, file: file })),
+    );
+
+    submit.disabled = false;
+
+    if (!result.ok || !result.data || !result.data.uploadCrewDocuments) {
+      CrewApi.setStatus(status, "error", CrewApi.describeErrors(result) || "The upload failed.");
+      return;
+    }
+
+    const outcome = result.data.uploadCrewDocuments;
+    input.value = "";
+    renderDocuments(outcome.folder, outcome);
+    CrewApi.setStatus(
+      document.getElementById("documentUploadStatus"),
+      outcome.rejected.length ? "warning" : "success",
+      outcome.accepted.length + " filed, " + outcome.rejected.length + " refused.",
+    );
+  }
+
+  /**
+   * Re-read the folder after something went wrong with a document.
+   *
+   * Separate from `loadDocuments` only because that one is guarded to run once per
+   * page; a failure is exactly when the table is most likely to be out of date.
+   */
+  async function refreshDocuments() {
+    if (!staffId || !elements.documents) return;
+    const CrewApi = window.CrewApi;
+    const result = await CrewApi.run(CrewApi.OPERATIONS.MEMBER_DOCUMENTS, { staffId: staffId });
+    if (!result.ok || !result.data || !result.data.crewMember || !result.data.crewMember.documents) return;
+    renderDocuments(result.data.crewMember.documents, null);
+  }
+
+  /** Fetched on first visit to the tab; re-rendered in place after every upload. */
+  async function loadDocuments() {
+    if (documentsLoaded || !staffId || !elements.documents) return;
+    const CrewApi = window.CrewApi;
+    documentsLoaded = true;
+
+    elements.documents.innerHTML = '<p class="crew-muted">Loading documents…</p>';
+    const result = await CrewApi.run(CrewApi.OPERATIONS.MEMBER_DOCUMENTS, { staffId: staffId });
+
+    if (!result.ok || !result.data || !result.data.crewMember) {
+      documentsLoaded = false; // let a later visit retry
+      elements.documents.innerHTML =
+        '<p class="crew-notice crew-notice--warning">' +
+        CrewApi.escapeHtml(CrewApi.describeErrors(result) || "Documents could not be loaded.") +
+        "</p>";
+      return;
+    }
+
+    const folder = result.data.crewMember.documents;
+    if (!folder) {
+      elements.documents.innerHTML = '<p class="crew-notice">The documents pillar is not assembled in this build.</p>';
+      return;
+    }
+    renderDocuments(folder, null);
+  }
+
   async function load() {
     const CrewApi = window.CrewApi;
 
@@ -798,6 +1356,9 @@
     if (!window.CrewApi.requireSession()) return;
     staffId = window.CrewApi.staffIdFromUrl();
     wireTabs();
+    // The dialog lives in the page, not in a panel, so it is wired once here rather
+    // than every time the documents table is rebuilt.
+    wireDocumentPreview();
     if (elements.editToggle) elements.editToggle.addEventListener("click", () => toggleEditPanel());
     if (elements.editCancel) elements.editCancel.addEventListener("click", () => toggleEditPanel(false));
     if (elements.editForm) elements.editForm.addEventListener("submit", submitEdit);

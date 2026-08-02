@@ -16,6 +16,8 @@ const { runOperation, printSchemaWithHeader } = require("../services/graphql");
 const { getCrewSchema, runFirstEnableSeeds } = require("../services/crew/registry");
 const { createCrewContext } = require("../services/crew/context");
 const { CREW_ERROR_CODES } = require("../services/crew/errors");
+const { isMultipartFormData, MultipartError } = require("../services/crew/upload/multipart");
+const { readGraphQLMultipartRequest } = require("../services/crew/upload/graphql-multipart");
 const { logError } = require("../helpers/logger-api");
 
 // A document larger than this is refused before it is parsed. Cheap protection
@@ -26,6 +28,25 @@ const { logError } = require("../helpers/logger-api");
 // tripped first, the caller would get its error instead of a GraphQL-shaped one,
 // and this endpoint's contract would depend on middleware it does not own.
 const MAX_DOCUMENT_BYTES = 64 * 1024;
+
+/**
+ * The whole-request cap for an upload, and a different thing from the per-file cap
+ * the documents pillar applies.
+ *
+ * This one refuses the REQUEST, mid-stream, before anything is parsed: past it the
+ * caller is no longer filing paperwork. The pillar's per-file cap is smaller and
+ * refuses ONE FILE while accepting its siblings. Collapsing the two into a single
+ * number would lose the distinction between "you sent too much" and "that one file
+ * was too big" — and the second is the one a user can act on.
+ */
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+
+/**
+ * The header that keeps this endpoint off the CSRF-simple list once it accepts
+ * multipart. See the long note in `executeCrewOperation`.
+ */
+const UPLOAD_HEADER = "x-crew-upload";
+const UPLOAD_HEADER_VALUE = "1";
 
 /** The error-catalogue header printed above the SDL, per §15. */
 const SDL_HEADER = `Crew Office — GraphQL schema (assembled from the enabled pillars).
@@ -43,6 +64,17 @@ Every error carries extensions.code. The catalogue:
   ${CREW_ERROR_CODES.LEAVE_POLICY_MISSING.padEnd(27)} balance asked for before a policy  200 + errors, leave: null
   INTERNAL_ERROR              masked; carries a correlationId    200 + errors
 
+Uploads (multipart/form-data, the GraphQL multipart request spec) add four, and
+every one of them is refused BEFORE any GraphQL runs — so they carry no data key:
+  UNSUPPORTED_MEDIA_TYPE      not JSON and not multipart         415
+  UPLOAD_HEADER_REQUIRED      multipart without x-crew-upload    415
+  MULTIPART_MALFORMED         no boundary, or a broken part      400
+  MULTIPART_SPEC_VIOLATION    bad operations/map wiring          400
+  REQUEST_TOO_LARGE           over the whole-request byte cap    413
+
+A file that is merely UNACCEPTABLE is not an error at all: uploadCrewDocuments
+answers 200 with it listed under \`rejected\`, beside whatever it did accept.
+
 This module can hire but never fire: there is no delete mutation of any kind.`;
 
 /**
@@ -50,21 +82,62 @@ This module can hire but never fire: there is no delete mutation of any kind.`;
  */
 async function executeCrewOperation(req, res) {
   try {
+    const contentType = req.headers["content-type"] || "";
+    const multipart = isMultipartFormData(contentType);
+
     // `Content-Type: application/json` is required so this endpoint is not a
     // CSRF-simple-request target: a form post cannot reach it.
-    const contentType = req.headers["content-type"] || "";
-    if (!contentType.toLowerCase().includes("application/json")) {
+    //
+    // Uploads are the exception, and they need a replacement for the property that
+    // exception gives up. `multipart/form-data` IS a simple request type — a plain
+    // cross-origin `<form>` can send one, with the session cookie attached — so
+    // admitting it would reopen exactly the hole the JSON rule closes. The
+    // requirement below is what closes it again: a custom header cannot be set by
+    // a form, so any multipart request that carries it has been through a
+    // preflight and is same-origin or explicitly allowed.
+    if (!multipart && !contentType.toLowerCase().includes("application/json")) {
       return res.status(415).json({
         errors: [
           {
-            message: "Content-Type must be application/json.",
+            message: "Content-Type must be application/json, or multipart/form-data for an upload.",
             extensions: { code: "UNSUPPORTED_MEDIA_TYPE" },
           },
         ],
       });
     }
 
-    const body = req.body || {};
+    if (multipart && String(req.headers[UPLOAD_HEADER] || "").trim() !== UPLOAD_HEADER_VALUE) {
+      return res.status(415).json({
+        errors: [
+          {
+            message: `A multipart upload must carry the ${UPLOAD_HEADER}: ${UPLOAD_HEADER_VALUE} header.`,
+            extensions: { code: "UPLOAD_HEADER_REQUIRED" },
+          },
+        ],
+      });
+    }
+
+    let body = req.body || {};
+    if (multipart) {
+      try {
+        // Note what this replaces: `express.json()` never touched this body, so the
+        // request stream is still intact and the parser reads it here rather than
+        // in a global middleware. That is the isolation the graph-scoped parser
+        // buys — no other route's body handling changes because this one uploads.
+        body = await readGraphQLMultipartRequest(req, {
+          maxTotalBytes: MAX_UPLOAD_BYTES,
+          maxFieldBytes: MAX_DOCUMENT_BYTES,
+        });
+      } catch (error) {
+        if (error instanceof MultipartError) {
+          return res.status(error.status).json({
+            errors: [{ message: error.message, extensions: { code: error.code } }],
+          });
+        }
+        throw error;
+      }
+    }
+
     const { query, variables, operationName } = body;
 
     if (typeof query === "string" && Buffer.byteLength(query, "utf8") > MAX_DOCUMENT_BYTES) {
@@ -140,4 +213,12 @@ async function getCrewSdl(req, res) {
   }
 }
 
-module.exports = { executeCrewOperation, getCrewSdl, MAX_DOCUMENT_BYTES, SDL_HEADER };
+module.exports = {
+  executeCrewOperation,
+  getCrewSdl,
+  MAX_DOCUMENT_BYTES,
+  MAX_UPLOAD_BYTES,
+  UPLOAD_HEADER,
+  UPLOAD_HEADER_VALUE,
+  SDL_HEADER,
+};

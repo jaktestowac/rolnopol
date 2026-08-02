@@ -116,12 +116,17 @@ describe("the tab pillars match the pillars the server can actually assemble", (
   });
 
   it("has a tab for every assembled pillar that owns a page", () => {
-    // profiles owns the roster (which has no `pillar`, because it is never absent)
-    // and training lives as a tab on the detail page rather than a page of its own.
+    // Three exemptions, and they are the same exemption three times: a pillar that
+    // is only ever read PER MEMBER lives as a tab on the detail page instead of a
+    // page of its own. Profiles owns the roster (whose tab has no `pillar`, because
+    // it is never absent); training is one person's certificates; documents is one
+    // person's personnel file. A module-wide "all documents" page would be a list of
+    // files belonging to nobody in particular — which is not a question anyone asks.
+    const MEMBER_SCOPED = ["profiles", "training", "documents"];
     const assembled = assembleCrewSchema().pillars.map((pillar) => pillar.name);
     const tabbed = CrewApi.MODULE_TABS.map((tab) => tab.pillar).filter(Boolean);
     for (const pillar of assembled) {
-      if (["profiles", "training"].includes(pillar)) continue;
+      if (MEMBER_SCOPED.includes(pillar)) continue;
       expect(tabbed).toContain(pillar);
     }
   });

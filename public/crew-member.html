@@ -35,6 +35,7 @@
         <button class="crew-tab" data-crew-tab="leave" role="tab" aria-selected="false" tabindex="-1" type="button">Holidays</button>
         <button class="crew-tab" data-crew-tab="training" role="tab" aria-selected="false" tabindex="-1" type="button">Training</button>
         <button class="crew-tab" data-crew-tab="tools" role="tab" aria-selected="false" tabindex="-1" type="button">Tools</button>
+        <button class="crew-tab" data-crew-tab="documents" role="tab" aria-selected="false" tabindex="-1" type="button">Documents</button>
       </div>
 
       <section class="crew-panel" data-crew-panel="overview" role="tabpanel">
@@ -100,6 +101,47 @@
       <section class="crew-panel" data-crew-panel="tools" role="tabpanel" hidden>
         <p class="crew-notice">Issued tools and overdue returns arrive with the tools pillar (Phase 6).</p>
       </section>
+
+      <!--
+        The personnel file (#100). The form posts a real multipart/form-data body
+        through the GraphQL multipart request spec — `CrewApi.upload` builds it —
+        so `setInputFiles` on `#documentFiles` is all an automated test needs to
+        drive it. The results list below reports BOTH halves of a partial success.
+      -->
+      <section id="crewMemberDocuments" class="crew-panel" data-crew-panel="documents" role="tabpanel" hidden></section>
+
+      <!--
+        Document preview, as a dialog.
+
+        Declared here rather than injected by the controller, and OUTSIDE the panel
+        it is opened from, for one concrete reason: the documents panel rewrites its
+        own innerHTML after every upload, which would tear an open preview out of the
+        DOM mid-read. A dialog that outlives its list is also the honest structure —
+        it is not part of the table, it is over it.
+      -->
+      <div
+        id="documentPreviewModal"
+        class="modal crew-modal crew-no-print"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="documentPreviewTitle"
+        data-testid="document-preview"
+        hidden
+      >
+        <div class="modal-content modal-content-wider">
+          <div class="modal-header">
+            <h3 id="documentPreviewTitle">Document</h3>
+            <p id="documentPreviewMeta" class="crew-muted"></p>
+            <!-- Labelled, not icon-only: an icon with an aria-label is invisible to
+                 anyone who has not loaded the icon font, which is the failure this
+                 module's own accessibility sweep looks for. -->
+            <button id="documentPreviewClose" class="crew-btn crew-btn--small" type="button" data-testid="preview-close">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i> Close
+            </button>
+          </div>
+          <div class="modal-body" id="documentPreviewBody"></div>
+        </div>
+      </div>
     </main>
 
     <div id="footer-component"></div>

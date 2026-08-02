@@ -174,6 +174,221 @@ describe("Crew Office role assignment (Phase 3B)", () => {
     });
   });
 
+  describe("the personnel file (#100)", () => {
+    const html = readPage("crew-member.html");
+    const controller = readScript("crew-member.js");
+    const api = readScript("crew-api.js");
+    /** Source with `//` comments removed, for assertions that must not read prose. */
+    const codeOnly = (source) =>
+      source
+        .split(String.fromCharCode(10))
+        .filter((line) => !line.trim().startsWith("//"))
+        .join(" ");
+
+    it("gives the member page a Documents tab and panel", () => {
+      expect(html).toContain('data-crew-tab="documents"');
+      expect(html).toContain('data-crew-panel="documents"');
+      expect(html).toContain('id="crewMemberDocuments"');
+    });
+
+    it("uploads through CrewApi.upload, never through the JSON path", () => {
+      // `CrewApi.run` posts application/json, which the Upload scalar refuses by
+      // design. A page that reached for it would fail only at runtime, and only
+      // once somebody actually picked a file.
+      const submit = controller.slice(
+        controller.indexOf("async function submitDocuments"),
+        controller.indexOf("async function refreshDocuments"),
+      );
+      expect(submit).toContain("CrewApi.upload(");
+      expect(submit).not.toContain("CrewApi.run(");
+    });
+
+    it("sends the spec's null placeholders and dotted variable paths", () => {
+      const submit = controller.slice(
+        controller.indexOf("async function submitDocuments"),
+        controller.indexOf("async function refreshDocuments"),
+      );
+      expect(submit).toContain("files: chosen.map(() => null)");
+      expect(submit).toContain('path: "variables.input.files."');
+    });
+
+    it("lets the browser set the multipart boundary, and carries the anti-CSRF header", () => {
+      const upload = api.slice(api.indexOf("async function upload("), api.indexOf("/** Fetch the SDL"));
+      expect(upload).toContain('"x-crew-upload": "1"');
+      expect(upload).toContain('form.append("operations"');
+      expect(upload).toContain('form.append("map"');
+      // Setting Content-Type by hand omits the boundary — the classic way to break
+      // a FormData upload, and worth pinning so nobody "tidies" it back in.
+      expect(upload).not.toMatch(/"Content-Type":\s*"multipart/);
+    });
+
+    it("shows the refused files as well as the accepted ones", () => {
+      // Partial success is the outcome this feature produces most often; a panel
+      // that rendered only `accepted` would silently lose files for the user.
+      expect(controller).toContain('data-testid="document-rejections"');
+      expect(controller).toContain("outcome.rejected");
+    });
+
+    it("offers actions only for a document that is AVAILABLE, and explains the ones that are not", () => {
+      const row = controller.slice(controller.indexOf("function renderDocumentRow"), controller.indexOf("function renderDocuments"));
+      expect(row).toContain('document.status === "AVAILABLE"');
+      // Every non-available state says which one it is, rather than showing a
+      // control that can only fail.
+      expect(row).toContain("scanning…");
+      expect(row).toContain("contents missing");
+    });
+
+    it("downloads through fetch, not a plain link, so a failure can be reported", () => {
+      // An <a download> hands the response to the browser: a 500 becomes a saved
+      // blob of JSON or a page of raw error text, and the app never finds out.
+      const row = controller.slice(controller.indexOf("function renderDocumentRow"), controller.indexOf("function renderDocuments"));
+      expect(row).toContain("data-download-document");
+      // Comments stripped first: the function's own comment says "not an <a download>"
+      // to explain the choice, and a naive match would read that as the thing itself.
+      expect(codeOnly(row)).not.toMatch(/<a[^>]*download/);
+
+      const download = controller.slice(
+        controller.indexOf("async function downloadDocument"),
+        controller.indexOf("function wireDocumentPreview"),
+      );
+      expect(download).toContain("await fetch(item.downloadPath");
+      expect(download).toContain("reportDocumentFailure");
+      // A blob URL that is never revoked keeps the whole file alive for the tab.
+      expect(download).toContain("URL.revokeObjectURL");
+    });
+
+    it("asks before it renders a preview, instead of letting an element fail silently", () => {
+      const open = controller.slice(
+        controller.indexOf("async function openDocumentPreview"),
+        controller.indexOf("function showPreviewProblem"),
+      );
+      // A HEAD costs a round trip and no body; an <img> that 404s shows a broken
+      // glyph and an <iframe> renders the error JSON as though it were the document.
+      expect(open).toContain('method: "HEAD"');
+      expect(open).toContain("showPreviewProblem(describeDocumentFailure(probe.status, null))");
+      // A slow probe and a fast Close must not paint into a dismissed dialog.
+      expect(open).toContain("modal.hidden ||");
+    });
+
+    it("turns every failure into one sentence, and refreshes the row that produced it", () => {
+      expect(controller).toContain("DOCUMENT_FAILURE_TEXT");
+      // The server's own sentence wins over the fallback map — it is closer to what
+      // actually happened.
+      const describe = controller.slice(
+        controller.indexOf("function describeDocumentFailure"),
+        controller.indexOf("async function failureBodyOf"),
+      );
+      expect(describe).toContain("body.error");
+      // Refresh BEFORE the message: the refresh re-renders the panel the status
+      // line lives in, so writing first would wipe it.
+      const report = controller.slice(
+        controller.indexOf("async function reportDocumentFailure"),
+        controller.indexOf("function renderDocumentRow"),
+      );
+      expect(report.indexOf("await refreshDocuments()")).toBeLessThan(report.indexOf("setStatus"));
+    });
+
+    it("exposes the file input and the rows to automation", () => {
+      expect(controller).toContain('data-testid="document-files"');
+      expect(controller).toContain('data-testid="document-row"');
+      expect(controller).toContain('type="file" multiple');
+    });
+
+    it("offers Preview only when the SERVER says the type may be rendered", () => {
+      // Not "if it looks like an image": the allow-list lives on the server, and a
+      // page carrying its own copy is a copy that drifts — in the direction of
+      // rendering something the server would have refused to render.
+      const row = controller.slice(controller.indexOf("function renderDocumentRow"), controller.indexOf("async function fillTextPreview"));
+      expect(row).toContain("document.previewable");
+      expect(row).toContain('data-testid="document-preview"');
+      expect(row).not.toMatch(/contentType.*(indexOf|startsWith).*image/);
+    });
+
+    it("renders each previewable type with the right element", () => {
+      const renderer = controller.slice(
+        controller.indexOf("function previewFrameFor"),
+        controller.indexOf("async function fillTextPreview"),
+      );
+      expect(renderer).toContain('data-testid="preview-image"');
+      expect(renderer).toContain('data-testid="preview-frame"');
+      expect(renderer).toContain('data-testid="preview-text"');
+      expect(renderer).toContain("previewPath");
+    });
+
+    it("puts previewed text in as TEXT, never as markup", () => {
+      // The bytes are whatever somebody uploaded. text/* is on the preview list
+      // precisely because it is treated as text at every step, and innerHTML here
+      // would undo that at the last one.
+      const fill = controller.slice(
+        controller.indexOf("async function fillTextPreview"),
+        controller.indexOf("function openDocumentPreview"),
+      );
+      expect(fill).toContain("target.textContent =");
+      // An ASSIGNMENT, not the word — the function's own comment names innerHTML
+      // to explain why it does not use one.
+      expect(fill).not.toMatch(/innerHTML\s*=/);
+    });
+
+    it("empties the preview on close, so a closed frame stops holding the document", () => {
+      const close = controller.slice(
+        controller.indexOf("function closeDocumentPreview"),
+        controller.indexOf("async function submitDocuments"),
+      );
+      expect(close).toContain("modal.hidden = true");
+      expect(close).toContain('elements.previewBody.innerHTML = ""');
+    });
+
+    it("is a dialog the page owns, not markup the table re-renders", () => {
+      // Declared in the page and OUTSIDE the documents panel on purpose: that panel
+      // rewrites its own innerHTML after every upload, which would tear an open
+      // preview out of the DOM mid-read.
+      expect(html).toContain('id="documentPreviewModal"');
+      expect(html).toContain('role="dialog"');
+      expect(html).toContain('aria-modal="true"');
+      expect(html).toContain('aria-labelledby="documentPreviewTitle"');
+      const panel = html.slice(html.indexOf('id="crewMemberDocuments"'), html.indexOf('id="documentPreviewModal"'));
+      expect(panel).not.toContain("documentPreviewBody");
+      expect(controller).not.toContain('<section id="documentPreview"');
+    });
+
+    it("gives the dialog back the keyboard: focus in, focus out, Escape, and a trap", () => {
+      // `aria-modal="true"` CLAIMS the rest of the page is inert. Without these four
+      // that claim is a lie, and a keyboard user tabs out of the dialog into a table
+      // they cannot see and cannot get back from.
+      const open = controller.slice(
+        controller.indexOf("function openDocumentPreview"),
+        controller.indexOf("function closeDocumentPreview"),
+      );
+      expect(open).toContain("previewOpener = document.activeElement");
+      expect(open).toContain("elements.previewClose.focus()");
+
+      const closing = controller.slice(
+        controller.indexOf("function closeDocumentPreview"),
+        controller.indexOf("async function submitDocuments"),
+      );
+      expect(closing).toContain("previewOpener.focus()");
+
+      expect(controller).toContain("function trapPreviewFocus");
+      expect(controller).toMatch(/event\.key === "Escape"/);
+      expect(controller).toMatch(/event\.key === "Tab"/);
+    });
+
+    it("closes on a backdrop click but not on a click inside the dialog", () => {
+      const wire = controller.slice(controller.indexOf("function wireDocumentPreview"), controller.indexOf("function isPreviewOpen"));
+      // `event.target === modal` and not `.contains(...)`: the second would close the
+      // dialog the moment somebody clicked the document they came to read.
+      expect(wire).toContain("event.target === modal");
+    });
+
+    it("labels the close control with text, not an icon alone", () => {
+      // The module's own accessibility sweep forbids an icon-only button, and an
+      // icon with an aria-label is invisible to anyone whose icon font failed.
+      const dialog = html.slice(html.indexOf('id="documentPreviewModal"'), html.indexOf("</main>"));
+      const closeButton = dialog.slice(dialog.indexOf('id="documentPreviewClose"'), dialog.indexOf("</button>"));
+      expect(closeButton).toContain("Close");
+    });
+  });
+
   describe("changing a role", () => {
     const html = readPage("crew-member.html");
     const controller = readScript("crew-member.js");

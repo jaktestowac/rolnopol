@@ -266,6 +266,71 @@
   box-shadow: var(--shadow);
 }
 
+/* Document preview (#100), shown in a dialog over the table.
+ *
+ * The furniture (.modal / .modal-content / .modal-header / .modal-body) is the
+ * app's own, driven the crew way with the `hidden` attribute — see the note by
+ * `.crew-modal` further down for why both display directions have to be stated.
+ * Only what is specific to showing a DOCUMENT lives here. */
+#documentPreviewModal .modal-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* The filename can be long; the meta line and the close button keep their place. */
+#documentPreviewModal #documentPreviewTitle {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#documentPreviewModal #documentPreviewMeta {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+#documentPreviewModal #documentPreviewClose {
+  margin-left: auto;
+}
+
+/* The body holds exactly one renderer, sized so the dialog never outgrows the
+   viewport whatever the document is. */
+#documentPreviewModal .modal-body {
+  padding: 0;
+}
+
+.crew-page .crew-preview__frame {
+  display: block;
+  width: 100%;
+  height: min(70vh, 640px);
+  border: 0;
+}
+
+.crew-page .crew-preview__image {
+  display: block;
+  max-width: 100%;
+  /* Contained rather than stretched: a scan of a contract is portrait and a photo
+     of a licence is landscape, and neither should be distorted to fit. */
+  max-height: min(70vh, 640px);
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.crew-page .crew-preview__text {
+  margin: 0;
+  padding: 0.9rem;
+  max-height: min(70vh, 640px);
+  overflow: auto;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  /* A CSV row is long; wrap it rather than making the whole pane scroll sideways. */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .crew-page .crew-table {
   width: 100%;
   border-collapse: collapse;

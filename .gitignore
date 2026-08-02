@@ -21,6 +21,11 @@ feature-flags.ini
 # Database files (optional - uncomment if you don't want to track data)
 # data/*.json
 
+# Uploaded personnel-file blobs (Crew Office documents pillar). The metadata lives
+# in data/crew-documents.json and is tracked like every other store; the bytes are
+# whatever somebody uploaded and have no business in the repository.
+data/crew-documents/
+
 # Logs
 logs/
 *.log

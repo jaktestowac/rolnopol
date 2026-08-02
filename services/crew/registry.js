@@ -145,6 +145,7 @@ function loadBuiltInPillars() {
     { name: "leave", path: "./pillars/leave" },
     { name: "training", path: "./pillars/training" },
     { name: "tools", path: "./pillars/tools" },
+    { name: "documents", path: "./pillars/documents" },
   ];
 
   const pillars = [];

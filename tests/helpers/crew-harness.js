@@ -21,7 +21,16 @@ const GRAPH = "/api/graphql/crew";
 const DATA_DIR = path.join(__dirname, "..", "..", "data");
 // Every store file the module could ever own, for the "flag off ⇒ no footprint"
 // assertion. Reset shapes come from the pillar manifests instead — see below.
-const CREW_STORE_FILES = ["crew-profiles.json", "crew-work.json", "crew-leave.json", "crew-training.json", "crew-tools.json"];
+const CREW_STORE_FILES = [
+  "crew-profiles.json",
+  "crew-work.json",
+  "crew-leave.json",
+  "crew-training.json",
+  "crew-tools.json",
+  "crew-documents.json",
+];
+/** The documents pillar is the only one with a footprint that is not a JSON file. */
+const CREW_BLOB_DIR = "crew-documents";
 
 async function getFlags() {
   const res = await request(app).get("/api/v1/feature-flags").expect(200);
@@ -81,6 +90,11 @@ async function resetCrewStores() {
     }
   }
 
+  // Documents keep their bytes outside the JSON store, so emptying the store alone
+  // would leave a growing pile of blobs behind every suite that uploads.
+  const blobDir = path.join(DATA_DIR, CREW_BLOB_DIR);
+  if (fs.existsSync(blobDir)) fs.rmSync(blobDir, { recursive: true, force: true });
+
   // A reset store must be seedable again, or the next suite starts empty by
   // accident rather than by choice.
   resetSeedState();
@@ -105,6 +119,85 @@ function graph({ query, variables, operationName, token }) {
   if (token) req.set("Cookie", `rolnopolToken=${token}`);
   return req.send({ query, variables, operationName });
 }
+
+/**
+ * POST one GraphQL operation as a multipart upload, per the GraphQL multipart
+ * request specification.
+ *
+ * The body is assembled by hand rather than with supertest's `.attach()`, and that
+ * is the point: `.attach()` would build a plain form post, and the thing under test
+ * is the `operations` + `map` + parts framing itself. A test that let a helper
+ * invent the framing would pass against a server that accepted the wrong one.
+ *
+ * @param {object} options
+ * @param {string} options.query
+ * @param {object} options.variables - with `null` wherever a file goes
+ * @param {object} options.map - { partName: ["variables.path"] }, spec-shaped
+ * @param {Array<{part,filename,contentType,body}>} options.files
+ * @param {boolean} [options.uploadHeader=true] - send x-crew-upload (the CSRF guard)
+ */
+function graphUpload({ query, variables, operationName, map, files = [], token, uploadHeader = true, boundary = "----crewtest" }) {
+  const chunks = [];
+  const push = (name, value, { filename, contentType } = {}) => {
+    // A filename with a quote or a non-ASCII character cannot go in the quoted
+    // form — it would end the string early or arrive mojibaked. Browsers send
+    // `filename*` (RFC 5987) for exactly those, so the harness does too: a test
+    // that only ever sent plain ASCII would never exercise the parser's real path.
+    const needsExtended = filename !== undefined && /[^\x20-\x7e]|["\\]/.test(filename);
+    const encoded = needsExtended
+      ? `filename*=UTF-8''${encodeURIComponent(filename).replace(/['()!*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)}`
+      : filename === undefined
+        ? null
+        : `filename="${filename}"`;
+    const disposition = encoded === null ? `name="${name}"` : `name="${name}"; ${encoded}`;
+    const headers = [`Content-Disposition: form-data; ${disposition}`];
+    if (contentType) headers.push(`Content-Type: ${contentType}`);
+    chunks.push(Buffer.from(`--${boundary}\r\n${headers.join("\r\n")}\r\n\r\n`, "utf8"));
+    chunks.push(Buffer.isBuffer(value) ? value : Buffer.from(String(value), "utf8"));
+    chunks.push(Buffer.from("\r\n", "utf8"));
+  };
+
+  push("operations", JSON.stringify({ query, variables, operationName }));
+  push("map", JSON.stringify(map || {}));
+  for (const file of files) {
+    push(file.part, file.body, { filename: file.filename, contentType: file.contentType });
+  }
+  chunks.push(Buffer.from(`--${boundary}--\r\n`, "utf8"));
+
+  const req = request(app).post(GRAPH).set("Content-Type", `multipart/form-data; boundary=${boundary}`);
+  if (uploadHeader) req.set("x-crew-upload", "1");
+  if (token) req.set("Cookie", `rolnopolToken=${token}`);
+  return req.send(Buffer.concat(chunks));
+}
+
+/**
+ * The common case: attach N files to one member and return the mutation payload.
+ *
+ * Builds the `map` from the file list so a test never has to keep two lists in
+ * step — a mismatch there is a test bug that looks like a server bug.
+ */
+async function uploadDocuments({ token, staffId, kind, files, selection = UPLOAD_SELECTION }) {
+  const map = {};
+  files.forEach((_file, index) => {
+    map[String(index)] = [`variables.input.files.${index}`];
+  });
+
+  const res = await graphUpload({
+    query: `mutation Upload($input: UploadCrewDocumentsInput!) { uploadCrewDocuments(input: $input) ${selection} }`,
+    variables: { input: { staffId: String(staffId), ...(kind ? { kind } : {}), files: files.map(() => null) } },
+    map,
+    files: files.map((file, index) => ({ part: String(index), ...file })),
+    token,
+  });
+  return res;
+}
+
+const UPLOAD_SELECTION = `{
+  staffId
+  accepted { id filename contentType sizeBytes checksum status kind scanCompletesAt downloadPath previewable previewPath }
+  rejected { filename code reason sizeBytes }
+  folder { totalCount totalBytes items { id filename status previewable previewPath } }
+}`;
 
 /** Assert a 200 with no `errors`, and return `data`. Fails loudly with the errors. */
 async function graphData(options) {
@@ -164,5 +257,9 @@ module.exports = {
   crewStoreFiles,
   graph,
   graphData,
+  graphUpload,
+  uploadDocuments,
+  UPLOAD_SELECTION,
+  CREW_BLOB_DIR,
   registerAndLogin,
 };

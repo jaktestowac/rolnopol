@@ -358,6 +358,43 @@
       }
     `,
 
+    /** One member's personnel file, for the detail page's Documents panel (#100). */
+    MEMBER_DOCUMENTS: `
+      query MemberDocuments($staffId: ID!) {
+        crewMember(staffId: $staffId) {
+          staffId
+          documents {
+            totalCount
+            totalBytes
+            items { id filename kind contentType sizeBytes checksum status scanDetail uploadedAt scanCompletesAt downloadPath previewable previewPath }
+          }
+        }
+      }
+    `,
+
+    /**
+     * Attach files to a member.
+     *
+     * Runs through `CrewApi.upload`, never `CrewApi.run` — `files` holds `null`
+     * placeholders that the multipart `map` fills, and an `application/json` POST
+     * of this document is refused by the Upload scalar. That is deliberate: the
+     * only way to send a file here is the spec's way.
+     */
+    UPLOAD_DOCUMENTS: `
+      mutation UploadCrewDocuments($input: UploadCrewDocumentsInput!) {
+        uploadCrewDocuments(input: $input) {
+          staffId
+          accepted { id filename kind contentType sizeBytes status scanCompletesAt downloadPath previewable previewPath }
+          rejected { filename code reason sizeBytes }
+          folder {
+            totalCount
+            totalBytes
+            items { id filename kind contentType sizeBytes checksum status scanDetail uploadedAt scanCompletesAt downloadPath previewable previewPath }
+          }
+        }
+      }
+    `,
+
     /**
      * One member's tools, for the detail page's Tools tab (§8.5).
      *
@@ -1105,6 +1142,67 @@
     };
   }
 
+  /**
+   * Run one operation as a multipart upload, per the GraphQL multipart request
+   * specification.
+   *
+   * Built by hand with `FormData` rather than posting JSON, because the spec is
+   * the wire format: an `operations` part holding the mutation with `null` where
+   * each file goes, a `map` part wiring part names to those positions, and one
+   * part per file. `fetch` sets the boundary itself — setting `Content-Type` here
+   * would omit it and the server would have nothing to split on, which is the
+   * single most common way this call is got wrong.
+   *
+   * `x-crew-upload` is the endpoint's anti-CSRF requirement. multipart/form-data
+   * is a "simple" request type that a cross-origin form can send with the session
+   * cookie attached, so the server refuses one without this header — a header a
+   * form cannot set.
+   *
+   * @param {string} operation - the mutation document
+   * @param {object} variables - with `null` at each file position
+   * @param {Array<{path: string, file: File}>} files - dotted variable paths
+   */
+  async function upload(operation, variables, files) {
+    const form = new FormData();
+    const map = {};
+    (files || []).forEach((entry, index) => {
+      map[String(index)] = [entry.path];
+    });
+
+    form.append("operations", JSON.stringify({ query: operation, variables: variables || {} }));
+    form.append("map", JSON.stringify(map));
+    (files || []).forEach((entry, index) => form.append(String(index), entry.file, entry.file.name));
+
+    let res;
+    try {
+      res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "x-crew-upload": "1" },
+        credentials: "same-origin",
+        body: form,
+      });
+    } catch (error) {
+      return { ok: false, status: 0, errors: [{ message: "Crew Office could not be reached.", extensions: { code: "NETWORK" } }] };
+    }
+
+    if (res.status === 401 || res.status === 403) {
+      redirectToLogin();
+      return { ok: false, status: res.status, errors: [{ message: "Session expired.", extensions: { code: "UNAUTHENTICATED" } }] };
+    }
+    if (res.status === 404) {
+      return { ok: false, status: 404, errors: [{ message: "Crew Office is not enabled.", extensions: { code: "NOT_ENABLED" } }] };
+    }
+
+    let body;
+    try {
+      body = await res.json();
+    } catch (error) {
+      return { ok: false, status: res.status, errors: [{ message: "Crew Office returned an unreadable response.", extensions: {} }] };
+    }
+
+    return { ok: res.ok && !body.errors, status: res.status, data: body.data, errors: body.errors, extensions: body.extensions };
+  }
+
   /** Fetch the SDL of the schema as currently assembled. */
   async function fetchSdl() {
     const res = await fetch(ENDPOINT, { credentials: "same-origin" });
@@ -1758,6 +1856,7 @@
     ROLE_LABELS,
     STATUS_LABELS,
     run,
+    upload,
     fetchSdl,
     requireSession,
     hasSessionHint,
