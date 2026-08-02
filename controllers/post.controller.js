@@ -70,20 +70,25 @@ class PostController {
 
       const currentUserId = this._extractUserId(req);
       const search = req.query.search || req.query.q;
-      const limit = req.query.limit;
-      const offset = req.query.offset;
       const sort = req.query.sort;
       const period = req.query.period;
-      const posts = await postService.searchPosts({
+      // `data` stays exactly what it was — the array of posts. The window the caller
+      // got, and how to ask for the next one, ride in `meta.paging`, so a client that
+      // never heard of paging reads the same response it always did.
+      const { items, meta } = await postService.searchPostsPage({
         search,
         currentUserId,
-        limit,
-        offset,
+        limit: req.query.limit,
+        offset: req.query.offset,
+        page: req.query.page,
+        size: req.query.size,
+        paging: req.query.paging,
+        cursor: req.query.cursor,
         sort,
         period,
         includeEngagement: featureState.engagementEnabled,
       });
-      return res.status(200).json(formatResponseBody({ data: posts }));
+      return res.status(200).json(formatResponseBody({ data: items, meta: { paging: meta } }));
     } catch (error) {
       logError("Error searching posts:", error);
       return sendError(req, res, 500, "Failed to search posts");

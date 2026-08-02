@@ -5,6 +5,12 @@ const farmlogEngagementService = require("./farmlog-engagement.service");
 const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
 
+// Feed window bounds. The default only applies once a caller asks for a window at
+// all — an unparameterised search still answers the whole result set, as it always
+// has. The cap is here because a page size is caller-supplied input.
+const DEFAULT_FEED_PAGE_SIZE = 10;
+const MAX_FEED_PAGE_SIZE = 100;
+
 class PostService {
   constructor() {
     this.postsDb = dbManager.getPostsDatabase();
@@ -29,18 +35,32 @@ class PostService {
     return ["newest", "oldest", "title-asc", "title-desc", "most-liked"].includes(normalized) ? normalized : "newest";
   }
 
+  // Ids are numeric today but the store does not promise it, so compare as numbers
+  // when both sides are numeric and fall back to text otherwise.
+  _compareIds(a, b) {
+    const na = Number(a);
+    const nb = Number(b);
+    if (Number.isFinite(na) && Number.isFinite(nb)) return na === nb ? 0 : na < nb ? -1 : 1;
+    return String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0;
+  }
+
   _sortRawPosts(posts, sort) {
     const sorted = [...posts];
     const normalizedSort = this._normalizeSort(sort);
+    const at = (post) => new Date(post.createdAt).getTime();
 
+    // The id tie-break is not cosmetic. Two posts published in the same millisecond
+    // used to fall back to store order, which meant the same query could hand back
+    // the same page in a different order — and a cursor cannot name a place in a
+    // list that has no total order. Newest-first breaks ties by higher id.
     if (normalizedSort === "oldest") {
-      sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      sorted.sort((a, b) => at(a) - at(b) || this._compareIds(a.id, b.id));
     } else if (normalizedSort === "title-asc") {
-      sorted.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+      sorted.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")) || this._compareIds(a.id, b.id));
     } else if (normalizedSort === "title-desc") {
-      sorted.sort((a, b) => String(b.title || "").localeCompare(String(a.title || "")));
+      sorted.sort((a, b) => String(b.title || "").localeCompare(String(a.title || "")) || -this._compareIds(a.id, b.id));
     } else {
-      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      sorted.sort((a, b) => at(b) - at(a) || -this._compareIds(a.id, b.id));
     }
 
     return sorted;
@@ -193,13 +213,83 @@ class PostService {
     return this._enrichPosts(paginatedResults, currentUserId, options);
   }
 
-  async searchPosts({ search, currentUserId = null, limit, offset, sort = "newest", period = "all", includeEngagement = false } = {}) {
+  /**
+   * A post's place in a sorted feed, as a value rather than a number of rows.
+   *
+   * This is the whole difference between the two paging modes below: an offset says
+   * "skip 20 rows" and means something different every time the list changes above
+   * it, while a cursor says "resume after THIS post" and keeps meaning that.
+   */
+  _postCursor(post) {
+    return `${new Date(post.createdAt).getTime()}_${post.id}`;
+  }
+
+  /**
+   * Where a cursor points in the list as it is sorted RIGHT NOW.
+   *
+   * The preferred path is exact: find the post the cursor names, resume after it.
+   * When that post is gone — deleted, edited out of the query, or (under a moving
+   * sort key like most-liked) shuffled elsewhere — a time-ordered feed can still
+   * resolve the cursor as a position, because the key it encodes IS the sort key.
+   * No other sort can, and saying so beats silently restarting at the top.
+   */
+  _locateCursor(sorted, cursor, normalizedSort) {
+    if (!cursor) return { start: 0 };
+
+    const exact = sorted.findIndex((post) => this._postCursor(post) === cursor);
+    if (exact >= 0) return { start: exact + 1 };
+
+    const [rawMs, rawId] = String(cursor).split("_");
+    const ms = Number(rawMs);
+    const timeOrdered = normalizedSort === "newest" || normalizedSort === "oldest";
+    if (!Number.isFinite(ms) || !timeOrdered) return { start: sorted.length, lost: true };
+
+    const isAfterCursor = (post) => {
+      const postMs = new Date(post.createdAt).getTime();
+      const idDelta = this._compareIds(post.id, rawId);
+      if (normalizedSort === "oldest") return postMs !== ms ? postMs > ms : idDelta > 0;
+      return postMs !== ms ? postMs < ms : idDelta < 0;
+    };
+
+    const index = sorted.findIndex(isAfterCursor);
+    return { start: index < 0 ? sorted.length : index };
+  }
+
+  /**
+   * One window of the public post feed, plus the metadata a scrolling client needs.
+   *
+   * Two paging modes, deliberately, over identical data:
+   *
+   *   offset (default)  `?page=&size=`, or the older `?limit=&offset=`. Counts rows
+   *                     from the top. Publish a post while somebody is paging and
+   *                     every row shifts down one, so their next page REPEATS a row;
+   *                     delete one and their next page SKIPS one. That is not a bug
+   *                     in this implementation — it is what offset paging over a
+   *                     live list does, and this feed exists to show it.
+   *   cursor            `?paging=cursor&cursor=<nextCursor>`. Resumes after a named
+   *                     post, so inserts above the window cannot duplicate or skip.
+   *
+   * `unstableSort` warns that a cursor still cannot save `most-liked`: there the
+   * sort key itself moves as likes arrive, so the place a cursor names moves with
+   * it. Cursors fix shifting *contents*, never a shifting *order*.
+   */
+  async searchPostsPage({
+    search,
+    currentUserId = null,
+    limit,
+    offset,
+    page,
+    size,
+    paging,
+    cursor,
+    sort = "newest",
+    period = "all",
+    includeEngagement = false,
+  } = {}) {
     const allBlogs = await dbManager.getBlogsDatabase().getAll();
     const publicBlogIds = new Set(allBlogs.filter((blog) => blog.visibility === "public" && blog.deletedAt == null).map((blog) => blog.id));
 
     const query = typeof search === "string" ? search.trim().toLowerCase() : "";
-    const normalizedLimit = Number.isFinite(Number(limit)) && Number(limit) > 0 ? Number(limit) : null;
-    const normalizedOffset = Number.isFinite(Number(offset)) && Number(offset) >= 0 ? Number(offset) : 0;
     const normalizedSort = this._normalizeSort(sort);
     const posts = await this.postsDb.getAll();
 
@@ -214,22 +304,63 @@ class PostService {
       return titleMatches || contentMatches;
     });
 
+    // most-liked has to rank enriched rows, so that branch sorts the whole set and
+    // slices after; every other sort still enriches only the window it returns.
+    let sorted;
+    let alreadyEnriched = false;
     if (normalizedSort === "most-liked" && includeEngagement === true) {
-      const enrichedResults = await this._enrichPosts(results, currentUserId, { includeEngagement, period });
-      const sortedResults = this._sortEnrichedPosts(enrichedResults, normalizedSort);
-      return normalizedLimit === null
-        ? sortedResults.slice(normalizedOffset)
-        : sortedResults.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+      sorted = this._sortEnrichedPosts(await this._enrichPosts(results, currentUserId, { includeEngagement, period }), normalizedSort);
+      alreadyEnriched = true;
+    } else {
+      sorted = this._sortRawPosts(results, normalizedSort);
     }
 
-    const sortedResults = this._sortRawPosts(results, normalizedSort);
+    const total = sorted.length;
+    const mode = String(paging || "").toLowerCase() === "cursor" ? "cursor" : "offset";
+    const meta = { mode, total, sort: normalizedSort, unstableSort: normalizedSort === "most-liked" };
 
-    const paginatedResults =
-      normalizedLimit === null
-        ? sortedResults.slice(normalizedOffset)
-        : sortedResults.slice(normalizedOffset, normalizedOffset + normalizedLimit);
+    let start = 0;
+    let windowSize = null; // null = no window asked for → answer everything, as before
 
-    return this._enrichPosts(paginatedResults, currentUserId, { includeEngagement, period });
+    if (mode === "cursor") {
+      windowSize = this._normalizePageSize(size ?? limit) ?? DEFAULT_FEED_PAGE_SIZE;
+      const located = this._locateCursor(sorted, cursor, normalizedSort);
+      start = located.start;
+      meta.cursor = cursor ? String(cursor) : null;
+      if (located.lost) meta.cursorLost = true;
+    } else if (page !== undefined || size !== undefined) {
+      windowSize = this._normalizePageSize(size) ?? DEFAULT_FEED_PAGE_SIZE;
+      const normalizedPage = Number.isFinite(Number(page)) && Number(page) >= 0 ? Math.floor(Number(page)) : 0;
+      start = normalizedPage * windowSize;
+      meta.page = normalizedPage;
+    } else {
+      // The older spelling, still honoured verbatim.
+      windowSize = this._normalizePageSize(limit);
+      start = Number.isFinite(Number(offset)) && Number(offset) >= 0 ? Math.floor(Number(offset)) : 0;
+    }
+
+    const windowed = windowSize === null ? sorted.slice(start) : sorted.slice(start, start + windowSize);
+    const items = alreadyEnriched ? windowed : await this._enrichPosts(windowed, currentUserId, { includeEngagement, period });
+
+    meta.offset = start;
+    meta.size = windowSize;
+    meta.returned = items.length;
+    meta.hasMore = start + windowed.length < total;
+    meta.nextCursor = windowed.length ? this._postCursor(windowed[windowed.length - 1]) : null;
+
+    return { items, meta };
+  }
+
+  _normalizePageSize(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) return null;
+    return Math.min(Math.floor(parsed), MAX_FEED_PAGE_SIZE);
+  }
+
+  /** The unpaged shape the rest of the app reads. See searchPostsPage for the rest. */
+  async searchPosts(options = {}) {
+    const { items } = await this.searchPostsPage(options);
+    return items;
   }
 
   async getPostBySlug(blogSlug, postSlug, currentUserId, options = {}) {

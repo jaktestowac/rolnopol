@@ -103,7 +103,9 @@ describe("Farmlog page engagement refresh behavior", () => {
 
   it("keeps scroll position stable when liking from the search panel", async () => {
     const page = new window.FarmlogHubPage();
-    const button = { dataset: { action: "toggle-like" } };
+    // No `data-post`, so this is the blog-favorite shape: it cannot be patched into
+    // a feed card and still takes the full reload path this test is about.
+    const button = { dataset: { action: "toggle-like" }, getAttribute: vi.fn(() => null) };
     const preventDefault = vi.fn();
     const searchPostsResults = {
       scrollLeft: 0,
