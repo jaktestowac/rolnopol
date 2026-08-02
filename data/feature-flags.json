@@ -18,6 +18,7 @@
     "financialCsvExportEnabled": false,
     "financialCommoditiesEnabled": false,
     "financialCommoditiesTradingEnabled": false,
+    "financialCommoditiesMarketDeskEnabled": false,
     "prometheusMetricsEnabled": false,
     "homeWelcomeVideoEnabled": false,
     "homeStatsSectionEnabled": false,

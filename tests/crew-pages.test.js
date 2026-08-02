@@ -174,6 +174,56 @@ describe("Crew Office role assignment (Phase 3B)", () => {
     });
   });
 
+  describe("the member Tools panel", () => {
+    const html = readPage("crew-member.html");
+    const controller = readScript("crew-member.js");
+    const { assembleCrewSchema } = require("../services/crew/registry");
+
+    it("no longer promises the tools pillar in a future phase", () => {
+      // The placeholder outlived the pillar it was waiting for: tools has been
+      // assembled since Phase 6 landed, and the panel still said it had not.
+      expect(assembleCrewSchema().pillars.map((pillar) => pillar.name)).toContain("tools");
+      expect(html).not.toContain("Phase 6");
+      expect(html).not.toMatch(/arrive[s]? with the tools pillar/);
+      expect(html).toContain('id="crewMemberTools"');
+    });
+
+    it("loads on first visit to the tab and reads the operation the page already had", () => {
+      expect(controller).toContain('if (name === "tools") loadTools()');
+      expect(controller).toContain("CrewApi.OPERATIONS.MEMBER_TOOLS");
+      // Same lazy-load shape as Work and Training: fetched once, and a failure lets
+      // a later visit retry rather than caching the error forever.
+      const load = controller.slice(controller.indexOf("async function loadTools"), controller.indexOf("// ── Documents"));
+      expect(load).toContain("toolsLoaded = true");
+      expect(load).toContain("toolsLoaded = false");
+    });
+
+    it("says so when the pillar is absent instead of showing an empty table", () => {
+      const load = controller.slice(controller.indexOf("async function loadTools"), controller.indexOf("// ── Documents"));
+      // An empty table would read as "this person has no tools out", which is a
+      // different and false statement.
+      expect(load).toContain("not assembled in this build");
+    });
+
+    it("flags overdue rows as well as counting them, because the two lists overlap", () => {
+      // `overdue` is a subset of `onIssue`. Rendering it as a second table would
+      // repeat every row; a notice plus a flagged row says it once.
+      const render = controller.slice(controller.indexOf("function renderTools"), controller.indexOf("async function loadTools"));
+      expect(render).toContain('data-testid="tools-overdue"');
+      expect(render).toContain('data-testid="tools-on-issue"');
+      expect(render).toContain('data-testid="tools-history"');
+      expect(controller).toContain("crew-row--flagged");
+    });
+
+    it("points at the tools board for the actions it deliberately does not offer", () => {
+      // Issuing and returning live where the registry and the certification gate
+      // are. A second issue form here would be a second copy of that gate.
+      const render = controller.slice(controller.indexOf("function renderTools"), controller.indexOf("async function loadTools"));
+      expect(render).toContain('href="/crew-tools.html"');
+      expect(render).not.toContain("data-issue-tool");
+    });
+  });
+
   describe("the personnel file (#100)", () => {
     const html = readPage("crew-member.html");
     const controller = readScript("crew-member.js");

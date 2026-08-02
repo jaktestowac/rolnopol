@@ -595,6 +595,33 @@
   color: var(--error-color, #b91c1c);
 }
 
+/*
+ * Two more on the same scale, added with the documents pillar and the member Tools
+ * panel.
+ *
+ * `pending` is amber for the reason `expiring_soon` is: a document being scanned is
+ * not a failure, it is a wait, and colouring it red would teach people that red
+ * means "nothing is wrong yet". `missing` is red but says something different from
+ * `expired` — the record is fine and its bytes are gone, which is a fault in the
+ * store rather than a decision about the document.
+ */
+.crew-page .crew-badge--pending {
+  border-color: var(--agri-earth);
+  color: var(--agri-earth);
+}
+
+.crew-page .crew-badge--missing {
+  border-color: var(--error-color, #b91c1c);
+  color: var(--error-color, #b91c1c);
+  font-style: italic;
+}
+
+/* A row that needs acting on — an overdue tool. A tint and not only a badge, so a
+   long table can be scanned without reading every cell. */
+.crew-page .crew-table tbody tr.crew-row--flagged {
+  background: rgba(185, 28, 28, 0.06);
+}
+
 /* Revoked is struck through as well as red: it is not "out of date", it is void. */
 .crew-page .crew-badge--revoked {
   border-color: var(--error-color, #b91c1c);

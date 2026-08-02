@@ -143,8 +143,19 @@ then **subscribe to** via `WatchEvents`:
 | `GET /v1/events/stream`               | every unit | none | `agri-academy-events.html`, `-status.html`  |
 
 The unary reads accept `?limit=` (clamped server-side -- an unbounded log read is never
-allowed), `?examId=`, and `?since=` (only entries above that sequence). `total` is the
-match count _before_ the limit, so a view can honestly say "showing 50 of 812".
+allowed), `?examId=`, and two sequence cursors that point in opposite directions and are
+deliberately **not** symmetrical:
+
+| Cursor          | Direction | Is it a filter?                                           | Who passes it          |
+| --------------- | --------- | --------------------------------------------------------- | ---------------------- |
+| `?since=<seq>`  | forwards  | **yes** -- narrows the query, so `total` counts within it | a poller, and the tail |
+| `?before=<seq>` | backwards | **no** -- a page bound only, `total` ignores it           | a scroll-back view     |
+
+`total` is therefore the match count _before_ the limit **and** ignoring `?before=`, so a
+view can honestly say "showing 50 of 812" and keep saying it while paging into history.
+`hasMore` comes back with every page and reports whether matching entries exist _below_
+the last one returned -- a scroll-back asks that question, never `returned === limit`,
+which is wrong on the page that lands exactly on the boundary.
 
 **Read a page, then tail it.** `latest_sequence` means the same thing to both RPCs, so a
 view hands the page's high-water mark to the stream (`?since=`) and receives exactly what
@@ -161,6 +172,24 @@ clickable **Live** pill (the toggle is there for anyone who wants the view to ho
 still), a unit profile's panel grows itself with a live dot next to the heading, and the
 status page runs a six-row ticker beside the health grid -- the grid polls because a
 probe is a question you have to ask, while the log is pushed.
+
+**Live at the top, paged at the bottom.** `agri-academy-events.html` is the surface that
+uses both cursors at once, and the rules that let one scroll container hold a stream and
+a history are worth stating:
+
+- The tail writes at the **top** and history pages in at the **bottom**. Appending below
+  the viewport cannot move what is being read; prepending above it can.
+- So the tail may only write while the view is **at the top**. Scrolled away, arriving
+  entries are buffered and counted on a "N new entries" button; scrolling back (or
+  clicking it) releases them. That is the whole trick -- without it, reading history
+  while the log is busy is impossible.
+- `?before=` follows the **page**, not the rendered rows. A page the page-side state
+  filter empties still advances the cursor, or the next request asks for the same window
+  forever. The loader keeps pulling until the sentinel leaves the viewport, because an
+  `IntersectionObserver` does not re-fire for an element that never stopped intersecting.
+- The window is capped (1,000 rows) and trims only from the bottom, only while following
+  -- and hands the history cursor back to the row that is now last, so what was trimmed
+  is simply history again.
 
 **Why these are public.** An entry records what happened to a _session_ -- `sess-12`
 went `active`, counting down to a deadline -- and carries **no taker identity**, because

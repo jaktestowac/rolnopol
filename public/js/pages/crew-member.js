@@ -41,6 +41,7 @@
     elements.work = document.getElementById("crewMemberWork");
     elements.leave = document.getElementById("crewMemberLeave");
     elements.training = document.getElementById("crewMemberTraining");
+    elements.tools = document.getElementById("crewMemberTools");
     elements.documents = document.getElementById("crewMemberDocuments");
     elements.previewModal = document.getElementById("documentPreviewModal");
     elements.previewTitle = document.getElementById("documentPreviewTitle");
@@ -72,6 +73,7 @@
     if (name === "work") loadWork();
     if (name === "leave") loadLeave();
     if (name === "training") loadTraining();
+    if (name === "tools") loadTools();
     if (name === "documents") loadDocuments();
   }
 
@@ -764,6 +766,167 @@
     renderTraining(training, result.data.academyLink);
   }
 
+  // ── Tools ───────────────────────────────────────────────────────────────────
+
+  let toolsLoaded = false;
+
+  /** `-3` → "3 days overdue", `0` → "due today", `2` → "due in 2 days". */
+  function describeDueBack(issuance) {
+    const days = Number(issuance.daysUntilDueBack);
+    if (issuance.dueBack === null || issuance.dueBack === undefined || !Number.isFinite(days)) {
+      return '<span class="crew-muted">no date</span>';
+    }
+    if (days < 0) return '<span class="crew-badge crew-badge--expired">' + Math.abs(days) + " day(s) overdue</span>";
+    if (days === 0) return '<span class="crew-badge crew-badge--pending">due today</span>';
+    return '<span class="crew-muted">in ' + days + " day(s)</span>";
+  }
+
+  function renderIssuedToolRow(issuance) {
+    const CrewApi = window.CrewApi;
+    const escape = CrewApi.escapeHtml;
+    const tool = issuance.tool || {};
+    // The service state matters here and not only on the registry page: a tool that
+    // is out AND due a service is the row somebody has to act on.
+    const service =
+      tool.serviceStatus && tool.serviceStatus !== "OK"
+        ? ' <span class="crew-badge crew-badge--pending">' + escape(CrewApi.labelForServiceStatus(tool.serviceStatus)) + "</span>"
+        : "";
+
+    return (
+      '<tr data-issuance-id="' +
+      escape(issuance.id) +
+      '"' +
+      (issuance.isOverdueBack ? ' class="crew-row--flagged"' : "") +
+      ">" +
+      "<td><strong>" +
+      escape(tool.assetTag || "—") +
+      "</strong> " +
+      escape(tool.name || "") +
+      service +
+      "</td>" +
+      "<td>" +
+      escape(CrewApi.labelForToolCategory(tool.category)) +
+      "</td>" +
+      "<td>" +
+      escape(issuance.issuedAt || "—") +
+      "</td>" +
+      "<td>" +
+      escape(issuance.dueBack || "—") +
+      " " +
+      describeDueBack(issuance) +
+      "</td>" +
+      "<td>" +
+      escape(tool.storageLocation || "—") +
+      "</td>" +
+      "<td>" +
+      (issuance.note ? escape(issuance.note) : "—") +
+      "</td>" +
+      "</tr>"
+    );
+  }
+
+  function renderToolHistoryRow(issuance) {
+    const escape = window.CrewApi.escapeHtml;
+    const tool = issuance.tool || {};
+    const condition = issuance.conditionOnReturn ? escape(issuance.conditionOnReturn) : '<span class="crew-muted">—</span>';
+    return (
+      "<tr><td><strong>" +
+      escape(tool.assetTag || "—") +
+      "</strong> " +
+      escape(tool.name || "") +
+      "</td><td>" +
+      escape(issuance.issuedAt || "—") +
+      "</td><td>" +
+      // An issuance with no `returnedAt` in the history list is one still out — the
+      // history is every issuance, not only the closed ones.
+      (issuance.returnedAt ? escape(issuance.returnedAt) : '<span class="crew-muted">still out</span>') +
+      "</td><td>" +
+      condition +
+      "</td><td>" +
+      (issuance.returnedLate ? '<span class="crew-badge crew-badge--expired">late</span>' : '<span class="crew-muted">on time</span>') +
+      "</td></tr>"
+    );
+  }
+
+  function renderTools(tools) {
+    const escape = window.CrewApi.escapeHtml;
+
+    // Overdue is a SUBSET of onIssue, and the two answer different questions ("what
+    // have they got?" and "what is late?"). So it is a notice plus flagged rows,
+    // rather than a second table repeating the first.
+    const overdueNotice =
+      tools.overdue.length === 0
+        ? ""
+        : '<p class="crew-notice crew-notice--warning" data-testid="tools-overdue">' +
+          "<strong>" +
+          tools.overdue.length +
+          " tool(s) overdue:</strong> " +
+          tools.overdue
+            .map(function (issuance) {
+              const tool = issuance.tool || {};
+              return (
+                escape((tool.assetTag || "") + " " + (tool.name || "")).trim() +
+                " (" +
+                Math.abs(Number(issuance.daysUntilDueBack) || 0) +
+                "d)"
+              );
+            })
+            .join(", ") +
+          "</p>";
+
+    elements.tools.innerHTML =
+      overdueNotice +
+      '<dl class="crew-fields">' +
+      field("Out now", escape(tools.onIssue.length)) +
+      field("Overdue", tools.overdue.length === 0 ? '<span class="crew-muted">none</span>' : escape(tools.overdue.length)) +
+      "</dl>" +
+      '<h3 class="crew-subhead">Out now</h3>' +
+      (tools.onIssue.length === 0
+        ? '<p class="crew-muted">Nothing issued to this member.</p>'
+        : '<div class="crew-table-wrap"><table class="crew-table" data-testid="tools-on-issue"><thead><tr>' +
+          "<th>Tool</th><th>Category</th><th>Issued</th><th>Due back</th><th>Kept at</th><th>Note</th>" +
+          "</tr></thead><tbody>" +
+          tools.onIssue.map(renderIssuedToolRow).join("") +
+          "</tbody></table></div>") +
+      '<h3 class="crew-subhead">History <span class="crew-muted">(the ledger is append-only — a return stamps the row it closes)</span></h3>' +
+      (tools.history.length === 0
+        ? '<p class="crew-muted">Nothing issued to this member yet.</p>'
+        : '<div class="crew-table-wrap"><table class="crew-table" data-testid="tools-history"><thead><tr>' +
+          "<th>Tool</th><th>Issued</th><th>Returned</th><th>Condition</th><th>Timing</th>" +
+          "</tr></thead><tbody>" +
+          tools.history.map(renderToolHistoryRow).join("") +
+          "</tbody></table></div>") +
+      '<p class="crew-hint">Issuing and returning happen on the <a href="/crew-tools.html">tools board</a>, where the certification gate and the registry live.</p>';
+  }
+
+  /** Fetched on first visit to the tab, then cached for the page's lifetime. */
+  async function loadTools() {
+    if (toolsLoaded || !staffId || !elements.tools) return;
+    const CrewApi = window.CrewApi;
+    toolsLoaded = true;
+
+    elements.tools.innerHTML = '<p class="crew-muted">Loading tools…</p>';
+    const result = await CrewApi.run(CrewApi.OPERATIONS.MEMBER_TOOLS, { staffId: staffId });
+
+    if (!result.ok || !result.data || !result.data.crewMember) {
+      toolsLoaded = false; // let a later visit retry
+      elements.tools.innerHTML =
+        '<p class="crew-notice crew-notice--warning">' +
+        CrewApi.escapeHtml(CrewApi.describeErrors(result) || "Tools could not be loaded.") +
+        "</p>";
+      return;
+    }
+
+    const tools = result.data.crewMember.tools;
+    if (!tools) {
+      // The pillar is not assembled — say so rather than showing an empty table,
+      // which would read as "this person has no tools out".
+      elements.tools.innerHTML = '<p class="crew-notice">The tools pillar is not assembled in this build.</p>';
+      return;
+    }
+    renderTools(tools);
+  }
+
   // ── Documents (#100) ────────────────────────────────────────────────────────
 
   let documentsLoaded = false;
@@ -772,7 +935,7 @@
   // Whatever had focus when the preview dialog was opened.
   let previewOpener = null;
 
-  const DOCUMENT_STATUS_BADGE = { AVAILABLE: "valid", PENDING: "pending", REJECTED: "expired", MISSING: "expired" };
+  const DOCUMENT_STATUS_BADGE = { AVAILABLE: "valid", PENDING: "pending", REJECTED: "expired", MISSING: "missing" };
 
   /**
    * What a failed document action means, in words a reader can act on.
