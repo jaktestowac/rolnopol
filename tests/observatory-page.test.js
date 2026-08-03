@@ -42,6 +42,33 @@ describe("Operator observatory page", () => {
     expect(response.text).toContain("simplified real-time sky dome");
   });
 
+  it("ships the dome's automation hooks — the state mirror, the viewport controls and the time-flow slider", async () => {
+    const response = await request(app).get("/operator/observatory.html").expect(200);
+
+    [
+      "sky-dome",
+      "dome-canvas",
+      "dome-mirror",
+      "dome-zoom-in",
+      "dome-zoom-out",
+      "dome-reset-view",
+      "time-flow",
+      "magnitude-limit",
+      "constellation-list",
+      "constellation-count",
+      "constellation-summary",
+    ].forEach((testId) => {
+      expect(response.text).toContain(`data-testid="${testId}"`);
+    });
+
+    // The time-flow control is a continuous range now, not the old five-value
+    // select, and the dome host is the element the state mirror lands on.
+    expect(response.text).toContain('id="observatoryTimeScaleRange"');
+    expect(response.text).not.toContain("observatoryTimeScaleSelect");
+    expect(response.text).toContain('id="observatoryCanvasHost"');
+    expect(response.text).toContain('id="observatoryDomeMirror"');
+  });
+
   it("redirects the shortcut path to the observatory page", async () => {
     const response = await request(app).get("/operator/observatory").expect(302);
 

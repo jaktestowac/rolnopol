@@ -40,6 +40,38 @@ class ObservatoryController {
   }
 
   /**
+   * The sky-dome viewport, as data. Same observer/time/magnitude inputs as the
+   * snapshot, plus the viewport the page is showing (zoom/pan/canvas size) and
+   * the frontend filters — so a test can assert what the canvas draws without
+   * comparing pixels, and cross-check the page's own `data-*` state mirror.
+   */
+  async getViewport(req, res) {
+    try {
+      const data = observatoryService.getViewport({
+        timestamp: req.query?.timestamp,
+        presetId: req.query?.presetId,
+        latitudeDeg: req.query?.latitude,
+        longitudeDeg: req.query?.longitude,
+        magnitudeLimit: req.query?.magnitudeLimit,
+        zoom: req.query?.zoom,
+        panX: req.query?.panX,
+        panY: req.query?.panY,
+        width: req.query?.width,
+        height: req.query?.height,
+        objectType: req.query?.objectType,
+        constellation: req.query?.constellation,
+        search: req.query?.search,
+      });
+      return res.status(200).json(formatResponseBody({ data }));
+    } catch (error) {
+      logError("Error getting observatory viewport", { error });
+      const statusCode = Number.isFinite(error?.statusCode) ? error.statusCode : 500;
+      const message = typeof error?.message === "string" ? error.message : "Failed to get observatory viewport";
+      return res.status(statusCode).json(formatResponseBody({ error: message }));
+    }
+  }
+
+  /**
    * Server-Sent Events stream of observatory snapshots. Replaces the client's
    * former REST-polling loop: the connection carries its own simulated clock
    * (anchored at the requested `timestamp`, advanced by `timeScale`) and pushes

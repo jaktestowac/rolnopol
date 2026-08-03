@@ -1137,8 +1137,28 @@ module.exports = [
           ),
           ul([
             "Pick a location by preset (Warsaw, Tokyo, Sydney, ...), browser geolocation, or manual latitude/longitude.",
-            "A time-flow control lets you pause the sky, run it in real time, or fast-forward (×60 to ×3600) to watch moon phases and planet motion advance.",
+            "A continuous time-flow slider pauses the sky, runs it in real time, or fast-forwards it anywhere up to ×3600 to watch moon phases and planet motion advance.",
+            "Drag the dome to pan, scroll or pinch to zoom; arrow keys pan, +/- zoom and 0 resets, so nothing needs a mouse.",
+            "Click a star, planet or the Moon to inspect it — or click a constellation line (or its name) to highlight the whole figure. The Constellations panel selects the same figures by name, and Escape clears the highlight.",
+            "The catalog carries 388 stars across 87 constellations, so most of the sky has a figure to click on rather than a handful of famous ones.",
             "The 'Observatory' nav link and the page itself appear only when this flag is on; the shared site nav/footer are re-themed dark to match the page.",
+          ]),
+        ]),
+        heading("Reading the canvas without reading pixels", [
+          p(
+            'The dome publishes its render state instead of hiding it behind a bitmap. The canvas host (data-testid="sky-dome") carries the scalars as data-* attributes — zoom, pan, the aperture centre in altitude/azimuth, the magnitude cutoff, the time scale, the observer and the object counts — and a visually hidden mirror list (data-testid="dome-mirror") carries one node per plotted object with its alt/az, dome coordinates, canvas position and whether the aperture is currently showing it.',
+          ),
+          p(
+            "GET /observatory/viewport answers the same question server-side: given a canvas size and a viewport, which objects the dome holds, where each lands in canvas pixels, and which of them are in view. Coordinates are in CSS pixels on both sides, so a browser assertion and an API assertion can be compared directly.",
+          ),
+          p(
+            "Constellations are answered the same way. dome.constellations lists every figure the drawn lines form — star count, line count, brightest member, centre in dome and canvas coordinates — and the page's Constellations panel carries the matching data-* on each row, so 'which figure did that click select?' never needs a screenshot. A line joining two constellations is an asterism (the Summer Triangle, say): it is drawn, but it belongs to neither figure and is not selectable.",
+          ),
+          ul([
+            "Dome coordinates are a unit disc seen from above: zenith at the origin, horizon at radius 1, north at -y.",
+            "Zoom is clamped to 1–8 and the pan target is clamped into the unit disc, so the centre of the view can never leave the sky.",
+            "The circular aperture does not grow with zoom — that is why zooming in pushes objects out of view while the dome itself keeps every one of them.",
+            "?animate=0 freezes the dome: no clock advance, no twinkle, no redraw loop, and the time badge switches to an ISO instant. Pair it with ?timestamp= for a screenshot that reproduces.",
           ]),
         ]),
         heading("REST snapshot vs. live SSE stream", [
@@ -1157,23 +1177,30 @@ module.exports = [
             ["Method", "Path", "Description"],
             [
               ["GET", "/observatory", "One JSON sky snapshot (public)"],
+              ["GET", "/observatory/viewport", "The dome as data — every object plus its canvas position and in-view flag (public)"],
               ["GET", "/observatory/stream", "SSE stream of `snapshot` events (public)"],
             ],
           ),
           table(
             ["Query param", "Meaning"],
             [
-              ["presetId / latitude / longitude", "Observer location (preset id takes precedence)"],
+              [
+                "presetId / latitude / longitude",
+                "Observer location; `presetId=custom` pins the coordinates so they are not relabelled as a matching preset",
+              ],
               ["timestamp", "Moment to render; defaults to now"],
-              ["magnitudeLimit", "Only show objects at or below this brightness magnitude (0–6)"],
+              ["magnitudeLimit", "Only show objects at or below this brightness magnitude (1–6)"],
               ["timeScale", "Stream only — simulated-time speed multiplier (0 = paused)"],
               ["limit", "Stream only — close after N snapshot events (bounded demos / tests)"],
+              ["zoom / panX / panY", "Viewport only — aperture zoom (1–8) and its centre in dome units"],
+              ["width / height", "Viewport only — canvas size in CSS pixels the coordinates are computed for"],
+              ["objectType / constellation / search", "Viewport only — the same frontend filters the page applies"],
             ],
           ),
           callout(
             "info",
             "Off by default",
-            "Both endpoints and the page return 404 when 'observatoryEnabled' is off. The stream sends a ': keep-alive' heartbeat every 15s so idle connections aren't dropped.",
+            "All three endpoints and the page return 404 when 'observatoryEnabled' is off. The stream sends a ': keep-alive' heartbeat every 15s so idle connections aren't dropped.",
           ),
         ]),
       ],
