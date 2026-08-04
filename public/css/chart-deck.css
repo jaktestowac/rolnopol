@@ -112,6 +112,35 @@
   max-width: 11rem;
 }
 
+/* A slider needs three slots: the name, the track and the value it reports. */
+.ck-opts__field--range {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, auto) minmax(4rem, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ck-opts__field--range strong {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4a5345;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.ck-range {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  accent-color: #2e9e5b;
+  cursor: pointer;
+}
+
+.ck-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .ck-opts__actions {
   display: flex;
   gap: 0.4rem;
@@ -122,6 +151,61 @@
 .ck-opts__actions .btn {
   padding: 0.25rem 0.6rem;
   font-size: 0.8rem;
+}
+
+/* ------------------------------------------------------------- scrub window */
+
+.ck-scrub {
+  display: grid;
+  grid-template-columns: minmax(10rem, 2fr) minmax(9rem, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+  margin: 0.2rem 0 0.7rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(120, 140, 110, 0.25);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* Held is a state worth seeing: the chart is no longer showing what just
+   arrived, and nothing else on the page says so. */
+.ck-scrub[data-window-follow="held"] {
+  background: rgba(214, 164, 19, 0.14);
+  border-color: rgba(214, 164, 19, 0.55);
+}
+
+.ck-scrub__field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ck-scrub__label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6a7b5e;
+  white-space: nowrap;
+}
+
+.ck-scrub__readout {
+  font-size: 0.8rem;
+  color: #5d6459;
+}
+
+.ck-scrub[data-window-follow="held"] .ck-scrub__readout {
+  color: #7a5a08;
+  font-weight: 600;
+}
+
+.ck-scrub__live.btn {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  justify-self: end;
 }
 
 /* -------------------------------------------------------------- chart grid */
@@ -377,6 +461,16 @@
   }
 }
 
+@media (max-width: 900px) {
+  .ck-scrub {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .ck-scrub__field {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 640px) {
   .ck-opts__field {
     flex-direction: column;
@@ -386,5 +480,17 @@
   .ck-opts__field .form-input {
     max-width: none;
     width: 100%;
+  }
+
+  /* The range fields keep their grid: a slider under its own label reads worse
+     than a slider beside it, even on a phone. */
+  .ck-opts__field--range {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .ck-opts__field--range .ck-range {
+    grid-column: 1 / -1;
   }
 }

@@ -13,7 +13,15 @@
  *   );
  *   host.innerHTML = result.svg;   // result.points → [{x, y, value, index}]
  */
-(function () {
+(function (root, factory) {
+  var api = factory();
+
+  if (typeof module === "object" && module.exports) {
+    module.exports = api;
+  }
+
+  root.ChartKit = api;
+})(typeof globalThis !== "undefined" ? globalThis : window, function () {
   "use strict";
 
   var DEFAULT_WIDTH = 620;
@@ -405,7 +413,7 @@
     return renderLineLike(spec, opts, style);
   }
 
-  window.ChartKit = {
+  return {
     PALETTES: PALETTES,
     STYLES: STYLES,
     DEFAULT_WIDTH: DEFAULT_WIDTH,
@@ -415,4 +423,4 @@
     format: format,
     round: round,
   };
-})();
+});

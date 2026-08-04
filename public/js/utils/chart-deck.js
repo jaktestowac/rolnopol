@@ -19,8 +19,22 @@
  * Series options: key, label, icon, unit, precision, hue, defaultStyle,
  * zeroFloor, pct, read(item), secondary { label, read(item) } and
  * band { min(item), max(item) } for min/max envelopes.
+ *
+ * A deck fed by a live stream can also be scrubbed: `window` is how many
+ * readings the chart shows, and the scrub control moves that window back over
+ * the retained history while new readings keep arriving. The deck publishes
+ * both as `data-*` on its root, so the state is assertable without reading
+ * pixels — see `getWindowState()`.
  */
-(function () {
+(function (root, factory) {
+  var api = factory();
+
+  if (typeof module === "object" && module.exports) {
+    module.exports = api;
+  }
+
+  root.ChartDeck = api;
+})(typeof globalThis !== "undefined" ? globalThis : window, function () {
   "use strict";
 
   var DECK_DEFAULTS = {
@@ -42,18 +56,53 @@
   var FLAG_IDS = ["smooth", "points", "grid", "fill", "axis", "secondary"];
   var NUMERIC_KEYS = { columns: true, height: true, window: true };
 
-  function escapeHtml(text) {
-    return window.ChartKit.escapeHtml(text);
-  }
-
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  function clampNumber(value, min, max) {
+    var number = Number(value);
+    if (!isFinite(number)) {
+      return min;
+    }
+    return Math.min(max, Math.max(min, Math.round(number)));
+  }
+
+  /**
+   * Where the visible window sits over the retained readings.
+   *
+   * `offset` counts readings back from the live edge: 0 is the newest reading,
+   * `maxOffset` is as far back as the retained history reaches. `position` is
+   * the same thing read left-to-right (0 = oldest window, `maxOffset` = live),
+   * which is the direction a scrub slider runs in.
+   */
+  function resolveWindow(state) {
+    var readingCount = Math.max(0, Math.floor(Number(state.readingCount)) || 0);
+    var windowSize = Math.max(0, Math.floor(Number(state.windowSize)) || 0);
+    var span = windowSize > 0 ? Math.min(windowSize, readingCount) : readingCount;
+    var maxOffset = Math.max(0, readingCount - span);
+    var offset = clampNumber(state.offset, 0, maxOffset);
+    var endIndex = readingCount - 1 - offset;
+
+    return {
+      readingCount: readingCount,
+      windowSize: windowSize,
+      span: span,
+      offset: offset,
+      maxOffset: maxOffset,
+      position: maxOffset - offset,
+      following: offset === 0,
+      startIndex: span === 0 ? -1 : endIndex - span + 1,
+      endIndex: span === 0 ? -1 : endIndex,
+    };
   }
 
   function create(spec) {
     var series = spec.series || [];
     var controls = spec.controls || {};
     var storageKey = spec.storageKey;
+    var doc = spec.documentRef || (typeof document === "undefined" ? null : document);
+    var win = spec.windowRef || (typeof window === "undefined" ? null : window);
 
     var defaults = clone(DECK_DEFAULTS);
     Object.keys(spec.defaults || {}).forEach(function (key) {
@@ -72,8 +121,23 @@
     var layoutSignature = "";
     var changeListeners = [];
 
+    // Retained readings are numbered by a monotonic sequence that survives
+    // eviction, so a scrubbed window can be anchored to the readings it shows
+    // rather than to a distance from the live edge. Arriving readings must not
+    // slide the chart sideways under the user's thumb.
+    var firstSeq = 0; // sequence number of data[0]
+    var anchorSeq = null; // newest visible reading while scrubbing; null = follow live
+
+    function kit() {
+      return win.ChartKit;
+    }
+
+    function escapeHtml(text) {
+      return kit().escapeHtml(text);
+    }
+
     function byId(id) {
-      return id ? document.getElementById(id) : null;
+      return id && doc ? doc.getElementById(id) : null;
     }
 
     function root() {
@@ -93,7 +157,7 @@
 
     function loadConfig() {
       try {
-        var raw = window.localStorage.getItem(storageKey);
+        var raw = win.localStorage.getItem(storageKey);
         if (!raw) {
           return;
         }
@@ -122,7 +186,7 @@
 
     function saveConfig() {
       try {
-        window.localStorage.setItem(storageKey, JSON.stringify(config));
+        win.localStorage.setItem(storageKey, JSON.stringify(config));
       } catch (error) {
         /* storage full or blocked — preferences just won't persist */
       }
@@ -132,6 +196,129 @@
       changeListeners.forEach(function (listener) {
         listener(key, config[key], config);
       });
+    }
+
+    /* --------------------------------------------------------- scrub window */
+
+    function newestSeq() {
+      return firstSeq + data.length - 1;
+    }
+
+    function windowState() {
+      return resolveWindow({
+        readingCount: data.length,
+        windowSize: config.window,
+        offset: anchorSeq === null ? 0 : newestSeq() - anchorSeq,
+      });
+    }
+
+    /**
+     * Pull the anchor back inside what the buffer still holds. A held window
+     * whose oldest reading has been evicted gets pushed forward — that is the
+     * honest consequence of a bounded history, not a reason to point at
+     * readings that are gone.
+     */
+    function clampAnchor() {
+      if (anchorSeq === null) {
+        return;
+      }
+      var state = windowState();
+      anchorSeq = state.offset === 0 ? null : newestSeq() - state.offset;
+    }
+
+    function setWindowOffset(offset) {
+      if (!isFinite(Number(offset))) {
+        return;
+      }
+      var state = windowState();
+      var next = clampNumber(offset, 0, state.maxOffset);
+      // A drag ends with `change` reporting the value its last `input` already
+      // delivered, and a clamped drag reports a value it cannot have.
+      if (next === state.offset) {
+        return;
+      }
+      anchorSeq = next === 0 ? null : newestSeq() - next;
+      render();
+      notifyChange("scrub");
+    }
+
+    function setWindowPosition(position) {
+      if (!isFinite(Number(position))) {
+        return;
+      }
+      setWindowOffset(windowState().maxOffset - Number(position));
+    }
+
+    function scrubText(state) {
+      var noun = spec.countLabel || "readings";
+      if (state.readingCount === 0) {
+        return "Live — waiting for the first reading…";
+      }
+      if (state.following) {
+        return "Live — latest " + state.span + " of " + state.readingCount + " " + noun;
+      }
+      return (
+        "Held " +
+        state.offset +
+        " " +
+        noun +
+        " back — showing " +
+        (state.startIndex + 1) +
+        "–" +
+        (state.endIndex + 1) +
+        " of " +
+        state.readingCount
+      );
+    }
+
+    /** Publishes the window as `data-*` so tests can read it without pixels. */
+    function writeWindowMirror(state, rows) {
+      var host = root();
+      if (host) {
+        host.setAttribute("data-reading-count", String(state.readingCount));
+        host.setAttribute("data-window-size", String(state.windowSize));
+        host.setAttribute("data-window-span", String(rows.length));
+        host.setAttribute("data-window-offset", String(state.offset));
+        host.setAttribute("data-window-max-offset", String(state.maxOffset));
+        host.setAttribute("data-window-position", String(state.position));
+        host.setAttribute("data-window-start", String(state.startIndex));
+        host.setAttribute("data-window-end", String(state.endIndex));
+        host.setAttribute("data-window-follow", state.following ? "live" : "held");
+        if (typeof spec.rowStamp === "function") {
+          host.setAttribute("data-window-first-at", rows.length ? String(spec.rowStamp(rows[0])) : "");
+          host.setAttribute("data-window-last-at", rows.length ? String(spec.rowStamp(rows[rows.length - 1])) : "");
+        }
+      }
+
+      var bar = byId(spec.scrubBarId);
+      if (bar) {
+        bar.setAttribute("data-window-follow", state.following ? "live" : "held");
+        bar.setAttribute("data-scrub-max", String(state.maxOffset));
+      }
+    }
+
+    function syncScrubControl(state) {
+      var text = scrubText(state);
+      var slider = byId(controls.scrub);
+      if (slider) {
+        // `max` grows with the retained history: the thumb keeps its value while
+        // the track it sits on gets longer, so the view recedes into the past.
+        slider.max = String(state.maxOffset);
+        slider.setAttribute("max", String(state.maxOffset));
+        slider.value = String(state.position);
+        slider.disabled = state.maxOffset === 0;
+        slider.setAttribute("aria-valuetext", text);
+      }
+
+      var readout = byId(spec.scrubReadoutId);
+      if (readout) {
+        readout.textContent = text;
+      }
+
+      var followBtn = byId(spec.followBtnId);
+      if (followBtn) {
+        followBtn.disabled = state.following;
+      }
     }
 
     /* --------------------------------------------------------------- render */
@@ -153,9 +340,8 @@
       });
     }
 
-    function windowedData() {
-      var size = Number(config.window) || 0;
-      return size > 0 ? data.slice(-size) : data.slice();
+    function windowedData(state) {
+      return state.span === 0 ? [] : data.slice(state.startIndex, state.endIndex + 1);
     }
 
     function styleOptionsMarkup(item, selected) {
@@ -173,20 +359,42 @@
 
     function cardMarkup(item) {
       return (
-        '<article class="ck-chart" data-chart="' + item.key + '">' +
+        '<article class="ck-chart" data-chart="' +
+        item.key +
+        '">' +
         '<header class="ck-chart__head">' +
-        '<span class="ck-chart__title"><i class="fas ' + (item.icon || "fa-chart-line") + '" aria-hidden="true"></i> ' + escapeHtml(item.label) + "</span>" +
-        '<span class="ck-chart__now" data-chart-now="' + item.key + '">—</span>' +
-        '<select class="ck-chart__style form-input" data-chart-style="' + item.key + '" aria-label="' + escapeHtml(item.label) + ' chart style">' +
+        '<span class="ck-chart__title"><i class="fas ' +
+        (item.icon || "fa-chart-line") +
+        '" aria-hidden="true"></i> ' +
+        escapeHtml(item.label) +
+        "</span>" +
+        '<span class="ck-chart__now" data-chart-now="' +
+        item.key +
+        '">—</span>' +
+        '<select class="ck-chart__style form-input" data-chart-style="' +
+        item.key +
+        '" aria-label="' +
+        escapeHtml(item.label) +
+        ' chart style">' +
         styleOptionsMarkup(item, config.styles[item.key] || "auto") +
         "</select>" +
         "</header>" +
-        '<div class="ck-chart__plot" data-chart-plot="' + item.key + '">' +
-        '<div class="ck-chart__svg-wrap" data-chart-svg="' + item.key + '"></div>' +
-        '<div class="ck-chart__cursor" data-chart-cursor="' + item.key + '" hidden></div>' +
-        '<div class="ck-chart__tip" data-chart-tip="' + item.key + '" hidden></div>' +
+        '<div class="ck-chart__plot" data-chart-plot="' +
+        item.key +
+        '">' +
+        '<div class="ck-chart__svg-wrap" data-chart-svg="' +
+        item.key +
+        '"></div>' +
+        '<div class="ck-chart__cursor" data-chart-cursor="' +
+        item.key +
+        '" hidden></div>' +
+        '<div class="ck-chart__tip" data-chart-tip="' +
+        item.key +
+        '" hidden></div>' +
         "</div>" +
-        '<footer class="ck-chart__stats" data-chart-stats="' + item.key + '"></footer>' +
+        '<footer class="ck-chart__stats" data-chart-stats="' +
+        item.key +
+        '"></footer>' +
         "</article>"
       );
     }
@@ -272,7 +480,7 @@
       if (!rect.width) {
         return;
       }
-      var viewX = ((event.clientX - rect.left) / rect.width) * window.ChartKit.DEFAULT_WIDTH;
+      var viewX = ((event.clientX - rect.left) / rect.width) * kit().DEFAULT_WIDTH;
       var nearest = geom.points[0];
       geom.points.forEach(function (point) {
         if (Math.abs(point.x - viewX) < Math.abs(nearest.x - viewX)) {
@@ -285,18 +493,27 @@
         return;
       }
       var lines =
-        '<span class="ck-chart__tip-time">' + escapeHtml(labelFor(row, nearest.index)) + "</span>" +
-        '<span class="ck-chart__tip-value">' + escapeHtml(valueText(item, item.read(row))) + "</span>";
+        '<span class="ck-chart__tip-time">' +
+        escapeHtml(labelFor(row, nearest.index)) +
+        "</span>" +
+        '<span class="ck-chart__tip-value">' +
+        escapeHtml(valueText(item, item.read(row))) +
+        "</span>";
       if (item.band && config.secondary) {
         lines +=
-          '<span class="ck-chart__tip-extra">' + escapeHtml(valueText(item, item.band.min(row)) + " … " + valueText(item, item.band.max(row))) + "</span>";
+          '<span class="ck-chart__tip-extra">' +
+          escapeHtml(valueText(item, item.band.min(row)) + " … " + valueText(item, item.band.max(row))) +
+          "</span>";
       }
       if (item.secondary && config.secondary) {
-        lines += '<span class="ck-chart__tip-extra">' + escapeHtml(item.secondary.label + " " + valueText(item, item.secondary.read(row))) + "</span>";
+        lines +=
+          '<span class="ck-chart__tip-extra">' +
+          escapeHtml(item.secondary.label + " " + valueText(item, item.secondary.read(row))) +
+          "</span>";
       }
       tip.innerHTML = lines;
 
-      var left = (nearest.x / window.ChartKit.DEFAULT_WIDTH) * rect.width;
+      var left = (nearest.x / kit().DEFAULT_WIDTH) * rect.width;
       cursor.style.left = left + "px";
       cursor.hidden = false;
       tip.style.left = Math.max(4, Math.min(rect.width - 4, left)) + "px";
@@ -304,7 +521,7 @@
     }
 
     function valueText(item, value) {
-      return window.ChartKit.format(value, item.precision) + " " + (item.unit || "");
+      return kit().format(value, item.precision) + " " + (item.unit || "");
     }
 
     function labelFor(row, index) {
@@ -329,10 +546,20 @@
         highs = rows.map(item.band.max).filter(isFinite);
       }
       return (
-        "<span><em>min</em> " + escapeHtml(window.ChartKit.format(Math.min.apply(null, lows), item.precision)) + "</span>" +
-        "<span><em>avg</em> " + escapeHtml(window.ChartKit.format(sum / finite.length, item.precision)) + "</span>" +
-        "<span><em>max</em> " + escapeHtml(window.ChartKit.format(Math.max.apply(null, highs), item.precision)) + "</span>" +
-        "<span><em>" + escapeHtml(spec.countLabel || "readings") + "</em> " + finite.length + "</span>"
+        "<span><em>min</em> " +
+        escapeHtml(kit().format(Math.min.apply(null, lows), item.precision)) +
+        "</span>" +
+        "<span><em>avg</em> " +
+        escapeHtml(kit().format(sum / finite.length, item.precision)) +
+        "</span>" +
+        "<span><em>max</em> " +
+        escapeHtml(kit().format(Math.max.apply(null, highs), item.precision)) +
+        "</span>" +
+        "<span><em>" +
+        escapeHtml(spec.countLabel || "readings") +
+        "</em> " +
+        finite.length +
+        "</span>"
       );
     }
 
@@ -352,12 +579,18 @@
     function render() {
       var host = root();
       var empty = byId(spec.emptyId);
+
+      clampAnchor();
+      var state = windowState();
+      var rows = windowedData(state);
+      writeWindowMirror(state, rows);
+      syncScrubControl(state);
+
       if (!host) {
         return;
       }
 
       var list = visibleSeries();
-      var rows = windowedData();
 
       if (list.length === 0 || rows.length === 0) {
         host.innerHTML = "";
@@ -380,9 +613,9 @@
       var labels = rows.map(labelFor);
 
       list.forEach(function (item) {
-        var color = window.ChartKit.paletteColor(config.palette, item.hue);
+        var color = kit().paletteColor(config.palette, item.hue);
         var values = rows.map(item.read);
-        var result = window.ChartKit.render(
+        var result = kit().render(
           {
             key: item.key,
             label: item.label,
@@ -399,7 +632,7 @@
             xLabels: labels,
           },
           {
-            width: window.ChartKit.DEFAULT_WIDTH,
+            width: kit().DEFAULT_WIDTH,
             height: Number(config.height) || defaults.height,
             color: color,
             smooth: config.smooth,
@@ -434,7 +667,7 @@
 
     function syncControls() {
       series.forEach(function (item) {
-        var toggle = document.querySelector('[data-series-toggle="' + item.key + '"]');
+        var toggle = doc.querySelector('[data-series-toggle="' + item.key + '"]');
         if (toggle) {
           toggle.checked = config.visible[item.key] !== false;
         }
@@ -444,6 +677,7 @@
         if (el) {
           el.value = String(config[key]);
         }
+        syncReadout(key);
       });
       FLAG_IDS.forEach(function (key) {
         var el = byId(controls[key]);
@@ -453,9 +687,35 @@
       });
     }
 
+    /**
+     * A slider needs its value written out somewhere readable. The markup owns
+     * the noun ("30 readings"), the deck only writes the number.
+     */
+    function syncReadout(key) {
+      if (!doc || typeof doc.querySelectorAll !== "function") {
+        return;
+      }
+      var nodes = doc.querySelectorAll('[data-ck-readout="' + key + '"]');
+      Array.prototype.forEach.call(nodes, function (node) {
+        node.textContent = String(config[key]);
+      });
+    }
+
+    function isRange(el) {
+      return el.type === "range" || (typeof el.getAttribute === "function" && el.getAttribute("type") === "range");
+    }
+
+    /** Ranges report every step through `input`; selects only fire `change`. */
+    function onControlInput(el, handler) {
+      el.addEventListener("change", handler);
+      if (isRange(el)) {
+        el.addEventListener("input", handler);
+      }
+    }
+
     function bindOptions() {
       series.forEach(function (item) {
-        var toggle = document.querySelector('[data-series-toggle="' + item.key + '"]');
+        var toggle = doc.querySelector('[data-series-toggle="' + item.key + '"]');
         if (!toggle) {
           return;
         }
@@ -472,14 +732,35 @@
         if (!el) {
           return;
         }
-        el.addEventListener("change", function () {
-          config[key] = NUMERIC_KEYS[key] ? Number(el.value) : el.value;
+        onControlInput(el, function () {
+          var next = NUMERIC_KEYS[key] ? Number(el.value) : el.value;
+          // A range fires `input` on every step and `change` on release; only
+          // the step that actually moves the value is worth a re-render.
+          if (config[key] === next) {
+            return;
+          }
+          config[key] = next;
           saveConfig();
+          syncReadout(key);
           layoutSignature = "";
           render();
           notifyChange(key);
         });
       });
+
+      var scrub = byId(controls.scrub);
+      if (scrub) {
+        onControlInput(scrub, function () {
+          setWindowPosition(scrub.value);
+        });
+      }
+
+      var followBtn = byId(spec.followBtnId);
+      if (followBtn) {
+        followBtn.addEventListener("click", function () {
+          setWindowOffset(0);
+        });
+      }
 
       FLAG_IDS.forEach(function (key) {
         var el = byId(controls[key]);
@@ -512,6 +793,7 @@
       if (resetBtn) {
         resetBtn.addEventListener("click", function () {
           config = clone(defaults);
+          anchorSeq = null;
           saveConfig();
           syncControls();
           layoutSignature = "";
@@ -519,6 +801,46 @@
           notifyChange("reset");
         });
       }
+    }
+
+    /**
+     * Programmatic equivalent of moving a control — used to restore state the
+     * page keeps elsewhere (a query string, say). Values are clamped to the
+     * control's own min/max, so a hand-edited URL cannot ask for 99 columns.
+     */
+    function set(key, value) {
+      if (!Object.prototype.hasOwnProperty.call(defaults, key) || key === "visible" || key === "styles") {
+        return false;
+      }
+
+      var next = value;
+      if (NUMERIC_KEYS[key]) {
+        var el = byId(controls[key]);
+        var min = el ? Number(el.getAttribute("min")) : NaN;
+        var max = el ? Number(el.getAttribute("max")) : NaN;
+        next = Number(value);
+        if (!isFinite(next)) {
+          return false;
+        }
+        if (isFinite(min) && isFinite(max)) {
+          next = clampNumber(next, min, max);
+        }
+      } else if (FLAG_IDS.indexOf(key) !== -1) {
+        next = value === true || value === "true" || value === "1";
+      } else {
+        next = String(value);
+      }
+
+      if (config[key] === next) {
+        return false;
+      }
+      config[key] = next;
+      saveConfig();
+      syncControls();
+      layoutSignature = "";
+      render();
+      notifyChange(key);
+      return true;
     }
 
     function init() {
@@ -533,6 +855,8 @@
       render: render,
       setData: function (rows) {
         data = Array.isArray(rows) ? rows.slice() : [];
+        firstSeq = 0;
+        anchorSeq = null;
         render();
       },
       appendData: function (row, maxRows) {
@@ -540,6 +864,9 @@
         var cap = maxRows || 240;
         while (data.length > cap) {
           data.shift();
+          // The dropped reading keeps its number: the anchor of a held window
+          // is a sequence, not an index, so eviction cannot renumber it.
+          firstSeq += 1;
         }
         render();
       },
@@ -547,6 +874,8 @@
         data = [];
         geometry = {};
         layoutSignature = "";
+        firstSeq = 0;
+        anchorSeq = null;
         render();
       },
       getData: function () {
@@ -554,6 +883,21 @@
       },
       get: function (key) {
         return config[key];
+      },
+      getDefault: function (key) {
+        return defaults[key];
+      },
+      set: set,
+      getWindowState: function () {
+        return windowState();
+      },
+      getVisibleData: function () {
+        return windowedData(windowState());
+      },
+      setWindowOffset: setWindowOffset,
+      setWindowPosition: setWindowPosition,
+      followLive: function () {
+        setWindowOffset(0);
       },
       onChange: function (listener) {
         if (typeof listener === "function") {
@@ -563,5 +907,10 @@
     };
   }
 
-  window.ChartDeck = { create: create, DEFAULTS: DECK_DEFAULTS };
-})();
+  return {
+    create: create,
+    DEFAULTS: DECK_DEFAULTS,
+    resolveWindow: resolveWindow,
+    clampNumber: clampNumber,
+  };
+});

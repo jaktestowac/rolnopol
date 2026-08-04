@@ -724,6 +724,33 @@ module.exports = [
             "Both endpoints and the page return 404 when 'weatherLiveStreamEnabled' is off. The stream sends a ': keep-alive' heartbeat every 15s so idle connections aren't dropped.",
           ),
         ]),
+        heading("Reading the charts back — the window and the scrub", [
+          p(
+            "The live chart deck is driven by range sliders: how many readings it shows (history window), how it is laid out (columns, card height) and — separately — where over the retained history that window sits. Scrubbing back does not stop the stream: readings keep arriving into the buffer while the chart holds still on the readings the user dragged to, which is why the deck can disagree with the 'Current conditions' card above it.",
+          ),
+          ul([
+            "The window is anchored to the readings it shows, not to a distance from the live edge — an arriving reading cannot slide the chart sideways.",
+            "The scrub slider's max grows with the retained history (240 readings), so the thumb keeps its value while the track gets longer. Once the buffer drops the readings under a held window, the window is pushed forward.",
+            "Dragging the scrub back to the live edge resumes following, as does the 'Jump to live' button. Pause/Resume only opens and closes the stream — it never moves the window.",
+          ]),
+          table(
+            ["Query param", "Meaning"],
+            [
+              ["history", "History window size in readings (10–240, default 30)"],
+              ["columns", "Deck columns (1–3, default 2)"],
+              ["height", "Card height in px (100–280, default 160)"],
+              ["scrub", "How many readings behind the live edge the chart is held; kept up to date while held"],
+            ],
+          ),
+          p(
+            "An explicit query parameter beats the stored preference, and a value outside a slider's range is clamped and the URL corrected. A link asking to scrub further back than the page has collected yet waits (the scrub bar carries `data-scrub-pending`) until enough readings have arrived.",
+          ),
+          callout(
+            "info",
+            "Assertable without pixels",
+            "The deck host publishes what it is drawing as `data-reading-count`, `data-window-size`, `data-window-span`, `data-window-offset`, `data-window-max-offset`, `data-window-position`, `data-window-start`/`-end`, `data-window-first-at`/`-last-at` and `data-window-follow` (live | held). The toolbar publishes `data-stream-state` (connecting | live | paused | error).",
+          ),
+        ]),
       ],
     },
   },
