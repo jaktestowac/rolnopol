@@ -48,6 +48,10 @@ module.exports = {
   base: BASE,
   healthAll: () => call("GET", "/health/all"),
   getCatalog: (userId) => call("GET", "/v1/catalog", { userId }),
+  // Location catalog + the globally shared custom locations.
+  listLocations: (userId) => call("GET", "/v1/locations", { userId }),
+  addLocation: (userId, body) => call("POST", "/v1/locations", { userId, body }),
+  removeLocation: (userId, query) => call("DELETE", "/v1/locations", { userId, query }),
   // query may include: from, to, guests, district, type, maxPrice, sort, page, pageSize
   search: (userId, query) => call("GET", "/v1/search", { userId, query }),
   getProperty: (userId, id, query) => call("GET", `/v1/properties/${encodeURIComponent(id)}`, { userId, query }),

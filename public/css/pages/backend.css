@@ -177,6 +177,11 @@
   opacity: 0.9;
 }
 
+.backend-card--nervous[data-service-state="degraded"],
+.backend-card--nervous:focus-visible {
+  border-color: rgba(190, 18, 60, 0.28);
+}
+
 .backend-card__icon {
   width: 40px;
   height: 40px;

@@ -1074,6 +1074,7 @@ module.exports = [
             [
               ["GET", "/farm-stay/search", "Search available properties"],
               ["GET/POST", "/farm-stay/properties", "Browse / create properties (hosting)"],
+              ["GET/POST/DELETE", "/farm-stay/locations", "Location catalog + custom locations, shared by all users"],
               ["POST", "/farm-stay/bookings", "Create a booking"],
               ["POST", "/farm-stay/bookings/:id/confirm", "Confirm and pay for a booking"],
               ["POST", "/farm-stay/bookings/:id/cancel", "Cancel a booking (partial refund)"],
