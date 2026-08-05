@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>INSTRUMENTALITY - SHADOW</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="/css/pages/instrumentality-shadow.css" />
+</head>
+
+<body class="ish-body">
+  <div class="ish-frame">
+    <aside class="ish-rail">
+      <span class="ish-rail-id">mirror sink</span>
+      <span class="ish-rail-state"><i class="ish-dot" aria-hidden="true"></i>absorbing</span>
+    </aside>
+
+    <main class="ish-panel">
+      <!-- Decoration only: two thin squares, off-axis, cropped by the frame. -->
+      <div class="ish-glyph" aria-hidden="true"><span></span><span></span></div>
+      <a class="ish-secret" href="/instrumentality/core" aria-label="Enter Instrumentality Protocol core" title="LCL_CORE://OPEN"></a>
+
+      <h1 class="ish-title">Instrumentality</h1>
+
+      <section class="ish-sink" aria-labelledby="ishCountLabel">
+        <span id="ishCount" class="ish-count-value">—</span>
+        <span id="ishCountLabel" class="ish-count-label">requests absorbed</span>
+      </section>
+
+      <p class="ish-lede">Every mirrored request arrives here. None of them return.</p>
+      <p id="ishSince" class="ish-since"></p>
+
+      <section class="ish-echoes">
+        <h2 class="ish-recent-title">last echoes</h2>
+        <ol id="ishRecent" class="ish-recent" aria-live="polite"></ol>
+        <p id="ishEmpty" class="ish-empty">The shadow is still. Nothing has been mirrored yet.</p>
+      </section>
+
+      <footer class="ish-foot">
+        <span>absorbs and forgets — no body is stored</span>
+        <span>enable <em>Human Instrumentality Dry Run</em> in <a href="/chaos-engine.html">chaos engine</a></span>
+      </footer>
+    </main>
+  </div>
+
+  <script src="/js/pages/instrumentality-shadow.js"></script>
+</body>
+
+</html>

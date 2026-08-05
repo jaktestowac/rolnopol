@@ -866,6 +866,35 @@ app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
   return next();
 });
 
+// Public hidden Instrumentality Protocol entry points.
+const instrumentalityPages = {
+  core: path.join(__dirname, "../public/instrumentality/core.html"),
+  apocrypha: path.join(__dirname, "../public/instrumentality/apocrypha.html"),
+  chat: path.join(__dirname, "../public/instrumentality/chat.html"),
+};
+
+function serveInstrumentalityPage(pageName) {
+  return (req, res) => {
+    return res.sendFile(instrumentalityPages[pageName]);
+  };
+}
+
+app.get(["/instrumentality/core", "/instrumentality/core.html"], serveInstrumentalityPage("core"));
+app.get(["/instrumentality/apocrypha", "/instrumentality/apocrypha.html"], serveInstrumentalityPage("apocrypha"));
+app.get(["/instrumentality/chat", "/instrumentality/chat.html"], serveInstrumentalityPage("chat"));
+
+app.get(["/operator/instrumentality-core", "/operator/instrumentality-core.html"], (req, res) => {
+  return res.redirect(302, "/instrumentality/core");
+});
+
+app.get(["/operator/instrumentality-apocrypha", "/operator/instrumentality-apocrypha.html"], (req, res) => {
+  return res.redirect(302, "/instrumentality/apocrypha");
+});
+
+app.get(["/operator/instrumentality-chat", "/operator/instrumentality-chat.html"], (req, res) => {
+  return res.redirect(302, "/instrumentality/chat");
+});
+
 // Feature-gate the Observatory page before static serving
 app.get(
   ["/operator/observatory", "/operator/observatory.html", "/operator/astronomy", "/operator/astronomy.html"],
@@ -890,6 +919,22 @@ app.get(
     }
   },
 );
+
+// Chaos Engine mirror sink + its (unlinked) page. Mounted before static so the
+// extension-less path serves the page and the wildcard can swallow mirrored
+// requests — see routes/instrumentality-shadow.route.js.
+app.get("/instrumentality/shadow.html", (req, res) => {
+  return res.redirect(302, "/instrumentality/shadow");
+});
+app.get("/instrumentality-shadow.html", (req, res) => {
+  return res.redirect(302, "/instrumentality/shadow");
+});
+app.get("/instrumentality-shadow", (req, res) => {
+  const query = req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : "";
+  return res.redirect(302, `/instrumentality/shadow${query}`);
+});
+app.use("/instrumentality/shadow", require("../routes/instrumentality-shadow.route"));
+app.use("/instrumentality-shadow", require("../routes/instrumentality-shadow.route"));
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "../public")));

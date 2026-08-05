@@ -57,7 +57,7 @@ flowchart LR
 | Service                | Runtime |    Port | Owns data | Responsibility                                                                      |
 | ---------------------- | ------- | ------: | --------- | ----------------------------------------------------------------------------------- |
 | `stay-gateway-service` | REST    |  `4310` | No        | Public Farm Stay API, identity forwarding, orchestration, health aggregation.       |
-| `inventory-service`    | gRPC    | `50071` | Yes       | Property catalog, calendars, blackouts, atomic holds, confirmed locks.              |
+| `inventory-service`    | gRPC    | `50071` | Yes       | Property catalog, calendars, blackouts, atomic holds, confirmed locks, locations.    |
 | `pricing-service`      | REST    |  `4311` | No        | Deterministic quotes from base price, dates, guests, seasons, weekends, discounts.  |
 | `reservation-service`  | gRPC    | `50072` | Yes       | Booking records, hold/confirm/cancel state machine, refund windows, release status. |
 | `review-desk-service`  | REST    |  `4312` | Yes       | Reviews, duplicate-booking guard, property score aggregation.                       |
@@ -373,6 +373,9 @@ same paths under `/v1/*` plus health endpoints.
 GET    /health
 GET    /health/all
 GET    /v1/catalog
+GET    /v1/locations
+POST   /v1/locations                    { voivodeship, city }
+DELETE /v1/locations?voivodeship=&city=
 GET    /v1/search?from=&to=&guests=&district=&type=&maxPrice=&sort=&page=&pageSize=
 GET    /v1/properties/:id?from=&to=
 POST   /v1/properties
@@ -392,6 +395,15 @@ GET    /v1/hosting/analytics
 GET    /v1/guest/travel                 (guest "your travel" summary)
 GET    /v1/platform/analytics           (admin-gated, cumulative across ALL data)
 ```
+
+`GET /v1/locations` returns the location catalog the UI builds its pickers from:
+the fixed voivodeship→city `regions` plus the `custom` cities users have added.
+Custom locations are **platform-wide** — inventory owns them (they sit next to the
+properties, in the service that owns `district`), so a city added by one user is
+immediately visible, listable, and searchable for everybody. Each entry carries
+`addedBy` and a per-caller `mine` flag; only the author may `DELETE` their own, and
+removal is refused with `409 IN_USE` while any listing still sits in that city.
+Duplicates (case-insensitive, against base *and* custom cities) return `409`.
 
 `GET /v1/guest/travel` shapes the caller's own trips into nights, spend, and
 favourite regions; the bridge overlays what was actually charged in ROL.

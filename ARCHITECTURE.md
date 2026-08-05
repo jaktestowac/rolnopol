@@ -398,6 +398,8 @@ Bundled plugins include easter eggs and observability helpers: `teapot-blocker` 
 
 `middleware/chaos-engine.middleware.js` + `services/chaos-engine.service.js` inject controlled failures (latency, errors, data mutation) into `/api` traffic based on configurable, runtime-reconfigurable rules (`data/chaos-engine.json`). It exists to make the API a **realistic, occasionally-flaky** target for resilience and retry testing, and has an admin UI (`chaos-engine.html`).
 
+**Mirroring** additionally copies a share of requests to `mirroring.targetUrl`, with the original request path appended. The "Human Instrumentality Dry Run" preset aims that at the app's own **shadow sink** — `routes/instrumentality-shadow.route.js` + `services/instrumentality-shadow.service.js` — which counts copies in memory, answers `204`, and stores nothing, so mirrored writes can never re-execute. Its target is built from the port this process listens on (override with `CHAOS_MIRROR_TARGET_URL`); the unlinked page at `/instrumentality-shadow` shows the running tally.
+
 ---
 
 ## 13. Farm Defence (FD) Game Subsystem

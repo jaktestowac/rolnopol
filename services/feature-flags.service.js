@@ -25,7 +25,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
     "Enable or disable commodities buy endpoint and trading UI actions (Requires financialCommoditiesEnabled to be enabled)",
   financialCommoditiesMarketDeskEnabled:
     "Enable or disable the Market desk on the commodities page: an embedded same-origin ticker iframe with a nested frame, plus the shadow-DOM converter and spread badge (Requires financialCommoditiesEnabled to be enabled)",
-  prometheusMetricsEnabled: "Enable or disable Prometheus metrics collection endpoint",
+  prometheusMetricsEnabled: "Enable or disable Prometheus metrics collection endpoint /api/v1/metrics",
   homeWelcomeVideoEnabled: "Enable or disable the homepage welcome promotional video",
   homeStatsSectionEnabled: "Enable or disable advanced statistics section on the homepage",
   homeModernRestyleEnabled: "Enable or disable modern redesigned homepage layout and styling",

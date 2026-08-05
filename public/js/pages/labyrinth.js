@@ -64,6 +64,7 @@
       this.sessionSeed = createSessionSeed();
       this.sessionConfig = this._buildSessionConfig(this.sessionSeed);
       this._notificationContainer = null;
+      this._luxShortcutBuffer = "";
     }
 
     init() {
@@ -178,6 +179,14 @@
         }
 
         const key = event.key.toLowerCase();
+        this._luxShortcutBuffer = `${this._luxShortcutBuffer}${key}`.slice(-3);
+        if (this._luxShortcutBuffer === "lux") {
+          event.preventDefault();
+          this._luxShortcutBuffer = "";
+          this._showLuxArchive();
+          return;
+        }
+
         const directionMap = {
           arrowup: "up",
           w: "up",
@@ -230,6 +239,20 @@
           this._startPolling();
         }
       });
+
+    }
+
+    _showLuxArchive() {
+      this._showNotification(
+        "Lux archive opened: lower city relay // limbs accounted for // surface signal absent",
+        "warning",
+        9000,
+      );
+      document.body?.classList.add("labyrinth-lux-mode");
+      if (this.controls.statusHint) {
+        this.controls.statusHint.hidden = false;
+        this.controls.statusHint.textContent = "Lux archive: the corridor below the silo remembers every turn.";
+      }
     }
 
     async _request(path, options = {}) {

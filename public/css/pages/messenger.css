@@ -244,6 +244,18 @@
   background: rgba(226, 242, 214, 0.95);
 }
 
+.messenger-wired-echo .messenger-chat {
+  box-shadow: inset 0 0 0 1px rgba(80, 110, 120, 0.18);
+}
+
+.messenger-message--wired {
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  border-color: rgba(40, 75, 88, 0.32);
+  background:
+    linear-gradient(90deg, rgba(230, 246, 244, 0.9), rgba(240, 244, 232, 0.92)),
+    rgba(255, 255, 255, 0.88);
+}
+
 .messenger-message__meta {
   display: block;
   margin-top: 0.25rem;
