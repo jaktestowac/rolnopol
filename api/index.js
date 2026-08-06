@@ -868,6 +868,7 @@ app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
 
 // Public hidden Instrumentality Protocol entry points.
 const instrumentalityPages = {
+  empty: path.join(__dirname, "../public/instrumentality/empty.html"),
   core: path.join(__dirname, "../public/instrumentality/core.html"),
   apocrypha: path.join(__dirname, "../public/instrumentality/apocrypha.html"),
   chat: path.join(__dirname, "../public/instrumentality/chat.html"),
@@ -879,6 +880,10 @@ function serveInstrumentalityPage(pageName) {
   };
 }
 
+app.get(["/instrumentality", "/instrumentality/"], (req, res) => {
+  return res.redirect(302, "/instrumentality/empty");
+});
+app.get(["/instrumentality/empty", "/instrumentality/empty.html"], serveInstrumentalityPage("empty"));
 app.get(["/instrumentality/core", "/instrumentality/core.html"], serveInstrumentalityPage("core"));
 app.get(["/instrumentality/apocrypha", "/instrumentality/apocrypha.html"], serveInstrumentalityPage("apocrypha"));
 app.get(["/instrumentality/chat", "/instrumentality/chat.html"], serveInstrumentalityPage("chat"));

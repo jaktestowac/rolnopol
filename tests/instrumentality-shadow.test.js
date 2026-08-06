@@ -1,5 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import request from "supertest";
+import http from "http";
 
 const app = require("../api/index.js");
 const shadow = require("../services/instrumentality-shadow.service");
@@ -40,6 +41,19 @@ describe("Instrumentality Shadow", () => {
     expect(res.text).toContain("/instrumentality/shadow");
   });
 
+  it("redirects the base Instrumentality namespace to the empty chamber", async () => {
+    await request(app).get("/instrumentality").expect(302).expect("Location", "/instrumentality/empty");
+    await request(app).get("/instrumentality/").expect(302).expect("Location", "/instrumentality/empty");
+  });
+
+  it("serves the empty Instrumentality chamber", async () => {
+    const res = await request(app).get("/instrumentality/empty").expect(200);
+    expect(res.headers["content-type"]).toMatch(/text\/html/);
+    expect(res.text).toContain("Nothing is here.");
+    expect(res.text).toContain("/css/pages/instrumentality-shadow.css");
+    expect(res.text).toContain("/instrumentality/shadow");
+  });
+
   it("serves the hidden Instrumentality apocrypha page from the core", async () => {
     const res = await request(app).get("/instrumentality/apocrypha").expect(200);
     expect(res.headers["content-type"]).toMatch(/text\/html/);
@@ -72,6 +86,33 @@ describe("Instrumentality Shadow", () => {
   it("reports an empty tally before anything is mirrored", async () => {
     const res = await request(app).get("/instrumentality/shadow?format=json").expect(200);
     expect(res.body).toEqual({ absorbed: 0, since: null, recent: [] });
+  });
+
+  it("streams shadow snapshots over SSE when mirrored requests are absorbed", async () => {
+    const server = http.createServer(app);
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address();
+    const controller = new AbortController();
+
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/instrumentality/shadow/stream`, {
+        headers: { accept: "text/event-stream" },
+        signal: controller.signal,
+      });
+      expect(res.headers.get("content-type")).toContain("text/event-stream");
+
+      const reader = res.body.getReader();
+      const initial = await readSseUntil(reader, "snapshot");
+      expect(initial).toContain('"absorbed":0');
+
+      await request(app).post("/instrumentality/shadow/v1/sse-probe").expect(204);
+      const update = await readSseUntil(reader, "sse-probe");
+      expect(update).toContain('"absorbed":1');
+      expect(update).toContain('"/v1/sse-probe"');
+    } finally {
+      controller.abort();
+      await new Promise((resolve) => server.close(resolve));
+    }
   });
 
   it("absorbs a mirrored request of any method and path with 204 and no body", async () => {
@@ -190,3 +231,23 @@ describe("Instrumentality Shadow", () => {
     });
   });
 });
+
+async function readSseUntil(reader, needle) {
+  const decoder = new TextDecoder();
+  let text = "";
+  const deadline = Date.now() + 2000;
+
+  while (!text.includes(needle)) {
+    if (Date.now() > deadline) {
+      throw new Error(`Timed out waiting for SSE frame containing ${needle}. Received: ${text}`);
+    }
+    const result = await Promise.race([
+      reader.read(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Timed out reading SSE stream")), 500)),
+    ]);
+    if (result.done) break;
+    text += decoder.decode(result.value, { stream: true });
+  }
+
+  return text;
+}

@@ -29,6 +29,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   homeWelcomeVideoEnabled: "Enable or disable the homepage welcome promotional video",
   homeStatsSectionEnabled: "Enable or disable advanced statistics section on the homepage",
   homeModernRestyleEnabled: "Enable or disable modern redesigned homepage layout and styling",
+  homeInstrumentalityRestyleEnabled: "Enable or disable the Instrumentality-inspired homepage layout and styling",
   messengerEnabled: "Enable or disable internal messenger feature",
   assistantChatEnabled: "Enable or disable AI assistant chat modal and API for authenticated users",
   notificationCenterEnabled: "Enable or disable event-driven multi-channel notification center module",
@@ -63,7 +64,7 @@ const FEATURE_FLAG_DESCRIPTIONS = {
 };
 
 const FEATURE_FLAG_GROUPS = {
-  homepage: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled", "homeModernRestyleEnabled"],
+  homepage: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled", "homeModernRestyleEnabled", "homeInstrumentalityRestyleEnabled"],
   alert: ["alertsEnabled", "alertsSeverityFilterEnabled", "alertsAiAssistantEnabled", "celebrationEventsEnabled"],
   profile: ["profileAvatarUploadEnabled"],
   map: ["rolnopolMapEnabled"],
@@ -104,6 +105,7 @@ const FEATURE_FLAG_GROUPS = {
 const EXPERIMENTAL_FEATURE_FLAGS = [
   "homeStatsSectionEnabled",
   "homeModernRestyleEnabled",
+  "homeInstrumentalityRestyleEnabled",
   "profileAvatarUploadEnabled",
   "docsSearchEnabled",
   "docsAdvancedSearchEnabled",
@@ -166,6 +168,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   homeWelcomeVideoEnabled: false,
   homeStatsSectionEnabled: false,
   homeModernRestyleEnabled: false,
+  homeInstrumentalityRestyleEnabled: false,
   cookieConsentBannerEnabled: false,
   messengerEnabled: false,
   assistantChatEnabled: false,

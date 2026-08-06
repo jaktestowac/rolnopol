@@ -241,7 +241,7 @@ module.exports = [
   // Homepage presentation (any of the homepage flags)
   // ---------------------------------------------------------------------------
   {
-    anyFlags: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled", "homeModernRestyleEnabled"],
+    anyFlags: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled", "homeModernRestyleEnabled", "homeInstrumentalityRestyleEnabled"],
     section: {
       section: "homepage-features",
       title: "Homepage Enhancements",
@@ -252,11 +252,12 @@ module.exports = [
             "homeWelcomeVideoEnabled: shows a promotional welcome video block.",
             "homeStatsSectionEnabled: shows an advanced statistics section.",
             "homeModernRestyleEnabled: swaps the homepage to a modern redesigned layout and styling.",
+            "homeInstrumentalityRestyleEnabled: swaps the homepage to an Instrumentality-inspired graphite-and-bone layout.",
           ]),
           callout(
             "tip",
             "Live restyle",
-            "The modern restyle applies at runtime and re-applies when feature flags change, so you can toggle it without reloading.",
+            "The homepage restyles apply at runtime and re-apply when feature flags change, so you can toggle them without reloading.",
           ),
         ]),
       ],

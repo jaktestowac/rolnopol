@@ -1,20 +1,22 @@
 /**
  * Instrumentality Shadow page.
  *
- * Polls the sink's own route for its in-memory tally — GET
- * /instrumentality/shadow?format=json — and renders the count plus the last few
- * absorbed paths. Read-only: the page never posts anything, and a failed poll
- * leaves the last known numbers on screen rather than blanking them.
+ * Opens the sink's Server-Sent Events stream and renders its in-memory tally
+ * plus the last few absorbed paths. Read-only: the page never posts anything,
+ * and a fallback poll keeps the last known numbers moving if SSE is unavailable.
  */
 (function () {
   "use strict";
 
-  const POLL_MS = 3000;
+  const POLL_MS = 10000;
+  const STREAM_URL = "/instrumentality/shadow/stream";
   const SECRET_SEQUENCE = "instrumentality";
   const SECRET_TARGET = "/instrumentality/core";
   const $ = (id) => document.getElementById(id);
   let lastCount = null;
   let secretBuffer = "";
+  let pollTimer = null;
+  let stream = null;
 
   function esc(s) {
     return String(s == null ? "" : s).replace(
@@ -56,13 +58,27 @@
   function renderCount(absorbed) {
     const el = $("ishCount");
     if (!el) return;
-    el.textContent = String(absorbed);
+    const count = Number.isFinite(absorbed) && absorbed > 0 ? Math.floor(absorbed) : 0;
+    const digits = String(count).length;
+    el.textContent = formatCount(count);
+    el.setAttribute("aria-label", `${formatCount(count)} requests absorbed`);
+    el.classList.toggle("ish-count-value--large", digits >= 7 && digits < 10);
+    el.classList.toggle("ish-count-value--huge", digits >= 10 && digits < 14);
+    el.classList.toggle("ish-count-value--extreme", digits >= 14);
     if (lastCount !== null && absorbed !== lastCount) {
       el.classList.remove("is-shifted");
       void el.offsetWidth; // restart the animation on a repeat increment
       el.classList.add("is-shifted");
     }
-    lastCount = absorbed;
+    lastCount = count;
+  }
+
+  function formatCount(value) {
+    try {
+      return new Intl.NumberFormat("en-US").format(value);
+    } catch {
+      return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
   }
 
   async function poll() {
@@ -74,10 +90,48 @@
     } catch {
       return; // the shadow keeps whatever it last showed
     }
+    renderState(state);
+  }
+
+  function renderState(state) {
     renderCount(Number(state.absorbed) || 0);
     renderRecent(Array.isArray(state.recent) ? state.recent : []);
     const since = $("ishSince");
     if (since) since.textContent = state.since ? `first echo ${ago(state.since)} · counted since this process started` : "";
+  }
+
+  function startPolling() {
+    if (pollTimer) return;
+    poll();
+    pollTimer = setInterval(poll, POLL_MS);
+  }
+
+  function stopPolling() {
+    if (!pollTimer) return;
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  function connectStream() {
+    if (!window.EventSource) {
+      startPolling();
+      return;
+    }
+
+    stream = new EventSource(STREAM_URL);
+    stream.addEventListener("open", stopPolling);
+    stream.addEventListener("snapshot", (event) => {
+      try {
+        renderState(JSON.parse(event.data || "{}"));
+      } catch {
+        /* ignore malformed stream frames */
+      }
+    });
+    stream.addEventListener("error", () => {
+      // EventSource reconnects by itself; polling covers the gap when a proxy or
+      // dropped connection prevents stream frames from arriving.
+      startPolling();
+    });
   }
 
   document.addEventListener("keydown", (event) => {
@@ -88,6 +142,9 @@
     }
   });
 
-  poll();
-  setInterval(poll, POLL_MS);
+  connectStream();
+  window.addEventListener("beforeunload", () => {
+    if (stream) stream.close();
+    stopPolling();
+  });
 })();

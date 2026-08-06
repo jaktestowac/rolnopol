@@ -43,6 +43,7 @@ describe("Feature Flags API", () => {
     expect(Array.isArray(res.body.data.groups.notifications)).toBe(true);
     expect(res.body.data.groups.notifications).toContain("notificationCenterEnabled");
     expect(res.body.data.flags).toHaveProperty("homeModernRestyleEnabled");
+    expect(res.body.data.flags).toHaveProperty("homeInstrumentalityRestyleEnabled");
     expect(res.body.data.flags).toHaveProperty("weatherPageEnabled");
     expect(res.body.data.flags).toHaveProperty("weatherWeatherDataExport");
     expect(res.body.data.flags).toHaveProperty("weatherUserInsightsEnabled");
@@ -50,6 +51,7 @@ describe("Feature Flags API", () => {
     expect(res.body.data.groups).toHaveProperty("weather");
     expect(Array.isArray(res.body.data.groups.homepage)).toBe(true);
     expect(res.body.data.groups.homepage).toContain("homeModernRestyleEnabled");
+    expect(res.body.data.groups.homepage).toContain("homeInstrumentalityRestyleEnabled");
     expect(Array.isArray(res.body.data.groups.weather)).toBe(true);
     expect(res.body.data.groups.weather).toContain("weatherPageEnabled");
     expect(res.body.data.groups.weather).toContain("weatherUserInsightsEnabled");

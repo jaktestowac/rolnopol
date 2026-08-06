@@ -1585,6 +1585,7 @@
         "homeWelcomeVideoEnabled": false,
         "homeStatsSectionEnabled": false,
         "homeModernRestyleEnabled": false,
+        "homeInstrumentalityRestyleEnabled": false,
         "cookieConsentBannerEnabled": false,
         "messengerEnabled": false,
         "assistantChatEnabled": false,
@@ -1607,7 +1608,7 @@
         "taskLabEnabled": false,
         "greenhouseControlRoomEnabled": false,
         "farmStayEnabled": false,
-        "agriAcademyEnabled": true,
+        "agriAcademyEnabled": false,
         "observatoryEnabled": false
       },
       "updatedAt": "2026-07-21T20:43:51.995Z"

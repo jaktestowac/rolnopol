@@ -17,6 +17,7 @@ const MAX_PATH_LEN = 120;
 let absorbed = 0;
 let since = null;
 let recent = []; // newest first, capped at MAX_RECENT
+const subscribers = new Set();
 
 /** Record one mirrored request. Returns the resulting count. */
 function absorb({ method, path, at } = {}) {
@@ -29,6 +30,7 @@ function absorb({ method, path, at } = {}) {
     at: timestamp,
   });
   if (recent.length > MAX_RECENT) recent.length = MAX_RECENT;
+  notify();
   return absorbed;
 }
 
@@ -37,10 +39,30 @@ function snapshot() {
   return { absorbed, since, recent: recent.map((entry) => ({ ...entry })) };
 }
 
+function subscribe(listener) {
+  if (typeof listener !== "function") return () => {};
+  subscribers.add(listener);
+  return () => {
+    subscribers.delete(listener);
+  };
+}
+
+function notify() {
+  const state = snapshot();
+  for (const listener of subscribers) {
+    try {
+      listener(state);
+    } catch {
+      subscribers.delete(listener);
+    }
+  }
+}
+
 function reset() {
   absorbed = 0;
   since = null;
   recent = [];
+  notify();
 }
 
-module.exports = { absorb, snapshot, reset, MAX_RECENT };
+module.exports = { absorb, snapshot, subscribe, reset, MAX_RECENT };
