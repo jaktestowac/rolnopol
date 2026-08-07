@@ -193,7 +193,9 @@ graph LR
     V1 --> AI["AI<br/>chatbot (Gemini / OpenRouter / mock)"]
 ```
 
-Response bodies are normalized through `helpers/response-helper.js` (`sendSuccess` / `sendError` / `formatResponseBody`). OpenAPI/Swagger is served from `/swagger.html` and `/schema/openapi.json`.
+Response bodies are normalized through `helpers/response-helper.js` (`sendSuccess` / `sendError` / `formatResponseBody`).
+
+Swagger UI is served from `/swagger.html`. It offers one definition per API version — `/schema/openapi.v1.json` and `/schema/openapi.v2.json` — in a picker rendered under the API title. Both are **generated** by `npm run schema:generate`, which walks the live Express routers; do not edit them by hand. `/schema/openapi.json` is the superseded hand-written schema, kept frozen and offered as a deprecated definition. See [schema/README.md](schema/README.md).
 
 A typical authenticated REST call:
 

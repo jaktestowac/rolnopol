@@ -139,6 +139,51 @@
         "updatedAt": "2028-07-19T10:15:35.348Z",
         "lastLogin": "2028-07-19T10:15:35.348Z",
         "protected": true
+      },
+      {
+        "id": 13,
+        "username": "Adi Cherryson",
+        "displayedName": "Adi Cherryson",
+        "email": "adi.cherryson@rolnopol.demo.pl",
+        "password": "adiPass123",
+        "isActive": true,
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "updatedAt": "2025-09-17T10:43:35.335Z",
+        "lastLogin": "2025-09-17T10:43:35.334Z"
+      },
+      {
+        "id": 14,
+        "username": "A. Zamoyski",
+        "displayedName": "A. Zamoyski",
+        "email": "a.zamoyski@rolnopol.demo.pl",
+        "password": "zamoyskiPass123",
+        "isActive": true,
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "updatedAt": "2025-09-17T10:43:35.335Z",
+        "lastLogin": "2025-09-17T10:43:35.334Z"
+      },
+      {
+        "id": 15,
+        "username": "Rinah Devi",
+        "displayedName": "Rinah Devi",
+        "email": "rinah.devi@rolnopol.demo.pl",
+        "password": "rinahPass123",
+        "isActive": true,
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "updatedAt": "2025-09-17T10:43:35.335Z",
+        "lastLogin": "2025-09-17T10:43:35.334Z"
+      },
+      {
+        "id": 16,
+        "username": "Patrick Gheorg McPherson",
+        "displayedName": "Patrick Gheorg McPherson",
+        "email": "patrick.mcpherson@rolnopol.demo.pl",
+        "password": "patrickPass123",
+        "isActive": true,
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "updatedAt": "2025-09-17T10:43:35.335Z",
+        "lastLogin": "2025-09-17T10:43:35.334Z",
+        "protected": true
       }
     ],
     "fields": [
@@ -1581,6 +1626,7 @@
         "financialCsvExportEnabled": false,
         "financialCommoditiesEnabled": false,
         "financialCommoditiesTradingEnabled": false,
+        "financialCommoditiesMarketDeskEnabled": false,
         "prometheusMetricsEnabled": false,
         "homeWelcomeVideoEnabled": false,
         "homeStatsSectionEnabled": false,
@@ -1609,7 +1655,8 @@
         "greenhouseControlRoomEnabled": false,
         "farmStayEnabled": false,
         "agriAcademyEnabled": false,
-        "observatoryEnabled": false
+        "observatoryEnabled": false,
+        "crewOfficeEnabled": false
       },
       "updatedAt": "2026-07-21T20:43:51.995Z"
     },

@@ -23,6 +23,7 @@
     "homeWelcomeVideoEnabled": false,
     "homeStatsSectionEnabled": false,
     "homeModernRestyleEnabled": false,
+    "homeInstrumentalityRestyleEnabled": false,
     "cookieConsentBannerEnabled": false,
     "messengerEnabled": false,
     "assistantChatEnabled": false,
@@ -49,5 +50,5 @@
     "observatoryEnabled": false,
     "crewOfficeEnabled": false
   },
-  "updatedAt": "2026-07-29T16:36:08.483Z"
+  "updatedAt": "2026-08-06T12:48:25.242Z"
 }

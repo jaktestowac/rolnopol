@@ -120,6 +120,9 @@ const adminLoginLimiter = (req, res, next) => {
   next();
 };
 
+// Self-description for the OpenAPI generator — see api/limiters.js.
+adminLoginLimiter.rateLimitType = "admin-login";
+
 module.exports = {
   createRateLimiter,
   adminLoginLimiter,

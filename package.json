@@ -1,6 +1,6 @@
 {
   "name": "rolnopol-app",
-  "version": "1.95.0",
+  "version": "1.96.0",
   "description": "A Rolnopol app with JSON database, authentication, and admin panel",
   "main": "api/index.js",
   "scripts": {
@@ -41,6 +41,8 @@
     "academy:test": "cross-env NODE_ENV=test vitest run --project unit agri-academy && cross-env NODE_ENV=test vitest run --project integration --project property agri-academy",
     "crew:test": "cross-env NODE_ENV=test vitest run --project unit crew && cross-env NODE_ENV=test vitest run --project integration --project property crew",
     "format": "npx prettier --write .",
+    "schema:generate": "node build/generate-openapi.js",
+    "schema:check": "node build/generate-openapi.js --check",
     "bump-version": "node bump-version.js minor",
     "test": "cross-env NODE_ENV=test vitest run --dir tests",
     "unit": "cross-env NODE_ENV=test vitest run --project unit",

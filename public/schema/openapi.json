@@ -3,10 +3,11 @@
   "info": {
     "title": "Rolnopol",
     "version": "1.95.0",
+    "author": "jaktestowac.pl",
     "description": "API documentation for the Rolnopol service with versioning support",
     "contact": {
       "name": "API Support",
-      "url": "https://github.com/your-repo/api-rolnopol"
+      "url": "https://github.com/jaktestowac/rolnopol"
     }
   },
   "servers": [
