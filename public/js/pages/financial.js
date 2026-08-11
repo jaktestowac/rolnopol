@@ -1386,7 +1386,7 @@ class FinancialPage {
       if (response.success) {
         document.getElementById("transfer-form-success").textContent = "Transfer completed successfully!";
         document.getElementById("transfer-form-success").style.display = "block";
-        form.reset();
+        document.getElementById("transfer-form").reset();
         // Reload data
         await this.loadFinancialData();
         await this.loadTransactions();
