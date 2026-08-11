@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
 bash bump-version.sh minor
-git add package.json app-data.json package-lock.json public/schema/openapi.v1.json public/schema/openapi.v2.json
+git add package.json app-data.json package-lock.json ./public/schema/openapi.v1.json ./public/schema/openapi.v2.json
