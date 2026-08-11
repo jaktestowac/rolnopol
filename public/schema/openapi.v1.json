@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Rolnopol API v1",
-    "version": "1.95.0",
-    "description": "Stable production API for the Rolnopol service.\n\n**Generated** from the live Express router by `npm run schema:generate` — do not edit by hand. \n\nOperations marked with `x-feature-flag` are gated: they answer **404** while their flag is off. Flags are listed at `GET /api/v1/feature-flags` and toggled via `PATCH /api/v1/admin/feature-flags`.",
+    "version": "1.96.0",
+    "description": "Stable production API for the Rolnopol service.\n\n**Generated** from the live Express router by `npm run schema:generate` — do not edit by hand.\n\nOperations marked with `x-feature-flag` are gated: they answer **404** while their flag is off. Flags are listed at `GET /api/v1/feature-flags` and toggled via `PATCH /api/v1/admin/feature-flags`.",
     "contact": {
       "name": "API Support",
       "url": "https://github.com/jaktestowac/rolnopol"
@@ -14403,7 +14403,7 @@
                   "properties": {
                     "version": {
                       "type": "string",
-                      "example": "1.95.0"
+                      "example": "1.96.0"
                     }
                   }
                 }
