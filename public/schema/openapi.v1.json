@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Rolnopol API v1",
-    "version": "1.100.0",
+    "version": "1.101.0",
     "description": "Stable production API for the Rolnopol service.\n\n**Generated** from the live Express router by `npm run schema:generate` — do not edit by hand.\n\nOperations marked with `x-feature-flag` are gated: they answer **404** while their flag is off. Flags are listed at `GET /api/v1/feature-flags` and toggled via `PATCH /api/v1/admin/feature-flags`.",
     "contact": {
       "name": "API Support",
@@ -11275,7 +11275,7 @@
         "summary": "Shutdown endpoint",
         "responses": {
           "200": {
-            "description": "Shutdown initiated",
+            "description": "Shutdown initiated (or simulated under NODE_ENV=test)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11284,11 +11284,25 @@
               }
             }
           },
+          "403": {
+            "description": "Request did not originate from localhost. The application keeps running.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Shutdown is available from localhost only"
+                }
+              }
+            }
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "description": "Shutdown the API server (for testing)"
+        "description": "Gracefully stops the whole application: launched external services, plugins, both WebSocket gateways and the Notification Center are torn down, databases are flushed, then the process exits 0. Available from localhost only — requests from any other address, or carrying a proxy hop header (X-Forwarded-For, X-Real-IP, Forwarded), are refused with 403 and nothing is stopped. Requires no credentials: the network location of the caller is the gate. Under NODE_ENV=test the endpoint reports `data.simulated: true` and skips the teardown so it cannot kill a test run."
       }
     },
     "/staff": {
@@ -14403,7 +14417,7 @@
                   "properties": {
                     "version": {
                       "type": "string",
-                      "example": "1.100.0"
+                      "example": "1.101.0"
                     }
                   }
                 }

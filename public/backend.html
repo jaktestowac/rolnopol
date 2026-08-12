@@ -57,6 +57,16 @@
             <div class="backend-card__desc">Live health of the external Greenhouse and TaskLab gRPC services.</div>
           </div>
         </a>
+        <a class="backend-card backend-card--danger" href="/operator/shutdown" id="backendShutdownCard">
+          <div class="backend-card__icon"><i class="fas fa-power-off"></i></div>
+          <div>
+            <div class="backend-card__title">
+              Emergency Shutdown
+              <span class="backend-card__tag" id="backendShutdownTag">localhost only</span>
+            </div>
+            <div class="backend-card__desc">Stop the whole Rolnopol.</div>
+          </div>
+        </a>
       </div>
     </section>
   </div>
@@ -86,6 +96,26 @@
   <script src="/js/utils/init-navigation.js"></script>
   <script>
     initNavigation("backend");
+
+    // The shutdown console is served only to callers on the server's own machine
+    // (it 404s for everyone else). Backend.html itself is public, so when this
+    // page was not opened on localhost the card is marked unavailable instead of
+    // sending the visitor into a 404. This is UX only — the real gate is
+    // server-side, in the route and in the endpoint.
+    (function () {
+      var card = document.getElementById("backendShutdownCard");
+      var tag = document.getElementById("backendShutdownTag");
+      if (!card) return;
+
+      var host = window.location.hostname;
+      if (/^(localhost|127(\.\d+){3}|::1|\[::1\])$/i.test(host)) return;
+
+      card.classList.add("is-unavailable");
+      card.setAttribute("aria-disabled", "true");
+      card.removeAttribute("href");
+      card.title = "Available only when Rolnopol is opened on localhost";
+      if (tag) tag.textContent = "unavailable here";
+    })();
   </script>
 </body>
 

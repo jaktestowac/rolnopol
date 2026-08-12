@@ -109,7 +109,7 @@ const path = require("path");
 const { formatResponseBody } = require("../helpers/response-helper");
 const { PORT } = require("../data/settings");
 const { logDebug, logInfo, logWarning, logError } = require("../helpers/logger-api");
-const { initializeDatabases, cleanupDatabases } = require("../data/database-init");
+const { initializeDatabases } = require("../data/database-init");
 const versionMiddleware = require("../middleware/version.middleware");
 const { restoreAllDatabasesFromBaseState, seedMissingDatabasesFromBaseState } = require("../services/debug-database-restore.service");
 const packageJson = require("../package.json");
@@ -274,55 +274,16 @@ logDebug("Plugins loaded on startup", {
   disabled: startupPlugins.filter((plugin) => !plugin.enabled).map((plugin) => plugin.name),
 });
 
-// Graceful shutdown handling
-const serviceLauncher = require("../services/service-launcher.service");
+// Graceful shutdown handling. The sequence itself lives in
+// services/app-shutdown.service.js because the localhost-only
+// GET /api/v1/shutdown endpoint has to run exactly the same teardown.
+const { shutdownApplication } = require("../services/app-shutdown.service");
 
-// Stop any external services started from the Kraken dashboard so they aren't
-// orphaned (still holding their ports) when the app goes down. This is the
-// graceful path; service-launcher also has a synchronous process 'exit' backstop
-// for crash/forced-exit paths.
-const stopLaunchedServices = async () => {
-  try {
-    await serviceLauncher.shutdownAll();
-  } catch (error) {
-    logError("Error stopping launched external services during shutdown:", error);
-  }
-};
-
-process.on("SIGINT", async () => {
-  logDebug("Received SIGINT. Graceful shutdown...");
-  await stopLaunchedServices();
-  await pluginRuntime.shutdown();
-  notificationWebSocketService.close();
-  messengerWebSocketService.close();
-  greenhouseWebSocketService.close();
-  await notificationCenter.stop();
-  await cleanupDatabases();
-  process.exit(0);
-});
-
-process.on("SIGTERM", async () => {
-  logDebug("Received SIGTERM. Graceful shutdown...");
-  await stopLaunchedServices();
-  await pluginRuntime.shutdown();
-  notificationWebSocketService.close();
-  messengerWebSocketService.close();
-  greenhouseWebSocketService.close();
-  await notificationCenter.stop();
-  await cleanupDatabases();
-  process.exit(0);
-});
-
-process.on("SIGHUP", async () => {
-  logDebug("Received SIGHUP. Graceful shutdown...");
-  await stopLaunchedServices();
-  await pluginRuntime.shutdown();
-  notificationWebSocketService.close();
-  messengerWebSocketService.close();
-  greenhouseWebSocketService.close();
-  await notificationCenter.stop();
-  await cleanupDatabases();
-  process.exit(0);
+["SIGINT", "SIGTERM", "SIGHUP"].forEach((signal) => {
+  process.on(signal, () => {
+    logDebug(`Received ${signal}. Graceful shutdown...`);
+    void shutdownApplication({ reason: signal });
+  });
 });
 
 // Middleware for parsing request bodies
@@ -834,6 +795,35 @@ app.get(["/status", "/status.html"], (req, res, next) => {
 app.get(["/operator/terminal", "/operator/terminal.html"], (req, res, next) => {
   if (req.path === "/operator/terminal") {
     return res.redirect(302, "/operator/terminal.html");
+  }
+
+  return next();
+});
+
+// Hidden operator shutdown console entry point.
+//
+// Unlike the other hidden operator pages this one is gated, and gated the way
+// Crew Office gates its pages: a caller who could never use it gets the HTML 404
+// and cannot tell the page from one that does not exist. The gate is the same
+// `isLocalRequest` the endpoint itself uses, so page and endpoint agree — no
+// point serving a console whose only button is guaranteed to be refused.
+//
+// It must stay above `express.static` below, otherwise /operator/shutdown.html
+// would be served straight off disk and skip the gate entirely.
+app.get(["/operator/shutdown", "/operator/shutdown.html"], (req, res, next) => {
+  const { isLocalRequest } = require("../middleware/localhost-only.middleware");
+
+  if (!isLocalRequest(req)) {
+    logWarning("Shutdown console hidden: request did not originate from localhost", {
+      path: req.originalUrl,
+      remoteAddress: req.socket?.remoteAddress || null,
+    });
+    notFoundStatsModule.incrementHtml(req.originalUrl);
+    return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+  }
+
+  if (req.path === "/operator/shutdown") {
+    return res.redirect(302, "/operator/shutdown.html");
   }
 
   return next();
