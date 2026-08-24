@@ -857,6 +857,17 @@ app.get(["/operator/tools/pixelizer", "/operator/tools/pixelizer.html"], (req, r
   return next();
 });
 
+// Public hidden Metadata Peeler tool entry point. Like the Pixelizer it does all
+// of its work in the browser — the file's bytes never reach this process — so
+// there is no endpoint behind it, only the extension-less alias.
+app.get(["/operator/tools/metadata-peeler", "/operator/tools/metadata-peeler.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/metadata-peeler") {
+    return res.redirect(302, "/operator/tools/metadata-peeler.html");
+  }
+
+  return next();
+});
+
 // Public hidden Farm Defence prototype entry point
 app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
   if (req.path === "/operator/fd") {
