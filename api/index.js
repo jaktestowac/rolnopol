@@ -847,6 +847,16 @@ app.get(["/operator/labyrinth", "/operator/labyrinth.html"], (req, res, next) =>
   return next();
 });
 
+// Public hidden Pixelizer tool entry point. The page does all of its work in the
+// browser, so there is no endpoint behind it — only the extension-less alias.
+app.get(["/operator/tools/pixelizer", "/operator/tools/pixelizer.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/pixelizer") {
+    return res.redirect(302, "/operator/tools/pixelizer.html");
+  }
+
+  return next();
+});
+
 // Public hidden Farm Defence prototype entry point
 app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
   if (req.path === "/operator/fd") {
