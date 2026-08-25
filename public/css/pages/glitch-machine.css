@@ -335,6 +335,12 @@
   image-rendering: auto;
 }
 
+/* `display: flex` below outranks the browser's `[hidden] { display: none }`,
+   so the empty state needs an explicit override once an image is loaded. */
+.glx-empty[hidden] {
+  display: none;
+}
+
 .glx-empty {
   display: flex;
   flex-direction: column;
