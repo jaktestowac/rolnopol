@@ -868,6 +868,17 @@ app.get(["/operator/tools/metadata-peeler", "/operator/tools/metadata-peeler.htm
   return next();
 });
 
+// Public hidden Glitch Machine tool entry point. Like the other tools it does
+// all of its work in the browser — corruption is written in the tab, never
+// here — so there is no endpoint behind it, only the extension-less alias.
+app.get(["/operator/tools/glitch-machine", "/operator/tools/glitch-machine.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/glitch-machine") {
+    return res.redirect(302, "/operator/tools/glitch-machine.html");
+  }
+
+  return next();
+});
+
 // Public hidden Farm Defence prototype entry point
 app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
   if (req.path === "/operator/fd") {
