@@ -879,6 +879,28 @@ app.get(["/operator/tools/glitch-machine", "/operator/tools/glitch-machine.html"
   return next();
 });
 
+// Public hidden Noise Loom tool entry point. Like the other tools it does all
+// of its work in the browser — the texture is woven in the tab, never here —
+// so there is no endpoint behind it, only the extension-less alias.
+app.get(["/operator/tools/noise-loom", "/operator/tools/noise-loom.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/noise-loom") {
+    return res.redirect(302, "/operator/tools/noise-loom.html");
+  }
+
+  return next();
+});
+
+// Public hidden Bytebeat Console tool entry point. Like the other tools it does
+// all of its work in the browser — formulas are parsed and played in the tab,
+// never here — so there is no endpoint behind it, only the extension-less alias.
+app.get(["/operator/tools/bytebeat", "/operator/tools/bytebeat.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/bytebeat") {
+    return res.redirect(302, "/operator/tools/bytebeat.html");
+  }
+
+  return next();
+});
+
 // Public hidden Farm Defence prototype entry point
 app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
   if (req.path === "/operator/fd") {
