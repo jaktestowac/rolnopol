@@ -901,6 +901,17 @@ app.get(["/operator/tools/bytebeat", "/operator/tools/bytebeat.html"], (req, res
   return next();
 });
 
+// Public hidden Spectrogram Bench tool entry point. The WAV is read, unpacked
+// and transformed in the browser — the samples never reach this process — so
+// there is no endpoint behind it, only the extension-less alias.
+app.get(["/operator/tools/spectrogram-bench", "/operator/tools/spectrogram-bench.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/spectrogram-bench") {
+    return res.redirect(302, "/operator/tools/spectrogram-bench.html");
+  }
+
+  return next();
+});
+
 // Public hidden Farm Defence prototype entry point
 app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
   if (req.path === "/operator/fd") {
