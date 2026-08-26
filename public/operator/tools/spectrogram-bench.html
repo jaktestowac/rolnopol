@@ -97,6 +97,19 @@
             </div>
           </dl>
 
+          <!-- Anything but "as displayed" re-runs the analysis at that many
+               columns, so a 4K export is real spectrum rather than an upscale. -->
+          <label class="spb-field">
+            <span class="spb-field__label">PNG size</span>
+            <select class="spb-select" id="spbExportSize">
+              <option value="viewport" selected>As displayed</option>
+              <option value="720p">1280 × 720</option>
+              <option value="1080p">1920 × 1080</option>
+              <option value="1440p">2560 × 1440</option>
+              <option value="4k">3840 × 2160</option>
+            </select>
+          </label>
+
           <div class="spb-actions">
             <button type="button" class="spb-btn" id="spbSavePng" disabled>
               <i class="fa-solid fa-image" aria-hidden="true"></i> Save PNG
@@ -168,8 +181,23 @@
         <fieldset class="spb-group">
           <legend><i class="fa-solid fa-sliders" aria-hidden="true"></i> Analysis</legend>
 
+          <!-- Choosing the window in time rather than in bins: 25 ms means the
+               same thing on a 48 kHz file as on a 22 kHz one, and the FFT size
+               below follows along. -->
           <label class="spb-field">
-            <span class="spb-field__label">FFT size</span>
+            <span class="spb-field__label">Window length</span>
+            <select class="spb-select" id="spbWindowMs">
+              <option value="fft" selected>By FFT size</option>
+              <option value="5">5 ms — transients</option>
+              <option value="10">10 ms</option>
+              <option value="25">25 ms — speech</option>
+              <option value="50">50 ms</option>
+              <option value="100">100 ms — tonal</option>
+            </select>
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">FFT size <output id="spbSizeNote"></output></span>
             <select class="spb-select" id="spbFftSize">
               <option value="256">256 · fast, coarse</option>
               <option value="512">512</option>
@@ -208,7 +236,10 @@
           <label class="spb-field">
             <span class="spb-field__label">Colour ramp</span>
             <select class="spb-select" id="spbRamp">
-              <option value="abyss" selected>Abyss</option>
+              <option value="viridis" selected>Viridis</option>
+              <option value="plasma">Plasma</option>
+              <option value="inferno">Inferno</option>
+              <option value="abyss">Abyss</option>
               <option value="ember">Ember</option>
               <option value="flux">Flux</option>
               <option value="chlorophyll">Chlorophyll</option>
@@ -226,6 +257,19 @@
             <input type="range" class="spb-range" id="spbGain" min="0" max="60" step="1" value="0" />
           </label>
 
+          <label class="spb-field">
+            <span class="spb-field__label">Frequency range</span>
+            <select class="spb-select" id="spbRange">
+              <option value="full" selected>Full range</option>
+              <option value="20k">20 Hz – 20 kHz</option>
+              <option value="10k">20 Hz – 10 kHz</option>
+              <option value="5k">20 Hz – 5 kHz</option>
+              <option value="2k">20 Hz – 2 kHz</option>
+              <option value="voice">300 Hz – 3.4 kHz — voice</option>
+              <option value="bass">20 Hz – 500 Hz — bass</option>
+            </select>
+          </label>
+
           <div class="spb-toggles">
             <label class="spb-toggle">
               <input type="checkbox" id="spbLogScale" checked />
@@ -237,7 +281,45 @@
               <span class="spb-toggle__box"></span>
               <span class="spb-toggle__text">Axes</span>
             </label>
+            <label class="spb-toggle">
+              <input type="checkbox" id="spbWaveOverlay" />
+              <span class="spb-toggle__box"></span>
+              <span class="spb-toggle__text">Waveform over plot</span>
+            </label>
           </div>
+        </fieldset>
+
+        <!-- Both of these change what the spectrogram means, so both are named
+             in the Measured readout once applied rather than folded in quietly. -->
+        <fieldset class="spb-group">
+          <legend><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Conditioning</legend>
+
+          <div class="spb-toggles">
+            <label class="spb-toggle">
+              <input type="checkbox" id="spbNormalize" />
+              <span class="spb-toggle__box"></span>
+              <span class="spb-toggle__text">Normalise peak</span>
+            </label>
+            <label class="spb-toggle">
+              <input type="checkbox" id="spbPreEmphasis" />
+              <span class="spb-toggle__box"></span>
+              <span class="spb-toggle__text">Pre-emphasis</span>
+            </label>
+          </div>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Normalise to <output id="spbNormalizeValue">0 dB</output></span>
+            <input type="range" class="spb-range" id="spbNormalizeTarget" min="-24" max="0" step="1" value="0" />
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Emphasis α <output id="spbEmphasisValue">0.97</output></span>
+            <input type="range" class="spb-range" id="spbEmphasis" min="0" max="99" step="1" value="97" />
+          </label>
+
+          <p class="spb-note">
+            Pre-emphasis runs first and lifts the high end about 6 dB per octave; normalising then puts the loudest sample at the target.
+          </p>
         </fieldset>
 
         <!-- The bench is useful before anything is loaded: these signals have
@@ -292,6 +374,10 @@
             <div class="spb-readout__row">
               <dt>Clipped</dt>
               <dd id="spbClipped">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Applied</dt>
+              <dd id="spbProcessing">—</dd>
             </div>
             <div class="spb-readout__row">
               <dt>Loudest</dt>

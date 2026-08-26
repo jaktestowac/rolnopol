@@ -1,16 +1,22 @@
 /**
  * Spectrogram Bench — the analysis engine, with no DOM in it.
  *
- * A WAV goes in as bytes and comes out as a picture of its own frequencies.
- * Nothing here is handed to `decodeAudioData` or to a DSP library: the RIFF
- * container is walked chunk by chunk, the samples are unpacked from whatever
- * width they were stored at, and the transform is a hand-written radix-2 FFT.
- * The page's whole premise is that the analysis is ours.
+ * A file goes in as bytes and comes out as a picture of its own frequencies.
+ * Nothing here is handed to a DSP library: both containers are walked by hand,
+ * WAV samples are unpacked from whatever width they were stored at, and the
+ * transform is a hand-written radix-2 FFT.
  *
- *   1. `parseRiff`    — chunk walk: fmt, data, LIST/INFO, and what is left over
- *   2. `decodeSamples`— packed integers or floats → one Float32Array per channel
- *   3. `makePlan`     — twiddle tables and the bit-reversal permutation, once
- *   4. `spectrogram`  — windowed frames → `transform` → magnitudes in dB
+ *   1. `detectContainer` — signature sniff, never the file name
+ *   2. `parseRiff` / `parseMpeg` — chunk walk, or frame walk plus ID3 and Xing
+ *   3. `decodeSamples`  — packed integers or floats → one Float32Array per channel
+ *   4. `preEmphasis` / `normalizePeak` — optional conditioning, always reported
+ *   5. `makePlan`       — twiddle tables and the bit-reversal permutation, once
+ *   6. `spectrogram`    — windowed frames → `transform` → magnitudes in dB
+ *
+ * One thing this module does *not* do: turn MP3 frames into samples. Layer III
+ * decoding is a project of its own, so the console borrows the browser's codec
+ * for that one step — see the `MPEG container` section. Nothing in this file
+ * calls it, which is what keeps the whole module testable outside a browser.
  *
  * Two things keep this honest rather than merely pretty:
  *
@@ -50,7 +56,7 @@
 
   // Beyond this the spectrogram is wider than any screen and the extra columns
   // cost memory for detail nobody can see.
-  const MAX_COLUMNS = 2400;
+  const MAX_COLUMNS = 4096;
   const DEFAULT_COLUMNS = 1200;
 
   const DB_FLOOR_RANGE = { min: -120, max: -20 };
@@ -155,6 +161,55 @@
         [238, 255, 190],
       ],
     },
+    /* The three perceptually-uniform maps everybody in signal processing knows
+     * by name, transcribed as stops rather than imported. They are worth having
+     * because a uniform ramp does not invent contrast that is not in the data —
+     * the eye reads an equal step in dB as an equal step in colour. */
+    viridis: {
+      label: "Viridis",
+      stops: [
+        [68, 1, 84],
+        [71, 45, 123],
+        [59, 82, 139],
+        [44, 114, 142],
+        [33, 145, 140],
+        [40, 174, 128],
+        [94, 201, 98],
+        [173, 220, 48],
+        [253, 231, 37],
+      ],
+    },
+    plasma: {
+      label: "Plasma",
+      stops: [
+        [13, 8, 135],
+        [65, 4, 157],
+        [106, 0, 168],
+        [143, 13, 164],
+        [177, 42, 144],
+        [204, 71, 120],
+        [225, 100, 98],
+        [242, 132, 75],
+        [252, 166, 54],
+        [252, 206, 37],
+        [240, 249, 33],
+      ],
+    },
+    inferno: {
+      label: "Inferno",
+      stops: [
+        [0, 0, 4],
+        [27, 12, 65],
+        [74, 12, 107],
+        [120, 28, 109],
+        [165, 44, 96],
+        [207, 68, 70],
+        [237, 105, 37],
+        [251, 155, 6],
+        [247, 209, 61],
+        [252, 255, 164],
+      ],
+    },
     graphite: {
       label: "Graphite",
       stops: [
@@ -166,6 +221,42 @@
       ],
     },
   };
+
+  /* Export sizes. `viewport` means "whatever the plot is on screen right now";
+   * every other entry re-runs the analysis at that many columns so a 4K export
+   * is genuinely 3840 columns of spectrum rather than an upscale of 1200. */
+  const EXPORT_SIZES = [
+    { key: "viewport", label: "As displayed", width: 0, height: 0 },
+    { key: "720p", label: "1280 × 720", width: 1280, height: 720 },
+    { key: "1080p", label: "1920 × 1080", width: 1920, height: 1080 },
+    { key: "1440p", label: "2560 × 1440", width: 2560, height: 1440 },
+    { key: "4k", label: "3840 × 2160", width: 3840, height: 2160 },
+  ];
+
+  /* Analysis window expressed in time rather than in bins. `fft` keeps whatever
+   * the FFT-size control says; the rest derive the size from the sample rate, so
+   * "25 ms" means the same thing on a 48 kHz file as on a 22 kHz one. */
+  const WINDOW_LENGTHS = [
+    { key: "fft", label: "By FFT size", ms: 0 },
+    { key: "5", label: "5 ms — transients", ms: 5 },
+    { key: "10", label: "10 ms", ms: 10 },
+    { key: "25", label: "25 ms — speech", ms: 25 },
+    { key: "50", label: "50 ms", ms: 50 },
+    { key: "100", label: "100 ms — tonal", ms: 100 },
+  ];
+
+  /* Frequency bands worth looking at on their own. A zero means "unset", and
+   * every bound is clamped to Nyquist by `axisBounds`, so asking for 0–20 kHz on
+   * an 8 kHz file quietly gets you 0–4 kHz instead of an empty top half. */
+  const FREQUENCY_RANGES = [
+    { key: "full", label: "Full range", minHz: 0, maxHz: 0 },
+    { key: "20k", label: "20 Hz – 20 kHz", minHz: 20, maxHz: 20000 },
+    { key: "10k", label: "20 Hz – 10 kHz", minHz: 20, maxHz: 10000 },
+    { key: "5k", label: "20 Hz – 5 kHz", minHz: 20, maxHz: 5000 },
+    { key: "2k", label: "20 Hz – 2 kHz", minHz: 20, maxHz: 2000 },
+    { key: "voice", label: "300 Hz – 3.4 kHz — voice", minHz: 300, maxHz: 3400 },
+    { key: "bass", label: "20 Hz – 500 Hz — bass", minHz: 20, maxHz: 500 },
+  ];
 
   const SIGNALS = {
     sine: { label: "Sine 440 Hz", note: "one bin, nothing else" },
@@ -1168,11 +1259,16 @@
   /* The frequency range the vertical axis spans. A log axis cannot start at
    * 0 Hz, so it starts at MIN_LOG_HZ; the linear axis reports the same pair so
    * both share one interface. */
-  function axisBounds(sampleRate) {
+  function axisBounds(sampleRate, options) {
+    const settings = options || {};
     const nyquist = sampleRate / 2;
-    const top = Math.max(MIN_LOG_HZ * 2, nyquist);
+    const ceiling = Math.max(MIN_LOG_HZ * 2, nyquist);
+    // Asking for 20 kHz on an 8 kHz file gets you Nyquist, not an empty band.
+    const top = settings.maxHz > 0 ? Math.min(ceiling, settings.maxHz) : ceiling;
+    const requested = settings.minHz > 0 ? settings.minHz : Math.min(MIN_LOG_HZ, top / 2);
+    const bottom = Math.min(Math.max(0.5, requested), top / 2);
 
-    return { bottom: Math.min(MIN_LOG_HZ, top / 2), top };
+    return { bottom, top };
   }
 
   /* Where a frequency sits on the axis: 0 at the bottom of the plot, 1 at the
@@ -1197,9 +1293,9 @@
    *
    * Rows are returned top-down (row 0 is the highest frequency) because that is
    * how the canvas draws and how every spectrogram is read. */
-  function scaleRows(rows, bins, size, sampleRate, logarithmic) {
+  function scaleRows(rows, bins, size, sampleRate, logarithmic, options) {
     const map = new Float64Array(rows);
-    const bounds = axisBounds(sampleRate);
+    const bounds = axisBounds(sampleRate, options);
 
     for (let row = 0; row < rows; row += 1) {
       // 1 at the top row, 0 at the bottom.
@@ -1209,6 +1305,87 @@
     }
 
     return map;
+  }
+
+  // ------------------------------------------------------------- conditioning
+
+  /* Two optional passes over the samples before any transform runs.
+   *
+   * Both change what the spectrogram *means*, so both are reported back to the
+   * caller rather than applied silently: normalising moves every level reading
+   * by a known number of dB, and pre-emphasis deliberately tilts the spectrum.
+   * A tool whose readouts you cannot trace back to the file is a toy. */
+
+  /* Scale so the loudest sample sits at `targetDb` (0 dBFS by default).
+   *
+   * Peak normalisation, not loudness normalisation: one transient decides the
+   * gain for the whole file. That is the honest thing for an analysis tool,
+   * where the question is usually "what is in here" rather than "how loud does
+   * this feel". */
+  function normalizePeak(samples, targetDb) {
+    const target = Math.pow(10, (targetDb === undefined ? 0 : targetDb) / 20);
+    let peak = 0;
+
+    for (let i = 0; i < samples.length; i += 1) {
+      const magnitude = samples[i] < 0 ? -samples[i] : samples[i];
+
+      if (magnitude > peak) peak = magnitude;
+    }
+
+    // Silence has no peak to normalise to, and scaling it by anything is still
+    // silence — so say the pass did nothing rather than divide by zero.
+    if (!peak) return { samples, gain: 1, gainDb: 0, applied: false, peak: 0 };
+
+    const gain = target / peak;
+    const out = new Float32Array(samples.length);
+
+    for (let i = 0; i < samples.length; i += 1) out[i] = samples[i] * gain;
+
+    return { samples: out, gain, gainDb: amplitudeToDb(gain), applied: true, peak };
+  }
+
+  /* First-order high-pass: y[n] = x[n] - a·x[n-1].
+   *
+   * The standard speech-analysis pre-emphasis. It lifts the high end by roughly
+   * 6 dB per octave, which makes upper formants and consonant detail visible on
+   * a spectrogram that natural spectral tilt would otherwise bury. A coefficient
+   * of 0 is the identity, so the toggle needs no separate bypass path. */
+  function preEmphasis(samples, coefficient) {
+    const a = coefficient === undefined ? 0.97 : Math.max(0, Math.min(0.999, coefficient));
+    const out = new Float32Array(samples.length);
+    let previous = 0;
+
+    for (let i = 0; i < samples.length; i += 1) {
+      out[i] = samples[i] - a * previous;
+      previous = samples[i];
+    }
+
+    return out;
+  }
+
+  /* The FFT size whose frame comes closest to a window of `ms` milliseconds.
+   *
+   * Chosen in log space, because 3000 samples is perceptually mid-way between
+   * 2048 and 4096 rather than closer to the one it is nearer in absolute terms.
+   * Speech work wants 25 ms, transient work wants 5; expressing the choice in
+   * time rather than in bins is what makes those numbers usable. */
+  function sizeForWindowMs(ms, sampleRate) {
+    if (!(ms > 0) || !(sampleRate > 0)) return DEFAULT_FFT_SIZE;
+
+    const target = (ms / 1000) * sampleRate;
+    let best = FFT_SIZES[0];
+    let bestDistance = Infinity;
+
+    for (const size of FFT_SIZES) {
+      const distance = Math.abs(Math.log2(size / target));
+
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = size;
+      }
+    }
+
+    return best;
   }
 
   // -------------------------------------------------------------- spectrogram
@@ -1528,6 +1705,9 @@
     WINDOWS,
     RAMPS,
     SIGNALS,
+    EXPORT_SIZES,
+    WINDOW_LENGTHS,
+    FREQUENCY_RANGES,
     FORMAT_NAMES,
     MPEG_VERSION_NAMES,
     MPEG_LAYER_NAMES,
@@ -1556,6 +1736,9 @@
     axisFraction,
     axisHz,
     scaleRows,
+    normalizePeak,
+    preEmphasis,
+    sizeForWindowMs,
     planFrames,
     spectrogram,
     refinePeak,

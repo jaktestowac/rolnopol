@@ -711,6 +711,216 @@ describe("spectrogram bench pipeline", () => {
     });
   });
 
+  describe("conditioning", () => {
+    it("normalises the peak to full scale", () => {
+      const quiet = Float32Array.from([0.1, -0.25, 0.2, 0]);
+      const result = pipeline.normalizePeak(quiet);
+
+      expect(result.applied).toBe(true);
+      expect(result.peak).toBeCloseTo(0.25, 6);
+      expect(result.gainDb).toBeCloseTo(12.04, 2);
+      expect(pipeline.measure(result.samples).peak).toBeCloseTo(1, 6);
+      // The shape survives; only the scale changes.
+      expect(result.samples[0] / result.samples[2]).toBeCloseTo(0.1 / 0.2, 5);
+    });
+
+    it("normalises to a target below full scale", () => {
+      const result = pipeline.normalizePeak(Float32Array.from([0.5, -0.5]), -6);
+
+      expect(pipeline.measure(result.samples).peakDb).toBeCloseTo(-6, 2);
+    });
+
+    it("leaves silence alone instead of dividing by zero", () => {
+      const silence = new Float32Array(16);
+      const result = pipeline.normalizePeak(silence);
+
+      expect(result.applied).toBe(false);
+      expect(result.gainDb).toBe(0);
+      expect(result.samples).toBe(silence);
+      expect([...result.samples].every((value) => value === 0)).toBe(true);
+    });
+
+    it("passes a signal through unchanged at coefficient zero", () => {
+      const signal = Float32Array.from([0.5, -0.25, 0.75, 0]);
+
+      expect([...pipeline.preEmphasis(signal, 0)]).toEqual([...signal]);
+    });
+
+    it("strips a constant offset", () => {
+      const flat = Float32Array.from(new Array(32).fill(0.5));
+      const filtered = pipeline.preEmphasis(flat, 0.97);
+
+      // The first sample has no predecessor, so it survives; everything after it
+      // is what a high-pass does to DC.
+      expect(filtered[0]).toBeCloseTo(0.5, 6);
+      expect(filtered[8]).toBeCloseTo(0.5 - 0.97 * 0.5, 6);
+      expect(Math.abs(filtered[31])).toBeLessThan(0.02);
+    });
+
+    it("tilts the spectrum upwards, which is the whole point", () => {
+      const rate = 16000;
+      const low = pipeline.synthesize("sine", rate, 0.25, { amplitude: 0.5 });
+      const before = pipeline.spectrogram(low, rate, { size: 1024, window: "hann" });
+      const after = pipeline.spectrogram(pipeline.preEmphasis(low, 0.97), rate, { size: 1024, window: "hann" });
+
+      // 440 Hz is well below the hinge, so pre-emphasis attenuates it.
+      expect(after.peak.db).toBeLessThan(before.peak.db);
+
+      const highTone = new Float32Array(rate / 4);
+
+      for (let i = 0; i < highTone.length; i += 1) highTone[i] = 0.5 * Math.sin((2 * Math.PI * 6000 * i) / rate);
+
+      const highBefore = pipeline.spectrogram(highTone, rate, { size: 1024, window: "hann" });
+      const highAfter = pipeline.spectrogram(pipeline.preEmphasis(highTone, 0.97), rate, { size: 1024, window: "hann" });
+
+      // 6 kHz is above it, so it gains — and gains more than the low tone did.
+      expect(highAfter.peak.db).toBeGreaterThan(highBefore.peak.db);
+    });
+
+    it("clamps a runaway coefficient", () => {
+      const signal = Float32Array.from([1, 1, 1, 1]);
+
+      expect(() => pipeline.preEmphasis(signal, 5)).not.toThrow();
+      expect(pipeline.preEmphasis(signal, 5)[3]).toBeCloseTo(1 - 0.999, 6);
+      expect(pipeline.preEmphasis(signal, -3)[3]).toBe(1);
+    });
+  });
+
+  describe("window length in time", () => {
+    it("picks the FFT size closest to the requested milliseconds", () => {
+      // 25 ms at 44100 is 1102.5 samples, and 1024 is the nearest power of two.
+      expect(pipeline.sizeForWindowMs(25, 44100)).toBe(1024);
+      expect(pipeline.sizeForWindowMs(5, 44100)).toBe(256);
+      expect(pipeline.sizeForWindowMs(10, 44100)).toBe(512);
+      expect(pipeline.sizeForWindowMs(50, 44100)).toBe(2048);
+      expect(pipeline.sizeForWindowMs(100, 44100)).toBe(4096);
+    });
+
+    it("means the same duration at any sample rate", () => {
+      // 25 ms is 1024 samples at 44.1 kHz but only 512 at 22.05 kHz.
+      expect(pipeline.sizeForWindowMs(25, 22050)).toBe(512);
+      expect(pipeline.sizeForWindowMs(25, 48000)).toBe(1024);
+      expect(pipeline.sizeForWindowMs(25, 8000)).toBe(256);
+    });
+
+    it("never leaves the offered sizes", () => {
+      for (const ms of [0.1, 1, 25, 500, 10000]) {
+        expect(pipeline.FFT_SIZES, `${ms} ms`).toContain(pipeline.sizeForWindowMs(ms, 44100));
+      }
+    });
+
+    it("falls back to the default for nonsense", () => {
+      expect(pipeline.sizeForWindowMs(0, 44100)).toBe(pipeline.DEFAULT_FFT_SIZE);
+      expect(pipeline.sizeForWindowMs(-5, 44100)).toBe(pipeline.DEFAULT_FFT_SIZE);
+      expect(pipeline.sizeForWindowMs(25, 0)).toBe(pipeline.DEFAULT_FFT_SIZE);
+    });
+  });
+
+  describe("frequency range of interest", () => {
+    it("narrows both ends of the axis", () => {
+      const bounds = pipeline.axisBounds(44100, { minHz: 300, maxHz: 3400 });
+
+      expect(bounds.bottom).toBe(300);
+      expect(bounds.top).toBe(3400);
+    });
+
+    it("clamps a range the file cannot supply", () => {
+      // 20 kHz asked of an 8 kHz file is 4 kHz, not an empty top half.
+      expect(pipeline.axisBounds(8000, { minHz: 20, maxHz: 20000 }).top).toBe(4000);
+      // A floor at or above the ceiling would invert the axis.
+      expect(pipeline.axisBounds(44100, { minHz: 9000, maxHz: 5000 }).bottom).toBe(2500);
+    });
+
+    it("leaves the axis alone when nothing is asked for", () => {
+      expect(pipeline.axisBounds(44100, {})).toEqual(pipeline.axisBounds(44100));
+      expect(pipeline.axisBounds(44100, { minHz: 0, maxHz: 0 })).toEqual(pipeline.axisBounds(44100));
+    });
+
+    it("maps the rows onto the narrowed band", () => {
+      const rows = 256;
+      const options = { minHz: 300, maxHz: 3400 };
+      const map = pipeline.scaleRows(rows, 1025, 2048, 44100, true, options);
+
+      // Row 0 is the top of the plot, which is now 3400 Hz rather than Nyquist.
+      expect(pipeline.binToHz(map[0], 2048, 44100)).toBeCloseTo(3400, -1);
+      expect(pipeline.binToHz(map[rows - 1], 2048, 44100)).toBeCloseTo(300, -1);
+
+      for (let row = 1; row < rows; row += 1) {
+        expect(map[row], `row ${row}`).toBeLessThanOrEqual(map[row - 1]);
+      }
+    });
+
+    it("keeps the gridline maths and the row map in step inside a range", () => {
+      const rows = 256;
+      const options = { minHz: 300, maxHz: 3400 };
+      const bounds = pipeline.axisBounds(44100, options);
+      const map = pipeline.scaleRows(rows, 1025, 2048, 44100, true, options);
+
+      for (const hz of [500, 1000, 2000, 3000]) {
+        const fraction = pipeline.axisFraction(hz, bounds, true);
+        const row = Math.round((1 - fraction) * (rows - 1));
+        const hzAtRow = pipeline.binToHz(map[row], 2048, 44100);
+        const drift = Math.abs(pipeline.axisFraction(hzAtRow, bounds, true) - fraction);
+
+        expect(drift, `${hz} Hz`).toBeLessThanOrEqual(0.5 / (rows - 1));
+      }
+    });
+
+    it("offers only ranges that make sense", () => {
+      for (const range of pipeline.FREQUENCY_RANGES) {
+        expect(typeof range.key).toBe("string");
+        expect(typeof range.label).toBe("string");
+        expect(range.maxHz === 0 || range.maxHz > range.minHz, `range ${range.key}`).toBe(true);
+      }
+    });
+  });
+
+  describe("colour maps", () => {
+    it("carries the three named scientific ramps", () => {
+      for (const name of ["viridis", "plasma", "inferno"]) {
+        expect(pipeline.RAMPS, `${name} missing`).toHaveProperty(name);
+        expect(pipeline.RAMPS[name].stops.length).toBeGreaterThanOrEqual(9);
+      }
+    });
+
+    it("runs each of them dark to light", () => {
+      const luminance = ([r, g, b]) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+      for (const name of ["viridis", "plasma", "inferno"]) {
+        const floor = luminance(pipeline.sampleRamp(name, 0));
+        const middle = luminance(pipeline.sampleRamp(name, 0.5));
+        const ceiling = luminance(pipeline.sampleRamp(name, 1));
+
+        expect(floor, `${name} floor`).toBeLessThan(middle);
+        expect(middle, `${name} middle`).toBeLessThan(ceiling);
+      }
+    });
+
+    it("ends viridis and inferno where the reference maps end", () => {
+      expect(pipeline.sampleRamp("viridis", 0)).toEqual([68, 1, 84]);
+      expect(pipeline.sampleRamp("viridis", 1)).toEqual([253, 231, 37]);
+      expect(pipeline.sampleRamp("inferno", 0)).toEqual([0, 0, 4]);
+      expect(pipeline.sampleRamp("inferno", 1)).toEqual([252, 255, 164]);
+    });
+  });
+
+  describe("export sizes", () => {
+    it("can hold a column per pixel at 4K", () => {
+      const widest = Math.max(...pipeline.EXPORT_SIZES.map((size) => size.width));
+
+      expect(widest).toBe(3840);
+      expect(pipeline.MAX_COLUMNS).toBeGreaterThanOrEqual(widest);
+      expect(pipeline.planFrames(44100 * 600, 2048, 0.5, widest).columns).toBe(widest);
+    });
+
+    it("offers a viewport option that names no size", () => {
+      const viewport = pipeline.EXPORT_SIZES.find((size) => size.key === "viewport");
+
+      expect(viewport.width).toBe(0);
+      expect(viewport.height).toBe(0);
+    });
+  });
+
   describe("test signals", () => {
     it("stays inside the amplitude it was asked for", () => {
       for (const kind of Object.keys(pipeline.SIGNALS)) {

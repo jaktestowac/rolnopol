@@ -718,6 +718,13 @@
   color: var(--spb-text);
 }
 
+/* The FFT select becomes a readout when the window is chosen in milliseconds. */
+.spb-select:disabled {
+  opacity: 0.5;
+  cursor: default;
+  border-color: var(--spb-line-soft);
+}
+
 .spb-range {
   width: 100%;
   height: 1.2rem;

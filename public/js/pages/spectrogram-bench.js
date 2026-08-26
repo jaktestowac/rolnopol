@@ -90,7 +90,10 @@
     legendMin: document.getElementById("spbLegendMin"),
     legendMax: document.getElementById("spbLegendMax"),
     controls: document.getElementById("spbControls"),
+    exportSize: document.getElementById("spbExportSize"),
+    windowMs: document.getElementById("spbWindowMs"),
     fftSize: document.getElementById("spbFftSize"),
+    sizeNote: document.getElementById("spbSizeNote"),
     window: document.getElementById("spbWindow"),
     overlap: document.getElementById("spbOverlap"),
     overlapValue: document.getElementById("spbOverlapValue"),
@@ -100,8 +103,17 @@
     floorValue: document.getElementById("spbFloorValue"),
     gain: document.getElementById("spbGain"),
     gainValue: document.getElementById("spbGainValue"),
+    range: document.getElementById("spbRange"),
     logScale: document.getElementById("spbLogScale"),
     gridLines: document.getElementById("spbGridLines"),
+    waveOverlay: document.getElementById("spbWaveOverlay"),
+    normalize: document.getElementById("spbNormalize"),
+    normalizeTarget: document.getElementById("spbNormalizeTarget"),
+    normalizeValue: document.getElementById("spbNormalizeValue"),
+    preEmphasis: document.getElementById("spbPreEmphasis"),
+    emphasis: document.getElementById("spbEmphasis"),
+    emphasisValue: document.getElementById("spbEmphasisValue"),
+    processing: document.getElementById("spbProcessing"),
     signal: document.getElementById("spbSignal"),
     seconds: document.getElementById("spbSeconds"),
     secondsValue: document.getElementById("spbSecondsValue"),
@@ -127,8 +139,11 @@
   // never re-reads the file.
   let source = null; // { label, kind, channels, sampleRate, frames, parsed }
   let picture = null; // spectrogram result, cached for repaints
+  let conditioned = null; // { samples, original, gainDb, label } — what the transform saw
   let rowMap = null; // row -> bin, for the current axis
-  let rampTable = pipeline.rampTable("abyss");
+  // Taken from the markup rather than named here, so the first paint cannot use
+  // a different ramp from the one the select claims is chosen.
+  let rampTable = pipeline.rampTable(el.ramp.value);
   let plans = {}; // FFT plans by size, reused across analyses
 
   let audioContext = null;
@@ -233,9 +248,20 @@
 
   // ------------------------------------------------------------------ controls
 
+  function rangeFor(key) {
+    const found = pipeline.FREQUENCY_RANGES.filter(function (range) {
+      return range.key === key;
+    })[0];
+
+    return found || pipeline.FREQUENCY_RANGES[0];
+  }
+
   function readControls() {
+    const range = rangeFor(el.range.value);
+
     return {
       size: Number(el.fftSize.value),
+      windowMs: el.windowMs.value === "fft" ? 0 : Number(el.windowMs.value),
       window: el.window.value,
       overlap: Number(el.overlap.value) / 100,
       channel: el.channel.value,
@@ -244,8 +270,24 @@
       gain: Number(el.gain.value),
       logarithmic: el.logScale.checked,
       axes: el.gridLines.checked,
+      waveOverlay: el.waveOverlay.checked,
+      normalize: el.normalize.checked,
+      normalizeTarget: Number(el.normalizeTarget.value),
+      preEmphasis: el.preEmphasis.checked,
+      // The slider is whole numbers; the coefficient is a fraction.
+      emphasis: Number(el.emphasis.value) / 100,
+      range: { minHz: range.minHz, maxHz: range.maxHz },
+      exportSize: el.exportSize.value,
       seconds: Number(el.seconds.value),
     };
+  }
+
+  /* The FFT size actually used: either the one chosen directly, or the one a
+   * window length in milliseconds works out to at this file's sample rate. */
+  function effectiveSize(controls) {
+    if (!controls.windowMs || !source) return controls.size;
+
+    return pipeline.sizeForWindowMs(controls.windowMs, source.sampleRate);
   }
 
   function syncLabels(controls) {
@@ -254,6 +296,21 @@
     el.gainValue.textContent = signed(controls.gain, " dB");
     el.secondsValue.textContent = `${controls.seconds.toFixed(1)} s`;
     el.legendMin.textContent = `${controls.floor} dB`;
+    el.normalizeValue.textContent = `${controls.normalizeTarget} dB`;
+    el.emphasisValue.textContent = controls.emphasis.toFixed(2);
+
+    // When the window is chosen in time, the FFT select is a readout rather than
+    // a control — so it shows the derived size and stops accepting input.
+    const derived = effectiveSize(controls);
+
+    el.fftSize.disabled = controls.windowMs > 0;
+
+    if (controls.windowMs > 0) {
+      el.fftSize.value = String(derived);
+      el.sizeNote.textContent = source ? `from ${controls.windowMs} ms` : "on load";
+    } else {
+      el.sizeNote.textContent = source ? `${((derived / source.sampleRate) * 1000).toFixed(1)} ms` : "";
+    }
   }
 
   /* Rebuild the channel list for the loaded signal, keeping "mix" selected
@@ -277,13 +334,42 @@
 
   // ------------------------------------------------------------------- analysis
 
-  function selectedSamples(controls) {
+  function selectedChannel(controls) {
     if (!source) return new Float32Array(0);
     if (controls.channel === "mix") return pipeline.mixToMono(source.channels);
 
     const index = Number(controls.channel);
 
     return source.channels[index] || source.channels[0];
+  }
+
+  /* The samples the transform will actually see.
+   *
+   * Order matters and is not arbitrary: pre-emphasis changes the peak, so
+   * normalising afterwards is the only way the target level means anything. The
+   * result carries a label describing itself, because every level readout below
+   * is a reading of *this* signal rather than of the file on disk. */
+  function condition(controls) {
+    const original = selectedChannel(controls);
+    let samples = original;
+    const applied = [];
+
+    if (controls.preEmphasis) {
+      samples = pipeline.preEmphasis(samples, controls.emphasis);
+      applied.push(`pre-emphasis α ${controls.emphasis.toFixed(2)}`);
+    }
+
+    let gainDb = 0;
+
+    if (controls.normalize) {
+      const normalised = pipeline.normalizePeak(samples, controls.normalizeTarget);
+
+      samples = normalised.samples;
+      gainDb = normalised.gainDb;
+      applied.push(normalised.applied ? `normalise ${signed(Math.round(normalised.gainDb * 10) / 10, " dB")}` : "normalise (silent)");
+    }
+
+    return { samples, original, gainDb, label: applied.length ? applied.join(" · ") : "nothing" };
   }
 
   function planFor(size) {
@@ -296,14 +382,18 @@
     if (!source) return;
 
     const controls = readControls();
-    const samples = selectedSamples(controls);
+    const size = effectiveSize(controls);
+
+    conditioned = condition(controls);
+
+    const samples = conditioned.samples;
     const startedAt = performance.now();
 
     picture = pipeline.spectrogram(samples, source.sampleRate, {
-      size: controls.size,
+      size,
       window: controls.window,
       overlap: controls.overlap,
-      plan: planFor(controls.size),
+      plan: planFor(size),
       maxColumns: pipeline.DEFAULT_COLUMNS,
     });
 
@@ -317,6 +407,7 @@
     el.crest.textContent = `${stats.crestDb.toFixed(1)} dB`;
     el.dc.textContent = stats.dcOffset.toFixed(4);
     el.clipped.textContent = stats.clipped ? `${stats.clipped} samples` : "none";
+    el.processing.textContent = conditioned.label;
     el.dominant.textContent = formatHz(dominant);
     el.note.textContent = note ? `${note.name} ${signed(note.cents, "¢")}` : "—";
     el.binHz.textContent = `${picture.binHz.toFixed(2)} Hz`;
@@ -339,33 +430,32 @@
    * One pixel per column per row, straight into an ImageData: at 1200 columns
    * and 512 rows that is 614k pixels, and anything less direct (a fill per cell,
    * a gradient per column) is visibly slower. */
-  function paint(controls) {
-    if (!picture) return;
+  /* Paint one spectrogram into one canvas at `rows` vertical resolution.
+   *
+   * Split out from `paint` so the export can call it with a freshly computed
+   * high-resolution picture instead of upscaling the one on screen. Returns the
+   * row-to-bin map it used, which the caller needs to draw axes that agree with
+   * the pixels. */
+  function paintPicture(canvas, pic, controls, rows) {
+    canvas.width = pic.columns;
+    canvas.height = rows;
 
-    el.canvas.width = picture.columns;
-    el.canvas.height = ROWS;
+    const context = canvas.getContext("2d", { willReadFrequently: false });
 
-    const context = el.canvas.getContext("2d", { willReadFrequently: false });
+    if (!context) return null;
 
-    if (!context) {
-      setState("no canvas", "error");
-      setMessage("This browser refused a 2D canvas context, so the spectrogram cannot be drawn.", "error");
-      return;
-    }
-
-    rowMap = pipeline.scaleRows(ROWS, picture.bins, picture.size, picture.sampleRate, controls.logarithmic);
-
-    const image = context.createImageData(picture.columns, ROWS);
+    const map = pipeline.scaleRows(rows, pic.bins, pic.size, pic.sampleRate, controls.logarithmic, controls.range);
+    const image = context.createImageData(pic.columns, rows);
     const pixels = image.data;
     const span = Math.max(1, -controls.floor); // floor is negative; 0 dB is the top
-    const magnitudes = picture.magnitudes;
-    const bins = picture.bins;
+    const magnitudes = pic.magnitudes;
+    const bins = pic.bins;
     let at = 0;
 
-    for (let row = 0; row < ROWS; row += 1) {
-      const bin = Math.round(rowMap[row]);
+    for (let row = 0; row < rows; row += 1) {
+      const bin = Math.round(map[row]);
 
-      for (let column = 0; column < picture.columns; column += 1) {
+      for (let column = 0; column < pic.columns; column += 1) {
         const db = magnitudes[column * bins + bin] + controls.gain;
         // Normalise the visible window (floor .. 0 dB) onto the 256-entry ramp.
         let level = ((db - controls.floor) / span) * 255;
@@ -384,6 +474,21 @@
     }
 
     context.putImageData(image, 0, 0);
+
+    return map;
+  }
+
+  function paint(controls) {
+    if (!picture) return;
+
+    rowMap = paintPicture(el.canvas, picture, controls, ROWS);
+
+    if (!rowMap) {
+      setState("no canvas", "error");
+      setMessage("This browser refused a 2D canvas context, so the spectrogram cannot be drawn.", "error");
+      return;
+    }
+
     drawLegend(controls);
     resizeOverlay();
   }
@@ -503,43 +608,55 @@
     return rowMap[row];
   }
 
+  function axisBoundsNow() {
+    return pipeline.axisBounds(picture.sampleRate, readControls().range);
+  }
+
   function hzToY(hz, height) {
     if (!picture) return 0;
 
-    const bounds = pipeline.axisBounds(picture.sampleRate);
-    const fraction = pipeline.axisFraction(hz, bounds, el.logScale.checked);
+    const fraction = pipeline.axisFraction(hz, axisBoundsNow(), el.logScale.checked);
 
     return (1 - fraction) * height;
   }
 
+  /* Axes for a plot of any size.
+   *
+   * Every measurement is derived from `height` rather than fixed in pixels, so
+   * the same function draws the on-screen overlay and a 4K export without the
+   * labels turning into ants in one or bricks in the other. */
   function drawAxes(context, width, height) {
     if (!picture) return;
 
-    const nyquist = picture.sampleRate / 2;
+    const bounds = axisBoundsNow();
     const logarithmic = el.logScale.checked;
+    const font = Math.max(9, Math.round(height / 42));
+    const gutter = font * 3.8;
 
     context.save();
-    context.font = "10px 'SF Mono', 'Cascadia Mono', Consolas, monospace";
+    context.font = `${font}px 'SF Mono', 'Cascadia Mono', Consolas, monospace`;
     context.textBaseline = "middle";
-    context.lineWidth = 1;
+    context.lineWidth = Math.max(1, height / 900);
 
+    // Only ticks the current range actually contains; a gridline for 10 kHz on a
+    // plot that stops at 3.4 kHz would be a label pointing at nothing.
     const ticks = logarithmic
-      ? LOG_TICKS.filter((hz) => hz < nyquist)
-      : [1, 2, 3, 4, 5, 6, 7].map((step) => Math.round((nyquist * step) / 8));
+      ? LOG_TICKS.filter((hz) => hz >= bounds.bottom && hz <= bounds.top)
+      : [1, 2, 3, 4, 5, 6, 7].map((step) => Math.round(bounds.bottom + ((bounds.top - bounds.bottom) * step) / 8));
 
     for (const hz of ticks) {
       const y = Math.round(hzToY(hz, height)) + 0.5;
 
-      if (y < 8 || y > height - 4) continue;
+      if (y < font || y > height - font * 0.5) continue;
 
       context.strokeStyle = "rgba(255,255,255,0.10)";
       context.beginPath();
-      context.moveTo(38, y);
+      context.moveTo(gutter, y);
       context.lineTo(width, y);
       context.stroke();
 
       context.fillStyle = "rgba(255,255,255,0.55)";
-      context.fillText(`${tickLabel(hz)}`, 6, y);
+      context.fillText(`${tickLabel(hz)}`, font * 0.6, y);
     }
 
     // Time axis: pick the coarsest step that still gives about eight labels.
@@ -549,18 +666,50 @@
     for (let t = 0; t <= duration + 1e-9; t += step) {
       const x = Math.round(secondsToX(t, width)) + 0.5;
 
-      if (x > width - 2) continue;
+      if (x > width - font) continue;
 
       context.strokeStyle = "rgba(255,255,255,0.08)";
       context.beginPath();
       context.moveTo(x, 0);
-      context.lineTo(x, height - 14);
+      context.lineTo(x, height - font * 1.4);
       context.stroke();
 
       context.fillStyle = "rgba(255,255,255,0.5)";
-      context.fillText(`${t.toFixed(step < 1 ? 2 : 0)}s`, x + 3, height - 7);
+      context.fillText(`${t.toFixed(step < 1 ? 2 : 0)}s`, x + font * 0.3, height - font * 0.7);
     }
 
+    context.restore();
+  }
+
+  /* The waveform, drawn over the spectrogram rather than above it.
+   *
+   * Deliberately faint and mirrored about the centre line: the point is to line
+   * a transient up with the column it produced, not to read the waveform. It is
+   * drawn from the conditioned signal, so what you see is what was analysed. */
+  function drawWaveOverlay(context, width, height) {
+    if (!conditioned) return;
+
+    const envelope = pipeline.waveformEnvelope(conditioned.samples, Math.max(1, Math.round(width)));
+    const middle = height / 2;
+    const scale = height * 0.42;
+
+    context.save();
+    context.globalCompositeOperation = "screen";
+    context.fillStyle = "rgba(255,255,255,0.28)";
+
+    for (let x = 0; x < envelope.buckets; x += 1) {
+      const top = middle - envelope.max[x] * scale;
+      const bottom = middle - envelope.min[x] * scale;
+
+      context.fillRect(x, top, 1, Math.max(1, bottom - top));
+    }
+
+    context.strokeStyle = "rgba(255,255,255,0.18)";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(0, middle + 0.5);
+    context.lineTo(width, middle + 0.5);
+    context.stroke();
     context.restore();
   }
 
@@ -574,6 +723,7 @@
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.clearRect(0, 0, width, height);
 
+    if (el.waveOverlay.checked) drawWaveOverlay(context, width, height);
     if (el.gridLines.checked) drawAxes(context, width, height);
 
     const styles = getComputedStyle(document.documentElement);
@@ -1083,36 +1233,83 @@
 
   // --------------------------------------------------------------------- export
 
+  function exportSizeFor(key) {
+    const found = pipeline.EXPORT_SIZES.filter(function (size) {
+      return size.key === key;
+    })[0];
+
+    return found || pipeline.EXPORT_SIZES[0];
+  }
+
   /* Composite the spectrogram and a clean set of axes — no crosshair, no
-   * playhead — at screen resolution, so the PNG is the plot rather than a
-   * snapshot of the cursor's position. */
+   * playhead — so the PNG is the plot rather than a snapshot of the cursor.
+   *
+   * At a named resolution the analysis is re-run with the column budget set to
+   * the target width, so a 3840-wide export holds 3840 real analysis frames.
+   * Stretching the 1200-column screen picture to 4K would look the same at a
+   * glance and be a lie about the time resolution. */
   function savePng() {
     if (!picture) return;
 
-    const { width, height, ratio } = overlaySize();
+    const controls = readControls();
+    const wanted = exportSizeFor(controls.exportSize);
+    const viewport = overlaySize();
+    const width = wanted.width || Math.round(viewport.width * viewport.ratio);
+    const height = wanted.height || Math.round(viewport.height * viewport.ratio);
     const canvas = document.createElement("canvas");
 
-    canvas.width = Math.round(width * ratio);
-    canvas.height = Math.round(height * ratio);
+    canvas.width = width;
+    canvas.height = height;
 
     const context = canvas.getContext("2d");
 
     if (!context) return;
 
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    context.imageSmoothingEnabled = true;
-    context.drawImage(el.canvas, 0, 0, width, height);
+    let plotted = picture;
+    let source2d = el.canvas;
 
-    if (el.gridLines.checked) drawAxes(context, width, height);
+    if (wanted.width && conditioned) {
+      setState("rendering", "busy");
+
+      // A fresh pass at the export's own width, then painted at its own height.
+      plotted = pipeline.spectrogram(conditioned.samples, source.sampleRate, {
+        size: picture.size,
+        window: controls.window,
+        overlap: controls.overlap,
+        plan: planFor(picture.size),
+        maxColumns: width,
+      });
+
+      const offscreen = document.createElement("canvas");
+
+      if (paintPicture(offscreen, plotted, controls, Math.min(height, plotted.bins * 4))) source2d = offscreen;
+    }
+
+    context.imageSmoothingEnabled = true;
+    context.drawImage(source2d, 0, 0, width, height);
+
+    // `drawAxes` reads `picture` for its time axis, so point it at what was drawn.
+    const onScreen = picture;
+
+    picture = plotted;
+
+    if (controls.waveOverlay) drawWaveOverlay(context, width, height);
+    if (controls.axes) drawAxes(context, width, height);
+
+    picture = onScreen;
 
     const base = source ? source.label.replace(/\.[^.]+$/, "") || "signal" : "signal";
     const link = document.createElement("a");
 
     link.href = canvas.toDataURL("image/png");
-    link.download = `${base}-spectrogram-${picture.size}.png`;
+    link.download = `${base}-spectrogram-${plotted.size}-${width}x${height}.png`;
     link.click();
 
-    setMessage(`Saved a ${canvas.width} × ${canvas.height} PNG of the plot.`);
+    setState("ready");
+    setMessage(
+      `Saved ${width} × ${height} from ${plotted.columns} analysis frames` +
+        (wanted.width ? " (re-analysed at export width)." : " (as displayed)."),
+    );
   }
 
   function clearSource() {
@@ -1120,6 +1317,7 @@
 
     source = null;
     picture = null;
+    conditioned = null;
     rowMap = null;
     audioBuffer = null;
     pointer = null;
@@ -1165,6 +1363,7 @@
       "crest",
       "dc",
       "clipped",
+      "processing",
       "dominant",
       "note",
       "binHz",
@@ -1236,7 +1435,22 @@
   });
 
   // Which controls need the transform run again, and which only need a repaint.
-  const REANALYSE = ["spbFftSize", "spbWindow", "spbOverlap", "spbChannel"];
+  // Conditioning changes the samples, so it belongs here; the frequency range
+  // and the colour ramp only change how the same magnitudes are drawn.
+  const REANALYSE = [
+    "spbFftSize",
+    "spbWindowMs",
+    "spbWindow",
+    "spbOverlap",
+    "spbChannel",
+    "spbNormalize",
+    "spbNormalizeTarget",
+    "spbPreEmphasis",
+    "spbEmphasis",
+  ];
+
+  // Changes that need nothing but the overlay redrawn.
+  const OVERLAY_ONLY = ["spbGridLines", "spbWaveOverlay"];
 
   el.controls.addEventListener("input", function (event) {
     const controls = readControls();
@@ -1254,6 +1468,7 @@
     }
 
     if (event.target === el.seconds) return; // only matters on the next render
+    if (event.target === el.exportSize) return; // only matters on the next save
 
     paint(controls);
   });
@@ -1273,10 +1488,12 @@
       return;
     }
 
-    if (event.target === el.gridLines) {
+    if (OVERLAY_ONLY.indexOf(event.target.id) !== -1) {
       drawOverlay();
       return;
     }
+
+    if (event.target === el.exportSize) return;
 
     paint(controls);
     updateCursor();
@@ -1339,7 +1556,7 @@
     // The waveform and overlay are painted with the theme accent, so they have
     // to be redrawn when it changes.
     if (source) {
-      drawWaveform(selectedSamples(readControls()));
+      drawWaveform(conditioned ? conditioned.samples : selectedChannel(readControls()));
       drawOverlay();
     }
   });

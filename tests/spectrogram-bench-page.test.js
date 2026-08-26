@@ -70,11 +70,73 @@ describe("hidden operator Spectrogram Bench page", () => {
       "spbDecoder",
       "spbTheme",
       "spbState",
+      "spbExportSize",
+      "spbWindowMs",
+      "spbRange",
+      "spbWaveOverlay",
+      "spbNormalize",
+      "spbNormalizeTarget",
+      "spbPreEmphasis",
+      "spbEmphasis",
+      "spbProcessing",
     ];
 
     for (const id of controls) {
       expect(res.text, `control ${id} missing`).toContain(`id="${id}"`);
     }
+  });
+
+  // Same drift-guard as the other selects: every table the pipeline exposes has
+  // to be reachable from the markup, or an option selects nothing.
+  it("offers every export size, window length and frequency range the pipeline defines", async () => {
+    const res = await request(app).get("/operator/tools/spectrogram-bench.html");
+
+    for (const size of pipeline.EXPORT_SIZES) {
+      expect(res.text, `export size ${size.key} missing`).toContain(`value="${size.key}"`);
+    }
+
+    for (const length of pipeline.WINDOW_LENGTHS) {
+      expect(res.text, `window length ${length.key} missing`).toContain(`value="${length.key}"`);
+    }
+
+    for (const range of pipeline.FREQUENCY_RANGES) {
+      expect(res.text, `range ${range.key} missing`).toContain(`value="${range.key}"`);
+    }
+  });
+
+  it("names the three scientific colour maps and defaults to one of them", async () => {
+    const res = await request(app).get("/operator/tools/spectrogram-bench.html");
+    const selected = res.text.match(/<option value="([^"]+)" selected>[^<]*<\/option>\s*<option value="plasma"/);
+
+    for (const name of ["viridis", "plasma", "inferno"]) {
+      expect(res.text, `${name} missing`).toContain(`value="${name}"`);
+      expect(pipeline.RAMPS, `${name} not in the pipeline`).toHaveProperty(name);
+    }
+
+    // Whatever the ramp select defaults to must be a ramp that exists — the
+    // console seeds its lookup table from this value.
+    expect(selected).not.toBe(null);
+    expect(pipeline.RAMPS).toHaveProperty(selected[1]);
+  });
+
+  /* The conditioning passes change the samples, so they have to re-run the
+   * transform; the frequency range and the ramp only change how the same
+   * magnitudes are drawn. A control in the wrong list is a silently stale plot. */
+  it("re-analyses for conditioning and only repaints for presentation", async () => {
+    const js = await request(app).get("/js/pages/spectrogram-bench.js");
+    const reanalyse = js.text.match(/const REANALYSE = \[([\s\S]*?)\]/)[1];
+    const overlayOnly = js.text.match(/const OVERLAY_ONLY = \[([\s\S]*?)\]/)[1];
+
+    for (const id of ["spbNormalize", "spbNormalizeTarget", "spbPreEmphasis", "spbEmphasis", "spbWindowMs"]) {
+      expect(reanalyse, `${id} must re-analyse`).toContain(id);
+    }
+
+    for (const id of ["spbRamp", "spbFloor", "spbGain", "spbRange"]) {
+      expect(reanalyse, `${id} must not re-analyse`).not.toContain(id);
+    }
+
+    expect(overlayOnly).toContain("spbWaveOverlay");
+    expect(overlayOnly).toContain("spbGridLines");
   });
 
   // The selects are the pipeline's own option sets. If the two drift apart, an
