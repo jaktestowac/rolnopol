@@ -13,7 +13,7 @@
 const { validationFailed, versionConflict, memberNotFound, CREW_ERROR_CODES, CrewError } = require("../../errors");
 const { daysBetween } = require("../../clock");
 const { getStore, read, transact } = require("./store");
-const { CREW_EVENTS } = require("../../notifier");
+const { employmentEnded } = require("./notifications");
 
 const ROLES = ["STOCKPERSON", "TRACTOR_DRIVER", "AGRONOMIST", "DAIRY_HAND", "MECHANIC", "SEASONAL_PICKER", "MANAGER"];
 const EMPLOYMENT_TYPES = ["PERMANENT", "FIXED_TERM", "SEASONAL", "CONTRACTOR"];
@@ -321,15 +321,7 @@ function createProfilesService(context, { store: storeOverride } = {}) {
       // NOT a firing (see the note at the top of schema.graphql) — an end date on
       // the overlay. The staff record and its assignments are untouched, which is
       // exactly why this needs announcing: nothing else downstream changes shape.
-      context.notifier.publish(
-        CREW_EVENTS.EMPLOYMENT_ENDED,
-        {
-          staffId: numericStaffId,
-          lastDay: ended.endDate,
-          reason: ended.endReason,
-        },
-        { correlationId: `crew-employment-ended-${numericStaffId}` },
-      );
+      context.notifier.publishEvent(employmentEnded(ended));
       return ended;
     },
 

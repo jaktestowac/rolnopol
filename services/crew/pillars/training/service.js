@@ -31,7 +31,7 @@
  */
 const { validationFailed, versionConflict, memberNotFound } = require("../../errors");
 const { getStore, read, transact } = require("./store");
-const { CREW_EVENTS } = require("../../notifier");
+const { eventFor } = require("./notifications");
 const {
   CERTIFICATION_STATUSES,
   ENROLLMENT_STATUSES,
@@ -452,19 +452,7 @@ function createTrainingService(context, { store: storeOverride } = {}) {
         // the message, and "certificate 12 was revoked" is not worth sending. A
         // course that cannot be read falls back to the id rather than failing.
         const course = await service.findCourse(result.certification.courseId).catch(() => null);
-        context.notifier.publish(
-          CREW_EVENTS.CERTIFICATION_REVOKED,
-          {
-            certificationId: String(result.certification.id),
-            staffId: Number(result.certification.staffId),
-            courseId: Number(result.certification.courseId),
-            courseName: course?.name ?? null,
-            reason: result.certification.revokedReason,
-            revokedOn: result.certification.revokedOn,
-            gapCount: Array.isArray(result.gaps) ? result.gaps.length : 0,
-          },
-          { correlationId: `crew-certification-revoked-${result.certification.id}` },
-        );
+        context.notifier.publishEvent(eventFor(result, { courseName: course?.name ?? null }));
       }
       return result;
     },

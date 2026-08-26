@@ -32,7 +32,7 @@
 const { memberNotFound, CrewError, CREW_ERROR_CODES } = require("../../errors");
 const { fromDateString, daysBetween } = require("../../clock");
 const { getStore, read, transact } = require("./store");
-const { CREW_EVENTS } = require("../../notifier");
+const { eventFor } = require("./notifications");
 const {
   TOOL_STATUSES,
   ADMIN_STATUSES,
@@ -463,20 +463,7 @@ function createToolsService(context, { store: storeOverride } = {}) {
 
       if (result.outcome === "ISSUED") {
         invalidate();
-        context.notifier.publish(
-          CREW_EVENTS.TOOL_ISSUED,
-          {
-            issuanceId: String(result.issuance.id),
-            toolId: Number(result.issuance.toolId),
-            toolName: result.tool?.name ?? null,
-            staffId: Number(result.issuance.staffId),
-            dueBack: result.issuance.dueBack,
-            issuedAt: result.issuance.issuedAt,
-          },
-          // Keyed on the issuance, not the tool: the same tool goes out many
-          // times and each trip is its own thing to be able to look up.
-          { correlationId: `crew-tool-issuance-${result.issuance.id}` },
-        );
+        context.notifier.publishEvent(eventFor(result));
       }
       return result;
     },
@@ -556,24 +543,7 @@ function createToolsService(context, { store: storeOverride } = {}) {
 
       if (result.outcome === "RETURNED") {
         invalidate();
-        context.notifier.publish(
-          CREW_EVENTS.TOOL_RETURNED,
-          {
-            issuanceId: String(result.issuance.id),
-            toolId: Number(result.issuance.toolId),
-            toolName: result.tool?.name ?? null,
-            staffId: Number(result.issuance.staffId),
-            condition: result.issuance.conditionOnReturn,
-            // Where the condition sent it: back on the shelf, into the workshop,
-            // or off the run entirely. This is the half a reader acts on.
-            toolStatus: result.tool?.status ?? null,
-            late: result.late === true,
-            returnedAt: result.issuance.returnedAt,
-          },
-          // The SAME correlationId as the issue event, on purpose: out and back
-          // are two halves of one trip, and the ledger reads that way too.
-          { correlationId: `crew-tool-issuance-${result.issuance.id}` },
-        );
+        context.notifier.publishEvent(eventFor(result));
       }
       return result;
     },

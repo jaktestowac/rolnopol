@@ -110,6 +110,21 @@ function createCrewNotifier({ userId, publish } = {}) {
         // Decision 2: a mutation that succeeded stays succeeded.
       }
     },
+
+    /**
+     * Publish a descriptor from a pillar's `notifications.js` table, or nothing
+     * at all when the table returned null for this outcome.
+     *
+     * This is the form the pillars use, so a call site is one line and the
+     * decision about whether an outcome notifies lives in the table rather than
+     * in an `if` wrapped around the call.
+     *
+     * @param {{type: string, payload: object, correlationId?: string}|null} event
+     */
+    publishEvent(event) {
+      if (!event || !event.type) return;
+      this.publish(event.type, event.payload, { correlationId: event.correlationId });
+    },
   };
 }
 

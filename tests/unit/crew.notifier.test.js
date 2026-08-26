@@ -17,6 +17,7 @@ import { describe, it, expect } from "vitest";
 const { createCrewNotifier, CREW_EVENTS } = require("../../services/crew/notifier");
 const { EVENT_TYPES } = require("../../modules/notification-center/core/contracts");
 const policies = require("../../modules/notification-center/core/policies");
+const webhookEventCatalog = require("../../services/webhook-event-catalog.service");
 
 const capture = (userId = 1) => {
   const published = [];
@@ -113,15 +114,39 @@ describe("crew notifier", () => {
     });
   });
 
-  it("routes every crew event to in-app only", () => {
-    // crew.route.js refuses personal API keys and waits on crew:read/crew:write
-    // scopes. The webhook catalog has no such gate, so a crew event on the
-    // webhook channel would be an egress the module deliberately kept shut.
+  it("routes every crew event to both channels", () => {
+    // The webhook channel is what makes these events worth emitting: the in-app
+    // copy only ever tells the owner about an action they just took. Webhook
+    // delivery is owner-scoped (listActiveSubscriptionsForDelivery filters on
+    // Number(record.userId) === Number(userId)), so this is the owner forwarding
+    // their own data to a URL they registered — not a way around the crew route's
+    // refusal of personal API keys.
     const crewTypes = Object.values(EVENT_TYPES).filter((type) => type.startsWith("crew."));
     expect(crewTypes.length).toBeGreaterThan(0);
 
     for (const type of crewTypes) {
-      expect(policies[type].channels, type).toEqual(["in-app"]);
+      expect(policies[type].channels, type).toEqual(["in-app", "webhook"]);
+    }
+  });
+
+  it("puts every crew event in the webhook subscription picker", () => {
+    // No new setting was added for this: subscriptions already carry an
+    // eventTypes list and the form already renders a checkbox per catalogued
+    // event. The catalog filters on the `channels` above, so this asserts the
+    // wiring that makes the six selectable rather than a feature of its own.
+    const catalogued = new Set(webhookEventCatalog.getSupportedEventTypes());
+    const crewTypes = Object.values(EVENT_TYPES).filter((type) => type.startsWith("crew."));
+
+    expect(crewTypes.filter((type) => !catalogued.has(type))).toEqual([]);
+  });
+
+  it("declares a live dedupe window on every crew event", () => {
+    // These were written as zeros when nothing read the field. Now that the
+    // dispatcher enforces it, a zero would be a real decision to accept replays.
+    for (const [name, type] of Object.entries(CREW_EVENTS)) {
+      expect(policies[type].dedupe.seconds, name).toBeGreaterThan(0);
+      expect(policies[type].rateLimit.max, name).toBeGreaterThan(0);
+      expect(policies[type].rateLimit.windowSeconds, name).toBeGreaterThan(0);
     }
   });
 });

@@ -38,7 +38,7 @@
 const { validationFailed, versionConflict, memberNotFound, CrewError, CREW_ERROR_CODES } = require("../../errors");
 const { daysBetween, addDays } = require("../../clock");
 const { getStore, read, transact } = require("./store");
-const { CREW_EVENTS } = require("../../notifier");
+const { eventFor } = require("./notifications");
 const {
   LEAVE_TYPES,
   LEAVE_STATUSES,
@@ -126,36 +126,6 @@ function createLeaveService(context, { store: storeOverride } = {}) {
   const ownedAdjustments = async () => (await own.all()).get("adjustments");
 
   const invalidate = () => context.resetLoaders("crewLeaveDocument");
-
-  /**
-   * Announce a decision — but only the two that are decisions ABOUT somebody.
-   *
-   * `decide` also produces `withdrawn` and `cancelled`, and both are the caller
-   * calling off their own request. Notifying someone that they did the thing they
-   * just did is the noise this module does not send.
-   */
-  const DECISION_EVENTS = {
-    approved: CREW_EVENTS.LEAVE_APPROVED,
-    rejected: CREW_EVENTS.LEAVE_REJECTED,
-  };
-  function notifyDecision(request) {
-    const type = DECISION_EVENTS[request.status];
-    if (!type) return;
-    context.notifier.publish(
-      type,
-      {
-        requestId: String(request.id),
-        staffId: Number(request.staffId),
-        leaveType: request.type,
-        from: request.from,
-        to: request.to,
-        workingDays: Number(request.workingDays),
-        reason: request.reason ?? null,
-        decidedAt: request.decidedAt,
-      },
-      { correlationId: `crew-leave-${request.id}-${request.status}` },
-    );
-  }
 
   /** The caller's policy, or the typed error §7.3 shows as `leave: null` + errors. */
   async function requirePolicy() {
@@ -718,7 +688,7 @@ function createLeaveService(context, { store: storeOverride } = {}) {
           // The decision stands; the balance is simply absent.
           result.balance = null;
         }
-        notifyDecision(result.request);
+        context.notifier.publishEvent(eventFor(result.request));
       }
       return result;
     },
