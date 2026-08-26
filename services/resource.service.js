@@ -13,6 +13,14 @@ const publishEvent = (event) => {
   });
 };
 
+// Deletion carries no resource-specific payload beyond the id, so one table per
+// resource type is enough to keep the three branches from diverging.
+const DELETION_EVENTS = {
+  fields: { type: EVENT_TYPES.FIELD_DELETED, idKey: "fieldId", correlationPrefix: "field" },
+  staff: { type: EVENT_TYPES.STAFF_DELETED, idKey: "staffId", correlationPrefix: "staff" },
+  animals: { type: EVENT_TYPES.ANIMAL_DELETED, idKey: "animalId", correlationPrefix: "animal" },
+};
+
 class ResourceService {
   constructor(resourceType) {
     this.resourceType = resourceType; // 'fields', 'staff', or 'animals'
@@ -228,14 +236,15 @@ class ResourceService {
       await ResourceService.cascadeDelete({ type: "animal", id: numericId });
     }
     try {
-      if (this.resourceType === "fields") {
+      const deletionEvent = DELETION_EVENTS[this.resourceType];
+      if (deletionEvent) {
         publishEvent({
-          type: EVENT_TYPES.FIELD_DELETED,
+          type: deletionEvent.type,
           payload: {
             userId: numericUserId,
-            fieldId: numericId,
+            [deletionEvent.idKey]: numericId,
           },
-          correlationId: `field-deleted-${numericId}`,
+          correlationId: `${deletionEvent.correlationPrefix}-deleted-${numericId}`,
           source: "resource.service",
         });
       }
@@ -276,6 +285,21 @@ class ResourceService {
               changes: updateData,
             },
             correlationId: `field-update-${updated.id}`,
+            source: "resource.service",
+          });
+        }
+
+        if (this.resourceType === "staff") {
+          publishEvent({
+            type: EVENT_TYPES.STAFF_UPDATED,
+            payload: {
+              userId: numericUserId,
+              staffId: updated.id,
+              name: updated.name,
+              surname: updated.surname,
+              changes: updateData,
+            },
+            correlationId: `staff-update-${updated.id}`,
             source: "resource.service",
           });
         }
@@ -563,6 +587,22 @@ ResourceService.prototype.updateAnimal = async function (userId, id, updateData)
   );
   const updated = Array.isArray(updatedArr) ? updatedArr.find((item) => item.userId === numericUserId && item.id === numericId) : null;
 
+  if (updated) {
+    publishEvent({
+      type: EVENT_TYPES.ANIMAL_UPDATED,
+      payload: {
+        userId: numericUserId,
+        animalId: updated.id,
+        type: updated.type,
+        amount: updated.amount,
+        fieldId: updated.fieldId,
+        changes: updateData,
+      },
+      correlationId: `animal-update-${updated.id}`,
+      source: "resource.service",
+    });
+  }
+
   if (updated && updateData.fieldId !== undefined && updateData.fieldId !== null && existing?.fieldId !== updated.fieldId) {
     publishEvent({
       type: EVENT_TYPES.ANIMAL_ASSIGNED,
@@ -581,6 +621,8 @@ ResourceService.prototype.updateAnimal = async function (userId, id, updateData)
 
 // Cascade-delete a user's resources when the user is deleted, without the data
 // layer depending on this service (dependency direction stays service → data).
-require("../data/user-lifecycle").onUserDeleted("resource:cascade-user", (user) => ResourceService.cascadeDelete({ type: "user", userId: user.id }));
+require("../data/user-lifecycle").onUserDeleted("resource:cascade-user", (user) =>
+  ResourceService.cascadeDelete({ type: "user", userId: user.id }),
+);
 
 module.exports = ResourceService;

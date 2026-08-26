@@ -352,6 +352,58 @@ const policies = {
       message: `Assignment #${event.payload?.assignmentId || "n/a"} was removed.`,
     }),
   },
+  [EVENT_TYPES.STAFF_UPDATED]: {
+    id: "policy.staff.updated",
+    eventType: EVENT_TYPES.STAFF_UPDATED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 40, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Staff Updated",
+      message: `Staff member ${event.payload?.name || `#${event.payload?.staffId || "n/a"}`} has been updated.`,
+    }),
+  },
+  [EVENT_TYPES.STAFF_DELETED]: {
+    id: "policy.staff.deleted",
+    eventType: EVENT_TYPES.STAFF_DELETED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 20, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Staff Deleted",
+      message: `Staff member #${event.payload?.staffId || "n/a"} has been removed.`,
+    }),
+  },
+  [EVENT_TYPES.ANIMAL_UPDATED]: {
+    id: "policy.animal.updated",
+    eventType: EVENT_TYPES.ANIMAL_UPDATED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 40, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Animal Updated",
+      message: `Animal #${event.payload?.animalId || "n/a"} (${event.payload?.type || "unknown"}) has been updated.`,
+    }),
+  },
+  [EVENT_TYPES.ANIMAL_DELETED]: {
+    id: "policy.animal.deleted",
+    eventType: EVENT_TYPES.ANIMAL_DELETED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 20, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Animal Deleted",
+      message: `Animal #${event.payload?.animalId || "n/a"} has been removed.`,
+    }),
+  },
 };
 
 module.exports = policies;
