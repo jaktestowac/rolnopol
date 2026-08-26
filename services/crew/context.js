@@ -19,6 +19,7 @@ const { createClock } = require("./clock");
 const { createStaffGateway } = require("./staff-gateway");
 const { createAssignmentReader } = require("./assignment-reader");
 const { createAcademyGateway } = require("./academy-gateway");
+const { createCrewNotifier } = require("./notifier");
 const { createBatchLoader, createOnce, groupBy } = require("./loaders");
 const { CrewError, CREW_ERROR_CODES } = require("./errors");
 
@@ -29,8 +30,11 @@ const { CrewError, CREW_ERROR_CODES } = require("./errors");
  * @param {Date|string|number} [options.now] - fixed clock for tests
  * @param {object} [options.academy] - AgriAcademy gateway overrides ({ client,
  *   isEnabled }) so the link's degradation paths are testable in isolation
+ * @param {(event: object) => any} [options.publishNotification] - notification
+ *   publisher override, so a test can assert which events a mutation emits
+ *   without going through the dispatcher (see notifier.js)
  */
-function createCrewContext({ userId, pillars = [], now, academy } = {}) {
+function createCrewContext({ userId, pillars = [], now, academy, publishNotification } = {}) {
   // Identity is coerced to a number the same way every other Rolnopol service
   // does it, because scoping compares against `Number(row.userId)`.
   //
@@ -58,6 +62,10 @@ function createCrewContext({ userId, pillars = [], now, academy } = {}) {
   // override seam for tests — an offline academy is a state that has to be
   // reachable without starting five standalone services.
   const academyGateway = createAcademyGateway({ onStoreRead, ...(academy || {}) });
+
+  // Notification egress. Built with the identity above so no pillar can address a
+  // notification to anyone but the authenticated owner (notifier.js, decision 1).
+  const notifier = createCrewNotifier({ userId: numericUserId, publish: publishNotification });
 
   // Base loaders every pillar can rely on. Each is lazy: a query that never
   // mentions assignments never reads assignments.json.
@@ -88,6 +96,7 @@ function createCrewContext({ userId, pillars = [], now, academy } = {}) {
     staffGateway,
     assignmentReader,
     academyGateway,
+    notifier,
     loaders,
     storeReads,
     onStoreRead,

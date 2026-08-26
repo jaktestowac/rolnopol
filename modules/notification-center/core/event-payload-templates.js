@@ -353,6 +353,79 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
+  [EVENT_TYPES.CREW_LEAVE_APPROVED]: {
+    label: "Crew Leave Approved",
+    description: "A crew member's leave request has been approved",
+    template: (overrides = {}) => ({
+      requestId: overrides.requestId || `leave-${Date.now()}`,
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      leaveType: overrides.leaveType || "annual",
+      from: overrides.from || new Date().toISOString().slice(0, 10),
+      to: overrides.to || new Date().toISOString().slice(0, 10),
+      workingDays: overrides.workingDays ?? 1,
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_LEAVE_REJECTED]: {
+    label: "Crew Leave Rejected",
+    description: "A crew member's leave request has been rejected",
+    template: (overrides = {}) => ({
+      requestId: overrides.requestId || `leave-${Date.now()}`,
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      leaveType: overrides.leaveType || "annual",
+      from: overrides.from || new Date().toISOString().slice(0, 10),
+      to: overrides.to || new Date().toISOString().slice(0, 10),
+      reason: overrides.reason || "Cover is already thin that week.",
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_EMPLOYMENT_ENDED]: {
+    label: "Crew Employment Ended",
+    description: "An end date has been recorded for a crew member",
+    template: (overrides = {}) => ({
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      lastDay: overrides.lastDay || new Date().toISOString().slice(0, 10),
+      reason: overrides.reason || "end_of_season",
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_CERTIFICATION_REVOKED]: {
+    label: "Crew Certification Revoked",
+    description: "A crew member's certification has been revoked, which may block tool issuance",
+    template: (overrides = {}) => ({
+      certificationId: overrides.certificationId || `cert-${Date.now()}`,
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      courseName: overrides.courseName || "Chainsaw Operation",
+      reason: overrides.reason || "Assessment result overturned on review.",
+      gapCount: overrides.gapCount ?? 1,
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_TOOL_ISSUED]: {
+    label: "Crew Tool Issued",
+    description: "A tool has been issued to a crew member",
+    template: (overrides = {}) => ({
+      issuanceId: overrides.issuanceId || `issuance-${Date.now()}`,
+      toolId: overrides.toolId || `tool-${Date.now()}`,
+      toolName: overrides.toolName || "Chainsaw",
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      dueBack: overrides.dueBack || new Date().toISOString().slice(0, 10),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_TOOL_RETURNED]: {
+    label: "Crew Tool Returned",
+    description: "A tool has come back from a crew member",
+    template: (overrides = {}) => ({
+      issuanceId: overrides.issuanceId || `issuance-${Date.now()}`,
+      toolId: overrides.toolId || `tool-${Date.now()}`,
+      toolName: overrides.toolName || "Chainsaw",
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      condition: overrides.condition || "good",
+      late: overrides.late ?? false,
+      ...overrides,
+    }),
+  },
 };
 
 const EVENT_TYPE_METADATA = {
@@ -510,6 +583,36 @@ const EVENT_TYPE_METADATA = {
     icon: "fa-circle-exclamation",
     color: "#F44336",
     priority: "high",
+  },
+  [EVENT_TYPES.CREW_LEAVE_APPROVED]: {
+    icon: "fa-calendar-check",
+    color: "#4CAF50",
+    priority: "normal",
+  },
+  [EVENT_TYPES.CREW_LEAVE_REJECTED]: {
+    icon: "fa-calendar-xmark",
+    color: "#FF5722",
+    priority: "normal",
+  },
+  [EVENT_TYPES.CREW_EMPLOYMENT_ENDED]: {
+    icon: "fa-door-open",
+    color: "#795548",
+    priority: "high",
+  },
+  [EVENT_TYPES.CREW_CERTIFICATION_REVOKED]: {
+    icon: "fa-certificate",
+    color: "#F44336",
+    priority: "high",
+  },
+  [EVENT_TYPES.CREW_TOOL_ISSUED]: {
+    icon: "fa-screwdriver-wrench",
+    color: "#607D8B",
+    priority: "low",
+  },
+  [EVENT_TYPES.CREW_TOOL_RETURNED]: {
+    icon: "fa-rotate-left",
+    color: "#607D8B",
+    priority: "low",
   },
 };
 

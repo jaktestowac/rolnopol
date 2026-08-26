@@ -31,6 +31,7 @@
  */
 const { validationFailed, versionConflict, memberNotFound } = require("../../errors");
 const { getStore, read, transact } = require("./store");
+const { CREW_EVENTS } = require("../../notifier");
 const {
   CERTIFICATION_STATUSES,
   ENROLLMENT_STATUSES,
@@ -441,6 +442,29 @@ function createTrainingService(context, { store: storeOverride } = {}) {
         // moment somebody needs to know the member is now non-compliant, and
         // making them run a second query for it invites nobody running it.
         result.gaps = await service.gapsFor(result.certification.staffId);
+        // The same reasoning, one step further: the gaps are only seen by whoever
+        // ran this mutation. The tools gate is fail-closed against them from now
+        // on (§8.5), so the notification carries the count rather than the list —
+        // enough to know something needs looking at, not a report in a bell icon.
+        //
+        // The certification row carries a `courseId`, not a name, so the name is
+        // resolved here — "Chainsaw Operation was revoked" is the whole point of
+        // the message, and "certificate 12 was revoked" is not worth sending. A
+        // course that cannot be read falls back to the id rather than failing.
+        const course = await service.findCourse(result.certification.courseId).catch(() => null);
+        context.notifier.publish(
+          CREW_EVENTS.CERTIFICATION_REVOKED,
+          {
+            certificationId: String(result.certification.id),
+            staffId: Number(result.certification.staffId),
+            courseId: Number(result.certification.courseId),
+            courseName: course?.name ?? null,
+            reason: result.certification.revokedReason,
+            revokedOn: result.certification.revokedOn,
+            gapCount: Array.isArray(result.gaps) ? result.gaps.length : 0,
+          },
+          { correlationId: `crew-certification-revoked-${result.certification.id}` },
+        );
       }
       return result;
     },

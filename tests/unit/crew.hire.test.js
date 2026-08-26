@@ -15,6 +15,7 @@ import { describe, it, expect } from "vitest";
 //      test asserts no rollback is even attempted.
 const { createProfilesService } = require("../../services/crew/pillars/profiles/service");
 const { CREW_ERROR_CODES } = require("../../services/crew/errors");
+const { createCrewNotifier, CREW_EVENTS } = require("../../services/crew/notifier");
 
 const VALID = {
   name: "Halina",
@@ -35,7 +36,14 @@ const VALID = {
  */
 function makeContext({ hire, upsertFails, userId = 1 } = {}) {
   const calls = [];
+  const published = [];
+
   const context = {
+    // The real notifier with a fake publisher, so notifier.js's userId stamping
+    // is exercised rather than stubbed past. Emitted events land in
+    // `context.published` for assertions.
+    notifier: createCrewNotifier({ userId, publish: (event) => published.push(event) }),
+    published,
     userId,
     hasWritableIdentity: Number.isFinite(userId),
     assertWritableIdentity() {
@@ -200,5 +208,100 @@ describe("the hire flow", () => {
     await service.hire(VALID);
     const reset = calls.find((entry) => entry.method === "resetLoaders");
     expect(reset.names).toEqual(expect.arrayContaining(["ownedStaff", "staffById"]));
+  });
+});
+
+describe("employment end — notification event", () => {
+  const clone = (value) => JSON.parse(JSON.stringify(value));
+
+  /** The profiles store, in memory. Same shape as the other pillars' doubles. */
+  function makeStoreDouble(initial) {
+    let data = clone(initial);
+    return {
+      async getAll() {
+        return clone(data);
+      },
+      async update(mutate) {
+        data = mutate(clone(data));
+        return data;
+      },
+    };
+  }
+
+  /** One staff record with one profile, which is the only starting state needed. */
+  async function withProfile({ userId = 1, staffId = 7 } = {}) {
+    const staff = [{ id: staffId, userId, name: "Halina", surname: "Kowalska", age: 34 }];
+    const { context } = makeContext({ userId });
+    // findMember resolves the person through `staffById`, so that is the loader
+    // the double has to answer — `ownedStaff` alone leaves it MEMBER_NOT_FOUND.
+    const staffById = new Map(staff.map((record) => [Number(record.id), record]));
+    context.loaders.ownedStaff = { get: async () => staff, reset: () => {} };
+    context.loaders.staffById = { get: async (id) => staffById.get(Number(id)), reset: () => {} };
+    // The hire stub's addLoader always yields an empty Map, which is right for
+    // hire (it never reads profiles) and wrong here: without real laziness the
+    // profile can never be found and every end date is refused. Give it the same
+    // lazy/resettable semantics the other pillars' doubles use.
+    const lazy = {};
+    context.addLoader = (name, load) => {
+      if (!lazy[name]) {
+        let promise = null;
+        lazy[name] = {
+          all: () => (promise = promise || load()),
+          get: async (key) => (await (promise = promise || load())).get(key),
+          reset: () => {
+            promise = null;
+          },
+        };
+      }
+      return lazy[name];
+    };
+    context.resetLoaders = (...names) => names.forEach((name) => lazy[name]?.reset());
+
+    const store = makeStoreDouble({
+      profiles: [
+        {
+          id: 1,
+          userId,
+          staffId,
+          role: "tractor_driver",
+          employmentType: "permanent",
+          fte: 1,
+          contractedHoursPerWeek: 40,
+          startDate: "2026-03-01",
+          endDate: null,
+          endReason: null,
+          createdAt: "2026-03-01T00:00:00.000Z",
+          updatedAt: "2026-03-01T00:00:00.000Z",
+          version: 1,
+        },
+      ],
+      counters: { lastProfileId: 1 },
+    });
+
+    const service = createProfilesService(context, { store });
+    context.services.profiles = service;
+    return { service, context, staffId, userId };
+  }
+
+  it("announces the end date, addressed to the owner", async () => {
+    const { service, context, staffId, userId } = await withProfile();
+
+    await service.recordEmploymentEnd({ staffId, lastDay: "2026-09-30", reason: "end_of_season" });
+
+    const event = context.published.find((row) => row.type === CREW_EVENTS.EMPLOYMENT_ENDED);
+    expect(event).toBeTruthy();
+    expect(event.payload).toMatchObject({ staffId, lastDay: "2026-09-30", reason: "end_of_season", userId });
+    expect(event.correlationId).toBe(`crew-employment-ended-${staffId}`);
+    expect(event.source).toBe("crew-office");
+  });
+
+  it("says nothing when the end date was refused", async () => {
+    const { service, context, staffId } = await withProfile();
+
+    // Before the start date — validation refuses it, so nothing ended.
+    await expect(service.recordEmploymentEnd({ staffId, lastDay: "2020-01-01" })).rejects.toBeTruthy();
+    await expect(service.recordEmploymentEnd({ staffId: 999, lastDay: "2026-09-30" })).rejects.toBeTruthy();
+
+    expect(context.published).toEqual([]);
   });
 });

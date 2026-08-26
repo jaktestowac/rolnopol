@@ -20,6 +20,7 @@ import { describe, it, expect } from "vitest";
 const { createLeaveService } = require("../../services/crew/pillars/leave/service");
 const { DEFAULT_DATA } = require("../../services/crew/pillars/leave/store");
 const { CREW_ERROR_CODES, CrewError } = require("../../services/crew/errors");
+const { createCrewNotifier, CREW_EVENTS } = require("../../services/crew/notifier");
 
 const TODAY = "2026-07-30";
 const NOW_ISO = "2026-07-30T09:00:00.000Z";
@@ -78,7 +79,14 @@ function makeContext({ userId = USER_ID, staff = [], profiles = {}, work = null,
 
   const staffById = new Map(staff.map((record) => [Number(record.id), record]));
 
+  const published = [];
+
   const context = {
+    // The real notifier with a fake publisher, so notifier.js's userId stamping
+    // is exercised rather than stubbed past. Emitted events land in
+    // `context.published` for assertions.
+    notifier: createCrewNotifier({ userId, publish: (event) => published.push(event) }),
+    published,
     userId,
     hasWritableIdentity: Number.isFinite(userId),
     assertWritableIdentity() {
@@ -523,6 +531,55 @@ describe("leave types", () => {
 });
 
 describe("the request lifecycle", () => {
+  describe("notification events", () => {
+    it("announces an approval, addressed to the OWNER and not the staff id", async () => {
+      // The dispatcher falls back to payload.staffId when userId is absent, and a
+      // staff id is not an account id — so this assertion is the one that keeps a
+      // crew notification from landing on a stranger's bell.
+      const { service, context, requestId } = await booked();
+      await service.decide({ requestId, to: "approved" });
+
+      const event = context.published.find((row) => row.type === CREW_EVENTS.LEAVE_APPROVED);
+      expect(event).toBeTruthy();
+      expect(event.payload.userId).toBe(USER_ID);
+      expect(event.payload.staffId).toBe(3);
+      expect(event.payload).toMatchObject({ leaveType: "annual", from: OCTOBER_WEEK.from, to: OCTOBER_WEEK.to, workingDays: 5 });
+      expect(event.correlationId).toBe(`crew-leave-${requestId}-approved`);
+      expect(event.source).toBe("crew-office");
+    });
+
+    it("announces a rejection, carrying the reason", async () => {
+      const { service, context, requestId } = await booked();
+      await service.decide({ requestId, to: "rejected", reason: "harvest cover" });
+
+      const event = context.published.find((row) => row.type === CREW_EVENTS.LEAVE_REJECTED);
+      expect(event.payload).toMatchObject({ staffId: 3, reason: "harvest cover" });
+    });
+
+    it("says NOTHING when the caller withdraws their own request", async () => {
+      // A withdrawal is the caller calling off their own request. There is nobody
+      // to tell who does not already know.
+      const { service, context, requestId } = await booked();
+      await service.decide({ requestId, to: "cancelled" });
+      expect(context.published).toEqual([]);
+    });
+
+    it("says nothing when an approved request is later cancelled", async () => {
+      const { service, context, requestId } = await booked();
+      await service.decide({ requestId, to: "approved" });
+      const before = context.published.length;
+      await service.decide({ requestId, to: "cancelled", reason: "plans changed" });
+      expect(context.published.length).toBe(before);
+    });
+
+    it("says nothing when the decision never happened", async () => {
+      const { service, context, requestId } = await booked();
+      await service.decide({ requestId, to: "rejected" }); // no reason -> VALIDATION_FAILED
+      await service.decide({ requestId: 9999, to: "approved" }); // REQUEST_NOT_FOUND
+      expect(context.published).toEqual([]);
+    });
+  });
+
   async function booked(overrides) {
     const context = await setup();
     const result = await context.service.requestLeave(request(overrides));

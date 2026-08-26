@@ -13,6 +13,7 @@
 const { validationFailed, versionConflict, memberNotFound, CREW_ERROR_CODES, CrewError } = require("../../errors");
 const { daysBetween } = require("../../clock");
 const { getStore, read, transact } = require("./store");
+const { CREW_EVENTS } = require("../../notifier");
 
 const ROLES = ["STOCKPERSON", "TRACTOR_DRIVER", "AGRONOMIST", "DAIRY_HAND", "MECHANIC", "SEASONAL_PICKER", "MANAGER"];
 const EMPLOYMENT_TYPES = ["PERMANENT", "FIXED_TERM", "SEASONAL", "CONTRACTOR"];
@@ -28,8 +29,16 @@ const PROBATION_DAYS = 90;
 // Once the end date is within this window, the member is working their notice.
 const NOTICE_WINDOW_DAYS = 30;
 
-function createProfilesService(context) {
-  const store = getStore();
+/**
+ * @param {object} context - the per-request context (context.js)
+ * @param {object} [deps]
+ * @param {object} [deps.store] - store override, the same seam the other three
+ *   pillars carry. The registry never passes one; a test does, so a write path
+ *   can be driven without a file on disk. Read-only from the pillar's point of
+ *   view: nothing here behaves differently because it was passed a double.
+ */
+function createProfilesService(context, { store: storeOverride } = {}) {
+  const store = storeOverride || getStore();
   const { userId, clock } = context;
 
   /** Every profile row this user owns. One store read per request, via the loader. */
@@ -309,6 +318,18 @@ function createProfilesService(context) {
       });
 
       context.resetLoaders("crewProfilesByStaffId");
+      // NOT a firing (see the note at the top of schema.graphql) — an end date on
+      // the overlay. The staff record and its assignments are untouched, which is
+      // exactly why this needs announcing: nothing else downstream changes shape.
+      context.notifier.publish(
+        CREW_EVENTS.EMPLOYMENT_ENDED,
+        {
+          staffId: numericStaffId,
+          lastDay: ended.endDate,
+          reason: ended.endReason,
+        },
+        { correlationId: `crew-employment-ended-${numericStaffId}` },
+      );
       return ended;
     },
 

@@ -404,6 +404,88 @@ const policies = {
       message: `Animal #${event.payload?.animalId || "n/a"} has been removed.`,
     }),
   },
+  // Crew Office (PRD §8). In-app only, deliberately: `crew.route.js` refuses
+  // personal API keys and waits on `crew:read`/`crew:write` scopes, so routing
+  // crew data to arbitrary subscriber URLs would open a programmatic egress the
+  // module has kept shut. Add "webhook" when those scopes land, not before.
+  [EVENT_TYPES.CREW_LEAVE_APPROVED]: {
+    id: "policy.crew.leave.approved",
+    eventType: EVENT_TYPES.CREW_LEAVE_APPROVED,
+    priority: "normal",
+    channels: ["in-app"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 50, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Leave Approved",
+      message: `Leave for crew member #${event.payload?.staffId || "n/a"} (${event.payload?.from || "?"} to ${event.payload?.to || "?"}) was approved.`,
+    }),
+  },
+  [EVENT_TYPES.CREW_LEAVE_REJECTED]: {
+    id: "policy.crew.leave.rejected",
+    eventType: EVENT_TYPES.CREW_LEAVE_REJECTED,
+    priority: "normal",
+    channels: ["in-app"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 50, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Leave Rejected",
+      message: `Leave for crew member #${event.payload?.staffId || "n/a"} was rejected: ${event.payload?.reason || "no reason given"}.`,
+    }),
+  },
+  [EVENT_TYPES.CREW_EMPLOYMENT_ENDED]: {
+    id: "policy.crew.employment.ended",
+    eventType: EVENT_TYPES.CREW_EMPLOYMENT_ENDED,
+    priority: "high",
+    channels: ["in-app"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 20, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Employment Ended",
+      message: `Employment for crew member #${event.payload?.staffId || "n/a"} ends on ${event.payload?.lastDay || "an unrecorded date"}.`,
+    }),
+  },
+  [EVENT_TYPES.CREW_CERTIFICATION_REVOKED]: {
+    id: "policy.crew.certification.revoked",
+    eventType: EVENT_TYPES.CREW_CERTIFICATION_REVOKED,
+    priority: "high",
+    channels: ["in-app"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 30, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Certification Revoked",
+      message: `${event.payload?.courseName || "A certification"} for crew member #${event.payload?.staffId || "n/a"} was revoked, leaving ${event.payload?.gapCount ?? 0} compliance gap(s).`,
+    }),
+  },
+  [EVENT_TYPES.CREW_TOOL_ISSUED]: {
+    id: "policy.crew.tool.issued",
+    eventType: EVENT_TYPES.CREW_TOOL_ISSUED,
+    priority: "low",
+    channels: ["in-app"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 100, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Tool Issued",
+      message: `${event.payload?.toolName || `Tool #${event.payload?.toolId || "n/a"}`} was issued to crew member #${event.payload?.staffId || "n/a"}, due back ${event.payload?.dueBack || "on an unrecorded date"}.`,
+    }),
+  },
+  [EVENT_TYPES.CREW_TOOL_RETURNED]: {
+    id: "policy.crew.tool.returned",
+    eventType: EVENT_TYPES.CREW_TOOL_RETURNED,
+    priority: "low",
+    channels: ["in-app"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 100, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Tool Returned",
+      message: `${event.payload?.toolName || `Tool #${event.payload?.toolId || "n/a"}`} came back ${event.payload?.condition || "in an unrecorded condition"}${event.payload?.late ? " and was late" : ""}.`,
+    }),
+  },
 };
 
 module.exports = policies;

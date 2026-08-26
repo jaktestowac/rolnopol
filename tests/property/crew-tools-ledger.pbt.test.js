@@ -43,6 +43,7 @@ const {
 const { createToolsService } = require("../../services/crew/pillars/tools/service");
 const { DEFAULT_DATA } = require("../../services/crew/pillars/tools/store");
 const { CrewError, CREW_ERROR_CODES } = require("../../services/crew/errors");
+const { createCrewNotifier } = require("../../services/crew/notifier");
 
 const TODAY = "2026-07-30";
 const NOW_ISO = "2026-07-30T09:00:00.000Z";
@@ -270,7 +271,14 @@ function makeContext(store) {
   const staff = STAFF_IDS.map((id) => ({ id, userId: USER_ID, name: `Member ${id}`, surname: "Test", age: 30 }));
   const staffById = new Map(staff.map((record) => [record.id, record]));
 
+  const published = [];
+
   const context = {
+    // The real notifier with a fake publisher, so notifier.js's userId stamping
+    // is exercised rather than stubbed past. Emitted events land in
+    // `context.published` for assertions.
+    notifier: createCrewNotifier({ userId: USER_ID, publish: (event) => published.push(event) }),
+    published,
     userId: USER_ID,
     hasWritableIdentity: true,
     assertWritableIdentity() {},

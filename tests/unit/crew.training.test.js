@@ -477,6 +477,7 @@ const AGRONOMIST = { fte: 1.0, startDate: "2026-01-01", endDate: null, role: "AG
 
 /** The real profiles service's role list, taken from the real profiles service. */
 const { ROLES: PROFILE_ROLES } = require("../../services/crew/pillars/profiles/service");
+const { createCrewNotifier, CREW_EVENTS } = require("../../services/crew/notifier");
 
 /** A context with real loader semantics, and an academy gateway a test can steer. */
 function makeContext({ userId = USER_ID, staff = STAFF, profiles = {}, today = TODAY, academy } = {}) {
@@ -494,7 +495,14 @@ function makeContext({ userId = USER_ID, staff = STAFF, profiles = {}, today = T
 
   const staffById = new Map(staff.map((record) => [Number(record.id), record]));
 
+  const published = [];
+
   const context = {
+    // The real notifier with a fake publisher, so notifier.js's userId stamping
+    // is exercised rather than stubbed past. Emitted events land in
+    // `context.published` for assertions.
+    notifier: createCrewNotifier({ userId, publish: (event) => published.push(event) }),
+    published,
     userId,
     hasWritableIdentity: Number.isFinite(userId),
     assertWritableIdentity() {
@@ -1176,5 +1184,51 @@ describe("the AgriAcademy link degrades to null, never to an error", () => {
     const course = await service.defineCourse({ code: "pesticide", name: "Pesticide", validMonths: 36, academyExamId: "exam-7" });
     expect(course.course.academyExamId).toBe("exam-7");
     expect(await context.academyGateway.certificateForExam(USER_ID, course.course.academyExamId)).toMatchObject({ certificateNo: "AC-1" });
+  });
+});
+
+describe("notification events", () => {
+  it("announces a revocation with the course NAME, not just its id", async () => {
+    // "certificate 12 was revoked" is not worth sending; the name is the message.
+    const { service, context } = await setup();
+    const { certification } = await certified(service, { code: "chainsaw" });
+    const before = context.published.length;
+
+    await service.revokeCertification({ certificationId: certification.id, reason: "Assessment overturned." });
+
+    const event = context.published.slice(before).find((row) => row.type === CREW_EVENTS.CERTIFICATION_REVOKED);
+    expect(event).toBeTruthy();
+    expect(event.payload).toMatchObject({
+      certificationId: String(certification.id),
+      staffId: 3,
+      courseName: "chainsaw",
+      reason: "Assessment overturned.",
+    });
+    expect(event.payload.userId).toBe(USER_ID);
+    expect(event.correlationId).toBe(`crew-certification-revoked-${certification.id}`);
+  });
+
+  it("carries the compliance gap COUNT the revocation just opened", async () => {
+    const { service, context } = await setup();
+    const { certification } = await certified(service, { code: "chainsaw", roles: ["MECHANIC"] });
+    const before = context.published.length;
+
+    await service.revokeCertification({ certificationId: certification.id, reason: "Ticket voided." });
+
+    const event = context.published.slice(before).find((row) => row.type === CREW_EVENTS.CERTIFICATION_REVOKED);
+    expect(event.payload.gapCount).toBeGreaterThan(0);
+  });
+
+  it("says nothing when the revocation did not happen", async () => {
+    const { service, context } = await setup();
+    const { certification } = await certified(service);
+    await service.revokeCertification({ certificationId: certification.id, reason: "First time." });
+    const after = context.published.length;
+
+    await service.revokeCertification({ certificationId: certification.id, reason: "Again." }); // ALREADY_REVOKED
+    await service.revokeCertification({ certificationId: 9999, reason: "Unknown." }); // NOT_FOUND
+    await service.revokeCertification({ certificationId: certification.id, reason: "  " }); // VALIDATION_FAILED
+
+    expect(context.published.length).toBe(after);
   });
 });

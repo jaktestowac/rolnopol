@@ -53,6 +53,7 @@ const {
 const { DEFAULT_DATA } = require("../../services/crew/pillars/tools/store");
 const { certificationCheck, toFailureReason, issueOutcome } = require("../../services/crew/pillars/tools/resolvers");
 const { CREW_ERROR_CODES, CrewError } = require("../../services/crew/errors");
+const { createCrewNotifier, CREW_EVENTS } = require("../../services/crew/notifier");
 
 const TODAY = "2026-07-30";
 const NOW_ISO = "2026-07-30T09:00:00.000Z";
@@ -299,7 +300,14 @@ function makeContext({ userId = USER_ID, staff = STAFF, today = TODAY, training 
 
   const staffById = new Map(staff.map((record) => [Number(record.id), record]));
 
+  const published = [];
+
   const context = {
+    // The real notifier with a fake publisher, so notifier.js's userId stamping
+    // is exercised rather than stubbed past. Emitted events land in
+    // `context.published` for assertions.
+    notifier: createCrewNotifier({ userId, publish: (event) => published.push(event) }),
+    published,
     userId,
     hasWritableIdentity: Number.isFinite(userId),
     assertWritableIdentity() {
@@ -1208,5 +1216,72 @@ describe("orphaned overlays (§12 rule 4)", () => {
     await expect(later.issueTool({ toolId: tool.id, staffId: 3, dueBack: addDays(TODAY, 1) })).rejects.toMatchObject({
       code: CREW_ERROR_CODES.MEMBER_NOT_FOUND,
     });
+  });
+});
+
+describe("notification events", () => {
+  it("announces an issue, addressed to the owner and naming the tool", async () => {
+    const { service, context } = await setup();
+    const tool = await registered(service);
+    const before = context.published.length;
+
+    const issued = await service.issueTool({ toolId: tool.id, staffId: 3, dueBack: addDays(TODAY, 3) });
+    expect(issued.outcome).toBe("ISSUED");
+
+    const event = context.published.slice(before).find((row) => row.type === CREW_EVENTS.TOOL_ISSUED);
+    expect(event).toBeTruthy();
+    expect(event.payload).toMatchObject({
+      issuanceId: String(issued.issuance.id),
+      toolId: tool.id,
+      toolName: "Chainsaw MS261",
+      staffId: 3,
+      dueBack: addDays(TODAY, 3),
+    });
+    expect(event.payload.userId).toBe(USER_ID);
+  });
+
+  it("announces a return, carrying the condition and where it sent the tool", async () => {
+    const { service, context } = await setup();
+    const tool = await registered(service);
+    await service.issueTool({ toolId: tool.id, staffId: 3, dueBack: addDays(TODAY, 3) });
+    const before = context.published.length;
+
+    const returned = await service.returnTool({ toolId: tool.id, condition: "NEEDS_SERVICE" });
+    expect(returned.outcome).toBe("RETURNED");
+
+    const event = context.published.slice(before).find((row) => row.type === CREW_EVENTS.TOOL_RETURNED);
+    expect(event.payload).toMatchObject({ toolId: tool.id, toolName: "Chainsaw MS261", staffId: 3 });
+    // The condition decided the tool's fate; the event says so rather than making
+    // a reader ask a second question.
+    expect(event.payload.toolStatus).toBe(returned.tool.status);
+    expect(event.payload.late).toBe(false);
+  });
+
+  it("gives the issue and its return ONE correlationId — out and back are one trip", async () => {
+    const { service, context } = await setup();
+    const tool = await registered(service);
+    const issued = await service.issueTool({ toolId: tool.id, staffId: 3, dueBack: addDays(TODAY, 3) });
+    await service.returnTool({ toolId: tool.id, condition: "GOOD" });
+
+    const [issue, ret] = [CREW_EVENTS.TOOL_ISSUED, CREW_EVENTS.TOOL_RETURNED].map((type) =>
+      context.published.find((row) => row.type === type),
+    );
+    expect(issue.correlationId).toBe(`crew-tool-issuance-${issued.issuance.id}`);
+    expect(ret.correlationId).toBe(issue.correlationId);
+  });
+
+  it("says nothing when the issue was refused", async () => {
+    const { service, context } = await setup();
+    const tool = await registered(service);
+    await service.issueTool({ toolId: tool.id, staffId: 3, dueBack: addDays(TODAY, 3) });
+    const after = context.published.length;
+
+    // Already out — the second issue is UNAVAILABLE, and an unavailable tool is
+    // not an event.
+    const again = await service.issueTool({ toolId: tool.id, staffId: 4, dueBack: addDays(TODAY, 3) });
+    expect(again.outcome).toBe("UNAVAILABLE");
+    expect(await service.returnTool({ toolId: 999, condition: "GOOD" })).toMatchObject({ outcome: "NOT_FOUND" });
+
+    expect(context.published.length).toBe(after);
   });
 });
