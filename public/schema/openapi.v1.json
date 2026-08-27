@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Rolnopol API v1",
-    "version": "1.108.0",
+    "version": "1.109.0",
     "description": "Stable production API for the Rolnopol service.\n\n**Generated** from the live Express router by `npm run schema:generate` — do not edit by hand.\n\nOperations marked with `x-feature-flag` are gated: they answer **404** while their flag is off. Flags are listed at `GET /api/v1/feature-flags` and toggled via `PATCH /api/v1/admin/feature-flags`.",
     "contact": {
       "name": "API Support",
@@ -134,6 +134,9 @@
     },
     {
       "name": "Staff"
+    },
+    {
+      "name": "Survival"
     },
     {
       "name": "TaskLab"
@@ -11570,6 +11573,322 @@
         "description": "Returns comprehensive system statistics including users, farms, fields, staff, animals, and marketplace data"
       }
     },
+    "/survival/progress": {
+      "get": {
+        "tags": [
+          "Survival"
+        ],
+        "operationId": "getSurvivalProgress",
+        "summary": "GET survival progress",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/FeatureDisabled"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "security": [
+          {
+            "TokenAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-auth": "user",
+        "x-feature-flag": "survivalGameEnabled",
+        "x-rate-limit": "api",
+        "description": "**Gated by feature flag `survivalGameEnabled`.** Answers `404` while the flag is off — toggle it via `PATCH /api/v1/admin/feature-flags`."
+      }
+    },
+    "/survival/scoreboard": {
+      "get": {
+        "tags": [
+          "Survival"
+        ],
+        "operationId": "getSurvivalScoreboard",
+        "summary": "GET survival scoreboard",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/FeatureDisabled"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "security": [
+          {
+            "TokenAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-auth": "user",
+        "x-feature-flag": "survivalGameEnabled",
+        "x-rate-limit": "api",
+        "description": "**Gated by feature flag `survivalGameEnabled`.** Answers `404` while the flag is off — toggle it via `PATCH /api/v1/admin/feature-flags`."
+      }
+    },
+    "/survival/sessions": {
+      "get": {
+        "tags": [
+          "Survival"
+        ],
+        "operationId": "getSurvivalSessions",
+        "summary": "GET survival sessions",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/FeatureDisabled"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "security": [
+          {
+            "TokenAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-auth": "user",
+        "x-feature-flag": "survivalGameEnabled",
+        "x-rate-limit": "api",
+        "description": "**Gated by feature flag `survivalGameEnabled`.** Answers `404` while the flag is off — toggle it via `PATCH /api/v1/admin/feature-flags`."
+      },
+      "post": {
+        "tags": [
+          "Survival"
+        ],
+        "operationId": "postSurvivalSessions",
+        "summary": "POST survival sessions",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/FeatureDisabled"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "security": [
+          {
+            "TokenAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-auth": "user",
+        "x-feature-flag": "survivalGameEnabled",
+        "x-rate-limit": "api",
+        "description": "**Gated by feature flag `survivalGameEnabled`.** Answers `404` while the flag is off — toggle it via `PATCH /api/v1/admin/feature-flags`."
+      }
+    },
+    "/survival/sessions/{sessionId}": {
+      "get": {
+        "tags": [
+          "Survival"
+        ],
+        "operationId": "getSurvivalSessionsBySessionId",
+        "summary": "GET survival sessions by sessionId",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/FeatureDisabled"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identifier of the target session."
+          }
+        ],
+        "security": [
+          {
+            "TokenAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-auth": "user",
+        "x-feature-flag": "survivalGameEnabled",
+        "x-rate-limit": "api",
+        "description": "**Gated by feature flag `survivalGameEnabled`.** Answers `404` while the flag is off — toggle it via `PATCH /api/v1/admin/feature-flags`."
+      },
+      "patch": {
+        "tags": [
+          "Survival"
+        ],
+        "operationId": "patchSurvivalSessionsBySessionId",
+        "summary": "PATCH survival sessions by sessionId",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/FeatureDisabled"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identifier of the target session."
+          }
+        ],
+        "security": [
+          {
+            "TokenAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-auth": "user",
+        "x-feature-flag": "survivalGameEnabled",
+        "x-rate-limit": "api",
+        "description": "**Gated by feature flag `survivalGameEnabled`.** Answers `404` while the flag is off — toggle it via `PATCH /api/v1/admin/feature-flags`."
+      }
+    },
+    "/survival/sessions/{sessionId}/snapshot": {
+      "put": {
+        "tags": [
+          "Survival"
+        ],
+        "operationId": "putSurvivalSessionsBySessionIdSnapshot",
+        "summary": "PUT survival sessions by sessionId snapshot",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/FeatureDisabled"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identifier of the target session."
+          }
+        ],
+        "security": [
+          {
+            "TokenAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "x-auth": "user",
+        "x-feature-flag": "survivalGameEnabled",
+        "x-rate-limit": "api",
+        "description": "**Gated by feature flag `survivalGameEnabled`.** Answers `404` while the flag is off — toggle it via `PATCH /api/v1/admin/feature-flags`."
+      }
+    },
     "/tape-recorder": {
       "get": {
         "tags": [
@@ -14417,7 +14736,7 @@
                   "properties": {
                     "version": {
                       "type": "string",
-                      "example": "1.108.0"
+                      "example": "1.109.0"
                     }
                   }
                 }

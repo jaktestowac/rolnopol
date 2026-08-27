@@ -61,6 +61,8 @@ const FEATURE_FLAG_DESCRIPTIONS = {
     "Enable or disable the Observatory sky-dome page with stars and constellations tracking, and the observatory REST/SSE endpoints (public, no login required)",
   crewOfficeEnabled:
     "Enable or disable the whole Crew Office module (GraphQL crew management over the existing staff records — pages, graph endpoint, module-owned stores, and all four pillars: work, holidays, training, tools) for logged-in users only",
+  survivalGameEnabled:
+    "Enable or disable Rolnopol Survival (the hex survival game page and its expedition-record REST API) for logged-in users only",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -100,6 +102,7 @@ const FEATURE_FLAG_GROUPS = {
   agriAcademy: ["agriAcademyEnabled"],
   observatory: ["observatoryEnabled"],
   crewOffice: ["crewOfficeEnabled"],
+  survival: ["survivalGameEnabled"],
 };
 
 const EXPERIMENTAL_FEATURE_FLAGS = [
@@ -142,6 +145,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "agriAcademyEnabled",
   "observatoryEnabled",
   "crewOfficeEnabled",
+  "survivalGameEnabled",
 ];
 
 const PREDEFINED_FEATURE_FLAGS = {
@@ -194,6 +198,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   agriAcademyEnabled: false,
   observatoryEnabled: false,
   crewOfficeEnabled: false,
+  survivalGameEnabled: true,
 };
 
 const DEFAULT_FEATURE_FLAGS = {

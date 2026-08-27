@@ -106,6 +106,16 @@ try {
   logError("[routes/v1] Failed to load agri-academy.route — agri-academy endpoints unavailable:", err.message);
   agriAcademyRoute = express.Router();
 }
+// Defensive loading — Rolnopol Survival is a self-contained game module; if it
+// fails to load, every other endpoint must still be served (PRD "the game must
+// not impact other functionality").
+let survivalRoute;
+try {
+  survivalRoute = require("./survival.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load survival.route — Rolnopol Survival endpoints unavailable:", err.message);
+  survivalRoute = express.Router();
+}
 // Defensive loading — Crew Office assembles its GraphQL schema from independently
 // flagged pillars; if any of that fails to load, the rest of the app must still
 // start and serve every existing endpoint (PRD §12 rule 6).
@@ -302,6 +312,7 @@ router.use("/", farmStayRoute);
 router.use("/", agriAcademyAdminRoute);
 router.use("/", agriAcademyRoute);
 router.use("/", crewRoute);
+router.use("/", survivalRoute);
 router.use("/", servicesMonitorRoute);
 router.use("/contact", contactRoute);
 router.use("/", blogRoute);

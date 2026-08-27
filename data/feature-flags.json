@@ -48,7 +48,8 @@
     "farmStayEnabled": false,
     "agriAcademyEnabled": false,
     "observatoryEnabled": false,
-    "crewOfficeEnabled": false
+    "crewOfficeEnabled": false,
+    "survivalGameEnabled": true
   },
-  "updatedAt": "2026-08-06T12:48:25.242Z"
+  "updatedAt": "2026-08-27T20:16:05.910Z"
 }

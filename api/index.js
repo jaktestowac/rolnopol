@@ -847,6 +847,30 @@ app.get(["/operator/labyrinth", "/operator/labyrinth.html"], (req, res, next) =>
   return next();
 });
 
+// Feature-gate the Rolnopol Survival game page before static serving. The page
+// itself also checks for a session and bounces to /login.html (WP-38); this gate
+// is about the module being switched off entirely (WP-44).
+app.get(["/operator/survival", "/operator/survival.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.survivalGameEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/operator/survival") {
+      return res.redirect(302, "/operator/survival.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Rolnopol Survival feature gate check failed", { error });
+    return next();
+  }
+});
+
 // Public hidden Pixelizer tool entry point. The page does all of its work in the
 // browser, so there is no endpoint behind it — only the extension-less alias.
 app.get(["/operator/tools/pixelizer", "/operator/tools/pixelizer.html"], (req, res, next) => {
