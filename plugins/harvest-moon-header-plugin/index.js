@@ -17,7 +17,18 @@ module.exports = {
       return;
     }
 
-    const routePaths = Array.isArray(config.routePaths) ? config.routePaths : [];
+    // An explicitly empty list means every path. A value of the wrong shape is a
+    // configuration mistake, and widening to every path is the worst reading of it, so
+    // this adds no header at all. The runtime warns about the shape at startup.
+    if (config.routePaths !== undefined && !Array.isArray(config.routePaths) && typeof config.routePaths !== "string") {
+      return;
+    }
+
+    const routePaths = Array.isArray(config.routePaths)
+      ? config.routePaths
+      : typeof config.routePaths === "string"
+        ? [config.routePaths]
+        : [];
     if (routePaths.length > 0 && !routePaths.includes(req.path)) {
       return;
     }

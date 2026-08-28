@@ -380,19 +380,35 @@ Toggling a flag takes effect on the **next request** — no restart needed (e.g.
 
 `modules/plugin-runtime/index.js` discovers plugins in `plugins/`, resolves their enabled-state from a precedence chain, and attaches their hooks/routes to Express. Plugins receive injected services (`featureFlagsService`, `notificationCenter`).
 
+Discovery is decided **before** a plugin's `index.js` is required, so a directory no manifest mentions never runs any code. Reachability has to be readable from JSON: either a key in the global manifest, or `{ "autoDiscoverable": true }` in the plugin's own `plugin.manifest.json`. `autoDiscoverable` in plugin code alone is honoured only when `initialize({ allowCodeDeclaredDiscovery: true })` opts back into the old behaviour.
+
 ```mermaid
 graph TD
-    Init["pluginRuntime.initialize({ pluginsDir, services })"] --> Disc["discover plugins/*"]
-    Disc --> Res["resolve enabled state"]
-    Res --> Attach["pluginRuntime.attach(app)"]
-    Attach --> Hooks["request/response hooks + custom routes + event subs"]
+    Init["pluginRuntime.initialize({ pluginsDir, services })"] --> Down["tear down the previously loaded set"]
+    Down --> Disc["list plugins/* and read their manifests"]
+    Disc --> Gate["reachable in JSON? skip without requiring"]
+    Gate --> Req["require, resolve enabled / config / order"]
+    Req --> InitHook["init + event subs + registerRoutes"]
+    InitHook --> Attach["pluginRuntime.attach(app)"]
+    Attach --> Hooks["onRequest, onResponse, /api/v1/plugins/&lt;name&gt; routers"]
 
-    subgraph Precedence["enabled-state precedence (high → low)"]
+    subgraph Precedence["enabled / config / order precedence (high → low)"]
         G["global plugins.manifest.json"] --> L["plugin.manifest.json (per-plugin)"] --> Code["index.js code default"] --> Off["disabled if unspecified"]
     end
 ```
 
-Bundled plugins include easter eggs and observability helpers: `teapot-blocker` (HTTP 418), `secret-garden-route`, `harvest-moon-header`, `firefly-notification`, `response-size-logger`, `starlit-statistics`, `feature-flag-watcher`, and a `plugin-template` for new ones.
+Six hooks, all optional: `init`, `registerRoutes`, `onRequest`, `onResponse`, `onEvent`, `shutdown`. Only `shutdown` is awaited; the rest are synchronous, and a hook that returns a promise is logged as a mistake. The contract worth knowing before writing one:
+
+| Hook                                           | Contract                                                                                                                                                                                                                         |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registerRoutes({ router, config, services })` | An Express router mounted at `/api/v1/plugins/<plugin-name>`, so plugin routes cannot shadow core routes. Preferred over matching paths inside `onRequest`.                                                                      |
+| `onRequest`                                    | Returning `false` stops the remaining plugins. If nothing answered, the runtime continues to the route handlers instead of leaving the request hanging. One plugin throwing does not cancel the plugins ordered after it.        |
+| `onResponse`                                   | Fires for `res.json` and `res.send` (`responseType` `"json"` / `"send"`), where a returned value replaces the body, and for everything else through `res.end` (`"end"`: sendFile, redirects, streams), where hooks observe only. |
+| `onEvent`                                      | Filtered by `config.eventTypes` alone; `[]` means every event.                                                                                                                                                                   |
+
+`initialize()` tears the previously loaded set down first (awaiting `shutdown` on each), so a reload cannot leave a plugin's timers running with nothing holding a handle on them. `reload({ reloadModules: true })` also evicts plugin files from the require cache. `attach(app)` throws if `initialize()` has not run, rather than loading every plugin with no services. Collisions are reported at init: duplicate names, two enabled plugins sharing an `order`, or two claiming the same `config.routePath`.
+
+Bundled plugins include easter eggs and observability helpers: `teapot-blocker` (HTTP 418), `secret-garden-route`, `harvest-moon-header`, `firefly-notification`, `response-size-logger`, `starlit-statistics`, `feature-flag-watcher`, and a `plugin-template` for new ones. Everything ships disabled, and `teapot-blocker` is reachable from neither manifest, so it is never even required.
 
 ---
 

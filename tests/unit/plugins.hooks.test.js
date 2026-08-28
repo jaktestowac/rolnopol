@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import express from "express";
+import request from "supertest";
 
 // Hook behaviour for the bundled plugins that nothing else exercises.
 //
 // `plugin-runtime.easter-eggs.test.js` already drives the five easter-egg plugins
 // through the real runtime over HTTP. The eight below are not covered anywhere, and
-// three of them ship `enabled: true` in code — so their hooks run on every request
-// in any deployment whose manifest does not say otherwise.
+// three of them ship `enabled: true` in code (response-size-logger, startup-info,
+// test-header) — so the moment a manifest registers one without saying `enabled: false`,
+// its hooks run on every request.
 //
 // Hooks are called directly here rather than through the runtime, with the exact
 // context shape `modules/plugin-runtime/index.js` builds. That keeps each assertion
@@ -253,6 +256,15 @@ describe("response-size-logger-plugin", () => {
     expect(context.responseBody).toEqual({ ok: true });
   });
 
+  it("logs nothing for a response whose size it cannot know", () => {
+    // sendFile, redirects and streams reach onResponse through res.end with no body.
+    const context = hookContext({ responseBody: undefined, responseType: "end" });
+
+    responseSizeLogger.onResponse(context);
+
+    expect(context.logInfo).not.toHaveBeenCalled();
+  });
+
   it("measures an empty string and an empty object as their real sizes", () => {
     const empty = hookContext({ responseBody: "", responseType: "send" });
     responseSizeLogger.onResponse(empty);
@@ -322,59 +334,62 @@ describe("startup-info-plugin", () => {
 });
 
 describe("sample-plugin-route", () => {
-  const routePath = samplePluginRoute.config.routePath;
+  /** The plugin's own router, mounted where the runtime would mount it. */
+  function buildApp(config = samplePluginRoute.config) {
+    const app = express();
+    app.use(express.json());
 
-  it("ignores any path but its own, returning undefined so the pipeline continues", () => {
-    const context = hookContext({ req: fakeReq({ path: "/api/v1/ping" }) });
+    const router = express.Router();
+    samplePluginRoute.registerRoutes({ router, config, ...loggers() });
+    app.use("/api/v1/plugins/sample-plugin-route", router);
 
-    expect(samplePluginRoute.onRequest(context)).toBeUndefined();
-    expect(context.res.captured.json).toBeNull();
+    return app;
+  }
+
+  it("owns routes instead of intercepting requests, so it cannot shadow a core path", () => {
+    expect(typeof samplePluginRoute.registerRoutes).toBe("function");
+    expect(samplePluginRoute.onRequest).toBeUndefined();
   });
 
-  it("answers a GET on its route and short-circuits", () => {
-    const context = hookContext({ req: fakeReq({ method: "GET", path: routePath }), config: samplePluginRoute.config });
+  it("answers a GET on its mount path", async () => {
+    const res = await request(buildApp()).get("/api/v1/plugins/sample-plugin-route").expect(200);
 
-    expect(samplePluginRoute.onRequest(context)).toBe(false);
-    expect(context.res.captured.json).toEqual({ message: "Hello from sample-plugin-route (GET)" });
+    expect(res.body).toEqual({ message: "Hello from sample-plugin-route (GET)" });
   });
 
-  it("echoes the body on a POST", () => {
+  it("echoes the body on a POST", async () => {
     const body = { seed: "wheat" };
-    const context = hookContext({
-      req: fakeReq({ method: "POST", path: routePath, body }),
-      config: samplePluginRoute.config,
-    });
+    const res = await request(buildApp()).post("/api/v1/plugins/sample-plugin-route").send(body).expect(200);
 
-    expect(samplePluginRoute.onRequest(context)).toBe(false);
-    expect(context.res.captured.json).toEqual({ message: "Hello from sample-plugin-route (POST)", body });
+    expect(res.body).toEqual({ message: "Hello from sample-plugin-route (POST)", body });
   });
 
-  it("answers 405 for any other method, and still short-circuits", () => {
-    for (const method of ["PUT", "PATCH", "DELETE"]) {
-      const context = hookContext({ req: fakeReq({ method, path: routePath }), config: samplePluginRoute.config });
+  it("answers 405 for any other method", async () => {
+    for (const method of ["put", "patch", "delete"]) {
+      const res = await request(buildApp())[method]("/api/v1/plugins/sample-plugin-route").expect(405);
 
-      expect(samplePluginRoute.onRequest(context)).toBe(false);
-      expect(context.res.captured.status).toBe(405);
-      expect(context.res.captured.json).toEqual({ error: "Method not allowed" });
+      expect(res.body).toEqual({ error: "Method not allowed" });
     }
   });
 
-  it("follows a reconfigured route path instead of its default", () => {
-    const config = { routePath: "/api/moved-elsewhere" };
+  it("uses the configured greeting, falling back to its own", async () => {
+    const configured = await request(buildApp({ greeting: "Dzien dobry" }))
+      .get("/api/v1/plugins/sample-plugin-route")
+      .expect(200);
+    expect(configured.body.message).toBe("Dzien dobry (GET)");
 
-    const onDefault = hookContext({ req: fakeReq({ path: routePath }), config });
-    expect(samplePluginRoute.onRequest(onDefault)).toBeUndefined();
-
-    const onConfigured = hookContext({ req: fakeReq({ path: config.routePath }), config });
-    expect(samplePluginRoute.onRequest(onConfigured)).toBe(false);
+    const bare = await request(buildApp({})).get("/api/v1/plugins/sample-plugin-route").expect(200);
+    expect(bare.body.message).toBe("Hello from sample-plugin-route (GET)");
   });
 
-  it("announces its route on init", () => {
+  it("announces its mount path on init", () => {
     const context = { ...loggers(), config: samplePluginRoute.config };
 
     samplePluginRoute.init(context);
 
-    expect(context.logInfo).toHaveBeenCalledWith("sample-plugin-route initialized", { routePath });
+    expect(context.logInfo).toHaveBeenCalledWith("sample-plugin-route initialized", {
+      mountPath: "/api/v1/plugins/sample-plugin-route",
+    });
   });
 });
 

@@ -18,7 +18,7 @@ const path = require("path");
 const PLUGINS_DIR = path.join(__dirname, "..", "..", "plugins");
 const MANIFEST = JSON.parse(fs.readFileSync(path.join(PLUGINS_DIR, "plugins.manifest.json"), "utf8"));
 
-const HOOKS = ["init", "onRequest", "onResponse", "onEvent", "shutdown"];
+const HOOKS = ["init", "registerRoutes", "onRequest", "onResponse", "onEvent", "shutdown"];
 
 /** Every plugin directory, loaded. */
 const PLUGINS = fs
@@ -26,7 +26,17 @@ const PLUGINS = fs
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name)
   .sort()
-  .map((dirName) => ({ dirName, plugin: require(path.join(PLUGINS_DIR, dirName, "index.js")) }));
+  .map((dirName) => ({
+    dirName,
+    plugin: require(path.join(PLUGINS_DIR, dirName, "index.js")),
+    localManifest: readLocalManifest(dirName),
+  }));
+
+/** A plugin's own plugin.manifest.json, or {} when it does not ship one. */
+function readLocalManifest(dirName) {
+  const file = path.join(PLUGINS_DIR, dirName, "plugin.manifest.json");
+  return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {};
+}
 
 // Deliberately double-locked: absent from the manifest AND not auto-discoverable,
 // because enabling it by accident would 418 every request in the app.
@@ -102,23 +112,43 @@ describe("plugin contract — the enabled flag", () => {
 });
 
 describe("plugin contract — reachability", () => {
-  it("makes every plugin either manifest-listed or auto-discoverable", () => {
+  it("declares every plugin reachable in JSON, because discovery happens before the require", () => {
+    // The runtime decides reachability from the manifests alone, so that a directory
+    // nobody registered never gets executed. `autoDiscoverable` in plugin code is not
+    // enough: reading it would mean running the file.
     const listed = new Set(Object.keys(MANIFEST.plugins));
 
-    for (const { dirName, plugin } of PLUGINS) {
+    for (const { dirName, localManifest } of PLUGINS) {
       if (INTENTIONALLY_UNREACHABLE.has(dirName)) continue;
 
-      const reachable = listed.has(dirName) || plugin.autoDiscoverable === true;
-      expect(reachable, `${dirName} is neither listed in plugins.manifest.json nor autoDiscoverable`).toBe(true);
+      const reachable = listed.has(dirName) || localManifest.autoDiscoverable === true;
+      expect(reachable, `${dirName} is neither listed in plugins.manifest.json nor autoDiscoverable in its own plugin.manifest.json`).toBe(
+        true,
+      );
     }
   });
 
-  it("keeps the intentionally-unreachable plugin unreachable in both ways at once", () => {
+  it("keeps the intentionally-unreachable plugin unreachable in every way at once", () => {
     for (const dirName of INTENTIONALLY_UNREACHABLE) {
-      const { plugin } = PLUGINS.find((entry) => entry.dirName === dirName);
+      const { plugin, localManifest } = PLUGINS.find((entry) => entry.dirName === dirName);
 
       expect(MANIFEST.plugins).not.toHaveProperty(dirName);
+      expect(localManifest.autoDiscoverable).not.toBe(true);
       expect(plugin.autoDiscoverable).not.toBe(true);
+    }
+  });
+
+  it("never ships a local manifest that enables a plugin behind the global manifest's back", () => {
+    for (const { dirName, localManifest } of PLUGINS) {
+      expect(localManifest.enabled, `${dirName}/plugin.manifest.json enables itself`).not.toBe(true);
+    }
+  });
+
+  it("keeps the code autoDiscoverable flag in step with the local manifest", () => {
+    // Only the JSON decides discovery now. A code flag that disagrees is a lie in whichever
+    // direction it points, and it still matters under `allowCodeDeclaredDiscovery`.
+    for (const { dirName, plugin, localManifest } of PLUGINS) {
+      expect(plugin.autoDiscoverable === true, `${dirName} code and local manifest disagree`).toBe(localManifest.autoDiscoverable === true);
     }
   });
 
@@ -200,6 +230,96 @@ describe("plugin contract — the manifest mirrors each plugin's own defaults", 
     for (const [name, entry] of Object.entries(MANIFEST.plugins)) {
       expect(typeof entry.config, name).toBe("object");
       expect(entry.config, name).not.toBeNull();
+    }
+  });
+
+  it("declares every configurable value in plugin code, not only in the manifest", () => {
+    // A manifest key with no code default cannot be checked by the test above, and it hides
+    // the plugin's real default inside a `||` fallback where nobody reads it.
+    for (const [name, entry] of Object.entries(MANIFEST.plugins)) {
+      const { plugin } = PLUGINS.find((candidate) => candidate.dirName === name);
+      const defaults = plugin.config || {};
+
+      for (const key of Object.keys(entry.config || {})) {
+        expect(key in defaults, `${name}.config.${key} has no default in plugins/${name}/index.js`).toBe(true);
+      }
+    }
+  });
+
+  it("overrides no order from the manifest, so a blocking plugin cannot be resequenced", () => {
+    for (const [name, entry] of Object.entries(MANIFEST.plugins)) {
+      expect(entry, name).not.toHaveProperty("order");
+    }
+  });
+
+  it("carries no manifest keys the runtime ignores", () => {
+    for (const [name, entry] of Object.entries(MANIFEST.plugins)) {
+      for (const key of Object.keys(entry)) {
+        expect(["enabled", "config", "order"], `${name}.${key}`).toContain(key);
+      }
+    }
+  });
+});
+
+describe("plugin contract — the real runtime honours the locks", () => {
+  it("loads every registered plugin and never requires the request blocker", () => {
+    const pluginRuntime = require(path.join(__dirname, "..", "..", "modules", "plugin-runtime"));
+
+    pluginRuntime.initialize({
+      pluginsDir: PLUGINS_DIR,
+      manifestPath: path.join(PLUGINS_DIR, "plugins.manifest.json"),
+    });
+
+    const loaded = pluginRuntime.getPlugins().map((plugin) => plugin.name);
+
+    for (const dirName of INTENTIONALLY_UNREACHABLE) {
+      expect(loaded, `${dirName} was loaded`).not.toContain(dirName);
+    }
+
+    // Everything else is registered somewhere, so it should all be here.
+    const expected = PLUGINS.map(({ dirName }) => dirName).filter((dirName) => !INTENTIONALLY_UNREACHABLE.has(dirName));
+    expect(loaded.slice().sort()).toEqual(expected.slice().sort());
+  });
+
+  it("ships with every plugin disabled, so a clone serves no plugin behaviour", () => {
+    const pluginRuntime = require(path.join(__dirname, "..", "..", "modules", "plugin-runtime"));
+
+    pluginRuntime.initialize({
+      pluginsDir: PLUGINS_DIR,
+      manifestPath: path.join(PLUGINS_DIR, "plugins.manifest.json"),
+    });
+
+    expect(pluginRuntime.getPlugins().filter((plugin) => plugin.enabled)).toEqual([]);
+  });
+});
+
+describe("plugin contract — no plugin shadows a core route", () => {
+  it("keeps every path-owning plugin off the live route table", () => {
+    // A plugin that ANSWERS on a path (an onRequest hook plus a config.routePath) runs
+    // above auth, rate limiting and request logging, so a path that also belongs to a real
+    // router would be silently hijacked. Decorator plugins, which only add to somebody
+    // else's response, are exactly the ones that are supposed to share a path.
+    const generatorConfig = require(path.join(__dirname, "..", "..", "schema", "generator.config.js"));
+    const { collectOperations, toOpenApiPath } = require(path.join(__dirname, "..", "..", "build", "lib", "introspect-routes.js"));
+
+    const live = new Map();
+    for (const version of generatorConfig.VERSIONS) {
+      const router = require(path.join(__dirname, "..", "..", version.routerModule));
+      for (const operation of collectOperations(router)) {
+        live.set(`/api/${version.key}${toOpenApiPath(operation.path)}`, version.key);
+      }
+    }
+
+    // Guard against the whole check passing because nothing was collected.
+    expect(live.size).toBeGreaterThan(50);
+
+    for (const { dirName, plugin } of PLUGINS) {
+      if (typeof plugin.onRequest !== "function") continue;
+
+      const routePath = plugin.config?.routePath;
+      if (typeof routePath !== "string" || routePath.length === 0) continue;
+
+      expect(live.has(routePath), `${dirName} answers on ${routePath}, which is a live ${live.get(routePath)} route`).toBe(false);
     }
   });
 });

@@ -108,6 +108,11 @@ describe("plugin-runtime local manifests", () => {
 
     await writePlugin(pluginDir, `module.exports = {\n  name: "${pluginName}",\n  autoDiscoverable: true\n};\n`);
 
+    // Discovery is decided before the require, so the opt-in has to be in JSON.
+    await writeJson(path.join(pluginDir, "plugin.manifest.json"), {
+      autoDiscoverable: true,
+    });
+
     await writeJson(path.join(pluginsDir, "plugins.manifest.json"), {
       plugins: {},
     });
@@ -173,13 +178,13 @@ describe("plugin-runtime local manifests", () => {
   config: {
     eventTypes: ["field.created"]
   },
-  onEvent({ event, eventType, pluginContext }) {
-    pluginContext.seen = pluginContext.seen || [];
-    pluginContext.seen.push(eventType);
+  onEvent({ event, eventType, pluginState }) {
+    pluginState.seen = pluginState.seen || [];
+    pluginState.seen.push(eventType);
     global.__pluginRuntimeEventCapture = {
       eventType,
       payload: event.payload,
-      seen: pluginContext.seen.slice(),
+      seen: pluginState.seen.slice(),
     };
   }
 };
