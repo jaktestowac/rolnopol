@@ -79,19 +79,50 @@ object other code sees when it requires the file directly.
 All six are optional. Only `shutdown` is awaited; the rest are called synchronously, and a
 hook that returns a promise is logged as a mistake rather than awaited.
 
-| Hook                                                       | When it runs and what it may do                                                                                                                                                                                                                            |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init({ config, services, ...loggers })`                   | Once at startup, for enabled plugins.                                                                                                                                                                                                                      |
-| `registerRoutes({ router, config, services, ...loggers })` | Once at startup. The Express router is mounted at `/api/v1/plugins/<name>`, so plugin routes cannot shadow core routes. Prefer this over matching paths inside `onRequest`.                                                                                |
-| `onRequest({ req, res, pluginContext, config, services })` | Per request, before the route handlers. Return `false` to stop the remaining plugins; if nothing answered, the runtime continues to the routes rather than leaving the request hanging. One plugin throwing does not cancel the plugins ordered after it.  |
-| `onResponse({ req, res, responseBody, responseType, … })`  | Before the body goes out. `responseType` is `"json"` or `"send"` when the body came from `res.json` / `res.send`, where returning a value **replaces** the body, and `"end"` for everything else (sendFile, redirects, streams), where hooks observe only. |
-| `onEvent({ event, eventType, pluginState, config, … })`    | Per notification-center event, filtered by `config.eventTypes`. An empty list means every event. This is the only place the runtime reads the filter.                                                                                                      |
-| `shutdown({ config, ...loggers })`                         | On graceful shutdown, and again before a reload replaces the plugin. Clear timers and handles here.                                                                                                                                                        |
+| Hook                                                                  | When it runs and what it may do                                                                                                                                                                                                                            |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `init({ config, services, mountPath, ...loggers })`                   | Once at startup, for enabled plugins. `mountPath` is the resolved route path, whether or not the plugin registers routes.                                                                                                                                  |
+| `registerRoutes({ router, mountPath, config, services, ...loggers })` | Once at startup. The Express router is mounted at `mountPath`, which the runtime resolves and passes in. Register routes relative to it. Prefer this over matching paths inside `onRequest`.                                                               |
+| `onRequest({ req, res, pluginContext, config, services })`            | Per request, before the route handlers. Return `false` to stop the remaining plugins; if nothing answered, the runtime continues to the routes rather than leaving the request hanging. One plugin throwing does not cancel the plugins ordered after it.  |
+| `onResponse({ req, res, responseBody, responseType, … })`             | Before the body goes out. `responseType` is `"json"` or `"send"` when the body came from `res.json` / `res.send`, where returning a value **replaces** the body, and `"end"` for everything else (sendFile, redirects, streams), where hooks observe only. |
+| `onEvent({ event, eventType, pluginState, config, … })`               | Per notification-center event, filtered by `config.eventTypes`. An empty list means every event. This is the only place the runtime reads the filter.                                                                                                      |
+| `shutdown({ config, ...loggers })`                                    | On graceful shutdown, and again before a reload replaces the plugin. Clear timers and handles here.                                                                                                                                                        |
 
 `pluginContext` in `onRequest` and `onResponse` is per-request state. The event hooks get
 `pluginState` instead, which lives as long as the load. They are separate objects with
 separate lifetimes, which is why they have separate names, and state that both a request and
 an event need belongs on `this`.
+
+### Where a plugin's routes answer
+
+A router from `registerRoutes` is mounted at `/api/v1/plugins/<plugin-name>` by default. That
+default cannot collide with a core route, which is the reason the namespace exists.
+
+Set `config.mountPath` to put it somewhere else. It follows the same precedence as the rest of
+the config, so either manifest can move a plugin's routes without touching its code:
+
+```json
+{
+  "plugins": {
+    "current-time-plugin": {
+      "enabled": true,
+      "config": { "mountPath": "/api/v1/plugins/clock" }
+    }
+  }
+}
+```
+
+- The resolved path is injected into `init` and `registerRoutes`, so nothing hardcodes it, and
+  `getPlugins()` reports it as `mountPath` (plus `routeMountPath`, set only when the plugin
+  actually has a router mounted there).
+- A value that is not an absolute path is refused with a warning, and the default is used.
+- A trailing slash is dropped, so a mounted router never answers on `//`.
+- A path outside `/api/v1/plugins/` **is allowed**, and warned about at startup: that is
+  exactly where a plugin can shadow a real route. Nothing bundled does it, and a contract test
+  keeps it that way.
+- Two enabled plugins on the same path: the one with the lower `order` keeps it, the other is
+  not mounted at all, and both are named in a warning.
+- A nested path gets its own requests: `/api/v1/plugins/a/b` wins over `/api/v1/plugins/a`.
 
 ### Runtime notes
 
@@ -101,6 +132,8 @@ an event need belongs on `this`.
   cannot leave a plugin's timers running with nothing holding a handle on them.
   `reload({ reloadModules: true })` also evicts plugin files from the require cache.
 - When no enabled plugin declares `onResponse`, `res.json` and `res.send` are left untouched.
+- Plugin routes are dispatched by one middleware that reads the current mount paths per
+  request, so `reload()` can move a plugin's routes without re-attaching anything.
 - At startup the runtime warns about collisions (two enabled plugins sharing an `order` or a
   `config.routePath`, two plugins sharing a name) and about the three config keys it
   understands being the wrong shape: `routePath`, `routePaths`, `eventTypes`.
@@ -111,6 +144,10 @@ an event need belongs on `this`.
   contract written out.
 - `sample-plugin-route/` is the reference for a plugin that owns endpoints: it uses
   `registerRoutes`, so its routes live under `/api/v1/plugins/sample-plugin-route`.
+- `current-time-plugin/` is the smallest useful one of those: a single `GET` answering with
+  the current time as an ISO string, an epoch, and a human-readable local time. Takes an
+  optional `?timeZone=` (any IANA zone, 400 for anything else) and a `timeZone` / `locale`
+  config.
 - `auto-discoverable-plugin/` opts itself in through its own `plugin.manifest.json`, and is
   disabled by default.
 - `response-size-logger-plugin/` and `startup-info-plugin/` are simple observers. Like every

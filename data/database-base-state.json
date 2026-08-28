@@ -118,27 +118,25 @@
       },
       {
         "id": 11,
-        "username": "NULLFRAME",
-        "displayedName": "NULLFRAME Heavy Industries",
-        "email": "nullframe-heavy-industries@rolnopol.demo.pl",
-        "password": "nullframePass123",
+        "username": "Mina Murray",
+        "displayedName": "Mina Murray",
+        "email": "mina.murray@rolnopol.demo.pl",
+        "password": "minaPass123",
         "isActive": true,
-        "createdAt": "2028-01-01T00:00:00.000Z",
-        "updatedAt": "2028-07-19T10:15:35.348Z",
-        "lastLogin": "2028-07-19T10:15:35.348Z",
-        "protected": true
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "updatedAt": "2025-09-17T10:43:35.335Z",
+        "lastLogin": "2025-09-17T10:43:35.334Z"
       },
       {
         "id": 12,
-        "username": "AXIOM",
-        "displayedName": "AXIOM Industrial",
-        "email": "axiom-industrial@rolnopol.demo.pl",
-        "password": "axiomPass123",
+        "username": "Kris Kelvin",
+        "displayedName": "Kris Kelvin",
+        "email": "kris.kelvin@rolnopol.demo.pl",
+        "password": "krisPass123",
         "isActive": true,
-        "createdAt": "2028-01-01T00:00:00.000Z",
-        "updatedAt": "2028-07-19T10:15:35.348Z",
-        "lastLogin": "2028-07-19T10:15:35.348Z",
-        "protected": true
+        "createdAt": "2026-01-01T00:00:00.000Z",
+        "updatedAt": "2025-09-17T10:43:35.335Z",
+        "lastLogin": "2025-09-17T10:43:35.334Z"
       },
       {
         "id": 13,
@@ -183,6 +181,30 @@
         "createdAt": "2026-01-01T00:00:00.000Z",
         "updatedAt": "2025-09-17T10:43:35.335Z",
         "lastLogin": "2025-09-17T10:43:35.334Z",
+        "protected": true
+      },
+      {
+        "id": 17,
+        "username": "NULLFRAME",
+        "displayedName": "NULLFRAME Heavy Industries",
+        "email": "nullframe-heavy-industries@rolnopol.demo.pl",
+        "password": "nullframePass123",
+        "isActive": true,
+        "createdAt": "2028-01-01T00:00:00.000Z",
+        "updatedAt": "2028-07-19T10:15:35.348Z",
+        "lastLogin": "2028-07-19T10:15:35.348Z",
+        "protected": true
+      },
+      {
+        "id": 18,
+        "username": "AXIOM",
+        "displayedName": "AXIOM Industrial",
+        "email": "axiom-industrial@rolnopol.demo.pl",
+        "password": "axiomPass123",
+        "isActive": true,
+        "createdAt": "2028-01-01T00:00:00.000Z",
+        "updatedAt": "2028-07-19T10:15:35.348Z",
+        "lastLogin": "2028-07-19T10:15:35.348Z",
         "protected": true
       }
     ],
@@ -445,14 +467,14 @@
       },
       {
         "id": 39,
-        "userId": 11,
+        "userId": 17,
         "name": "Helix Foundry",
         "area": 7200,
         "protected": true
       },
       {
         "id": 40,
-        "userId": 12,
+        "userId": 18,
         "name": "Eidolon Heavy Works",
         "area": 9600,
         "protected": true
@@ -1192,7 +1214,7 @@
         },
         {
           "id": 8,
-          "userId": 11,
+          "userId": 17,
           "balance": 999999999999,
           "currency": "ROL",
           "createdAt": "2025-09-17T10:37:32.265Z",
@@ -1201,7 +1223,7 @@
         },
         {
           "id": 9,
-          "userId": 12,
+          "userId": 18,
           "balance": 999999999999,
           "currency": "ROL",
           "createdAt": "2025-09-17T10:37:32.265Z",

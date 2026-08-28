@@ -28,8 +28,8 @@ const { logInfo, logError, logDebug, logWarning } = require("../../helpers/logge
  *
  * Hooks a plugin may export, all optional:
  *
- *   init({ logInfo, logError, logDebug, config, services })
- *   registerRoutes({ router, config, services, logInfo, logError, logDebug })
+ *   init({ logInfo, logError, logDebug, config, services, mountPath })
+ *   registerRoutes({ router, mountPath, config, services, logInfo, logError, logDebug })
  *   onRequest({ req, res, pluginContext, config, services, ...loggers })
  *   onResponse({ req, res, responseBody, responseType, pluginContext, config, services, ...loggers })
  *   onEvent({ event, eventType, pluginContext, config, services, ...loggers })
@@ -41,6 +41,10 @@ const { logInfo, logError, logDebug, logWarning } = require("../../helpers/logge
  * nothing has answered by then the runtime continues to the route handlers rather than
  * leaving the request hanging. `onResponse` may return a replacement body for `res.json`
  * and `res.send`; returning `undefined` leaves the body alone.
+ *
+ * A router from `registerRoutes` answers on `/api/v1/plugins/<name>` unless the plugin sets
+ * `config.mountPath`, which follows the same precedence chain as the rest of the config. The
+ * resolved path is injected into `init` and `registerRoutes`, so nothing has to hardcode it.
  */
 
 const DEFAULT_MANIFEST_FILE = "plugins.manifest.json";
@@ -452,6 +456,18 @@ function _detectCollisions(plugins) {
     byOrder.set(plugin.order, plugin.name);
   }
 
+  const byMountPath = new Map();
+  for (const plugin of enabled) {
+    if (typeof plugin.mountPath !== "string" || typeof plugin.registerRoutes !== "function") {
+      continue;
+    }
+    if (byMountPath.has(plugin.mountPath)) {
+      warnings.push(`Plugins "${byMountPath.get(plugin.mountPath)}" and "${plugin.name}" both mount on ${plugin.mountPath}`);
+      continue;
+    }
+    byMountPath.set(plugin.mountPath, plugin.name);
+  }
+
   const byRoutePath = new Map();
   for (const plugin of enabled) {
     const routePath = plugin.config?.routePath;
@@ -504,7 +520,59 @@ function _teardownLoadedPlugins() {
   state.pluginRouters = new Map();
 }
 
-/** Routers built once per initialize, dispatched by plugin name at request time. */
+/**
+ * Where a plugin's router answers.
+ *
+ * The default is `/api/v1/plugins/<name>`, which cannot collide with a core route. A plugin
+ * may override it with `config.mountPath`, so the path follows the usual precedence chain and
+ * can be moved from either manifest without touching code. Leaving the namespace is allowed
+ * and warned about, because that is the point at which a plugin can shadow a real route.
+ */
+function _resolveMountPath(plugin) {
+  const requested = _isObject(plugin.config) ? plugin.config.mountPath : undefined;
+  const fallback = `${PLUGIN_ROUTE_NAMESPACE}/${plugin.name}`;
+
+  if (requested === undefined || requested === null) {
+    return fallback;
+  }
+
+  if (typeof requested !== "string" || requested.trim().length === 0) {
+    logWarning("Plugin runtime: config.mountPath is not a path, using the default", {
+      plugin: plugin.name,
+      mountPath: requested,
+      using: fallback,
+    });
+    return fallback;
+  }
+
+  const trimmed = requested.trim();
+  if (!trimmed.startsWith("/")) {
+    logWarning("Plugin runtime: config.mountPath must start with a slash, using the default", {
+      plugin: plugin.name,
+      mountPath: trimmed,
+      using: fallback,
+    });
+    return fallback;
+  }
+
+  // A trailing slash would make the mounted router answer on "//".
+  const normalised = trimmed.length > 1 ? trimmed.replace(/\/+$/, "") : trimmed;
+
+  if (!normalised.startsWith(`${PLUGIN_ROUTE_NAMESPACE}/`) && normalised !== PLUGIN_ROUTE_NAMESPACE) {
+    logWarning("Plugin runtime: plugin routes mounted outside the plugin namespace can shadow a real route", {
+      plugin: plugin.name,
+      mountPath: normalised,
+      namespace: PLUGIN_ROUTE_NAMESPACE,
+    });
+  }
+
+  return normalised;
+}
+
+/**
+ * Routers built once per initialize, keyed by the path they answer on. Longest path first, so
+ * a plugin mounted under another plugin's path still gets its own requests.
+ */
 function _buildPluginRouters(plugins, services) {
   const routers = new Map();
 
@@ -514,20 +582,29 @@ function _buildPluginRouters(plugins, services) {
     }
 
     const router = express.Router();
+    const mountPath = plugin.mountPath;
 
     try {
-      plugin.registerRoutes({ router, config: plugin.config, services, logInfo, logError, logDebug });
-      routers.set(plugin.name, router);
-      logDebug("Plugin runtime: mounted plugin routes", {
-        plugin: plugin.name,
-        mountPath: `${PLUGIN_ROUTE_NAMESPACE}/${plugin.name}`,
-      });
+      plugin.registerRoutes({ router, mountPath, config: plugin.config, services, logInfo, logError, logDebug });
+
+      if (routers.has(mountPath)) {
+        logError("Plugin runtime: two plugins claim the same mount path, the first one keeps it", {
+          plugin: plugin.name,
+          mountPath,
+          heldBy: routers.get(mountPath).pluginName,
+        });
+        continue;
+      }
+
+      router.pluginName = plugin.name;
+      routers.set(mountPath, router);
+      logDebug("Plugin runtime: mounted plugin routes", { plugin: plugin.name, mountPath });
     } catch (error) {
       logError("Plugin runtime: registerRoutes failed", { plugin: plugin.name, error: error.message });
     }
   }
 
-  return routers;
+  return new Map([...routers.entries()].sort((a, b) => b[0].length - a[0].length));
 }
 
 function initialize(options = {}) {
@@ -600,6 +677,8 @@ function initialize(options = {}) {
       loaded.push({
         ...pluginDef,
         enabled: _resolveEnabled(pluginDef, localPluginConfig, globalManifestPluginConfig),
+        // Filled in below, once the resolved config is known.
+        mountPath: null,
         enabledBy: _resolveEnabledSource(pluginDef, localPluginConfig, globalManifestPluginConfig),
         config: _resolveConfig(pluginDef, localPluginConfig, globalManifestPluginConfig),
         order: _resolveOrder(pluginDef, localPluginConfig, globalManifestPluginConfig),
@@ -613,6 +692,10 @@ function initialize(options = {}) {
 
   // Name breaks ties so two plugins sharing an order still run in a fixed sequence.
   loaded.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+
+  for (const plugin of loaded) {
+    plugin.mountPath = _resolveMountPath(plugin);
+  }
 
   state.plugins = loaded;
   state.initialized = true;
@@ -647,7 +730,11 @@ function initialize(options = {}) {
   for (const plugin of enabledPlugins) {
     try {
       if (typeof plugin.init === "function") {
-        _warnOnPromise(plugin, "init", plugin.init({ logInfo, logError, logDebug, config: plugin.config, services }));
+        _warnOnPromise(
+          plugin,
+          "init",
+          plugin.init({ logInfo, logError, logDebug, config: plugin.config, services, mountPath: plugin.mountPath }),
+        );
       }
     } catch (error) {
       logError("Plugin runtime: plugin init failed", { plugin: plugin.name, error: error.message });
@@ -835,13 +922,36 @@ function _attachResponseHooks(app) {
 }
 
 function _attachPluginRoutes(app) {
-  app.use(`${PLUGIN_ROUTE_NAMESPACE}/:pluginName`, (req, res, next) => {
-    const router = state.pluginRouters.get(req.params.pluginName);
-    if (!router) {
+  // One middleware doing its own prefix matching, rather than one express mount per plugin:
+  // mount paths are configurable and can change on a reload, and this reads the current map
+  // per request instead of freezing whatever existed when attach ran.
+  app.use((req, res, next) => {
+    if (state.pluginRouters.size === 0) {
       return next();
     }
 
-    return router(req, res, next);
+    for (const [mountPath, router] of state.pluginRouters) {
+      const isExact = req.path === mountPath;
+      if (!isExact && !req.path.startsWith(`${mountPath}/`)) {
+        continue;
+      }
+
+      // The router registers its routes relative to the mount path, so hand it the rest of
+      // the url and put the original back before anything else sees it.
+      const originalUrl = req.url;
+      const queryAt = originalUrl.indexOf("?");
+      const search = queryAt === -1 ? "" : originalUrl.slice(queryAt);
+      const remainder = isExact ? "/" : req.path.slice(mountPath.length) || "/";
+
+      req.url = `${remainder}${search}`;
+
+      return router(req, res, (error) => {
+        req.url = originalUrl;
+        next(error);
+      });
+    }
+
+    return next();
   });
 }
 
@@ -884,7 +994,8 @@ function getPlugins() {
     order: Number.isFinite(plugin.order) ? plugin.order : DEFAULT_ORDER,
     enabledBy: plugin.enabledBy,
     hooks: HOOK_NAMES.filter((hook) => typeof plugin[hook] === "function"),
-    routeMountPath: state.pluginRouters.has(plugin.name) ? `${PLUGIN_ROUTE_NAMESPACE}/${plugin.name}` : null,
+    mountPath: plugin.mountPath || null,
+    routeMountPath: state.pluginRouters.get(plugin.mountPath)?.pluginName === plugin.name ? plugin.mountPath : null,
   }));
 }
 
@@ -908,6 +1019,7 @@ module.exports = {
   _mergeConfig,
   _isAutoDiscoverable,
   _detectCollisions,
+  _resolveMountPath,
   _validateManifest,
   _validateConventionalConfig,
 };

@@ -566,7 +566,16 @@ describe("plugin runtime — the mistakes it has to survive", () => {
     pluginRuntime.initialize({ pluginsDir, manifestPath });
 
     expect(pluginRuntime.getPlugins()).toEqual([
-      { name: "reported", enabled: true, order: 10, enabledBy: "code", hooks: ["onRequest", "shutdown"], routeMountPath: null },
+      {
+        name: "reported",
+        enabled: true,
+        order: 10,
+        enabledBy: "code",
+        hooks: ["onRequest", "shutdown"],
+        // Every plugin resolves a mount path; only one that registers routes is mounted on it.
+        mountPath: "/api/v1/plugins/reported",
+        routeMountPath: null,
+      },
     ]);
   });
 
@@ -654,5 +663,250 @@ describe("plugin runtime — the mistakes it has to survive", () => {
     expect(pluginRuntime._validateConventionalConfig({ name: "a", config: { routePaths: ["/one"] } })).toEqual([]);
     expect(pluginRuntime._validateConventionalConfig({ name: "a", config: { eventTypes: { nope: true } } })).toHaveLength(1);
     expect(pluginRuntime._validateConventionalConfig({ name: "a", config: {} })).toEqual([]);
+  });
+  it("mounts a router on the path from config, overriding the default", async () => {
+    await writePlugin(
+      "movable",
+      `module.exports = {
+  name: "movable",
+  order: 10,
+  enabled: true,
+  config: { mountPath: "/api/v1/plugins/somewhere-else" },
+  registerRoutes({ router }) {
+    router.get("/status", (req, res) => res.json({ ok: true }));
+  },
+};
+`,
+    );
+    await writeManifest({ movable: { enabled: true } });
+
+    const app = buildApp();
+
+    await request(app).get("/api/v1/plugins/somewhere-else/status").expect(200);
+    await request(app).get("/api/v1/plugins/movable/status").expect(404);
+
+    expect(pluginRuntime.getPlugins()[0]).toMatchObject({
+      mountPath: "/api/v1/plugins/somewhere-else",
+      routeMountPath: "/api/v1/plugins/somewhere-else",
+    });
+  });
+
+  it("lets a manifest move a plugin's routes without touching its code", async () => {
+    await writePlugin(
+      "movable",
+      `module.exports = {
+  name: "movable",
+  order: 10,
+  enabled: true,
+  config: { mountPath: "/api/v1/plugins/movable" },
+  registerRoutes({ router, mountPath }) {
+    router.get("/where", (req, res) => res.json({ mountPath }));
+  },
+};
+`,
+    );
+    await writeManifest({ movable: { enabled: true, config: { mountPath: "/api/v1/plugins/moved-by-manifest" } } });
+
+    const app = buildApp();
+    const res = await request(app).get("/api/v1/plugins/moved-by-manifest/where").expect(200);
+
+    // The hook is told where it ended up, so nothing has to hardcode the path.
+    expect(res.body).toEqual({ mountPath: "/api/v1/plugins/moved-by-manifest" });
+  });
+
+  it("injects the resolved mount path into init as well", async () => {
+    await writePlugin(
+      "announcer",
+      `module.exports = {
+  name: "announcer",
+  order: 10,
+  enabled: true,
+  config: { mountPath: "/api/v1/plugins/announced" },
+  init({ mountPath }) {
+    global.__pluginProbe = mountPath;
+  },
+  registerRoutes({ router }) {
+    router.get("/", (req, res) => res.json({ ok: true }));
+  },
+};
+`,
+    );
+    await writeManifest({ announcer: { enabled: true } });
+
+    buildApp();
+
+    expect(global.__pluginProbe).toBe("/api/v1/plugins/announced");
+  });
+
+  it("serves a mount path outside the plugin namespace, having warned about it", async () => {
+    // Allowed on purpose: this is how a plugin decorates or replaces an app path. The warning
+    // is the guardrail, not a refusal.
+    await writePlugin(
+      "outsider",
+      `module.exports = {
+  name: "outsider",
+  order: 10,
+  enabled: true,
+  config: { mountPath: "/api/v1/outside" },
+  registerRoutes({ router }) {
+    router.get("/", (req, res) => res.json({ ok: true }));
+  },
+};
+`,
+    );
+    await writeManifest({ outsider: { enabled: true } });
+
+    await request(buildApp()).get("/api/v1/outside").expect(200);
+  });
+
+  it("keeps the query string and the rest of the path when it hands over to a router", async () => {
+    await writePlugin(
+      "deep",
+      `module.exports = {
+  name: "deep",
+  order: 10,
+  enabled: true,
+  registerRoutes({ router }) {
+    router.get("/one/:id", (req, res) => res.json({ id: req.params.id, q: req.query.q, path: req.path }));
+  },
+};
+`,
+    );
+    await writeManifest({ deep: { enabled: true } });
+
+    const res = await request(buildApp()).get("/api/v1/plugins/deep/one/42?q=yes").expect(200);
+
+    expect(res.body).toEqual({ id: "42", q: "yes", path: "/one/42" });
+  });
+
+  it("restores the url for whatever runs after an unmatched plugin route", async () => {
+    await writePlugin(
+      "picky",
+      `module.exports = {
+  name: "picky",
+  order: 10,
+  enabled: true,
+  registerRoutes({ router }) {
+    router.get("/known", (req, res) => res.json({ ok: true }));
+  },
+};
+`,
+    );
+    await writeManifest({ picky: { enabled: true } });
+
+    const app = buildApp();
+    app.get("/api/v1/plugins/picky/unknown", (req, res) => res.json({ answeredBy: "the app", url: req.url }));
+
+    const res = await request(app).get("/api/v1/plugins/picky/unknown").expect(200);
+
+    expect(res.body).toEqual({ answeredBy: "the app", url: "/api/v1/plugins/picky/unknown" });
+  });
+
+  it("gives a nested mount path its own requests, not the shorter one's", async () => {
+    const source = (name, mountPath) => `module.exports = {
+  name: "${name}",
+  order: 10,
+  enabled: true,
+  config: { mountPath: "${mountPath}" },
+  registerRoutes({ router }) {
+    router.get("/", (req, res) => res.json({ answeredBy: "${name}" }));
+  },
+};
+`;
+    await writePlugin("outer", source("outer", "/api/v1/plugins/shared"));
+    await writePlugin("inner", source("inner", "/api/v1/plugins/shared/inner"));
+    await writeManifest({ outer: { enabled: true }, inner: { enabled: true } });
+
+    const app = buildApp();
+
+    expect((await request(app).get("/api/v1/plugins/shared").expect(200)).body).toEqual({ answeredBy: "outer" });
+    expect((await request(app).get("/api/v1/plugins/shared/inner").expect(200)).body).toEqual({ answeredBy: "inner" });
+  });
+
+  it("falls back to the default when the configured mount path is not a path", async () => {
+    for (const mountPath of ["", "   ", "relative/path", 42, true]) {
+      await writePlugin(
+        "fussy",
+        `module.exports = {
+  name: "fussy",
+  order: 10,
+  enabled: true,
+  config: { mountPath: ${JSON.stringify(mountPath)} },
+  registerRoutes({ router }) {
+    router.get("/", (req, res) => res.json({ ok: true }));
+  },
+};
+`,
+      );
+      await writeManifest({ fussy: { enabled: true } });
+
+      await request(buildApp()).get("/api/v1/plugins/fussy").expect(200);
+      expect(pluginRuntime.getPlugins()[0].mountPath).toBe("/api/v1/plugins/fussy");
+    }
+  });
+
+  it("drops a trailing slash rather than answering on a doubled one", () => {
+    pluginRuntime = require(runtimeModulePath);
+
+    expect(pluginRuntime._resolveMountPath({ name: "x", config: { mountPath: "/api/v1/plugins/x/" } })).toBe("/api/v1/plugins/x");
+    expect(pluginRuntime._resolveMountPath({ name: "x", config: { mountPath: "/api/v1/plugins/x//" } })).toBe("/api/v1/plugins/x");
+    expect(pluginRuntime._resolveMountPath({ name: "x", config: { mountPath: "  /api/v1/plugins/spaced  " } })).toBe(
+      "/api/v1/plugins/spaced",
+    );
+    expect(pluginRuntime._resolveMountPath({ name: "x", config: {} })).toBe("/api/v1/plugins/x");
+    expect(pluginRuntime._resolveMountPath({ name: "x" })).toBe("/api/v1/plugins/x");
+  });
+
+  it("keeps the first plugin on a shared mount path and reports the clash", async () => {
+    const source = (name) => `module.exports = {
+  name: "${name}",
+  order: ${name === "first" ? 10 : 20},
+  enabled: true,
+  config: { mountPath: "/api/v1/plugins/contested" },
+  registerRoutes({ router }) {
+    router.get("/", (req, res) => res.json({ answeredBy: "${name}" }));
+  },
+};
+`;
+    await writePlugin("first", source("first"));
+    await writePlugin("second", source("second"));
+    await writeManifest({ first: { enabled: true }, second: { enabled: true } });
+
+    const app = buildApp();
+    const res = await request(app).get("/api/v1/plugins/contested").expect(200);
+
+    // Order decides, and the loser is not silently half-mounted.
+    expect(res.body).toEqual({ answeredBy: "first" });
+    const [first, second] = pluginRuntime.getPlugins();
+    expect(first.routeMountPath).toBe("/api/v1/plugins/contested");
+    expect(second.routeMountPath).toBeNull();
+
+    const warnings = pluginRuntime._detectCollisions(pluginRuntime.getPlugins().map((plugin) => ({ ...plugin, registerRoutes() {} })));
+    expect(warnings.join(" ")).toContain("both mount on /api/v1/plugins/contested");
+  });
+
+  it("follows a mount path that changes on reload", async () => {
+    const source = (mountPath) => `module.exports = {
+  name: "wanderer",
+  order: 10,
+  enabled: true,
+  config: { mountPath: "${mountPath}" },
+  registerRoutes({ router }) {
+    router.get("/", (req, res) => res.json({ ok: true }));
+  },
+};
+`;
+    await writePlugin("wanderer", source("/api/v1/plugins/here"));
+    await writeManifest({ wanderer: { enabled: true } });
+
+    const app = buildApp();
+    await request(app).get("/api/v1/plugins/here").expect(200);
+
+    await writePlugin("wanderer", source("/api/v1/plugins/there"));
+    await pluginRuntime.reload({ reloadModules: true });
+
+    // The dispatcher reads the current map per request, so no re-attach is needed.
+    await request(app).get("/api/v1/plugins/there").expect(200);
+    await request(app).get("/api/v1/plugins/here").expect(404);
   });
 });

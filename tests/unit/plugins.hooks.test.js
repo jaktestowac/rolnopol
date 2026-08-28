@@ -26,6 +26,7 @@ const samplePluginRoute = load("sample-plugin-route");
 const featureFlagWatcher = load("feature-flag-watcher");
 const autoDiscoverable = load("auto-discoverable-plugin");
 const pluginTemplate = load("plugin-template");
+const currentTime = load("current-time-plugin");
 
 /** The logger trio the runtime injects into every hook. */
 const loggers = () => ({ logInfo: vi.fn(), logError: vi.fn(), logDebug: vi.fn() });
@@ -382,14 +383,13 @@ describe("sample-plugin-route", () => {
     expect(bare.body.message).toBe("Hello from sample-plugin-route (GET)");
   });
 
-  it("announces its mount path on init", () => {
-    const context = { ...loggers(), config: samplePluginRoute.config };
+  it("announces the mount path the runtime resolved for it", () => {
+    // The runtime injects the resolved path, so the plugin never repeats it.
+    const context = { ...loggers(), config: samplePluginRoute.config, mountPath: "/api/v1/plugins/moved" };
 
     samplePluginRoute.init(context);
 
-    expect(context.logInfo).toHaveBeenCalledWith("sample-plugin-route initialized", {
-      mountPath: "/api/v1/plugins/sample-plugin-route",
-    });
+    expect(context.logInfo).toHaveBeenCalledWith("sample-plugin-route initialized", { mountPath: "/api/v1/plugins/moved" });
   });
 });
 
@@ -563,5 +563,120 @@ describe("plugin-template", () => {
     expect(context.logInfo).toHaveBeenCalledWith("plugin-template initialized", { config: {} });
 
     await expect(pluginTemplate.shutdown(context)).resolves.toBeUndefined();
+  });
+});
+
+describe("current-time-plugin", () => {
+  /** The plugin's own router, mounted where the runtime would mount it. */
+  function buildApp(config = currentTime.config) {
+    const app = express();
+    const router = express.Router();
+    currentTime.registerRoutes({ router, config, ...loggers() });
+    app.use("/api/v1/plugins/current-time-plugin", router);
+    return app;
+  }
+
+  const mountPath = "/api/v1/plugins/current-time-plugin";
+
+  it("owns a route instead of intercepting requests", () => {
+    expect(typeof currentTime.registerRoutes).toBe("function");
+    expect(currentTime.onRequest).toBeUndefined();
+    expect(currentTime.onResponse).toBeUndefined();
+  });
+
+  it("answers with the time in three forms", async () => {
+    const before = Date.now();
+    const res = await request(buildApp()).get(mountPath).expect(200);
+    const after = Date.now();
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toBe("Current server time");
+
+    const { iso, epochMs, timeZone, local } = res.body.data;
+
+    // The epoch is the same instant as the ISO string, and both fall inside the request.
+    expect(Date.parse(iso)).toBe(epochMs);
+    expect(epochMs).toBeGreaterThanOrEqual(before);
+    expect(epochMs).toBeLessThanOrEqual(after);
+    expect(typeof timeZone).toBe("string");
+    expect(local.length).toBeGreaterThan(0);
+  });
+
+  it("moves with the clock rather than answering from a cached instant", async () => {
+    const app = buildApp();
+    const first = await request(app).get(mountPath).expect(200);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const second = await request(app).get(mountPath).expect(200);
+
+    expect(second.body.data.epochMs).toBeGreaterThan(first.body.data.epochMs);
+  });
+
+  it("answers in the requested time zone, which wins over its config", async () => {
+    const res = await request(buildApp({ timeZone: "Europe/Warsaw" }))
+      .get(`${mountPath}?timeZone=Asia/Tokyo`)
+      .expect(200);
+
+    expect(res.body.data.timeZone).toBe("Asia/Tokyo");
+  });
+
+  it("uses the configured zone when the request asks for nothing", async () => {
+    const res = await request(buildApp({ timeZone: "UTC", locale: "en-GB" }))
+      .get(mountPath)
+      .expect(200);
+
+    expect(res.body.data.timeZone).toBe("UTC");
+    // The same instant, rendered in UTC, so the ISO hour is the one shown.
+    expect(res.body.data.local).toContain(String(new Date(res.body.data.epochMs).getUTCFullYear()));
+  });
+
+  it("falls back to the server's own zone when nothing is configured", async () => {
+    const res = await request(buildApp({})).get(mountPath).expect(200);
+
+    expect(res.body.data.timeZone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  });
+
+  it("refuses a time zone that does not exist, instead of throwing a RangeError", async () => {
+    const res = await request(buildApp()).get(`${mountPath}?timeZone=Mars/Olympus_Mons`).expect(400);
+
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toBe("Unknown time zone");
+    expect(res.body.details).toContain("Mars/Olympus_Mons");
+  });
+
+  it("ignores an empty timeZone parameter rather than treating it as a zone", async () => {
+    const res = await request(buildApp({ timeZone: "UTC" }))
+      .get(`${mountPath}?timeZone=%20`)
+      .expect(200);
+
+    expect(res.body.data.timeZone).toBe("UTC");
+  });
+
+  it("renders the same instant in the configured locale", async () => {
+    const british = await request(buildApp({ timeZone: "UTC", locale: "en-GB" }))
+      .get(mountPath)
+      .expect(200);
+    const polish = await request(buildApp({ timeZone: "UTC", locale: "pl-PL" }))
+      .get(mountPath)
+      .expect(200);
+
+    expect(polish.body.data.local).not.toBe(british.body.data.local);
+  });
+
+  it("answers 405 for any other method", async () => {
+    for (const method of ["post", "put", "patch", "delete"]) {
+      const res = await request(buildApp())[method](mountPath).expect(405);
+      expect(res.body.error).toBe("Method not allowed");
+    }
+  });
+
+  it("announces the injected mount path and its effective zone on init", () => {
+    const context = { ...loggers(), config: { timeZone: "UTC" }, mountPath: "/api/v1/plugins/clock" };
+
+    currentTime.init(context);
+
+    expect(context.logInfo).toHaveBeenCalledWith("current-time-plugin initialized", {
+      mountPath: "/api/v1/plugins/clock",
+      timeZone: "UTC",
+    });
   });
 });

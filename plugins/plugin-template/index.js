@@ -27,6 +27,12 @@ module.exports = {
     // Notification center event types this plugin wants. An empty list means every event.
     // This is the ONLY place the runtime looks for the filter.
     eventTypes: [],
+
+    // Where a registerRoutes router answers. Omit it for /api/v1/plugins/<plugin-name>.
+    // Either manifest can override it, so routes can be moved without touching code. A path
+    // outside /api/v1/plugins/ is allowed and warned about, since that is where a plugin can
+    // shadow a real route.
+    // mountPath: "/api/v1/plugins/plugin-template",
   },
 
   // ---------------------------------------------------------------------------
@@ -41,14 +47,15 @@ module.exports = {
 
   // Called once on startup (if plugin enabled)
   // Receives core logging helpers, resolved config, and the injected services
-  init({ logInfo, logError, logDebug, config, services }) {
-    logInfo("plugin-template initialized", { config });
+  init({ logInfo, logError, logDebug, config, services, mountPath }) {
+    logInfo("plugin-template initialized", { config, mountPath });
   },
 
   // Called once on startup, after `init`, for plugins that want real Express routes.
-  // The router is mounted at /api/v1/plugins/<plugin-name>, which is why a plugin cannot
-  // shadow a core route this way. Prefer this over matching paths inside `onRequest`.
-  registerRoutes({ router, config, logInfo }) {
+  // The router is mounted at `mountPath`, which the runtime resolves and passes in:
+  // /api/v1/plugins/<plugin-name> by default, or config.mountPath when one is set. Register
+  // routes relative to it. Prefer this over matching paths inside `onRequest`.
+  registerRoutes({ router, mountPath, config, logInfo }) {
     // Example:
     // router.get("/status", (req, res) => {
     //   res.json({ ok: true, plugin: "plugin-template", config });

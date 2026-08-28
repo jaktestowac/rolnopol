@@ -293,4 +293,33 @@ describe("plugin runtime easter egg plugins", () => {
 
     expect(res.body).toEqual([1, 2, 3]);
   });
+  it("serves the current time through the runtime once the plugin is enabled", async () => {
+    // The whole path: manifest entry, discovery, registerRoutes, and the namespaced mount.
+    const manifestPath = await writeManifest(tempRoot, {
+      "current-time-plugin": { enabled: true },
+    });
+
+    pluginRuntime = require(runtimeModulePath);
+    pluginRuntime.initialize({ pluginsDir: realPluginsDir, manifestPath });
+
+    const app = buildApp(pluginRuntime);
+    const res = await request(app).get("/api/v1/plugins/current-time-plugin").expect(200);
+
+    expect(res.body.data.epochMs).toBeLessThanOrEqual(Date.now());
+    expect(Date.parse(res.body.data.iso)).toBe(res.body.data.epochMs);
+    expect(pluginRuntime.getPlugins().find((plugin) => plugin.name === "current-time-plugin").routeMountPath).toBe(
+      "/api/v1/plugins/current-time-plugin",
+    );
+  });
+
+  it("serves nothing at that path while the plugin is disabled", async () => {
+    const manifestPath = await writeManifest(tempRoot, {
+      "current-time-plugin": { enabled: false },
+    });
+
+    pluginRuntime = require(runtimeModulePath);
+    pluginRuntime.initialize({ pluginsDir: realPluginsDir, manifestPath });
+
+    await request(buildApp(pluginRuntime)).get("/api/v1/plugins/current-time-plugin").expect(404);
+  });
 });

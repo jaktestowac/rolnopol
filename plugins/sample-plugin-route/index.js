@@ -15,10 +15,12 @@ module.exports = {
   config: {
     // Included in every answer, to show config reaching a route handler.
     greeting: "Hello from sample-plugin-route",
+    // The default, spelled out. Change it here or in either manifest to move the routes.
+    mountPath: "/api/v1/plugins/sample-plugin-route",
   },
 
-  init({ logInfo }) {
-    logInfo("sample-plugin-route initialized", { mountPath: "/api/v1/plugins/sample-plugin-route" });
+  init({ logInfo, mountPath }) {
+    logInfo("sample-plugin-route initialized", { mountPath });
   },
 
   registerRoutes({ router, config, logInfo }) {

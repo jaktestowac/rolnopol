@@ -261,6 +261,62 @@ describe("plugin contract — the manifest mirrors each plugin's own defaults", 
   });
 });
 
+describe("plugin contract — mount paths", () => {
+  const mountPathsOf = () =>
+    PLUGINS.filter(({ plugin }) => typeof plugin.registerRoutes === "function").map(({ dirName, plugin }) => ({
+      dirName,
+      mountPath: plugin.config?.mountPath,
+    }));
+
+  it("declares a mount path as an absolute path wherever one is set", () => {
+    for (const { dirName, plugin } of PLUGINS) {
+      const mountPath = plugin.config?.mountPath;
+      if (mountPath === undefined) continue;
+
+      expect(typeof mountPath, dirName).toBe("string");
+      expect(mountPath.startsWith("/"), `${dirName} mountPath must be absolute`).toBe(true);
+      expect(mountPath.endsWith("/"), `${dirName} mountPath must not end in a slash`).toBe(false);
+    }
+  });
+
+  it("keeps every bundled route plugin inside the plugin namespace", () => {
+    // Leaving the namespace is allowed and warned about at runtime, but nothing bundled
+    // should do it: that is how a plugin would shadow a real route.
+    for (const { dirName, mountPath } of mountPathsOf()) {
+      if (mountPath === undefined) continue;
+      expect(mountPath.startsWith("/api/v1/plugins/"), `${dirName} mounts outside /api/v1/plugins/`).toBe(true);
+    }
+  });
+
+  it("gives no two route plugins the same mount path", () => {
+    const declared = mountPathsOf()
+      .map(({ dirName, mountPath }) => mountPath || `/api/v1/plugins/${dirName}`)
+      .sort();
+
+    expect(new Set(declared).size).toBe(declared.length);
+  });
+
+  it("shadows no live route with a mount path", () => {
+    const generatorConfig = require(path.join(__dirname, "..", "..", "schema", "generator.config.js"));
+    const { collectOperations, toOpenApiPath } = require(path.join(__dirname, "..", "..", "build", "lib", "introspect-routes.js"));
+
+    const live = new Set();
+    for (const version of generatorConfig.VERSIONS) {
+      const router = require(path.join(__dirname, "..", "..", version.routerModule));
+      for (const operation of collectOperations(router)) {
+        live.add(`/api/${version.key}${toOpenApiPath(operation.path)}`);
+      }
+    }
+
+    expect(live.size).toBeGreaterThan(50);
+
+    for (const { dirName, mountPath } of mountPathsOf()) {
+      const resolved = mountPath || `/api/v1/plugins/${dirName}`;
+      expect(live.has(resolved), `${dirName} mounts on ${resolved}, which is a live route`).toBe(false);
+    }
+  });
+});
+
 describe("plugin contract — the real runtime honours the locks", () => {
   it("loads every registered plugin and never requires the request blocker", () => {
     const pluginRuntime = require(path.join(__dirname, "..", "..", "modules", "plugin-runtime"));

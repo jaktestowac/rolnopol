@@ -35,6 +35,10 @@
     "firefly-notification-plugin": {
       "enabled": false,
       "config": {}
+    },
+    "current-time-plugin": {
+      "enabled": false,
+      "config": {}
     }
   }
 }
