@@ -180,13 +180,16 @@
   /* Stateless lattice hash: (x, y, seed) → [0, 1). The whole texture hangs off
    * this one function being deterministic and well-spread. */
   function hash2d(x, y, seed) {
-    let h = seed >>> 0;
+    // Each coordinate is mixed on its own before it meets the other. Folding
+    // both in with a bare XOR (h ^ x then h ^ y) leaves the two only a few bits
+    // apart on neighbouring lattice points, and whole rows of the lattice then
+    // collide onto the same value.
+    let h = (seed >>> 0) ^ Math.imul(x | 0, 0x27d4eb2d);
 
-    h = Math.imul(h ^ (x | 0), 0x85ebca6b);
-    h = Math.imul(h ^ (y | 0), 0xc2b2ae35);
-    h ^= h >>> 13;
-    h = Math.imul(h, 0x27d4eb2f);
-    h ^= h >>> 15;
+    h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+    h ^= Math.imul(y | 0, 0x165667b1);
+    h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+    h ^= h >>> 16;
 
     return (h >>> 0) / 4294967296;
   }

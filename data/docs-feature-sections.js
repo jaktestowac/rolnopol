@@ -1557,4 +1557,63 @@ module.exports = [
       ],
     },
   },
+  {
+    flag: "survivalGameEnabled",
+    section: {
+      section: "survival-game",
+      title: "Rolnopol Survival",
+      content: [
+        heading("Overview", [
+          p(
+            "A hex-map survival game played entirely in the browser at /operator/survival.html, for logged-in users only. The server hands out the seed and keeps the expedition record; the map, the walking and the weather all happen client-side.",
+          ),
+          ul([
+            "Six expeditions: Lost (reach any border), Survival (only the western border counts), Search (four signs, three of them wrong), Rescue (carry them out, a point of movement a day), Deadline (the pickup leaves the western ridge on day 7) and The Chase (someone is on your trail).",
+            "Scenarios unlock from your own history, so a new player starts with Lost and earns the rest.",
+            "A daily challenge fixes scenario, difficulty and map size and derives the seed from the date, which is what makes the scoreboard comparable — and what a streak is counted from.",
+            "A run in progress can be saved and resumed; only what the player changed is stored, never the map, which the seed regenerates.",
+            "One expedition is open per player at a time; it closes as won, lost or abandoned.",
+          ]),
+        ]),
+        heading("Login is mandatory — page and API", [
+          p(
+            "The page is feature-gated server-side before static serving, and the game itself bounces an anonymous visitor to /login.html. On the API the flag is checked before credentials, so a switched-off module answers 404 rather than 401 and cannot be found by probing.",
+          ),
+          table(
+            ["Situation", "Response"],
+            [
+              ["Flag off (page or API)", "404 — checked before authentication"],
+              ["Flag on, no session", "Page redirects to /login.html; API answers 401"],
+              ["Flag on, only an x-api-key", "401 — personal API keys are not accepted here"],
+              ["Flag on, valid session", "Proceed, scoped to your own expeditions"],
+            ],
+          ),
+        ]),
+        heading("Endpoints", [
+          table(
+            ["Method", "Path", "Description"],
+            [
+              ["POST", "/survival/sessions", "Start an expedition; the server issues the seed"],
+              ["GET", "/survival/sessions", "Your own expedition history"],
+              ["GET", "/survival/sessions/{sessionId}", "One of your expeditions"],
+              ["PATCH", "/survival/sessions/{sessionId}", "Close it: won, lost or abandoned"],
+              ["PUT", "/survival/sessions/{sessionId}/snapshot", "Save a run in progress"],
+              ["GET", "/survival/scoreboard", "The league table, across players"],
+              ["GET", "/survival/progress", "Records, daily streak, marks and which scenarios are unlocked"],
+            ],
+          ),
+        ]),
+        heading("What the server does and does not check", [
+          p(
+            "The game is single-player, so the outcome is taken at the client's word rather than replayed server-side. What the record guarantees is that nothing outside the game's own ranges is written down: days, hexes travelled, health, water, food, events seen and forced marches are all range-checked against the game's balance config, the chronicle is capped, and the seed is always stored — which leaves verification possible later.",
+          ),
+          callout(
+            "info",
+            "Snapshot size",
+            "A saved run is capped at 256 KB. It holds only the player's changes, so the JSON store stays small even after a long expedition.",
+          ),
+        ]),
+      ],
+    },
+  },
 ];

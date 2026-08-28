@@ -11,6 +11,12 @@ const { PREDEFINED_FEATURE_FLAGS } = require(path.join(ROOT, "services/feature-f
 
 const HTTP_METHODS = ["get", "put", "post", "delete", "patch", "options", "head"];
 
+/* Generating both documents walks every live router, which takes long enough
+ * that repeating it per test can outrun the suite timeout on a loaded machine.
+ * The generator is pure, so one run serves the whole file. */
+let generated = null;
+const generateOnce = () => (generated = generated || generate());
+
 const readDocument = (file) => JSON.parse(fs.readFileSync(path.join(ROOT, config.OUTPUT_DIR, file), "utf8"));
 
 /** Parameter names are documentation only; compare on position. */
@@ -62,7 +68,7 @@ function resolveRef(document, ref) {
 describe("OpenAPI contract", () => {
   describe("freshness", () => {
     it("committed documents match what the generator produces", () => {
-      const { documents } = generate();
+      const { documents } = generateOnce();
       const stale = Object.entries(documents)
         .filter(([file, document]) => {
           const target = path.join(ROOT, config.OUTPUT_DIR, file);
@@ -74,7 +80,7 @@ describe("OpenAPI contract", () => {
     });
 
     it("reports no generator warnings that indicate a broken document", () => {
-      const { warnings } = generate();
+      const { warnings } = generateOnce();
       const blocking = warnings.filter((warning) => /Duplicate operation|Path collision|matches no live route|Skipped/.test(warning));
       expect(blocking, `Generator warnings:\n${blocking.join("\n")}`).toEqual([]);
     });
@@ -146,14 +152,14 @@ describe("OpenAPI contract", () => {
       const legacyPath = path.join(ROOT, config.OUTPUT_DIR, config.FROZEN_LEGACY);
       const before = fs.readFileSync(legacyPath);
 
-      const { documents } = generate();
+      const { documents } = generateOnce();
       expect(Object.keys(documents)).not.toContain(config.FROZEN_LEGACY);
 
       expect(fs.readFileSync(legacyPath).equals(before)).toBe(true);
     });
 
     it("only v1 and v2 are emitted", () => {
-      const { documents } = generate();
+      const { documents } = generateOnce();
       expect(Object.keys(documents).sort()).toEqual(config.VERSIONS.map((version) => version.outFile).sort());
     });
 
