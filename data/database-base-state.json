@@ -478,6 +478,12 @@
         "name": "Eidolon Heavy Works",
         "area": 9600,
         "protected": true
+      },
+      {
+        "id": 41,
+        "userId": 17,
+        "name": "field 7",
+        "area": 7
       }
     ],
     "staff": [

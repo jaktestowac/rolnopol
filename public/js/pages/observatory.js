@@ -1900,6 +1900,42 @@
       magnitude: 3.85,
       color: "#fff6e4",
     },
+
+    // Fictional entries — Rolnopol's own sky, not real astronomy. Flagged
+    // `fictional: true` so the rest of the catalog stays a truthful record.
+    {
+      id: "nullframe-7",
+      name: "NULLFRAME-7",
+      constellation: "Rolnopol",
+      raHours: 7,
+      decDeg: -7.7,
+      magnitude: 4.9,
+      color: "#ffb15c",
+      fictional: true,
+      lore: "Industrial memory held in light. Catalogued by NULLFRAME Heavy Industries; the period never repeats the same way twice.",
+    },
+    {
+      id: "pluvia-rubra",
+      name: "Pluvia Rubra",
+      constellation: "Rolnopol",
+      raHours: 7.07,
+      decDeg: -7.07,
+      magnitude: 5.3,
+      color: "#c2453a",
+      fictional: true,
+      lore: "The red rain star. Weather stations logged it on the nights the ditch stayed warm.",
+    },
+    {
+      id: "speculum-cinereum",
+      name: "Speculum Cinereum",
+      constellation: "Rolnopol",
+      raHours: 6.93,
+      decDeg: -8.14,
+      magnitude: 5.6,
+      color: "#b9bec7",
+      fictional: true,
+      lore: "The ash mirror. Every measurement taken of it arrives; none of them return.",
+    },
   ];
 
   const PLANET_CATALOG = [
@@ -2382,6 +2418,11 @@
     ["unukalhai", "epsilon-serpentis"],
     ["epsilon-serpentis", "mu-serpentis"],
     ["xi-serpentis", "eta-serpentis"],
+
+    // Rolnopol (fictional)
+    ["nullframe-7", "pluvia-rubra"],
+    ["pluvia-rubra", "speculum-cinereum"],
+    ["speculum-cinereum", "nullframe-7"],
   ];
 
   function toNumber(value, fallback = 0) {
