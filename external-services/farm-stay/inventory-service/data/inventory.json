@@ -588,5 +588,13 @@
     "prop-25": {
       "locks": []
     }
-  }
+  },
+  "customLocations": [
+    {
+      "voivodeship": "Podlaskie",
+      "city": "Supraśl",
+      "addedBy": "seed-host",
+      "addedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ]
 }

@@ -1,0 +1,91 @@
+/* Styles for the /widgets/commodity-ticker.html embed. Kept separate from the
+   page stylesheets: the frame must render standalone, without styles.css. */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.ticker {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #2f3d2b;
+  background: transparent;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.ticker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.ticker__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.ticker__btn {
+  border: 1px solid rgba(106, 123, 94, 0.45);
+  background: rgba(255, 255, 255, 0.6);
+  color: #2f3d2b;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.ticker__btn:hover {
+  background: rgba(106, 123, 94, 0.16);
+}
+
+.ticker__btn[disabled] {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.ticker__status-frame {
+  display: block;
+  width: 100%;
+  height: 1.4rem;
+  border: 0;
+  margin-bottom: 0.45rem;
+}
+
+.ticker__message {
+  margin: 0 0 0.4rem;
+  color: #5d6459;
+  font-size: 0.78rem;
+}
+
+.ticker[data-frame-state="error"] .ticker__message {
+  color: #b91c1c;
+}
+
+.ticker__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ticker__table th,
+.ticker__table td {
+  text-align: left;
+  padding: 0.25rem 0.35rem;
+  border-bottom: 1px solid rgba(106, 123, 94, 0.2);
+}
+
+.ticker__table th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #5d6459;
+}
+
+.ticker__table td:not(:first-child) {
+  font-variant-numeric: tabular-nums;
+}

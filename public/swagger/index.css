@@ -14,3 +14,37 @@ body {
   margin: 0;
   background: #fafafa;
 }
+
+/* The API definition picker is rendered under the page title by the
+   DefinitionPickerPlugin in swagger-initializer.js. Hide the topbar's own copy
+   so only one picker exists — without this the two selects drift out of sync,
+   since each tracks its selection separately. */
+.topbar .download-url-wrapper {
+  display: none;
+}
+
+.swagger-ui .info .definition-select {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.swagger-ui .info .definition-select span {
+  color: #3b4151;
+  font-family: sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.swagger-ui .info .definition-select select {
+  background: #fff;
+  border: 2px solid #62a03f;
+  border-radius: 4px;
+  color: #3b4151;
+  font-family: sans-serif;
+  font-size: 14px;
+  outline: none;
+  padding: 4px 8px;
+}

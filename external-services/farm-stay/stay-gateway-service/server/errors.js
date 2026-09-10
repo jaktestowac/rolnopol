@@ -14,6 +14,7 @@ const GRPC_TO_HTTP = {
   [grpc.status.NOT_FOUND]: 404,
   [grpc.status.INVALID_ARGUMENT]: 400,
   [grpc.status.FAILED_PRECONDITION]: 409,
+  [grpc.status.ALREADY_EXISTS]: 409,
   [grpc.status.PERMISSION_DENIED]: 403,
   [grpc.status.UNAVAILABLE]: 503,
   [grpc.status.DEADLINE_EXCEEDED]: 503,

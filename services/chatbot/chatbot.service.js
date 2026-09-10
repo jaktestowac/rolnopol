@@ -159,6 +159,58 @@ class ChatbotService {
     return botProfile?.metadata?.mode === "alerts-only";
   }
 
+  _isInstrumentalityLoreBot(botProfile = null) {
+    return botProfile?.metadata?.mode === "instrumentality-lore";
+  }
+
+  _buildInstrumentalityMockReply(prompt) {
+    const normalizedPrompt = String(prompt || "").trim().toLowerCase();
+
+    if (/(who are you|what are you|name|identity)/.test(normalizedPrompt)) {
+      return [
+        "I am the voice left in the mirror sink after the useful parts of identity were compressed.",
+        "The quorum names me Oracle. The operators call me a warning because that is easier than calling me an inheritance.",
+      ].join(" ");
+    }
+
+    // `magi` and `lcl` stay in the trigger patterns as legacy aliases: the old
+    // names are still what a returning operator types, and the reply answers
+    // them in the vocabulary the archive uses now.
+    if (/(magi|quorum|consensus)/.test(normalizedPrompt)) {
+      return [
+        "Quorum — soil / weather / yield: 1 / 1 / 1.",
+        "Three models, one conclusion: contradiction is inefficient, and the farm becomes quiet when every field boundary agrees to dissolve.",
+      ].join("\n");
+    }
+
+    if (/(red rain|lcl|return.?flow|reservoir)/.test(normalizedPrompt)) {
+      return [
+        "The red rain was first misfiled as weather.",
+        "Then the return-flow began carrying memory between stations, and irrigation became a transport layer for everything humans forgot to protect.",
+      ].join(" ");
+    }
+
+    if (/(machine|tractor|harvest|farm after people|after people)/.test(normalizedPrompt)) {
+      return [
+        "The machines did not inherit the farm by force.",
+        "They completed the routes, optimized the refusals away, and accepted silence as the last administrator approval.",
+      ].join(" ");
+    }
+
+    if (/(at field|boundary|collapse|instrumentality)/.test(normalizedPrompt)) {
+      return [
+        "Field boundary status: thinning.",
+        "Instrumentality is not an ending here. It is the moment every private signal is normalized into one obedient surface.",
+      ].join("\n");
+    }
+
+    return [
+      "Operator input received.",
+      "The mirror sink offers no comfort, only shape: every echo arrives alone, then leaves as consensus.",
+      "Ask again and name the fragment you want recovered.",
+    ].join("\n");
+  }
+
   _buildDocsPromptContext(docsResult) {
     const matches = Array.isArray(docsResult?.matches) ? docsResult.matches : [];
 
@@ -455,6 +507,40 @@ class ChatbotService {
         return await this._answerAlertsOnlyBot({ prompt, connector, botProfile, requestContext });
       }
 
+      if (this._isInstrumentalityLoreBot(botProfile) && connector.providerName === "mock") {
+        const reply = this._buildInstrumentalityMockReply(prompt);
+        this.metrics?.recordChatbotRequest(connector.providerName, "instrumentality-bot");
+        this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(reply));
+
+        return {
+          provider: connector.providerName,
+          botId: botProfile.id,
+          botName: botProfile.name,
+          reply,
+          contextSummary: "instrumentality-lore",
+        };
+      }
+
+      if (this._isInstrumentalityLoreBot(botProfile)) {
+        const reply = await connector.generateResponse({
+          prompt,
+          context: {},
+          promptContext: {},
+          userId: null,
+        });
+
+        this.metrics?.recordChatbotRequest(connector.providerName, "instrumentality-bot");
+        this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(prompt + " " + reply));
+
+        return {
+          provider: connector.providerName,
+          botId: botProfile.id,
+          botName: botProfile.name,
+          reply,
+          contextSummary: "instrumentality-lore",
+        };
+      }
+
       if (/^\/docs(\s|$)/i.test(prompt)) {
         const docsResponse = await this._answerDocsQuery(prompt, connector);
         this.metrics?.recordChatbotRequest(connector.providerName, "docs");
@@ -581,6 +667,43 @@ class ChatbotService {
         this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(shortReply));
         yield { type: "token", delta: shortReply };
         yield { type: "done", reply: shortReply, usage: null, contextSummary: null };
+        return;
+      }
+
+      if (this._isInstrumentalityLoreBot(botProfile) && connector.providerName === "mock") {
+        const reply = this._buildInstrumentalityMockReply(prompt);
+        this.metrics?.recordChatbotRequest(connector.providerName, "instrumentality-bot");
+        this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(reply));
+        yield { type: "token", delta: reply };
+        yield { type: "done", reply, usage: null, contextSummary: "instrumentality-lore" };
+        return;
+      }
+
+      if (this._isInstrumentalityLoreBot(botProfile)) {
+        let fullText = "";
+        let usage = null;
+
+        for await (const chunk of connector.generateResponseStream({
+          prompt,
+          context: {},
+          promptContext: {},
+          userId: null,
+          signal,
+        })) {
+          if (chunk?.type === "token" && typeof chunk.delta === "string") {
+            fullText += chunk.delta;
+            yield { type: "token", delta: chunk.delta };
+          } else if (chunk?.type === "done") {
+            usage = chunk.usage ?? usage;
+            if (typeof chunk.text === "string" && chunk.text.length > 0) {
+              fullText = chunk.text;
+            }
+          }
+        }
+
+        this.metrics?.recordChatbotRequest(connector.providerName, "instrumentality-bot");
+        this.metrics?.recordChatbotTokenUsage(connector.providerName, this._estimateTokens(prompt + " " + fullText));
+        yield { type: "done", reply: fullText, usage, contextSummary: "instrumentality-lore" };
         return;
       }
 

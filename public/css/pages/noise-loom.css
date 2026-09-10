@@ -1,0 +1,740 @@
+/* Hidden operator page: /operator/tools/noise-loom
+ *
+ * A weaver's console, not a corruption deck: horizontal thread lines instead
+ * of static, a slow weft drift instead of screen tears, warm accents over deep
+ * indigo. Everything is scoped under .nlm-page / .nlm-* so it cannot leak into
+ * the shared stylesheet.
+ *
+ * Dyes: the two accent colours are declared as space-separated RGB triplets so
+ * every rule can mix its own alpha with `rgb(var(--nlm-a-rgb) / 0.2)`. The
+ * page script sets `data-nlm-dye` on <html>; the blocks at the end of this
+ * file override the triplets. "indigo" is the default and lives in :root. */
+
+:root {
+  --nlm-a-rgb: 122 140 255; /* accent A — the thread */
+  --nlm-b-rgb: 255 200 87; /* accent B — the shuttle */
+  --nlm-text-rgb: 240 240 246;
+  --nlm-bg: #05060f;
+  --nlm-bg-mid: #0a0c1c;
+  --nlm-panel: rgba(11, 13, 30, 0.84);
+  --nlm-panel-strong: rgba(6, 7, 18, 0.95);
+
+  --nlm-a: rgb(var(--nlm-a-rgb));
+  --nlm-b: rgb(var(--nlm-b-rgb));
+  --nlm-text: rgb(var(--nlm-text-rgb));
+  --nlm-text-dim: rgb(var(--nlm-text-rgb) / 0.62);
+  --nlm-text-soft: rgb(var(--nlm-text-rgb) / 0.36);
+  --nlm-line: rgb(var(--nlm-a-rgb) / 0.26);
+  --nlm-line-hot: rgb(var(--nlm-b-rgb) / 0.4);
+  --nlm-danger: #ff5470;
+  --nlm-mono: "SF Mono", "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+  --nlm-wide: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  /* Corner cut used by pods, buttons and the viewport. */
+  --nlm-cut: 12px;
+  --nlm-clip: polygon(
+    var(--nlm-cut) 0,
+    100% 0,
+    100% calc(100% - var(--nlm-cut)),
+    calc(100% - var(--nlm-cut)) 100%,
+    0 100%,
+    0 var(--nlm-cut)
+  );
+}
+
+.nlm-page {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(55% 40% at 80% -6%, rgb(var(--nlm-b-rgb) / 0.1), transparent 62%),
+    radial-gradient(50% 42% at 10% 6%, rgb(var(--nlm-a-rgb) / 0.14), transparent 60%),
+    linear-gradient(170deg, var(--nlm-bg-mid), var(--nlm-bg) 55%, #020208);
+  color: var(--nlm-text);
+  font-family: var(--nlm-wide);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem 3rem;
+  overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------------- atmosphere */
+
+/* Two fixed layers: the warp threads (fine horizontal lines) and a slow weft
+   band drifting down the page. pointer-events: none throughout. */
+.nlm-threads,
+.nlm-weft {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.nlm-threads {
+  background-image:
+    repeating-linear-gradient(0deg, rgb(var(--nlm-a-rgb) / 0.05) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(90deg, rgb(var(--nlm-text-rgb) / 0.014) 0 1px, transparent 1px 9px);
+}
+
+.nlm-weft {
+  background: linear-gradient(180deg, transparent 0%, rgb(var(--nlm-b-rgb) / 0.06) 48%, rgb(var(--nlm-b-rgb) / 0.1) 50%, rgb(var(--nlm-b-rgb) / 0.06) 52%, transparent 100%);
+  background-size: 100% 260px;
+  background-repeat: no-repeat;
+  animation: nlm-weft-drift 16s linear infinite;
+  opacity: 0.85;
+}
+
+@keyframes nlm-weft-drift {
+  0% { background-position: 0 -260px; }
+  100% { background-position: 0 110vh; }
+}
+
+/* --------------------------------------------------------------------- shell */
+
+.nlm-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1280px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+/* -------------------------------------------------------------------- header */
+
+.nlm-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.nlm-eyebrow {
+  font-family: var(--nlm-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgb(var(--nlm-a-rgb) / 0.75);
+}
+
+.nlm-title {
+  margin: 0.35rem 0 0;
+  position: relative;
+  font-size: clamp(2rem, 5.5vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--nlm-text);
+}
+
+.nlm-title span {
+  color: var(--nlm-b);
+}
+
+/* A woven underline: alternating dashes in the two dyes. */
+.nlm-title::after {
+  content: "";
+  display: block;
+  margin-top: 0.45rem;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--nlm-a) 0 18px,
+    transparent 18px 24px,
+    var(--nlm-b) 24px 42px,
+    transparent 42px 48px
+  );
+  opacity: 0.8;
+  animation: nlm-underweave 6s linear infinite;
+}
+
+@keyframes nlm-underweave {
+  from { background-position: 0 0; }
+  to { background-position: 96px 0; }
+}
+
+.nlm-tagline {
+  margin: 0.5rem 0 0;
+  font-family: var(--nlm-mono);
+  font-size: 0.78rem;
+  color: var(--nlm-text-dim);
+}
+
+.nlm-header__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.nlm-dye {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--nlm-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--nlm-text-dim);
+}
+
+.nlm-chip {
+  font-family: var(--nlm-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.32rem 0.7rem;
+  color: rgb(var(--nlm-a-rgb) / 0.85);
+  background: rgb(var(--nlm-a-rgb) / 0.08);
+  border: 1px solid var(--nlm-line);
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+
+.nlm-chip--live {
+  color: var(--nlm-b);
+  background: rgb(var(--nlm-b-rgb) / 0.1);
+  border-color: var(--nlm-line-hot);
+  min-width: 5.5em;
+  text-align: center;
+}
+
+.nlm-chip--live.is-busy {
+  animation: nlm-flicker 0.6s steps(2) infinite;
+}
+
+.nlm-chip--live.is-error {
+  color: var(--nlm-danger);
+  border-color: rgb(255 84 112 / 0.5);
+  background: rgb(255 84 112 / 0.12);
+}
+
+@keyframes nlm-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ------------------------------------------------------------------ viewport */
+
+.nlm-viewport {
+  position: relative;
+  min-height: clamp(300px, 48vh, 560px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(135deg, rgb(var(--nlm-a-rgb) / 0.05), transparent 30%),
+    linear-gradient(315deg, rgb(var(--nlm-b-rgb) / 0.05), transparent 30%),
+    var(--nlm-panel-strong);
+  border: 1px solid var(--nlm-line);
+  clip-path: var(--nlm-clip);
+  overflow: hidden;
+  padding: 1.2rem;
+  box-sizing: border-box;
+}
+
+.nlm-hud {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 2px solid rgb(var(--nlm-a-rgb) / 0.7);
+  z-index: 2;
+}
+
+.nlm-hud--tl { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+.nlm-hud--tr { top: 10px; right: 10px; border-left: 0; border-bottom: 0; border-color: rgb(var(--nlm-b-rgb) / 0.7); }
+.nlm-hud--bl { bottom: 10px; left: 10px; border-right: 0; border-top: 0; border-color: rgb(var(--nlm-b-rgb) / 0.7); }
+.nlm-hud--br { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+
+.nlm-telemetry {
+  position: absolute;
+  top: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--nlm-mono);
+  padding: 0.3rem 0.8rem;
+  background: rgb(0 0 0 / 0.55);
+  border: 1px solid var(--nlm-line);
+}
+
+.nlm-telemetry--left { left: 46px; }
+.nlm-telemetry--right { right: 46px; }
+
+.nlm-telemetry span {
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  color: var(--nlm-text-soft);
+}
+
+.nlm-telemetry strong {
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  color: var(--nlm-a);
+  text-shadow: 0 0 12px rgb(var(--nlm-a-rgb) / 0.55);
+}
+
+.nlm-telemetry--right strong {
+  color: var(--nlm-b);
+  text-shadow: 0 0 12px rgb(var(--nlm-b-rgb) / 0.55);
+}
+
+.nlm-cloth {
+  max-width: 100%;
+  max-height: clamp(260px, 42vh, 512px);
+  image-rendering: pixelated;
+  border: 1px solid rgb(var(--nlm-text-rgb) / 0.12);
+  box-shadow: 0 0 40px rgb(var(--nlm-a-rgb) / 0.14);
+}
+
+/* ---------------------------------------------------------------------- deck */
+
+.nlm-deck {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.1fr;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.nlm-pod {
+  position: relative;
+  margin: 0;
+  padding: 1.1rem 1.15rem 1.25rem;
+  background: var(--nlm-panel);
+  border: 1px solid var(--nlm-line);
+  clip-path: var(--nlm-clip);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+/* A thin dyed seam along the top edge, split between the two dyes. */
+.nlm-pod::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--nlm-cut);
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--nlm-b), var(--nlm-a) 60%, transparent);
+  opacity: 0.7;
+}
+
+.nlm-pod legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  margin: 0 0 0.2rem;
+  font-family: var(--nlm-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgb(var(--nlm-a-rgb) / 0.9);
+}
+
+.nlm-pod legend i {
+  color: var(--nlm-b);
+  margin-right: 0.4rem;
+}
+
+.nlm-message {
+  margin: 0;
+  min-height: 1.1em;
+  font-family: var(--nlm-mono);
+  font-size: 0.72rem;
+  color: rgb(var(--nlm-a-rgb) / 0.85);
+}
+
+.nlm-message.is-error {
+  color: var(--nlm-danger);
+}
+
+.nlm-note {
+  margin: auto 0 0;
+  font-family: var(--nlm-mono);
+  font-size: 0.68rem;
+  line-height: 1.55;
+  color: var(--nlm-text-soft);
+}
+
+/* ------------------------------------------------------------------ readouts */
+
+.nlm-readout {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-family: var(--nlm-mono);
+  font-size: 0.74rem;
+}
+
+.nlm-readout__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-bottom: 1px solid rgb(var(--nlm-text-rgb) / 0.07);
+  padding-bottom: 0.28rem;
+}
+
+.nlm-readout__row dt {
+  color: var(--nlm-text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+.nlm-readout__row dd {
+  margin: 0;
+  color: var(--nlm-text);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ controls */
+
+.nlm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.nlm-field__label {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--nlm-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--nlm-text-dim);
+}
+
+.nlm-field__label output {
+  color: var(--nlm-b);
+}
+
+.nlm-range {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, rgb(var(--nlm-a-rgb) / 0.5), rgb(var(--nlm-a-rgb) / 0.15));
+  outline: none;
+  cursor: pointer;
+}
+
+.nlm-range--hot {
+  background: linear-gradient(90deg, rgb(var(--nlm-b-rgb) / 0.25), var(--nlm-b));
+}
+
+.nlm-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--nlm-bg);
+  border: 2px solid var(--nlm-a);
+  box-shadow: 0 0 10px rgb(var(--nlm-a-rgb) / 0.7);
+  border-radius: 50%;
+  cursor: grab;
+}
+
+.nlm-range--hot::-webkit-slider-thumb {
+  border-color: var(--nlm-b);
+  box-shadow: 0 0 12px rgb(var(--nlm-b-rgb) / 0.8);
+}
+
+.nlm-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--nlm-bg);
+  border: 2px solid var(--nlm-a);
+  box-shadow: 0 0 10px rgb(var(--nlm-a-rgb) / 0.7);
+  cursor: grab;
+}
+
+.nlm-range--hot::-moz-range-thumb {
+  border-color: var(--nlm-b);
+  box-shadow: 0 0 12px rgb(var(--nlm-b-rgb) / 0.8);
+}
+
+/* ----------------------------------------------------------------------- ops */
+
+.nlm-ops {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.nlm-op input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nlm-op__box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.4rem;
+  font-family: var(--nlm-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nlm-text-soft);
+  border: 1px solid rgb(var(--nlm-text-rgb) / 0.14);
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+  user-select: none;
+}
+
+.nlm-op input:checked + .nlm-op__box {
+  color: var(--nlm-b);
+  border-color: var(--nlm-line-hot);
+  background: rgb(var(--nlm-b-rgb) / 0.1);
+  text-shadow: 0 0 10px rgb(var(--nlm-b-rgb) / 0.5);
+}
+
+.nlm-op input:focus-visible + .nlm-op__box {
+  outline: 2px solid var(--nlm-a);
+  outline-offset: 1px;
+}
+
+/* -------------------------------------------------------------------- swatch */
+
+.nlm-swatch {
+  width: 100%;
+  height: 14px;
+  border: 1px solid rgb(var(--nlm-text-rgb) / 0.14);
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------------- seed */
+
+.nlm-seedbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.nlm-seedbar__field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.nlm-seed-input,
+.nlm-recipe-input {
+  font-family: var(--nlm-mono);
+  color: var(--nlm-a);
+  background: rgb(0 0 0 / 0.5);
+  border: 1px solid var(--nlm-line);
+  padding: 0.5rem 0.7rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.nlm-seed-input {
+  font-size: 1.05rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgb(var(--nlm-a-rgb) / 0.5);
+}
+
+.nlm-recipe-input {
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  color: var(--nlm-b);
+}
+
+.nlm-seed-input:focus,
+.nlm-recipe-input:focus {
+  outline: none;
+  border-color: var(--nlm-b);
+}
+
+.nlm-seed-input.is-error,
+.nlm-recipe-input.is-error {
+  color: var(--nlm-danger);
+  border-color: rgb(255 84 112 / 0.6);
+  text-shadow: none;
+}
+
+/* ------------------------------------------------------------------- buttons */
+
+.nlm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-family: var(--nlm-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nlm-bg);
+  background: linear-gradient(100deg, var(--nlm-b), rgb(var(--nlm-b-rgb) / 0.75));
+  border: 0;
+  padding: 0.6rem 0.9rem;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  cursor: pointer;
+  transition: filter 0.12s ease, transform 0.12s ease;
+}
+
+.nlm-btn:hover:not(:disabled),
+.nlm-btn:focus-visible {
+  filter: brightness(1.15) saturate(1.1);
+  outline: none;
+}
+
+.nlm-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.nlm-btn:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.9) brightness(0.5);
+}
+
+.nlm-btn--ghost {
+  color: var(--nlm-text-dim);
+  background: transparent;
+  border: 1px solid rgb(var(--nlm-text-rgb) / 0.2);
+}
+
+.nlm-btn--ghost:hover:not(:disabled) {
+  color: var(--nlm-a);
+  border-color: var(--nlm-line);
+  filter: none;
+}
+
+.nlm-btn--wide {
+  width: 100%;
+}
+
+.nlm-btn--dice {
+  font-size: 1.05rem;
+  padding: 0.55rem 0.85rem;
+  background: linear-gradient(100deg, var(--nlm-a), rgb(var(--nlm-a-rgb) / 0.75));
+}
+
+.nlm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+/* -------------------------------------------------------------------- footer */
+
+.nlm-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-family: var(--nlm-mono);
+  font-size: 0.72rem;
+  color: var(--nlm-text-soft);
+}
+
+.nlm-link {
+  color: rgb(var(--nlm-a-rgb) / 0.85);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+}
+
+.nlm-link:hover {
+  color: var(--nlm-a);
+  text-shadow: 0 0 10px rgb(var(--nlm-a-rgb) / 0.5);
+}
+
+/* ------------------------------------------------------------------- selects */
+
+.nlm-select {
+  font-family: var(--nlm-mono);
+  font-size: 0.74rem;
+  color: var(--nlm-text);
+  background: var(--nlm-panel-strong);
+  border: 1px solid var(--nlm-line);
+  padding: 0.35rem 0.5rem;
+}
+
+.nlm-select--wide {
+  width: 100%;
+}
+
+.nlm-select:focus {
+  outline: none;
+  border-color: var(--nlm-b);
+}
+
+/* ---------------------------------------------------------------- responsive */
+
+@media (max-width: 980px) {
+  .nlm-deck {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .nlm-pod--thread {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .nlm-deck {
+    grid-template-columns: 1fr;
+  }
+
+  .nlm-ops {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .nlm-telemetry--left { left: 40px; }
+  .nlm-telemetry--right { right: 40px; }
+}
+
+/* Motion is decoration here, never information. */
+@media (prefers-reduced-motion: reduce) {
+  .nlm-weft,
+  .nlm-title::after,
+  .nlm-chip--live.is-busy {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- dyes */
+
+[data-nlm-dye="ember"] {
+  --nlm-a-rgb: 255 122 61;
+  --nlm-b-rgb: 255 214 140;
+  --nlm-bg: #0f0603;
+  --nlm-bg-mid: #180b05;
+  --nlm-panel: rgba(24, 12, 6, 0.84);
+  --nlm-panel-strong: rgba(13, 6, 3, 0.95);
+}
+
+[data-nlm-dye="verdigris"] {
+  --nlm-a-rgb: 64 224 168;
+  --nlm-b-rgb: 190 255 120;
+  --nlm-bg: #03100b;
+  --nlm-bg-mid: #071a12;
+  --nlm-panel: rgba(8, 22, 16, 0.84);
+  --nlm-panel-strong: rgba(4, 11, 8, 0.95);
+}
+
+[data-nlm-dye="bone"] {
+  --nlm-a-rgb: 230 226 214;
+  --nlm-b-rgb: 152 146 132;
+  --nlm-bg: #0a0908;
+  --nlm-bg-mid: #12100e;
+  --nlm-panel: rgba(18, 17, 15, 0.84);
+  --nlm-panel-strong: rgba(9, 8, 7, 0.95);
+}

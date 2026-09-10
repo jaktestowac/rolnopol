@@ -1,6 +1,7 @@
 const { existsSync, readdirSync, statSync, readFileSync } = require("fs");
 const path = require("path");
-const { logInfo, logError, logDebug } = require("../../helpers/logger-api");
+const express = require("express");
+const { logInfo, logError, logDebug, logWarning } = require("../../helpers/logger-api");
 
 /**
  * Plugin runtime configuration precedence (highest to lowest):
@@ -11,15 +12,63 @@ const { logInfo, logError, logDebug } = require("../../helpers/logger-api");
  * 4) Fallback - if `enabled` is not explicitly set anywhere, the plugin defaults to disabled.
  *
  * This is why you can have `enabled` in both the plugin code and the manifest; the manifest
- * always wins, and the code value is treated as a default.
+ * always wins, and the code value is treated as a default. The same chain applies to
+ * `config` (deep-merged, later layers winning) and to `order`.
+ *
+ * Discovery is deliberately decided BEFORE a plugin's `index.js` is required: a directory
+ * that no manifest mentions never gets executed, so dropping a folder into `plugins/` is
+ * not enough to run code. Reachability therefore has to be readable from JSON:
+ *
+ *   - the plugin is a key in the global manifest, or
+ *   - its own `plugin.manifest.json` says `"autoDiscoverable": true`.
+ *
+ * `autoDiscoverable: true` in plugin code alone is not enough, because reading it means
+ * running the file. Pass `allowCodeDeclaredDiscovery: true` to `initialize()` to fall back
+ * to the old behaviour (it requires the module to ask, which is the hole it reopens).
+ *
+ * Hooks a plugin may export, all optional:
+ *
+ *   init({ logInfo, logError, logDebug, config, services, mountPath })
+ *   registerRoutes({ router, mountPath, config, services, logInfo, logError, logDebug })
+ *   onRequest({ req, res, pluginContext, config, services, ...loggers })
+ *   onResponse({ req, res, responseBody, responseType, pluginContext, config, services, ...loggers })
+ *   onEvent({ event, eventType, pluginContext, config, services, ...loggers })
+ *   shutdown({ logInfo, logError, logDebug, config })
+ *
+ * `init`, `onRequest`, `onResponse` and `onEvent` are called synchronously and their
+ * promises are NOT awaited; returning one is logged as a mistake. Only `shutdown` is
+ * awaited. `onRequest` returning `false` stops the remaining plugins for that request; if
+ * nothing has answered by then the runtime continues to the route handlers rather than
+ * leaving the request hanging. `onResponse` may return a replacement body for `res.json`
+ * and `res.send`; returning `undefined` leaves the body alone.
+ *
+ * A router from `registerRoutes` answers on `/api/v1/plugins/<name>` unless the plugin sets
+ * `config.mountPath`, which follows the same precedence chain as the rest of the config. The
+ * resolved path is injected into `init` and `registerRoutes`, so nothing has to hardcode it.
  */
 
 const DEFAULT_MANIFEST_FILE = "plugins.manifest.json";
 const DEFAULT_PLUGIN_MANIFEST_FILE = "plugin.manifest.json";
+const DEFAULT_ORDER = 1000;
+
+/** Routers from `registerRoutes` mount here, one segment per plugin name. */
+const PLUGIN_ROUTE_NAMESPACE = "/api/v1/plugins";
+
+/** Hook names, in the order they are documented and reported by `getPlugins()`. */
+const HOOK_NAMES = ["init", "registerRoutes", "onRequest", "onResponse", "onEvent", "shutdown"];
+
+/** Keys that would change an object's shape rather than its contents. */
+const UNSAFE_CONFIG_KEYS = ["__proto__", "constructor", "prototype"];
+
+/** Superseded ways of naming the event filter, kept only to warn about them. */
+const LEGACY_EVENT_KEYS = ["eventType", "events"];
 
 const state = {
   initialized: false,
   plugins: [],
+  requestHooks: [],
+  responseHooks: [],
+  pluginRouters: new Map(),
   pluginsDir: null,
   manifestPath: null,
   services: {},
@@ -92,17 +141,75 @@ function _resolveEnabled(pluginDef, localPluginConfig, globalManifestPluginConfi
   return false;
 }
 
+/** Which layer decided `enabled`, for `getPlugins()` and the startup log. */
+function _resolveEnabledSource(pluginDef, localPluginConfig, globalManifestPluginConfig) {
+  if (_isObject(globalManifestPluginConfig) && typeof globalManifestPluginConfig.enabled === "boolean") {
+    return "global-manifest";
+  }
+  if (_isObject(localPluginConfig) && typeof localPluginConfig.enabled === "boolean") {
+    return "local-manifest";
+  }
+  if (typeof pluginDef.enabled === "boolean") {
+    return "code";
+  }
+  return "default";
+}
+
+/**
+ * Deep merge for config layers. Plain objects merge key by key so a manifest can override
+ * one nested value without restating its siblings; arrays are replaced wholesale, because
+ * a partial array override has no obvious meaning.
+ */
+function _mergeConfig(base, override) {
+  if (!_isObject(base) || !_isObject(override)) {
+    return override === undefined ? base : override;
+  }
+
+  const result = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    // Config arrives from JSON files, so a key like `__proto__` is reachable by anyone who
+    // can write a manifest. Assigning it would change the merged object's prototype rather
+    // than add a value, and `key in result` would answer for inherited keys like
+    // `constructor` as well.
+    if (UNSAFE_CONFIG_KEYS.includes(key)) {
+      logWarning("Plugin runtime: ignoring unsafe config key", { key });
+      continue;
+    }
+
+    const hasKey = Object.prototype.hasOwnProperty.call(result, key);
+    result[key] = hasKey ? _mergeConfig(result[key], value) : value;
+  }
+  return result;
+}
+
 function _resolveConfig(pluginDef, localPluginConfig, globalManifestPluginConfig) {
   const codeConfig = _isObject(pluginDef.config) ? pluginDef.config : {};
   const localConfig = _isObject(localPluginConfig) && _isObject(localPluginConfig.config) ? localPluginConfig.config : {};
   const globalConfig =
     _isObject(globalManifestPluginConfig) && _isObject(globalManifestPluginConfig.config) ? globalManifestPluginConfig.config : {};
 
-  return {
-    ...codeConfig,
-    ...localConfig,
-    ...globalConfig,
-  };
+  return _mergeConfig(_mergeConfig(codeConfig, localConfig), globalConfig);
+}
+
+/**
+ * `order` follows the same chain as `enabled`, so the sequence plugins run in can be
+ * changed from the manifest. It is the field that decides who wins when two plugins want
+ * the same request, and it used to be editable only by changing plugin code.
+ */
+function _resolveOrder(pluginDef, localPluginConfig, globalManifestPluginConfig) {
+  const candidates = [
+    _isObject(globalManifestPluginConfig) ? globalManifestPluginConfig.order : undefined,
+    _isObject(localPluginConfig) ? localPluginConfig.order : undefined,
+    _isObject(pluginDef) ? pluginDef.order : undefined,
+  ];
+
+  for (const candidate of candidates) {
+    if (Number.isFinite(candidate)) {
+      return candidate;
+    }
+  }
+
+  return DEFAULT_ORDER;
 }
 
 function _isAutoDiscoverable(pluginDef, localPluginConfig) {
@@ -129,12 +236,27 @@ function _normalizeEventTypeList(value) {
   return normalized;
 }
 
+/**
+ * The event filter is `config.eventTypes` and nothing else. It used to be readable from six
+ * places, which meant a typo in any of them looked like "subscribe to everything"; the
+ * superseded spellings now produce a warning instead of quietly working.
+ */
 function _getPluginEventTypes(plugin) {
   const config = _isObject(plugin?.config) ? plugin.config : {};
-  const eventTypeValue =
-    config.eventTypes ?? config.eventType ?? config.events ?? plugin?.eventTypes ?? plugin?.eventType ?? plugin?.events;
 
-  return _normalizeEventTypeList(eventTypeValue);
+  const legacyKeys = [
+    ...LEGACY_EVENT_KEYS.filter((key) => config[key] !== undefined).map((key) => `config.${key}`),
+    ...["eventTypes", ...LEGACY_EVENT_KEYS].filter((key) => plugin?.[key] !== undefined),
+  ];
+
+  if (legacyKeys.length > 0) {
+    logWarning("Plugin runtime: ignoring superseded event-filter keys, use config.eventTypes", {
+      plugin: plugin?.name,
+      ignored: legacyKeys,
+    });
+  }
+
+  return _normalizeEventTypeList(config.eventTypes);
 }
 
 function _clearEventSubscriptions() {
@@ -154,6 +276,18 @@ function _clearEventSubscriptions() {
   }
 
   state.eventSubscriptions = [];
+}
+
+/** Warn when a hook hands back a promise the runtime is never going to await. */
+function _warnOnPromise(plugin, hookName, result) {
+  if (result && typeof result.then === "function") {
+    logWarning("Plugin runtime: hook returned a promise, which the runtime does not await", {
+      plugin: plugin?.name,
+      hook: hookName,
+    });
+  }
+
+  return result;
 }
 
 function _registerPluginEventListener(plugin, services) {
@@ -179,16 +313,19 @@ function _registerPluginEventListener(plugin, services) {
     }
 
     try {
-      plugin.onEvent({
+      const result = plugin.onEvent({
         event,
         eventType: event.type,
-        pluginContext: plugin.eventContext,
+        // Deliberately not called pluginContext: that name means per-request state in
+        // onRequest and onResponse, and this object lives as long as the load.
+        pluginState: plugin.eventContext,
         config: plugin.config,
         services,
         logInfo,
         logError,
         logDebug,
       });
+      _warnOnPromise(plugin, "onEvent", result);
     } catch (error) {
       logError("Plugin runtime: onEvent failed", {
         plugin: plugin.name,
@@ -203,87 +340,362 @@ function _registerPluginEventListener(plugin, services) {
   }
 }
 
-function _discoverPluginEntryFiles(pluginsDir) {
+/**
+ * Every candidate directory, described from JSON alone. Nothing here executes plugin code,
+ * which is what lets `initialize` decide reachability before requiring anything.
+ */
+function _discoverPluginCandidates(pluginsDir) {
   if (!pluginsDir || !existsSync(pluginsDir)) {
     return [];
   }
 
-  const entries = readdirSync(pluginsDir, { withFileTypes: true });
-  const pluginEntryFiles = [];
+  const candidates = [];
 
-  for (const entry of entries) {
+  for (const entry of readdirSync(pluginsDir, { withFileTypes: true })) {
     if (!entry.isDirectory()) {
       continue;
     }
 
-    const pluginIndex = path.join(pluginsDir, entry.name, "index.js");
-    if (existsSync(pluginIndex) && statSync(pluginIndex).isFile()) {
-      pluginEntryFiles.push(pluginIndex);
+    const entryFile = path.join(pluginsDir, entry.name, "index.js");
+    if (!existsSync(entryFile) || !statSync(entryFile).isFile()) {
+      continue;
+    }
+
+    candidates.push({
+      dirName: entry.name,
+      entryFile,
+      localPluginConfig: _loadPluginManifest(path.join(pluginsDir, entry.name, DEFAULT_PLUGIN_MANIFEST_FILE)),
+    });
+  }
+
+  return candidates;
+}
+
+/** Keys a global manifest entry may carry. Anything else is a typo doing nothing. */
+const MANIFEST_ENTRY_KEYS = ["enabled", "config", "order"];
+
+/**
+ * Mistakes in the manifest itself. Both of these used to be silent: an unknown key reads as
+ * "unspecified", which for `enabled` means disabled, and an entry naming a directory that is
+ * not there looks exactly like a plugin that failed to load.
+ */
+function _validateManifest(manifest, candidates) {
+  const warnings = [];
+  const directories = new Set(candidates.map((candidate) => candidate.dirName));
+
+  for (const [name, entry] of Object.entries(manifest.plugins)) {
+    if (!directories.has(name)) {
+      warnings.push(`Manifest lists "${name}", which has no plugins/${name}/index.js`);
+    }
+
+    if (!_isObject(entry)) {
+      warnings.push(`Manifest entry "${name}" is not an object`);
+      continue;
+    }
+
+    for (const key of Object.keys(entry)) {
+      if (!MANIFEST_ENTRY_KEYS.includes(key)) {
+        warnings.push(`Manifest entry "${name}" carries unknown key "${key}", which the runtime ignores`);
+      }
+    }
+
+    if (entry.order !== undefined && !Number.isFinite(entry.order)) {
+      warnings.push(`Manifest entry "${name}" has a non-numeric order, which is ignored`);
     }
   }
 
-  return pluginEntryFiles;
+  return warnings;
+}
+
+/**
+ * The three config keys the runtime itself understands. A wrong shape here does not throw,
+ * it changes what a plugin matches: a `routePaths` string reads as "no filter at all", and a
+ * `routePath` that is not a string matches nothing, so the plugin looks simply dead.
+ */
+function _validateConventionalConfig(plugin) {
+  const warnings = [];
+  const config = _isObject(plugin.config) ? plugin.config : {};
+
+  if (config.routePath !== undefined && (typeof config.routePath !== "string" || config.routePath.length === 0)) {
+    warnings.push(`"${plugin.name}" has a config.routePath that is not a non-empty string, so it will never match a request`);
+  }
+
+  if (config.routePaths !== undefined && !Array.isArray(config.routePaths)) {
+    warnings.push(`"${plugin.name}" has a config.routePaths that is not an array`);
+  }
+
+  if (config.eventTypes !== undefined && !Array.isArray(config.eventTypes) && typeof config.eventTypes !== "string") {
+    warnings.push(`"${plugin.name}" has a config.eventTypes that is neither an array nor a string, so no event will be filtered out`);
+  }
+
+  return warnings;
+}
+
+/** Duplicates that would otherwise be decided by sort stability or by whoever runs first. */
+function _detectCollisions(plugins) {
+  const warnings = [];
+  const enabled = plugins.filter((plugin) => plugin.enabled);
+
+  const byName = new Map();
+  for (const plugin of plugins) {
+    if (byName.has(plugin.name)) {
+      warnings.push(`Duplicate plugin name "${plugin.name}": ${byName.get(plugin.name)} and ${plugin.pluginFile}`);
+      continue;
+    }
+    byName.set(plugin.name, plugin.pluginFile);
+  }
+
+  const byOrder = new Map();
+  for (const plugin of enabled) {
+    if (byOrder.has(plugin.order)) {
+      warnings.push(
+        `Plugins "${byOrder.get(plugin.order)}" and "${plugin.name}" share order ${plugin.order}; the run sequence is arbitrary`,
+      );
+      continue;
+    }
+    byOrder.set(plugin.order, plugin.name);
+  }
+
+  const byMountPath = new Map();
+  for (const plugin of enabled) {
+    if (typeof plugin.mountPath !== "string" || typeof plugin.registerRoutes !== "function") {
+      continue;
+    }
+    if (byMountPath.has(plugin.mountPath)) {
+      warnings.push(`Plugins "${byMountPath.get(plugin.mountPath)}" and "${plugin.name}" both mount on ${plugin.mountPath}`);
+      continue;
+    }
+    byMountPath.set(plugin.mountPath, plugin.name);
+  }
+
+  const byRoutePath = new Map();
+  for (const plugin of enabled) {
+    const routePath = plugin.config?.routePath;
+    if (typeof routePath !== "string" || routePath.length === 0) {
+      continue;
+    }
+    if (byRoutePath.has(routePath)) {
+      warnings.push(`Plugins "${byRoutePath.get(routePath)}" and "${plugin.name}" both claim ${routePath}`);
+      continue;
+    }
+    byRoutePath.set(routePath, plugin.name);
+  }
+
+  return warnings;
+}
+
+function _shutdownPlugin(plugin) {
+  if (typeof plugin.shutdown !== "function") {
+    return undefined;
+  }
+
+  try {
+    return plugin.shutdown({ logInfo, logError, logDebug, config: plugin.config });
+  } catch (error) {
+    logError("Plugin runtime: plugin shutdown failed", { plugin: plugin.name, error: error.message });
+    return undefined;
+  }
+}
+
+/**
+ * Drop everything the previous `initialize()` set up. Without this a second initialize ran
+ * `init` twice and left the first set of plugins holding their timers, with no handle on
+ * them: `shutdown()` only ever saw the newest instances.
+ */
+function _teardownLoadedPlugins() {
+  _clearEventSubscriptions();
+
+  for (const plugin of state.plugins.filter((candidate) => candidate.enabled)) {
+    const result = _shutdownPlugin(plugin);
+    if (result && typeof result.then === "function") {
+      result.then(undefined, (error) =>
+        logError("Plugin runtime: plugin shutdown rejected", { plugin: plugin.name, error: error?.message }),
+      );
+    }
+  }
+
+  state.plugins = [];
+  state.requestHooks = [];
+  state.responseHooks = [];
+  state.pluginRouters = new Map();
+}
+
+/**
+ * Where a plugin's router answers.
+ *
+ * The default is `/api/v1/plugins/<name>`, which cannot collide with a core route. A plugin
+ * may override it with `config.mountPath`, so the path follows the usual precedence chain and
+ * can be moved from either manifest without touching code. Leaving the namespace is allowed
+ * and warned about, because that is the point at which a plugin can shadow a real route.
+ */
+function _resolveMountPath(plugin) {
+  const requested = _isObject(plugin.config) ? plugin.config.mountPath : undefined;
+  const fallback = `${PLUGIN_ROUTE_NAMESPACE}/${plugin.name}`;
+
+  if (requested === undefined || requested === null) {
+    return fallback;
+  }
+
+  if (typeof requested !== "string" || requested.trim().length === 0) {
+    logWarning("Plugin runtime: config.mountPath is not a path, using the default", {
+      plugin: plugin.name,
+      mountPath: requested,
+      using: fallback,
+    });
+    return fallback;
+  }
+
+  const trimmed = requested.trim();
+  if (!trimmed.startsWith("/")) {
+    logWarning("Plugin runtime: config.mountPath must start with a slash, using the default", {
+      plugin: plugin.name,
+      mountPath: trimmed,
+      using: fallback,
+    });
+    return fallback;
+  }
+
+  // A trailing slash would make the mounted router answer on "//".
+  const normalised = trimmed.length > 1 ? trimmed.replace(/\/+$/, "") : trimmed;
+
+  if (!normalised.startsWith(`${PLUGIN_ROUTE_NAMESPACE}/`) && normalised !== PLUGIN_ROUTE_NAMESPACE) {
+    logWarning("Plugin runtime: plugin routes mounted outside the plugin namespace can shadow a real route", {
+      plugin: plugin.name,
+      mountPath: normalised,
+      namespace: PLUGIN_ROUTE_NAMESPACE,
+    });
+  }
+
+  return normalised;
+}
+
+/**
+ * Routers built once per initialize, keyed by the path they answer on. Longest path first, so
+ * a plugin mounted under another plugin's path still gets its own requests.
+ */
+function _buildPluginRouters(plugins, services) {
+  const routers = new Map();
+
+  for (const plugin of plugins) {
+    if (typeof plugin.registerRoutes !== "function") {
+      continue;
+    }
+
+    const router = express.Router();
+    const mountPath = plugin.mountPath;
+
+    try {
+      plugin.registerRoutes({ router, mountPath, config: plugin.config, services, logInfo, logError, logDebug });
+
+      if (routers.has(mountPath)) {
+        logError("Plugin runtime: two plugins claim the same mount path, the first one keeps it", {
+          plugin: plugin.name,
+          mountPath,
+          heldBy: routers.get(mountPath).pluginName,
+        });
+        continue;
+      }
+
+      router.pluginName = plugin.name;
+      routers.set(mountPath, router);
+      logDebug("Plugin runtime: mounted plugin routes", { plugin: plugin.name, mountPath });
+    } catch (error) {
+      logError("Plugin runtime: registerRoutes failed", { plugin: plugin.name, error: error.message });
+    }
+  }
+
+  return new Map([...routers.entries()].sort((a, b) => b[0].length - a[0].length));
 }
 
 function initialize(options = {}) {
   const pluginsDir = options.pluginsDir || path.resolve(__dirname, "../../plugins");
   const manifestPath = options.manifestPath || path.join(pluginsDir, DEFAULT_MANIFEST_FILE);
   const services = _isObject(options.services) ? options.services : {};
+  const allowCodeDeclaredDiscovery = options.allowCodeDeclaredDiscovery === true;
 
-  _clearEventSubscriptions();
+  _teardownLoadedPlugins();
 
   const manifest = _loadManifest(manifestPath);
-  const pluginFiles = _discoverPluginEntryFiles(pluginsDir);
+  const candidates = _discoverPluginCandidates(pluginsDir);
   const loaded = [];
 
-  for (const pluginFile of pluginFiles) {
+  for (const warning of _validateManifest(manifest, candidates)) {
+    logWarning("Plugin runtime: manifest", { warning });
+  }
+
+  for (const candidate of candidates) {
+    const { dirName, entryFile, localPluginConfig } = candidate;
+
     try {
-      const pluginDef = _safeRequire(pluginFile);
+      const isInGlobalManifest = Object.prototype.hasOwnProperty.call(manifest.plugins, dirName);
+      const declaredInJson = isInGlobalManifest || localPluginConfig.autoDiscoverable === true;
+
+      // Deciding this before the require is the whole point: an unregistered directory
+      // must not get the chance to run anything at all.
+      if (!declaredInJson && !allowCodeDeclaredDiscovery) {
+        logDebug("Plugin runtime: skipping unregistered plugin without requiring it", {
+          plugin: dirName,
+          pluginFile: entryFile,
+          reason: "not-in-global-manifest-and-no-local-manifest-opt-in",
+        });
+        continue;
+      }
+
+      const pluginDef = _safeRequire(entryFile);
       if (!pluginDef || typeof pluginDef !== "object") {
-        logError("Plugin runtime: plugin does not export an object", { pluginFile });
+        logError("Plugin runtime: plugin does not export an object", { pluginFile: entryFile });
         continue;
       }
 
       const pluginName = pluginDef.name;
       if (!pluginName || typeof pluginName !== "string") {
-        logError("Plugin runtime: plugin has invalid or missing name", { pluginFile });
+        logError("Plugin runtime: plugin has invalid or missing name", { pluginFile: entryFile });
         continue;
       }
 
-      const localPluginManifestPath = path.join(path.dirname(pluginFile), DEFAULT_PLUGIN_MANIFEST_FILE);
-      const localPluginConfig = _loadPluginManifest(localPluginManifestPath);
-      const isInGlobalManifest = Object.prototype.hasOwnProperty.call(manifest.plugins, pluginName);
-      const globalManifestPluginConfig = isInGlobalManifest ? manifest.plugins[pluginName] : {};
-      const isAutoDiscoverable = _isAutoDiscoverable(pluginDef, localPluginConfig);
+      // Discovery works off directories, so that is what the manifests are keyed by. A
+      // plugin whose exported name disagrees reports one identity in the logs and is
+      // configured under another.
+      if (pluginName !== dirName) {
+        logWarning("Plugin runtime: plugin name does not match its directory, which is what both manifests key by", {
+          plugin: pluginName,
+          directory: dirName,
+        });
+      }
 
-      if (!isInGlobalManifest && !isAutoDiscoverable) {
+      if (!declaredInJson && !_isAutoDiscoverable(pluginDef, localPluginConfig)) {
         logDebug("Plugin runtime: skipping unregistered plugin", {
           plugin: pluginName,
-          pluginFile,
+          pluginFile: entryFile,
           reason: "not-in-global-manifest-and-not-auto-discoverable",
         });
         continue;
       }
 
-      const enabled = _resolveEnabled(pluginDef, localPluginConfig, globalManifestPluginConfig);
-      const config = _resolveConfig(pluginDef, localPluginConfig, globalManifestPluginConfig);
+      const globalManifestPluginConfig = isInGlobalManifest ? manifest.plugins[dirName] : {};
 
       loaded.push({
         ...pluginDef,
-        enabled,
-        config,
+        enabled: _resolveEnabled(pluginDef, localPluginConfig, globalManifestPluginConfig),
+        // Filled in below, once the resolved config is known.
+        mountPath: null,
+        enabledBy: _resolveEnabledSource(pluginDef, localPluginConfig, globalManifestPluginConfig),
+        config: _resolveConfig(pluginDef, localPluginConfig, globalManifestPluginConfig),
+        order: _resolveOrder(pluginDef, localPluginConfig, globalManifestPluginConfig),
+        pluginFile: entryFile,
         eventContext: {},
       });
     } catch (error) {
-      logError("Plugin runtime: failed loading plugin", { pluginFile, error: error.message });
+      logError("Plugin runtime: failed loading plugin", { pluginFile: entryFile, error: error.message });
     }
   }
 
-  loaded.sort((a, b) => {
-    const aOrder = Number.isFinite(a.order) ? a.order : 1000;
-    const bOrder = Number.isFinite(b.order) ? b.order : 1000;
-    return aOrder - bOrder;
-  });
+  // Name breaks ties so two plugins sharing an order still run in a fixed sequence.
+  loaded.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+
+  for (const plugin of loaded) {
+    plugin.mountPath = _resolveMountPath(plugin);
+  }
 
   state.plugins = loaded;
   state.initialized = true;
@@ -291,32 +703,38 @@ function initialize(options = {}) {
   state.manifestPath = manifestPath;
   state.services = services;
 
-  const enabledPlugins = loaded.filter((p) => p.enabled).map((p) => p.name);
-  const disabledPlugins = loaded.filter((p) => !p.enabled).map((p) => p.name);
+  const enabledPlugins = loaded.filter((plugin) => plugin.enabled);
+
+  state.requestHooks = enabledPlugins.filter((plugin) => typeof plugin.onRequest === "function");
+  state.responseHooks = enabledPlugins.filter((plugin) => typeof plugin.onResponse === "function");
 
   logInfo("Plugin runtime initialized");
   logDebug("Plugin runtime initialized", {
     pluginsDir,
     manifestPath,
-    loadedPlugins: loaded.map((p) => p.name),
-    enabledPlugins,
-    disabledPlugins,
+    loadedPlugins: loaded.map((plugin) => plugin.name),
+    enabledPlugins: enabledPlugins.map((plugin) => plugin.name),
+    disabledPlugins: loaded.filter((plugin) => !plugin.enabled).map((plugin) => plugin.name),
   });
 
-  for (const plugin of loaded) {
-    if (!plugin.enabled) {
-      continue;
-    }
+  for (const warning of _detectCollisions(loaded)) {
+    logWarning("Plugin runtime: collision", { warning });
+  }
 
+  for (const plugin of enabledPlugins) {
+    for (const warning of _validateConventionalConfig(plugin)) {
+      logWarning("Plugin runtime: config", { warning });
+    }
+  }
+
+  for (const plugin of enabledPlugins) {
     try {
       if (typeof plugin.init === "function") {
-        plugin.init({
-          logInfo,
-          logError,
-          logDebug,
-          config: plugin.config,
-          services,
-        });
+        _warnOnPromise(
+          plugin,
+          "init",
+          plugin.init({ logInfo, logError, logDebug, config: plugin.config, services, mountPath: plugin.mountPath }),
+        );
       }
     } catch (error) {
       logError("Plugin runtime: plugin init failed", { plugin: plugin.name, error: error.message });
@@ -324,25 +742,58 @@ function initialize(options = {}) {
 
     _registerPluginEventListener(plugin, services);
   }
+
+  state.pluginRouters = _buildPluginRouters(enabledPlugins, services);
 }
 
-function attach(app) {
-  if (!state.initialized) {
-    initialize();
+/**
+ * Tear the current set down and load it again, optionally picking up edited plugin files.
+ * `initialize()` alone reuses whatever node has already cached.
+ */
+async function reload(options = {}) {
+  const pluginsDir = options.pluginsDir || state.pluginsDir || path.resolve(__dirname, "../../plugins");
+
+  await shutdown();
+
+  if (options.reloadModules === true) {
+    for (const candidate of _discoverPluginCandidates(pluginsDir)) {
+      try {
+        delete require.cache[require.resolve(candidate.entryFile)];
+      } catch (error) {
+        logError("Plugin runtime: failed to evict plugin from the require cache", {
+          pluginFile: candidate.entryFile,
+          error: error.message,
+        });
+      }
+    }
   }
 
-  const activePlugins = state.plugins.filter((plugin) => plugin.enabled);
+  initialize({
+    pluginsDir,
+    manifestPath: options.manifestPath || state.manifestPath,
+    services: _isObject(options.services) ? options.services : state.services,
+    allowCodeDeclaredDiscovery: options.allowCodeDeclaredDiscovery === true,
+  });
 
+  return getPlugins();
+}
+
+function _attachRequestHooks(app) {
   app.use((req, res, next) => {
+    // Read the live list rather than a snapshot, so a reload cannot leave the request
+    // path running plugins the event path has already dropped.
+    const hooks = state.requestHooks;
+    if (hooks.length === 0) {
+      return next();
+    }
+
     req.pluginContext = req.pluginContext || {};
 
-    try {
-      for (const plugin of activePlugins) {
-        if (typeof plugin.onRequest !== "function") {
-          continue;
-        }
+    for (const plugin of hooks) {
+      let result;
 
-        const result = plugin.onRequest({
+      try {
+        result = plugin.onRequest({
           req,
           res,
           pluginContext: req.pluginContext,
@@ -352,41 +803,67 @@ function attach(app) {
           logError,
           logDebug,
         });
-
-        if (result === false) {
-          return;
-        }
+        _warnOnPromise(plugin, "onRequest", result);
+      } catch (error) {
+        // Per plugin, so one bad hook cannot cancel the plugins ordered after it, and the
+        // log says which one to go and look at.
+        logError("Plugin runtime: onRequest failed", { plugin: plugin.name, error: error.message });
 
         if (res.headersSent) {
-          return;
+          return undefined;
         }
+        continue;
       }
-    } catch (error) {
-      logError("Plugin runtime: onRequest failed", { error: error.message });
+
+      if (res.headersSent) {
+        return undefined;
+      }
+
+      if (result === false) {
+        // `false` means "stop the other plugins". A plugin that stops the chain without
+        // answering used to strand the request until the client gave up.
+        logDebug("Plugin runtime: onRequest stopped the plugin chain without answering", {
+          plugin: plugin.name,
+          method: req.method,
+          path: req.originalUrl || req.path,
+        });
+        break;
+      }
     }
 
-    next();
+    return next();
   });
+}
 
+function _attachResponseHooks(app) {
   app.use((req, res, next) => {
+    const hooks = state.responseHooks;
+    if (hooks.length === 0) {
+      // Nothing to observe, so `res.json` and `res.send` are left alone. In the shipped
+      // configuration every plugin is disabled, and this is the branch that runs.
+      return next();
+    }
+
     let hooksApplied = false;
 
-    const applyResponseHooks = ({ responseBody, responseType }) => {
+    /**
+     * @param replaceable json/send can adopt a hook's returned body. The `end` path cannot:
+     *   it carries encodings and stream chunks, so hooks there only observe.
+     */
+    const applyResponseHooks = (responseBody, responseType, replaceable) => {
       if (hooksApplied) {
-        return;
+        return responseBody;
       }
       hooksApplied = true;
 
-      for (const plugin of activePlugins) {
-        if (typeof plugin.onResponse !== "function") {
-          continue;
-        }
+      let body = responseBody;
 
+      for (const plugin of hooks) {
         try {
-          plugin.onResponse({
+          const result = plugin.onResponse({
             req,
             res,
-            responseBody,
+            responseBody: body,
             responseType,
             pluginContext: req.pluginContext || {},
             config: plugin.config,
@@ -395,6 +872,10 @@ function attach(app) {
             logError,
             logDebug,
           });
+
+          if (replaceable && result !== undefined) {
+            body = result;
+          }
         } catch (error) {
           logError("Plugin runtime: onResponse failed", {
             plugin: plugin.name,
@@ -402,56 +883,131 @@ function attach(app) {
           });
         }
       }
+
+      return body;
     };
 
-    const originalJson = res.json.bind(res);
-    const originalSend = res.send.bind(res);
+    const originalJson = res.json;
+    const originalSend = res.send;
+    const originalEnd = res.end;
 
-    res.json = (body) => {
-      applyResponseHooks({ responseBody: body, responseType: "json" });
-      return originalJson(body);
+    res.json = function patchedJson(...args) {
+      if (args.length === 0) {
+        return originalJson.apply(this, args);
+      }
+
+      const [body, ...rest] = args;
+      return originalJson.call(this, applyResponseHooks(body, "json", true), ...rest);
     };
 
-    res.send = (body) => {
-      applyResponseHooks({ responseBody: body, responseType: "send" });
-      return originalSend(body);
+    res.send = function patchedSend(...args) {
+      if (args.length === 0) {
+        return originalSend.apply(this, args);
+      }
+
+      const [body, ...rest] = args;
+      return originalSend.call(this, applyResponseHooks(body, "send", true), ...rest);
     };
 
-    next();
+    res.end = function patchedEnd(...args) {
+      // The last choke point: sendFile (every HTML page), redirects, streams and bodyless
+      // responses never reach json or send, and used to skip onResponse entirely.
+      const chunk = typeof args[0] === "string" || Buffer.isBuffer(args[0]) ? args[0] : undefined;
+      applyResponseHooks(chunk, "end", false);
+      return originalEnd.apply(this, args);
+    };
+
+    return next();
   });
+}
+
+function _attachPluginRoutes(app) {
+  // One middleware doing its own prefix matching, rather than one express mount per plugin:
+  // mount paths are configurable and can change on a reload, and this reads the current map
+  // per request instead of freezing whatever existed when attach ran.
+  app.use((req, res, next) => {
+    if (state.pluginRouters.size === 0) {
+      return next();
+    }
+
+    for (const [mountPath, router] of state.pluginRouters) {
+      const isExact = req.path === mountPath;
+      if (!isExact && !req.path.startsWith(`${mountPath}/`)) {
+        continue;
+      }
+
+      // The router registers its routes relative to the mount path, so hand it the rest of
+      // the url and put the original back before anything else sees it.
+      const originalUrl = req.url;
+      const queryAt = originalUrl.indexOf("?");
+      const search = queryAt === -1 ? "" : originalUrl.slice(queryAt);
+      const remainder = isExact ? "/" : req.path.slice(mountPath.length) || "/";
+
+      req.url = `${remainder}${search}`;
+
+      return router(req, res, (error) => {
+        req.url = originalUrl;
+        next(error);
+      });
+    }
+
+    return next();
+  });
+}
+
+function attach(app) {
+  if (!state.initialized) {
+    // Initializing here used to happen silently, with no services, so any plugin that
+    // needed one loaded and did nothing. A missing initialize is a wiring mistake.
+    throw new Error("Plugin runtime: attach(app) called before initialize(). Call initialize({ services }) first.");
+  }
+
+  _attachRequestHooks(app);
+  _attachResponseHooks(app);
+  _attachPluginRoutes(app);
 }
 
 async function shutdown() {
   _clearEventSubscriptions();
 
-  const activePlugins = state.plugins.filter((plugin) => plugin.enabled);
-
-  for (const plugin of activePlugins) {
-    if (typeof plugin.shutdown !== "function") {
-      continue;
-    }
-
+  for (const plugin of state.plugins.filter((candidate) => candidate.enabled)) {
     try {
-      await plugin.shutdown({ logInfo, logError, logDebug, config: plugin.config });
+      await _shutdownPlugin(plugin);
     } catch (error) {
       logError("Plugin runtime: plugin shutdown failed", { plugin: plugin.name, error: error.message });
     }
   }
+
+  // Cleared so a following initialize (or a second shutdown) cannot shut the same
+  // instances down twice. Nothing is loaded any more, and getPlugins() says so.
+  state.plugins = [];
+  state.requestHooks = [];
+  state.responseHooks = [];
+  state.pluginRouters = new Map();
+  state.initialized = false;
 }
 
 function getPlugins() {
   return state.plugins.map((plugin) => ({
     name: plugin.name,
     enabled: plugin.enabled,
-    order: Number.isFinite(plugin.order) ? plugin.order : 1000,
+    order: Number.isFinite(plugin.order) ? plugin.order : DEFAULT_ORDER,
+    enabledBy: plugin.enabledBy,
+    hooks: HOOK_NAMES.filter((hook) => typeof plugin[hook] === "function"),
+    mountPath: plugin.mountPath || null,
+    routeMountPath: state.pluginRouters.get(plugin.mountPath)?.pluginName === plugin.name ? plugin.mountPath : null,
   }));
 }
 
 module.exports = {
   initialize,
+  reload,
   attach,
   shutdown,
   getPlugins,
+
+  HOOK_NAMES,
+  PLUGIN_ROUTE_NAMESPACE,
 
   // Expose private helpers for property-based tests
   _isObject,
@@ -459,5 +1015,11 @@ module.exports = {
   _loadPluginManifest,
   _resolveEnabled,
   _resolveConfig,
+  _resolveOrder,
+  _mergeConfig,
   _isAutoDiscoverable,
+  _detectCollisions,
+  _resolveMountPath,
+  _validateManifest,
+  _validateConventionalConfig,
 };

@@ -559,6 +559,15 @@ body.terminal-page {
   flex: 0 0 auto;
 }
 
+.terminal-shell.terminal-wired-mode {
+  --terminal-amber: #8fd6d2;
+}
+
+.terminal-shell.terminal-wired-mode .terminal-prompt::before {
+  content: "layer ";
+  color: rgba(143, 214, 210, 0.55);
+}
+
 .terminal-command,
 .terminal-response {
   white-space: pre-wrap;

@@ -177,6 +177,62 @@
   opacity: 0.9;
 }
 
+.backend-card--nervous[data-service-state="degraded"],
+.backend-card--nervous:focus-visible {
+  border-color: rgba(190, 18, 60, 0.28);
+}
+
+/* Destructive tool (Emergency Shutdown): red rather than the green house accent,
+   so it never reads as just another dashboard link. */
+.backend-card--danger {
+  border-color: rgba(190, 18, 60, 0.28);
+}
+
+.backend-card--danger::before {
+  background: linear-gradient(135deg, rgba(190, 18, 60, 0.12) 0%, rgba(190, 18, 60, 0.05) 100%);
+}
+
+.backend-card--danger .backend-card__icon {
+  background: linear-gradient(135deg, rgba(190, 18, 60, 0.18), rgba(190, 18, 60, 0.08));
+  border-color: rgba(190, 18, 60, 0.24);
+  box-shadow:
+    0 0 20px rgba(190, 18, 60, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  color: #be123c;
+}
+
+.backend-card__tag {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 0.35rem;
+  border: 1px solid rgba(190, 18, 60, 0.28);
+  background: rgba(190, 18, 60, 0.08);
+  color: #be123c;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Set by backend.html when the page was not opened on localhost — the console
+   would 404 there, so the card is shown but inert. */
+.backend-card.is-unavailable {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+.backend-card.is-unavailable:hover {
+  transform: none;
+}
+
+.backend-card.is-unavailable:hover::before {
+  opacity: 0;
+}
+
 .backend-card__icon {
   width: 40px;
   height: 40px;

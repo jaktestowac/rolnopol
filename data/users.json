@@ -176,5 +176,29 @@
     "updatedAt": "2025-09-17T10:43:35.335Z",
     "lastLogin": "2025-09-17T10:43:35.334Z",
     "protected": true
+  },
+  {
+    "id": 17,
+    "username": "NULLFRAME",
+    "displayedName": "NULLFRAME Heavy Industries",
+    "email": "nullframe-heavy-industries@rolnopol.demo.pl",
+    "password": "nullframePass123",
+    "isActive": true,
+    "createdAt": "2028-01-01T00:00:00.000Z",
+    "updatedAt": "2028-07-19T10:15:35.348Z",
+    "lastLogin": "2028-07-19T10:15:35.348Z",
+    "protected": true
+  },
+  {
+    "id": 18,
+    "username": "AXIOM",
+    "displayedName": "AXIOM Industrial",
+    "email": "axiom-industrial@rolnopol.demo.pl",
+    "password": "axiomPass123",
+    "isActive": true,
+    "createdAt": "2028-01-01T00:00:00.000Z",
+    "updatedAt": "2028-07-19T10:15:35.348Z",
+    "lastLogin": "2028-07-19T10:15:35.348Z",
+    "protected": true
   }
 ]

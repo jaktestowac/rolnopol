@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crew Office — GraphQL Explorer - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/crew.css" />
+  </head>
+  <!--
+    Crew Office — GraphQL explorer (PRD §10.1, §10.3).
+
+    A dev affordance and a live schema view for testers: query editor, variables
+    pane, response pane, and the SDL of the schema as it is CURRENTLY assembled —
+    the real thing, not a checked-in copy, so what a tester reads is what their
+    queries are validated against.
+
+    The controller lives in /js/pages/crew-explorer.js like every other page
+    controller, and its example operations come from the same `CrewApi.OPERATIONS`
+    constants the other pages use — so the explorer cannot demonstrate a query the
+    app does not actually issue.
+  -->
+  <body class="crew-page crew-page--crew-explorer">
+    <div id="header-component"></div>
+
+    <main class="crew-shell">
+      <header class="crew-header">
+        <h1 class="crew-title"><i class="fa-solid fa-diagram-project"></i> GraphQL explorer</h1>
+        <p class="crew-lede">
+          One endpoint, one schema: <code>POST /api/graphql/crew</code>. Queries and mutations both go here, and variables are always sent
+          as JSON rather than interpolated into the query text.
+        </p>
+      </header>
+
+      <!-- One tab strip for the whole module, rendered by CrewApi.renderModuleTabs. -->
+      <nav id="crewTabs" class="crew-tabs crew-no-print" aria-label="Crew Office views"></nav>
+
+      <div class="crew-explorer">
+        <section class="crew-explorer__pane">
+          <!--
+            The ladder (§10.3): seven operations, easiest first, one concept per rung.
+            Rendered by the controller from one list so a rung cannot exist as a button
+            without a query behind it — and so every rung is validated against the real
+            schema by a test rather than by somebody clicking it.
+          -->
+          <div class="crew-explorer__examples">
+            <span class="crew-label" id="exampleLadderLabel">Try an operation — easiest first</span>
+            <div id="exampleButtons" class="crew-example-buttons" role="group" aria-labelledby="exampleLadderLabel"></div>
+            <p id="exampleHint" class="crew-hint"></p>
+          </div>
+
+          <label class="crew-label" for="query">Operation</label>
+          <textarea id="query" class="crew-code" spellcheck="false" rows="14"></textarea>
+
+          <label class="crew-label" for="variables">Variables (JSON)</label>
+          <textarea id="variables" class="crew-code" spellcheck="false" rows="5">{}</textarea>
+
+          <div class="crew-explorer__actions">
+            <button id="runBtn" class="crew-btn crew-btn--primary" type="button"><i class="fa-solid fa-play"></i> Run</button>
+            <button id="sdlBtn" class="crew-btn" type="button"><i class="fa-solid fa-file-code"></i> Load SDL</button>
+            <select id="samples" class="crew-select" aria-label="Operations this app issues">
+              <option value="">Operations the app issues…</option>
+            </select>
+          </div>
+          <p id="status" class="crew-status" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="crew-explorer__pane">
+          <label class="crew-label" for="response">Response</label>
+          <pre id="response" class="crew-code crew-code--readonly" tabindex="0">Run an operation to see the response.</pre>
+          <p class="crew-hint" id="extensions"></p>
+        </section>
+      </div>
+
+      <details class="crew-details">
+        <summary>Schema (SDL) — as currently assembled</summary>
+        <pre id="sdl" class="crew-code crew-code--readonly" tabindex="0">Press “Load SDL”.</pre>
+      </details>
+    </main>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/crew-api.js"></script>
+    <script src="/js/pages/crew-explorer.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("crew");
+    </script>
+  </body>
+</html>

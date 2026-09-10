@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crew Office — Roster - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/crew.css" />
+  </head>
+  <!--
+    Crew Office roster (PRD §10.1).
+
+    Every owned staff member, with or without an employment profile — a member with
+    no profile is listed on purpose (§17 Q1). Past crew is hidden by default and
+    revealed by a toggle, because Crew Office can never delete anyone.
+
+    Note what is NOT on this page and never will be: any delete, remove, fire or
+    assign-to-field action (§8.1.2, §12.2).
+  -->
+  <body class="crew-page crew-page--crew">
+    <div id="header-component"></div>
+
+    <main class="crew-shell">
+      <header class="crew-header">
+        <h1 class="crew-title"><i class="fa-solid fa-people-group"></i> Crew roster</h1>
+        <p class="crew-lede">Everyone on the farm, their employment profile, and how long they have been here.</p>
+      </header>
+
+      <!-- One tab strip for the whole module, rendered by CrewApi.renderModuleTabs. -->
+      <nav id="crewTabs" class="crew-tabs crew-no-print" aria-label="Crew Office views"></nav>
+
+      <div class="crew-toolbar">
+        <label class="crew-control">
+          <span class="crew-label">Role</span>
+          <select id="crewRoleFilter" class="crew-select">
+            <option value="">All roles</option>
+            <option value="STOCKPERSON">Stockperson</option>
+            <option value="TRACTOR_DRIVER">Tractor driver</option>
+            <option value="AGRONOMIST">Agronomist</option>
+            <option value="DAIRY_HAND">Dairy hand</option>
+            <option value="MECHANIC">Mechanic</option>
+            <option value="SEASONAL_PICKER">Seasonal picker</option>
+            <option value="MANAGER">Manager</option>
+          </select>
+        </label>
+
+        <label class="crew-control">
+          <span class="crew-label">Status</span>
+          <select id="crewStatusFilter" class="crew-select">
+            <option value="">Any status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="PROBATION">Probation</option>
+            <option value="NOTICE">Notice</option>
+            <option value="ENDED">Ended</option>
+          </select>
+        </label>
+
+        <label class="crew-control crew-control--check">
+          <input type="checkbox" id="crewIncludePast" />
+          <span>Include past crew</span>
+        </label>
+
+        <button id="crewReload" class="crew-btn" type="button"><i class="fa-solid fa-rotate"></i> Reload</button>
+        <button id="crewHireToggle" class="crew-btn crew-btn--primary" type="button" aria-expanded="false" aria-controls="crewHirePanel">
+          <i class="fa-solid fa-user-plus"></i> Hire crew member
+        </button>
+      </div>
+
+      <!--
+        The hire form. One operation writes BOTH stores: the staff record via the
+        existing ResourceService, and the employment profile keyed to it (§8.1.1).
+        Role is chosen here, at hire time — it is the field everything else joins on.
+
+        An inline panel rather than a modal: eight fields, no focus trap to get
+        wrong, and the roster stays visible behind it.
+      -->
+      <section id="crewHirePanel" class="crew-panel crew-form-panel" hidden>
+        <h2 class="crew-subhead">Hire a crew member</h2>
+        <form id="crewHireForm" novalidate>
+          <div class="crew-form-grid">
+            <label class="crew-control">
+              <span class="crew-label">First name</span>
+              <input class="crew-input" id="hireName" name="name" type="text" maxlength="100" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Surname</span>
+              <input class="crew-input" id="hireSurname" name="surname" type="text" maxlength="100" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Age</span>
+              <input class="crew-input" id="hireAge" name="age" type="number" min="16" max="120" step="1" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Role</span>
+              <select class="crew-select" id="hireRole" name="role" required></select>
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Employment type</span>
+              <select class="crew-select" id="hireEmploymentType" name="employmentType" required></select>
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">FTE <span class="crew-muted">(0.1–1.0)</span></span>
+              <input class="crew-input" id="hireFte" name="fte" type="number" min="0.1" max="1" step="0.1" value="1" required />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Contracted hours / week</span>
+              <input class="crew-input" id="hireHours" name="contractedHoursPerWeek" type="number" min="1" max="80" step="1" value="40" />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Start date</span>
+              <input class="crew-input" id="hireStartDate" name="startDate" type="date" required />
+            </label>
+          </div>
+
+          <p id="crewHireErrors" class="crew-status crew-status--error" role="alert" aria-live="polite"></p>
+
+          <div class="crew-form-actions">
+            <button id="crewHireSubmit" class="crew-btn crew-btn--primary" type="submit"><i class="fa-solid fa-check"></i> Hire</button>
+            <button id="crewHireCancel" class="crew-btn" type="button">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <p id="crewSummary" class="crew-hint"></p>
+      <p id="crewStatus" class="crew-status" role="status" aria-live="polite"></p>
+
+      <div class="crew-table-wrap">
+        <table class="crew-table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Role</th>
+              <th scope="col">Status</th>
+              <th scope="col">FTE</th>
+              <th scope="col">Tenure</th>
+              <th scope="col">Fields</th>
+              <th scope="col"><span class="crew-sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="crewRows"></tbody>
+        </table>
+      </div>
+
+      <p id="crewEmpty" class="crew-notice" hidden>No crew match these filters.</p>
+    </main>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/crew-api.js"></script>
+    <script src="/js/pages/crew.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("crew");
+    </script>
+  </body>
+</html>

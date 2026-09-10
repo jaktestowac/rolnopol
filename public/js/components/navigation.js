@@ -62,6 +62,7 @@ class NavigationComponent {
       const taskLabEnabled = await this.featureFlagsService.isEnabled("taskLabEnabled", false);
       const farmStayEnabled = await this.featureFlagsService.isEnabled("farmStayEnabled", false);
       const agriAcademyEnabled = await this.featureFlagsService.isEnabled("agriAcademyEnabled", false);
+      const crewOfficeEnabled = await this.featureFlagsService.isEnabled("crewOfficeEnabled", false);
       return {
         alertsEnabled,
         rolnopolMapEnabled,
@@ -70,6 +71,7 @@ class NavigationComponent {
         taskLabEnabled,
         farmStayEnabled,
         agriAcademyEnabled,
+        crewOfficeEnabled,
       };
     } catch (error) {
       return { alertsEnabled: true, rolnopolMapEnabled: true, rolnopolFarmlogEnabled: false, greenhouseControlRoomEnabled: false };
@@ -250,6 +252,16 @@ class NavigationComponent {
       `
       : "";
 
+    // Crew Office is logged-in-only (PRD §9.1), so this link exists only in the
+    // authenticated renderer — deliberately absent from _renderUnauthenticatedNav.
+    const crewLink = flagState?.crewOfficeEnabled
+      ? `
+        <a href="/crew.html" class="nav__item">
+          <i class="fa-solid fa-people-group"></i> Crew
+        </a>
+      `
+      : "";
+
     this.navElement.innerHTML = `
       <span class="nav__welcome">
         Welcome, <span class="nav__username">${username}</span>
@@ -284,6 +296,7 @@ class NavigationComponent {
         ${tasklabLink}
         ${farmStayLink}
         ${agriAcademyLink}
+        ${crewLink}
         <a href="/docs.html" class="nav__item">
           <i class="fa-solid fa-book"></i> Documentation
         </a>

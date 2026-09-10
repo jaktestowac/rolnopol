@@ -241,7 +241,7 @@ module.exports = [
   // Homepage presentation (any of the homepage flags)
   // ---------------------------------------------------------------------------
   {
-    anyFlags: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled", "homeModernRestyleEnabled"],
+    anyFlags: ["homeWelcomeVideoEnabled", "homeStatsSectionEnabled", "homeModernRestyleEnabled", "homeInstrumentalityRestyleEnabled"],
     section: {
       section: "homepage-features",
       title: "Homepage Enhancements",
@@ -252,11 +252,12 @@ module.exports = [
             "homeWelcomeVideoEnabled: shows a promotional welcome video block.",
             "homeStatsSectionEnabled: shows an advanced statistics section.",
             "homeModernRestyleEnabled: swaps the homepage to a modern redesigned layout and styling.",
+            "homeInstrumentalityRestyleEnabled: swaps the homepage to an Instrumentality-inspired graphite-and-bone layout.",
           ]),
           callout(
             "tip",
             "Live restyle",
-            "The modern restyle applies at runtime and re-applies when feature flags change, so you can toggle it without reloading.",
+            "The homepage restyles apply at runtime and re-apply when feature flags change, so you can toggle them without reloading.",
           ),
         ]),
       ],
@@ -715,13 +716,40 @@ module.exports = [
               ["intervalMs", "Cadence between conditions frames (250–60000, default 5000)"],
               ["variance", "Sub-daily jitter amplitude 0–3 (0 = base daily values verbatim)"],
               ["limit", "Close the stream after N conditions frames (bounded demos / tests)"],
-              ["seed", "Extra seed so parallel streams differ deterministically"],
+              ["seed", "Pins the jitter to a reproducible series; omitted = a fresh random seed per request/connection"],
             ],
           ),
           callout(
             "info",
             "Off by default",
             "Both endpoints and the page return 404 when 'weatherLiveStreamEnabled' is off. The stream sends a ': keep-alive' heartbeat every 15s so idle connections aren't dropped.",
+          ),
+        ]),
+        heading("Reading the charts back — the window and the scrub", [
+          p(
+            "The live chart deck is driven by range sliders: how many readings it shows (history window), how it is laid out (columns, card height) and — separately — where over the retained history that window sits. Scrubbing back does not stop the stream: readings keep arriving into the buffer while the chart holds still on the readings the user dragged to, which is why the deck can disagree with the 'Current conditions' card above it.",
+          ),
+          ul([
+            "The window is anchored to the readings it shows, not to a distance from the live edge — an arriving reading cannot slide the chart sideways.",
+            "The scrub slider's max grows with the retained history (240 readings), so the thumb keeps its value while the track gets longer. Once the buffer drops the readings under a held window, the window is pushed forward.",
+            "Dragging the scrub back to the live edge resumes following, as does the 'Jump to live' button. Pause/Resume only opens and closes the stream — it never moves the window.",
+          ]),
+          table(
+            ["Query param", "Meaning"],
+            [
+              ["history", "History window size in readings (10–240, default 30)"],
+              ["columns", "Deck columns (1–3, default 2)"],
+              ["height", "Card height in px (100–280, default 160)"],
+              ["scrub", "How many readings behind the live edge the chart is held; kept up to date while held"],
+            ],
+          ),
+          p(
+            "An explicit query parameter beats the stored preference, and a value outside a slider's range is clamped and the URL corrected. A link asking to scrub further back than the page has collected yet waits (the scrub bar carries `data-scrub-pending`) until enough readings have arrived.",
+          ),
+          callout(
+            "info",
+            "Assertable without pixels",
+            "The deck host publishes what it is drawing as `data-reading-count`, `data-window-size`, `data-window-span`, `data-window-offset`, `data-window-max-offset`, `data-window-position`, `data-window-start`/`-end`, `data-window-first-at`/`-last-at` and `data-window-follow` (live | held). The toolbar publishes `data-stream-state` (connecting | live | paused | error).",
           ),
         ]),
       ],
@@ -846,6 +874,55 @@ module.exports = [
             "Requires monitoring too",
             "At runtime, buy/sell also require 'financialCommoditiesEnabled'; this section appears whenever the trading flag is on so the flag is documented.",
           ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "financialCommoditiesMarketDeskEnabled",
+    section: {
+      section: "financial-commodities-market-desk",
+      title: "Commodities Market Desk",
+      content: [
+        heading("Overview", [
+          p(
+            "Adds a 'Market desk' panel to the bottom of /financial-commodities.html. It adds no endpoints and no new data — it re-presents the prices the page already loads through two browser features the rest of Rolnopol does not use: an embedded iframe and shadow DOM.",
+          ),
+          ul([
+            "Embedded ticker board — a same-origin iframe at /widgets/commodity-ticker.html that fetches GET /commodities/prices itself using the session cookie, with its own Refresh button.",
+            "A nested srcdoc frame inside that board showing the market session (open on weekdays 06:00-18:00 UTC), written into by the outer frame's script.",
+            "'Quantity converter' — a <commodity-converter> custom element whose form lives in an OPEN shadow root, with a slot filled from the page.",
+            "'Widest spread' — a <commodity-spread-badge> custom element with a CLOSED shadow root.",
+          ]),
+        ]),
+        heading("Reading the widgets from outside", [
+          table(
+            ["Target", "How it is reachable"],
+            [
+              ["Ticker board contents", "Switch into the /widgets/commodity-ticker.html frame"],
+              ["Market session text", "Switch into the ticker frame, then into its nested srcdoc frame"],
+              ["Ticker load state", "<body data-frame-state> in the frame: loading / ready / error"],
+              ["Converter inputs and result", "Open shadow root — reachable by anything that pierces shadow DOM"],
+              ["Widest-spread value", "Closed shadow root — NOT reachable; read data-widest-spread on the host, or call getState()"],
+            ],
+          ),
+          callout(
+            "info",
+            "Why the closed root publishes its state",
+            "Nothing outside the element can read a closed shadow root — element.shadowRoot is null. The badge therefore mirrors what it knows onto the host element as 'data-widest-spread' and 'data-widest-spread-value', and exposes getState(). That mirror is the element's public contract; the shadow markup is not.",
+          ),
+        ]),
+        heading("Frame reload", [
+          p(
+            "The panel's reload button re-points the iframe's src. The previous document is torn down, so any handle taken into the old frame now refers to a detached document and must be re-acquired. Each successful load in the frame posts a message to the parent page, which updates the line under the board.",
+          ),
+        ]),
+        heading("Scenario: the spread badge cannot be read the usual way", [
+          scenario([
+            "Enable 'financialCommoditiesEnabled' and 'financialCommoditiesMarketDeskEnabled', then open the commodities page.",
+            "Try to read the text of the 'Widest spread' badge — the closed shadow root hides it.",
+            "Read the 'data-widest-spread' attribute on the <commodity-spread-badge> host instead, and confirm it names one of the symbols in the Current prices table.",
+          ]),
         ]),
       ],
     },
@@ -998,6 +1075,7 @@ module.exports = [
             [
               ["GET", "/farm-stay/search", "Search available properties"],
               ["GET/POST", "/farm-stay/properties", "Browse / create properties (hosting)"],
+              ["GET/POST/DELETE", "/farm-stay/locations", "Location catalog + custom locations, shared by all users"],
               ["POST", "/farm-stay/bookings", "Create a booking"],
               ["POST", "/farm-stay/bookings/:id/confirm", "Confirm and pay for a booking"],
               ["POST", "/farm-stay/bookings/:id/cancel", "Cancel a booking (partial refund)"],
@@ -1088,8 +1166,28 @@ module.exports = [
           ),
           ul([
             "Pick a location by preset (Warsaw, Tokyo, Sydney, ...), browser geolocation, or manual latitude/longitude.",
-            "A time-flow control lets you pause the sky, run it in real time, or fast-forward (×60 to ×3600) to watch moon phases and planet motion advance.",
+            "A continuous time-flow slider pauses the sky, runs it in real time, or fast-forwards it anywhere up to ×3600 to watch moon phases and planet motion advance.",
+            "Drag the dome to pan, scroll or pinch to zoom; arrow keys pan, +/- zoom and 0 resets, so nothing needs a mouse.",
+            "Click a star, planet or the Moon to inspect it — or click a constellation line (or its name) to highlight the whole figure. The Constellations panel selects the same figures by name, and Escape clears the highlight.",
+            "The catalog carries 388 stars across 87 constellations, so most of the sky has a figure to click on rather than a handful of famous ones.",
             "The 'Observatory' nav link and the page itself appear only when this flag is on; the shared site nav/footer are re-themed dark to match the page.",
+          ]),
+        ]),
+        heading("Reading the canvas without reading pixels", [
+          p(
+            'The dome publishes its render state instead of hiding it behind a bitmap. The canvas host (data-testid="sky-dome") carries the scalars as data-* attributes — zoom, pan, the aperture centre in altitude/azimuth, the magnitude cutoff, the time scale, the observer and the object counts — and a visually hidden mirror list (data-testid="dome-mirror") carries one node per plotted object with its alt/az, dome coordinates, canvas position and whether the aperture is currently showing it.',
+          ),
+          p(
+            "GET /observatory/viewport answers the same question server-side: given a canvas size and a viewport, which objects the dome holds, where each lands in canvas pixels, and which of them are in view. Coordinates are in CSS pixels on both sides, so a browser assertion and an API assertion can be compared directly.",
+          ),
+          p(
+            "Constellations are answered the same way. dome.constellations lists every figure the drawn lines form — star count, line count, brightest member, centre in dome and canvas coordinates — and the page's Constellations panel carries the matching data-* on each row, so 'which figure did that click select?' never needs a screenshot. A line joining two constellations is an asterism (the Summer Triangle, say): it is drawn, but it belongs to neither figure and is not selectable.",
+          ),
+          ul([
+            "Dome coordinates are a unit disc seen from above: zenith at the origin, horizon at radius 1, north at -y.",
+            "Zoom is clamped to 1–8 and the pan target is clamped into the unit disc, so the centre of the view can never leave the sky.",
+            "The circular aperture does not grow with zoom — that is why zooming in pushes objects out of view while the dome itself keeps every one of them.",
+            "?animate=0 freezes the dome: no clock advance, no twinkle, no redraw loop, and the time badge switches to an ISO instant. Pair it with ?timestamp= for a screenshot that reproduces.",
           ]),
         ]),
         heading("REST snapshot vs. live SSE stream", [
@@ -1108,23 +1206,195 @@ module.exports = [
             ["Method", "Path", "Description"],
             [
               ["GET", "/observatory", "One JSON sky snapshot (public)"],
+              ["GET", "/observatory/viewport", "The dome as data — every object plus its canvas position and in-view flag (public)"],
               ["GET", "/observatory/stream", "SSE stream of `snapshot` events (public)"],
             ],
           ),
           table(
             ["Query param", "Meaning"],
             [
-              ["presetId / latitude / longitude", "Observer location (preset id takes precedence)"],
+              [
+                "presetId / latitude / longitude",
+                "Observer location; `presetId=custom` pins the coordinates so they are not relabelled as a matching preset",
+              ],
               ["timestamp", "Moment to render; defaults to now"],
-              ["magnitudeLimit", "Only show objects at or below this brightness magnitude (0–6)"],
+              ["magnitudeLimit", "Only show objects at or below this brightness magnitude (1–6)"],
               ["timeScale", "Stream only — simulated-time speed multiplier (0 = paused)"],
               ["limit", "Stream only — close after N snapshot events (bounded demos / tests)"],
+              ["zoom / panX / panY", "Viewport only — aperture zoom (1–8) and its centre in dome units"],
+              ["width / height", "Viewport only — canvas size in CSS pixels the coordinates are computed for"],
+              ["objectType / constellation / search", "Viewport only — the same frontend filters the page applies"],
             ],
           ),
           callout(
             "info",
             "Off by default",
-            "Both endpoints and the page return 404 when 'observatoryEnabled' is off. The stream sends a ': keep-alive' heartbeat every 15s so idle connections aren't dropped.",
+            "All three endpoints and the page return 404 when 'observatoryEnabled' is off. The stream sends a ': keep-alive' heartbeat every 15s so idle connections aren't dropped.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "crewOfficeEnabled",
+    section: {
+      section: "crew-office",
+      title: "Crew Office",
+      content: [
+        heading("Overview", [
+          p(
+            "Crew Office adds real crew management on top of the existing staff records — work, holidays, training and tools — for logged-in users only. It is Rolnopol's first GraphQL surface: one endpoint and one schema, assembled at boot from four 'pillars'.",
+          ),
+          ul([
+            "'crewOfficeEnabled' is the module's ONLY flag, and it is all-or-nothing: with it off, the pages and every crew endpoint return 404 and no crew data file is created at all; with it on, all four pillars are live.",
+            "There are deliberately no per-pillar sub-flags. The pillars are separate code, separate stores and separate tests — but one release and one switch, so there is no half-enabled Crew Office to reason about.",
+            "The 'Crew' navbar link appears only when the flag is on AND you are logged in — unlike every other gated link, it is absent from the anonymous navbar, because to a visitor who could never use the module it must not exist at all.",
+            "The four sections that follow document the pillars; they appear alongside this one whenever the module is enabled.",
+          ]),
+        ]),
+        heading("Login is mandatory — pages and API", [
+          p(
+            "Crew Office is built entirely on user-owned staff data, so it has no meaningful anonymous view. Unusually for Rolnopol, the PAGES are gated on a valid session server-side, not just the API — and an anonymous visitor gets the same HTML 404 as if the module were switched off. The module's existence is never disclosed to someone who could not use it.",
+          ),
+          table(
+            ["Situation", "Response"],
+            [
+              ["Flag off (any caller)", "404 — checked before authentication"],
+              ["Flag on, no credentials", "401 'Access token required'"],
+              ["Flag on, invalid or expired token", "403 'Invalid or expired token' — not 401"],
+              ["Flag on, only an x-api-key", "401 — personal API keys are not accepted here"],
+              ["Flag on, valid session", "Proceed, scoped to your own crew"],
+            ],
+          ),
+          callout(
+            "info",
+            "Why personal API keys are refused",
+            "API key authentication resolves a required scope from the request, and no crew scope exists yet. Admitting keys would silently widen every already-issued key into a new data domain. Programmatic access arrives with dedicated 'crew:read' / 'crew:write' scopes.",
+          ),
+        ]),
+        heading("Endpoints", [
+          table(
+            ["Method", "Path", "Description"],
+            [
+              ["GET", "/crew/health", "Module status plus each pillar's enablement and store state (login required)"],
+              ["POST", "/graphql/crew", "The API — queries and mutations (login required)"],
+              ["GET", "/graphql/crew", "SDL of the currently assembled schema, as text/plain (login required)"],
+            ],
+          ),
+          p(
+            "There are deliberately no REST domain endpoints: everything the module reads or writes goes through the one graph endpoint. Middleware order is flag, then authentication, then rate limiting — so a disabled module reveals nothing, and anonymous traffic cannot consume a real user's quota.",
+          ),
+        ]),
+        heading("What it will never do", [
+          ul([
+            "It can HIRE — one operation creates the staff record and its employment profile — but it can never FIRE. There is no delete mutation of any kind; ending employment records an end date on the crew profile and leaves the staff record intact.",
+            "It never edits name, surname or age after hire. Those belong to the existing staff page.",
+            "It never creates, edits or removes a staff-to-field assignment. Assignments are read-only, for display.",
+            "No money: no ROL movement and no ledger access in v1.",
+          ]),
+          callout(
+            "warning",
+            "Under construction",
+            "The graph endpoint is live and serves the profiles and work pillars: the roster and hiring, plus duty types, shifts, the work log and rollups. The holidays, training and tools pillars are still being built, so their fields are not in the schema yet — GET /api/graphql/crew always prints the schema as it currently stands, and /crew/health lists the pillars that are actually assembled.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "crewOfficeEnabled",
+    section: {
+      section: "crew-office-work",
+      title: "Crew Office — Work",
+      content: [
+        heading("Overview", [
+          p(
+            "The work pillar covers who is doing what, when, and what actually got done. It is part of the Crew Office module and arrives with it — there is no separate flag for it.",
+          ),
+          ul([
+            "Duty types (early milking, feeding, night watch, ...) with times, an optional required role, and a colour for the UI.",
+            "Shifts — a duty type assigned to a crew member on a date, moving planned → confirmed → completed or cancelled.",
+            "Work log — hours and activity against a shift or standalone, with weekly and monthly rollups. Corrections append rather than overwrite, so the original entry survives and the amended one is shown struck through with its reason.",
+            "Overlaps are refused, and the boundaries are deliberate: two shifts meeting exactly at an hour are a handover, not a clash, while a night watch running 22:00 to 06:00 does conflict with the next morning's early start.",
+            "The work board (/crew-work.html) puts the crew down the side and days across the top, filters by member and date range, and loads the whole grid in one GraphQL round trip. Export is client-side: CSV from the data already on screen, and PDF through the browser's own print pipeline — so no REST endpoint is added.",
+          ]),
+        ]),
+        heading("Cross-pillar checks", [
+          p(
+            "A shift overlapping approved leave is refused, and so are two overlapping shifts for the same person. A shift whose duty type wants a role the member's profile does not have is a warning, not a block — the roster manager gets told, not stopped.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "crewOfficeEnabled",
+    section: {
+      section: "crew-office-leave",
+      title: "Crew Office — Holidays",
+      content: [
+        heading("Overview", [
+          p(
+            "The holidays pillar handles leave policy, accrual, requests and approvals. It is part of the Crew Office module and arrives with it — there is no separate flag for it.",
+          ),
+          ul([
+            "Policy per farm: annual entitlement at full time, accrual mode, carry-over cap and expiry, leave-year start, public holidays, harvest blackout windows, and minimum notice.",
+            "Accrual is monthly and pro-rata to the member's FTE, pro-rated from their start date and stopped at their end date. Carry-over is granted explicitly and expires on the policy date.",
+            "Requests move requested → approved, rejected, cancelled or withdrawn, support half-day start/end, and exclude public holidays and non-working days from the working-day count.",
+          ]),
+          callout(
+            "tip",
+            "Balance is computed, never stored",
+            "Entitlement, accrued, carried over, taken, booked and remaining are all derived from the policy, the member's FTE, their requests and any manual adjustments, for whatever 'as of' date you ask about. Storing a balance is the classic drift bug; computing it keeps the arithmetic honest and testable.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "crewOfficeEnabled",
+    section: {
+      section: "crew-office-training",
+      title: "Crew Office — Training",
+      content: [
+        heading("Overview", [
+          p(
+            "The training pillar records what the crew is qualified to do, and when that lapses. It is part of the Crew Office module and arrives with it — there is no separate flag for it.",
+          ),
+          ul([
+            "Courses carry a validity period in months and the roles they are mandatory for.",
+            "Enrollments move planned → in progress → passed, failed or cancelled. A passed enrollment mints a certification whose expiry is the completion date plus the course validity.",
+            "Certification status (valid, expiring soon, expired, revoked) is computed from the clock, so it is correct at every boundary rather than at write time. Revocation is terminal.",
+            "Reports: a crew-by-course training matrix, certifications expiring within N days, and compliance gaps — mandatory courses missing for a member's role.",
+          ]),
+          callout(
+            "info",
+            "Optional AgriAcademy link",
+            "When 'agriAcademyEnabled' is also on, a course may reference an AgriAcademy exam and surface the certificate from it. That link is read-only and degrades to null when the academy is unavailable — it never fails the query.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "crewOfficeEnabled",
+    section: {
+      section: "crew-office-tools",
+      title: "Crew Office — Tools",
+      content: [
+        heading("Overview", [
+          p(
+            "The tools pillar answers who has the chainsaw, and whether it is due a service. It is part of the Crew Office module and arrives with it — there is no separate flag for it.",
+          ),
+          ul([
+            "Tools carry an asset tag, category, service interval, storage location and status (available, on issue, in service, retired).",
+            "Issuance is an append-only ledger: issue with a due-back date, return with a condition. The current holder is DERIVED from the ledger rather than stored on the tool, so the two can never disagree.",
+            "Reports: tools on issue, overdue returns, and service status (ok, due soon, overdue).",
+          ]),
+          callout(
+            "warning",
+            "The certification gate fails closed",
+            "Issuing a tool that requires a certification to someone whose certification is missing, expired or revoked is refused. If the check cannot be evaluated at all, the request is still refused rather than allowed — failing open on a chainsaw would be a safety bug.",
           ),
         ]),
       ],
@@ -1282,6 +1552,65 @@ module.exports = [
             "warning",
             "Publicly reachable",
             "Once enabled, /metrics has no authentication and is publicly reachable — treat it as an internal/ops feature.",
+          ),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "survivalGameEnabled",
+    section: {
+      section: "survival-game",
+      title: "Rolnopol Survival",
+      content: [
+        heading("Overview", [
+          p(
+            "A hex-map survival game played entirely in the browser at /operator/survival.html, for logged-in users only. The server hands out the seed and keeps the expedition record; the map, the walking and the weather all happen client-side.",
+          ),
+          ul([
+            "Six expeditions: Lost (reach any border), Survival (only the western border counts), Search (four signs, three of them wrong), Rescue (carry them out, a point of movement a day), Deadline (the pickup leaves the western ridge on day 7) and The Chase (someone is on your trail).",
+            "Scenarios unlock from your own history, so a new player starts with Lost and earns the rest.",
+            "A daily challenge fixes scenario, difficulty and map size and derives the seed from the date, which is what makes the scoreboard comparable — and what a streak is counted from.",
+            "A run in progress can be saved and resumed; only what the player changed is stored, never the map, which the seed regenerates.",
+            "One expedition is open per player at a time; it closes as won, lost or abandoned.",
+          ]),
+        ]),
+        heading("Login is mandatory — page and API", [
+          p(
+            "The page is feature-gated server-side before static serving, and the game itself bounces an anonymous visitor to /login.html. On the API the flag is checked before credentials, so a switched-off module answers 404 rather than 401 and cannot be found by probing.",
+          ),
+          table(
+            ["Situation", "Response"],
+            [
+              ["Flag off (page or API)", "404 — checked before authentication"],
+              ["Flag on, no session", "Page redirects to /login.html; API answers 401"],
+              ["Flag on, only an x-api-key", "401 — personal API keys are not accepted here"],
+              ["Flag on, valid session", "Proceed, scoped to your own expeditions"],
+            ],
+          ),
+        ]),
+        heading("Endpoints", [
+          table(
+            ["Method", "Path", "Description"],
+            [
+              ["POST", "/survival/sessions", "Start an expedition; the server issues the seed"],
+              ["GET", "/survival/sessions", "Your own expedition history"],
+              ["GET", "/survival/sessions/{sessionId}", "One of your expeditions"],
+              ["PATCH", "/survival/sessions/{sessionId}", "Close it: won, lost or abandoned"],
+              ["PUT", "/survival/sessions/{sessionId}/snapshot", "Save a run in progress"],
+              ["GET", "/survival/scoreboard", "The league table, across players"],
+              ["GET", "/survival/progress", "Records, daily streak, marks and which scenarios are unlocked"],
+            ],
+          ),
+        ]),
+        heading("What the server does and does not check", [
+          p(
+            "The game is single-player, so the outcome is taken at the client's word rather than replayed server-side. What the record guarantees is that nothing outside the game's own ranges is written down: days, hexes travelled, health, water, food, events seen and forced marches are all range-checked against the game's balance config, the chronicle is capped, and the seed is always stored — which leaves verification possible later.",
+          ),
+          callout(
+            "info",
+            "Snapshot size",
+            "A saved run is capped at 256 KB. It holds only the player's changes, so the JSON store stays small even after a long expedition.",
           ),
         ]),
       ],

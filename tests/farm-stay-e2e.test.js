@@ -113,6 +113,52 @@ describe("farm-stay — full lifecycle", () => {
     delete process.env.FARM_STAY_TIME_OFFSET_MS;
   });
 
+  it("a custom location added by the host is global — the guest can see and book in it", async () => {
+    const seeded = await request(app()).get("/v1/locations").set("x-stay-user", HOST).expect(200);
+    expect(seeded.body.regions.length).toBe(16);
+    // The seeded sample belongs to seed-host, so it is nobody's to remove.
+    expect(seeded.body.custom).toEqual([
+      { voivodeship: "Podlaskie", city: "Supraśl", addedBy: "seed-host", addedAt: "2026-01-01T00:00:00.000Z", mine: false },
+    ]);
+
+    const added = await request(app())
+      .post("/v1/locations")
+      .set("x-stay-user", HOST)
+      .send({ voivodeship: "Świętokrzyskie", city: "Sandomierz" })
+      .expect(201);
+    expect(added.body.location).toMatchObject({ city: "Sandomierz", addedBy: HOST, mine: true });
+
+    // The guest — a different user, no shared browser storage — sees it, and it
+    // is `mine: false` for them, so their UI offers no remove button.
+    const asGuest = await request(app()).get("/v1/locations").set("x-stay-user", GUEST).expect(200);
+    expect(asGuest.body.custom.find((c) => c.city === "Sandomierz")).toMatchObject({ addedBy: HOST, mine: false });
+
+    // Only the author can remove it, and a real listing in it blocks removal.
+    await request(app()).delete("/v1/locations?voivodeship=Świętokrzyskie&city=Sandomierz").set("x-stay-user", GUEST).expect(403);
+
+    const listing = await request(app())
+      .post("/v1/properties")
+      .set("x-stay-user", GUEST)
+      .send({ name: "Sandomierz Vineyard Room", district: "Sandomierz", type: "room", capacity: 2, basePrice: 70, policy: "flexible" })
+      .expect(201);
+    const found = await request(app())
+      .get(`/v1/search?from=2032-04-01&to=2032-04-03&guests=2&district=Sandomierz`)
+      .set("x-stay-user", HOST)
+      .expect(200);
+    expect(found.body.results.map((r) => r.id)).toEqual([listing.body.id]);
+
+    const blocked = await request(app())
+      .delete("/v1/locations?voivodeship=Świętokrzyskie&city=Sandomierz")
+      .set("x-stay-user", HOST)
+      .expect(409);
+    expect(blocked.body.error).toBe("IN_USE");
+
+    await request(app()).delete(`/v1/properties/${listing.body.id}`).set("x-stay-user", GUEST).expect(200);
+    await request(app()).delete("/v1/locations?voivodeship=Świętokrzyskie&city=Sandomierz").set("x-stay-user", HOST).expect(200);
+    const after = await request(app()).get("/v1/locations").set("x-stay-user", GUEST).expect(200);
+    expect(after.body.custom.map((c) => c.city)).not.toContain("Sandomierz");
+  });
+
   it("platform analytics aggregates across all data via role=all + include_inactive (real wire)", async () => {
     process.env.FARM_STAY_TIME_OFFSET_MS = String(Date.parse("2030-07-01T00:00:00Z") - Date.now());
     // ADMIN_USERS is unset in the harness → the gate is open (dev default).

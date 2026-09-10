@@ -1,0 +1,236 @@
+# Work pillar — who is doing what, when, and what got done (PRD §8.2).
+#
+# Every root field EXTENDS the types the core and the foundation pillar declared;
+# nothing here redeclares `Query`, `Mutation` or `CrewMember`. That is the whole
+# extension contract (§11), and it is why adding this pillar needed no edit to the
+# executor, the router, the controller, or the profiles pillar.
+#
+# NOTE: there is no mutation here that deletes a shift or a work-log entry.
+# Cancelling a shift moves it to CANCELLED; correcting an entry APPENDS a
+# correction (§6.6). The history is auditable rather than editable.
+
+enum ShiftStatus {
+  PLANNED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+"A kind of work with a time window — early milking, night watch, harvest long day."
+type DutyType {
+  id: ID!
+  code: String!
+  name: String!
+  "HH:MM, 24-hour."
+  startTime: String!
+  "HH:MM. At or before startTime means the duty crosses midnight."
+  endTime: String!
+  "Hours the duty covers, computed from its window."
+  hours: Float!
+  "True when the duty runs past midnight into the next day."
+  crossesMidnight: Boolean!
+  "Advisory only — a mismatch is a warning on the shift, never a refusal."
+  requiredRole: CrewRole
+  "#rrggbb, for the roster UI."
+  colour: String
+}
+
+"A duty type assigned to a crew member on a date."
+type Shift {
+  id: ID!
+  staffId: ID!
+  dutyType: DutyType
+  date: Date!
+  status: ShiftStatus!
+  "Where the work happens. READ-ONLY — Crew Office never creates or edits a field."
+  fieldId: ID
+  note: String
+  cancelReason: String
+  hours: Float!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  "Pass back as expectedVersion to make a transition conditional."
+  version: Int!
+}
+
+"One record of work done. Corrections append rather than overwrite."
+type WorkLogEntry {
+  id: ID!
+  staffId: ID!
+  shiftId: ID
+  date: Date!
+  hours: Float!
+  activity: String!
+  note: String
+  "Set when this row is a correction to an earlier entry."
+  amendsId: ID
+  "Why the correction was made."
+  amendedByReason: String
+  "False when a later correction supersedes this row — such rows are kept, not deleted."
+  effective: Boolean!
+  createdAt: DateTime!
+}
+
+type ActivityHours {
+  activity: String!
+  hours: Float!
+}
+
+"Hours actually worked in a range. Each logical entry counts once, however often it was amended."
+type WorkRollup {
+  from: Date
+  to: Date
+  hours: Float!
+  entries: Int!
+  byActivity: [ActivityHours!]!
+}
+
+"The work pillar's contribution to CrewMember."
+type WorkSummary {
+  shifts(from: Date, to: Date, status: ShiftStatus): [Shift!]!
+  "The next PLANNED or CONFIRMED shift from today onwards."
+  nextShift: Shift
+  workLog(from: Date, to: Date): [WorkLogEntry!]!
+  "Monday-based week containing the given date."
+  weeklyRollup(weekStarting: Date!): WorkRollup!
+  "Calendar month containing the given date."
+  monthlyRollup(month: Date!): WorkRollup!
+}
+
+extend type CrewMember {
+  work: WorkSummary
+}
+
+extend type Query {
+  dutyTypes: [DutyType!]!
+  shifts(from: Date, to: Date, status: ShiftStatus, staffId: ID): [Shift!]!
+  """
+  Work-log rows across the whole crew, or one member when staffId is given.
+
+  The team-wide counterpart to `CrewMember.work.workLog`: a roster board needs one
+  read for everyone, not one read per person. Superseded rows are INCLUDED — the
+  log is append-only, and `effective` says which rows currently count.
+  """
+  workLog(from: Date, to: Date, staffId: ID): [WorkLogEntry!]!
+  "Rollup across the whole crew, or one member when staffId is given."
+  workRollup(from: Date, to: Date, staffId: ID): WorkRollup!
+}
+
+input DutyTypeInput {
+  "lower_snake_case, 2–40 characters."
+  code: NonEmptyString!
+  name: NonEmptyString!
+  startTime: String!
+  endTime: String!
+  requiredRole: CrewRole
+  colour: String
+}
+
+input PlanShiftInput {
+  staffId: ID!
+  dutyTypeId: ID!
+  date: Date!
+  fieldId: ID
+  note: String
+}
+
+input LogWorkInput {
+  staffId: ID!
+  date: Date!
+  "Greater than zero, at most 24, in 0.25 steps."
+  hours: Float!
+  activity: NonEmptyString!
+  "Optional — standalone work needs no shift."
+  shiftId: ID
+  note: String
+}
+
+type WorkValidationFailed {
+  fieldErrors: [FieldError!]!
+}
+
+type DutyTypeDefined {
+  dutyType: DutyType!
+}
+
+union DefineDutyTypeResult = DutyTypeDefined | WorkValidationFailed
+
+"An advisory attached to a successful shift — the roster manager is told, not stopped."
+type ShiftWarning {
+  code: String!
+  message: String!
+}
+
+"""
+Success. `warnings` is non-empty when the shift was planned despite an advisory —
+for example the member's role does not match the duty type's requiredRole. The
+shift IS planned; a client that treats warnings as failure has misread this type.
+"""
+type ShiftPlanned {
+  shift: Shift!
+  warnings: [ShiftWarning!]!
+}
+
+"Refused: the member already has a blocking shift covering part of this window."
+type ShiftOverlap {
+  conflictingShiftId: ID!
+}
+
+"Refused: the member has approved leave on this date."
+type ShiftConflictsLeave {
+  staffId: ID!
+  date: Date!
+}
+
+type DutyTypeNotFound {
+  dutyTypeId: ID!
+}
+
+union PlanShiftResult = ShiftPlanned | ShiftOverlap | ShiftConflictsLeave | MemberNotFound | DutyTypeNotFound | WorkValidationFailed
+
+type ShiftTransitioned {
+  shift: Shift!
+}
+
+type ShiftNotFound {
+  shiftId: ID!
+}
+
+"Refused: that move is not part of the lifecycle. `allowed` lists what is."
+type IllegalShiftTransition {
+  shiftId: ID!
+  from: ShiftStatus!
+  to: ShiftStatus!
+  allowed: [ShiftStatus!]!
+}
+
+union ShiftTransitionResult = ShiftTransitioned | ShiftNotFound | IllegalShiftTransition | VersionConflict
+
+type WorkLogged {
+  entry: WorkLogEntry!
+}
+
+union LogWorkResult = WorkLogged | MemberNotFound | ShiftNotFound | WorkValidationFailed
+
+"The correction, plus the original it supersedes — which is still in the store."
+type WorkLogAmended {
+  correction: WorkLogEntry!
+  original: WorkLogEntry!
+}
+
+type WorkLogEntryNotFound {
+  entryId: ID!
+}
+
+union AmendWorkLogResult = WorkLogAmended | WorkLogEntryNotFound | WorkValidationFailed
+
+extend type Mutation {
+  defineDutyType(input: DutyTypeInput!): DefineDutyTypeResult!
+  planShift(input: PlanShiftInput!): PlanShiftResult!
+  confirmShift(shiftId: ID!, expectedVersion: Int): ShiftTransitionResult!
+  completeShift(shiftId: ID!, expectedVersion: Int): ShiftTransitionResult!
+  cancelShift(shiftId: ID!, reason: String, expectedVersion: Int): ShiftTransitionResult!
+  logWork(input: LogWorkInput!): LogWorkResult!
+  "Appends a correction. The original entry is never edited or removed."
+  amendWorkLog(entryId: ID!, hours: Float, activity: NonEmptyString, note: String, reason: NonEmptyString!): AmendWorkLogResult!
+}

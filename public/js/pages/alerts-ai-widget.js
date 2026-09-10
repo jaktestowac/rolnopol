@@ -102,6 +102,10 @@
       }
 
       appendMessage("user", message);
+      if (/\bangels?\b/i.test(message)) {
+        appendMessage("assistant", "Pattern Blue? Around here that usually means a suspicious weather front with excellent dramatic timing.");
+        return;
+      }
       setSendingState(true);
 
       try {

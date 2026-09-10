@@ -12,6 +12,10 @@ function buildSecretHelpReply() {
     '- "tractor7"',
     '- "kraken"',
     '- "night owl"',
+    '- "connect wired"',
+    '- "pattern blue"',
+    '- "sync ratio"',
+    '- "texhnolyze"',
   ].join("\n");
 }
 
@@ -33,6 +37,18 @@ function resolveEasterEgg(normalizedPrompt, context) {
   }
   if (normalizedPrompt.includes("night owl") || normalizedPrompt.includes("night shift")) {
     return "🌙 Night owl bonus: dreams grow best before sunrise. Your farm data is still safely user-scoped.";
+  }
+  if (normalizedPrompt.includes("lain") || normalizedPrompt.includes("wired") || normalizedPrompt.includes("connect wired")) {
+    return "The farm network is awake, but politely so: fences, routers, weather beacons, and one quiet signal under the hayloft.";
+  }
+  if (normalizedPrompt.includes("pattern blue")) {
+    return "Pattern Blue confirmed: probably pests, possibly weather, definitely still scoped to harmless farm diagnostics.";
+  }
+  if (normalizedPrompt.includes("sync ratio") || normalizedPrompt.includes("synchronization")) {
+    return "Sync ratio nominal. Operator intent, crop telemetry, and barn Wi-Fi are briefly agreeing with each other.";
+  }
+  if (normalizedPrompt.includes("lux")) {
+    return "Lux archive note: the machinery below the silo is only a metaphor until someone adds a maintenance ticket.";
   }
   return null;
 }

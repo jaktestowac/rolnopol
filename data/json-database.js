@@ -43,6 +43,9 @@ class Semaphore {
  */
 const globalWriteSemaphore = new Semaphore();
 
+/** Distinguishes temp files written by this process from each other. */
+let writeSequence = 0;
+
 /**
  * In-Memory JSON Database with file persistence
  * Loads all data into memory at startup, only writes to files
@@ -107,20 +110,53 @@ class JSONDatabase {
     return ["EBUSY", "EPERM", "EACCES", "UNKNOWN"].includes(error?.code);
   }
 
+  /**
+   * Write a database file without ever truncating the one already on disk.
+   *
+   * `fs.writeFile` opens the target with O_TRUNC, so the file is 0 bytes for as long as the
+   * write takes. Any reader in that window sees an empty file, and a process that dies (or
+   * a second process writing the same path, which the in-process semaphore cannot see)
+   * leaves it empty for good. This writes a temp file beside the target and renames it over,
+   * which is atomic: readers see either the old file or the new one.
+   */
   static async writeFileWithRetry(filePath, content, options = {}) {
-    const attempts = Number.isInteger(options.attempts) ? options.attempts : 5;
+    // A database file is never legitimately empty. Refusing here means no bug upstream can
+    // turn a populated file into a blank one.
+    if (typeof content !== "string" || content.trim() === "") {
+      throw new Error(`Refusing to write empty content to ${filePath}`);
+    }
+
+    // Renaming over an existing file is where Windows says EPERM: a reader with the target
+    // open, a virus scanner, or another writer renaming onto the same path. All of those
+    // clear in milliseconds, so this waits rather than giving up, and jitters the delay so
+    // competing writers do not retry in lockstep.
+    const attempts = Number.isInteger(options.attempts) ? options.attempts : 10;
     let lastError = null;
 
     for (let attempt = 1; attempt <= attempts; attempt++) {
+      // A fresh name per attempt, and per process, so two writers never share a temp file.
+      writeSequence += 1;
+      const tempPath = `${filePath}.${process.pid}.${writeSequence}.tmp`;
+
       try {
-        await fs.writeFile(filePath, content, "utf8");
+        await fs.writeFile(tempPath, content, "utf8");
+        await fs.rename(tempPath, filePath);
         return;
       } catch (error) {
         lastError = error;
+
+        // The target is untouched on any failure, so the worst case is the old contents.
+        try {
+          await fs.unlink(tempPath);
+        } catch {
+          // The temp file may never have been created. Nothing to clean up.
+        }
+
         if (!JSONDatabase.isTransientWriteError(error) || attempt === attempts) {
           break;
         }
-        await new Promise((resolve) => setTimeout(resolve, 20 * attempt));
+        const backoffMs = 15 * attempt + Math.floor(Math.random() * 15);
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
       }
     }
 
@@ -134,6 +170,21 @@ class JSONDatabase {
     const dir = path.dirname(this.filePath);
     if (!require("fs").existsSync(dir)) {
       require("fs").mkdirSync(dir, { recursive: true });
+    }
+  }
+
+  /**
+   * Keep the content of a file that could not be parsed, so restoring defaults over it does
+   * not destroy the only copy of whatever went wrong. One file per database, overwritten.
+   */
+  async preserveUnreadableFile(fileContent) {
+    const backupPath = `${this.filePath}.corrupt.bak`;
+
+    try {
+      await fs.writeFile(backupPath, fileContent, "utf8");
+      logError(`Kept the unreadable file for inspection: ${backupPath}`);
+    } catch (error) {
+      logError(`Could not keep a copy of the unreadable file: ${backupPath}`, error);
     }
   }
 
@@ -155,10 +206,17 @@ class JSONDatabase {
             logDebug(`Loaded data into memory: ${this.filePath}`);
           } catch (parseError) {
             logError(`JSON parsing error for ${this.filePath}:`, parseError);
+            // Falling back to defaults overwrites whatever was there, so keep a copy of it.
+            // Unparseable content is still evidence of what went wrong.
+            await this.preserveUnreadableFile(fileContent);
             this.data = Array.isArray(this.defaultData) ? [...this.defaultData] : this.defaultData;
             await this.persist({ immediate: true }); // Save default data
           }
         } else {
+          // An empty file carries nothing worth preserving, but it should never be here:
+          // writes go through a rename, so a truncated file means something outside this
+          // process wrote it.
+          logError(`Empty database file, restoring defaults: ${this.filePath}`);
           this.data = Array.isArray(this.defaultData) ? [...this.defaultData] : this.defaultData;
           await this.persist({ immediate: true }); // Save default data
         }

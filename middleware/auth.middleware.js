@@ -31,7 +31,7 @@ function extractApiKey(req) {
 function createAuthenticateUser(options = {}) {
   const allowApiKey = options.allowApiKey !== false;
 
-  return async (req, res, next) => {
+  const middleware = async (req, res, next) => {
     const token = extractSessionToken(req);
 
     if (token) {
@@ -100,6 +100,12 @@ function createAuthenticateUser(options = {}) {
       }),
     );
   };
+
+  // Self-description for the OpenAPI generator — see requireFeatureFlag.
+  // `authKind` names the security scheme(s) the generator should attach.
+  middleware.authKind = allowApiKey ? "user+apiKey" : "user";
+
+  return middleware;
 }
 
 /**
@@ -147,6 +153,9 @@ const authenticateAdmin = (req, res, next) => {
   req.adminToken = token;
   next();
 };
+
+// Self-description for the OpenAPI generator — see requireFeatureFlag.
+authenticateAdmin.authKind = "admin";
 
 module.exports = {
   authenticateUser,

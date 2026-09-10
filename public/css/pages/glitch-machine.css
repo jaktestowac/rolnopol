@@ -1,0 +1,878 @@
+/* Hidden operator page: /operator/tools/glitch-machine
+ *
+ * Deliberately NOT the dark-console idiom the other operator tools use. This is
+ * a corruption deck: dual-accent chromatic aberration, angular clipped panels,
+ * hazard stripes, a title that tears itself apart. Everything is scoped under
+ * .glx-page / .glx-* so it cannot leak into the shared stylesheet.
+ *
+ * Signals: the two accent colours are declared as space-separated RGB triplets
+ * so every rule can mix its own alpha with `rgb(var(--glx-a-rgb) / 0.2)`. The
+ * page script sets `data-glx-signal` on <html>; the blocks at the end of this
+ * file override the triplets. "vapor" is the default and lives in :root. */
+
+:root {
+  --glx-a-rgb: 255 45 111; /* accent A — the hot one */
+  --glx-b-rgb: 0 240 255; /* accent B — the cold one */
+  --glx-text-rgb: 240 238 248;
+  --glx-bg: #050208;
+  --glx-bg-mid: #0b0512;
+  --glx-panel: rgba(14, 7, 24, 0.82);
+  --glx-panel-strong: rgba(8, 4, 14, 0.95);
+
+  --glx-a: rgb(var(--glx-a-rgb));
+  --glx-b: rgb(var(--glx-b-rgb));
+  --glx-text: rgb(var(--glx-text-rgb));
+  --glx-text-dim: rgb(var(--glx-text-rgb) / 0.62);
+  --glx-text-soft: rgb(var(--glx-text-rgb) / 0.36);
+  --glx-line: rgb(var(--glx-b-rgb) / 0.28);
+  --glx-line-hot: rgb(var(--glx-a-rgb) / 0.4);
+  --glx-danger: #ff5470;
+  --glx-mono: "SF Mono", "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+  --glx-wide: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  /* Corner cut used by pods, buttons and the viewport. */
+  --glx-cut: 14px;
+  --glx-clip: polygon(
+    var(--glx-cut) 0,
+    100% 0,
+    100% calc(100% - var(--glx-cut)),
+    calc(100% - var(--glx-cut)) 100%,
+    0 100%,
+    0 var(--glx-cut)
+  );
+}
+
+.glx-page {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(60% 42% at 78% -8%, rgb(var(--glx-a-rgb) / 0.16), transparent 65%),
+    radial-gradient(50% 40% at 12% 8%, rgb(var(--glx-b-rgb) / 0.13), transparent 60%),
+    linear-gradient(165deg, var(--glx-bg-mid), var(--glx-bg) 55%, #010103);
+  color: var(--glx-text);
+  font-family: var(--glx-wide);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem 3rem;
+  overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------------- atmosphere */
+
+/* Three fixed layers: broadcast static, angled light beams, and a horizontal
+   tear that sweeps down every few seconds. pointer-events: none throughout. */
+.glx-static,
+.glx-beams,
+.glx-tear {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glx-static {
+  background-image:
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 0.022) 0 1px, transparent 1px 2px),
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.014) 0 1px, transparent 1px 3px);
+  animation: glx-static-jitter 0.9s steps(4) infinite;
+}
+
+.glx-beams {
+  background:
+    linear-gradient(115deg, transparent 42%, rgb(var(--glx-a-rgb) / 0.06) 46%, transparent 52%),
+    linear-gradient(65deg, transparent 60%, rgb(var(--glx-b-rgb) / 0.06) 66%, transparent 74%);
+  animation: glx-beams-drift 14s ease-in-out infinite alternate;
+}
+
+.glx-tear {
+  background: linear-gradient(180deg, transparent 0%, rgb(var(--glx-b-rgb) / 0.09) 49%, rgb(var(--glx-a-rgb) / 0.12) 50%, transparent 52%);
+  background-size: 100% 340px;
+  background-repeat: no-repeat;
+  animation: glx-tear-sweep 7s linear infinite;
+  opacity: 0.8;
+}
+
+@keyframes glx-static-jitter {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(0, 1px); }
+  50% { transform: translate(1px, 0); }
+  75% { transform: translate(-1px, 1px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes glx-beams-drift {
+  from { transform: translateX(-3%); }
+  to { transform: translateX(3%); }
+}
+
+@keyframes glx-tear-sweep {
+  0% { background-position: 0 -340px; }
+  55% { background-position: 0 110vh; }
+  100% { background-position: 0 110vh; }
+}
+
+/* --------------------------------------------------------------------- shell */
+
+.glx-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1280px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+/* -------------------------------------------------------------------- header */
+
+.glx-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.glx-eyebrow {
+  font-family: var(--glx-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgb(var(--glx-b-rgb) / 0.75);
+}
+
+.glx-title {
+  margin: 0.35rem 0 0;
+  position: relative;
+  font-size: clamp(2rem, 5.5vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--glx-text);
+}
+
+.glx-title span {
+  color: var(--glx-a);
+}
+
+/* Chromatic aberration: two ghost copies, offset in opposite directions, each
+   showing only a moving horizontal slice of itself. */
+.glx-title::before,
+.glx-title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.glx-title::before {
+  color: var(--glx-a);
+  transform: translate(-2px, -1px);
+  clip-path: inset(12% 0 74% 0);
+  animation: glx-slice-a 3.1s steps(9) infinite;
+  opacity: 0.75;
+}
+
+.glx-title::after {
+  color: var(--glx-b);
+  transform: translate(2px, 1px);
+  clip-path: inset(64% 0 22% 0);
+  animation: glx-slice-b 2.3s steps(7) infinite;
+  opacity: 0.75;
+}
+
+@keyframes glx-slice-a {
+  0% { clip-path: inset(8% 0 80% 0); }
+  20% { clip-path: inset(52% 0 36% 0); }
+  40% { clip-path: inset(24% 0 62% 0); }
+  60% { clip-path: inset(76% 0 8% 0); }
+  80% { clip-path: inset(40% 0 44% 0); }
+  100% { clip-path: inset(8% 0 80% 0); }
+}
+
+@keyframes glx-slice-b {
+  0% { clip-path: inset(70% 0 14% 0); }
+  25% { clip-path: inset(18% 0 68% 0); }
+  50% { clip-path: inset(84% 0 4% 0); }
+  75% { clip-path: inset(34% 0 52% 0); }
+  100% { clip-path: inset(70% 0 14% 0); }
+}
+
+.glx-tagline {
+  margin: 0.5rem 0 0;
+  font-family: var(--glx-mono);
+  font-size: 0.78rem;
+  color: var(--glx-text-dim);
+}
+
+.glx-header__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.glx-signal {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--glx-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--glx-text-dim);
+}
+
+.glx-chip {
+  font-family: var(--glx-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.32rem 0.7rem;
+  color: rgb(var(--glx-b-rgb) / 0.85);
+  background: rgb(var(--glx-b-rgb) / 0.08);
+  border: 1px solid var(--glx-line);
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+
+.glx-chip--live {
+  color: var(--glx-a);
+  background: rgb(var(--glx-a-rgb) / 0.1);
+  border-color: var(--glx-line-hot);
+  min-width: 5.5em;
+  text-align: center;
+}
+
+.glx-chip--live.is-busy {
+  animation: glx-flicker 0.5s steps(2) infinite;
+}
+
+.glx-chip--live.is-error {
+  color: var(--glx-danger);
+  border-color: rgb(255 84 112 / 0.5);
+  background: rgb(255 84 112 / 0.12);
+}
+
+@keyframes glx-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ------------------------------------------------------------------ viewport */
+
+.glx-viewport {
+  position: relative;
+  min-height: clamp(300px, 48vh, 560px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(135deg, rgb(var(--glx-a-rgb) / 0.05), transparent 30%),
+    linear-gradient(315deg, rgb(var(--glx-b-rgb) / 0.05), transparent 30%),
+    var(--glx-panel-strong);
+  border: 1px solid var(--glx-line);
+  clip-path: var(--glx-clip);
+  overflow: hidden;
+}
+
+.glx-viewport.is-auto {
+  border-color: var(--glx-line-hot);
+}
+
+.glx-hud {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 2px solid rgb(var(--glx-b-rgb) / 0.7);
+  z-index: 2;
+}
+
+.glx-hud--tl { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+.glx-hud--tr { top: 10px; right: 10px; border-left: 0; border-bottom: 0; border-color: rgb(var(--glx-a-rgb) / 0.7); }
+.glx-hud--bl { bottom: 10px; left: 10px; border-right: 0; border-top: 0; border-color: rgb(var(--glx-a-rgb) / 0.7); }
+.glx-hud--br { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+
+.glx-telemetry {
+  position: absolute;
+  top: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--glx-mono);
+  padding: 0.3rem 0.8rem;
+  background: rgb(0 0 0 / 0.55);
+  border: 1px solid var(--glx-line);
+}
+
+.glx-telemetry--left { left: 46px; }
+.glx-telemetry--right { right: 46px; }
+
+.glx-telemetry span {
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  color: var(--glx-text-soft);
+}
+
+.glx-telemetry strong {
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  color: var(--glx-b);
+  text-shadow: 0 0 12px rgb(var(--glx-b-rgb) / 0.55);
+}
+
+.glx-telemetry--right strong {
+  color: var(--glx-a);
+  text-shadow: 0 0 12px rgb(var(--glx-a-rgb) / 0.55);
+}
+
+.glx-output {
+  max-width: 100%;
+  max-height: clamp(300px, 48vh, 560px);
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+/* `display: flex` below outranks the browser's `[hidden] { display: none }`,
+   so the empty state needs an explicit override once an image is loaded. */
+.glx-empty[hidden] {
+  display: none;
+}
+
+.glx-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--glx-mono);
+  letter-spacing: 0.3em;
+  color: var(--glx-text-soft);
+  text-transform: uppercase;
+}
+
+.glx-empty__sigil {
+  font-size: 1.4rem;
+  color: rgb(var(--glx-a-rgb) / 0.5);
+  animation: glx-flicker 1.6s steps(2) infinite;
+}
+
+.glx-empty em {
+  font-style: normal;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  color: var(--glx-text-soft);
+}
+
+.glx-flag {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-family: var(--glx-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  padding: 0.3rem 1rem;
+  color: var(--glx-bg);
+  background: var(--glx-b);
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+
+/* ---------------------------------------------------------------------- deck */
+
+.glx-deck {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.glx-pod {
+  position: relative;
+  margin: 0;
+  padding: 1.1rem 1.15rem 1.25rem;
+  background: var(--glx-panel);
+  border: 1px solid var(--glx-line);
+  clip-path: var(--glx-clip);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+/* A thin accent seam along the top edge, split between the two accents. */
+.glx-pod::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--glx-cut);
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--glx-a), var(--glx-b) 60%, transparent);
+  opacity: 0.7;
+}
+
+.glx-pod legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  margin: 0 0 0.2rem;
+  font-family: var(--glx-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgb(var(--glx-b-rgb) / 0.9);
+}
+
+.glx-pod legend i {
+  color: var(--glx-a);
+  margin-right: 0.4rem;
+}
+
+/* ---------------------------------------------------------------------- drop */
+
+.glx-drop {
+  position: relative;
+  border: 1px dashed rgb(var(--glx-a-rgb) / 0.45);
+  padding: 1.3rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.glx-drop__stripes {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgb(var(--glx-a-rgb) / 0.07) 0 12px,
+    transparent 12px 26px
+  );
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.glx-drop.is-hot,
+.glx-drop:hover,
+.glx-drop:focus-visible {
+  border-color: var(--glx-a);
+  background: rgb(var(--glx-a-rgb) / 0.06);
+  outline: none;
+}
+
+.glx-drop.is-hot .glx-drop__stripes {
+  animation: glx-stripes-march 0.8s linear infinite;
+}
+
+@keyframes glx-stripes-march {
+  from { background-position: 0 0; }
+  to { background-position: 37px 0; }
+}
+
+.glx-drop__glyph {
+  font-size: 1.6rem;
+  color: var(--glx-a);
+  text-shadow: 0 0 18px rgb(var(--glx-a-rgb) / 0.6);
+}
+
+.glx-drop__label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.glx-drop__hint {
+  font-family: var(--glx-mono);
+  font-size: 0.68rem;
+  color: var(--glx-text-soft);
+}
+
+.glx-drop__input {
+  display: none;
+}
+
+.glx-message {
+  margin: 0;
+  min-height: 1.1em;
+  font-family: var(--glx-mono);
+  font-size: 0.72rem;
+  color: rgb(var(--glx-b-rgb) / 0.85);
+}
+
+.glx-message.is-error {
+  color: var(--glx-danger);
+}
+
+/* ------------------------------------------------------------------ readouts */
+
+.glx-readout {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-family: var(--glx-mono);
+  font-size: 0.74rem;
+}
+
+.glx-readout__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-bottom: 1px solid rgb(var(--glx-text-rgb) / 0.07);
+  padding-bottom: 0.28rem;
+}
+
+.glx-readout__row dt {
+  color: var(--glx-text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+
+.glx-readout__row dd {
+  margin: 0;
+  color: var(--glx-text);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ controls */
+
+.glx-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.glx-field__label {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--glx-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--glx-text-dim);
+}
+
+.glx-field__label output {
+  color: var(--glx-b);
+}
+
+.glx-range {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, rgb(var(--glx-b-rgb) / 0.5), rgb(var(--glx-b-rgb) / 0.15));
+  outline: none;
+  cursor: pointer;
+}
+
+.glx-range--hot {
+  background: linear-gradient(90deg, rgb(var(--glx-a-rgb) / 0.25), var(--glx-a));
+}
+
+.glx-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--glx-bg);
+  border: 2px solid var(--glx-b);
+  box-shadow: 0 0 10px rgb(var(--glx-b-rgb) / 0.7);
+  transform: rotate(45deg);
+  cursor: grab;
+}
+
+.glx-range--hot::-webkit-slider-thumb {
+  border-color: var(--glx-a);
+  box-shadow: 0 0 12px rgb(var(--glx-a-rgb) / 0.8);
+}
+
+.glx-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 0;
+  background: var(--glx-bg);
+  border: 2px solid var(--glx-b);
+  box-shadow: 0 0 10px rgb(var(--glx-b-rgb) / 0.7);
+  transform: rotate(45deg);
+  cursor: grab;
+}
+
+.glx-range--hot::-moz-range-thumb {
+  border-color: var(--glx-a);
+  box-shadow: 0 0 12px rgb(var(--glx-a-rgb) / 0.8);
+}
+
+/* ----------------------------------------------------------------------- ops */
+
+.glx-ops {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.glx-op input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glx-op__box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.4rem;
+  font-family: var(--glx-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--glx-text-soft);
+  border: 1px solid rgb(var(--glx-text-rgb) / 0.14);
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  cursor: pointer;
+  transition: color 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+  user-select: none;
+}
+
+.glx-op input:checked + .glx-op__box {
+  color: var(--glx-a);
+  border-color: var(--glx-line-hot);
+  background: rgb(var(--glx-a-rgb) / 0.1);
+  text-shadow: 0 0 10px rgb(var(--glx-a-rgb) / 0.5);
+}
+
+.glx-op input:focus-visible + .glx-op__box {
+  outline: 2px solid var(--glx-b);
+  outline-offset: 1px;
+}
+
+.glx-op--auto input:checked + .glx-op__box {
+  color: var(--glx-b);
+  border-color: var(--glx-line);
+  background: rgb(var(--glx-b-rgb) / 0.1);
+  text-shadow: 0 0 10px rgb(var(--glx-b-rgb) / 0.5);
+  animation: glx-flicker 0.7s steps(2) infinite;
+}
+
+/* ---------------------------------------------------------------------- seed */
+
+.glx-seedbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.glx-seedbar__field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.glx-seed-input {
+  font-family: var(--glx-mono);
+  font-size: 1.05rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--glx-b);
+  background: rgb(0 0 0 / 0.5);
+  border: 1px solid var(--glx-line);
+  padding: 0.5rem 0.7rem;
+  width: 100%;
+  box-sizing: border-box;
+  text-shadow: 0 0 10px rgb(var(--glx-b-rgb) / 0.5);
+}
+
+.glx-seed-input:focus {
+  outline: none;
+  border-color: var(--glx-b);
+}
+
+.glx-seed-input.is-error {
+  color: var(--glx-danger);
+  border-color: rgb(255 84 112 / 0.6);
+  text-shadow: none;
+}
+
+/* ------------------------------------------------------------------- buttons */
+
+.glx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font-family: var(--glx-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--glx-bg);
+  background: linear-gradient(100deg, var(--glx-a), rgb(var(--glx-a-rgb) / 0.75));
+  border: 0;
+  padding: 0.6rem 0.9rem;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  cursor: pointer;
+  transition: filter 0.12s ease, transform 0.12s ease;
+}
+
+.glx-btn:hover:not(:disabled),
+.glx-btn:focus-visible {
+  filter: brightness(1.2) saturate(1.15);
+  outline: none;
+}
+
+.glx-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.glx-btn:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.9) brightness(0.5);
+}
+
+.glx-btn--ghost {
+  color: var(--glx-text-dim);
+  background: transparent;
+  border: 1px solid rgb(var(--glx-text-rgb) / 0.2);
+}
+
+.glx-btn--ghost:hover:not(:disabled) {
+  color: var(--glx-b);
+  border-color: var(--glx-line);
+  filter: none;
+}
+
+.glx-btn--wide {
+  width: 100%;
+}
+
+.glx-btn--dice {
+  font-size: 1.05rem;
+  padding: 0.55rem 0.85rem;
+  background: linear-gradient(100deg, var(--glx-b), rgb(var(--glx-b-rgb) / 0.75));
+}
+
+.glx-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+/* -------------------------------------------------------------------- footer */
+
+.glx-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-family: var(--glx-mono);
+  font-size: 0.72rem;
+  color: var(--glx-text-soft);
+}
+
+.glx-link {
+  color: rgb(var(--glx-b-rgb) / 0.85);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+}
+
+.glx-link:hover {
+  color: var(--glx-b);
+  text-shadow: 0 0 10px rgb(var(--glx-b-rgb) / 0.5);
+}
+
+/* ------------------------------------------------------------------- selects */
+
+.glx-select {
+  font-family: var(--glx-mono);
+  font-size: 0.74rem;
+  color: var(--glx-text);
+  background: var(--glx-panel-strong);
+  border: 1px solid var(--glx-line);
+  padding: 0.35rem 0.5rem;
+}
+
+.glx-select:focus {
+  outline: none;
+  border-color: var(--glx-b);
+}
+
+/* ---------------------------------------------------------------- responsive */
+
+@media (max-width: 980px) {
+  .glx-deck {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .glx-pod--inject {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .glx-deck {
+    grid-template-columns: 1fr;
+  }
+
+  .glx-telemetry--left { left: 40px; }
+  .glx-telemetry--right { right: 40px; }
+}
+
+/* Motion is decoration here, never information. */
+@media (prefers-reduced-motion: reduce) {
+  .glx-static,
+  .glx-beams,
+  .glx-tear,
+  .glx-title::before,
+  .glx-title::after,
+  .glx-empty__sigil,
+  .glx-chip--live.is-busy,
+  .glx-op--auto input:checked + .glx-op__box,
+  .glx-drop.is-hot .glx-drop__stripes {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------- signals */
+
+[data-glx-signal="toxin"] {
+  --glx-a-rgb: 170 255 0;
+  --glx-b-rgb: 177 109 255;
+  --glx-bg: #030702;
+  --glx-bg-mid: #081106;
+  --glx-panel: rgba(10, 18, 8, 0.82);
+  --glx-panel-strong: rgba(5, 10, 4, 0.95);
+}
+
+[data-glx-signal="inferno"] {
+  --glx-a-rgb: 255 61 0;
+  --glx-b-rgb: 255 196 0;
+  --glx-bg: #070202;
+  --glx-bg-mid: #120705;
+  --glx-panel: rgba(22, 9, 6, 0.82);
+  --glx-panel-strong: rgba(12, 5, 3, 0.95);
+}
+
+[data-glx-signal="void"] {
+  --glx-a-rgb: 240 240 245;
+  --glx-b-rgb: 122 122 140;
+  --glx-bg: #030304;
+  --glx-bg-mid: #0a0a0d;
+  --glx-panel: rgba(14, 14, 18, 0.82);
+  --glx-panel-strong: rgba(7, 7, 10, 0.95);
+}

@@ -202,6 +202,230 @@ const PAYLOAD_TEMPLATES = {
       ...overrides,
     }),
   },
+  [EVENT_TYPES.USER_ACCOUNT_UPDATED]: {
+    label: "User Account Updated",
+    description: "An existing user account has been modified",
+    template: (overrides = {}) => ({
+      userId: overrides.userId || `user-${Date.now()}`,
+      email: overrides.email || `user-${Date.now()}@example.com`,
+      changes: overrides.changes || { username: "updated_username" },
+      updatedAt: overrides.updatedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.USER_ACCOUNT_DEACTIVATED]: {
+    label: "User Account Deactivated",
+    description: "A user account has been deactivated by an administrator",
+    template: (overrides = {}) => ({
+      userId: overrides.userId || `user-${Date.now()}`,
+      email: overrides.email || `user-${Date.now()}@example.com`,
+      reason: overrides.reason || "admin_action",
+      deactivatedAt: overrides.deactivatedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.USER_ACCOUNT_REACTIVATED]: {
+    label: "User Account Reactivated",
+    description: "A previously deactivated user account has been restored",
+    template: (overrides = {}) => ({
+      userId: overrides.userId || `user-${Date.now()}`,
+      email: overrides.email || `user-${Date.now()}@example.com`,
+      reactivatedAt: overrides.reactivatedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.USER_ACCOUNT_DELETED]: {
+    label: "User Account Deleted",
+    description: "A user account has been permanently removed",
+    template: (overrides = {}) => ({
+      userId: overrides.userId || `user-${Date.now()}`,
+      email: overrides.email || `user-${Date.now()}@example.com`,
+      deletedAt: overrides.deletedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.FIELD_UPDATED]: {
+    label: "Field Updated",
+    description: "An agricultural field has been modified",
+    template: (overrides = {}) => ({
+      fieldId: overrides.fieldId || `field-${Date.now()}`,
+      name: overrides.name || `Field ${Math.floor(Math.random() * 100)}`,
+      changes: overrides.changes || { area: 75.25 },
+      updatedAt: overrides.updatedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.FIELD_DELETED]: {
+    label: "Field Deleted",
+    description: "An agricultural field has been removed",
+    template: (overrides = {}) => ({
+      fieldId: overrides.fieldId || `field-${Date.now()}`,
+      name: overrides.name || `Field ${Math.floor(Math.random() * 100)}`,
+      deletedAt: overrides.deletedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.STAFF_UPDATED]: {
+    label: "Staff Updated",
+    description: "An existing staff member has been modified",
+    template: (overrides = {}) => ({
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      name: overrides.name || `Staff Member ${Math.floor(Math.random() * 1000)}`,
+      surname: overrides.surname || "Kowalski",
+      changes: overrides.changes || { position: "Supervisor" },
+      updatedAt: overrides.updatedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.STAFF_DELETED]: {
+    label: "Staff Deleted",
+    description: "A staff member has been removed",
+    template: (overrides = {}) => ({
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      deletedAt: overrides.deletedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.ANIMAL_UPDATED]: {
+    label: "Animal Updated",
+    description: "An animal record has been modified",
+    template: (overrides = {}) => ({
+      animalId: overrides.animalId || `animal-${Date.now()}`,
+      type: overrides.type || "cow",
+      amount: overrides.amount ?? 5,
+      fieldId: overrides.fieldId || `field-${Date.now()}`,
+      changes: overrides.changes || { amount: 7 },
+      updatedAt: overrides.updatedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.ANIMAL_DELETED]: {
+    label: "Animal Deleted",
+    description: "An animal has been removed from inventory",
+    template: (overrides = {}) => ({
+      animalId: overrides.animalId || `animal-${Date.now()}`,
+      deletedAt: overrides.deletedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.ASSIGNMENT_CREATED]: {
+    label: "Assignment Created",
+    description: "A staff member has been assigned to a field",
+    template: (overrides = {}) => ({
+      assignmentId: overrides.assignmentId || `assignment-${Date.now()}`,
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      fieldId: overrides.fieldId || `field-${Date.now()}`,
+      createdAt: overrides.createdAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.ASSIGNMENT_REMOVED]: {
+    label: "Assignment Removed",
+    description: "A staff-to-field assignment has been removed",
+    template: (overrides = {}) => ({
+      assignmentId: overrides.assignmentId || `assignment-${Date.now()}`,
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      fieldId: overrides.fieldId || `field-${Date.now()}`,
+      removedAt: overrides.removedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.MARKETPLACE_OFFER_CANCELLED]: {
+    label: "Marketplace Offer Cancelled",
+    description: "A marketplace offer has been withdrawn",
+    template: (overrides = {}) => ({
+      offerId: overrides.offerId || `offer-${Date.now()}`,
+      itemType: overrides.itemType || "vegetables",
+      reason: overrides.reason || "cancelled_by_seller",
+      cancelledAt: overrides.cancelledAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.TRANSACTION_FAILED]: {
+    label: "Transaction Failed",
+    description: "A financial transaction could not be completed",
+    template: (overrides = {}) => ({
+      transactionId: overrides.transactionId || `txn-${Date.now()}`,
+      amount: overrides.amount ?? 150.5,
+      currency: overrides.currency || "ROL",
+      reason: overrides.reason || "insufficient_funds",
+      failedAt: overrides.failedAt || new Date().toISOString(),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_LEAVE_APPROVED]: {
+    label: "Crew Leave Approved",
+    description: "A crew member's leave request has been approved",
+    template: (overrides = {}) => ({
+      requestId: overrides.requestId || `leave-${Date.now()}`,
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      leaveType: overrides.leaveType || "annual",
+      from: overrides.from || new Date().toISOString().slice(0, 10),
+      to: overrides.to || new Date().toISOString().slice(0, 10),
+      workingDays: overrides.workingDays ?? 1,
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_LEAVE_REJECTED]: {
+    label: "Crew Leave Rejected",
+    description: "A crew member's leave request has been rejected",
+    template: (overrides = {}) => ({
+      requestId: overrides.requestId || `leave-${Date.now()}`,
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      leaveType: overrides.leaveType || "annual",
+      from: overrides.from || new Date().toISOString().slice(0, 10),
+      to: overrides.to || new Date().toISOString().slice(0, 10),
+      reason: overrides.reason || "Cover is already thin that week.",
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_EMPLOYMENT_ENDED]: {
+    label: "Crew Employment Ended",
+    description: "An end date has been recorded for a crew member",
+    template: (overrides = {}) => ({
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      lastDay: overrides.lastDay || new Date().toISOString().slice(0, 10),
+      reason: overrides.reason || "end_of_season",
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_CERTIFICATION_REVOKED]: {
+    label: "Crew Certification Revoked",
+    description: "A crew member's certification has been revoked, which may block tool issuance",
+    template: (overrides = {}) => ({
+      certificationId: overrides.certificationId || `cert-${Date.now()}`,
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      courseName: overrides.courseName || "Chainsaw Operation",
+      reason: overrides.reason || "Assessment result overturned on review.",
+      gapCount: overrides.gapCount ?? 1,
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_TOOL_ISSUED]: {
+    label: "Crew Tool Issued",
+    description: "A tool has been issued to a crew member",
+    template: (overrides = {}) => ({
+      issuanceId: overrides.issuanceId || `issuance-${Date.now()}`,
+      toolId: overrides.toolId || `tool-${Date.now()}`,
+      toolName: overrides.toolName || "Chainsaw",
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      dueBack: overrides.dueBack || new Date().toISOString().slice(0, 10),
+      ...overrides,
+    }),
+  },
+  [EVENT_TYPES.CREW_TOOL_RETURNED]: {
+    label: "Crew Tool Returned",
+    description: "A tool has come back from a crew member",
+    template: (overrides = {}) => ({
+      issuanceId: overrides.issuanceId || `issuance-${Date.now()}`,
+      toolId: overrides.toolId || `tool-${Date.now()}`,
+      toolName: overrides.toolName || "Chainsaw",
+      staffId: overrides.staffId || `staff-${Date.now()}`,
+      condition: overrides.condition || "good",
+      late: overrides.late ?? false,
+      ...overrides,
+    }),
+  },
 };
 
 const EVENT_TYPE_METADATA = {
@@ -289,6 +513,106 @@ const EVENT_TYPE_METADATA = {
     icon: "fa-star",
     color: "#FFEB3B",
     priority: "normal",
+  },
+  [EVENT_TYPES.USER_ACCOUNT_UPDATED]: {
+    icon: "fa-user-pen",
+    color: "#2196F3",
+    priority: "normal",
+  },
+  [EVENT_TYPES.USER_ACCOUNT_DEACTIVATED]: {
+    icon: "fa-user-slash",
+    color: "#FF5722",
+    priority: "high",
+  },
+  [EVENT_TYPES.USER_ACCOUNT_REACTIVATED]: {
+    icon: "fa-user-check",
+    color: "#4CAF50",
+    priority: "high",
+  },
+  [EVENT_TYPES.USER_ACCOUNT_DELETED]: {
+    icon: "fa-user-minus",
+    color: "#F44336",
+    priority: "high",
+  },
+  [EVENT_TYPES.FIELD_UPDATED]: {
+    icon: "fa-pen-to-square",
+    color: "#8BC34A",
+    priority: "normal",
+  },
+  [EVENT_TYPES.FIELD_DELETED]: {
+    icon: "fa-trash",
+    color: "#F44336",
+    priority: "normal",
+  },
+  [EVENT_TYPES.STAFF_UPDATED]: {
+    icon: "fa-user-gear",
+    color: "#FF9800",
+    priority: "normal",
+  },
+  [EVENT_TYPES.STAFF_DELETED]: {
+    icon: "fa-user-xmark",
+    color: "#F44336",
+    priority: "normal",
+  },
+  [EVENT_TYPES.ANIMAL_UPDATED]: {
+    icon: "fa-pen",
+    color: "#9C27B0",
+    priority: "normal",
+  },
+  [EVENT_TYPES.ANIMAL_DELETED]: {
+    icon: "fa-trash",
+    color: "#F44336",
+    priority: "normal",
+  },
+  [EVENT_TYPES.ASSIGNMENT_CREATED]: {
+    icon: "fa-link",
+    color: "#3F51B5",
+    priority: "normal",
+  },
+  [EVENT_TYPES.ASSIGNMENT_REMOVED]: {
+    icon: "fa-link-slash",
+    color: "#795548",
+    priority: "normal",
+  },
+  [EVENT_TYPES.MARKETPLACE_OFFER_CANCELLED]: {
+    icon: "fa-ban",
+    color: "#FF5722",
+    priority: "normal",
+  },
+  [EVENT_TYPES.TRANSACTION_FAILED]: {
+    icon: "fa-circle-exclamation",
+    color: "#F44336",
+    priority: "high",
+  },
+  [EVENT_TYPES.CREW_LEAVE_APPROVED]: {
+    icon: "fa-calendar-check",
+    color: "#4CAF50",
+    priority: "normal",
+  },
+  [EVENT_TYPES.CREW_LEAVE_REJECTED]: {
+    icon: "fa-calendar-xmark",
+    color: "#FF5722",
+    priority: "normal",
+  },
+  [EVENT_TYPES.CREW_EMPLOYMENT_ENDED]: {
+    icon: "fa-door-open",
+    color: "#795548",
+    priority: "high",
+  },
+  [EVENT_TYPES.CREW_CERTIFICATION_REVOKED]: {
+    icon: "fa-certificate",
+    color: "#F44336",
+    priority: "high",
+  },
+  [EVENT_TYPES.CREW_TOOL_ISSUED]: {
+    icon: "fa-screwdriver-wrench",
+    color: "#607D8B",
+    priority: "low",
+  },
+  [EVENT_TYPES.CREW_TOOL_RETURNED]: {
+    icon: "fa-rotate-left",
+    color: "#607D8B",
+    priority: "low",
   },
 };
 

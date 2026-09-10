@@ -54,4 +54,24 @@ describe("Farmlog HTML pages gating", () => {
     expect(blog.text).toContain("/js/pages/farmlog.js");
     expect(post.text).toContain("/js/pages/farmlog.js");
   });
+
+  it("the hub ships the discovery feed: both paging modes and the new-posts pill", async () => {
+    await setFarmlogEnabled(true);
+    const hub = await request(app).get("/farmlog.html").expect(200);
+
+    // The twin has to be reachable from the page, not just from the query string —
+    // it is the control the whole feature is built to contrast.
+    expect(hub.text).toContain('id="farmlogPagingMode"');
+    expect(hub.text).toContain('value="offset"');
+    expect(hub.text).toContain('value="cursor"');
+    // Posts arriving mid-read are counted here rather than pushed into the window.
+    expect(hub.text).toContain('id="farmlogFeedNew"');
+
+    const controller = await request(app).get("/js/pages/farmlog.js").expect(200);
+    expect(controller.text).toContain("IntersectionObserver");
+    expect(controller.text).toContain("_loadMorePosts");
+    // Every card carries its id, so "did this window repeat a row?" is answerable
+    // from the DOM — the assertion the offset/cursor comparison rests on.
+    expect(controller.text).toContain("data-post-id");
+  });
 });

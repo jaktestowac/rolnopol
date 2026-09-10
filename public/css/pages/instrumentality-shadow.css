@@ -1,0 +1,1682 @@
+/*
+ * Instrumentality Shadow — the Chaos Engine mirror sink's page.
+ *
+ * Deliberately outside the app's design system. The composition is a Swiss
+ * grid held to two columns: a narrow vertical rail carrying the page's identity
+ * sideways, and one asymmetric panel of content, separated by a single
+ * full-height hairline. Hierarchy is inverted — the tally is the display type
+ * and the name of the page is a caption. Achromatic throughout: bone on
+ * graphite, no accent colour, no gradient, no fill except one 4px square. The
+ * only image is two thin squares off-axis, cropped by the frame.
+ */
+:root {
+  --ish-graphite: #101012;
+  --ish-deep: #060607;
+  --ish-bone: #e8e5df;
+  --ish-white: #fffaf0;
+  --ish-mid: #77747c;
+  --ish-dim: #4a484f;
+  --ish-hair: rgba(232, 229, 223, 0.1);
+  --ish-veil: rgba(232, 229, 223, 0.035);
+  --ish-glow: rgba(255, 250, 240, 0.18);
+  --ish-mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --ish-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.ish-body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 76% 18%, rgba(232, 229, 223, 0.07), transparent 24rem),
+    radial-gradient(circle at 18% 84%, rgba(232, 229, 223, 0.035), transparent 19rem),
+    linear-gradient(180deg, var(--ish-graphite), var(--ish-deep));
+  color: var(--ish-bone);
+  font-family: var(--ish-sans);
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ish-body::before,
+.ish-body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ish-body::before {
+  background:
+    linear-gradient(rgba(232, 229, 223, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(232, 229, 223, 0.018) 1px, transparent 1px);
+  background-size: 4rem 4rem, 4rem 4rem;
+  mask-image: radial-gradient(circle at 62% 32%, black, transparent 72%);
+}
+
+.ish-body::after {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 250, 240, 0.018) 0,
+      rgba(255, 250, 240, 0.018) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  mix-blend-mode: screen;
+  opacity: 0.42;
+}
+
+/* Two columns, one seam. The seam is the only line on the page. */
+.ish-frame {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: clamp(3.5rem, 12vw, 8rem) minmax(0, 1fr);
+  min-height: 100vh;
+  max-width: 78rem;
+  margin: 0 auto;
+}
+
+/* Rail ───────────────────────────────────────────────────────────────── */
+.ish-rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2.5rem 0;
+  border-right: 1px solid var(--ish-hair);
+  font-family: var(--ish-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.ish-rail::before,
+.ish-rail::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  width: 1px;
+  background: linear-gradient(transparent, var(--ish-white), transparent);
+  opacity: 0.45;
+}
+
+.ish-rail::before {
+  top: 12%;
+  height: 7rem;
+  animation: ish-rail-trace 7s linear infinite;
+}
+
+.ish-rail::after {
+  bottom: 11%;
+  height: 3rem;
+}
+
+/* Read bottom-up, like a spine. */
+.ish-rail-id,
+.ish-rail-state {
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+}
+
+.ish-rail-id {
+  color: var(--ish-mid);
+}
+
+.ish-rail-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  color: var(--ish-dim);
+}
+
+/* The one filled shape in the design. */
+.ish-dot {
+  width: 4px;
+  height: 4px;
+  background: var(--ish-bone);
+  animation: ish-blink 4.5s steps(1, end) infinite;
+}
+
+/* Panel ──────────────────────────────────────────────────────────────── */
+.ish-panel {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(2.5rem, 9vh, 5rem) clamp(1.5rem, 7vw, 6rem) 3rem;
+}
+
+.ish-panel::before,
+.ish-panel::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.ish-panel::before {
+  inset: 0;
+  background:
+    linear-gradient(115deg, transparent 0 28%, rgba(232, 229, 223, 0.04) 28.2%, transparent 28.8% 100%),
+    linear-gradient(90deg, transparent 0 6rem, rgba(232, 229, 223, 0.04) 6rem 6.06rem, transparent 6.06rem);
+  opacity: 0.65;
+}
+
+.ish-panel::after {
+  top: 1.5rem;
+  right: clamp(1.1rem, 4vw, 3rem);
+  width: min(34rem, 52vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 250, 240, 0.5), transparent);
+  box-shadow:
+    0 1.5rem 0 rgba(232, 229, 223, 0.055),
+    0 3rem 0 rgba(232, 229, 223, 0.035);
+  animation: ish-scanline 9s ease-in-out infinite;
+}
+
+/* Two squares, rotated off true, sliding out of the frame's top-right. */
+.ish-glyph {
+  position: absolute;
+  top: -14vmin;
+  right: -16vmin;
+  width: 52vmin;
+  aspect-ratio: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 1.8rem rgba(232, 229, 223, 0.06));
+}
+
+.ish-glyph span {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--ish-hair);
+}
+
+.ish-glyph span:first-child {
+  rotate: 12deg;
+  animation: ish-glyph-drift 18s linear infinite;
+}
+
+.ish-glyph span:last-child {
+  inset: 18%;
+  rotate: -7deg;
+  border-color: rgba(232, 229, 223, 0.05);
+  animation: ish-glyph-drift 24s linear infinite reverse;
+}
+
+.ish-glyph::before,
+.ish-glyph::after {
+  content: "";
+  position: absolute;
+  border: 1px solid rgba(232, 229, 223, 0.07);
+  border-radius: 50%;
+}
+
+.ish-glyph::before {
+  inset: 9%;
+}
+
+.ish-glyph::after {
+  inset: 34%;
+  border-color: rgba(255, 250, 240, 0.13);
+  box-shadow: 0 0 2.6rem rgba(255, 250, 240, 0.045);
+}
+
+.ish-signal-field {
+  position: absolute;
+  inset: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 4vw, 3rem) auto auto;
+  z-index: 0;
+  width: min(27rem, 58vw);
+  aspect-ratio: 1.55;
+  pointer-events: none;
+  opacity: 0.72;
+}
+
+.ish-signal-field span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--ish-bone);
+  box-shadow: 0 0 1.3rem var(--ish-glow);
+  animation: ish-node-pulse 5.8s steps(1, end) infinite;
+}
+
+.ish-signal-field span::before,
+.ish-signal-field span::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  height: 1px;
+  background: rgba(232, 229, 223, 0.12);
+  transform-origin: left center;
+}
+
+.ish-signal-field span::before {
+  width: 9rem;
+}
+
+.ish-signal-field span::after {
+  width: 5rem;
+  rotate: 55deg;
+}
+
+.ish-signal-field span:nth-child(1) {
+  top: 6%;
+  left: 18%;
+}
+
+.ish-signal-field span:nth-child(2) {
+  top: 34%;
+  left: 58%;
+  animation-delay: -1.3s;
+}
+
+.ish-signal-field span:nth-child(3) {
+  top: 68%;
+  left: 30%;
+  animation-delay: -2.6s;
+}
+
+.ish-signal-field span:nth-child(4) {
+  top: 52%;
+  left: 82%;
+  animation-delay: -3.9s;
+}
+
+.ish-secret {
+  position: absolute;
+  top: clamp(1rem, 4vw, 2rem);
+  right: clamp(1rem, 4vw, 2rem);
+  z-index: 2;
+  width: clamp(2.8rem, 8vmin, 5rem);
+  aspect-ratio: 1;
+  opacity: 0.01;
+  outline-offset: 0.35rem;
+}
+
+.ish-secret:focus-visible {
+  opacity: 1;
+  outline: 1px solid var(--ish-bone);
+}
+
+.ish-secret::before,
+.ish-secret::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border: 1px solid var(--ish-hair);
+}
+
+.ish-secret::after {
+  inset: 38%;
+  background: var(--ish-bone);
+}
+
+/* Inverted hierarchy: the page's name is a caption, the tally is the display. */
+.ish-title {
+  position: relative;
+  margin: 0;
+  font-family: var(--ish-mono);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.46em;
+  text-transform: uppercase;
+  color: var(--ish-mid);
+}
+
+.ish-hud {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  max-width: 44rem;
+  margin: clamp(1.5rem, 4vh, 2.5rem) 0 0;
+  font-family: var(--ish-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ish-dim);
+}
+
+.ish-hud span {
+  position: relative;
+  padding: 0.42rem 0.7rem 0.42rem 1rem;
+  border: 1px solid rgba(232, 229, 223, 0.09);
+  background:
+    linear-gradient(90deg, rgba(232, 229, 223, 0.08), transparent 68%),
+    rgba(232, 229, 223, 0.012);
+  clip-path: polygon(0.55rem 0, 100% 0, 100% calc(100% - 0.35rem), calc(100% - 0.35rem) 100%, 0 100%, 0 0.55rem);
+}
+
+.ish-hud span::before {
+  content: "";
+  position: absolute;
+  left: 0.42rem;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  background: var(--ish-bone);
+  transform: translateY(-50%);
+  opacity: 0.58;
+}
+
+.ish-sink {
+  position: relative;
+  margin: clamp(4rem, 16vh, 8rem) 0 0;
+}
+
+.ish-count-value {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  font-size: clamp(5rem, 22vw, 11rem);
+  font-weight: 100;
+  line-height: 0.85;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  text-shadow:
+    0 0 1px rgba(255, 250, 240, 0.45),
+    0 0 4rem rgba(255, 250, 240, 0.09);
+}
+
+.ish-count-value--large {
+  font-size: clamp(4.2rem, 17vw, 9rem);
+}
+
+.ish-count-value--huge {
+  font-size: clamp(3.1rem, 12vw, 6.6rem);
+  letter-spacing: -0.04em;
+}
+
+.ish-count-value--extreme {
+  font-size: clamp(2.25rem, 8vw, 4.4rem);
+  letter-spacing: 0;
+}
+
+.ish-count-value::after {
+  content: "mirror-count";
+  position: absolute;
+  left: 0.1em;
+  bottom: -0.75rem;
+  font-family: var(--ish-mono);
+  font-size: 0.06em;
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ish-dim);
+}
+
+/* No glitch, no jolt — the number simply resolves out of the dark. */
+.ish-count-value.is-shifted {
+  animation: ish-resolve 1s cubic-bezier(0.16, 1, 0.3, 1) 1;
+}
+
+.ish-count-label {
+  display: block;
+  margin-top: 1.8rem;
+  font-family: var(--ish-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ish-dim);
+}
+
+.ish-lede {
+  position: relative;
+  max-width: 20rem;
+  margin: clamp(3rem, 10vh, 5rem) 0 0;
+  font-size: 1.05rem;
+  font-weight: 200;
+  line-height: 1.65;
+  color: var(--ish-mid);
+}
+
+.ish-since {
+  margin: 1rem 0 0;
+  font-family: var(--ish-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--ish-dim);
+}
+
+/* Echoes ─────────────────────────────────────────────────────────────── */
+.ish-echoes {
+  position: relative;
+  margin: clamp(4rem, 14vh, 7rem) 0 0;
+}
+
+.ish-recent-title {
+  margin: 0 0 1.4rem;
+  font-family: var(--ish-mono);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ish-dim);
+}
+
+/* Numbered like plates in a catalogue; nothing else marks the rows. */
+.ish-recent {
+  counter-reset: ish-echo;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--ish-mono);
+}
+
+.ish-echo {
+  position: relative;
+  counter-increment: ish-echo;
+  display: grid;
+  grid-template-columns: 2.2rem 3.2rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 1.2rem;
+  padding: 0.55rem 0;
+  font-size: 0.76rem;
+  color: var(--ish-dim);
+}
+
+.ish-echo::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(232, 229, 223, 0.08), transparent);
+  opacity: 0.7;
+}
+
+.ish-echo::before {
+  content: counter(ish-echo, decimal-leading-zero);
+  font-size: 0.6rem;
+  color: var(--ish-dim);
+}
+
+.ish-echo:first-child {
+  color: var(--ish-bone);
+}
+
+.ish-echo:first-child::before,
+.ish-echo:first-child .ish-echo-method {
+  color: var(--ish-mid);
+}
+
+.ish-echo-method {
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ish-mid);
+}
+
+.ish-echo-path {
+  overflow-wrap: anywhere;
+  font-variant-ligatures: none;
+}
+
+.ish-echo-at {
+  font-size: 0.6rem;
+  white-space: nowrap;
+}
+
+.ish-empty {
+  margin: 0;
+  font-family: var(--ish-mono);
+  font-size: 0.74rem;
+  color: var(--ish-dim);
+}
+
+/* Footer ─────────────────────────────────────────────────────────────── */
+.ish-foot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: clamp(5rem, 16vh, 9rem) 0 0;
+  font-family: var(--ish-mono);
+  font-size: 0.62rem;
+  line-height: 1.9;
+  color: var(--ish-dim);
+}
+
+.ish-foot em {
+  font-style: normal;
+  color: var(--ish-mid);
+}
+
+.ish-foot a {
+  color: var(--ish-mid);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ish-hair);
+  transition: color 0.3s ease;
+}
+
+.ish-foot a:hover,
+.ish-foot a:focus-visible {
+  color: var(--ish-bone);
+}
+
+.ish-core-frame {
+  max-width: 86rem;
+}
+
+.ish-empty-frame {
+  max-width: 64rem;
+}
+
+.ish-empty-panel {
+  min-height: min(100vh, 42rem);
+}
+
+.ish-empty-glyph {
+  top: 46%;
+  right: auto;
+  left: 58%;
+  width: min(44vmin, 25rem);
+  opacity: 0.34;
+  transform: translate(-50%, -50%);
+}
+
+.ish-empty-signal {
+  inset: auto clamp(1rem, 5vw, 4rem) clamp(2rem, 7vh, 4rem) auto;
+  width: min(20rem, 48vw);
+  opacity: 0.22;
+}
+
+.ish-empty-title {
+  position: absolute;
+  left: clamp(1.5rem, 7vw, 6rem);
+  bottom: clamp(6rem, 15vh, 9rem);
+  max-width: 13ch;
+  margin: 0;
+  color: rgba(232, 229, 223, 0.56);
+  font-size: clamp(2.1rem, 6vw, 4.4rem);
+  font-weight: 100;
+  line-height: 0.96;
+  letter-spacing: -0.055em;
+  text-shadow: 0 0 3rem rgba(255, 250, 240, 0.05);
+}
+
+.ish-empty-title::after {
+  content: "";
+  display: block;
+  width: min(13rem, 42vw);
+  height: 1px;
+  margin-top: 1rem;
+  background: linear-gradient(90deg, rgba(255, 250, 240, 0.42), transparent);
+}
+
+.ish-empty-foot {
+  position: absolute;
+  left: clamp(1.5rem, 7vw, 6rem);
+  bottom: clamp(2rem, 6vh, 3rem);
+  margin: 0;
+}
+
+.ish-core-panel {
+  padding-bottom: clamp(3rem, 8vh, 5rem);
+}
+
+.ish-core-glyph {
+  top: auto;
+  right: -12vmin;
+  bottom: -20vmin;
+}
+
+.ish-core-kicker {
+  margin: 0;
+  font-family: var(--ish-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ish-dim);
+}
+
+.ish-core-title {
+  position: relative;
+  max-width: 11ch;
+  margin: clamp(2rem, 7vh, 4rem) 0 0;
+  font-size: clamp(3.5rem, 13vw, 8.6rem);
+  font-weight: 100;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+  text-shadow: 0 0 3.4rem rgba(255, 250, 240, 0.075);
+}
+
+.ish-core-title::after {
+  content: "";
+  position: absolute;
+  left: 0.06em;
+  right: 0.2em;
+  bottom: -0.18em;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 250, 240, 0.56), transparent);
+  opacity: 0.28;
+}
+
+.ish-core-lede {
+  max-width: 42rem;
+  margin: clamp(2rem, 6vh, 3.5rem) 0 0;
+  color: var(--ish-mid);
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  font-weight: 200;
+  line-height: 1.75;
+}
+
+.ish-core-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: clamp(3rem, 10vh, 6rem) 0 0;
+  background: var(--ish-hair);
+  box-shadow:
+    0 0 0 1px rgba(232, 229, 223, 0.02),
+    0 1.6rem 4rem rgba(0, 0, 0, 0.28);
+}
+
+.ish-core-card {
+  position: relative;
+  min-height: 18rem;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  background:
+    linear-gradient(145deg, rgba(232, 229, 223, 0.045), transparent 38%),
+    var(--ish-graphite);
+  overflow: hidden;
+  transition:
+    background 0.24s ease,
+    transform 0.24s ease;
+}
+
+.ish-core-card::before,
+.ish-core-card::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.ish-core-card::before {
+  top: 0;
+  right: 0;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-top: 1px solid rgba(232, 229, 223, 0.2);
+  border-right: 1px solid rgba(232, 229, 223, 0.2);
+}
+
+.ish-core-card::after {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 250, 240, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.24s ease;
+}
+
+.ish-core-card:hover {
+  background:
+    linear-gradient(145deg, rgba(255, 250, 240, 0.075), transparent 42%),
+    var(--ish-graphite);
+  transform: translateY(-2px);
+}
+
+.ish-core-card:hover::after {
+  opacity: 1;
+}
+
+.ish-core-card span,
+.ish-core-card h2,
+.ish-core-terminal {
+  font-family: var(--ish-mono);
+}
+
+.ish-core-card span {
+  color: var(--ish-dim);
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+}
+
+.ish-core-card h2 {
+  margin: 3.5rem 0 0;
+  color: var(--ish-bone);
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.ish-core-card p {
+  margin: 1.4rem 0 0;
+  color: var(--ish-mid);
+  font-weight: 200;
+  line-height: 1.75;
+}
+
+.ish-core-terminal {
+  position: relative;
+  max-width: 35rem;
+  margin: clamp(3rem, 9vh, 5rem) 0 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ish-hair);
+  color: var(--ish-dim);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.ish-core-terminal::before {
+  content: "transmission";
+  position: absolute;
+  top: -0.75rem;
+  right: 0;
+  padding-left: 1rem;
+  background: var(--ish-graphite);
+  color: rgba(232, 229, 223, 0.32);
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.ish-core-terminal p {
+  margin: 0.45rem 0;
+}
+
+.ish-core-apocrypha {
+  display: block;
+  width: fit-content;
+  margin-top: 1.35rem;
+  color: var(--ish-mid);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ish-hair);
+  opacity: 1;
+  transition:
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.ish-core-apocrypha:hover,
+.ish-core-apocrypha:focus-visible {
+  color: var(--ish-bone);
+  border-color: var(--ish-bone);
+}
+
+.ish-core-apocrypha::before {
+  content: "> ";
+  color: var(--ish-dim);
+}
+
+.ish-core-appendix {
+  max-width: 48rem;
+  margin: clamp(3rem, 9vh, 5rem) 0 0;
+}
+
+.ish-core-appendix h2 {
+  margin: 0 0 1.4rem;
+  font-family: var(--ish-mono);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ish-dim);
+}
+
+.ish-core-appendix dl {
+  margin: 0;
+}
+
+.ish-core-appendix div,
+.ish-apocrypha-log article {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 1.4rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--ish-hair);
+}
+
+.ish-core-appendix dt,
+.ish-apocrypha-log span {
+  font-family: var(--ish-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ish-mid);
+}
+
+.ish-core-appendix dd,
+.ish-apocrypha-log p {
+  margin: 0;
+  color: var(--ish-mid);
+  font-weight: 200;
+  line-height: 1.7;
+}
+
+.ish-apocrypha-log {
+  position: relative;
+  max-width: 52rem;
+  margin: clamp(3rem, 10vh, 6rem) 0 0;
+}
+
+.ish-apocrypha-log::before {
+  content: "";
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  left: 5.45rem;
+  width: 1px;
+  background: linear-gradient(transparent, rgba(255, 250, 240, 0.25), transparent);
+}
+
+.ish-oracle-frame {
+  max-width: 92rem;
+}
+
+.ish-oracle-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(20rem, 1.1fr);
+  column-gap: clamp(2rem, 6vw, 5rem);
+  align-content: start;
+}
+
+.ish-oracle-panel .ish-core-kicker,
+.ish-oracle-title,
+.ish-oracle-lede {
+  grid-column: 1;
+}
+
+.ish-oracle-title {
+  max-width: 8ch;
+}
+
+.ish-oracle-shell {
+  position: relative;
+  z-index: 1;
+  grid-column: 2;
+  grid-row: 1 / span 5;
+  display: flex;
+  height: clamp(32rem, 72vh, 46rem);
+  min-height: 0;
+  flex-direction: column;
+  border-left: 1px solid var(--ish-hair);
+  border-top: 1px solid var(--ish-hair);
+  border-bottom: 1px solid var(--ish-hair);
+  padding-left: clamp(1.2rem, 3vw, 2rem);
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  background:
+    linear-gradient(180deg, rgba(232, 229, 223, 0.035), transparent 36%),
+    rgba(6, 6, 7, 0.24);
+  box-shadow:
+    inset 1px 0 0 rgba(255, 250, 240, 0.055),
+    0 0 4rem rgba(0, 0, 0, 0.26);
+}
+
+.ish-oracle-shell::before,
+.ish-oracle-shell::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.ish-oracle-shell::before {
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(232, 229, 223, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(232, 229, 223, 0.026) 1px, transparent 1px);
+  background-size: 2.5rem 2.5rem;
+  opacity: 0.28;
+  mask-image: linear-gradient(90deg, black, transparent 72%);
+}
+
+.ish-oracle-shell::after {
+  top: 0;
+  right: 0;
+  width: 6rem;
+  height: 6rem;
+  border-top: 1px solid rgba(232, 229, 223, 0.2);
+  border-right: 1px solid rgba(232, 229, 223, 0.2);
+}
+
+.ish-oracle-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  font-family: var(--ish-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ish-dim);
+}
+
+.ish-oracle-conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.ish-oracle-provider {
+  overflow: hidden;
+  max-width: 18rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ish-oracle-dot {
+  width: 4px;
+  height: 4px;
+  background: var(--ish-dim);
+}
+
+.ish-oracle-dot--connecting,
+.ish-oracle-dot--live {
+  background: var(--ish-bone);
+  animation: ish-blink 1.6s steps(1, end) infinite;
+}
+
+.ish-oracle-dot--error {
+  background: var(--ish-mid);
+}
+
+.ish-oracle-messages {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--ish-hair);
+  border-bottom: 1px solid var(--ish-hair);
+  scrollbar-color: var(--ish-dim) transparent;
+}
+
+.ish-oracle-message {
+  position: relative;
+  display: flex;
+  max-width: min(92%, 34rem);
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.ish-oracle-message::before {
+  content: "oracle";
+  order: -1;
+  font-family: var(--ish-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ish-dim);
+}
+
+.ish-oracle-message--user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.ish-oracle-message--user::before {
+  content: "operator";
+}
+
+.ish-oracle-message--assistant {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.ish-oracle-message__body {
+  position: relative;
+  padding: 0.9rem 1rem 0.95rem 1.15rem;
+  border-left: 1px solid rgba(232, 229, 223, 0.26);
+  background: rgba(232, 229, 223, 0.025);
+  color: var(--ish-mid);
+  font-size: 0.95rem;
+  font-weight: 200;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  box-shadow:
+    inset 0 0 0 1px rgba(232, 229, 223, 0.018),
+    0 0.8rem 2rem rgba(0, 0, 0, 0.12);
+}
+
+.ish-oracle-message__body::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  background: var(--ish-bone);
+  opacity: 0.82;
+}
+
+.ish-oracle-message--user .ish-oracle-message__body {
+  border-right: 1px solid rgba(232, 229, 223, 0.32);
+  border-left: 0;
+  background: rgba(232, 229, 223, 0.075);
+  color: var(--ish-bone);
+  padding-right: 1.15rem;
+  padding-left: 1rem;
+  text-align: right;
+}
+
+.ish-oracle-message--user .ish-oracle-message__body::after {
+  right: -3px;
+  left: auto;
+}
+
+.ish-oracle-message__body--error {
+  background: rgba(232, 229, 223, 0.08);
+  color: var(--ish-bone);
+  border-left-color: rgba(232, 229, 223, 0.5);
+}
+
+.ish-oracle-message__time {
+  font-family: var(--ish-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--ish-dim);
+}
+
+.ish-glitch-word {
+  position: relative;
+  display: inline-block;
+  color: var(--ish-bone);
+  font-family: var(--ish-mono);
+  font-size: 0.92em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  isolation: isolate;
+  text-shadow: 0 0 0.65rem rgba(232, 229, 223, 0.08);
+}
+
+.ish-glitch-word::before,
+.ish-glitch-word::after {
+  content: attr(data-glitch);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.ish-glitch-word::after {
+  content: attr(data-glitch-alt);
+  color: rgba(232, 229, 223, 0.62);
+  letter-spacing: 0.02em;
+}
+
+.ish-oracle-message__body:hover .ish-glitch-word::before,
+.ish-oracle-message__body:hover .ish-glitch-word::after,
+.ish-oracle-message__body:focus-within .ish-glitch-word::before,
+.ish-oracle-message__body:focus-within .ish-glitch-word::after {
+  animation-duration: 1.35s;
+}
+
+.ish-oracle-message__body:hover .ish-glitch-word::after,
+.ish-oracle-message__body:focus-within .ish-glitch-word::after {
+  clip-path: inset(0);
+}
+
+.ish-glitch--split::before {
+  clip-path: inset(0 0 58% 0);
+  animation: ish-glitch-split-a 4.6s steps(1, end) infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-glitch--split::after {
+  clip-path: inset(44% 0 0 0);
+  animation: ish-glitch-split-b 5.1s steps(1, end) infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-glitch--bleed {
+  animation: ish-glitch-bleed 6.4s steps(1, end) infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-glitch--bleed::after {
+  color: rgba(232, 229, 223, 0.5);
+  filter: blur(0.6px);
+  transform: translate(0.1em, 0.04em);
+  animation: ish-glitch-bleed-shadow 6.4s steps(1, end) infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-glitch--scan {
+  background: linear-gradient(
+    180deg,
+    transparent 0,
+    transparent 42%,
+    rgba(232, 229, 223, 0.22) 45%,
+    transparent 50%,
+    transparent 100%
+  );
+  background-size: 100% 220%;
+  animation: ish-glitch-scan 5.8s linear infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-glitch--scan::before {
+  content: "";
+  inset: auto 0 0.08em;
+  height: 1px;
+  background: rgba(232, 229, 223, 0.42);
+  animation: ish-glitch-scan-slice 3.6s steps(1, end) infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-glitch--tear::before {
+  clip-path: inset(18% 0 58% 0);
+  animation: ish-glitch-tear-a 4.1s steps(1, end) infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-glitch--tear::after {
+  clip-path: inset(62% 0 16% 0);
+  animation: ish-glitch-tear-b 4.8s steps(1, end) infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-glitch--phase {
+  animation: ish-glitch-phase 7.2s steps(1, end) infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-glitch--phase::before {
+  color: rgba(232, 229, 223, 0.34);
+  animation: ish-glitch-phase-ghost 7.2s steps(1, end) infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-glitch--phase::after {
+  color: rgba(232, 229, 223, 0.2);
+  animation: ish-glitch-phase-echo 8.4s steps(1, end) infinite;
+  animation-delay: var(--ish-glitch-delay, 0s);
+}
+
+.ish-oracle-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  min-width: 3rem;
+}
+
+.ish-oracle-typing span {
+  width: 4px;
+  height: 4px;
+  background: var(--ish-bone);
+  animation: ish-oracle-typing 1.2s steps(1, end) infinite;
+}
+
+.ish-oracle-typing span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.ish-oracle-typing span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+.ish-oracle-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding-top: 1.1rem;
+}
+
+.ish-oracle-input-wrap {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.ish-oracle-input-wrap span {
+  font-family: var(--ish-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ish-dim);
+}
+
+.ish-oracle-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-bottom-color: var(--ish-hair);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(232, 229, 223, 0.055), transparent 42%),
+    rgba(232, 229, 223, 0.018);
+  color: var(--ish-bone);
+  font: 300 1rem/1.5 var(--ish-sans);
+  outline: none;
+  padding: 0.75rem 0.65rem;
+  box-shadow: inset 0 0 0 1px rgba(232, 229, 223, 0.035);
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.ish-oracle-input::placeholder {
+  color: rgba(232, 229, 223, 0.34);
+}
+
+.ish-oracle-input:focus {
+  border-color: rgba(232, 229, 223, 0.12);
+  border-bottom-color: rgba(232, 229, 223, 0.48);
+  background: rgba(232, 229, 223, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(232, 229, 223, 0.075);
+}
+
+.ish-oracle-input:hover:not(:focus):not(:disabled) {
+  border-bottom-color: rgba(232, 229, 223, 0.28);
+  background:
+    linear-gradient(90deg, rgba(232, 229, 223, 0.075), transparent 46%),
+    rgba(232, 229, 223, 0.025);
+}
+
+.ish-oracle-actions {
+  display: flex;
+  align-items: end;
+  gap: 0.55rem;
+}
+
+.ish-oracle-button {
+  min-width: 6.4rem;
+  border: 1px solid rgba(232, 229, 223, 0.25);
+  background: var(--ish-bone);
+  color: var(--ish-graphite);
+  cursor: pointer;
+  font-family: var(--ish-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  padding: 0.82rem 0.95rem;
+  text-transform: uppercase;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  clip-path: polygon(0.5rem 0, 100% 0, 100% calc(100% - 0.5rem), calc(100% - 0.5rem) 100%, 0 100%, 0 0.5rem);
+}
+
+.ish-oracle-button--ghost {
+  background: transparent;
+  color: var(--ish-mid);
+}
+
+.ish-oracle-button:disabled {
+  cursor: wait;
+  opacity: 0.45;
+}
+
+.ish-oracle-button:hover:not(:disabled),
+.ish-oracle-button:focus-visible:not(:disabled) {
+  background: transparent;
+  color: var(--ish-bone);
+  border-color: var(--ish-bone);
+  box-shadow: 0 0 1.4rem rgba(255, 250, 240, 0.12);
+}
+
+@keyframes ish-rail-trace {
+  0% {
+    transform: translateY(-6rem);
+    opacity: 0;
+  }
+  18%,
+  74% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateY(62vh);
+    opacity: 0;
+  }
+}
+
+@keyframes ish-scanline {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: translateY(0);
+  }
+  45% {
+    opacity: 0.58;
+    transform: translateY(4.5rem);
+  }
+}
+
+@keyframes ish-glyph-drift {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  to {
+    transform: rotate(360deg) scale(1.02);
+  }
+}
+
+@keyframes ish-node-pulse {
+  0%,
+  72%,
+  100% {
+    opacity: 0.28;
+  }
+  73%,
+  76% {
+    opacity: 1;
+  }
+}
+
+@keyframes ish-oracle-typing {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes ish-glitch-split-a {
+  0%,
+  77%,
+  82%,
+  100% {
+    opacity: 0;
+  }
+  78% {
+    opacity: 0.55;
+    transform: translate(-0.1em, -1px);
+  }
+  79% {
+    opacity: 0.7;
+    transform: translate(0.06em, 0);
+  }
+}
+
+@keyframes ish-glitch-split-b {
+  0%,
+  69%,
+  74%,
+  100% {
+    opacity: 0;
+  }
+  70% {
+    opacity: 0.7;
+    transform: translate(0.16em, 1px);
+  }
+  71% {
+    opacity: 0.52;
+    transform: translate(-0.08em, 0);
+  }
+  72% {
+    opacity: 0.4;
+    transform: translate(0.08em, -1px);
+  }
+}
+
+@keyframes ish-glitch-bleed {
+  0%,
+  83%,
+  87%,
+  100% {
+    filter: none;
+    transform: none;
+  }
+  84% {
+    filter: blur(0.35px);
+    transform: translateY(1px);
+  }
+  85% {
+    filter: blur(0.65px);
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes ish-glitch-bleed-shadow {
+  0%,
+  83%,
+  87%,
+  100% {
+    opacity: 0;
+  }
+  84% {
+    opacity: 0.82;
+    transform: translate(0.14em, 0.04em);
+  }
+  85% {
+    opacity: 0.58;
+    transform: translate(-0.06em, 0.02em);
+  }
+  86% {
+    opacity: 0.44;
+    transform: translate(0.08em, -0.02em);
+  }
+}
+
+@keyframes ish-glitch-scan {
+  from {
+    background-position: 0 -160%;
+  }
+  to {
+    background-position: 0 160%;
+  }
+}
+
+@keyframes ish-glitch-scan-slice {
+  0%,
+  64%,
+  68%,
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  65% {
+    opacity: 0.7;
+    transform: translateY(-0.45em);
+  }
+  66% {
+    opacity: 0.45;
+    transform: translateY(0.28em);
+  }
+}
+
+@keyframes ish-glitch-tear-a {
+  0%,
+  62%,
+  66%,
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  63% {
+    opacity: 0.65;
+    transform: translateX(-0.18em);
+  }
+  64% {
+    opacity: 0.4;
+    transform: translateX(0.08em);
+  }
+}
+
+@keyframes ish-glitch-tear-b {
+  0%,
+  72%,
+  76%,
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  73% {
+    opacity: 0.76;
+    transform: translateX(0.2em);
+  }
+  74% {
+    opacity: 0.48;
+    transform: translateX(-0.06em);
+  }
+  75% {
+    opacity: 0.36;
+    transform: translateX(0.1em);
+  }
+}
+
+@keyframes ish-glitch-phase {
+  0%,
+  91%,
+  100% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 0.58;
+    filter: blur(0.2px);
+  }
+  93% {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@keyframes ish-glitch-phase-ghost {
+  0%,
+  91%,
+  100% {
+    opacity: 0;
+  }
+  92% {
+    opacity: 0.62;
+    transform: translateX(-0.1em);
+  }
+}
+
+@keyframes ish-glitch-phase-echo {
+  0%,
+  88%,
+  92%,
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  89% {
+    opacity: 0.58;
+    transform: translateX(0.14em);
+  }
+  90% {
+    opacity: 0.36;
+    transform: translateX(-0.08em);
+  }
+  91% {
+    opacity: 0.28;
+    transform: translateX(0.06em);
+  }
+}
+
+@keyframes ish-blink {
+  0%,
+  92% {
+    opacity: 1;
+  }
+  93%,
+  100% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes ish-resolve {
+  from {
+    opacity: 0.1;
+    letter-spacing: -0.02em;
+  }
+  to {
+    opacity: 1;
+    letter-spacing: -0.055em;
+  }
+}
+
+@media (max-width: 34rem) {
+  .ish-echo {
+    grid-template-columns: 1.9rem 2.8rem minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+  .ish-echo-at {
+    grid-column: 3;
+  }
+}
+
+@media (max-width: 48rem) {
+  .ish-core-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ish-core-card {
+    min-height: auto;
+  }
+
+  .ish-core-card h2 {
+    margin-top: 2.5rem;
+  }
+
+  .ish-core-appendix div,
+  .ish-apocrypha-log article {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+  .ish-oracle-panel {
+    display: block;
+  }
+
+  .ish-hud {
+    font-size: 0.54rem;
+  }
+
+  .ish-signal-field {
+    width: min(20rem, 78vw);
+    opacity: 0.38;
+  }
+
+  .ish-oracle-shell {
+    height: clamp(34rem, 78vh, 44rem);
+    min-height: 0;
+    margin-top: clamp(3rem, 10vh, 5rem);
+    border-left: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .ish-oracle-form {
+    grid-template-columns: 1fr;
+  }
+
+  .ish-oracle-actions {
+    justify-content: flex-end;
+  }
+
+  .ish-oracle-message {
+    max-width: 100%;
+  }
+
+  .ish-oracle-button {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ish-dot,
+  .ish-rail::before,
+  .ish-panel::after,
+  .ish-glyph span,
+  .ish-signal-field span,
+  .ish-count-value.is-shifted,
+  .ish-oracle-dot--connecting,
+  .ish-oracle-dot--live,
+  .ish-oracle-typing span,
+  .ish-glitch-word,
+  .ish-glitch-word::before,
+  .ish-glitch-word::after {
+    animation: none;
+  }
+}

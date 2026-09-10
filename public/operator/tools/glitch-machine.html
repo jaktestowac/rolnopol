@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Glitch Machine - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/pages/glitch-machine.css?v=20260825-2" />
+</head>
+
+<body class="glx-page">
+    <div class="glx-static" aria-hidden="true"></div>
+    <div class="glx-beams" aria-hidden="true"></div>
+    <div class="glx-tear" aria-hidden="true"></div>
+
+    <main class="glx-shell">
+        <header class="glx-header">
+            <div class="glx-header__title">
+                <span class="glx-eyebrow">rolnopol / operator / tools</span>
+                <h1 class="glx-title" data-text="GLITCH//MACHINE">GLITCH<span>//</span>MACHINE</h1>
+                <p class="glx-tagline">structure-aware databending &mdash; the skeleton survives, the flesh melts</p>
+            </div>
+            <div class="glx-header__meta">
+                <label class="glx-signal">
+                    <span class="glx-signal__label">Signal</span>
+                    <select class="glx-select" id="glxSignal" aria-label="Signal colour scheme">
+                        <option value="vapor">Vapor / magenta</option>
+                        <option value="toxin">Toxin / acid</option>
+                        <option value="inferno">Inferno / red</option>
+                        <option value="void">Void / mono</option>
+                    </select>
+                </label>
+                <span class="glx-chip">no external libs</span>
+                <span class="glx-chip glx-chip--live" id="glxState">offline</span>
+            </div>
+        </header>
+
+        <!-- Everything happens in this tab: the file never leaves the browser,
+             there is no upload endpoint behind this page. Corruption is written
+             only into entropy-coded scan data, so the output always decodes. -->
+        <section class="glx-viewport" id="glxViewport" aria-label="Glitched output">
+            <span class="glx-hud glx-hud--tl" aria-hidden="true"></span>
+            <span class="glx-hud glx-hud--tr" aria-hidden="true"></span>
+            <span class="glx-hud glx-hud--bl" aria-hidden="true"></span>
+            <span class="glx-hud glx-hud--br" aria-hidden="true"></span>
+
+            <div class="glx-telemetry glx-telemetry--left" aria-hidden="true">
+                <span>SEED</span><strong id="glxSeedHud">--------</strong>
+            </div>
+            <div class="glx-telemetry glx-telemetry--right" aria-hidden="true">
+                <span>WRITES</span><strong id="glxWritesHud">0</strong>
+            </div>
+
+            <img class="glx-output" id="glxOutput" alt="Glitched result" hidden />
+            <div class="glx-empty" id="glxEmpty">
+                <span class="glx-empty__sigil" aria-hidden="true">&#9646;&#9646;&#9646;</span>
+                <span>NO CARRIER</span>
+                <em>feed the machine an image</em>
+            </div>
+            <span class="glx-flag" id="glxCompareFlag" hidden>original</span>
+        </section>
+
+        <form class="glx-deck" id="glxControls">
+            <fieldset class="glx-pod glx-pod--inject">
+                <legend><i class="fa-solid fa-satellite-dish" aria-hidden="true"></i> Inject</legend>
+
+                <div class="glx-drop" id="glxDrop" role="button" tabindex="0" aria-describedby="glxDropHint">
+                    <span class="glx-drop__stripes" aria-hidden="true"></span>
+                    <span class="glx-drop__glyph" aria-hidden="true"><i class="fa-solid fa-biohazard"></i></span>
+                    <span class="glx-drop__label">Drop an image or click to browse</span>
+                    <span class="glx-drop__hint" id="glxDropHint">Max 16 MB. PNG and GIF are rebaked to JPEG before bending.</span>
+                    <input class="glx-drop__input" type="file" id="glxFile" accept="image/jpeg,image/png,image/gif" />
+                </div>
+
+                <p class="glx-message" id="glxMessage" role="status" aria-live="polite"></p>
+
+                <dl class="glx-readout">
+                    <div class="glx-readout__row"><dt>File</dt><dd id="glxFileName">&mdash;</dd></div>
+                    <div class="glx-readout__row"><dt>Carrier</dt><dd id="glxCarrier">&mdash;</dd></div>
+                    <div class="glx-readout__row"><dt>Frame</dt><dd id="glxDims">&mdash;</dd></div>
+                    <div class="glx-readout__row"><dt>Coding</dt><dd id="glxCoding">&mdash;</dd></div>
+                    <div class="glx-readout__row"><dt>Scan data</dt><dd id="glxScanBytes">&mdash;</dd></div>
+                </dl>
+
+                <label class="glx-field">
+                    <span class="glx-field__label">Carrier quality <output id="glxQualityValue">85%</output></span>
+                    <input type="range" class="glx-range" id="glxQuality" min="30" max="95" step="1" value="85" />
+                </label>
+
+                <button type="button" class="glx-btn glx-btn--ghost glx-btn--wide" id="glxRebake" disabled>
+                    <i class="fa-solid fa-fire" aria-hidden="true"></i> Rebake carrier
+                </button>
+            </fieldset>
+
+            <fieldset class="glx-pod glx-pod--corrupt">
+                <legend><i class="fa-solid fa-skull" aria-hidden="true"></i> Corrupt</legend>
+
+                <label class="glx-field">
+                    <span class="glx-field__label">Intensity <output id="glxAmountValue">35</output></span>
+                    <input type="range" class="glx-range glx-range--hot" id="glxAmount" min="1" max="100" step="1" value="35" />
+                </label>
+
+                <!-- The window pins corruption to a vertical band of the image:
+                     scan bytes stream top to bottom, so "first 20%" of the scan
+                     is roughly the top fifth of the frame. -->
+                <label class="glx-field">
+                    <span class="glx-field__label">Window start <output id="glxWindowFromValue">0%</output></span>
+                    <input type="range" class="glx-range" id="glxWindowFrom" min="0" max="100" step="1" value="0" />
+                </label>
+                <label class="glx-field">
+                    <span class="glx-field__label">Window end <output id="glxWindowToValue">100%</output></span>
+                    <input type="range" class="glx-range" id="glxWindowTo" min="0" max="100" step="1" value="100" />
+                </label>
+
+                <div class="glx-ops">
+                    <label class="glx-op">
+                        <input type="checkbox" id="glxOpMutate" checked />
+                        <span class="glx-op__box"><i class="fa-solid fa-dna" aria-hidden="true"></i> Mutate</span>
+                    </label>
+                    <label class="glx-op">
+                        <input type="checkbox" id="glxOpSmear" checked />
+                        <span class="glx-op__box"><i class="fa-solid fa-water" aria-hidden="true"></i> Smear</span>
+                    </label>
+                    <label class="glx-op">
+                        <input type="checkbox" id="glxOpStutter" checked />
+                        <span class="glx-op__box"><i class="fa-solid fa-repeat" aria-hidden="true"></i> Stutter</span>
+                    </label>
+                    <label class="glx-op">
+                        <input type="checkbox" id="glxOpSwap" checked />
+                        <span class="glx-op__box"><i class="fa-solid fa-shuffle" aria-hidden="true"></i> Swap</span>
+                    </label>
+                </div>
+
+                <button type="button" class="glx-btn glx-btn--ghost glx-btn--wide" id="glxReset">
+                    <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset controls
+                </button>
+            </fieldset>
+
+            <fieldset class="glx-pod glx-pod--seed">
+                <legend><i class="fa-solid fa-dice" aria-hidden="true"></i> Seed</legend>
+
+                <div class="glx-seedbar">
+                    <label class="glx-seedbar__field">
+                        <span class="glx-field__label">Hex seed</span>
+                        <input type="text" class="glx-seed-input" id="glxSeed" maxlength="8" spellcheck="false"
+                            autocomplete="off" placeholder="C0FFEE00" aria-label="Corruption seed in hex" />
+                    </label>
+                    <button type="button" class="glx-btn glx-btn--dice" id="glxReroll" disabled aria-label="Roll a new seed">
+                        <i class="fa-solid fa-dice-five" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <label class="glx-op glx-op--auto">
+                    <input type="checkbox" id="glxAuto" />
+                    <span class="glx-op__box"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Auto-mutate</span>
+                </label>
+
+                <dl class="glx-readout">
+                    <div class="glx-readout__row"><dt>Ops</dt><dd id="glxOpsOut">&mdash;</dd></div>
+                    <div class="glx-readout__row"><dt>Bytes written</dt><dd id="glxWrittenOut">&mdash;</dd></div>
+                    <div class="glx-readout__row"><dt>Deflected</dt><dd id="glxSkippedOut">&mdash;</dd></div>
+                    <div class="glx-readout__row"><dt>Pass</dt><dd id="glxElapsed">&mdash;</dd></div>
+                </dl>
+
+                <div class="glx-actions">
+                    <button type="button" class="glx-btn" id="glxCompare" disabled>
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i> Hold to compare
+                    </button>
+                    <button type="button" class="glx-btn" id="glxSaveJpeg" disabled>
+                        <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Save .jpg
+                    </button>
+                    <button type="button" class="glx-btn" id="glxSavePng" disabled>
+                        <i class="fa-solid fa-image" aria-hidden="true"></i> Save .png
+                    </button>
+                    <button type="button" class="glx-btn glx-btn--ghost" id="glxClear" disabled>
+                        <i class="fa-solid fa-eject" aria-hidden="true"></i> Eject
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+
+        <footer class="glx-footer">
+            <a class="glx-link" href="/">&#8592; Back to Rolnopol</a>
+            <span class="glx-footer__note">Hidden operator tool. Corruption runs in this tab &mdash; nothing is uploaded anywhere.</span>
+        </footer>
+    </main>
+
+    <script src="/js/pages/glitch-machine-pipeline.js?v=20260825-1"></script>
+    <script src="/js/pages/glitch-machine.js?v=20260825-1"></script>
+</body>
+
+</html>

@@ -1,7 +1,8 @@
 const { formatResponseBody } = require("../helpers/response-helper");
-const { logError, logInfo } = require("../helpers/logger-api");
+const { logError, logInfo, logWarning } = require("../helpers/logger-api");
 const adminService = require("../services/admin.service");
 const docsService = require("../services/docs.service");
+const featureFlagsService = require("../services/feature-flags.service");
 const { getClientId } = require("../middleware/rate-limit.middleware");
 const { loginExpirationAdmin } = require("../data/settings");
 
@@ -544,9 +545,15 @@ class AdminController {
         }),
       );
     } catch (error) {
-      logError("Error updating feature flags:", error);
+      // Flags pinned by feature-flags.ini outrank the API: conflict, not a bad request.
+      const isPinnedConflict = error?.code === featureFlagsService.PINNED_FLAG_ERROR_CODE;
+      if (isPinnedConflict) {
+        logWarning(`Rejected feature flag update: ${error.message}`);
+      } else {
+        logError("Error updating feature flags:", error);
+      }
       const message = String(error?.message || "Failed to update feature flags");
-      const statusCode = message.includes("Validation failed") ? 400 : 500;
+      const statusCode = isPinnedConflict ? 409 : message.includes("Validation failed") ? 400 : 500;
 
       res.status(statusCode).json(
         formatResponseBody({

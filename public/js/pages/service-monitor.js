@@ -16,6 +16,7 @@
   const refreshBtn = document.getElementById("refresh-btn");
 
   let timer = null;
+  let allHealthySince = null;
 
   const STATUS_META = {
     online: { label: "Online", icon: "fa-circle-check", cls: "svc-card--online" },
@@ -80,8 +81,10 @@
       details = `<div class="svc-error-box"><i class="fas fa-plug-circle-xmark"></i> ${esc(svc.error || "No response")}</div>${hint}`;
     }
 
+    const nervousClass = svc.status === "online" ? "" : " svc-card--nervous";
+
     return `
-      <article class="svc-card ${meta.cls}">
+      <article class="svc-card ${meta.cls}${nervousClass}">
         <div class="svc-card__top">
           <div class="svc-card__name">
             <span class="svc-card__title">${esc(svc.name)} ${transportBadge}</span>
@@ -113,8 +116,15 @@
       }
       const services = json.data.services;
       grid.innerHTML = services.map(renderCard).join("");
+      const allHealthy = services.length > 0 && services.every((service) => service.status === "online");
+      if (allHealthy) {
+        allHealthySince = allHealthySince || Date.now();
+      } else {
+        allHealthySince = null;
+      }
       if (updatedEl) {
-        updatedEl.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+        const syncText = allHealthySince && Date.now() - allHealthySince >= 60000 ? " · synchronization: 100%" : "";
+        updatedEl.textContent = `Updated ${new Date().toLocaleTimeString()}${syncText}`;
       }
     } catch (e) {
       renderError("Could not reach the monitoring endpoint.");

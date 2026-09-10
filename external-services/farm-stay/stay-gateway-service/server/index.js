@@ -515,6 +515,28 @@ function paginate(items, page, pageSize) {
   return { page: current, pageSize: size, total, totalPages, slice: items.slice(start, start + size) };
 }
 
+/**
+ * Shape one custom location for the UI (camelCase + `mine`, so the page knows
+ * which entries the caller may remove).
+ */
+function shapeCustomLocation(loc, user) {
+  return {
+    voivodeship: loc.voivodeship || "",
+    city: loc.city || "",
+    addedBy: loc.added_by || "",
+    addedAt: loc.added_at || "",
+    mine: !!loc.added_by && String(loc.added_by) === String(user),
+  };
+}
+
+function shapeLocations(reply, user) {
+  return {
+    regions: (reply.regions || []).map((r) => ({ voivodeship: r.voivodeship, cities: r.cities || [] })),
+    custom: (reply.custom || []).map((c) => shapeCustomLocation(c, user)),
+    total: reply.total || 0,
+  };
+}
+
 // ── app ─────────────────────────────────────────────────────────────────────
 
 function buildApp() {
@@ -561,6 +583,45 @@ function buildApp() {
 
   // Presentation catalog — option lists + icons/gradients for the UI. Static.
   app.get("/v1/catalog", (req, res) => res.json(catalogMeta));
+
+  // ── Locations ───────────────────────────────────────────────────────────────
+  // Voivodeship→city catalog for the UI's location pickers, plus the custom
+  // locations users add. Custom ones are GLOBAL — inventory owns them, so a city
+  // added by one user is immediately listable/searchable by everybody. Each is
+  // tagged `mine` so the page only offers a remove button to its author.
+
+  app.get("/v1/locations", async (req, res) => {
+    const user = userOf(req);
+    try {
+      res.json(shapeLocations(await inventory.listLocations(user), user));
+    } catch (err) {
+      sendError(res, err);
+    }
+  });
+
+  app.post("/v1/locations", async (req, res) => {
+    const user = userOf(req);
+    const { voivodeship, city } = req.body || {};
+    try {
+      const created = await inventory.addLocation(user, { voivodeship, city });
+      res.status(201).json({ location: shapeCustomLocation(created, user) });
+    } catch (err) {
+      sendError(res, err);
+    }
+  });
+
+  app.delete("/v1/locations", async (req, res) => {
+    const user = userOf(req);
+    try {
+      const result = await inventory.removeLocation(user, { voivodeship: req.query.voivodeship, city: req.query.city });
+      res.json({ voivodeship: result.voivodeship, city: result.city, deleted: result.deleted });
+    } catch (err) {
+      if (grpcPreconditionToken(err) === "IN_USE") {
+        return res.status(409).json({ error: "IN_USE", detail: "A listing still uses this location" });
+      }
+      sendError(res, err);
+    }
+  });
 
   // ── Host: listings ──────────────────────────────────────────────────────────
 

@@ -142,5 +142,10 @@ module.exports = {
     ),
   confirmHold: (userId, lockId) => unary("ConfirmHold", { lock_id: lockId }, userId),
   release: (userId, lockId) => unary("Release", { lock_id: lockId }, userId),
+  listLocations: (userId) => unary("ListLocations", {}, userId),
+  addLocation: (userId, loc) =>
+    unary("AddLocation", { voivodeship: loc.voivodeship || "", city: loc.city || "", added_by: userId }, userId),
+  removeLocation: (userId, loc) =>
+    unary("RemoveLocation", { voivodeship: loc.voivodeship || "", city: loc.city || "", requested_by: userId }, userId),
   _reset: reset,
 };

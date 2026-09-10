@@ -1,11 +1,15 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
-const { startEcosystem } = require("./helpers/farm-stay-harness");
+const { startEcosystem, prepareEnv } = require("./helpers/farm-stay-harness");
 
 // The Rolnopol bridge (routes/v1/farm-stay.route.js) proxies to the gateway:
 // feature-flag gate → session auth → identity header (x-stay-user) → passthrough.
-// The gateway port must be known before the app-side client is required.
+// The gateway port must be known before the app-side client is required, and the
+// leaf ports/DB paths before the APP is required (booting it in test mode loads
+// the leaf configs, which cache them) — see prepareEnv.
 const GATEWAY_PORT = 4450;
+const ECO = { base: GATEWAY_PORT, tag: "rest" };
+prepareEnv(ECO);
 process.env.FARM_STAY_TARGET = `http://localhost:${GATEWAY_PORT}`;
 process.env.FARM_STAY_CLIENT_TIMEOUT_MS = "2000";
 
@@ -61,7 +65,7 @@ describe("farm-stay REST bridge — full ecosystem up", () => {
   let eco;
 
   beforeAll(async () => {
-    eco = await startEcosystem({ base: GATEWAY_PORT, tag: "rest" });
+    eco = await startEcosystem(ECO);
     await setFlag(true);
   });
 
@@ -88,6 +92,29 @@ describe("farm-stay REST bridge — full ecosystem up", () => {
       .send({ propertyId: created.body.id, from: "2030-06-10", to: "2030-06-12", guests: 1 })
       .expect(409);
     expect(res.body.error).toMatch(/your own property/i);
+  });
+
+  it("serves the location catalog and shares a custom location across users", async () => {
+    const other = tokenHelpers.generateToken("user-fs-locations");
+
+    const res = await request(app).get("/api/v1/farm-stay/locations").set("token", token).expect(200);
+    expect(res.body.regions.length).toBe(16);
+    expect(res.body.custom.map((c) => c.city)).toContain("Supraśl"); // backend sample
+
+    const added = await request(app)
+      .post("/api/v1/farm-stay/locations")
+      .set("token", token)
+      .send({ voivodeship: "Opolskie", city: "Nysa" })
+      .expect(201);
+    expect(added.body.location).toMatchObject({ city: "Nysa", addedBy: USER, mine: true });
+
+    // Another logged-in user sees it (it is platform state, not browser state).
+    const asOther = await request(app).get("/api/v1/farm-stay/locations").set("token", other).expect(200);
+    expect(asOther.body.custom.find((c) => c.city === "Nysa")).toMatchObject({ mine: false });
+
+    // ...but cannot remove someone else's entry.
+    await request(app).delete("/api/v1/farm-stay/locations?voivodeship=Opolskie&city=Nysa").set("token", other).expect(403);
+    await request(app).delete("/api/v1/farm-stay/locations?voivodeship=Opolskie&city=Nysa").set("token", token).expect(200);
   });
 
   it("passes upstream 4xx through: a missing booking is 404", async () => {

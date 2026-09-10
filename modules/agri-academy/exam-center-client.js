@@ -113,9 +113,14 @@ module.exports = {
   // Public activity log from the exam-events leaf, newest first. Carries no taker
   // identity (see the exam center's activity routes), so no identity is needed to
   // read it — per-unit for a unit profile, unscoped for the all-units page.
-  listUnitEvents: (unitId, { limit, examId, since } = {}) =>
-    call("GET", `/v1/units/${encodeURIComponent(unitId)}/events`, { query: { limit, examId, since } }),
-  listEvents: ({ limit, unitId, examId, since } = {}) => call("GET", "/v1/events", { query: { limit, unitId, examId, since } }),
+  //
+  // `since` reads forwards (a poll cursor, part of the filter); `before` reads
+  // backwards from a page already held (scroll-back, NOT part of the filter, so
+  // `total` stays stable while a view walks into history).
+  listUnitEvents: (unitId, { limit, examId, since, before } = {}) =>
+    call("GET", `/v1/units/${encodeURIComponent(unitId)}/events`, { query: { limit, examId, since, before } }),
+  listEvents: ({ limit, unitId, examId, since, before } = {}) =>
+    call("GET", "/v1/events", { query: { limit, unitId, examId, since, before } }),
   // The streaming siblings of the two reads above: a live SSE tail of the same log,
   // from the cursor a page just read. `lastEventId` is the browser's own reconnect
   // cursor and is forwarded verbatim so a dropped connection resumes without gaps.

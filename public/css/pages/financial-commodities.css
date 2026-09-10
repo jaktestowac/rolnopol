@@ -207,3 +207,49 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Market desk — embedded ticker frame and the shadow-DOM widgets. */
+
+.commodities-desk {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.commodities-desk__panel {
+  border-radius: 0.7rem;
+  padding: 0.7rem 0.75rem 0.8rem;
+  background: rgba(106, 123, 94, 0.08);
+  border: 1px solid rgba(106, 123, 94, 0.2);
+}
+
+.commodities-desk__title {
+  margin: 0 0 0.55rem;
+  font-size: 0.9rem;
+  color: #2f3d2b;
+}
+
+.commodities-desk__frame {
+  display: block;
+  width: 100%;
+  height: 15rem;
+  border: 1px solid rgba(106, 123, 94, 0.25);
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.commodities-desk__hint {
+  margin: 0.45rem 0 0;
+  font-size: 0.75rem;
+  color: #5d6459;
+}
+
+.commodities-desk__badge-row {
+  margin-top: 0.7rem;
+}
+
+@media (max-width: 900px) {
+  .commodities-desk {
+    grid-template-columns: 1fr;
+  }
+}

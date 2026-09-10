@@ -257,16 +257,22 @@
   },
   {
     "id": 39,
-    "userId": 11,
+    "userId": 17,
     "name": "Helix Foundry",
     "area": 7200,
     "protected": true
   },
   {
     "id": 40,
-    "userId": 12,
+    "userId": 18,
     "name": "Eidolon Heavy Works",
     "area": 9600,
     "protected": true
+  },
+  {
+    "id": 41,
+    "userId": 17,
+    "name": "field 7",
+    "area": 7
   }
 ]

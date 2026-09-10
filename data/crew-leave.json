@@ -1,0 +1,10 @@
+{
+  "policies": [],
+  "requests": [],
+  "adjustments": [],
+  "counters": {
+    "lastPolicyId": 0,
+    "lastRequestId": 0,
+    "lastAdjustmentId": 0
+  }
+}

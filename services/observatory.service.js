@@ -262,6 +262,1483 @@ const STAR_CATALOG = [
   },
   { id: "naos", name: "Naos", constellation: "Puppis", raHours: 8.0597, decDeg: -40.0032, magnitude: 2.25, color: "#d7ebff" },
   { id: "suhail", name: "Suhail", constellation: "Vela", raHours: 9.1333, decDeg: -43.4326, magnitude: 2.23, color: "#fff0cf" },
+
+  // --- Catalog expansion: fainter stars and 30 more constellations ---------
+  { id: "altarf", name: "Al Tarf", constellation: "Cancer", raHours: 8.2751, decDeg: 9.1856, magnitude: 3.53, color: "#ffcfa2" },
+  {
+    id: "asellus-australis",
+    name: "Asellus Australis",
+    constellation: "Cancer",
+    raHours: 8.7449,
+    decDeg: 18.1543,
+    magnitude: 3.94,
+    color: "#ffdcb0",
+  },
+  { id: "iota-cancri", name: "Iota Cancri", constellation: "Cancer", raHours: 8.7784, decDeg: 28.7599, magnitude: 4.02, color: "#fff0cf" },
+  { id: "acubens", name: "Acubens", constellation: "Cancer", raHours: 8.9747, decDeg: 11.8577, magnitude: 4.25, color: "#eef5ff" },
+  {
+    id: "asellus-borealis",
+    name: "Asellus Borealis",
+    constellation: "Cancer",
+    raHours: 8.7215,
+    decDeg: 21.4685,
+    magnitude: 4.66,
+    color: "#fff0d6",
+  },
+  {
+    id: "beta-monocerotis",
+    name: "Beta Monocerotis",
+    constellation: "Monoceros",
+    raHours: 6.4796,
+    decDeg: -7.033,
+    magnitude: 3.76,
+    color: "#d5e8ff",
+  },
+  {
+    id: "alpha-monocerotis",
+    name: "Alpha Monocerotis",
+    constellation: "Monoceros",
+    raHours: 7.6857,
+    decDeg: -9.5511,
+    magnitude: 3.93,
+    color: "#ffd8ac",
+  },
+  {
+    id: "gamma-monocerotis",
+    name: "Gamma Monocerotis",
+    constellation: "Monoceros",
+    raHours: 6.2479,
+    decDeg: -6.2748,
+    magnitude: 3.98,
+    color: "#ffcfa5",
+  },
+  {
+    id: "delta-monocerotis",
+    name: "Delta Monocerotis",
+    constellation: "Monoceros",
+    raHours: 7.1976,
+    decDeg: -0.4939,
+    magnitude: 4.15,
+    color: "#eef5ff",
+  },
+  { id: "arneb", name: "Arneb", constellation: "Lepus", raHours: 5.5455, decDeg: -17.8223, magnitude: 2.58, color: "#fff3dc" },
+  { id: "nihal", name: "Nihal", constellation: "Lepus", raHours: 5.4707, decDeg: -20.7594, magnitude: 2.84, color: "#ffe9bb" },
+  {
+    id: "epsilon-leporis",
+    name: "Epsilon Leporis",
+    constellation: "Lepus",
+    raHours: 5.0913,
+    decDeg: -22.3714,
+    magnitude: 3.19,
+    color: "#ffcda3",
+  },
+  { id: "mu-leporis", name: "Mu Leporis", constellation: "Lepus", raHours: 5.2129, decDeg: -16.2054, magnitude: 3.29, color: "#dcecff" },
+  {
+    id: "zeta-leporis",
+    name: "Zeta Leporis",
+    constellation: "Lepus",
+    raHours: 5.7822,
+    decDeg: -14.8221,
+    magnitude: 3.55,
+    color: "#eef5ff",
+  },
+  {
+    id: "gamma-leporis",
+    name: "Gamma Leporis",
+    constellation: "Lepus",
+    raHours: 5.744,
+    decDeg: -22.4481,
+    magnitude: 3.59,
+    color: "#fff6e4",
+  },
+  {
+    id: "delta-leporis",
+    name: "Delta Leporis",
+    constellation: "Lepus",
+    raHours: 5.8557,
+    decDeg: -20.8794,
+    magnitude: 3.81,
+    color: "#ffe4bb",
+  },
+  { id: "phact", name: "Phact", constellation: "Columba", raHours: 5.66, decDeg: -34.0741, magnitude: 2.65, color: "#d5e8ff" },
+  { id: "wazn", name: "Wazn", constellation: "Columba", raHours: 5.8493, decDeg: -35.7683, magnitude: 3.12, color: "#ffcfa2" },
+  {
+    id: "delta-columbae",
+    name: "Delta Columbae",
+    constellation: "Columba",
+    raHours: 6.3714,
+    decDeg: -33.4362,
+    magnitude: 3.85,
+    color: "#fff0cf",
+  },
+  {
+    id: "epsilon-columbae",
+    name: "Epsilon Columbae",
+    constellation: "Columba",
+    raHours: 5.522,
+    decDeg: -35.4704,
+    magnitude: 3.87,
+    color: "#ffcfa8",
+  },
+  { id: "rotanev", name: "Rotanev", constellation: "Delphinus", raHours: 20.6255, decDeg: 14.5953, magnitude: 3.63, color: "#fff3de" },
+  { id: "sualocin", name: "Sualocin", constellation: "Delphinus", raHours: 20.6607, decDeg: 15.9121, magnitude: 3.77, color: "#dcecff" },
+  {
+    id: "epsilon-delphini",
+    name: "Epsilon Delphini",
+    constellation: "Delphinus",
+    raHours: 20.5555,
+    decDeg: 11.3033,
+    magnitude: 4.03,
+    color: "#d8ebff",
+  },
+  {
+    id: "gamma-delphini",
+    name: "Gamma Delphini",
+    constellation: "Delphinus",
+    raHours: 20.7746,
+    decDeg: 16.1244,
+    magnitude: 4.27,
+    color: "#ffe1bb",
+  },
+  {
+    id: "delta-delphini",
+    name: "Delta Delphini",
+    constellation: "Delphinus",
+    raHours: 20.7284,
+    decDeg: 15.0747,
+    magnitude: 4.43,
+    color: "#f4f7ff",
+  },
+  {
+    id: "gamma-sagittae",
+    name: "Gamma Sagittae",
+    constellation: "Sagitta",
+    raHours: 19.979,
+    decDeg: 19.4923,
+    magnitude: 3.47,
+    color: "#ffcb9a",
+  },
+  {
+    id: "delta-sagittae",
+    name: "Delta Sagittae",
+    constellation: "Sagitta",
+    raHours: 19.7899,
+    decDeg: 18.5341,
+    magnitude: 3.82,
+    color: "#ffd6ad",
+  },
+  { id: "sham", name: "Sham", constellation: "Sagitta", raHours: 19.6685, decDeg: 18.0139, magnitude: 4.37, color: "#fff0cf" },
+  {
+    id: "beta-sagittae",
+    name: "Beta Sagittae",
+    constellation: "Sagitta",
+    raHours: 19.6816,
+    decDeg: 17.4761,
+    magnitude: 4.37,
+    color: "#fff0cf",
+  },
+  { id: "anser", name: "Anser", constellation: "Vulpecula", raHours: 19.4784, decDeg: 24.665, magnitude: 4.44, color: "#ffcfa5" },
+  {
+    id: "alpha-lacertae",
+    name: "Alpha Lacertae",
+    constellation: "Lacerta",
+    raHours: 22.521,
+    decDeg: 50.2825,
+    magnitude: 3.77,
+    color: "#eef5ff",
+  },
+  {
+    id: "beta-lacertae",
+    name: "Beta Lacertae",
+    constellation: "Lacerta",
+    raHours: 22.3924,
+    decDeg: 52.2291,
+    magnitude: 4.42,
+    color: "#ffe1bb",
+  },
+  {
+    id: "beta-trianguli",
+    name: "Beta Trianguli",
+    constellation: "Triangulum",
+    raHours: 2.1591,
+    decDeg: 34.9873,
+    magnitude: 3,
+    color: "#f4f7ff",
+  },
+  { id: "mothallah", name: "Mothallah", constellation: "Triangulum", raHours: 1.8846, decDeg: 29.5793, magnitude: 3.42, color: "#fff6e4" },
+  {
+    id: "gamma-trianguli",
+    name: "Gamma Trianguli",
+    constellation: "Triangulum",
+    raHours: 2.2891,
+    decDeg: 33.8473,
+    magnitude: 4.03,
+    color: "#eef5ff",
+  },
+  { id: "alpha-lyncis", name: "Alpha Lyncis", constellation: "Lynx", raHours: 9.3508, decDeg: 34.3925, magnitude: 3.14, color: "#ffbf94" },
+  { id: "38-lyncis", name: "38 Lyncis", constellation: "Lynx", raHours: 9.3092, decDeg: 36.8025, magnitude: 3.82, color: "#eef5ff" },
+  {
+    id: "beta-camelopardalis",
+    name: "Beta Camelopardalis",
+    constellation: "Camelopardalis",
+    raHours: 5.057,
+    decDeg: 60.4423,
+    magnitude: 4.03,
+    color: "#fff0cf",
+  },
+  {
+    id: "alpha-camelopardalis",
+    name: "Alpha Camelopardalis",
+    constellation: "Camelopardalis",
+    raHours: 4.9022,
+    decDeg: 66.3427,
+    magnitude: 4.29,
+    color: "#cfe6ff",
+  },
+  {
+    id: "cor-caroli",
+    name: "Cor Caroli",
+    constellation: "Canes Venatici",
+    raHours: 12.9338,
+    decDeg: 38.3187,
+    magnitude: 2.89,
+    color: "#eef5ff",
+  },
+  { id: "chara", name: "Chara", constellation: "Canes Venatici", raHours: 12.5622, decDeg: 41.3576, magnitude: 4.24, color: "#fff6e4" },
+  {
+    id: "beta-comae",
+    name: "Beta Comae Berenices",
+    constellation: "Coma Berenices",
+    raHours: 13.1979,
+    decDeg: 27.8781,
+    magnitude: 4.26,
+    color: "#fff6e4",
+  },
+  { id: "diadem", name: "Diadem", constellation: "Coma Berenices", raHours: 13.1663, decDeg: 17.5292, magnitude: 4.32, color: "#fff6e4" },
+  {
+    id: "gamma-comae",
+    name: "Gamma Comae Berenices",
+    constellation: "Coma Berenices",
+    raHours: 12.4392,
+    decDeg: 28.2681,
+    magnitude: 4.35,
+    color: "#ffd8ac",
+  },
+  {
+    id: "delta-crateris",
+    name: "Delta Crateris",
+    constellation: "Crater",
+    raHours: 11.3222,
+    decDeg: -14.7789,
+    magnitude: 3.56,
+    color: "#ffcfa2",
+  },
+  {
+    id: "gamma-crateris",
+    name: "Gamma Crateris",
+    constellation: "Crater",
+    raHours: 11.4147,
+    decDeg: -17.6841,
+    magnitude: 4.06,
+    color: "#eef5ff",
+  },
+  { id: "alkes", name: "Alkes", constellation: "Crater", raHours: 10.9962, decDeg: -18.2988, magnitude: 4.07, color: "#ffd8ac" },
+  {
+    id: "beta-crateris",
+    name: "Beta Crateris",
+    constellation: "Crater",
+    raHours: 11.1946,
+    decDeg: -22.8261,
+    magnitude: 4.46,
+    color: "#eef5ff",
+  },
+  {
+    id: "alpha-sextantis",
+    name: "Alpha Sextantis",
+    constellation: "Sextans",
+    raHours: 10.1324,
+    decDeg: -0.3719,
+    magnitude: 4.48,
+    color: "#eef5ff",
+  },
+  {
+    id: "alpha-antliae",
+    name: "Alpha Antliae",
+    constellation: "Antlia",
+    raHours: 10.4523,
+    decDeg: -31.0678,
+    magnitude: 4.25,
+    color: "#ffcfa2",
+  },
+  {
+    id: "alpha-pyxidis",
+    name: "Alpha Pyxidis",
+    constellation: "Pyxis",
+    raHours: 8.7264,
+    decDeg: -33.1864,
+    magnitude: 3.68,
+    color: "#d5e8ff",
+  },
+  {
+    id: "beta-pyxidis",
+    name: "Beta Pyxidis",
+    constellation: "Pyxis",
+    raHours: 8.6698,
+    decDeg: -35.3083,
+    magnitude: 3.97,
+    color: "#fff0cf",
+  },
+  { id: "alpha-lupi", name: "Alpha Lupi", constellation: "Lupus", raHours: 14.6989, decDeg: -47.3882, magnitude: 2.3, color: "#cfe6ff" },
+  { id: "beta-lupi", name: "Beta Lupi", constellation: "Lupus", raHours: 14.9758, decDeg: -43.1339, magnitude: 2.68, color: "#d5e8ff" },
+  { id: "gamma-lupi", name: "Gamma Lupi", constellation: "Lupus", raHours: 15.5852, decDeg: -41.1666, magnitude: 2.78, color: "#d8ebff" },
+  { id: "delta-lupi", name: "Delta Lupi", constellation: "Lupus", raHours: 15.3565, decDeg: -40.6475, magnitude: 3.22, color: "#d5e8ff" },
+  {
+    id: "epsilon-lupi",
+    name: "Epsilon Lupi",
+    constellation: "Lupus",
+    raHours: 15.3799,
+    decDeg: -44.6896,
+    magnitude: 3.37,
+    color: "#d5e8ff",
+  },
+  { id: "zeta-lupi", name: "Zeta Lupi", constellation: "Lupus", raHours: 15.2118, decDeg: -52.099, magnitude: 3.41, color: "#fff0cf" },
+  {
+    id: "gamma-normae",
+    name: "Gamma Normae",
+    constellation: "Norma",
+    raHours: 16.3272,
+    decDeg: -50.1556,
+    magnitude: 4.02,
+    color: "#fff0cf",
+  },
+  { id: "beta-arae", name: "Beta Arae", constellation: "Ara", raHours: 17.4218, decDeg: -55.5299, magnitude: 2.85, color: "#ffcb9a" },
+  { id: "alpha-arae", name: "Alpha Arae", constellation: "Ara", raHours: 17.5311, decDeg: -49.8761, magnitude: 2.95, color: "#d5e8ff" },
+  { id: "zeta-arae", name: "Zeta Arae", constellation: "Ara", raHours: 16.9772, decDeg: -55.9902, magnitude: 3.13, color: "#ffbf94" },
+  { id: "gamma-arae", name: "Gamma Arae", constellation: "Ara", raHours: 17.4218, decDeg: -56.3777, magnitude: 3.34, color: "#d5e8ff" },
+  { id: "delta-arae", name: "Delta Arae", constellation: "Ara", raHours: 17.5188, decDeg: -60.6836, magnitude: 3.62, color: "#dcecff" },
+  {
+    id: "alpha-circini",
+    name: "Alpha Circini",
+    constellation: "Circinus",
+    raHours: 14.7085,
+    decDeg: -64.9754,
+    magnitude: 3.19,
+    color: "#f4f7ff",
+  },
+  {
+    id: "alphecca",
+    name: "Alphecca",
+    constellation: "Corona Borealis",
+    raHours: 15.5781,
+    decDeg: 26.7147,
+    magnitude: 2.23,
+    color: "#eef5ff",
+  },
+  {
+    id: "nusakan",
+    name: "Nusakan",
+    constellation: "Corona Borealis",
+    raHours: 15.4638,
+    decDeg: 29.1058,
+    magnitude: 3.66,
+    color: "#fff6e4",
+  },
+  {
+    id: "gamma-coronae-borealis",
+    name: "Gamma Coronae Borealis",
+    constellation: "Corona Borealis",
+    raHours: 15.7101,
+    decDeg: 26.2957,
+    magnitude: 3.81,
+    color: "#eef5ff",
+  },
+  {
+    id: "theta-coronae-borealis",
+    name: "Theta Coronae Borealis",
+    constellation: "Corona Borealis",
+    raHours: 15.5588,
+    decDeg: 31.3593,
+    magnitude: 4.14,
+    color: "#d5e8ff",
+  },
+  {
+    id: "epsilon-coronae-borealis",
+    name: "Epsilon Coronae Borealis",
+    constellation: "Corona Borealis",
+    raHours: 15.96,
+    decDeg: 26.8776,
+    magnitude: 4.14,
+    color: "#ffcfa2",
+  },
+  {
+    id: "delta-coronae-borealis",
+    name: "Delta Coronae Borealis",
+    constellation: "Corona Borealis",
+    raHours: 15.8228,
+    decDeg: 26.0682,
+    magnitude: 4.59,
+    color: "#fff6e4",
+  },
+  {
+    id: "meridiana",
+    name: "Meridiana",
+    constellation: "Corona Australis",
+    raHours: 19.158,
+    decDeg: -37.9045,
+    magnitude: 4.1,
+    color: "#eef5ff",
+  },
+  {
+    id: "beta-coronae-australis",
+    name: "Beta Coronae Australis",
+    constellation: "Corona Australis",
+    raHours: 19.1673,
+    decDeg: -39.3407,
+    magnitude: 4.11,
+    color: "#ffd8ac",
+  },
+  {
+    id: "alpha-telescopii",
+    name: "Alpha Telescopii",
+    constellation: "Telescopium",
+    raHours: 18.4497,
+    decDeg: -45.9683,
+    magnitude: 3.49,
+    color: "#d5e8ff",
+  },
+  { id: "alpha-indi", name: "Alpha Indi", constellation: "Indus", raHours: 20.6259, decDeg: -47.2915, magnitude: 3.11, color: "#ffcfa2" },
+  { id: "beta-indi", name: "Beta Indi", constellation: "Indus", raHours: 20.9128, decDeg: -58.4541, magnitude: 3.65, color: "#ffcb9a" },
+  {
+    id: "alpha-tucanae",
+    name: "Alpha Tucanae",
+    constellation: "Tucana",
+    raHours: 22.3084,
+    decDeg: -60.2597,
+    magnitude: 2.86,
+    color: "#ffcb9a",
+  },
+  {
+    id: "gamma-tucanae",
+    name: "Gamma Tucanae",
+    constellation: "Tucana",
+    raHours: 23.2929,
+    decDeg: -58.2359,
+    magnitude: 3.99,
+    color: "#fff6e4",
+  },
+  { id: "beta-hydri", name: "Beta Hydri", constellation: "Hydrus", raHours: 0.4293, decDeg: -77.2544, magnitude: 2.8, color: "#fff6e4" },
+  { id: "alpha-hydri", name: "Alpha Hydri", constellation: "Hydrus", raHours: 1.9799, decDeg: -61.5697, magnitude: 2.86, color: "#f4f7ff" },
+  { id: "gamma-hydri", name: "Gamma Hydri", constellation: "Hydrus", raHours: 3.7876, decDeg: -74.2393, magnitude: 3.24, color: "#ffbf94" },
+  {
+    id: "alpha-reticuli",
+    name: "Alpha Reticuli",
+    constellation: "Reticulum",
+    raHours: 4.2404,
+    decDeg: -62.4739,
+    magnitude: 3.35,
+    color: "#fff0cf",
+  },
+  {
+    id: "beta-reticuli",
+    name: "Beta Reticuli",
+    constellation: "Reticulum",
+    raHours: 3.7381,
+    decDeg: -64.8071,
+    magnitude: 3.85,
+    color: "#ffcfa2",
+  },
+  {
+    id: "alpha-doradus",
+    name: "Alpha Doradus",
+    constellation: "Dorado",
+    raHours: 4.567,
+    decDeg: -55.045,
+    magnitude: 3.27,
+    color: "#eef5ff",
+  },
+  {
+    id: "beta-doradus",
+    name: "Beta Doradus",
+    constellation: "Dorado",
+    raHours: 5.5578,
+    decDeg: -62.4899,
+    magnitude: 3.76,
+    color: "#fff6e4",
+  },
+  {
+    id: "alpha-pictoris",
+    name: "Alpha Pictoris",
+    constellation: "Pictor",
+    raHours: 6.8032,
+    decDeg: -61.9414,
+    magnitude: 3.27,
+    color: "#eef5ff",
+  },
+  {
+    id: "beta-pictoris",
+    name: "Beta Pictoris",
+    constellation: "Pictor",
+    raHours: 5.788,
+    decDeg: -51.0665,
+    magnitude: 3.86,
+    color: "#eef5ff",
+  },
+  {
+    id: "beta-volantis",
+    name: "Beta Volantis",
+    constellation: "Volans",
+    raHours: 8.426,
+    decDeg: -66.1369,
+    magnitude: 3.77,
+    color: "#ffcb9a",
+  },
+  {
+    id: "gamma-volantis",
+    name: "Gamma Volantis",
+    constellation: "Volans",
+    raHours: 7.1456,
+    decDeg: -70.499,
+    magnitude: 3.78,
+    color: "#ffcfa2",
+  },
+  {
+    id: "alpha-muscae",
+    name: "Alpha Muscae",
+    constellation: "Musca",
+    raHours: 12.6194,
+    decDeg: -69.1355,
+    magnitude: 2.69,
+    color: "#cfe6ff",
+  },
+  { id: "beta-muscae", name: "Beta Muscae", constellation: "Musca", raHours: 12.7706, decDeg: -68.1082, magnitude: 3.05, color: "#d0e7ff" },
+  {
+    id: "delta-muscae",
+    name: "Delta Muscae",
+    constellation: "Musca",
+    raHours: 13.0272,
+    decDeg: -71.5488,
+    magnitude: 3.62,
+    color: "#ffcfa2",
+  },
+  {
+    id: "alpha-chamaeleontis",
+    name: "Alpha Chamaeleontis",
+    constellation: "Chamaeleon",
+    raHours: 8.3088,
+    decDeg: -76.9198,
+    magnitude: 4.06,
+    color: "#fff6e4",
+  },
+  {
+    id: "gamma-chamaeleontis",
+    name: "Gamma Chamaeleontis",
+    constellation: "Chamaeleon",
+    raHours: 10.5926,
+    decDeg: -78.6077,
+    magnitude: 4.11,
+    color: "#ffbf94",
+  },
+  {
+    id: "alpha-apodis",
+    name: "Alpha Apodis",
+    constellation: "Apus",
+    raHours: 14.7978,
+    decDeg: -79.0447,
+    magnitude: 3.83,
+    color: "#ffcb9a",
+  },
+  { id: "nu-octantis", name: "Nu Octantis", constellation: "Octans", raHours: 21.691, decDeg: -77.3903, magnitude: 3.73, color: "#ffdcb0" },
+  {
+    id: "beta-octantis",
+    name: "Beta Octantis",
+    constellation: "Octans",
+    raHours: 22.7669,
+    decDeg: -81.3819,
+    magnitude: 4.13,
+    color: "#eef5ff",
+  },
+  { id: "alpha-mensae", name: "Alpha Mensae", constellation: "Mensa", raHours: 6.169, decDeg: -74.7531, magnitude: 5.09, color: "#fff6e4" },
+  {
+    id: "alpha-horologii",
+    name: "Alpha Horologii",
+    constellation: "Horologium",
+    raHours: 4.2325,
+    decDeg: -42.2942,
+    magnitude: 3.85,
+    color: "#ffdcb0",
+  },
+  { id: "alpha-caeli", name: "Alpha Caeli", constellation: "Caelum", raHours: 4.6761, decDeg: -41.8636, magnitude: 4.44, color: "#fff6e4" },
+  {
+    id: "alpha-fornacis",
+    name: "Alpha Fornacis",
+    constellation: "Fornax",
+    raHours: 3.2013,
+    decDeg: -28.9877,
+    magnitude: 3.87,
+    color: "#fff6e4",
+  },
+  {
+    id: "alpha-sculptoris",
+    name: "Alpha Sculptoris",
+    constellation: "Sculptor",
+    raHours: 0.9769,
+    decDeg: -29.3572,
+    magnitude: 4.3,
+    color: "#d5e8ff",
+  },
+  {
+    id: "beta-sculptoris",
+    name: "Beta Sculptoris",
+    constellation: "Sculptor",
+    raHours: 23.8168,
+    decDeg: -37.8183,
+    magnitude: 4.37,
+    color: "#eef5ff",
+  },
+  {
+    id: "gamma-microscopii",
+    name: "Gamma Microscopii",
+    constellation: "Microscopium",
+    raHours: 21.0175,
+    decDeg: -32.2525,
+    magnitude: 4.67,
+    color: "#fff0cf",
+  },
+  { id: "kitalpha", name: "Kitalpha", constellation: "Equuleus", raHours: 21.2621, decDeg: 5.2478, magnitude: 3.92, color: "#fff6e4" },
+  { id: "alpha-scuti", name: "Alpha Scuti", constellation: "Scutum", raHours: 18.5865, decDeg: -8.2443, magnitude: 3.85, color: "#ffcfa2" },
+  { id: "beta-scuti", name: "Beta Scuti", constellation: "Scutum", raHours: 18.7864, decDeg: -4.7478, magnitude: 4.22, color: "#fff0cf" },
+  { id: "cursa", name: "Cursa", constellation: "Eridanus", raHours: 5.1305, decDeg: -5.0864, magnitude: 2.79, color: "#eef5ff" },
+  { id: "acamar", name: "Acamar", constellation: "Eridanus", raHours: 2.971, decDeg: -40.3047, magnitude: 2.88, color: "#eef5ff" },
+  { id: "zaurak", name: "Zaurak", constellation: "Eridanus", raHours: 3.9679, decDeg: -13.5085, magnitude: 2.95, color: "#ffbb95" },
+  { id: "rana", name: "Rana", constellation: "Eridanus", raHours: 3.7208, decDeg: -9.7653, magnitude: 3.54, color: "#ffd8ac" },
+  {
+    id: "phi-eridani",
+    name: "Phi Eridani",
+    constellation: "Eridanus",
+    raHours: 2.2818,
+    decDeg: -51.5121,
+    magnitude: 3.55,
+    color: "#d0e7ff",
+  },
+  {
+    id: "chi-eridani",
+    name: "Chi Eridani",
+    constellation: "Eridanus",
+    raHours: 1.9308,
+    decDeg: -51.6091,
+    magnitude: 3.7,
+    color: "#fff6e4",
+  },
+  {
+    id: "epsilon-eridani",
+    name: "Epsilon Eridani",
+    constellation: "Eridanus",
+    raHours: 3.5493,
+    decDeg: -9.4581,
+    magnitude: 3.73,
+    color: "#ffcb9a",
+  },
+  {
+    id: "upsilon2-eridani",
+    name: "Upsilon2 Eridani",
+    constellation: "Eridanus",
+    raHours: 4.5875,
+    decDeg: -30.5623,
+    magnitude: 3.82,
+    color: "#ffdcb0",
+  },
+  { id: "azha", name: "Azha", constellation: "Eridanus", raHours: 2.7906, decDeg: -8.8981, magnitude: 3.89, color: "#ffdcb0" },
+  { id: "nu-eridani", name: "Nu Eridani", constellation: "Eridanus", raHours: 4.6035, decDeg: -3.3524, magnitude: 3.93, color: "#d0e7ff" },
+  {
+    id: "iota-eridani",
+    name: "Iota Eridani",
+    constellation: "Eridanus",
+    raHours: 2.7455,
+    decDeg: -39.8554,
+    magnitude: 4.11,
+    color: "#ffdcb0",
+  },
+  {
+    id: "kappa-eridani",
+    name: "Kappa Eridani",
+    constellation: "Eridanus",
+    raHours: 2.4457,
+    decDeg: -47.7038,
+    magnitude: 4.25,
+    color: "#d0e7ff",
+  },
+  {
+    id: "gamma-hydrae",
+    name: "Gamma Hydrae",
+    constellation: "Hydra",
+    raHours: 13.3157,
+    decDeg: -23.1717,
+    magnitude: 2.99,
+    color: "#fff6e4",
+  },
+  { id: "zeta-hydrae", name: "Zeta Hydrae", constellation: "Hydra", raHours: 8.9231, decDeg: 5.9455, magnitude: 3.11, color: "#ffdcb0" },
+  { id: "nu-hydrae", name: "Nu Hydrae", constellation: "Hydra", raHours: 10.8298, decDeg: -16.1936, magnitude: 3.11, color: "#ffcfa2" },
+  { id: "pi-hydrae", name: "Pi Hydrae", constellation: "Hydra", raHours: 14.1062, decDeg: -26.682, magnitude: 3.25, color: "#ffcfa2" },
+  {
+    id: "epsilon-hydrae",
+    name: "Epsilon Hydrae",
+    constellation: "Hydra",
+    raHours: 8.7794,
+    decDeg: 6.4189,
+    magnitude: 3.38,
+    color: "#fff6e4",
+  },
+  { id: "xi-hydrae", name: "Xi Hydrae", constellation: "Hydra", raHours: 11.5527, decDeg: -31.8577, magnitude: 3.54, color: "#fff6e4" },
+  {
+    id: "lambda-hydrae",
+    name: "Lambda Hydrae",
+    constellation: "Hydra",
+    raHours: 10.1094,
+    decDeg: -12.3541,
+    magnitude: 3.61,
+    color: "#ffdcb0",
+  },
+  { id: "mu-hydrae", name: "Mu Hydrae", constellation: "Hydra", raHours: 10.4359, decDeg: -16.836, magnitude: 3.81, color: "#ffcfa2" },
+  { id: "theta-hydrae", name: "Theta Hydrae", constellation: "Hydra", raHours: 9.2409, decDeg: 2.314, magnitude: 3.88, color: "#d8ebff" },
+  { id: "iota-hydrae", name: "Iota Hydrae", constellation: "Hydra", raHours: 9.6634, decDeg: -1.1428, magnitude: 3.9, color: "#ffcb9a" },
+  { id: "delta-hydrae", name: "Delta Hydrae", constellation: "Hydra", raHours: 8.6273, decDeg: 5.7038, magnitude: 4.14, color: "#eef5ff" },
+  { id: "eta-hydrae", name: "Eta Hydrae", constellation: "Hydra", raHours: 8.7202, decDeg: 3.3993, magnitude: 4.3, color: "#d5e8ff" },
+  { id: "sigma-hydrae", name: "Sigma Hydrae", constellation: "Hydra", raHours: 8.6446, decDeg: 3.3413, magnitude: 4.44, color: "#ffcfa2" },
+  {
+    id: "rigil-kentaurus",
+    name: "Rigil Kentaurus",
+    constellation: "Centaurus",
+    raHours: 14.6601,
+    decDeg: -60.834,
+    magnitude: -0.27,
+    color: "#fff6e4",
+  },
+  { id: "menkent", name: "Menkent", constellation: "Centaurus", raHours: 14.1114, decDeg: -36.37, magnitude: 2.06, color: "#ffcfa2" },
+  {
+    id: "gamma-centauri",
+    name: "Gamma Centauri",
+    constellation: "Centaurus",
+    raHours: 12.6919,
+    decDeg: -48.9599,
+    magnitude: 2.17,
+    color: "#eef5ff",
+  },
+  {
+    id: "epsilon-centauri",
+    name: "Epsilon Centauri",
+    constellation: "Centaurus",
+    raHours: 13.6647,
+    decDeg: -53.4664,
+    magnitude: 2.3,
+    color: "#cfe6ff",
+  },
+  {
+    id: "eta-centauri",
+    name: "Eta Centauri",
+    constellation: "Centaurus",
+    raHours: 14.5947,
+    decDeg: -42.1578,
+    magnitude: 2.31,
+    color: "#d0e7ff",
+  },
+  {
+    id: "zeta-centauri",
+    name: "Zeta Centauri",
+    constellation: "Centaurus",
+    raHours: 13.9126,
+    decDeg: -47.2882,
+    magnitude: 2.55,
+    color: "#cfe6ff",
+  },
+  {
+    id: "delta-centauri",
+    name: "Delta Centauri",
+    constellation: "Centaurus",
+    raHours: 12.1399,
+    decDeg: -50.7226,
+    magnitude: 2.58,
+    color: "#d0e7ff",
+  },
+  {
+    id: "iota-centauri",
+    name: "Iota Centauri",
+    constellation: "Centaurus",
+    raHours: 13.3436,
+    decDeg: -36.7123,
+    magnitude: 2.75,
+    color: "#eef5ff",
+  },
+  {
+    id: "kappa-centauri",
+    name: "Kappa Centauri",
+    constellation: "Centaurus",
+    raHours: 14.9899,
+    decDeg: -42.1042,
+    magnitude: 3.13,
+    color: "#d0e7ff",
+  },
+  {
+    id: "lambda-centauri",
+    name: "Lambda Centauri",
+    constellation: "Centaurus",
+    raHours: 11.596,
+    decDeg: -63.0195,
+    magnitude: 3.13,
+    color: "#d8ebff",
+  },
+  { id: "regor", name: "Regor", constellation: "Vela", raHours: 8.1584, decDeg: -47.3367, magnitude: 1.78, color: "#cfe6ff" },
+  { id: "alsephina", name: "Alsephina", constellation: "Vela", raHours: 8.745, decDeg: -54.7086, magnitude: 1.96, color: "#eef5ff" },
+  { id: "markeb", name: "Markeb", constellation: "Vela", raHours: 9.368, decDeg: -55.0107, magnitude: 2.47, color: "#d0e7ff" },
+  { id: "mu-velorum", name: "Mu Velorum", constellation: "Vela", raHours: 10.7772, decDeg: -49.4201, magnitude: 2.69, color: "#fff0cf" },
+  { id: "phi-velorum", name: "Phi Velorum", constellation: "Vela", raHours: 9.9569, decDeg: -54.5677, magnitude: 3.52, color: "#d5e8ff" },
+  { id: "psi-velorum", name: "Psi Velorum", constellation: "Vela", raHours: 9.5108, decDeg: -40.4667, magnitude: 3.6, color: "#f4f7ff" },
+  { id: "pi-puppis", name: "Pi Puppis", constellation: "Puppis", raHours: 7.2846, decDeg: -37.0975, magnitude: 2.71, color: "#ffcb9a" },
+  { id: "rho-puppis", name: "Rho Puppis", constellation: "Puppis", raHours: 8.1258, decDeg: -24.3042, magnitude: 2.83, color: "#fff6e4" },
+  { id: "tau-puppis", name: "Tau Puppis", constellation: "Puppis", raHours: 6.832, decDeg: -50.6144, magnitude: 2.94, color: "#ffdcb0" },
+  { id: "nu-puppis", name: "Nu Puppis", constellation: "Puppis", raHours: 6.6377, decDeg: -43.1957, magnitude: 3.17, color: "#d5e8ff" },
+  {
+    id: "sigma-puppis",
+    name: "Sigma Puppis",
+    constellation: "Puppis",
+    raHours: 7.4531,
+    decDeg: -43.3011,
+    magnitude: 3.25,
+    color: "#ffcb9a",
+  },
+  { id: "xi-puppis", name: "Xi Puppis", constellation: "Puppis", raHours: 7.8221, decDeg: -24.8597, magnitude: 3.34, color: "#fff0cf" },
+  { id: "aspidiske", name: "Aspidiske", constellation: "Carina", raHours: 9.285, decDeg: -59.2753, magnitude: 2.21, color: "#fff6e4" },
+  {
+    id: "theta-carinae",
+    name: "Theta Carinae",
+    constellation: "Carina",
+    raHours: 10.715,
+    decDeg: -64.3945,
+    magnitude: 2.74,
+    color: "#cfe6ff",
+  },
+  {
+    id: "upsilon-carinae",
+    name: "Upsilon Carinae",
+    constellation: "Carina",
+    raHours: 9.785,
+    decDeg: -65.072,
+    magnitude: 2.92,
+    color: "#f4f7ff",
+  },
+  {
+    id: "omega-carinae",
+    name: "Omega Carinae",
+    constellation: "Carina",
+    raHours: 10.2288,
+    decDeg: -70.0381,
+    magnitude: 3.29,
+    color: "#d0e7ff",
+  },
+  { id: "p-carinae", name: "p Carinae", constellation: "Carina", raHours: 10.532, decDeg: -61.6853, magnitude: 3.32, color: "#d0e7ff" },
+  { id: "tiaki", name: "Tiaki", constellation: "Grus", raHours: 22.7113, decDeg: -46.8846, magnitude: 2.07, color: "#ffbb95" },
+  { id: "aldhanab", name: "Aldhanab", constellation: "Grus", raHours: 21.8987, decDeg: -37.3648, magnitude: 3, color: "#d5e8ff" },
+  {
+    id: "epsilon-gruis",
+    name: "Epsilon Gruis",
+    constellation: "Grus",
+    raHours: 22.8091,
+    decDeg: -51.3167,
+    magnitude: 3.49,
+    color: "#f4f7ff",
+  },
+  { id: "iota-gruis", name: "Iota Gruis", constellation: "Grus", raHours: 23.1727, decDeg: -45.2469, magnitude: 3.9, color: "#ffcfa2" },
+  { id: "delta-gruis", name: "Delta Gruis", constellation: "Grus", raHours: 22.4874, decDeg: -43.4958, magnitude: 3.97, color: "#fff0cf" },
+  { id: "zeta-gruis", name: "Zeta Gruis", constellation: "Grus", raHours: 23.1691, decDeg: -52.7539, magnitude: 4.11, color: "#fff6e4" },
+  {
+    id: "beta-phoenicis",
+    name: "Beta Phoenicis",
+    constellation: "Phoenix",
+    raHours: 1.101,
+    decDeg: -46.7185,
+    magnitude: 3.31,
+    color: "#fff6e4",
+  },
+  {
+    id: "gamma-phoenicis",
+    name: "Gamma Phoenicis",
+    constellation: "Phoenix",
+    raHours: 1.4728,
+    decDeg: -43.3182,
+    magnitude: 3.41,
+    color: "#ffbb95",
+  },
+  {
+    id: "epsilon-phoenicis",
+    name: "Epsilon Phoenicis",
+    constellation: "Phoenix",
+    raHours: 0.1573,
+    decDeg: -45.7473,
+    magnitude: 3.88,
+    color: "#ffcfa2",
+  },
+  {
+    id: "zeta-phoenicis",
+    name: "Zeta Phoenicis",
+    constellation: "Phoenix",
+    raHours: 1.1391,
+    decDeg: -55.2456,
+    magnitude: 3.92,
+    color: "#d5e8ff",
+  },
+  {
+    id: "delta-phoenicis",
+    name: "Delta Phoenicis",
+    constellation: "Phoenix",
+    raHours: 1.5218,
+    decDeg: -49.0731,
+    magnitude: 3.93,
+    color: "#fff0cf",
+  },
+  {
+    id: "kappa-phoenicis",
+    name: "Kappa Phoenicis",
+    constellation: "Phoenix",
+    raHours: 0.4359,
+    decDeg: -43.6797,
+    magnitude: 3.94,
+    color: "#f4f7ff",
+  },
+  {
+    id: "deneb-algenubi",
+    name: "Deneb Algenubi",
+    constellation: "Cetus",
+    raHours: 1.1423,
+    decDeg: -10.182,
+    magnitude: 3.45,
+    color: "#ffcfa2",
+  },
+  { id: "kaffaljidhma", name: "Kaffaljidhma", constellation: "Cetus", raHours: 2.7217, decDeg: 3.2359, magnitude: 3.47, color: "#f4f7ff" },
+  { id: "tau-ceti", name: "Tau Ceti", constellation: "Cetus", raHours: 1.7345, decDeg: -15.9375, magnitude: 3.5, color: "#fff6e4" },
+  { id: "iota-ceti", name: "Iota Ceti", constellation: "Cetus", raHours: 0.3234, decDeg: -8.8235, magnitude: 3.56, color: "#ffcfa2" },
+  { id: "theta-ceti", name: "Theta Ceti", constellation: "Cetus", raHours: 1.16, decDeg: -8.1836, magnitude: 3.6, color: "#ffcfa2" },
+  { id: "baten-kaitos", name: "Baten Kaitos", constellation: "Cetus", raHours: 1.8574, decDeg: -10.335, magnitude: 3.73, color: "#ffdcb0" },
+  {
+    id: "upsilon-ceti",
+    name: "Upsilon Ceti",
+    constellation: "Cetus",
+    raHours: 2.3446,
+    decDeg: -21.0778,
+    magnitude: 3.99,
+    color: "#ffbb95",
+  },
+  { id: "delta-ceti", name: "Delta Ceti", constellation: "Cetus", raHours: 2.6564, decDeg: 0.3285, magnitude: 4.07, color: "#d5e8ff" },
+  { id: "alpherg", name: "Alpherg", constellation: "Pisces", raHours: 1.5249, decDeg: 15.3459, magnitude: 3.62, color: "#fff6e4" },
+  {
+    id: "gamma-piscium",
+    name: "Gamma Piscium",
+    constellation: "Pisces",
+    raHours: 23.286,
+    decDeg: 3.2822,
+    magnitude: 3.7,
+    color: "#fff0cf",
+  },
+  {
+    id: "omega-piscium",
+    name: "Omega Piscium",
+    constellation: "Pisces",
+    raHours: 23.9924,
+    decDeg: 6.8637,
+    magnitude: 4.01,
+    color: "#f4f7ff",
+  },
+  {
+    id: "iota-piscium",
+    name: "Iota Piscium",
+    constellation: "Pisces",
+    raHours: 23.6604,
+    decDeg: 5.6265,
+    magnitude: 4.13,
+    color: "#f4f7ff",
+  },
+  {
+    id: "omicron-piscium",
+    name: "Omicron Piscium",
+    constellation: "Pisces",
+    raHours: 1.7736,
+    decDeg: 9.1578,
+    magnitude: 4.26,
+    color: "#fff0cf",
+  },
+  {
+    id: "epsilon-piscium",
+    name: "Epsilon Piscium",
+    constellation: "Pisces",
+    raHours: 1.0577,
+    decDeg: 7.8901,
+    magnitude: 4.27,
+    color: "#fff0cf",
+  },
+  {
+    id: "theta-piscium",
+    name: "Theta Piscium",
+    constellation: "Pisces",
+    raHours: 23.4661,
+    decDeg: 6.379,
+    magnitude: 4.27,
+    color: "#ffcfa2",
+  },
+  {
+    id: "delta-piscium",
+    name: "Delta Piscium",
+    constellation: "Pisces",
+    raHours: 0.8143,
+    decDeg: 7.585,
+    magnitude: 4.43,
+    color: "#ffcfa2",
+  },
+  {
+    id: "beta-piscium",
+    name: "Beta Piscium",
+    constellation: "Pisces",
+    raHours: 23.0396,
+    decDeg: 3.8203,
+    magnitude: 4.48,
+    color: "#d5e8ff",
+  },
+  {
+    id: "zeta-aquarii",
+    name: "Zeta Aquarii",
+    constellation: "Aquarius",
+    raHours: 22.4807,
+    decDeg: -0.0201,
+    magnitude: 3.65,
+    color: "#f4f7ff",
+  },
+  {
+    id: "lambda-aquarii",
+    name: "Lambda Aquarii",
+    constellation: "Aquarius",
+    raHours: 22.8763,
+    decDeg: -7.5794,
+    magnitude: 3.73,
+    color: "#ffbb95",
+  },
+  { id: "albali", name: "Albali", constellation: "Aquarius", raHours: 20.7947, decDeg: -9.4958, magnitude: 3.77, color: "#d5e8ff" },
+  { id: "sadachbia", name: "Sadachbia", constellation: "Aquarius", raHours: 22.3606, decDeg: -1.3873, magnitude: 3.84, color: "#eef5ff" },
+  {
+    id: "tau-aquarii",
+    name: "Tau Aquarii",
+    constellation: "Aquarius",
+    raHours: 22.8778,
+    decDeg: -13.5926,
+    magnitude: 4.01,
+    color: "#ffcfa2",
+  },
+  {
+    id: "eta-aquarii",
+    name: "Eta Aquarii",
+    constellation: "Aquarius",
+    raHours: 22.5877,
+    decDeg: -0.1178,
+    magnitude: 4.02,
+    color: "#d5e8ff",
+  },
+  {
+    id: "phi-aquarii",
+    name: "Phi Aquarii",
+    constellation: "Aquarius",
+    raHours: 23.2295,
+    decDeg: -6.049,
+    magnitude: 4.22,
+    color: "#ffcfa2",
+  },
+  { id: "dabih", name: "Dabih", constellation: "Capricornus", raHours: 20.35, decDeg: -14.7813, magnitude: 3.05, color: "#ffdcb0" },
+  { id: "algedi", name: "Algedi", constellation: "Capricornus", raHours: 20.3002, decDeg: -12.5083, magnitude: 3.57, color: "#fff6e4" },
+  {
+    id: "zeta-capricorni",
+    name: "Zeta Capricorni",
+    constellation: "Capricornus",
+    raHours: 21.4447,
+    decDeg: -22.4113,
+    magnitude: 3.74,
+    color: "#fff6e4",
+  },
+  {
+    id: "theta-capricorni",
+    name: "Theta Capricorni",
+    constellation: "Capricornus",
+    raHours: 21.0983,
+    decDeg: -17.2327,
+    magnitude: 4.07,
+    color: "#eef5ff",
+  },
+  {
+    id: "omega-capricorni",
+    name: "Omega Capricorni",
+    constellation: "Capricornus",
+    raHours: 20.8617,
+    decDeg: -26.9192,
+    magnitude: 4.11,
+    color: "#ffbb95",
+  },
+  {
+    id: "psi-capricorni",
+    name: "Psi Capricorni",
+    constellation: "Capricornus",
+    raHours: 20.7692,
+    decDeg: -25.2705,
+    magnitude: 4.13,
+    color: "#fff6e4",
+  },
+  {
+    id: "iota-capricorni",
+    name: "Iota Capricorni",
+    constellation: "Capricornus",
+    raHours: 21.3712,
+    decDeg: -16.8348,
+    magnitude: 4.27,
+    color: "#fff0cf",
+  },
+  {
+    id: "epsilon-scorpii",
+    name: "Epsilon Scorpii",
+    constellation: "Scorpius",
+    raHours: 16.8361,
+    decDeg: -34.2933,
+    magnitude: 2.29,
+    color: "#ffcb9a",
+  },
+  {
+    id: "kappa-scorpii",
+    name: "Kappa Scorpii",
+    constellation: "Scorpius",
+    raHours: 17.7083,
+    decDeg: -39.0299,
+    magnitude: 2.39,
+    color: "#d0e7ff",
+  },
+  {
+    id: "zeta-ophiuchi",
+    name: "Zeta Ophiuchi",
+    constellation: "Ophiuchus",
+    raHours: 16.6191,
+    decDeg: -10.5671,
+    magnitude: 2.56,
+    color: "#cfe6ff",
+  },
+  { id: "acrab", name: "Acrab", constellation: "Scorpius", raHours: 16.0906, decDeg: -19.8055, magnitude: 2.62, color: "#d0e7ff" },
+  {
+    id: "tau-scorpii",
+    name: "Tau Scorpii",
+    constellation: "Scorpius",
+    raHours: 16.5983,
+    decDeg: -28.216,
+    magnitude: 2.82,
+    color: "#d0e7ff",
+  },
+  { id: "pi-scorpii", name: "Pi Scorpii", constellation: "Scorpius", raHours: 15.981, decDeg: -26.114, magnitude: 2.89, color: "#d0e7ff" },
+  {
+    id: "sigma-scorpii",
+    name: "Sigma Scorpii",
+    constellation: "Scorpius",
+    raHours: 16.3536,
+    decDeg: -25.5928,
+    magnitude: 2.89,
+    color: "#d5e8ff",
+  },
+  { id: "mu-scorpii", name: "Mu Scorpii", constellation: "Scorpius", raHours: 16.8622, decDeg: -38.0475, magnitude: 3, color: "#d0e7ff" },
+  {
+    id: "iota-scorpii",
+    name: "Iota Scorpii",
+    constellation: "Scorpius",
+    raHours: 17.793,
+    decDeg: -40.127,
+    magnitude: 3.03,
+    color: "#fff6e4",
+  },
+  {
+    id: "eta-scorpii",
+    name: "Eta Scorpii",
+    constellation: "Scorpius",
+    raHours: 17.2027,
+    decDeg: -43.2392,
+    magnitude: 3.32,
+    color: "#fff6e4",
+  },
+  {
+    id: "zeta-scorpii",
+    name: "Zeta Scorpii",
+    constellation: "Scorpius",
+    raHours: 16.907,
+    decDeg: -42.3612,
+    magnitude: 3.62,
+    color: "#ffbb95",
+  },
+  {
+    id: "rho-scorpii",
+    name: "Rho Scorpii",
+    constellation: "Scorpius",
+    raHours: 15.9564,
+    decDeg: -29.2141,
+    magnitude: 3.87,
+    color: "#d5e8ff",
+  },
+  {
+    id: "pi-sagittarii",
+    name: "Pi Sagittarii",
+    constellation: "Sagittarius",
+    raHours: 19.1625,
+    decDeg: -21.0235,
+    magnitude: 2.89,
+    color: "#fff6e4",
+  },
+  {
+    id: "eta-sagittarii",
+    name: "Eta Sagittarii",
+    constellation: "Sagittarius",
+    raHours: 18.2939,
+    decDeg: -36.7616,
+    magnitude: 3.11,
+    color: "#ffbb95",
+  },
+  {
+    id: "phi-sagittarii",
+    name: "Phi Sagittarii",
+    constellation: "Sagittarius",
+    raHours: 18.746,
+    decDeg: -26.9907,
+    magnitude: 3.17,
+    color: "#d8ebff",
+  },
+  {
+    id: "tau-sagittarii",
+    name: "Tau Sagittarii",
+    constellation: "Sagittarius",
+    raHours: 19.1153,
+    decDeg: -27.6705,
+    magnitude: 3.32,
+    color: "#ffcfa2",
+  },
+  {
+    id: "xi2-sagittarii",
+    name: "Xi2 Sagittarii",
+    constellation: "Sagittarius",
+    raHours: 18.9587,
+    decDeg: -21.1067,
+    magnitude: 3.51,
+    color: "#ffcfa2",
+  },
+  {
+    id: "omicron-sagittarii",
+    name: "Omicron Sagittarii",
+    constellation: "Sagittarius",
+    raHours: 19.0774,
+    decDeg: -21.7415,
+    magnitude: 3.77,
+    color: "#ffdcb0",
+  },
+  {
+    id: "kappa-ophiuchi",
+    name: "Kappa Ophiuchi",
+    constellation: "Ophiuchus",
+    raHours: 16.9611,
+    decDeg: 9.375,
+    magnitude: 3.2,
+    color: "#ffcfa2",
+  },
+  {
+    id: "theta-ophiuchi",
+    name: "Theta Ophiuchi",
+    constellation: "Ophiuchus",
+    raHours: 17.369,
+    decDeg: -24.9995,
+    magnitude: 3.27,
+    color: "#d0e7ff",
+  },
+  {
+    id: "nu-ophiuchi",
+    name: "Nu Ophiuchi",
+    constellation: "Ophiuchus",
+    raHours: 17.9843,
+    decDeg: -9.7735,
+    magnitude: 3.32,
+    color: "#ffdcb0",
+  },
+  {
+    id: "gamma-ophiuchi",
+    name: "Gamma Ophiuchi",
+    constellation: "Ophiuchus",
+    raHours: 17.7978,
+    decDeg: 2.7073,
+    magnitude: 3.75,
+    color: "#eef5ff",
+  },
+  {
+    id: "zeta-herculis",
+    name: "Zeta Herculis",
+    constellation: "Hercules",
+    raHours: 16.6882,
+    decDeg: 31.6019,
+    magnitude: 2.81,
+    color: "#fff6e4",
+  },
+  {
+    id: "pi-herculis",
+    name: "Pi Herculis",
+    constellation: "Hercules",
+    raHours: 17.2506,
+    decDeg: 36.8092,
+    magnitude: 3.16,
+    color: "#ffcfa2",
+  },
+  {
+    id: "mu-herculis",
+    name: "Mu Herculis",
+    constellation: "Hercules",
+    raHours: 17.7746,
+    decDeg: 27.7204,
+    magnitude: 3.42,
+    color: "#fff6e4",
+  },
+  {
+    id: "eta-herculis",
+    name: "Eta Herculis",
+    constellation: "Hercules",
+    raHours: 16.7146,
+    decDeg: 38.9224,
+    magnitude: 3.53,
+    color: "#ffdcb0",
+  },
+  {
+    id: "xi-herculis",
+    name: "Xi Herculis",
+    constellation: "Hercules",
+    raHours: 17.9633,
+    decDeg: 29.2478,
+    magnitude: 3.7,
+    color: "#ffdcb0",
+  },
+  {
+    id: "iota-herculis",
+    name: "Iota Herculis",
+    constellation: "Hercules",
+    raHours: 17.6606,
+    decDeg: 46.0064,
+    magnitude: 3.8,
+    color: "#d5e8ff",
+  },
+  {
+    id: "tau-herculis",
+    name: "Tau Herculis",
+    constellation: "Hercules",
+    raHours: 16.3323,
+    decDeg: 46.3132,
+    magnitude: 3.89,
+    color: "#d5e8ff",
+  },
+  {
+    id: "epsilon-herculis",
+    name: "Epsilon Herculis",
+    constellation: "Hercules",
+    raHours: 17.0049,
+    decDeg: 30.9263,
+    magnitude: 3.92,
+    color: "#dcecff",
+  },
+  {
+    id: "beta-serpentis",
+    name: "Beta Serpentis",
+    constellation: "Serpens",
+    raHours: 15.7696,
+    decDeg: 15.4218,
+    magnitude: 3.65,
+    color: "#eef5ff",
+  },
+  {
+    id: "mu-serpentis",
+    name: "Mu Serpentis",
+    constellation: "Serpens",
+    raHours: 15.8265,
+    decDeg: -3.4303,
+    magnitude: 3.53,
+    color: "#eef5ff",
+  },
+  {
+    id: "eta-serpentis",
+    name: "Eta Serpentis",
+    constellation: "Serpens",
+    raHours: 18.3552,
+    decDeg: -2.8987,
+    magnitude: 3.26,
+    color: "#ffdcb0",
+  },
+  {
+    id: "xi-serpentis",
+    name: "Xi Serpentis",
+    constellation: "Serpens",
+    raHours: 17.6259,
+    decDeg: -15.3985,
+    magnitude: 3.54,
+    color: "#fff6e4",
+  },
+  {
+    id: "epsilon-serpentis",
+    name: "Epsilon Serpentis",
+    constellation: "Serpens",
+    raHours: 15.8467,
+    decDeg: 4.4777,
+    magnitude: 3.71,
+    color: "#f4f7ff",
+  },
+  {
+    id: "delta-serpentis",
+    name: "Delta Serpentis",
+    constellation: "Serpens",
+    raHours: 15.5799,
+    decDeg: 10.5389,
+    magnitude: 3.8,
+    color: "#f4f7ff",
+  },
+  {
+    id: "gamma-serpentis",
+    name: "Gamma Serpentis",
+    constellation: "Serpens",
+    raHours: 15.9407,
+    decDeg: 15.6618,
+    magnitude: 3.85,
+    color: "#fff6e4",
+  },
+
+  // Fictional entries — Rolnopol's own sky, not real astronomy. Flagged
+  // `fictional: true` so the rest of the catalog stays a truthful record.
+  {
+    id: "nullframe-7",
+    name: "NULLFRAME-7",
+    constellation: "Rolnopol",
+    raHours: 7,
+    decDeg: -7.7,
+    magnitude: 4.9,
+    color: "#ffb15c",
+    fictional: true,
+    lore: "Industrial memory held in light. Catalogued by NULLFRAME Heavy Industries; the period never repeats the same way twice.",
+  },
+  {
+    id: "pluvia-rubra",
+    name: "Pluvia Rubra",
+    constellation: "Rolnopol",
+    raHours: 7.07,
+    decDeg: -7.07,
+    magnitude: 5.3,
+    color: "#c2453a",
+    fictional: true,
+    lore: "The red rain star. Weather stations logged it on the nights the ditch stayed warm.",
+  },
+  {
+    id: "speculum-cinereum",
+    name: "Speculum Cinereum",
+    constellation: "Rolnopol",
+    raHours: 6.93,
+    decDeg: -8.14,
+    magnitude: 5.6,
+    color: "#b9bec7",
+    fictional: true,
+    lore: "The ash mirror. Every measurement taken of it arrives; none of them return.",
+  },
 ];
 
 const PLANET_CATALOG = [
@@ -424,9 +1901,7 @@ const CONSTELLATION_SEGMENTS = [
   ["regulus", "algieba"],
   ["algieba", "denebola"],
   ["regulus", "denebola"],
-  ["antares", "shaula"],
   ["shaula", "lesath"],
-  ["antares", "sargas"],
   ["markab", "scheat"],
   ["markab", "enif"],
   ["enif", "scheat"],
@@ -444,7 +1919,6 @@ const CONSTELLATION_SEGMENTS = [
   ["adhafera", "rasalas"],
   ["rasalas", "zosma"],
   ["zosma", "denebola"],
-  ["dschubba", "antares"],
   ["kaus-borealis", "nunki"],
   ["nunki", "kaus-media"],
   ["kaus-media", "kaus-australis"],
@@ -475,7 +1949,6 @@ const CONSTELLATION_SEGMENTS = [
   ["mirfak", "atik"],
   ["atik", "menkib"],
   ["sadalmelik", "sadalsuud"],
-  ["sadalmelik", "skaat"],
   ["zubenelgenubi", "zubeneschamali"],
   ["ruchbah", "navi"],
   ["navi", "segin"],
@@ -523,11 +1996,259 @@ const CONSTELLATION_SEGMENTS = [
   ["zubenelgenubi", "zubenelhakrabi"],
   ["zubenelhakrabi", "zubeneschamali"],
   ["naos", "suhail"],
+
+  // --- Catalog expansion: figures for the stars added above ----------------
+  ["altarf", "asellus-australis"],
+  ["asellus-australis", "asellus-borealis"],
+  ["asellus-australis", "acubens"],
+  ["asellus-borealis", "iota-cancri"],
+  ["gamma-monocerotis", "beta-monocerotis"],
+  ["beta-monocerotis", "delta-monocerotis"],
+  ["delta-monocerotis", "alpha-monocerotis"],
+  ["arneb", "nihal"],
+  ["nihal", "epsilon-leporis"],
+  ["epsilon-leporis", "mu-leporis"],
+  ["mu-leporis", "arneb"],
+  ["nihal", "gamma-leporis"],
+  ["gamma-leporis", "delta-leporis"],
+  ["delta-leporis", "zeta-leporis"],
+  ["zeta-leporis", "arneb"],
+  ["epsilon-columbae", "phact"],
+  ["phact", "wazn"],
+  ["wazn", "delta-columbae"],
+  ["sualocin", "rotanev"],
+  ["rotanev", "delta-delphini"],
+  ["delta-delphini", "gamma-delphini"],
+  ["gamma-delphini", "sualocin"],
+  ["delta-delphini", "epsilon-delphini"],
+  ["sham", "delta-sagittae"],
+  ["beta-sagittae", "delta-sagittae"],
+  ["delta-sagittae", "gamma-sagittae"],
+  ["alpha-lacertae", "beta-lacertae"],
+  ["mothallah", "beta-trianguli"],
+  ["beta-trianguli", "gamma-trianguli"],
+  ["gamma-trianguli", "mothallah"],
+  ["alpha-lyncis", "38-lyncis"],
+  ["alpha-camelopardalis", "beta-camelopardalis"],
+  ["cor-caroli", "chara"],
+  ["gamma-comae", "beta-comae"],
+  ["beta-comae", "diadem"],
+  ["alkes", "beta-crateris"],
+  ["beta-crateris", "gamma-crateris"],
+  ["gamma-crateris", "delta-crateris"],
+  ["delta-crateris", "alkes"],
+  ["alpha-pyxidis", "beta-pyxidis"],
+  ["alpha-lupi", "beta-lupi"],
+  ["beta-lupi", "delta-lupi"],
+  ["delta-lupi", "gamma-lupi"],
+  ["delta-lupi", "epsilon-lupi"],
+  ["epsilon-lupi", "zeta-lupi"],
+  ["zeta-lupi", "alpha-lupi"],
+  ["alpha-arae", "beta-arae"],
+  ["beta-arae", "gamma-arae"],
+  ["gamma-arae", "delta-arae"],
+  ["gamma-arae", "zeta-arae"],
+  ["theta-coronae-borealis", "nusakan"],
+  ["nusakan", "alphecca"],
+  ["alphecca", "gamma-coronae-borealis"],
+  ["gamma-coronae-borealis", "delta-coronae-borealis"],
+  ["delta-coronae-borealis", "epsilon-coronae-borealis"],
+  ["meridiana", "beta-coronae-australis"],
+  ["alpha-indi", "beta-indi"],
+  ["alpha-tucanae", "gamma-tucanae"],
+  ["beta-hydri", "alpha-hydri"],
+  ["alpha-hydri", "gamma-hydri"],
+  ["gamma-hydri", "beta-hydri"],
+  ["alpha-reticuli", "beta-reticuli"],
+  ["alpha-doradus", "beta-doradus"],
+  ["alpha-pictoris", "beta-pictoris"],
+  ["beta-volantis", "gamma-volantis"],
+  ["alpha-muscae", "beta-muscae"],
+  ["alpha-muscae", "delta-muscae"],
+  ["alpha-chamaeleontis", "gamma-chamaeleontis"],
+  ["nu-octantis", "beta-octantis"],
+  ["alpha-sculptoris", "beta-sculptoris"],
+  ["alpha-scuti", "beta-scuti"],
+  ["cursa", "nu-eridani"],
+  ["nu-eridani", "zaurak"],
+  ["zaurak", "rana"],
+  ["rana", "epsilon-eridani"],
+  ["epsilon-eridani", "azha"],
+  ["azha", "upsilon2-eridani"],
+  ["upsilon2-eridani", "acamar"],
+  ["acamar", "iota-eridani"],
+  ["iota-eridani", "kappa-eridani"],
+  ["kappa-eridani", "phi-eridani"],
+  ["phi-eridani", "chi-eridani"],
+  ["chi-eridani", "achernar"],
+  ["eta-hydrae", "sigma-hydrae"],
+  ["sigma-hydrae", "delta-hydrae"],
+  ["delta-hydrae", "epsilon-hydrae"],
+  ["epsilon-hydrae", "zeta-hydrae"],
+  ["zeta-hydrae", "eta-hydrae"],
+  ["zeta-hydrae", "theta-hydrae"],
+  ["theta-hydrae", "iota-hydrae"],
+  ["iota-hydrae", "alphard"],
+  ["alphard", "lambda-hydrae"],
+  ["lambda-hydrae", "mu-hydrae"],
+  ["mu-hydrae", "nu-hydrae"],
+  ["nu-hydrae", "xi-hydrae"],
+  ["xi-hydrae", "gamma-hydrae"],
+  ["gamma-hydrae", "pi-hydrae"],
+  ["rigil-kentaurus", "hadar"],
+  ["hadar", "epsilon-centauri"],
+  ["epsilon-centauri", "zeta-centauri"],
+  ["zeta-centauri", "gamma-centauri"],
+  ["gamma-centauri", "delta-centauri"],
+  ["zeta-centauri", "eta-centauri"],
+  ["eta-centauri", "kappa-centauri"],
+  ["gamma-centauri", "iota-centauri"],
+  ["iota-centauri", "menkent"],
+  ["menkent", "eta-centauri"],
+  ["delta-centauri", "lambda-centauri"],
+  ["regor", "alsephina"],
+  ["alsephina", "markeb"],
+  ["markeb", "phi-velorum"],
+  ["phi-velorum", "mu-velorum"],
+  ["mu-velorum", "psi-velorum"],
+  ["psi-velorum", "suhail"],
+  ["suhail", "regor"],
+  ["tau-puppis", "nu-puppis"],
+  ["nu-puppis", "pi-puppis"],
+  ["pi-puppis", "sigma-puppis"],
+  ["sigma-puppis", "naos"],
+  ["naos", "xi-puppis"],
+  ["xi-puppis", "rho-puppis"],
+  ["canopus", "avior"],
+  ["avior", "aspidiske"],
+  ["aspidiske", "upsilon-carinae"],
+  ["upsilon-carinae", "omega-carinae"],
+  ["omega-carinae", "theta-carinae"],
+  ["theta-carinae", "p-carinae"],
+  ["p-carinae", "miaplacidus"],
+  ["miaplacidus", "omega-carinae"],
+  ["aldhanab", "delta-gruis"],
+  ["delta-gruis", "alnair"],
+  ["alnair", "tiaki"],
+  ["tiaki", "epsilon-gruis"],
+  ["epsilon-gruis", "zeta-gruis"],
+  ["tiaki", "iota-gruis"],
+  ["ankaa", "beta-phoenicis"],
+  ["beta-phoenicis", "gamma-phoenicis"],
+  ["gamma-phoenicis", "delta-phoenicis"],
+  ["delta-phoenicis", "beta-phoenicis"],
+  ["beta-phoenicis", "zeta-phoenicis"],
+  ["ankaa", "epsilon-phoenicis"],
+  ["epsilon-phoenicis", "kappa-phoenicis"],
+  ["menkar", "kaffaljidhma"],
+  ["kaffaljidhma", "delta-ceti"],
+  ["delta-ceti", "baten-kaitos"],
+  ["baten-kaitos", "tau-ceti"],
+  ["tau-ceti", "upsilon-ceti"],
+  ["upsilon-ceti", "diphda"],
+  ["diphda", "iota-ceti"],
+  ["iota-ceti", "deneb-algenubi"],
+  ["deneb-algenubi", "theta-ceti"],
+  ["theta-ceti", "baten-kaitos"],
+  ["beta-piscium", "gamma-piscium"],
+  ["gamma-piscium", "theta-piscium"],
+  ["theta-piscium", "iota-piscium"],
+  ["iota-piscium", "omega-piscium"],
+  ["omega-piscium", "delta-piscium"],
+  ["delta-piscium", "epsilon-piscium"],
+  ["epsilon-piscium", "alrescha"],
+  ["alrescha", "omicron-piscium"],
+  ["omicron-piscium", "alpherg"],
+  ["albali", "sadalsuud"],
+  ["sadalmelik", "sadachbia"],
+  ["sadachbia", "zeta-aquarii"],
+  ["zeta-aquarii", "eta-aquarii"],
+  ["zeta-aquarii", "lambda-aquarii"],
+  ["lambda-aquarii", "tau-aquarii"],
+  ["tau-aquarii", "skaat"],
+  ["lambda-aquarii", "phi-aquarii"],
+  ["algedi", "dabih"],
+  ["dabih", "psi-capricorni"],
+  ["psi-capricorni", "omega-capricorni"],
+  ["omega-capricorni", "zeta-capricorni"],
+  ["zeta-capricorni", "deneb-algedi"],
+  ["deneb-algedi", "iota-capricorni"],
+  ["iota-capricorni", "theta-capricorni"],
+  ["theta-capricorni", "algedi"],
+  ["acrab", "dschubba"],
+  ["dschubba", "pi-scorpii"],
+  ["pi-scorpii", "rho-scorpii"],
+  ["dschubba", "sigma-scorpii"],
+  ["sigma-scorpii", "antares"],
+  ["antares", "tau-scorpii"],
+  ["tau-scorpii", "epsilon-scorpii"],
+  ["epsilon-scorpii", "mu-scorpii"],
+  ["mu-scorpii", "zeta-scorpii"],
+  ["zeta-scorpii", "eta-scorpii"],
+  ["eta-scorpii", "sargas"],
+  ["sargas", "iota-scorpii"],
+  ["iota-scorpii", "kappa-scorpii"],
+  ["kappa-scorpii", "shaula"],
+  ["kaus-borealis", "phi-sagittarii"],
+  ["phi-sagittarii", "nunki"],
+  ["phi-sagittarii", "kaus-media"],
+  ["nunki", "tau-sagittarii"],
+  ["tau-sagittarii", "ascella"],
+  ["kaus-australis", "eta-sagittarii"],
+  ["nunki", "xi2-sagittarii"],
+  ["xi2-sagittarii", "omicron-sagittarii"],
+  ["omicron-sagittarii", "pi-sagittarii"],
+  ["rasalhague", "kappa-ophiuchi"],
+  ["kappa-ophiuchi", "zeta-ophiuchi"],
+  ["zeta-ophiuchi", "sabik"],
+  ["zeta-ophiuchi", "yed-posterior"],
+  ["sabik", "theta-ophiuchi"],
+  ["cebalrai", "gamma-ophiuchi"],
+  ["gamma-ophiuchi", "nu-ophiuchi"],
+  ["zeta-herculis", "epsilon-herculis"],
+  ["epsilon-herculis", "pi-herculis"],
+  ["pi-herculis", "eta-herculis"],
+  ["eta-herculis", "zeta-herculis"],
+  ["zeta-herculis", "kornephoros"],
+  ["pi-herculis", "mu-herculis"],
+  ["mu-herculis", "xi-herculis"],
+  ["pi-herculis", "iota-herculis"],
+  ["eta-herculis", "tau-herculis"],
+  ["sarin", "epsilon-herculis"],
+  ["beta-serpentis", "gamma-serpentis"],
+  ["beta-serpentis", "delta-serpentis"],
+  ["delta-serpentis", "unukalhai"],
+  ["unukalhai", "epsilon-serpentis"],
+  ["epsilon-serpentis", "mu-serpentis"],
+  ["xi-serpentis", "eta-serpentis"],
+
+  // Rolnopol (fictional)
+  ["nullframe-7", "pluvia-rubra"],
+  ["pluvia-rubra", "speculum-cinereum"],
+  ["speculum-cinereum", "nullframe-7"],
 ];
 
 const SYNODIC_MONTH_DAYS = 29.530588853;
 const DEFAULT_MAGNITUDE_LIMIT = 4.2;
 const DEFAULT_TIMESTAMP = () => new Date();
+
+// Sky-dome viewport geometry. These constants are mirrored verbatim in
+// public/js/pages/observatory.js so the browser and this endpoint answer the
+// same question the same way — that equality is the point of the endpoint.
+const DOME_HORIZON_OVERSHOOT = 1.2;
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 8;
+const MIN_CANVAS_SIZE_PX = 320;
+const MAX_CANVAS_SIZE_PX = 4096;
+const DEFAULT_CANVAS_SIZE_PX = 820;
+const CANVAS_INSET_PX = 42;
+const MIN_CANVAS_RADIUS_PX = 120;
+const OBJECT_TYPE_FILTERS = ["all", "star", "planet", "moon", "solar-system"];
+
+function roundTo(value, decimals) {
+  const factor = 10 ** decimals;
+  return Math.round(toNumber(value) * factor) / factor;
+}
 
 function toNumber(value, fallback = 0) {
   const parsed = Number(value);
@@ -814,6 +2535,144 @@ function computeMoonMagnitude(illuminationFraction) {
   return Number((-12.7 + (1 - illuminationFraction) * 3.4).toFixed(2));
 }
 
+/**
+ * Alt/az -> dome coordinates. The dome is a unit disc seen from above: the
+ * zenith is the origin, the horizon is radius 1, and north is -y. Everything the
+ * canvas draws is this projection scaled by the aperture radius, so dome units
+ * are the resolution-independent language the viewport state speaks.
+ */
+function projectAltAzToDome(altitudeDeg, azimuthDeg) {
+  const altitude = clamp(toNumber(altitudeDeg), -90, 90);
+  const azimuthRad = degreesToRadians(normalizeDegrees(azimuthDeg));
+  const domeRadius = clamp((90 - altitude) / 90, 0, DOME_HORIZON_OVERSHOOT);
+
+  return {
+    x: Math.sin(azimuthRad) * domeRadius,
+    y: -Math.cos(azimuthRad) * domeRadius,
+    radius: domeRadius,
+  };
+}
+
+/** Inverse of projectAltAzToDome — turns a dome point back into alt/az. */
+function unprojectDomeToAltAz(x, y) {
+  const domeX = toNumber(x);
+  const domeY = toNumber(y);
+  const domeRadius = Math.hypot(domeX, domeY);
+
+  return {
+    altitudeDeg: 90 - clamp(domeRadius, 0, DOME_HORIZON_OVERSHOOT) * 90,
+    // At the exact zenith there is no bearing; report north rather than the
+    // atan2(0, -0) artefact.
+    azimuthDeg: domeRadius === 0 ? 0 : normalizeDegrees(radiansToDegrees(Math.atan2(domeX, -domeY))),
+  };
+}
+
+/**
+ * Canvas geometry for a square-ish dome. Kept identical to the client's
+ * _resizeCanvas so a caller can pass the page's CSS pixel size and get the same
+ * numbers back.
+ */
+function resolveCanvasMetrics(width, height) {
+  const canvasWidth = clamp(Math.round(toNumber(width, DEFAULT_CANVAS_SIZE_PX)), MIN_CANVAS_SIZE_PX, MAX_CANVAS_SIZE_PX);
+  const canvasHeight = clamp(Math.round(toNumber(height, canvasWidth)), MIN_CANVAS_SIZE_PX, MAX_CANVAS_SIZE_PX);
+
+  return {
+    width: canvasWidth,
+    height: canvasHeight,
+    centerX: canvasWidth / 2,
+    centerY: canvasHeight / 2,
+    radius: Math.max(MIN_CANVAS_RADIUS_PX, Math.min(canvasWidth, canvasHeight) / 2 - CANVAS_INSET_PX),
+  };
+}
+
+/**
+ * Normalizes a requested viewport. Zoom is clamped to [1, 8]; the pan target is
+ * clamped into the unit disc, so the centre of the aperture can never leave the
+ * dome no matter how far a drag goes.
+ */
+function resolveViewport(options = {}) {
+  const zoom = clamp(toNumber(options.zoom, MIN_ZOOM), MIN_ZOOM, MAX_ZOOM);
+  const requestedX = clamp(toNumber(options.panX, 0), -1, 1);
+  const requestedY = clamp(toNumber(options.panY, 0), -1, 1);
+  const panRadius = Math.hypot(requestedX, requestedY);
+  const scale = panRadius > 1 ? 1 / panRadius : 1;
+  const panX = roundTo(requestedX * scale, 4);
+  const panY = roundTo(requestedY * scale, 4);
+  const center = unprojectDomeToAltAz(panX, panY);
+
+  return {
+    zoom: roundTo(zoom, 3),
+    panX,
+    panY,
+    center: {
+      domeX: panX,
+      domeY: panY,
+      altitudeDeg: roundTo(center.altitudeDeg, 2),
+      azimuthDeg: roundTo(center.azimuthDeg, 2),
+    },
+  };
+}
+
+/** Dome point -> canvas pixel, given a viewport and the canvas geometry. */
+function projectDomeToCanvas(dome, viewport, canvas) {
+  return {
+    x: canvas.centerX + (toNumber(dome?.x) - toNumber(viewport?.panX)) * canvas.radius * toNumber(viewport?.zoom, 1),
+    y: canvas.centerY + (toNumber(dome?.y) - toNumber(viewport?.panY)) * canvas.radius * toNumber(viewport?.zoom, 1),
+  };
+}
+
+/**
+ * True when a canvas point falls inside the circular aperture the dome is
+ * clipped to. The aperture does not grow with zoom — that is exactly why
+ * zooming in pushes objects out of view.
+ */
+function isInsideAperture(point, canvas) {
+  return Math.hypot(toNumber(point?.x) - canvas.centerX, toNumber(point?.y) - canvas.centerY) <= canvas.radius;
+}
+
+function resolveFilters(options = {}) {
+  const objectType = String(options.objectType || "all")
+    .trim()
+    .toLowerCase();
+  const constellation = String(options.constellation || "all").trim();
+
+  return {
+    objectType: OBJECT_TYPE_FILTERS.includes(objectType) ? objectType : "all",
+    constellation: constellation || "all",
+    search: String(options.search || "").trim(),
+  };
+}
+
+function matchesObjectFilters(object, filters = {}) {
+  const objectType = String(filters.objectType || "all").toLowerCase();
+  const constellation = String(filters.constellation || "all");
+  const search = String(filters.search || "")
+    .trim()
+    .toLowerCase();
+
+  const matchesType =
+    objectType === "all"
+      ? true
+      : objectType === "solar-system"
+        ? object?.type === "moon" || object?.type === "planet"
+        : object?.type === objectType;
+  if (!matchesType) {
+    return false;
+  }
+
+  if (constellation !== "all" && String(object?.constellation || "") !== constellation) {
+    return false;
+  }
+
+  if (!search) {
+    return true;
+  }
+
+  return [object?.name, object?.constellation, object?.type]
+    .filter((value) => typeof value === "string" && value.trim())
+    .some((value) => value.toLowerCase().includes(search));
+}
+
 function findPresetById(id) {
   return LOCATION_PRESETS.find((preset) => preset.id === id) || null;
 }
@@ -827,11 +2686,17 @@ function findPresetByCoordinates(latitudeDeg, longitudeDeg) {
 }
 
 function resolveObserver(options = {}) {
-  const preset = findPresetById(String(options.presetId || "").trim());
+  const requestedPresetId = String(options.presetId || "").trim();
+  const preset = findPresetById(requestedPresetId);
   const fallback = preset || findPresetById("warsaw");
   const latitudeDeg = clamp(toNumber(options.latitudeDeg, fallback.latitudeDeg), -90, 90);
   const longitudeDeg = clamp(toNumber(options.longitudeDeg, fallback.longitudeDeg), -180, 180);
-  const matchedPreset = preset || findPresetByCoordinates(latitudeDeg, longitudeDeg);
+  // `presetId=custom` is the caller saying "these are my coordinates, do not
+  // relabel them". Without it, coordinates that happen to sit on a preset are
+  // reverse-matched back to that preset — and the page's location control snaps
+  // back to the preset the moment the next snapshot arrives.
+  const pinnedToCustom = requestedPresetId.toLowerCase() === "custom";
+  const matchedPreset = preset || (pinnedToCustom ? null : findPresetByCoordinates(latitudeDeg, longitudeDeg));
 
   return {
     id: matchedPreset?.id || "custom",
@@ -994,11 +2859,153 @@ function getSnapshot(options = {}) {
   };
 }
 
+/**
+ * Groups the drawn segments into figures a viewer could point at.
+ *
+ * A segment whose two stars belong to different constellations is an asterism —
+ * the Summer Triangle, the Winter Triangle — and belongs to neither figure. It
+ * is still drawn, but it is not part of anything clickable, which is the same
+ * rule the page's labels and hit-testing use.
+ */
+function buildConstellationFigures(objects, canvas) {
+  const starMap = new Map(
+    (objects || []).filter((object) => object?.type === "star" && object.constellation).map((object) => [object.id, object]),
+  );
+  const figures = new Map();
+
+  CONSTELLATION_SEGMENTS.forEach(([fromId, toId]) => {
+    const from = starMap.get(fromId);
+    const to = starMap.get(toId);
+    if (!from || !to || from.constellation !== to.constellation) {
+      return;
+    }
+
+    let figure = figures.get(from.constellation);
+    if (!figure) {
+      figure = { name: from.constellation, segmentCount: 0, stars: new Map() };
+      figures.set(from.constellation, figure);
+    }
+    figure.segmentCount += 1;
+    figure.stars.set(from.id, from);
+    figure.stars.set(to.id, to);
+  });
+
+  return Array.from(figures.values())
+    .map((figure) => {
+      const stars = Array.from(figure.stars.values());
+      const centerDomeX = stars.reduce((sum, star) => sum + star.domeX, 0) / stars.length;
+      const centerDomeY = stars.reduce((sum, star) => sum + star.domeY, 0) / stars.length;
+      const centerCanvasX = stars.reduce((sum, star) => sum + star.canvasX, 0) / stars.length;
+      const centerCanvasY = stars.reduce((sum, star) => sum + star.canvasY, 0) / stars.length;
+      const brightest = stars.reduce((best, star) => (best === null || star.magnitude < best.magnitude ? star : best), null);
+
+      return {
+        name: figure.name,
+        starCount: stars.length,
+        segmentCount: figure.segmentCount,
+        inViewCount: stars.filter((star) => star.inView).length,
+        brightestObjectId: brightest?.id || null,
+        starIds: stars.map((star) => star.id).sort(),
+        centerDomeX: roundTo(centerDomeX, 4),
+        centerDomeY: roundTo(centerDomeY, 4),
+        centerCanvasX: roundTo(centerCanvasX, 2),
+        centerCanvasY: roundTo(centerCanvasY, 2),
+        inView: isInsideAperture({ x: centerCanvasX, y: centerCanvasY }, canvas),
+      };
+    })
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+/**
+ * The sky dome, answered as data instead of pixels.
+ *
+ * Given the same observer/time/magnitude inputs as `getSnapshot` plus the
+ * viewport the page is currently showing (zoom, pan, canvas size) and the
+ * frontend filters, this returns every object on the dome with both its dome
+ * coordinates and its canvas pixel position, each flagged with whether the
+ * current aperture actually shows it.
+ *
+ * `dome.objects` is deliberately the FULL dome, not the visible slice: a test
+ * that zooms in needs to assert what left the view as much as what stayed, and
+ * an out-of-view object is a fact about the viewport, not an absence of data.
+ */
+function getViewport(options = {}) {
+  const timestamp = parseTimestamp(options.timestamp);
+  const magnitudeLimit = clamp(toNumber(options.magnitudeLimit, DEFAULT_MAGNITUDE_LIMIT), 1, 6);
+  const observer = resolveObserver({
+    presetId: options.presetId,
+    latitudeDeg: options.latitudeDeg,
+    longitudeDeg: options.longitudeDeg,
+  });
+  const filters = resolveFilters(options);
+  const canvas = resolveCanvasMetrics(options.width, options.height);
+  const viewport = resolveViewport(options);
+  const sky = getVisibleObjects({ date: timestamp, observer, magnitudeLimit });
+
+  const objects = sky.visibleObjects
+    .filter((object) => matchesObjectFilters(object, filters))
+    .map((object) => {
+      const dome = projectAltAzToDome(object.altitudeDeg, object.azimuthDeg);
+      const point = projectDomeToCanvas(dome, viewport, canvas);
+
+      return {
+        id: object.id,
+        name: object.name,
+        type: object.type,
+        magnitude: object.magnitude,
+        constellation: object.constellation,
+        altitudeDeg: roundTo(object.altitudeDeg, 2),
+        azimuthDeg: roundTo(object.azimuthDeg, 2),
+        domeX: roundTo(dome.x, 4),
+        domeY: roundTo(dome.y, 4),
+        canvasX: roundTo(point.x, 2),
+        canvasY: roundTo(point.y, 2),
+        inView: isInsideAperture(point, canvas),
+      };
+    });
+
+  const inViewObjects = objects.filter((object) => object.inView);
+  const constellations = buildConstellationFigures(objects, canvas);
+
+  return {
+    page: {
+      title: "Operator Observatory",
+      subtitle: "Sky-dome viewport state, answerable without reading a single pixel.",
+      pageUrl: "/operator/observatory.html",
+    },
+    observer,
+    simulation: {
+      requestedTimestamp: timestamp.toISOString(),
+      serverTimestamp: new Date().toISOString(),
+    },
+    viewport: {
+      ...viewport,
+      magnitudeLimit,
+      filters,
+      canvas,
+    },
+    dome: {
+      objectCount: objects.length,
+      inViewCount: inViewObjects.length,
+      outOfViewCount: objects.length - inViewObjects.length,
+      constellationCount: constellations.length,
+      objects,
+      constellations,
+    },
+    inView: {
+      objectCount: inViewObjects.length,
+      objectIds: inViewObjects.map((object) => object.id),
+      constellationNames: constellations.filter((figure) => figure.inView).map((figure) => figure.name),
+    },
+  };
+}
+
 module.exports = {
   LOCATION_PRESETS,
   STAR_CATALOG,
   PLANET_CATALOG,
   CONSTELLATION_SEGMENTS,
+  buildConstellationFigures,
   calculateJulianDate,
   calculateGreenwichSiderealTime,
   calculateLocalSiderealTime,
@@ -1009,6 +3016,15 @@ module.exports = {
   getVisibleObjects,
   getVisiblePlanets,
   getSnapshot,
+  getViewport,
+  isInsideAperture,
+  matchesObjectFilters,
   normalizeDegrees,
   normalizeHours,
+  projectAltAzToDome,
+  projectDomeToCanvas,
+  resolveCanvasMetrics,
+  resolveObserver,
+  resolveViewport,
+  unprojectDomeToAltAz,
 };

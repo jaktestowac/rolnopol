@@ -95,6 +95,7 @@ describe("docs service feature-flagged sections", () => {
       homeWelcomeVideoEnabled: false,
       homeStatsSectionEnabled: false,
       homeModernRestyleEnabled: false,
+      homeInstrumentalityRestyleEnabled: false,
     });
 
     expect(docs.some((section) => section.section === "homepage-features")).toBe(false);

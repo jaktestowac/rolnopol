@@ -1,0 +1,1560 @@
+/*
+ * Crew Office — scoped stylesheet (PRD §10.2).
+ *
+ * Rules this file lives by, and the isolation they buy:
+ *   - Design TOKENS only. No new colour literals, no new `:root` block, no new
+ *     font, no CDN, no framework, no build step. Every value below resolves from
+ *     public/css/styles.css, so a token change reaches Crew Office for free.
+ *   - Every selector sits under `.crew-page` / `.crew-*`. This stylesheet is
+ *     loaded only by crew pages and cannot leak into another page even if it were.
+ *
+ * Covers the page shell, the GraphQL explorer, the roster table and the member
+ * tabs. The leave calendar and the tool registry grow the same way when their
+ * pillars land — additively, under the same scope rules.
+ */
+
+.crew-page .crew-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.crew-page .crew-title {
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+}
+
+.crew-page .crew-lede {
+  color: var(--text-secondary);
+  margin: 0 0 1.5rem;
+}
+
+.crew-page .crew-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--agri-green);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.crew-page .crew-placeholder i {
+  color: var(--agri-green-dark);
+}
+
+/* --- GraphQL explorer ---------------------------------------------------- */
+
+.crew-page .crew-explorer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* One column on narrow screens: the two panes are a convenience, not a layout
+   requirement, and a squeezed query editor is worse than a stacked one. */
+@media (max-width: 900px) {
+  .crew-page .crew-explorer {
+    grid-template-columns: 1fr;
+  }
+}
+
+.crew-page .crew-explorer__pane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.crew-page .crew-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.crew-page .crew-code {
+  width: 100%;
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  padding: 0.75rem;
+  background: var(--surface-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  resize: vertical;
+  /* Long lines scroll inside the pane rather than widening the page. */
+  overflow: auto;
+  tab-size: 2;
+}
+
+.crew-page .crew-code:focus-visible {
+  outline: 2px solid var(--agri-green);
+  outline-offset: 1px;
+}
+
+.crew-page .crew-code--readonly {
+  margin: 0;
+  min-height: 12rem;
+  max-height: 30rem;
+  white-space: pre;
+}
+
+.crew-page .crew-explorer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* --- the example ladder ---------------------------------------------------- */
+/*
+ * Seven small buttons, easiest first, wrapping onto as many rows as they need. They
+ * are deliberately SMALL and in one block: the ladder has to read as a scale you can
+ * see the whole of, and a row of full-size buttons would compete with Run.
+ */
+.crew-page .crew-explorer__examples {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.crew-page .crew-example-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.crew-page .crew-btn--example {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* The rung number, as a badge. `aria-hidden` on it in the markup: the difficulty
+   order is a visual affordance, and read aloud it would just prefix every label
+   with a digit. */
+.crew-page .crew-example__level {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35em;
+  height: 1.35em;
+  border-radius: 50%;
+  background: var(--agri-green-dark);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* The rung currently in the editor. Border AND fill, so it survives a forced-colours
+   mode that drops the background. */
+.crew-page .crew-btn--example[aria-pressed="true"] {
+  background: var(--agri-green);
+  border-color: var(--agri-green-dark);
+  color: #fff;
+}
+
+.crew-page .crew-btn--example[aria-pressed="true"] .crew-example__level {
+  background: #fff;
+  color: var(--agri-green-dark);
+}
+
+.crew-page .crew-btn,
+.crew-page .crew-select {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.9rem;
+}
+
+.crew-page .crew-btn:hover,
+.crew-page .crew-select:hover {
+  border-color: var(--agri-green);
+}
+
+.crew-page .crew-btn--primary {
+  background: var(--agri-green);
+  border-color: var(--agri-green-dark);
+  color: #fff;
+}
+
+.crew-page .crew-btn--primary:hover {
+  background: var(--agri-green-dark);
+}
+
+.crew-page .crew-btn:focus-visible,
+.crew-page .crew-select:focus-visible {
+  outline: 2px solid var(--agri-green-dark);
+  outline-offset: 2px;
+}
+
+.crew-page .crew-status,
+.crew-page .crew-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  min-height: 1.2em;
+}
+
+.crew-page .crew-status--error {
+  color: var(--agri-earth);
+  font-weight: 600;
+}
+
+.crew-page .crew-details {
+  margin-top: 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-color);
+  padding: 0.75rem 1rem;
+}
+
+.crew-page .crew-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.crew-page .crew-details[open] summary {
+  margin-bottom: 0.75rem;
+}
+
+/* --- roster, tabs and detail views --------------------------------------- */
+
+.crew-page .crew-header {
+  margin-bottom: 1.5rem;
+}
+
+.crew-page .crew-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.crew-page .crew-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.crew-page .crew-control--check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.crew-page .crew-table-wrap {
+  /* A wide table scrolls inside its own box; the page body never scrolls sideways. */
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-color);
+  box-shadow: var(--shadow);
+}
+
+/* Document preview (#100), shown in a dialog over the table.
+ *
+ * The furniture (.modal / .modal-content / .modal-header / .modal-body) is the
+ * app's own, driven the crew way with the `hidden` attribute — see the note by
+ * `.crew-modal` further down for why both display directions have to be stated.
+ * Only what is specific to showing a DOCUMENT lives here. */
+#documentPreviewModal .modal-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* The filename can be long; the meta line and the close button keep their place. */
+#documentPreviewModal #documentPreviewTitle {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#documentPreviewModal #documentPreviewMeta {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+#documentPreviewModal #documentPreviewClose {
+  margin-left: auto;
+}
+
+/* The body holds exactly one renderer, sized so the dialog never outgrows the
+   viewport whatever the document is. */
+#documentPreviewModal .modal-body {
+  padding: 0;
+}
+
+.crew-page .crew-preview__frame {
+  display: block;
+  width: 100%;
+  height: min(70vh, 640px);
+  border: 0;
+}
+
+.crew-page .crew-preview__image {
+  display: block;
+  max-width: 100%;
+  /* Contained rather than stretched: a scan of a contract is portrait and a photo
+     of a licence is landscape, and neither should be distorted to fit. */
+  max-height: min(70vh, 640px);
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.crew-page .crew-preview__text {
+  margin: 0;
+  padding: 0.9rem;
+  max-height: min(70vh, 640px);
+  overflow: auto;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  /* A CSV row is long; wrap it rather than making the whole pane scroll sideways. */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.crew-page .crew-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.crew-page .crew-table th,
+.crew-page .crew-table td {
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.crew-page .crew-table th {
+  color: var(--text-secondary);
+  font-weight: 600;
+  background: var(--agri-green-light);
+}
+
+.crew-page .crew-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.crew-page .crew-table tbody tr:hover {
+  background: var(--agri-green-light);
+}
+
+/* An orphaned row is real data whose staff record is gone — flagged, not hidden. */
+.crew-page .crew-row--orphaned td {
+  opacity: 0.75;
+  font-style: italic;
+}
+
+.crew-page .crew-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.crew-page .crew-badge--active {
+  border-color: var(--agri-green-dark);
+  color: var(--agri-green-dark);
+}
+
+.crew-page .crew-badge--probation,
+.crew-page .crew-badge--notice {
+  border-color: var(--agri-earth);
+  color: var(--agri-earth);
+}
+
+.crew-page .crew-badge--ended,
+.crew-page .crew-badge--none {
+  opacity: 0.7;
+}
+
+/* --- tool and service states ---------------------------------------------- */
+/*
+ * One colour per state, used by the table badge, the detail panel, the state strip and
+ * the flow modal — so a tool that is "in service" looks the same everywhere it is
+ * mentioned. The icon beside each label comes from CrewApi.iconForToolStatus.
+ */
+.crew-page .crew-badge--available,
+.crew-page .crew-badge--ok {
+  border-color: var(--agri-green-dark);
+  color: var(--agri-green-dark);
+}
+
+.crew-page .crew-badge--on_issue {
+  border-color: var(--info-color);
+  color: var(--info-color);
+}
+
+.crew-page .crew-badge--in_service,
+.crew-page .crew-badge--due_soon {
+  border-color: var(--warning-color);
+  color: var(--warning-color);
+}
+
+.crew-page .crew-badge--overdue {
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+
+.crew-page .crew-badge--retired {
+  opacity: 0.7;
+}
+
+/* The inline tones the tables use for a date that is fine, close, or past. These were
+   named in the markup long before they had any colour behind them. */
+.crew-page .crew-tone--ok {
+  color: var(--text-secondary);
+}
+
+.crew-page .crew-tone--due_soon {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.crew-page .crew-tone--overdue {
+  color: var(--error-color);
+  font-weight: 600;
+}
+
+.crew-page .crew-muted {
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+
+.crew-page .crew-link {
+  color: var(--agri-green-dark);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.crew-page .crew-link:hover,
+.crew-page .crew-link:focus-visible {
+  text-decoration: underline;
+}
+
+.crew-page .crew-notice {
+  padding: 0.9rem 1.1rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--agri-green);
+  border-radius: var(--border-radius);
+  color: var(--text-secondary);
+}
+
+.crew-page .crew-notice--warning {
+  border-left-color: var(--agri-earth);
+}
+
+.crew-page .crew-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border-color);
+  margin: 1.25rem 0 1rem;
+}
+
+.crew-page .crew-tab {
+  padding: 0.6rem 1rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: var(--transition);
+}
+
+.crew-page .crew-tab:hover {
+  color: var(--text-primary);
+}
+
+.crew-page .crew-tab--active {
+  color: var(--agri-green-dark);
+  border-bottom-color: var(--agri-green);
+  font-weight: 600;
+}
+
+.crew-page .crew-tab:focus-visible {
+  outline: 2px solid var(--agri-green-dark);
+  outline-offset: -2px;
+}
+
+.crew-page .crew-panel {
+  padding: 0.5rem 0 1rem;
+}
+
+.crew-page .crew-subhead {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.crew-page .crew-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 0;
+}
+
+.crew-page .crew-field dt {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.crew-page .crew-field dd {
+  margin: 0.15rem 0 0;
+  color: var(--text-primary);
+}
+
+/* Visually hidden but available to a screen reader — for the actions column head. */
+.crew-page .crew-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* A superseded work-log row is kept and shown, greyed — the history is the point. */
+.crew-page .crew-row--superseded td {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.crew-page .crew-badge--planned {
+  border-color: var(--border-color);
+}
+
+.crew-page .crew-badge--confirmed {
+  border-color: var(--agri-green-dark);
+  color: var(--agri-green-dark);
+}
+
+.crew-page .crew-badge--completed {
+  border-color: var(--agri-green);
+  color: var(--agri-green-dark);
+  background: var(--agri-green-light);
+}
+
+.crew-page .crew-badge--cancelled {
+  opacity: 0.65;
+  text-decoration: line-through;
+}
+
+/* --- training ------------------------------------------------------------- */
+/*
+ * Certificate status, on the same three tokens the rest of the module uses. The
+ * point of the scale is that `expiring_soon` reads as a WARNING and not as a
+ * failure: the ticket is still valid, and colouring it like an expired one would
+ * teach people to ignore the colour.
+ */
+.crew-page .crew-badge--valid,
+.crew-page .crew-badge--passed {
+  border-color: var(--agri-green-dark);
+  color: var(--agri-green-dark);
+}
+
+.crew-page .crew-badge--expiring_soon,
+.crew-page .crew-badge--in_progress {
+  border-color: var(--agri-earth);
+  color: var(--agri-earth);
+}
+
+.crew-page .crew-badge--expired,
+.crew-page .crew-badge--failed {
+  border-color: var(--error-color, #b91c1c);
+  color: var(--error-color, #b91c1c);
+}
+
+/*
+ * Two more on the same scale, added with the documents pillar and the member Tools
+ * panel.
+ *
+ * `pending` is amber for the reason `expiring_soon` is: a document being scanned is
+ * not a failure, it is a wait, and colouring it red would teach people that red
+ * means "nothing is wrong yet". `missing` is red but says something different from
+ * `expired` — the record is fine and its bytes are gone, which is a fault in the
+ * store rather than a decision about the document.
+ */
+.crew-page .crew-badge--pending {
+  border-color: var(--agri-earth);
+  color: var(--agri-earth);
+}
+
+.crew-page .crew-badge--missing {
+  border-color: var(--error-color, #b91c1c);
+  color: var(--error-color, #b91c1c);
+  font-style: italic;
+}
+
+/* A row that needs acting on — an overdue tool. A tint and not only a badge, so a
+   long table can be scanned without reading every cell. */
+.crew-page .crew-table tbody tr.crew-row--flagged {
+  background: rgba(185, 28, 28, 0.06);
+}
+
+/* Revoked is struck through as well as red: it is not "out of date", it is void. */
+.crew-page .crew-badge--revoked {
+  border-color: var(--error-color, #b91c1c);
+  color: var(--error-color, #b91c1c);
+  text-decoration: line-through;
+}
+
+/* An informational notice — a deliberate configuration, not something broken. */
+.crew-page .crew-notice--info {
+  border-left-color: var(--agri-green);
+}
+
+.crew-page .crew-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* --- holidays ------------------------------------------------------------- */
+
+/* Leave request states, on the same three tokens as everything else. */
+.crew-page .crew-badge--approved {
+  border-color: var(--agri-green-dark);
+  color: var(--agri-green-dark);
+}
+
+.crew-page .crew-badge--requested {
+  border-color: var(--agri-earth);
+  color: var(--agri-earth);
+}
+
+.crew-page .crew-badge--rejected {
+  border-color: var(--error-color, #b91c1c);
+  color: var(--error-color, #b91c1c);
+}
+
+/* Withdrawn is not a judgement — it is a request that was pulled. Muted, not red. */
+.crew-page .crew-badge--withdrawn {
+  opacity: 0.65;
+}
+
+.crew-page .crew-badge--holiday {
+  border-color: var(--agri-green);
+  color: var(--agri-green-dark);
+  background: var(--agri-green-light);
+}
+
+.crew-page .crew-badge--blackout {
+  border-color: var(--agri-earth);
+  color: var(--agri-earth);
+}
+
+/*
+ * One person's absence on a calendar day. A chip rather than a table cell because a
+ * day can hold any number of them and they have to wrap.
+ */
+.crew-page .crew-chip {
+  display: inline-block;
+  margin: 0.1rem 0.25rem 0.1rem 0;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-color);
+  font-size: 0.85rem;
+}
+
+/* Approved is settled; requested is still a proposal, so it reads lighter. */
+.crew-page .crew-chip--approved {
+  border-color: var(--agri-green-dark);
+}
+
+.crew-page .crew-chip--requested {
+  border-style: dashed;
+  border-color: var(--agri-earth);
+}
+
+/* A weekend row is present but recedes — the working days are what is being read. */
+.crew-page .crew-row--weekend td {
+  background: color-mix(in srgb, var(--border-color) 18%, transparent);
+}
+
+.crew-page .crew-table--calendar td:first-child {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * A negative balance is legal — days committed that have not accrued yet — so it is
+ * flagged rather than hidden. The page says why next to it.
+ */
+.crew-page .crew-negative {
+  color: var(--error-color, #b91c1c);
+}
+
+.crew-page .crew-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.crew-page .crew-btn--small {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.82rem;
+}
+
+/* A checkbox sits beside its label rather than under it, unlike the text inputs. */
+.crew-page .crew-control--check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.crew-page .crew-control--wide {
+  flex: 1 1 100%;
+}
+
+/* --- icon buttons, and why they need a floor ------------------------------ */
+/*
+ * Font Awesome is a CDN dependency, so it can simply fail to arrive. When it does, an
+ * `<i class="fa-...">` renders as nothing — and a button whose only child is that icon
+ * collapses to its own padding and becomes invisible. That is exactly how the
+ * calendar's previous/next arrows went missing.
+ *
+ * Two defences. Every crew button that can be clicked keeps a minimum width, and an
+ * icon that is the ONLY child still reserves a character of space. Neither is a
+ * substitute for a text label — the arrows now carry one — but they stop a missing
+ * glyph from erasing a control.
+ */
+.crew-page .crew-btn > i:only-child {
+  display: inline-block;
+  min-width: 1em;
+  min-height: 1em;
+}
+
+.crew-page .crew-btn {
+  min-height: 2.2rem;
+}
+
+/* The month arrows: wide enough for a short month name, so the row does not jitter
+ * as the label changes from "Previous" to "Jul" to "Dec 2025". */
+.crew-page .crew-btn--nav {
+  min-width: 6.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+/* --- the team calendar grid ----------------------------------------------- */
+/*
+ * A month per grid, seven columns, Monday first. The point is density: the previous
+ * day-per-row table needed 31 rows to show one month, and this shows the same month
+ * in five or six.
+ */
+.crew-page .crew-month {
+  margin: 0 0 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-color);
+}
+
+.crew-page .crew-month__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  /* The default triangle is kept — it is the affordance that says "this collapses". */
+}
+
+.crew-page .crew-month__summary:focus-visible {
+  outline: 2px solid var(--agri-green-dark);
+  outline-offset: -2px;
+}
+
+.crew-page .crew-month__count {
+  font-weight: 400;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.crew-page .crew-cal {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.crew-page .crew-cal th {
+  padding: 0.3rem 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.crew-page .crew-cal th abbr {
+  text-decoration: none;
+  border: 0;
+}
+
+.crew-page .crew-cal__cell {
+  border: 1px solid var(--border-color);
+  vertical-align: top;
+  padding: 0;
+  height: 3.6rem;
+}
+
+/* A blank keeps the grid's shape without pretending to be a day. */
+.crew-page .crew-cal__cell--blank {
+  background: color-mix(in srgb, var(--border-color) 12%, transparent);
+  border-color: transparent;
+}
+
+.crew-page .crew-cal__cell--weekend {
+  background: color-mix(in srgb, var(--border-color) 18%, transparent);
+}
+
+.crew-page .crew-cal__cell--holiday {
+  background: var(--agri-green-light);
+}
+
+.crew-page .crew-cal__cell--blackout {
+  background: color-mix(in srgb, var(--agri-earth) 14%, transparent);
+}
+
+/* Today gets a ring rather than a fill, so it survives whatever else the day is. */
+.crew-page .crew-cal__cell--today {
+  box-shadow: inset 0 0 0 2px var(--agri-green-dark);
+}
+
+/* The whole cell is the button: a 3.6rem target rather than a date-sized one. */
+.crew-page .crew-cal__day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.25rem 0.3rem;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.crew-page .crew-cal__day:focus-visible {
+  outline: 2px solid var(--agri-green-dark);
+  outline-offset: -2px;
+}
+
+.crew-page .crew-cal__cell--busy .crew-cal__day:hover {
+  background: color-mix(in srgb, var(--agri-green) 12%, transparent);
+}
+
+.crew-page .crew-cal__date {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.crew-page .crew-cal__cell--busy .crew-cal__date {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.crew-page .crew-cal__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+/*
+ * Initials, not names — a cell is too small for a name and the title attribute plus
+ * the day panel carry the full detail.
+ */
+.crew-page .crew-cal__chip {
+  display: inline-block;
+  padding: 0 0.28rem;
+  border-radius: 3px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  border: 1px solid var(--agri-green-dark);
+  color: var(--agri-green-dark);
+  background: var(--surface-color);
+}
+
+/* Awaiting a decision reads as provisional, the way it does on the request tables. */
+.crew-page .crew-cal__chip--requested {
+  border-style: dashed;
+  border-color: var(--agri-earth);
+  color: var(--agri-earth);
+}
+
+.crew-page .crew-cal__chip--half {
+  /* Half a day, half a chip: the left edge is filled, the right is not. */
+  background: linear-gradient(90deg, color-mix(in srgb, var(--agri-green) 30%, transparent) 50%, transparent 50%);
+}
+
+.crew-page .crew-cal__chip--more {
+  border-style: dotted;
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+/*
+ * The detail for one day, below the grids rather than inside one — an expanding row
+ * would reflow the month somebody is reading.
+ */
+.crew-page .crew-day-detail {
+  margin: 0.5rem 0 0;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--agri-green);
+  border-radius: var(--border-radius);
+  background: var(--surface-color);
+}
+
+.crew-page .crew-day-detail__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.crew-page .crew-day-detail__head .crew-subhead {
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+/* Print the grids, not the controls — and never a collapsed month. */
+@media print {
+  .crew-page .crew-month[open] .crew-cal,
+  .crew-page .crew-month:not([open]) .crew-cal {
+    display: table;
+  }
+}
+
+/*
+ * A list of dates the user types or pastes. Monospace because these are structured
+ * values, and a proportional font makes a misaligned YYYY-MM-DD hard to spot.
+ */
+.crew-page .crew-textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+/* --- hire and edit forms -------------------------------------------------- */
+
+.crew-page .crew-form-panel {
+  margin: 1rem 0 1.5rem;
+  padding: 1.25rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--agri-green);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.crew-page .crew-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* A field that wants the full width of the grid, whatever the column count. */
+.crew-page .crew-control--wide {
+  grid-column: 1 / -1;
+}
+
+.crew-page .crew-input {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-color);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: var(--transition);
+  /* Without this a number input overflows its grid column on narrow screens. */
+  min-width: 0;
+  width: 100%;
+}
+
+.crew-page .crew-input:hover {
+  border-color: var(--agri-green);
+}
+
+.crew-page .crew-input:focus-visible {
+  outline: 2px solid var(--agri-green-dark);
+  outline-offset: 1px;
+}
+
+.crew-page .crew-input:invalid {
+  border-color: var(--agri-earth);
+}
+
+.crew-page .crew-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+/* --- the work board ------------------------------------------------------- */
+
+.crew-page .crew-board {
+  font-size: 0.85rem;
+}
+
+.crew-page .crew-board th,
+.crew-page .crew-board td {
+  padding: 0.4rem 0.5rem;
+  vertical-align: top;
+}
+
+.crew-page .crew-board__day {
+  text-align: center;
+  min-width: 4.5rem;
+  white-space: nowrap;
+}
+
+.crew-page .crew-board__member {
+  text-align: left;
+  white-space: nowrap;
+  position: sticky;
+  /* The name column stays put while a wide range scrolls sideways — without it you
+     lose track of whose row you are reading. */
+  left: 0;
+  background: var(--surface-color);
+  z-index: 1;
+}
+
+.crew-page .crew-board__cell {
+  min-width: 4.5rem;
+}
+
+.crew-page .crew-board__total {
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.crew-page .crew-chip {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.2rem;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.72rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--agri-green);
+  border-radius: var(--border-radius);
+  background: var(--surface-color);
+  color: var(--text-primary);
+  transition: var(--transition);
+  /* A long duty code must not widen the column. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crew-page .crew-chip:hover {
+  background: var(--agri-green-light);
+}
+
+.crew-page .crew-chip:focus-visible {
+  outline: 2px solid var(--agri-green-dark);
+  outline-offset: 1px;
+}
+
+.crew-page .crew-chip--confirmed {
+  font-weight: 600;
+}
+
+.crew-page .crew-chip--completed {
+  background: var(--agri-green-light);
+}
+
+.crew-page .crew-chip--cancelled {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.crew-page .crew-chip-hours {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--agri-green-dark);
+}
+
+.crew-page .crew-input--inline {
+  width: auto;
+  max-width: 9rem;
+  padding: 0.3rem 0.45rem;
+  font-size: 0.85rem;
+}
+
+.crew-page .crew-amend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+/*
+ * Print / PDF (Phase 3C export).
+ *
+ * "Export to PDF" is the browser's own print pipeline rather than a bundled PDF
+ * library: no new dependency, and the output follows whatever is on screen. The
+ * controls, forms and chrome are dropped; the board is printed landscape with
+ * exact colours so the status shading survives.
+ */
+@media print {
+  .crew-page .crew-no-print,
+  .crew-page #header-component,
+  .crew-page #footer-component,
+  .crew-page .crew-lede,
+  .crew-page #boardShiftPanel {
+    display: none !important;
+  }
+
+  .crew-page .crew-shell {
+    max-width: none;
+    padding: 0;
+  }
+
+  .crew-page .crew-table-wrap {
+    overflow: visible;
+    border: none;
+    box-shadow: none;
+  }
+
+  .crew-page .crew-board {
+    font-size: 0.68rem;
+  }
+
+  .crew-page .crew-chip {
+    /* Keep the status shading in the PDF rather than printing everything white. */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .crew-page .crew-board__member {
+    position: static;
+  }
+
+  @page {
+    size: landscape;
+    margin: 10mm;
+  }
+}
+
+/* Scheduled hours ride on the chip; the cell's bold figure is what was logged. */
+.crew-page .crew-chip__hours {
+  opacity: 0.75;
+  font-weight: 400;
+}
+
+.crew-page .crew-board__total .crew-muted {
+  font-weight: 400;
+}
+
+/* A field the validator (or the server) rejected. Marked, not just described in
+   prose above the form, so a long form points at the offender. */
+.crew-page .crew-input[aria-invalid="true"],
+.crew-page .crew-select[aria-invalid="true"] {
+  border-color: var(--agri-earth);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--agri-earth) 25%, transparent);
+}
+
+/* --- module tab strip ----------------------------------------------------- */
+
+/*
+ * The Crew Office views as tabs. Each one is a LINK, so it stays deep-linkable and
+ * openable in a new tab — a JS-only switch would take both away. The `.crew-tab`
+ * styling is shared with the member page's in-page tabs so the two read as one
+ * pattern; only the link-specific bits live here.
+ */
+.crew-page .crew-tab--link {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.crew-page .crew-tab--link:hover {
+  color: var(--text-primary);
+  background: var(--agri-green-light);
+}
+
+/* aria-current is the accessible signal; this keeps the visual one in step with it
+   rather than relying on the class alone. */
+.crew-page .crew-tab--link[aria-current="page"] {
+  color: var(--agri-green-dark);
+  border-bottom-color: var(--agri-green);
+  font-weight: 600;
+}
+
+/* The strip is navigation chrome, so it stays out of the printed board. */
+@media print {
+  .crew-page #crewTabs {
+    display: none !important;
+  }
+}
+
+/* --- the tool registry's action gate -------------------------------------- */
+/*
+ * A blocked action is marked with `aria-disabled`, never with `disabled`, so it keeps
+ * its place in the tab order and can be pressed for an explanation (see
+ * `applyActions` in crew-tools.js). It therefore has to LOOK unavailable without the
+ * browser's own disabled styling doing it: dimmed, no hover lift, not-allowed cursor.
+ */
+.crew-page .crew-btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.crew-page .crew-btn[aria-disabled="true"]:hover {
+  border-color: var(--border-color);
+}
+
+/* Still clearly focusable — that is the point of not using `disabled`. */
+.crew-page .crew-btn[aria-disabled="true"]:focus-visible {
+  opacity: 0.85;
+  outline: 2px solid var(--agri-green-dark);
+  outline-offset: 2px;
+}
+
+.crew-page .tools-detail__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* The state strip: where this tool is, and what follows from it. */
+.crew-page .tools-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-color);
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+/* `display: flex` above outranks the browser's `[hidden] { display: none }`, so the
+   attribute the controller toggles has to be honoured explicitly — otherwise an empty
+   state strip stays on the page. Same for the notes list below. */
+.crew-page .tools-state[hidden],
+.crew-page .tools-notes[hidden] {
+  display: none;
+}
+
+.crew-page .tools-state__icon {
+  font-size: 1.1rem;
+  line-height: 1.4;
+  /* A floor, so a missing Font Awesome glyph does not collapse the column and shift
+     the sentence left. Same defence as the crew buttons. */
+  min-width: 1.1em;
+}
+
+.crew-page .tools-state--available {
+  border-left-color: var(--agri-green);
+}
+.crew-page .tools-state--available .tools-state__icon {
+  color: var(--agri-green-dark);
+}
+
+.crew-page .tools-state--on_issue {
+  border-left-color: var(--info-color);
+}
+.crew-page .tools-state--on_issue .tools-state__icon {
+  color: var(--info-color);
+}
+
+.crew-page .tools-state--in_service {
+  border-left-color: var(--warning-color);
+}
+.crew-page .tools-state--in_service .tools-state__icon {
+  color: var(--warning-color);
+}
+
+.crew-page .tools-state--retired {
+  border-left-color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+/* Why the greyed-out actions are greyed out. Visible rather than hover-only: a
+   tooltip is unreachable on a touch screen, which is where "the button does nothing"
+   is most likely to be reported as a bug. */
+.crew-page .tools-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.87rem;
+  color: var(--text-secondary);
+}
+
+.crew-page .tools-note {
+  display: flex;
+  gap: 0.45rem;
+  align-items: baseline;
+}
+
+.crew-page .tools-note--blocked i {
+  color: var(--text-secondary);
+}
+
+.crew-page .tools-note--caution i {
+  color: var(--warning-color);
+}
+
+/* --- the lifecycle modal --------------------------------------------------- */
+/*
+ * The app's own `.modal` furniture, driven the crew module's way.
+ *
+ * styles.css declares `.modal` TWICE: `display: flex` where the component is defined,
+ * and then `display: none` again 800 lines later under "Modal Defaults". The second
+ * one wins, and the pages that use this component reveal a dialog by setting an inline
+ * `style.display = "flex"`. Crew pages drive every panel they own with the `hidden`
+ * attribute instead, so BOTH directions are stated here — relying on whichever `.modal`
+ * rule happens to come last is exactly how removing `hidden` ended up doing nothing at
+ * all.
+ */
+.crew-page .crew-modal[hidden] {
+  display: none;
+}
+
+.crew-page .crew-modal:not([hidden]) {
+  display: flex;
+}
+
+.crew-page .tools-flow__states {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.6rem;
+}
+
+.crew-page .tools-flow__state {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--background-color);
+  font-size: 0.88rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.crew-page .tools-flow__state .crew-muted {
+  flex: 1 1 100%;
+}
+
+.crew-page .tools-flow__state--available i {
+  color: var(--agri-green-dark);
+}
+.crew-page .tools-flow__state--on_issue i {
+  color: var(--info-color);
+}
+.crew-page .tools-flow__state--in_service i {
+  color: var(--warning-color);
+}
+.crew-page .tools-flow__state--retired i {
+  color: var(--text-secondary);
+}
+
+/* The state the tool you opened this from is actually in. Marked with aria-current
+   too — the ring alone would say nothing to a screen reader. */
+.crew-page .tools-flow__state--current {
+  border-color: var(--agri-green);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+}
+
+.crew-page .tools-flow__here {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--agri-green-dark);
+}
+
+.crew-page .tools-flow__table {
+  font-size: 0.87rem;
+}
+
+/* The "worth knowing" column is prose. Crew tables are `nowrap` by default — right for
+   a date or a badge, and here it would stretch the table to several screens wide. */
+.crew-page .tools-flow__table td:last-child {
+  white-space: normal;
+  min-width: 14rem;
+}
+
+.crew-page .tools-flow__action {
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.crew-page .tools-flow__row--current {
+  background: var(--agri-green-light);
+}
+
+.crew-page .tools-flow__footnote {
+  margin-top: 1.25rem;
+  font-size: 0.87rem;
+}
+
+/* --- registering: templates and the icon picker ---------------------------- */
+/*
+ * Both are button groups above/inside the register form, and both are deliberately
+ * small: they are shortcuts into the form, not a second form competing with it.
+ */
+.crew-page .tools-templates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.crew-page .tools-templates__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.crew-page .tools-template {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.crew-page .tools-template i {
+  color: var(--agri-green-dark);
+}
+
+/* The template whose values are currently in the form. It stops being true the moment
+   a field is edited, which is fine — it marks where the form came FROM, and the fields
+   themselves are the truth. */
+.crew-page .tools-template[aria-pressed="true"] {
+  background: var(--agri-green);
+  border-color: var(--agri-green-dark);
+  color: #fff;
+}
+
+.crew-page .tools-template[aria-pressed="true"] i {
+  color: #fff;
+}
+
+/* A grid rather than a wrapping row: eighteen equal cells read as a palette, where a
+   ragged flex row reads as a sentence that ran on. */
+.crew-page .tools-icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.crew-page .tools-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.35rem;
+  min-height: 3.9rem;
+  text-align: center;
+}
+
+.crew-page .tools-icon i {
+  font-size: 1.15rem;
+  color: var(--agri-green-dark);
+  /* A floor, so a glyph that never arrives from the CDN leaves the cell its shape
+     instead of collapsing the grid row. */
+  min-height: 1.15em;
+}
+
+/* The label is what makes the picker usable when Font Awesome does not load, and what
+   a screen reader reads — so it is never dropped, only made small. */
+.crew-page .tools-icon__label {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--text-secondary);
+}
+
+.crew-page .tools-icon[aria-pressed="true"] {
+  background: var(--agri-green);
+  border-color: var(--agri-green-dark);
+}
+
+.crew-page .tools-icon[aria-pressed="true"] i,
+.crew-page .tools-icon[aria-pressed="true"] .tools-icon__label {
+  color: #fff;
+}
+
+/* An invalid picker is marked on the group, since the value behind it is hidden. */
+.crew-page .tools-icons[aria-invalid="true"] {
+  outline: 2px solid var(--error-color);
+  outline-offset: 3px;
+  border-radius: var(--border-radius);
+}
+
+/* The tool's own glyph in the registry table. Muted: the name is the label, and a row
+   of full-strength icons would out-shout the status column, which is the one that
+   changes. */
+.crew-page .tools-row__icon {
+  color: var(--text-secondary);
+  min-width: 1em;
+  margin-right: 0.15rem;
+}

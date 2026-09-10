@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Rolnopol Survival</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/pages/survival.css" />
+  </head>
+
+  <body class="wp-page">
+    <main class="wp-shell">
+      <header class="wp-header">
+        <h1 class="wp-title" data-string="game.title">Rolnopol Survival</h1>
+        <div class="wp-header__counters">
+          <span class="wp-counter"><span data-string="hud.day">Day</span> <strong id="wpDay">1</strong></span>
+          <span class="wp-counter wp-counter--move"><span data-string="hud.movement">Movement</span> <strong id="wpMove">6</strong></span>
+          <span class="wp-counter wp-counter--seed"><span data-string="hud.seed">Seed</span> <strong id="wpSeed">—</strong></span>
+        </div>
+        <span class="wp-counter"><span data-string="hud.weather">Weather</span> <strong id="wpWeather">—</strong></span>
+        <span class="wp-counter wp-counter--danger" id="wpDeadline" hidden
+          ><span data-string="hud.daysLeft">Days left</span> <strong id="wpDaysLeft">—</strong></span
+        >
+        <span class="wp-counter wp-counter--danger" id="wpPursuit" hidden
+          ><span data-string="hud.pursuit">Pursuit</span> <strong id="wpPursuitState">—</strong></span
+        >
+        <span class="wp-counter wp-counter--scenario"
+          ><span data-string="hud.scenario">Expedition</span> <strong id="wpScenarioName">—</strong></span
+        >
+        <button id="wpHistory" class="wp-btn" type="button" data-string="action.history">Past expeditions</button>
+        <button id="wpMenuBtn" class="wp-btn" type="button" data-string="action.backToMenu">Main menu</button>
+      </header>
+
+      <p id="wpBanner" class="wp-banner" hidden></p>
+
+      <section class="wp-layout">
+        <div class="wp-mapwrap">
+          <div id="wpViewport" class="wp-viewport">
+            <div id="wpMap" class="wp-map" role="grid" aria-label="Expedition map"></div>
+          </div>
+          <p id="wpHexInfo" class="wp-hexinfo">Hover a hex</p>
+          <p class="wp-hexinfo wp-hexinfo--hint" data-string="hud.panHint">Drag with the right mouse button to move the map</p>
+        </div>
+
+        <aside class="wp-side">
+          <ul class="wp-stats">
+            <li class="wp-stat">
+              <span id="wpHealthIcon" class="wp-stat__icon"></span><span class="wp-stat__label" data-string="resource.health">Health</span
+              ><strong id="wpHealth">10</strong>
+            </li>
+            <li class="wp-stat">
+              <span id="wpWaterIcon" class="wp-stat__icon"></span><span class="wp-stat__label" data-string="resource.water">Water</span
+              ><strong id="wpWater">6</strong>
+            </li>
+            <li class="wp-stat">
+              <span id="wpFoodIcon" class="wp-stat__icon"></span><span class="wp-stat__label" data-string="resource.food">Food</span
+              ><strong id="wpFood">10</strong>
+            </li>
+            <li class="wp-stat">
+              <span id="wpFatigueIcon" class="wp-stat__icon"></span
+              ><span class="wp-stat__label" data-string="resource.fatigue">Fatigue</span><strong id="wpFatigue">0</strong>
+            </li>
+            <li class="wp-stat">
+              <span id="wpOrientationIcon" class="wp-stat__icon"></span
+              ><span class="wp-stat__label" data-string="resource.orientation">Bearings</span><strong id="wpOrientation">6</strong>
+            </li>
+          </ul>
+
+          <ul id="wpConditions" class="wp-conditions"></ul>
+
+          <p id="wpCarrying" class="wp-carrying" data-string="hud.carrying" hidden>Carrying the survivor</p>
+
+          <div class="wp-actions">
+            <button id="wpInvestigate" class="wp-btn wp-btn--accent" type="button" hidden>Take a closer look</button>
+            <button id="wpSearchWater" class="wp-btn" type="button" data-string="action.searchWater">Search for water</button>
+            <button id="wpSearchFood" class="wp-btn" type="button" data-string="action.searchFood">Forage</button>
+            <button id="wpCheckMap" class="wp-btn" type="button" data-string="action.checkMap">Study the map</button>
+            <button id="wpRest" class="wp-btn" type="button" data-string="action.rest">Rest</button>
+            <button id="wpCamp" class="wp-btn" type="button" data-string="action.camp">Make camp</button>
+            <button id="wpEndDay" class="wp-btn wp-btn--accent" type="button" data-string="action.endDay">End day</button>
+            <button id="wpForce" class="wp-btn wp-btn--danger" type="button" data-string="action.forcedMarch" hidden>
+              Force the march
+            </button>
+          </div>
+
+          <h2 class="wp-side__heading" data-string="hud.journal">Journal</h2>
+          <ol id="wpJournal" class="wp-journal"></ol>
+        </aside>
+      </section>
+    </main>
+
+    <section id="wpCheats" class="wp-cheats" hidden aria-label="Cheat console">
+      <header class="wp-cheats__bar">
+        <strong data-string="cheat.title">Cheat console</strong>
+        <span class="wp-cheats__hint" data-string="cheat.hint"></span>
+        <button id="wpCheatsFold" class="wp-btn wp-btn--small" type="button" aria-expanded="true">–</button>
+      </header>
+      <div id="wpCheatsBody" class="wp-cheats__body">
+        <h3 class="wp-cheats__heading" data-string="cheat.actions">Do something</h3>
+        <div id="wpCheatActions" class="wp-cheats__grid"></div>
+        <h3 class="wp-cheats__heading" data-string="cheat.dials">Set something</h3>
+        <div id="wpCheatDials" class="wp-cheats__grid"></div>
+      </div>
+    </section>
+
+    <div id="wpChoice" class="wp-modal" role="dialog" aria-modal="true" hidden>
+      <div class="wp-modal__box">
+        <h2 id="wpChoiceTitle" class="wp-modal__title"></h2>
+        <p id="wpChoiceBody" class="wp-modal__body"></p>
+        <div id="wpChoiceActions" class="wp-modal__actions"></div>
+      </div>
+    </div>
+
+    <div id="wpMenu" class="wp-menu">
+      <div class="wp-menu__box">
+        <h1 class="wp-menu__title" data-string="menu.title">Rolnopol Survival</h1>
+        <p class="wp-menu__tagline" data-string="menu.tagline"></p>
+        <p id="wpMenuNotice" class="wp-menu__notice" role="status" hidden></p>
+
+        <h2 class="wp-menu__heading" data-string="menu.chooseScenario">Choose an expedition</h2>
+        <div id="wpScenarios" class="wp-scenarios" role="radiogroup"></div>
+
+        <div class="wp-menu__row">
+          <label class="wp-field">
+            <span data-string="hud.difficulty">Difficulty</span>
+            <select id="wpDifficulty" class="wp-select"></select>
+          </label>
+          <label class="wp-field">
+            <span data-string="hud.mapSize">Map</span>
+            <select id="wpMapSize" class="wp-select"></select>
+          </label>
+          <button id="wpResume" class="wp-btn" type="button" data-string="action.resume" hidden>Resume expedition</button>
+          <button id="wpDaily" class="wp-btn" type="button" data-string="action.daily">Daily challenge</button>
+          <button id="wpProgressBtn" class="wp-btn" type="button" data-string="action.progress">Your record</button>
+          <button id="wpScoreboardBtn" class="wp-btn" type="button" data-string="action.scoreboard">Scoreboard</button>
+          <button id="wpInstructionsBtn" class="wp-btn" type="button" data-string="action.instructions">How to play</button>
+          <button id="wpStart" class="wp-btn wp-btn--accent" type="button" data-string="action.start">Set out</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="wpInstructions" class="wp-modal" role="dialog" aria-modal="true" hidden>
+      <div class="wp-modal__box wp-modal__box--wide">
+        <h2 class="wp-modal__title" data-string="menu.instructions.title">How to play</h2>
+        <div id="wpGuide" class="wp-guide"></div>
+        <div class="wp-modal__actions">
+          <button id="wpInstructionsClose" class="wp-btn" type="button" data-string="action.close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="wpScoreboard" class="wp-modal" role="dialog" aria-modal="true" hidden>
+      <div class="wp-modal__box">
+        <h2 class="wp-modal__title" data-string="scoreboard.title">Scoreboard</h2>
+        <div id="wpScoreboardBody" class="wp-scoreboard"></div>
+        <p class="wp-modal__body wp-modal__body--muted" data-string="scoreboard.note"></p>
+        <div class="wp-modal__actions">
+          <button id="wpScoreboardClose" class="wp-btn" type="button" data-string="action.close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="wpHistoryModal" class="wp-modal" role="dialog" aria-modal="true" hidden>
+      <div class="wp-modal__box">
+        <h2 class="wp-modal__title" data-string="history.title">Past expeditions</h2>
+        <div id="wpHistoryList" class="wp-history"></div>
+        <div class="wp-modal__actions">
+          <button id="wpHistoryClose" class="wp-btn" type="button" data-string="action.close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="wpConfirm" class="wp-modal" role="dialog" aria-modal="true" hidden>
+      <div class="wp-modal__box">
+        <h2 id="wpConfirmTitle" class="wp-modal__title"></h2>
+        <p id="wpConfirmBody" class="wp-modal__body"></p>
+        <div class="wp-modal__actions">
+          <button id="wpConfirmOk" class="wp-btn wp-btn--accent" type="button">OK</button>
+          <button id="wpConfirmCancel" class="wp-btn" type="button" data-string="action.cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="wpProgress" class="wp-modal" role="dialog" aria-modal="true" hidden>
+      <div class="wp-modal__box wp-modal__box--wide">
+        <h2 class="wp-modal__title" data-string="progress.title">Your record</h2>
+        <div id="wpProgressBody" class="wp-record"></div>
+        <div class="wp-modal__actions">
+          <button id="wpProgressClose" class="wp-btn" type="button" data-string="action.close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="wpEnd" class="wp-modal" role="dialog" aria-modal="true" hidden>
+      <div class="wp-modal__box wp-modal__box--wide">
+        <h2 id="wpEndTitle" class="wp-modal__title"></h2>
+        <div id="wpEndStats" class="wp-end__stats"></div>
+        <p class="wp-end__seed">
+          <span data-string="end.seed">Seed</span>: <code id="wpEndSeed"></code>
+          <button id="wpCopySeed" class="wp-btn wp-btn--small" type="button" data-string="action.copySeed">Copy seed</button>
+        </p>
+        <p id="wpEndRecorded" class="wp-end__recorded"></p>
+        <p id="wpEndCheated" class="wp-end__cheated" data-string="end.cheated" hidden></p>
+
+        <h3 class="wp-menu__heading" data-string="end.route">The way you went</h3>
+        <div id="wpEndMap" class="wp-end__map"></div>
+
+        <section id="wpEndMoments" hidden>
+          <h3 class="wp-menu__heading" data-string="end.moments">What happened</h3>
+          <ul id="wpEndMomentsList" class="wp-moments"></ul>
+        </section>
+
+        <section id="wpEndAchievements" hidden>
+          <h3 class="wp-menu__heading" data-string="end.achievements">Earned on this expedition</h3>
+          <ul id="wpEndAchievementsList" class="wp-marks"></ul>
+        </section>
+
+        <h3 class="wp-menu__heading" data-string="hud.fullJournal">Expedition journal</h3>
+        <div id="wpEndJournal" class="wp-end__journal"></div>
+        <div class="wp-modal__actions">
+          <button id="wpCopyReport" class="wp-btn" type="button" data-string="action.copyReport">Copy the report</button>
+          <button id="wpEndClose" class="wp-btn wp-btn--accent" type="button" data-string="action.returnToMenu">Return to the menu</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/games/survival/rng.js?v=1"></script>
+    <script src="/js/games/survival/hex.js?v=1"></script>
+    <script src="/js/games/survival/config.js?v=1"></script>
+    <script src="/js/games/survival/strings.js?v=1"></script>
+    <script src="/js/games/survival/assets.js?v=1"></script>
+    <script src="/js/games/survival/map-generator.js?v=1"></script>
+    <script src="/js/games/survival/handmade-maps.js?v=1"></script>
+    <script src="/js/games/survival/markers.js?v=1"></script>
+    <script src="/js/games/survival/ambient.js?v=1"></script>
+    <script src="/js/games/survival/chaser.js?v=1"></script>
+    <script src="/js/games/survival/achievements.js?v=1"></script>
+    <script src="/js/games/survival/chronicle.js?v=1"></script>
+    <script src="/js/games/survival/scenarios.js?v=1"></script>
+    <script src="/js/games/survival/events.js?v=1"></script>
+    <script src="/js/games/survival/game.js?v=1"></script>
+    <script src="/js/games/survival/snapshot.js?v=1"></script>
+    <script src="/js/games/survival/balance-bot.js?v=1"></script>
+    <script src="/js/games/survival/guide.js?v=1"></script>
+    <script src="/js/games/survival/cheats.js?v=1"></script>
+    <script src="/js/games/survival/api-client.js?v=1"></script>
+    <script src="/js/games/survival/ui.js?v=1"></script>
+  </body>
+</html>

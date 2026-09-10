@@ -1,0 +1,1419 @@
+/*
+ * Rolnopol Survival — retro field-simulator styling (PRD 11).
+ *
+ * Terrain is never told apart by colour alone: every hex also carries a glyph
+ * and a text fallback, because the palette holds three greens next to each
+ * other and a blocked icon CDN must still leave a readable map.
+ */
+
+:root {
+  --wp-bg: #10140f;
+  --wp-panel: #1c2418;
+  --wp-line: #2f3b28;
+  --wp-text: #d7e6b3;
+  --wp-muted: #8a9a68;
+  --wp-accent: #f0b35a;
+  --wp-player: #3b2323;
+  --wp-danger: #d65d4a;
+
+  --wp-open: #8b7f4e;
+  --wp-forest: #2f5f3a;
+  --wp-mountain: #7a6a58;
+  --wp-swamp: #46513a;
+  --wp-river: #4f8fa8;
+  --wp-desert: #b09a5c;
+}
+
+.fa-person-running {
+  scale: 2;
+}
+
+.wp-page {
+  margin: 0;
+  padding: 0;
+  background: var(--wp-bg);
+  color: var(--wp-text);
+  font-family: "Courier New", ui-monospace, monospace;
+  min-height: 100vh;
+}
+
+.wp-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+
+.wp-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border: 1px solid var(--wp-line);
+  background: var(--wp-panel);
+  padding: 12px 16px;
+}
+
+.wp-title {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.wp-header__counters {
+  display: flex;
+  gap: 18px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.wp-counter {
+  color: var(--wp-muted);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.wp-counter strong {
+  color: var(--wp-text);
+  font-size: 16px;
+  margin-left: 6px;
+}
+
+/* Movement left is the number the whole turn hangs on (PRD 11). */
+.wp-counter--move strong {
+  color: var(--wp-accent);
+}
+
+.wp-counter--seed strong {
+  font-size: 12px;
+  color: var(--wp-muted);
+}
+
+.wp-banner {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border: 1px solid var(--wp-danger);
+  background: rgba(214, 93, 74, 0.12);
+  color: var(--wp-danger);
+  font-size: 13px;
+}
+
+/* ── layout ─────────────────────────────────────────────────────────────── */
+
+.wp-layout {
+  display: flex;
+  gap: 18px;
+  margin-top: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.wp-mapwrap {
+  flex: 1 1 660px;
+  min-width: 0;
+  border: 1px solid var(--wp-line);
+  background: var(--wp-panel);
+  padding: 14px;
+}
+
+/* The map is bigger than the panel on purpose: the player sees a window onto it
+   and drags that window around with the right mouse button. */
+.wp-viewport {
+  position: relative;
+  width: 100%;
+  height: 62vh;
+  min-height: 380px;
+  overflow: hidden;
+  cursor: grab;
+  background: var(--wp-bg);
+  border: 1px solid var(--wp-line);
+}
+
+.wp-viewport--panning {
+  cursor: grabbing;
+}
+
+.wp-map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.wp-hexinfo--hint {
+  color: var(--wp-line);
+  font-size: 11px;
+}
+
+.wp-hexinfo {
+  margin: 12px 0 0;
+  color: var(--wp-muted);
+  font-size: 12px;
+  min-height: 16px;
+}
+
+.wp-side {
+  flex: 0 0 300px;
+  border: 1px solid var(--wp-line);
+  background: var(--wp-panel);
+  padding: 14px;
+}
+
+.wp-side__heading {
+  margin: 18px 0 8px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--wp-muted);
+}
+
+/* ── stats ──────────────────────────────────────────────────────────────── */
+
+.wp-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.wp-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--wp-line);
+}
+
+.wp-stat__label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--wp-muted);
+}
+
+.wp-stat strong {
+  font-size: 18px;
+  min-width: 2ch;
+  text-align: right;
+}
+
+.wp-stat--danger strong,
+.wp-stat--danger .wp-stat__label {
+  color: var(--wp-danger);
+}
+
+/* ── asset registry slots (PRD 11.1) ────────────────────────────────────── */
+/* Size lives here, never in the asset, so a picture can replace an icon. */
+
+/* The slot decides the size, not the surrounding text (PRD 11.1).
+   Without an explicit size the icon font inherits whatever the context sets,
+   which made the same icon 16px on the map, 12px in a guide table and 11px
+   under a sample hex. */
+.wp-asset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.wp-asset i {
+  font-size: inherit;
+}
+
+.wp-asset__img,
+.wp-asset__sprite {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* The text fallback only shows when the icon font never arrived. */
+.wp-asset__text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── hexes ──────────────────────────────────────────────────────────────── */
+
+.wp-hex {
+  position: absolute;
+  width: 54px;
+  height: 62px;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  background: var(--wp-open);
+  color: #0d120b;
+  transition: filter 0.12s ease;
+}
+
+.wp-hex--open {
+  background: var(--wp-open);
+}
+.wp-hex--forest {
+  background: var(--wp-forest);
+  color: var(--wp-text);
+}
+.wp-hex--mountain {
+  background: var(--wp-mountain);
+}
+.wp-hex--river {
+  background: var(--wp-river);
+}
+.wp-hex--swamp {
+  background: var(--wp-swamp);
+  color: var(--wp-text);
+}
+.wp-hex--desert {
+  background: var(--wp-desert);
+}
+
+.wp-hex--visited {
+  box-shadow: inset 0 0 0 2px rgba(215, 230, 179, 0.25);
+}
+
+.wp-hex--trail .wp-hex__glyph {
+  text-decoration: underline;
+}
+
+.wp-hex--reachable {
+  cursor: pointer;
+  filter: brightness(1.25);
+}
+
+.wp-hex--reachable:hover {
+  filter: brightness(1.5);
+}
+
+.wp-hex--forced {
+  box-shadow: inset 0 0 0 3px var(--wp-danger);
+  cursor: pointer;
+}
+
+.wp-hex--player {
+  box-shadow: inset 0 0 0 3px var(--wp-accent);
+  color: var(--wp-accent);
+}
+
+.wp-hex--player i {
+  color: var(--wp-player);
+  scale: 2;
+}
+
+.wp-hex__cost {
+  position: absolute;
+  bottom: 8px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #0d120b;
+  background: rgba(240, 179, 90, 0.85);
+  padding: 0 4px;
+}
+
+/* ── journal ────────────────────────────────────────────────────────────── */
+
+.wp-journal {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+.wp-journal__entry {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--wp-line);
+  display: flex;
+  gap: 8px;
+}
+
+.wp-journal__day {
+  color: var(--wp-muted);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* ── buttons ────────────────────────────────────────────────────────────── */
+
+.wp-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.wp-btn {
+  font-family: inherit;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--wp-text);
+  background: transparent;
+  border: 1px solid var(--wp-line);
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.wp-btn:hover:not(:disabled) {
+  border-color: var(--wp-accent);
+  color: var(--wp-accent);
+}
+
+.wp-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.wp-btn--accent {
+  border-color: var(--wp-accent);
+  color: var(--wp-accent);
+}
+
+.wp-btn--danger {
+  border-color: var(--wp-danger);
+  color: var(--wp-danger);
+}
+
+.wp-btn--small {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+/* ── modals ─────────────────────────────────────────────────────────────── */
+
+.wp-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 9, 5, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  /* Above the main menu (60): every dialog here can be opened from it, and a
+     dialog underneath the screen that opened it is a dialog nobody sees. */
+  z-index: 70;
+}
+
+.wp-modal[hidden] {
+  display: none;
+}
+
+/*
+ * A dialog is never taller than the window it is in.
+ *
+ * `.wp-modal` centres its box, so a box taller than the viewport used to hang
+ * off both ends with no way to reach either — which is what the end screen did
+ * once it started carrying a map, the moments and the journal. `max-height`
+ * resolves against the modal's content box, so the 20px padding round the
+ * dialog is already taken off and there is no viewport arithmetic to keep in
+ * step with the media query below.
+ */
+.wp-modal__box {
+  background: var(--wp-panel);
+  border: 1px solid var(--wp-line);
+  padding: 22px;
+  max-width: 460px;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  /* This page loads no shared reset, so the default is content-box and the
+     padding above would sit outside both caps. Scoped to the dialog rather
+     than set globally: the map and the panels are laid out against the
+     default and would move if it changed under them. */
+  box-sizing: border-box;
+  /* Scrolling past the end of a dialog must not start scrolling the map. */
+  overscroll-behavior: contain;
+}
+
+.wp-modal__title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--wp-accent);
+}
+
+.wp-modal__body {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.wp-modal__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.wp-end__stats {
+  margin-bottom: 16px;
+}
+
+.wp-end__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--wp-line);
+  font-size: 13px;
+}
+
+.wp-end__seed {
+  font-size: 12px;
+  color: var(--wp-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wp-end__recorded {
+  font-size: 12px;
+  color: var(--wp-muted);
+}
+
+/* ── CRT scanlines, off for anyone who asked for less motion ────────────── */
+
+.wp-page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-page::after {
+    display: none;
+  }
+
+  .wp-hex {
+    transition: none;
+  }
+}
+
+/* ── header field ───────────────────────────────────────────────────────── */
+
+.wp-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--wp-muted);
+}
+
+.wp-select {
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--wp-text);
+  background: var(--wp-bg);
+  border: 1px solid var(--wp-line);
+  padding: 6px 8px;
+}
+
+/* ── expedition history ─────────────────────────────────────────────────── */
+
+.wp-history {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.wp-history__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--wp-line);
+  font-size: 12px;
+}
+
+.wp-history__date {
+  color: var(--wp-muted);
+  white-space: nowrap;
+}
+
+.wp-history__status {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.wp-history__status--won {
+  color: var(--wp-accent);
+}
+.wp-history__status--lost {
+  color: var(--wp-danger);
+}
+.wp-history__status--abandoned {
+  color: var(--wp-muted);
+}
+
+.wp-history__days {
+  white-space: nowrap;
+  color: var(--wp-muted);
+}
+
+.wp-history__seed {
+  color: var(--wp-text);
+}
+
+.wp-history__empty {
+  color: var(--wp-muted);
+  font-size: 12px;
+}
+
+/* ── fog of war (WP-28) ─────────────────────────────────────────────────── */
+
+.wp-hex--hidden {
+  background: #0a0d08;
+  box-shadow: inset 0 0 0 1px var(--wp-line);
+  pointer-events: none;
+}
+
+.wp-hex--marker .wp-hex__glyph {
+  color: var(--wp-accent);
+}
+
+/* ── carrying a survivor (WP-32) ────────────────────────────────────────── */
+
+.wp-carrying {
+  margin: 12px 0 0;
+  padding: 6px 10px;
+  border: 1px solid var(--wp-accent);
+  color: var(--wp-accent);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.wp-carrying[hidden] {
+  display: none;
+}
+
+/* ── main menu (WP-35) ──────────────────────────────────────────────────── */
+
+.wp-menu {
+  position: fixed;
+  inset: 0;
+  background: var(--wp-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 60;
+  overflow-y: auto;
+}
+
+.wp-menu[hidden] {
+  display: none;
+}
+
+.wp-menu__box {
+  width: 100%;
+  max-width: 640px;
+  border: 1px solid var(--wp-line);
+  background: var(--wp-panel);
+  padding: 28px;
+}
+
+.wp-menu__title {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--wp-accent);
+}
+
+.wp-menu__tagline {
+  margin: 8px 0 26px;
+  color: var(--wp-muted);
+  font-size: 13px;
+}
+
+.wp-menu__heading {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--wp-muted);
+}
+
+.wp-menu__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.wp-menu__row .wp-btn--accent {
+  margin-left: auto;
+}
+
+.wp-scenarios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.wp-scenario {
+  display: block;
+  text-align: left;
+  font-family: inherit;
+  color: var(--wp-text);
+  background: transparent;
+  border: 1px solid var(--wp-line);
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.wp-scenario:hover {
+  border-color: var(--wp-muted);
+}
+
+.wp-scenario[aria-checked="true"] {
+  border-color: var(--wp-accent);
+  background: rgba(240, 179, 90, 0.08);
+}
+
+.wp-scenario__name {
+  display: block;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.wp-scenario__text {
+  display: block;
+  font-size: 12px;
+  color: var(--wp-muted);
+  line-height: 1.5;
+}
+
+.wp-modal__body--muted {
+  color: var(--wp-muted);
+  font-size: 12px;
+}
+
+.wp-counter--scenario strong {
+  color: var(--wp-accent);
+  font-size: 13px;
+}
+
+/* ── the icon font never arrived (WP-34) ────────────────────────────────── */
+/* Every asset already carries a text fallback; this is what puts it on screen. */
+
+.wp-no-icons .wp-asset i {
+  display: none;
+}
+
+.wp-no-icons .wp-asset__text {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+.wp-no-icons .wp-asset {
+  width: auto;
+  min-width: 20px;
+}
+
+/* ── wounds and illnesses (WP-60) ───────────────────────────────────────── */
+
+.wp-conditions {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.wp-condition {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  margin-bottom: 4px;
+  border: 1px solid var(--wp-danger);
+  color: var(--wp-danger);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.wp-condition__days::after {
+  content: "d";
+}
+
+/* ── the full journal on the end screen (WP-55) ─────────────────────────── */
+
+.wp-end__journal {
+  max-height: 220px;
+  overflow-y: auto;
+  border-top: 1px solid var(--wp-line);
+  padding-top: 10px;
+  margin-bottom: 16px;
+}
+
+.wp-end__day {
+  margin: 12px 0 4px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--wp-muted);
+}
+
+.wp-end__line {
+  margin: 0 0 4px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ── a clock and a hunter (WP-66, WP-68) ────────────────────────────────── */
+
+.wp-counter--danger strong {
+  color: var(--wp-danger);
+}
+
+.wp-counter--danger[hidden] {
+  display: none;
+}
+
+/* ── cheat console (PRD 8.8) ────────────────────────────────────────────── */
+
+.wp-cheats {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 340px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--wp-accent);
+  background: var(--wp-panel);
+  /* Top of the stack: the console opens over any screen, by design. */
+  z-index: 80;
+  font-size: 12px;
+}
+
+.wp-cheats[hidden] {
+  display: none;
+}
+
+.wp-cheats__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--wp-line);
+  color: var(--wp-accent);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.wp-cheats__hint {
+  flex: 1;
+  color: var(--wp-line);
+  font-size: 10px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.wp-cheats__body {
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.wp-cheats__body[hidden] {
+  display: none;
+}
+
+.wp-cheats__heading {
+  margin: 4px 0 8px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--wp-muted);
+}
+
+.wp-cheats__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.wp-cheats__grid .wp-btn {
+  padding: 6px 8px;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.wp-cheat-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--wp-line);
+  padding: 4px 6px;
+}
+
+.wp-cheat-field span {
+  flex: 1;
+  color: var(--wp-muted);
+  font-size: 11px;
+}
+
+.wp-cheat-field input,
+.wp-cheat-field select {
+  width: 5.5em;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--wp-text);
+  background: var(--wp-bg);
+  border: 1px solid var(--wp-line);
+  padding: 2px 4px;
+}
+
+.wp-cheat-field--wide {
+  grid-column: 1 / -1;
+}
+
+.wp-cheat-field--wide select {
+  width: auto;
+  flex: 1;
+}
+
+.wp-end__cheated {
+  margin: 0 0 12px;
+  color: var(--wp-danger);
+  font-size: 12px;
+}
+
+.wp-end__cheated[hidden] {
+  display: none;
+}
+
+/* ── the hunter, when he is close enough to see (WP-66) ─────────────────── */
+
+.wp-hex--chaser {
+  box-shadow: inset 0 0 0 3px var(--wp-danger);
+  color: var(--wp-danger);
+}
+
+.wp-hex--chaser .wp-hex__glyph {
+  animation: wp-chaser-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes wp-chaser-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wp-hex--chaser .wp-hex__glyph {
+    animation: none;
+  }
+}
+
+/* ── scoreboard (PRD 8.11) ──────────────────────────────────────────────── */
+
+.wp-scoreboard {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.wp-scoreboard__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.wp-scoreboard__table th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--wp-line);
+  color: var(--wp-muted);
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 10px;
+}
+
+.wp-scoreboard__table td {
+  padding: 6px 8px;
+  border-bottom: 1px dashed var(--wp-line);
+}
+
+.wp-scoreboard__row--you {
+  color: var(--wp-accent);
+}
+
+.wp-scoreboard__row--you td:first-child::after {
+  content: " ←";
+}
+
+/* ── how to play (PRD 8.12) ─────────────────────────────────────────────── */
+
+.wp-modal__box--wide {
+  max-width: 760px;
+}
+
+.wp-guide {
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-bottom: 16px;
+}
+
+.wp-guide__section {
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px dashed var(--wp-line);
+}
+
+.wp-guide__section:last-child {
+  border-bottom: 0;
+  margin-bottom: 0;
+}
+
+.wp-guide__heading {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--wp-accent);
+}
+
+.wp-guide__text {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Sample hexes are the real thing, lifted out of the absolute layout the map
+   puts them in. */
+.wp-guide__figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 12px 0;
+}
+
+.wp-guide__hex {
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--wp-muted);
+}
+
+.wp-hex--sample {
+  position: static;
+  display: flex;
+  margin: 0 auto 4px;
+  /* The caption under it is 11px; the hex itself is the one from the map. */
+  font-size: 16px;
+}
+
+.wp-guide__keys {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 6px;
+}
+
+.wp-guide__keys li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.wp-guide__keys kbd {
+  min-width: 3.5em;
+  text-align: center;
+  padding: 3px 6px;
+  border: 1px solid var(--wp-line);
+  background: var(--wp-bg);
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--wp-accent);
+}
+
+.wp-guide__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin: 8px 0 12px;
+}
+
+.wp-guide__table td {
+  padding: 5px 8px;
+  border-bottom: 1px dashed var(--wp-line);
+  vertical-align: middle;
+}
+
+.wp-guide__table td:nth-child(2) {
+  width: 5em;
+  color: var(--wp-accent);
+  white-space: nowrap;
+}
+
+.wp-guide__list {
+  margin: 0;
+  font-size: 12px;
+}
+
+.wp-guide__list dt {
+  color: var(--wp-text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 8px;
+}
+
+.wp-guide__list dd {
+  margin: 2px 0 0;
+  color: var(--wp-muted);
+  line-height: 1.5;
+}
+
+.wp-guide__tips {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.wp-guide__tips li {
+  margin-bottom: 6px;
+}
+
+/* Narrow screens: the guide is the one thing here that has to stay readable
+   on a phone-sized window. */
+@media (max-width: 640px) {
+  .wp-modal {
+    padding: 8px;
+  }
+
+  .wp-modal__box {
+    padding: 14px;
+  }
+
+  .wp-modal__box--wide {
+    padding: 16px;
+  }
+
+  .wp-guide {
+    max-height: 74vh;
+  }
+
+  .wp-end__journal {
+    max-height: 160px;
+  }
+
+  .wp-guide__keys {
+    grid-template-columns: 1fr;
+  }
+
+  .wp-guide__table td:first-child {
+    max-width: 55vw;
+  }
+}
+
+.wp-journal__icon {
+  flex: 0 0 auto;
+  color: var(--wp-accent);
+}
+
+/* ── the journal, by what sort of line it is (PRD 8.13) ─────────────────── */
+
+.wp-journal__entry--ambient .wp-journal__text {
+  color: var(--wp-muted);
+  font-style: italic;
+}
+
+.wp-journal__entry--event .wp-journal__text {
+  color: var(--wp-accent);
+}
+
+.wp-journal__entry--harm .wp-journal__text {
+  color: var(--wp-danger);
+}
+
+.wp-journal__entry--good .wp-journal__text {
+  color: #9ec96f;
+}
+
+.wp-journal__entry--action .wp-journal__text,
+.wp-journal__entry--terrain .wp-journal__text {
+  color: var(--wp-text);
+}
+
+.wp-journal__entry--weather .wp-journal__text {
+  color: var(--wp-river);
+}
+
+.wp-journal__entry--cheat .wp-journal__text {
+  color: var(--wp-accent);
+  opacity: 0.7;
+}
+
+.wp-journal__entry--system .wp-journal__text {
+  color: var(--wp-muted);
+}
+
+/* The end screen prints the same journal, so it reads the same way. */
+.wp-end__line.wp-journal__entry--ambient {
+  color: var(--wp-muted);
+  font-style: italic;
+}
+
+.wp-end__line.wp-journal__entry--event {
+  color: var(--wp-accent);
+}
+
+.wp-end__line.wp-journal__entry--harm {
+  color: var(--wp-danger);
+}
+/* ── the expedition as a picture (PRD 8.17) ───────────────────────────────── */
+
+/*
+ * A sketch, not a chart. Square cells on a hex map are a deliberate lie: the
+ * point is where you went, and a postage stamp cannot carry offset rows and
+ * still be legible.
+ */
+.wp-picture {
+  display: grid;
+  gap: 1px;
+  /*
+   * Capped, not stretched. Cells are square, so a 40-column picture in a
+   * 700px box would be 700px tall on its own and push everything under it out
+   * of reach. At 360px a cell is about nine pixels, which is still a legible
+   * route and leaves room for the rest of the end screen.
+   */
+  max-width: min(360px, 100%);
+  margin: 8px 0 16px;
+  background: var(--wp-line);
+  border: 1px solid var(--wp-line);
+  aspect-ratio: auto;
+}
+
+.wp-picture--small {
+  gap: 0;
+  margin: 8px 0;
+  max-width: 320px;
+}
+
+.wp-picture__cell {
+  aspect-ratio: 1;
+  min-width: 3px;
+  background: var(--wp-open);
+}
+
+.wp-picture__cell--unseen {
+  background: var(--wp-bg);
+}
+
+.wp-picture__cell--open {
+  background: var(--wp-open);
+}
+
+.wp-picture__cell--forest {
+  background: var(--wp-forest);
+}
+
+.wp-picture__cell--desert {
+  background: var(--wp-desert);
+}
+
+.wp-picture__cell--mountain {
+  background: var(--wp-mountain);
+}
+
+.wp-picture__cell--river {
+  background: var(--wp-river);
+}
+
+.wp-picture__cell--swamp {
+  background: var(--wp-swamp);
+}
+
+.wp-picture__cell--trail {
+  outline: 1px solid var(--wp-accent);
+  outline-offset: -1px;
+  opacity: 0.9;
+}
+
+/* The route has to win over the ground it crosses, or it disappears. */
+.wp-picture__cell--route {
+  background: var(--wp-text);
+}
+
+.wp-picture__cell--start {
+  background: var(--wp-accent);
+}
+
+.wp-picture__cell--end {
+  background: var(--wp-danger);
+}
+
+.wp-end__map {
+  display: flex;
+  justify-content: center;
+}
+
+.wp-report {
+  white-space: pre;
+  overflow-x: auto;
+  font-size: 11px;
+  line-height: 1.15;
+  color: var(--wp-muted);
+}
+
+/* ── what happened, and what it earned ────────────────────────────────────── */
+
+.wp-moments,
+.wp-marks {
+  list-style: none;
+  margin: 8px 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.wp-moment {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--wp-text);
+}
+
+.wp-moment__day {
+  flex: 0 0 auto;
+  min-width: 56px;
+  color: var(--wp-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.wp-mark {
+  display: grid;
+  gap: 2px;
+  padding: 6px 10px;
+  border: 1px solid var(--wp-line);
+  border-left: 3px solid var(--wp-accent);
+  background: var(--wp-panel);
+}
+
+.wp-mark strong {
+  color: var(--wp-accent);
+  font-size: 13px;
+}
+
+.wp-mark span {
+  color: var(--wp-muted);
+  font-size: 12px;
+}
+
+/* Locked marks are shown, not hidden: they are the reason to play again. */
+.wp-mark--locked {
+  border-left-color: var(--wp-line);
+  opacity: 0.45;
+}
+
+.wp-mark--locked strong {
+  color: var(--wp-muted);
+}
+
+/* ── your record (PRD 8.18) ───────────────────────────────────────────────── */
+
+.wp-record__section {
+  margin-bottom: 20px;
+}
+
+.wp-record__section h3 {
+  margin: 0 0 8px;
+  color: var(--wp-accent);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.wp-record__pair {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--wp-line);
+  font-size: 13px;
+  color: var(--wp-text);
+}
+
+.wp-record__note {
+  margin: 8px 0 0;
+  color: var(--wp-muted);
+  font-size: 12px;
+}
+
+/* Something the menu itself has to say, where the game banner cannot reach. */
+.wp-menu__notice {
+  margin: 0 0 12px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--wp-accent);
+  background: var(--wp-panel);
+  color: var(--wp-accent);
+  font-size: 13px;
+}
+
+/* ── a scenario you have not earned yet ───────────────────────────────────── */
+
+.wp-scenario--locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.wp-scenario__text--locked {
+  color: var(--wp-accent);
+  font-style: italic;
+}
+
+/* A wound that changes how you move says so at a glance (PRD 8.16). */
+.wp-condition--hobbling {
+  border-left: 3px solid var(--wp-danger);
+  padding-left: 5px;
+}
+
+.wp-history__details {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding-top: 8px;
+  border-top: 1px solid var(--wp-line);
+}

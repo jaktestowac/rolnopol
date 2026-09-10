@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crew Office — Tools - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/crew.css" />
+  </head>
+  <!--
+    Crew Office tool registry (PRD §10.1, §8.5).
+
+    Everything on this page is one GraphQL round trip (CrewApi.OPERATIONS.TOOL_BOARD):
+    the crew for the issue form, every tool with its derived status and holder, and the
+    overdue-returns list.
+
+    The Holder and Status columns are COMPUTED from the append-only issuance ledger on
+    every read — there is no stored `heldBy` field to fetch (§8.5). So this page cannot
+    show a holder that contradicts the ledger, and every action reloads rather than
+    patching a row in place.
+
+    The panels below the toolbar are one exclusive group: exactly one is open at a time.
+  -->
+
+  <body class="crew-page crew-page--crew-tools">
+    <div id="header-component"></div>
+
+    <main class="crew-shell">
+      <header class="crew-header">
+        <h1 class="crew-title"><i class="fa-solid fa-screwdriver-wrench"></i> Tool registry</h1>
+        <p class="crew-lede">Who has the chainsaw, when it is due back, and what is due a service.</p>
+      </header>
+
+      <!-- One tab strip for the whole module, rendered by CrewApi.renderModuleTabs. -->
+      <nav id="crewTabs" class="crew-tabs crew-no-print" aria-label="Crew Office views"></nav>
+
+      <div class="crew-toolbar crew-no-print">
+        <label class="crew-control">
+          <span class="crew-label">Status</span>
+          <select id="toolsFilterStatus" class="crew-select">
+            <option value="">Any status</option>
+            <option value="AVAILABLE">Available</option>
+            <option value="ON_ISSUE">On issue</option>
+            <option value="IN_SERVICE">In service</option>
+            <option value="RETIRED">Retired</option>
+          </select>
+        </label>
+
+        <label class="crew-control">
+          <span class="crew-label">Category</span>
+          <select id="toolsFilterCategory" class="crew-select">
+            <option value="">Any category</option>
+            <option value="HAND_TOOL">Hand tool</option>
+            <option value="POWERED_HAND_TOOL">Powered hand tool</option>
+            <option value="MACHINERY">Machinery</option>
+            <option value="VEHICLE">Vehicle</option>
+            <option value="PPE">PPE</option>
+            <option value="MEASURING">Measuring</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </label>
+
+        <label class="crew-control">
+          <span class="crew-label">Service</span>
+          <select id="toolsFilterService" class="crew-select">
+            <option value="">Any service state</option>
+            <option value="OK">OK</option>
+            <option value="DUE_SOON">Due soon</option>
+            <option value="OVERDUE">Overdue</option>
+          </select>
+        </label>
+
+        <!--
+          Retired tools are hidden by default, the same way the roster hides ENDED crew:
+          a registry listing every tool the farm has ever owned buries the ones somebody
+          might actually pick up.
+        -->
+        <label class="crew-control crew-control--check">
+          <input id="toolsFilterRetired" type="checkbox" />
+          <span class="crew-label">Include retired</span>
+        </label>
+
+        <div class="crew-form-actions">
+          <button id="toolsReload" class="crew-btn" type="button"><i class="fa-solid fa-rotate"></i> Reload</button>
+        </div>
+      </div>
+
+      <div class="crew-toolbar crew-no-print">
+        <div class="crew-form-actions">
+          <button id="toolsRegisterToggle" class="crew-btn" type="button" aria-expanded="false" aria-controls="toolsRegisterPanel">
+            <i class="fa-solid fa-plus"></i> Register a tool
+          </button>
+          <button id="toolsPrint" class="crew-btn" type="button"><i class="fa-solid fa-print"></i> Print / PDF</button>
+          <!--
+            The lifecycle, on demand. Which actions a tool allows depends entirely on
+            the state it is in, and the state machine is not guessable from four
+            buttons — so it is one click away from the buttons themselves.
+          -->
+          <button id="toolsFlowOpen" class="crew-btn" type="button" aria-haspopup="dialog" aria-controls="toolsFlowModal">
+            <i class="fa-solid fa-diagram-project"></i> How a tool moves
+          </button>
+        </div>
+        <p class="crew-hint">Pick a tool from the table to issue it, take it back, record a service or retire it.</p>
+      </div>
+
+      <p id="toolsSummary" class="crew-hint"></p>
+      <p id="toolsStatus" class="crew-status" role="status" aria-live="polite"></p>
+
+      <!-- Rendered only when there is something in it — a permanent "0 overdue" is noise. -->
+      <section id="toolsOverdue" class="crew-notice crew-notice--warning" hidden></section>
+
+      <!-- Register a tool. -->
+      <section id="toolsRegisterPanel" class="crew-form-panel crew-no-print" hidden>
+        <h2 class="crew-subhead">Register a tool</h2>
+
+        <!--
+            Ten common tools as starting points. Rendered by the controller from
+            TOOL_TEMPLATES so a template cannot exist as a button with nothing behind
+            it, and so a test can check every one against the register form's own
+            validation rules. Each fills all seven fields — including the two nobody
+            thinks about, the certification and the service interval — and every field
+            stays editable afterwards.
+          -->
+        <div class="tools-templates crew-no-print">
+          <span class="crew-label" id="toolsTemplatesLabel">Start from a common tool</span>
+          <div id="toolsTemplates" class="tools-templates__buttons" role="group" aria-labelledby="toolsTemplatesLabel"></div>
+        </div>
+
+        <form id="toolsRegisterForm" novalidate>
+          <div class="crew-form-grid">
+            <label class="crew-control">
+              <span class="crew-label">Asset tag *</span>
+              <input id="toolAssetTag" class="crew-input" type="text" placeholder="CHS-001" maxlength="24" />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Name *</span>
+              <input id="toolName" class="crew-input" type="text" placeholder="Chainsaw MS261" maxlength="120" />
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Category</span>
+              <select id="toolCategory" class="crew-select">
+                <option value="">Other</option>
+                <option value="HAND_TOOL">Hand tool</option>
+                <option value="POWERED_HAND_TOOL">Powered hand tool</option>
+                <option value="MACHINERY">Machinery</option>
+                <option value="VEHICLE">Vehicle</option>
+                <option value="PPE">PPE</option>
+                <option value="MEASURING">Measuring</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </label>
+            <!--
+                The icon picker. Buttons rather than a dropdown, because the point is
+                seeing the glyphs side by side — a list of eighteen icon NAMES would be
+                a worse version of the category field above.
+
+                The value lives in a hidden input so the form holds all of its own
+                state and `form.reset()` clears it with everything else. Only the
+                schema's `ToolIcon` values can ever reach it, which is what makes the
+                stored value safe to render as a CSS class.
+              -->
+            <div class="crew-control crew-control--wide">
+              <span class="crew-label" id="toolsIconLabel">Icon</span>
+              <div id="toolsIconPicker" class="tools-icons" role="group" aria-labelledby="toolsIconLabel"></div>
+              <input id="toolIcon" type="hidden" value="" />
+              <span class="crew-hint">Optional. Without one the tool is drawn with its category's icon.</span>
+            </div>
+
+            <label class="crew-control">
+              <span class="crew-label">Requires certification</span>
+              <input id="toolRequiresCertification" class="crew-input" type="text" placeholder="chainsaw" maxlength="40" />
+              <!--
+                The course need not exist yet. §8.5 makes a code no course answers to a
+                CertificationCheckUnavailable at issue time — which REFUSES — so the tool
+                simply cannot go out until the course is defined.
+              -->
+              <span class="crew-hint">A course code. The tool cannot be issued until a course with that code exists.</span>
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Service interval (days)</span>
+              <input id="toolServiceInterval" class="crew-input" type="number" min="1" max="3650" step="1" />
+              <span class="crew-hint">Leave blank for a tool that is never due anything.</span>
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Last serviced</span>
+              <input id="toolLastServiced" class="crew-input" type="date" />
+              <span class="crew-hint">Blank with an interval set reads as <strong>overdue</strong>, not as OK.</span>
+            </label>
+            <label class="crew-control crew-control--wide">
+              <span class="crew-label">Storage location</span>
+              <input id="toolStorageLocation" class="crew-input" type="text" placeholder="Workshop A" maxlength="120" />
+            </label>
+          </div>
+          <p id="toolsRegisterErrors" class="crew-status" role="alert"></p>
+          <div class="crew-form-actions">
+            <button id="toolsRegisterSubmit" class="crew-btn crew-btn--primary" type="submit">Add to the registry</button>
+            <button id="toolsRegisterCancel" class="crew-btn" type="button">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Issue the selected tool. -->
+      <section id="toolsIssuePanel" class="crew-form-panel crew-no-print" hidden>
+        <h2 class="crew-subhead">Issue <span id="toolsIssueTool" class="crew-muted"></span></h2>
+        <form id="toolsIssueForm" novalidate>
+          <div class="crew-form-grid">
+            <label class="crew-control">
+              <span class="crew-label">Crew member *</span>
+              <select id="issueStaffId" class="crew-select">
+                <option value="">Choose a crew member…</option>
+              </select>
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Due back *</span>
+              <input id="issueDueBack" class="crew-input" type="date" />
+              <span class="crew-hint">Required — an issue with no return date can never show as overdue.</span>
+            </label>
+            <label class="crew-control crew-control--wide">
+              <span class="crew-label">Note</span>
+              <input id="issueNote" class="crew-input" type="text" placeholder="Fencing repairs, north paddock" maxlength="200" />
+            </label>
+          </div>
+          <!--
+            The certification gate, previewed (§8.5). Filled in when a member is chosen,
+            by asking the same server-side function that will decide the mutation. It is
+            a courtesy — the enforcement is the mutation, which fails CLOSED.
+          -->
+          <p id="toolsIssueGate" class="crew-notice" hidden></p>
+          <p id="toolsIssueErrors" class="crew-status" role="alert"></p>
+          <div class="crew-form-actions">
+            <button id="toolsIssueSubmit" class="crew-btn crew-btn--primary" type="submit">Issue</button>
+            <button id="toolsIssueCancel" class="crew-btn" type="button">Back to the tool</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Take the selected tool back. -->
+      <section id="toolsReturnPanel" class="crew-form-panel crew-no-print" hidden>
+        <h2 class="crew-subhead">Return <span id="toolsReturnTool" class="crew-muted"></span></h2>
+        <form id="toolsReturnForm" novalidate>
+          <div class="crew-form-grid">
+            <!--
+              The condition is not bookkeeping: three of the four values take the tool
+              out of circulation, so each option says what it does.
+            -->
+            <label class="crew-control">
+              <span class="crew-label">Condition *</span>
+              <select id="returnCondition" class="crew-select">
+                <option value="GOOD">Good — back on the shelf</option>
+                <option value="NEEDS_SERVICE">Needs a service — off the run until serviced</option>
+                <option value="DAMAGED">Damaged — off the run until serviced</option>
+                <option value="LOST">Lost — retires the tool</option>
+              </select>
+            </label>
+            <label class="crew-control crew-control--wide">
+              <span class="crew-label">Note</span>
+              <input id="returnNote" class="crew-input" type="text" placeholder="Chain needs sharpening" maxlength="200" />
+            </label>
+          </div>
+          <p id="toolsReturnErrors" class="crew-status" role="alert"></p>
+          <div class="crew-form-actions">
+            <button id="toolsReturnSubmit" class="crew-btn crew-btn--primary" type="submit">Record the return</button>
+            <button id="toolsReturnCancel" class="crew-btn" type="button">Back to the tool</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Record a service on the selected tool. -->
+      <section id="toolsServicePanel" class="crew-form-panel crew-no-print" hidden>
+        <h2 class="crew-subhead">Record a service on <span id="toolsServiceTool" class="crew-muted"></span></h2>
+        <form id="toolsServiceForm" novalidate>
+          <div class="crew-form-grid">
+            <label class="crew-control">
+              <span class="crew-label">Serviced on</span>
+              <input id="servicePerformedOn" class="crew-input" type="date" />
+              <span class="crew-hint">Backdating is kept in the history but never moves the service clock backwards.</span>
+            </label>
+            <label class="crew-control">
+              <span class="crew-label">Performed by</span>
+              <input id="servicePerformedBy" class="crew-input" type="text" placeholder="Workshop" maxlength="120" />
+            </label>
+            <label class="crew-control crew-control--wide">
+              <span class="crew-label">Note</span>
+              <input id="serviceNote" class="crew-input" type="text" placeholder="Chain + bar" maxlength="200" />
+            </label>
+          </div>
+          <p id="toolsServiceErrors" class="crew-status" role="alert"></p>
+          <div class="crew-form-actions">
+            <button id="toolsServiceSubmit" class="crew-btn crew-btn--primary" type="submit">Record the service</button>
+            <button id="toolsServiceCancel" class="crew-btn" type="button">Back to the tool</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- The selected tool: its ledger, its service history, and what can be done to it. -->
+      <section id="toolsDetailPanel" class="crew-form-panel crew-no-print" hidden>
+        <div class="crew-day-detail__head">
+          <h2 id="toolsDetailTitle" class="crew-subhead"></h2>
+          <!--
+            Text, not just an icon: Font Awesome is a CDN dependency, and a button with
+            no other content vanishes when it fails to arrive. Same reason the leave
+            page's day-detail close carries a label.
+          -->
+          <button id="toolsDetailClose" class="crew-btn crew-btn--small" type="button">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i> Close
+          </button>
+        </div>
+
+        <div id="toolsDetailBody"></div>
+
+        <div class="tools-detail__actions">
+          <!--
+            Where this tool is in its lifecycle, and the move that follows. Rendered by
+            the controller from `stateSummary`, so the sentence cannot disagree with the
+            buttons underneath it.
+          -->
+          <p id="toolsDetailState" class="tools-state" hidden></p>
+
+          <div class="crew-form-actions">
+            <button id="toolsDetailIssue" class="crew-btn crew-btn--primary" type="button">
+              <i class="fa-solid fa-hand-holding"></i> Issue
+            </button>
+            <button id="toolsDetailReturn" class="crew-btn" type="button"><i class="fa-solid fa-rotate-left"></i> Return</button>
+            <button id="toolsDetailService" class="crew-btn" type="button"><i class="fa-solid fa-oil-can"></i> Record a service</button>
+            <button
+              id="toolsDetailFlow"
+              class="crew-btn crew-btn--small"
+              type="button"
+              aria-haspopup="dialog"
+              aria-controls="toolsFlowModal"
+            >
+              <i class="fa-solid fa-circle-question"></i> What can this tool do?
+            </button>
+          </div>
+
+          <!--
+            Why the greyed-out actions are greyed out. A blocked button is marked with
+            aria-disabled rather than disabled — it stays focusable and says its reason
+            when pressed — and this list says the same thing without needing a hover.
+          -->
+          <ul id="toolsActionNotes" class="tools-notes" hidden></ul>
+
+          <!--
+          Retirement is terminal and irreversible, so the reason is the only record of
+          why — hence a required field next to the button rather than a bare click.
+        -->
+          <div class="crew-form-actions">
+            <label class="crew-control crew-control--wide">
+              <span class="crew-label">Reason for retiring</span>
+              <input id="toolsRetireReason" class="crew-input" type="text" placeholder="Beyond economic repair" maxlength="200" />
+            </label>
+            <button id="toolsDetailRetire" class="crew-btn crew-btn--danger" type="button">
+              <i class="fa-solid fa-box-archive"></i> Retire
+            </button>
+          </div>
+
+          <p id="toolsDetailErrors" class="crew-status" role="alert"></p>
+        </div>
+      </section>
+
+      <div id="toolsTable" class="crew-table-wrap">
+        <table class="crew-table">
+          <thead>
+            <tr>
+              <th scope="col">Asset tag</th>
+              <th scope="col">Tool</th>
+              <th scope="col">Category</th>
+              <th scope="col">Status</th>
+              <th scope="col">Holder</th>
+              <th scope="col">Due back</th>
+              <th scope="col">Service</th>
+              <th scope="col">Location</th>
+            </tr>
+          </thead>
+          <tbody id="toolsBody"></tbody>
+        </table>
+      </div>
+
+      <p id="toolsEmpty" class="crew-notice" hidden>
+        No tools match. Register one, or widen the filters — retired tools are hidden unless you ask for them.
+      </p>
+
+      <!--
+        The lifecycle, as a dialog. Its body is rendered by the controller from
+        TOOL_FLOW_STATES / TOOL_FLOW_TRANSITIONS rather than written here, so the states
+        it shows are the same ones the action gate enforces — a diagram that drifts from
+        the code is worse than no diagram.
+      -->
+      <div
+        id="toolsFlowModal"
+        class="modal crew-modal crew-no-print"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="toolsFlowTitle"
+        hidden
+      >
+        <div class="modal-content modal-content-wider">
+          <div class="modal-header">
+            <h3 id="toolsFlowTitle"><i class="fa-solid fa-diagram-project"></i> How a tool moves</h3>
+            <button id="toolsFlowClose" class="modal-close" type="button" aria-label="Close">&times;</button>
+          </div>
+          <div class="modal-body" id="toolsFlowBody"></div>
+          <div class="modal-footer">
+            <button id="toolsFlowDone" class="crew-btn crew-btn--primary" type="button">Got it</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/crew-api.js"></script>
+    <script src="/js/pages/crew-tools.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("crew");
+    </script>
+  </body>
+</html>

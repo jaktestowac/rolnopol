@@ -459,4 +459,60 @@ export const SPECIAL_ALERTS = [
       "UNEARTHLY alert: Wooden grain patterns inside barn 2 have begun forming tightening spirals. Workers exposed for more than 5 minutes report itching beneath the skin and compulsive attempts to trace circular cuts into nearby surfaces. Barn doors now open inward regardless of hinge direction. (Details: Spiral Density Increasing, Exposure Threshold 5min, Self-Injury Risk Severe)",
     severity: "apocalyptic",
   },
+  {
+    category: "machinery",
+    title: "Lux Prosthetic Drift",
+    message:
+      "MACHINERY alert: Agricultural prosthetic units assigned to field workers are executing movements before receiving operator input. Affected users report that the machinery appears to anticipate intended actions with increasing accuracy. Disconnect neural interfaces and suspend all assisted labor. (Details: Affected Units 8, Prediction Lead 1.7s, Suggested Action: Disable Control Links)",
+    severity: "critical",
+  },
+  {
+    category: "unearthly",
+    title: "The City Is Listening",
+    message:
+      "UNEARTHLY alert: Structural vibration sensors beneath the farm complex are detecting rhythmic responses to spoken questions. The pattern originates below all mapped foundations and changes when staff discuss evacuation. Avoid speaking near underground access points. (Details: Signal Depth Unknown, Response Accuracy 82%, Excavation Prohibited)",
+    severity: "apocalyptic",
+  },
+  {
+    category: "network",
+    title: "Layer 13 Desynchronization",
+    message:
+      "NETWORK alert: User identities are appearing simultaneously across multiple application layers with conflicting roles, permissions, and activity histories. Logging out does not terminate the additional sessions. Disable identity synchronization and revoke all active tokens. (Details: Duplicate Sessions 31, Conflicting Profiles 12, Suggested Action: Isolate Layer 13)",
+    severity: "critical",
+  },
+  {
+    category: "unearthly",
+    title: "Everyone Is Connected",
+    message:
+      "UNEARTHLY alert: Staff devices, animal trackers, irrigation sensors, and inactive machinery are transmitting the same message through unrelated communication protocols. Disconnecting equipment causes nearby biological organisms to continue broadcasting the signal. (Details: Connected Entities 416, Message Origin None, Signal Persistence Active)",
+    severity: "apocalyptic",
+  },
+  {
+    category: "animals",
+    title: "Pattern Blue: Livestock",
+    message:
+      "ANIMALS alert: Livestock monitoring systems have classified an unidentified organism within herd 04 as Pattern Blue. The entity matches registered animals visually but produces no heartbeat, body heat, or biological telemetry. Establish an exclusion perimeter immediately. (Details: Entity Count 1, Identification Confidence 0%, Field Boundary Anomaly Detected)",
+    severity: "apocalyptic",
+  },
+  {
+    category: "certification",
+    title: "Quorum Consensus Failure",
+    message:
+      "CERTIFICATION alert: The three independent evaluation engines have returned mutually incompatible decisions for the same candidate. One system approved certification, one rejected it, and one requested permanent suspension of the examiner. Manual review is mandatory. (Details: Decision Split 1-1-1, Candidate Score 93%, Examiner Risk Flagged)",
+    severity: "critical",
+  },
+  {
+    category: "weather",
+    title: "Red Basin Front",
+    message:
+      "WEATHER alert: A circular atmospheric shock front is expanding from the southern irrigation basin without measurable wind, pressure change, or thermal source. Soil and water inside the affected zone are turning red while remaining chemically unchanged. Evacuate all personnel beyond the projected radius. (Details: Current Radius 11km, Expansion Rate 22m/min, Water Discoloration Active)",
+    severity: "apocalyptic",
+  },
+  {
+    category: "unearthly",
+    title: "Field Boundary Collapse",
+    message:
+      "UNEARTHLY alert: A previously stable exclusion boundary around field 03 has collapsed inward, compressing air, soil, and biological matter toward a central point. Radio transmissions entering the zone are returning as distorted human voices. Evacuate all adjacent sectors immediately. (Details: Collapse Radius 320m, Compression Rate Increasing, Signal Distortion Active)",
+    severity: "apocalyptic",
+  },
 ];

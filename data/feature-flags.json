@@ -18,10 +18,12 @@
     "financialCsvExportEnabled": false,
     "financialCommoditiesEnabled": false,
     "financialCommoditiesTradingEnabled": false,
+    "financialCommoditiesMarketDeskEnabled": false,
     "prometheusMetricsEnabled": false,
     "homeWelcomeVideoEnabled": false,
     "homeStatsSectionEnabled": false,
     "homeModernRestyleEnabled": false,
+    "homeInstrumentalityRestyleEnabled": false,
     "cookieConsentBannerEnabled": false,
     "messengerEnabled": false,
     "assistantChatEnabled": false,
@@ -45,7 +47,9 @@
     "greenhouseControlRoomEnabled": false,
     "farmStayEnabled": false,
     "agriAcademyEnabled": false,
-    "observatoryEnabled": false
+    "observatoryEnabled": false,
+    "crewOfficeEnabled": false,
+    "survivalGameEnabled": true
   },
-  "updatedAt": "2026-07-21T22:11:46.935Z"
+  "updatedAt": "2026-08-27T20:16:05.910Z"
 }

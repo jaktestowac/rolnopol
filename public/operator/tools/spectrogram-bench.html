@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Spectrogram Bench - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/pages/spectrogram-bench.css?v=20260825-1" />
+  </head>
+
+  <body class="spb-page">
+    <div class="spb-grid" aria-hidden="true"></div>
+    <div class="spb-aurora" aria-hidden="true"></div>
+    <div class="spb-scanlines" aria-hidden="true"></div>
+
+    <main class="spb-shell">
+      <header class="spb-header">
+        <div class="spb-header__title">
+          <span class="spb-eyebrow">rolnopol / operator / tools</span>
+          <h1>Spectrogram <span>Bench</span></h1>
+        </div>
+        <div class="spb-header__meta">
+          <label class="spb-theme">
+            <span class="spb-theme__label">Console</span>
+            <select class="spb-select" id="spbTheme" aria-label="Console colour theme">
+              <option value="cyan">Cyan / default</option>
+              <option value="amber">Amber / terminal</option>
+              <option value="lime">Lime / greenhouse</option>
+              <option value="magenta">Magenta / synthwave</option>
+              <option value="ice">Ice / monochrome</option>
+            </select>
+          </label>
+          <span class="spb-badge">no external libs</span>
+          <span class="spb-badge spb-badge--live" id="spbState">idle</span>
+        </div>
+      </header>
+
+      <!-- Everything happens in this tab: the file is read with the File API,
+           its container walked here, and thrown away when the page closes. There
+           is no upload endpoint behind this page. WAV samples are unpacked by the
+           pipeline; MP3 samples come from the browser codec, and the "Samples
+           via" readout says which. -->
+      <section class="spb-stage">
+        <section class="spb-panel spb-panel--source" aria-labelledby="spbSourceHeading">
+          <div class="spb-panel__head">
+            <h2 id="spbSourceHeading"><i class="fa-solid fa-inbox" aria-hidden="true"></i> Source</h2>
+            <span class="spb-panel__tag">WAV · MP3</span>
+          </div>
+
+          <div class="spb-drop" id="spbDrop" role="button" tabindex="0" aria-describedby="spbDropHint">
+            <span class="spb-drop__reticle" aria-hidden="true"></span>
+            <span class="spb-drop__glyph" aria-hidden="true"><i class="fa-solid fa-wave-square"></i></span>
+            <span class="spb-drop__label">Drop a WAV or MP3, or click to browse</span>
+            <span class="spb-drop__hint" id="spbDropHint">
+              Max 64 MB, first 120 s. WAV: 8/16/24/32-bit PCM and 32/64-bit float, unpacked here. MP3: container read here, samples decoded
+              by the browser codec.
+            </span>
+            <input class="spb-drop__input" type="file" id="spbFile" accept="audio/wav,audio/x-wav,audio/wave,audio/mpeg,.wav,.mp3" />
+          </div>
+
+          <p class="spb-message" id="spbMessage" role="status" aria-live="polite"></p>
+
+          <dl class="spb-readout">
+            <div class="spb-readout__row">
+              <dt>Source</dt>
+              <dd id="spbFileName">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Format</dt>
+              <dd id="spbFormat">—</dd>
+            </div>
+            <!-- Says plainly who turned this file into samples: the WAV path is
+                 unpacked in the pipeline, the MP3 path is handed to the browser
+                 codec. Everything measured afterwards is ours either way. -->
+            <div class="spb-readout__row">
+              <dt>Samples via</dt>
+              <dd id="spbDecoder">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Rate</dt>
+              <dd id="spbRate">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Channels</dt>
+              <dd id="spbChannels">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Duration</dt>
+              <dd id="spbDuration">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Samples</dt>
+              <dd id="spbSamples">—</dd>
+            </div>
+          </dl>
+
+          <!-- Anything but "as displayed" re-runs the analysis at that many
+               columns, so a 4K export is real spectrum rather than an upscale. -->
+          <label class="spb-field">
+            <span class="spb-field__label">PNG size</span>
+            <select class="spb-select" id="spbExportSize">
+              <option value="viewport" selected>As displayed</option>
+              <option value="720p">1280 × 720</option>
+              <option value="1080p">1920 × 1080</option>
+              <option value="1440p">2560 × 1440</option>
+              <option value="4k">3840 × 2160</option>
+            </select>
+          </label>
+
+          <div class="spb-actions">
+            <button type="button" class="spb-btn" id="spbSavePng" disabled>
+              <i class="fa-solid fa-image" aria-hidden="true"></i> Save PNG
+            </button>
+            <button type="button" class="spb-btn spb-btn--ghost" id="spbClear" disabled>
+              <i class="fa-solid fa-eject" aria-hidden="true"></i> Eject
+            </button>
+          </div>
+        </section>
+
+        <section class="spb-panel spb-panel--display" aria-labelledby="spbDisplayHeading">
+          <div class="spb-panel__head">
+            <h2 id="spbDisplayHeading"><i class="fa-solid fa-chart-area" aria-hidden="true"></i> Spectrum</h2>
+            <span class="spb-panel__tag" id="spbGeometry">no signal</span>
+          </div>
+
+          <div class="spb-wave">
+            <canvas class="spb-wave__canvas" id="spbWave" width="1200" height="90" aria-label="Waveform"></canvas>
+          </div>
+
+          <!-- Two stacked canvases: the spectrogram is painted once per analysis,
+               the overlay is redrawn on every pointer move and animation frame.
+               Keeping them apart is what makes the crosshair free. -->
+          <div class="spb-viewport" id="spbViewport">
+            <canvas class="spb-viewport__image" id="spbCanvas" width="1200" height="512" aria-label="Spectrogram"></canvas>
+            <canvas class="spb-viewport__overlay" id="spbOverlay" width="1200" height="512" aria-hidden="true"></canvas>
+            <p class="spb-viewport__empty" id="spbEmpty">drop a WAV or MP3, or render a test signal below</p>
+            <span class="spb-corner spb-corner--tl" aria-hidden="true"></span>
+            <span class="spb-corner spb-corner--tr" aria-hidden="true"></span>
+            <span class="spb-corner spb-corner--bl" aria-hidden="true"></span>
+            <span class="spb-corner spb-corner--br" aria-hidden="true"></span>
+          </div>
+
+          <div class="spb-cursor" id="spbCursor">
+            <span class="spb-cursor__cell"><em>t</em><b id="spbCursorTime">—</b></span>
+            <span class="spb-cursor__cell"><em>f</em><b id="spbCursorHz">—</b></span>
+            <span class="spb-cursor__cell"><em>note</em><b id="spbCursorNote">—</b></span>
+            <span class="spb-cursor__cell"><em>level</em><b id="spbCursorDb">—</b></span>
+            <span class="spb-cursor__hint">move over the plot · click to seek</span>
+          </div>
+
+          <div class="spb-transport">
+            <button type="button" class="spb-btn spb-btn--play" id="spbPlay" disabled>
+              <i class="fa-solid fa-play" aria-hidden="true"></i> <span id="spbPlayLabel">Play</span>
+            </button>
+            <button type="button" class="spb-btn spb-btn--ghost" id="spbStop" disabled>
+              <i class="fa-solid fa-stop" aria-hidden="true"></i> Stop
+            </button>
+            <span class="spb-transport__clock" id="spbClock">0:00.00</span>
+
+            <!-- Starts at 20%: a full-scale test tone through a hand-written
+                 oscillator is loud, and this page generates those on request. -->
+            <label class="spb-volume">
+              <i class="fa-solid fa-volume-low" aria-hidden="true"></i>
+              <input type="range" class="spb-range" id="spbVolume" min="0" max="100" step="1" value="20" aria-label="Playback volume" />
+              <output class="spb-volume__value" id="spbVolumeValue">20%</output>
+            </label>
+
+            <div class="spb-legend">
+              <span class="spb-legend__label" id="spbLegendMin">—</span>
+              <canvas class="spb-legend__bar" id="spbLegend" width="160" height="10" aria-hidden="true"></canvas>
+              <span class="spb-legend__label" id="spbLegendMax">0 dB</span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <form class="spb-deck" id="spbControls">
+        <fieldset class="spb-group">
+          <legend><i class="fa-solid fa-sliders" aria-hidden="true"></i> Analysis</legend>
+
+          <!-- Choosing the window in time rather than in bins: 25 ms means the
+               same thing on a 48 kHz file as on a 22 kHz one, and the FFT size
+               below follows along. -->
+          <label class="spb-field">
+            <span class="spb-field__label">Window length</span>
+            <select class="spb-select" id="spbWindowMs">
+              <option value="fft" selected>By FFT size</option>
+              <option value="5">5 ms — transients</option>
+              <option value="10">10 ms</option>
+              <option value="25">25 ms — speech</option>
+              <option value="50">50 ms</option>
+              <option value="100">100 ms — tonal</option>
+            </select>
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">FFT size <output id="spbSizeNote"></output></span>
+            <select class="spb-select" id="spbFftSize">
+              <option value="256">256 · fast, coarse</option>
+              <option value="512">512</option>
+              <option value="1024">1024</option>
+              <option value="2048" selected>2048 · balanced</option>
+              <option value="4096">4096 · fine, slow</option>
+            </select>
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Window</span>
+            <select class="spb-select" id="spbWindow">
+              <option value="hann" selected>Hann — general purpose</option>
+              <option value="hamming">Hamming — narrow lobe</option>
+              <option value="blackman">Blackman — low side lobes</option>
+              <option value="rectangular">Rectangular — none</option>
+            </select>
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Overlap <output id="spbOverlapValue">50%</output></span>
+            <input type="range" class="spb-range" id="spbOverlap" min="0" max="90" step="5" value="50" />
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Channel</span>
+            <select class="spb-select" id="spbChannel">
+              <option value="mix" selected>Mix to mono</option>
+            </select>
+          </label>
+        </fieldset>
+
+        <fieldset class="spb-group">
+          <legend><i class="fa-solid fa-palette" aria-hidden="true"></i> Display</legend>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Colour ramp</span>
+            <select class="spb-select" id="spbRamp">
+              <option value="viridis" selected>Viridis</option>
+              <option value="plasma">Plasma</option>
+              <option value="inferno">Inferno</option>
+              <option value="abyss">Abyss</option>
+              <option value="ember">Ember</option>
+              <option value="flux">Flux</option>
+              <option value="chlorophyll">Chlorophyll</option>
+              <option value="graphite">Graphite</option>
+            </select>
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Floor <output id="spbFloorValue">-90 dB</output></span>
+            <input type="range" class="spb-range" id="spbFloor" min="-120" max="-20" step="5" value="-90" />
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Gain <output id="spbGainValue">+0 dB</output></span>
+            <input type="range" class="spb-range" id="spbGain" min="0" max="60" step="1" value="0" />
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Frequency range</span>
+            <select class="spb-select" id="spbRange">
+              <option value="full" selected>Full range</option>
+              <option value="20k">20 Hz – 20 kHz</option>
+              <option value="10k">20 Hz – 10 kHz</option>
+              <option value="5k">20 Hz – 5 kHz</option>
+              <option value="2k">20 Hz – 2 kHz</option>
+              <option value="voice">300 Hz – 3.4 kHz — voice</option>
+              <option value="bass">20 Hz – 500 Hz — bass</option>
+            </select>
+          </label>
+
+          <div class="spb-toggles">
+            <label class="spb-toggle">
+              <input type="checkbox" id="spbLogScale" checked />
+              <span class="spb-toggle__box"></span>
+              <span class="spb-toggle__text">Log frequency</span>
+            </label>
+            <label class="spb-toggle">
+              <input type="checkbox" id="spbGridLines" checked />
+              <span class="spb-toggle__box"></span>
+              <span class="spb-toggle__text">Axes</span>
+            </label>
+            <label class="spb-toggle">
+              <input type="checkbox" id="spbWaveOverlay" />
+              <span class="spb-toggle__box"></span>
+              <span class="spb-toggle__text">Waveform over plot</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Both of these change what the spectrogram means, so both are named
+             in the Measured readout once applied rather than folded in quietly. -->
+        <fieldset class="spb-group">
+          <legend><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Conditioning</legend>
+
+          <div class="spb-toggles">
+            <label class="spb-toggle">
+              <input type="checkbox" id="spbNormalize" />
+              <span class="spb-toggle__box"></span>
+              <span class="spb-toggle__text">Normalise peak</span>
+            </label>
+            <label class="spb-toggle">
+              <input type="checkbox" id="spbPreEmphasis" />
+              <span class="spb-toggle__box"></span>
+              <span class="spb-toggle__text">Pre-emphasis</span>
+            </label>
+          </div>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Normalise to <output id="spbNormalizeValue">0 dB</output></span>
+            <input type="range" class="spb-range" id="spbNormalizeTarget" min="-24" max="0" step="1" value="0" />
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Emphasis α <output id="spbEmphasisValue">0.97</output></span>
+            <input type="range" class="spb-range" id="spbEmphasis" min="0" max="99" step="1" value="97" />
+          </label>
+
+          <p class="spb-note">
+            Pre-emphasis runs first and lifts the high end about 6 dB per octave; normalising then puts the loudest sample at the target.
+          </p>
+        </fieldset>
+
+        <!-- The bench is useful before anything is loaded: these signals have
+             known spectra, so the reading can be checked against arithmetic. -->
+        <fieldset class="spb-group">
+          <legend><i class="fa-solid fa-flask" aria-hidden="true"></i> Test signal</legend>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Shape</span>
+            <select class="spb-select" id="spbSignal">
+              <option value="sine" selected>Sine 440 Hz — one bin</option>
+              <option value="twoTone">Two tones 440 + 445 Hz</option>
+              <option value="square">Square 220 Hz — odd harmonics</option>
+              <option value="saw">Saw 110 Hz — every harmonic</option>
+              <option value="chirp">Chirp 40 Hz → 8 kHz</option>
+              <option value="noise">White noise — seeded</option>
+            </select>
+          </label>
+
+          <label class="spb-field">
+            <span class="spb-field__label">Length <output id="spbSecondsValue">2.0 s</output></span>
+            <input type="range" class="spb-range" id="spbSeconds" min="1" max="10" step="1" value="2" />
+          </label>
+
+          <button type="button" class="spb-btn spb-btn--wide" id="spbLoadSignal">
+            <i class="fa-solid fa-bolt" aria-hidden="true"></i> Render signal
+          </button>
+
+          <p class="spb-note">Synthesised at 44 100 Hz. The sine should read −3.1 dBFS at A4.</p>
+        </fieldset>
+
+        <fieldset class="spb-group">
+          <legend><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> Measured</legend>
+
+          <dl class="spb-readout spb-readout--tight">
+            <div class="spb-readout__row">
+              <dt>Peak</dt>
+              <dd id="spbPeak">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>RMS</dt>
+              <dd id="spbRms">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Crest</dt>
+              <dd id="spbCrest">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>DC</dt>
+              <dd id="spbDc">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Clipped</dt>
+              <dd id="spbClipped">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Applied</dt>
+              <dd id="spbProcessing">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Loudest</dt>
+              <dd id="spbDominant">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Note</dt>
+              <dd id="spbNote">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Bin</dt>
+              <dd id="spbBinHz">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Hop</dt>
+              <dd id="spbHop">—</dd>
+            </div>
+            <div class="spb-readout__row">
+              <dt>Pass</dt>
+              <dd id="spbElapsed">—</dd>
+            </div>
+          </dl>
+        </fieldset>
+      </form>
+
+      <section class="spb-panel spb-panel--chunks" aria-labelledby="spbChunksHeading">
+        <div class="spb-panel__head">
+          <h2 id="spbChunksHeading"><i class="fa-solid fa-list-ol" aria-hidden="true"></i> Container</h2>
+          <span class="spb-panel__tag" id="spbChunksTag">no file</span>
+        </div>
+
+        <div class="spb-chunks" id="spbChunks" aria-label="Parts of the container"></div>
+        <p class="spb-empty" id="spbChunksEmpty">a synthesised signal has no container</p>
+        <dl class="spb-readout spb-readout--wide" id="spbInfo"></dl>
+        <p class="spb-note" id="spbWarnings"></p>
+      </section>
+
+      <footer class="spb-footer">
+        <a class="spb-link" href="/">&#8592; Back to Rolnopol</a>
+        <span class="spb-footer__note">Hidden operator tool. Hand-written FFT — the transform runs in this tab, nothing is uploaded.</span>
+      </footer>
+    </main>
+
+    <script src="/js/pages/spectrogram-bench-pipeline.js?v=20260825-1"></script>
+    <script src="/js/pages/spectrogram-bench.js?v=20260825-1"></script>
+  </body>
+</html>

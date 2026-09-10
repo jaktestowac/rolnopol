@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Emergency Shutdown - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/pages/shutdown.css" />
+</head>
+
+<body class="shutdown-page">
+    <div class="shutdown-vignette" aria-hidden="true"></div>
+    <div class="shutdown-scanlines" aria-hidden="true"></div>
+
+    <main class="shutdown-shell" id="shutdownShell">
+        <header class="shutdown-header">
+            <div class="shutdown-header__title">
+                <span class="shutdown-header__eyebrow">rolnopol / operator</span>
+                <h1>Emergency Shutdown</h1>
+            </div>
+            <div class="shutdown-header__meta">
+                <span class="shutdown-badge" id="shutdownHost">host …</span>
+                <span class="shutdown-badge" id="shutdownVersion">v…</span>
+                <span class="shutdown-badge shutdown-badge--gate" id="shutdownGate">localhost only</span>
+            </div>
+        </header>
+
+        <section class="shutdown-console" aria-label="Shutdown control">
+            <div class="shutdown-reactor">
+                <!-- Two-stage safety: arm the switch, then hold the button. A single
+                     stray click must never be able to stop the application. -->
+                <div class="shutdown-arm">
+                    <button type="button" class="shutdown-arm__switch" id="shutdownArmSwitch" role="switch" aria-checked="false" aria-describedby="shutdownArmHint">
+                        <span class="shutdown-arm__track" aria-hidden="true">
+                            <span class="shutdown-arm__thumb"></span>
+                        </span>
+                        <span class="shutdown-arm__label">Safety</span>
+                        <span class="shutdown-arm__state" id="shutdownArmState">engaged</span>
+                    </button>
+                    <p class="shutdown-arm__hint" id="shutdownArmHint">Release the safety to enable the shutdown control.</p>
+                </div>
+
+                <div class="shutdown-button-wrap">
+                    <span class="shutdown-ring shutdown-ring--outer" aria-hidden="true"></span>
+                    <span class="shutdown-ring shutdown-ring--mid" aria-hidden="true"></span>
+
+                    <svg class="shutdown-progress" viewBox="0 0 120 120" aria-hidden="true">
+                        <circle class="shutdown-progress__track" cx="60" cy="60" r="54" />
+                        <circle class="shutdown-progress__fill" id="shutdownProgress" cx="60" cy="60" r="54" />
+                    </svg>
+
+                    <button type="button" class="shutdown-button" id="shutdownButton" disabled aria-describedby="shutdownButtonHint">
+                        <span class="shutdown-button__glyph" aria-hidden="true"><i class="fa-solid fa-power-off"></i></span>
+                        <span class="shutdown-button__label" id="shutdownButtonLabel">Locked</span>
+                    </button>
+                </div>
+
+                <p class="shutdown-hint" id="shutdownButtonHint">Hold for 3 seconds to shut down. Release early to abort.</p>
+
+                <div class="shutdown-countdown" id="shutdownCountdown" aria-live="assertive"></div>
+            </div>
+
+            <div class="shutdown-log-wrap">
+                <div class="shutdown-log-head">
+                    <span>Console</span>
+                    <span class="shutdown-state" id="shutdownState">standby</span>
+                </div>
+                <div class="shutdown-log" id="shutdownLog" role="log" aria-live="polite" aria-relevant="additions text"></div>
+            </div>
+        </section>
+
+        <footer class="shutdown-footer">
+            <a class="shutdown-link" href="/">&#8592; Back to Rolnopol</a>
+            <span class="shutdown-footer__note">Hidden operator page. The endpoint refuses every caller that is not on this machine.</span>
+        </footer>
+    </main>
+
+    <!-- Filled in by the page script once the server stops answering. -->
+    <div class="shutdown-curtain" id="shutdownCurtain" aria-hidden="true">
+        <div class="shutdown-curtain__inner">
+            <span class="shutdown-curtain__glyph" aria-hidden="true"><i class="fa-solid fa-power-off"></i></span>
+            <h2>System down</h2>
+            <p id="shutdownCurtainNote">Rolnopol has stopped answering on this host.</p>
+            <code class="shutdown-curtain__cmd">npm start</code>
+            <button type="button" class="shutdown-retry" id="shutdownRetry">Check again</button>
+        </div>
+    </div>
+
+    <script src="/js/pages/shutdown-page.js?v=20260812"></script>
+</body>
+
+</html>

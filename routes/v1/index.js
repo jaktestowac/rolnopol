@@ -1,5 +1,8 @@
 const express = require("express");
 const { createRateLimiter } = require("../../middleware/rate-limit.middleware");
+const { localhostOnly } = require("../../middleware/localhost-only.middleware");
+const { formatResponseBody } = require("../../helpers/response-helper");
+const { shutdownApplication } = require("../../services/app-shutdown.service");
 const { logInfo, logError } = require("../../helpers/logger-api");
 
 // Import all route modules
@@ -102,6 +105,26 @@ try {
 } catch (err) {
   logError("[routes/v1] Failed to load agri-academy.route — agri-academy endpoints unavailable:", err.message);
   agriAcademyRoute = express.Router();
+}
+// Defensive loading — Rolnopol Survival is a self-contained game module; if it
+// fails to load, every other endpoint must still be served (PRD "the game must
+// not impact other functionality").
+let survivalRoute;
+try {
+  survivalRoute = require("./survival.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load survival.route — Rolnopol Survival endpoints unavailable:", err.message);
+  survivalRoute = express.Router();
+}
+// Defensive loading — Crew Office assembles its GraphQL schema from independently
+// flagged pillars; if any of that fails to load, the rest of the app must still
+// start and serve every existing endpoint (PRD §12 rule 6).
+let crewRoute;
+try {
+  crewRoute = require("./crew.route");
+} catch (err) {
+  logError("[routes/v1] Failed to load crew.route — Crew Office endpoints unavailable:", err.message);
+  crewRoute = express.Router();
 }
 
 const router = express.Router();
@@ -207,19 +230,42 @@ router.get("/statistics", async (req, res) => {
   }
 });
 
-// Shutdown endpoint (no auth)
+// Shutdown endpoint — stops the whole application.
 // endpoint is: /api/v1/shutdown
-router.get("/shutdown", async (req, res) => {
-  try {
-    res.status(200).json({ message: "Server is shutting down..." });
-    // Give the response time to be sent before shutting down
-    setTimeout(() => {
-      logInfo("Server is shutting down...");
-      process.exit(0);
-    }, 500);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to shut down server" });
+//
+// No auth, by design: this is an operator convenience for a locally running
+// instance, and the gate is the network location of the caller, not a
+// credential. `localhostOnly` answers 403 to anything that is not a loopback
+// peer, which is what keeps a deployed instance from being killed by a stranger
+// with a URL. Anything reachable from outside must never be shut down this way.
+//
+// To let another address through, set LOCALHOST_ONLY_EXTRA_ADDRESSES (no restart
+// needed) or pass `allow: ["192.168.1.5", /^10\./]` below — see the extension
+// notes at the top of middleware/localhost-only.middleware.js.
+//
+// Teardown goes through the shared graceful sequence (the same one the
+// SIGINT/SIGTERM/SIGHUP handlers use) so launched external services are stopped
+// and pending database writes are flushed rather than dropped on a hard exit.
+const SHUTDOWN_RESPONSE_GRACE_MS = 500;
+
+router.get("/shutdown", localhostOnly({ resourceName: "Shutdown" }), async (req, res) => {
+  // Under NODE_ENV=test the request is loopback and would therefore pass the
+  // gate — and take the test runner down with it. Report what would happen
+  // instead of doing it; the teardown itself is covered by unit tests that drive
+  // shutdownApplication() with an injected exit hook.
+  const simulated = process.env.NODE_ENV === "test";
+
+  res.status(200).json(formatResponseBody({ message: "Server is shutting down...", data: { simulated } }));
+
+  if (simulated) {
+    logInfo("Shutdown requested under NODE_ENV=test — teardown skipped");
+    return;
   }
+
+  // Let the response reach the client before the process starts going down.
+  setTimeout(() => {
+    void shutdownApplication({ reason: "GET /api/v1/shutdown" });
+  }, SHUTDOWN_RESPONSE_GRACE_MS);
 });
 
 // Register all routes
@@ -265,6 +311,8 @@ router.use("/", tasklabRoute);
 router.use("/", farmStayRoute);
 router.use("/", agriAcademyAdminRoute);
 router.use("/", agriAcademyRoute);
+router.use("/", crewRoute);
+router.use("/", survivalRoute);
 router.use("/", servicesMonitorRoute);
 router.use("/contact", contactRoute);
 router.use("/", blogRoute);
