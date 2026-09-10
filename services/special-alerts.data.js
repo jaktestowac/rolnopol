@@ -491,26 +491,26 @@ export const SPECIAL_ALERTS = [
     category: "animals",
     title: "Pattern Blue: Livestock",
     message:
-      "ANIMALS alert: Livestock monitoring systems have classified an unidentified organism within herd 04 as Pattern Blue. The entity matches registered animals visually but produces no heartbeat, body heat, or biological telemetry. Establish an exclusion perimeter immediately. (Details: Entity Count 1, Identification Confidence 0%, A.T. Boundary Detected)",
+      "ANIMALS alert: Livestock monitoring systems have classified an unidentified organism within herd 04 as Pattern Blue. The entity matches registered animals visually but produces no heartbeat, body heat, or biological telemetry. Establish an exclusion perimeter immediately. (Details: Entity Count 1, Identification Confidence 0%, Field Boundary Anomaly Detected)",
     severity: "apocalyptic",
   },
   {
     category: "certification",
-    title: "MAGI Consensus Failure",
+    title: "Quorum Consensus Failure",
     message:
       "CERTIFICATION alert: The three independent evaluation engines have returned mutually incompatible decisions for the same candidate. One system approved certification, one rejected it, and one requested permanent suspension of the examiner. Manual review is mandatory. (Details: Decision Split 1-1-1, Candidate Score 93%, Examiner Risk Flagged)",
     severity: "critical",
   },
   {
     category: "weather",
-    title: "Second Impact Front",
+    title: "Red Basin Front",
     message:
       "WEATHER alert: A circular atmospheric shock front is expanding from the southern irrigation basin without measurable wind, pressure change, or thermal source. Soil and water inside the affected zone are turning red while remaining chemically unchanged. Evacuate all personnel beyond the projected radius. (Details: Current Radius 11km, Expansion Rate 22m/min, Water Discoloration Active)",
     severity: "apocalyptic",
   },
   {
     category: "unearthly",
-    title: "A.T. Boundary Collapse",
+    title: "Field Boundary Collapse",
     message:
       "UNEARTHLY alert: A previously stable exclusion boundary around field 03 has collapsed inward, compressing air, soil, and biological matter toward a central point. Radio transmissions entering the zone are returning as distorted human voices. Evacuate all adjacent sectors immediately. (Details: Collapse Radius 320m, Compression Rate Increasing, Signal Distortion Active)",
     severity: "apocalyptic",

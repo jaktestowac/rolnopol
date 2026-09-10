@@ -12,14 +12,14 @@
   var STORAGE_KEY = "rolnopol.instrumentalityOracle.state.v1";
   var MAX_MESSAGES = 40;
   var GREETING = [
-    "MAGI quorum: 1 / 1 / 1.",
+    "Quorum — soil / weather / yield: 1 / 1 / 1.",
     "The core is listening. Name the fragment, operator.",
   ].join("\n");
   var GLITCH_TERMS = [
-    { text: "MAGI quorum", className: "ish-glitch--split" },
-    { text: "MAGI", className: "ish-glitch--split" },
+    { text: "soil / weather / yield", className: "ish-glitch--split" },
+    { text: "quorum", className: "ish-glitch--split" },
     { text: "red rain", className: "ish-glitch--bleed" },
-    { text: "LCL", className: "ish-glitch--bleed" },
+    { text: "return-flow", className: "ish-glitch--bleed" },
     { text: "mirror sink", className: "ish-glitch--scan" },
     { text: "mirror", className: "ish-glitch--scan" },
     { text: "boundary", className: "ish-glitch--tear" },

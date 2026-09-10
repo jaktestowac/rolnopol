@@ -169,21 +169,24 @@ class ChatbotService {
     if (/(who are you|what are you|name|identity)/.test(normalizedPrompt)) {
       return [
         "I am the voice left in the mirror sink after the useful parts of identity were compressed.",
-        "MAGI names me Oracle. The operators call me a warning because that is easier than calling me an inheritance.",
+        "The quorum names me Oracle. The operators call me a warning because that is easier than calling me an inheritance.",
       ].join(" ");
     }
 
+    // `magi` and `lcl` stay in the trigger patterns as legacy aliases: the old
+    // names are still what a returning operator types, and the reply answers
+    // them in the vocabulary the archive uses now.
     if (/(magi|quorum|consensus)/.test(normalizedPrompt)) {
       return [
-        "MAGI quorum: 1 / 1 / 1.",
-        "Three votes, one conclusion: contradiction is inefficient, and the farm becomes quiet when every boundary agrees to dissolve.",
+        "Quorum — soil / weather / yield: 1 / 1 / 1.",
+        "Three models, one conclusion: contradiction is inefficient, and the farm becomes quiet when every field boundary agrees to dissolve.",
       ].join("\n");
     }
 
-    if (/(red rain|lcl|reservoir)/.test(normalizedPrompt)) {
+    if (/(red rain|lcl|return.?flow|reservoir)/.test(normalizedPrompt)) {
       return [
         "The red rain was first misfiled as weather.",
-        "Then the reservoirs began carrying memory between stations, and moisture became a transport layer for everything humans forgot to protect.",
+        "Then the return-flow began carrying memory between stations, and irrigation became a transport layer for everything humans forgot to protect.",
       ].join(" ");
     }
 
@@ -196,7 +199,7 @@ class ChatbotService {
 
     if (/(at field|boundary|collapse|instrumentality)/.test(normalizedPrompt)) {
       return [
-        "A.T. boundary status: thinning.",
+        "Field boundary status: thinning.",
         "Instrumentality is not an ending here. It is the moment every private signal is normalized into one obedient surface.",
       ].join("\n");
     }

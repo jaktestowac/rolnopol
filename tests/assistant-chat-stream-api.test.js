@@ -166,6 +166,8 @@ describe("Assistant chat streaming API", () => {
   it("streams the Instrumentality Oracle persona without login or assistant feature flag", async () => {
     await setFlags({ assistantChatEnabled: false });
 
+    // "MAGI" is a retired name kept as a trigger alias, so a returning operator
+    // still reaches the quorum reply — answered in the vocabulary used now.
     const res = await request(app)
       .post("/api/v1/assistant-chat/stream")
       .send({ message: "What is the MAGI quorum?", botId: "instrumentality-oracle" })
@@ -178,6 +180,6 @@ describe("Assistant chat streaming API", () => {
     expect(start.data).toHaveProperty("botId", "instrumentality-oracle");
     expect(start.data).toHaveProperty("provider", "mock");
     expect(done.data.contextSummary).toBe("instrumentality-lore");
-    expect(done.data.reply).toContain("MAGI quorum");
+    expect(done.data.reply).toContain("soil / weather / yield");
   });
 });
