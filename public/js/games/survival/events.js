@@ -413,6 +413,58 @@
     },
   });
 
+  register({
+    id: "fieldSevenTag",
+    tone: "good",
+    category: "tracks",
+    logKey: "event.fieldSevenTag.text",
+    apply(effects) {
+      effects.change("orientation", 1);
+    },
+  });
+
+  register({
+    id: "midnightLedger",
+    tone: "bad",
+    category: "discovery",
+    logKey: "event.midnightLedger.text",
+    apply(effects) {
+      effects.change("fatigue", 1);
+    },
+  });
+
+  register({
+    id: "dummyRoute",
+    tone: "good",
+    category: "tracks",
+    logKey: "event.dummyRoute.text",
+    apply(effects) {
+      const tile = effects.tile();
+      if (tile) tile.hasTrail = true;
+    },
+  });
+
+  register({
+    id: "returnFlowNote",
+    tone: "bad",
+    category: "discovery",
+    terrain: ["river", "swamp"],
+    logKey: "event.returnFlowNote.text",
+    apply(effects) {
+      effects.change("orientation", -1);
+    },
+  });
+
+  register({
+    id: "quorumSlip",
+    tone: "good",
+    category: "discovery",
+    logKey: "event.quorumSlip.text",
+    apply(effects) {
+      effects.change("orientation", 1);
+    },
+  });
+
   // ── scheduled follow-ups (never drawn by the nightly roll) ─────────────────
 
   register({

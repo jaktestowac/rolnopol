@@ -12,6 +12,7 @@ const handmade = require("../../public/js/games/survival/handmade-maps.js");
 
 const SHIPPED = ["storm", "bite", "fog", "berries", "shelter", "tracks"];
 const CHOICE_EVENTS = ["wolves", "berries", "abandonedPack", "deadTraveller", "smoke"];
+const MACHINE_HARVEST_FRAGMENTS = ["fieldSevenTag", "midnightLedger", "dummyRoute", "returnFlowNote", "quorumSlip"];
 
 handmade.DEFINITIONS["evt-plain"] = { id: "evt-plain", rows: [".....", ".....", ".....", ".....", "....."], start: { col: 2, row: 2 } };
 scenarios.SCENARIOS["evt-plain"] = {
@@ -60,6 +61,15 @@ describe("survival events — WP-22 the six shipped events", () => {
       expect(answer.ok, id).toBe(true);
       expect(state.stats.eventsSeen).toBe(1);
       expect(state.log[state.log.length - 1].text.length).toBeGreaterThan(10);
+    }
+  });
+
+  it("carries the light Machine Harvest canon fragments", () => {
+    for (const id of MACHINE_HARVEST_FRAGMENTS) {
+      const event = events.get(id);
+      expect(event, id + " is gone").toBeTruthy();
+      expect(["discovery", "tracks"]).toContain(event.category);
+      expect(strings.t(event.logKey).length).toBeGreaterThan(40);
     }
   });
 

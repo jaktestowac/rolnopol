@@ -325,6 +325,11 @@
     "event.mirage.text": "Water, a mile off, flat and silver. It is not there when you arrive.",
     "event.dustStorm.text": "Dust comes across the flats in a wall. You sit it out with your back to it.",
     "event.dryWash.text": "You dig into the bend of a dry wash and hit damp sand, then water.",
+    "event.fieldSevenTag.text": "A rain-soft label hangs from a survey stake: FIELD 7 / DO NOT PERFECT THE MAP.",
+    "event.midnightLedger.text": "A torn ledger page: 2028-01-01 00:00:00. Rolai, NULLFRAME, AXIOM. Three signatures, one hand.",
+    "event.dummyRoute.text": "Old tractor tracks keep to the route after the road gives out. The driver column is blank.",
+    "event.returnFlowNote.text": "Irrigation tags in the culvert read RETURN-FLOW: memory-bearing. Do not drink twice.",
+    "event.quorumSlip.text": "A folded audit note lists soil, weather, yield. All three columns say yes.",
 
     "terrain.desert": "dry flats",
 
