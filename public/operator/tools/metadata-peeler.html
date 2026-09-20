@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Metadata Peeler - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/pages/metadata-peeler.css?v=20260825-1" />
+  </head>
+
+  <body class="mdp-page">
+    <div class="mdp-grid" aria-hidden="true"></div>
+    <div class="mdp-aurora" aria-hidden="true"></div>
+    <div class="mdp-scanlines" aria-hidden="true"></div>
+
+    <main class="mdp-shell">
+      <header class="mdp-header">
+        <div class="mdp-header__title">
+          <span class="mdp-eyebrow">rolnopol / operator / tools</span>
+          <h1>Metadata <span>Peeler</span></h1>
+        </div>
+        <div class="mdp-header__meta">
+          <label class="mdp-theme">
+            <span class="mdp-theme__label">Console</span>
+            <select class="mdp-select" id="mdpTheme" aria-label="Console colour theme">
+              <option value="cyan">Cyan / default</option>
+              <option value="amber">Amber / terminal</option>
+              <option value="lime">Lime / greenhouse</option>
+              <option value="magenta">Magenta / synthwave</option>
+              <option value="ice">Ice / monochrome</option>
+            </select>
+          </label>
+          <span class="mdp-badge">no external libs</span>
+          <span class="mdp-badge mdp-badge--live" id="mdpState">idle</span>
+        </div>
+      </header>
+
+      <!-- Everything happens in this tab: the file never leaves the browser,
+           there is no upload endpoint behind this page. Coordinates read out of
+           a photo are printed here and nowhere else. -->
+      <section class="mdp-stage">
+        <section class="mdp-panel mdp-panel--source" aria-labelledby="mdpSourceHeading">
+          <div class="mdp-panel__head">
+            <h2 id="mdpSourceHeading"><i class="fa-solid fa-inbox" aria-hidden="true"></i> Source</h2>
+            <span class="mdp-panel__tag">JPEG · PNG · GIF</span>
+          </div>
+
+          <div class="mdp-drop" id="mdpDrop" role="button" tabindex="0" aria-describedby="mdpDropHint">
+            <span class="mdp-drop__reticle" aria-hidden="true"></span>
+            <span class="mdp-drop__glyph" aria-hidden="true"><i class="fa-solid fa-file-shield"></i></span>
+            <span class="mdp-drop__label">Drop an image or click to browse</span>
+            <span class="mdp-drop__hint" id="mdpDropHint">Max 24 MB. Read as bytes, never decoded as pixels.</span>
+            <input class="mdp-drop__input" type="file" id="mdpFile" accept="image/jpeg,image/png,image/gif" />
+          </div>
+
+          <p class="mdp-message" id="mdpMessage" role="status" aria-live="polite"></p>
+
+          <dl class="mdp-readout">
+            <div class="mdp-readout__row">
+              <dt>File</dt>
+              <dd id="mdpFileName">—</dd>
+            </div>
+            <div class="mdp-readout__row">
+              <dt>Format</dt>
+              <dd id="mdpFormat">—</dd>
+            </div>
+            <div class="mdp-readout__row">
+              <dt>Size</dt>
+              <dd id="mdpFileSize">—</dd>
+            </div>
+            <div class="mdp-readout__row">
+              <dt>Blocks</dt>
+              <dd id="mdpBlockTotal">—</dd>
+            </div>
+            <div class="mdp-readout__row">
+              <dt>Metadata</dt>
+              <dd id="mdpMetaBytes">—</dd>
+            </div>
+            <div class="mdp-readout__row">
+              <dt>Pass</dt>
+              <dd id="mdpElapsed">—</dd>
+            </div>
+          </dl>
+
+          <div class="mdp-actions">
+            <button type="button" class="mdp-btn" id="mdpPeel" disabled>
+              <i class="fa-solid fa-scissors" aria-hidden="true"></i> Peel &amp; save
+            </button>
+            <button type="button" class="mdp-btn" id="mdpReport" disabled>
+              <i class="fa-solid fa-clipboard" aria-hidden="true"></i> Copy report
+            </button>
+            <button type="button" class="mdp-btn mdp-btn--ghost" id="mdpClear" disabled>
+              <i class="fa-solid fa-eject" aria-hidden="true"></i> Eject
+            </button>
+          </div>
+        </section>
+
+        <section class="mdp-panel mdp-panel--exposure" aria-labelledby="mdpExposureHeading">
+          <div class="mdp-panel__head">
+            <h2 id="mdpExposureHeading"><i class="fa-solid fa-user-secret" aria-hidden="true"></i> Exposure</h2>
+            <span class="mdp-panel__tag" id="mdpRiskTag">no file</span>
+          </div>
+
+          <ul class="mdp-findings" id="mdpFindings"></ul>
+          <p class="mdp-empty" id="mdpFindingsEmpty">awaiting a file</p>
+
+          <div class="mdp-frames" id="mdpFrames" hidden>
+            <figure class="mdp-frame">
+              <img class="mdp-frame__img" id="mdpPreview" alt="The image as the file stores it" />
+              <figcaption>visible image</figcaption>
+            </figure>
+            <figure class="mdp-frame mdp-frame--alert" id="mdpThumbFrame" hidden>
+              <img class="mdp-frame__img" id="mdpThumb" alt="The thumbnail embedded in the file's EXIF block" />
+              <figcaption id="mdpThumbCaption">embedded thumbnail</figcaption>
+            </figure>
+          </div>
+        </section>
+      </section>
+
+      <form class="mdp-deck" id="mdpControls">
+        <!-- Each toggle names one strip group from the pipeline. The block list
+             below strikes through what the current selection would remove, so
+             the peel is visible before it is committed. -->
+        <fieldset class="mdp-group mdp-group--strip">
+          <legend><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Peel</legend>
+
+          <label class="mdp-toggle">
+            <input type="checkbox" id="mdpStripExif" data-mdp-strip="exif" checked />
+            <span class="mdp-toggle__box"></span>
+            <span class="mdp-toggle__text">EXIF / TIFF<em>camera, GPS, timestamps</em></span>
+          </label>
+          <label class="mdp-toggle">
+            <input type="checkbox" id="mdpStripXmp" data-mdp-strip="xmp" checked />
+            <span class="mdp-toggle__box"></span>
+            <span class="mdp-toggle__text">XMP<em>editor history, ratings</em></span>
+          </label>
+          <label class="mdp-toggle">
+            <input type="checkbox" id="mdpStripIptc" data-mdp-strip="iptc" checked />
+            <span class="mdp-toggle__box"></span>
+            <span class="mdp-toggle__text">IPTC / Photoshop<em>captions, credits, paths</em></span>
+          </label>
+          <label class="mdp-toggle">
+            <input type="checkbox" id="mdpStripComment" data-mdp-strip="comment" checked />
+            <span class="mdp-toggle__box"></span>
+            <span class="mdp-toggle__text">Comments<em>JPEG COM, GIF comment</em></span>
+          </label>
+          <label class="mdp-toggle">
+            <input type="checkbox" id="mdpStripText" data-mdp-strip="text" checked />
+            <span class="mdp-toggle__box"></span>
+            <span class="mdp-toggle__text">PNG text<em>tEXt / zTXt / iTXt</em></span>
+          </label>
+          <label class="mdp-toggle">
+            <input type="checkbox" id="mdpStripTime" data-mdp-strip="time" checked />
+            <span class="mdp-toggle__box"></span>
+            <span class="mdp-toggle__text">Timestamps<em>PNG tIME</em></span>
+          </label>
+          <label class="mdp-toggle mdp-toggle--risky">
+            <input type="checkbox" id="mdpStripIcc" data-mdp-strip="icc" />
+            <span class="mdp-toggle__box"></span>
+            <span class="mdp-toggle__text">ICC profile<em>colours may shift</em></span>
+          </label>
+          <label class="mdp-toggle mdp-toggle--risky">
+            <input type="checkbox" id="mdpStripOther" data-mdp-strip="other" />
+            <span class="mdp-toggle__box"></span>
+            <span class="mdp-toggle__text">Other non-essential<em>JFIF, Adobe, app blocks, tail</em></span>
+          </label>
+        </fieldset>
+
+        <fieldset class="mdp-group">
+          <legend><i class="fa-solid fa-weight-scale" aria-hidden="true"></i> Result</legend>
+
+          <dl class="mdp-readout">
+            <div class="mdp-readout__row">
+              <dt>Before</dt>
+              <dd id="mdpBeforeBytes">—</dd>
+            </div>
+            <div class="mdp-readout__row">
+              <dt>After</dt>
+              <dd id="mdpAfterBytes">—</dd>
+            </div>
+            <div class="mdp-readout__row">
+              <dt>Removed</dt>
+              <dd id="mdpSavedBytes">—</dd>
+            </div>
+            <div class="mdp-readout__row">
+              <dt>Blocks cut</dt>
+              <dd id="mdpDropCount">—</dd>
+            </div>
+          </dl>
+
+          <p class="mdp-note">Kept ranges are copied verbatim — no re-encoding, so the pixels stay bit-identical.</p>
+
+          <div class="mdp-actions">
+            <button type="button" class="mdp-btn mdp-btn--ghost" id="mdpSelectAll">All</button>
+            <button type="button" class="mdp-btn mdp-btn--ghost" id="mdpSelectNone">None</button>
+            <button type="button" class="mdp-btn mdp-btn--ghost" id="mdpReset">
+              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Defaults
+            </button>
+          </div>
+        </fieldset>
+
+        <fieldset class="mdp-group">
+          <legend><i class="fa-solid fa-microscope" aria-hidden="true"></i> Inspector</legend>
+
+          <label class="mdp-field">
+            <span class="mdp-field__label">Hex rows</span>
+            <select class="mdp-select" id="mdpHexRows">
+              <option value="4">4 rows · 64 B</option>
+              <option value="8" selected>8 rows · 128 B</option>
+              <option value="16">16 rows · 256 B</option>
+              <option value="48">48 rows · 768 B</option>
+            </select>
+          </label>
+
+          <label class="mdp-field">
+            <span class="mdp-field__label">Show</span>
+            <select class="mdp-select" id="mdpHexScope">
+              <option value="payload">Payload only</option>
+              <option value="block">Whole block, header first</option>
+            </select>
+          </label>
+
+          <p class="mdp-note" id="mdpWarnings"></p>
+        </fieldset>
+      </form>
+
+      <section class="mdp-map">
+        <section class="mdp-panel mdp-panel--blocks" aria-labelledby="mdpBlocksHeading">
+          <div class="mdp-panel__head">
+            <h2 id="mdpBlocksHeading"><i class="fa-solid fa-list-ol" aria-hidden="true"></i> Structure</h2>
+            <span class="mdp-panel__tag" id="mdpBlocksTag">block —</span>
+          </div>
+
+          <div class="mdp-blocks" id="mdpBlocks" aria-label="Blocks in the file"></div>
+          <p class="mdp-empty" id="mdpBlocksEmpty">awaiting a file</p>
+        </section>
+
+        <section class="mdp-panel mdp-panel--detail" aria-labelledby="mdpDetailHeading">
+          <div class="mdp-panel__head">
+            <h2 id="mdpDetailHeading"><i class="fa-solid fa-code" aria-hidden="true"></i> Block</h2>
+            <span class="mdp-panel__tag" id="mdpDetailTag">—</span>
+          </div>
+
+          <h3 class="mdp-detail__title" id="mdpDetailTitle">—</h3>
+          <dl class="mdp-readout mdp-readout--wide" id="mdpDetailFields"></dl>
+          <pre class="mdp-hex" id="mdpHex" tabindex="0">select a block to dump its bytes</pre>
+        </section>
+      </section>
+
+      <section class="mdp-panel mdp-panel--exif" aria-labelledby="mdpExifHeading">
+        <div class="mdp-panel__head">
+          <h2 id="mdpExifHeading"><i class="fa-solid fa-sitemap" aria-hidden="true"></i> EXIF tree</h2>
+          <span class="mdp-panel__tag" id="mdpExifTag">no EXIF block</span>
+        </div>
+
+        <div class="mdp-exif" id="mdpExif"></div>
+        <p class="mdp-empty" id="mdpExifEmpty">no TIFF directories in this file</p>
+      </section>
+
+      <footer class="mdp-footer">
+        <a class="mdp-link" href="/">&#8592; Back to Rolnopol</a>
+        <span class="mdp-footer__note">Hidden operator tool. Parsing runs in this tab — nothing is uploaded anywhere.</span>
+      </footer>
+    </main>
+
+    <script src="/js/pages/metadata-peeler-pipeline.js?v=20260825-1"></script>
+    <script src="/js/pages/metadata-peeler.js?v=20260825-1"></script>
+  </body>
+</html>

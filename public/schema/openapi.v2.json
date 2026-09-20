@@ -1,0 +1,1174 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Rolnopol API v2",
+    "version": "2.0.0",
+    "description": "Development API version. **Unstable — use v1 for production.**\n\nv2 currently implements only the operations listed below. Everything else lives in the v1 document (switch with the API definition picker under the title); v2 does not proxy or inherit v1.",
+    "contact": {
+      "name": "API Support",
+      "url": "https://github.com/jaktestowac/rolnopol"
+    },
+    "x-author": "jaktestowac.pl"
+  },
+  "servers": [
+    {
+      "url": "/api/v2",
+      "description": "API v2 (development)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "General"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "General"
+        ],
+        "operationId": "get",
+        "summary": "GET",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/healthcheck": {
+      "get": {
+        "tags": [
+          "General"
+        ],
+        "operationId": "getHealthcheck",
+        "summary": "GET healthcheck",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "Unauthorized": {
+        "description": "No credentials supplied.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Access token required"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Credentials supplied but invalid, expired, or lacking the required scope.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Invalid or expired token"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "The requested resource does not exist.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Resource not found"
+            }
+          }
+        }
+      },
+      "FeatureDisabled": {
+        "description": "The feature flag gating this endpoint is off. Indistinguishable from a missing resource by design — the endpoint answers 404, not 403.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Resource not found"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "Rate limit exceeded for this client.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "success": false,
+              "error": "Too many requests from this IP, please try again later."
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Unexpected server error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Response timestamp"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details"
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Response timestamp"
+          },
+          "data": {
+            "type": "object",
+            "description": "Response data"
+          },
+          "message": {
+            "type": "string",
+            "description": "Response message"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Numeric user ID (primary key)"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Auto-generated unique user identifier (internal ID)"
+          },
+          "displayedName": {
+            "type": "string",
+            "description": "User display name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User email address"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp"
+          },
+          "lastLogin": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last login timestamp"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Account active status"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "email",
+          "createdAt",
+          "isActive"
+        ]
+      },
+      "UserRegistration": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email for login",
+            "example": "newuser@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password",
+            "minLength": 3,
+            "maxLength": 50,
+            "example": "newPassword123"
+          },
+          "displayedName": {
+            "type": "string",
+            "description": "Display name (optional)",
+            "minLength": 3,
+            "maxLength": 20,
+            "example": "New User"
+          }
+        }
+      },
+      "UserLogin": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email for login",
+            "example": "demo@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password",
+            "example": "demo123"
+          }
+        }
+      },
+      "UserProfileUpdate": {
+        "type": "object",
+        "properties": {
+          "displayedName": {
+            "type": "string",
+            "description": "New display name",
+            "minLength": 3,
+            "maxLength": 20
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "New email address"
+          },
+          "password": {
+            "type": "string",
+            "description": "New password",
+            "minLength": 3,
+            "maxLength": 50
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "Authentication token"
+              },
+              "id": {
+                "type": "integer",
+                "description": "Numeric user ID (primary key)"
+              },
+              "displayedName": {
+                "type": "string",
+                "description": "User display name"
+              },
+              "userId": {
+                "type": "string",
+                "description": "Auto-generated user ID (internal identifier)"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Email for login"
+              },
+              "expiration": {
+                "type": "object",
+                "description": "Token expiration information"
+              }
+            }
+          }
+        }
+      },
+      "HealthCheck": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "unhealthy"
+            ],
+            "description": "Service health status"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Health check timestamp"
+          },
+          "uptime": {
+            "type": "number",
+            "description": "Service uptime in seconds"
+          },
+          "database": {
+            "type": "object",
+            "properties": {
+              "connected": {
+                "type": "boolean",
+                "description": "Database connection status"
+              },
+              "userCount": {
+                "type": "number",
+                "description": "Number of users in database"
+              }
+            }
+          },
+          "memory": {
+            "type": "object",
+            "description": "Memory usage information"
+          },
+          "version": {
+            "type": "string",
+            "description": "API version"
+          }
+        }
+      },
+      "VersionInfo": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "Version number (e.g., 1.0.0)"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "stable",
+              "development",
+              "deprecated"
+            ],
+            "description": "Version status"
+          },
+          "deprecated": {
+            "type": "boolean",
+            "description": "Whether version is deprecated"
+          },
+          "sunsetDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Deprecation sunset date"
+          },
+          "description": {
+            "type": "string",
+            "description": "Version description"
+          }
+        }
+      },
+      "ApiVersions": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "API information message"
+          },
+          "currentVersion": {
+            "type": "string",
+            "description": "Current stable version"
+          },
+          "versions": {
+            "type": "object",
+            "description": "Available versions information"
+          },
+          "endpoints": {
+            "type": "object",
+            "description": "Available endpoints by version"
+          }
+        }
+      },
+      "Field": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Field ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Owner userId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "area": {
+            "type": "number"
+          }
+        }
+      },
+      "Staff": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Staff ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Owner userId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "surname": {
+            "type": "string"
+          },
+          "age": {
+            "type": "integer"
+          }
+        }
+      },
+      "Assignment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Assignment ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Owner userId"
+          },
+          "fieldId": {
+            "type": "integer"
+          },
+          "staffId": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          }
+        }
+      },
+      "AdminUser": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Animal": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Animal ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Owner userId"
+          },
+          "fieldId": {
+            "type": "integer",
+            "description": "Field ID where animal is located (optional)"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Number of animals",
+            "minimum": 1
+          },
+          "type": {
+            "type": "string",
+            "description": "Animal type key"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "amount",
+          "type",
+          "createdAt"
+        ]
+      },
+      "AnimalCreate": {
+        "type": "object",
+        "properties": {
+          "fieldId": {
+            "type": "integer",
+            "description": "Field ID where animal is located (optional)"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Number of animals",
+            "minimum": 1
+          },
+          "type": {
+            "type": "string",
+            "description": "Animal type key"
+          }
+        },
+        "required": [
+          "amount",
+          "type"
+        ]
+      },
+      "FinancialAccount": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Account ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "balance": {
+            "type": "number",
+            "description": "Current account balance"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code",
+            "example": "ROL"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          },
+          "transactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Transaction"
+            },
+            "description": "List of transactions"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "balance",
+          "currency",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Transaction ID"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "description": "Transaction type"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Transaction amount"
+          },
+          "description": {
+            "type": "string",
+            "description": "Transaction description"
+          },
+          "category": {
+            "type": "string",
+            "description": "Transaction category",
+            "example": "general"
+          },
+          "referenceId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Reference ID for related operations"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Transaction timestamp"
+          },
+          "balanceBefore": {
+            "type": "number",
+            "description": "Account balance before transaction"
+          },
+          "balanceAfter": {
+            "type": "number",
+            "description": "Account balance after transaction"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "amount",
+          "description",
+          "timestamp",
+          "balanceBefore",
+          "balanceAfter"
+        ]
+      },
+      "TransactionCreate": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "description": "Transaction type"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "Transaction amount (max 2 decimal places)"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100,
+            "description": "Transaction description (3-100 characters, alphanumeric and basic punctuation only)"
+          },
+          "category": {
+            "type": "string",
+            "description": "Transaction category",
+            "example": "general"
+          },
+          "cardNumber": {
+            "type": "string",
+            "minLength": 13,
+            "maxLength": 20,
+            "pattern": "^[0-9]{13,20}$",
+            "writeOnly": true,
+            "description": "Required when type=income. Card number (digits only). Not persisted and never returned in responses.",
+            "example": "4242424242424242"
+          },
+          "cvv": {
+            "type": "string",
+            "pattern": "^\\d{3,4}$",
+            "writeOnly": true,
+            "description": "Required when type=income. CVV/CVC code (3-4 digits). Not persisted and never returned in responses.",
+            "example": "123"
+          }
+        },
+        "required": [
+          "type",
+          "amount",
+          "description"
+        ]
+      },
+      "TransferRequest": {
+        "type": "object",
+        "properties": {
+          "toUserId": {
+            "type": "string",
+            "description": "Recipient user ID"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 999.99,
+            "description": "Transfer amount (max 999.99 ROL, max 2 decimal places)"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100,
+            "description": "Transfer description (3-100 characters, alphanumeric and basic punctuation only)"
+          }
+        },
+        "required": [
+          "toUserId",
+          "amount",
+          "description"
+        ]
+      },
+      "FinancialStats": {
+        "type": "object",
+        "properties": {
+          "totalIncome": {
+            "type": "number",
+            "description": "Total income amount"
+          },
+          "totalExpenses": {
+            "type": "number",
+            "description": "Total expenses amount"
+          },
+          "netBalance": {
+            "type": "number",
+            "description": "Net balance (income - expenses)"
+          },
+          "transactionCount": {
+            "type": "integer",
+            "description": "Total number of transactions"
+          },
+          "incomeCount": {
+            "type": "integer",
+            "description": "Number of income transactions"
+          },
+          "expenseCount": {
+            "type": "integer",
+            "description": "Number of expense transactions"
+          },
+          "averageTransaction": {
+            "type": "number",
+            "description": "Average transaction amount"
+          },
+          "largestIncome": {
+            "type": "number",
+            "description": "Largest income transaction"
+          },
+          "largestExpense": {
+            "type": "number",
+            "description": "Largest expense transaction"
+          }
+        }
+      },
+      "MarketplaceStats": {
+        "type": "object",
+        "properties": {
+          "totalVolume": {
+            "type": "number",
+            "description": "Total marketplace volume across all users"
+          },
+          "totalTransactions": {
+            "type": "integer",
+            "description": "Total number of marketplace transactions"
+          },
+          "activeUsers": {
+            "type": "integer",
+            "description": "Number of users with financial activity"
+          },
+          "averageTransactionValue": {
+            "type": "number",
+            "description": "Average transaction value across marketplace"
+          }
+        }
+      },
+      "MarketplaceOffer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Offer ID"
+          },
+          "sellerId": {
+            "type": "integer",
+            "description": "Seller user ID"
+          },
+          "itemType": {
+            "type": "string",
+            "enum": [
+              "field",
+              "animal"
+            ],
+            "description": "Type of item being sold"
+          },
+          "itemId": {
+            "type": "integer",
+            "description": "ID of the item being sold"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "Price of the item"
+          },
+          "description": {
+            "type": "string",
+            "description": "Offer description"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "cancelled",
+              "sold"
+            ],
+            "description": "Offer status"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Offer creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          },
+          "sellerLabel": {
+            "type": "string",
+            "description": "Seller display label (display name or masked email)"
+          }
+        },
+        "required": [
+          "id",
+          "sellerId",
+          "itemType",
+          "itemId",
+          "price",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "MarketplaceOfferCreate": {
+        "type": "object",
+        "properties": {
+          "itemType": {
+            "type": "string",
+            "enum": [
+              "field",
+              "animal"
+            ],
+            "description": "Type of item to sell"
+          },
+          "itemId": {
+            "type": "integer",
+            "description": "ID of the item to sell"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "Price of the item"
+          },
+          "description": {
+            "type": "string",
+            "description": "Offer description"
+          }
+        },
+        "required": [
+          "itemType",
+          "itemId",
+          "price"
+        ]
+      },
+      "MarketplaceTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Transaction ID"
+          },
+          "offerId": {
+            "type": "integer",
+            "description": "Related offer ID"
+          },
+          "buyerId": {
+            "type": "integer",
+            "description": "Buyer user ID"
+          },
+          "sellerId": {
+            "type": "integer",
+            "description": "Seller user ID"
+          },
+          "itemType": {
+            "type": "string",
+            "enum": [
+              "field",
+              "animal"
+            ],
+            "description": "Type of item sold"
+          },
+          "itemId": {
+            "type": "integer",
+            "description": "ID of the item sold"
+          },
+          "price": {
+            "type": "number",
+            "description": "Transaction price"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Transaction timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "offerId",
+          "buyerId",
+          "sellerId",
+          "itemType",
+          "itemId",
+          "price",
+          "timestamp"
+        ]
+      },
+      "BuyRequest": {
+        "type": "object",
+        "properties": {
+          "offerId": {
+            "type": "integer",
+            "description": "ID of the offer to buy"
+          }
+        },
+        "required": [
+          "offerId"
+        ]
+      },
+      "SystemStatistics": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "integer",
+            "description": "Number of active users"
+          },
+          "farms": {
+            "type": "integer",
+            "description": "Total number of farms"
+          },
+          "area": {
+            "type": "number",
+            "description": "Total area of all fields"
+          },
+          "staff": {
+            "type": "integer",
+            "description": "Total number of staff members"
+          },
+          "animals": {
+            "type": "integer",
+            "description": "Total number of animals"
+          },
+          "avgStaffAge": {
+            "type": "integer",
+            "description": "Average age of staff members"
+          },
+          "offers": {
+            "type": "integer",
+            "description": "Number of active marketplace offers"
+          }
+        }
+      },
+      "DatabaseHealth": {
+        "type": "object",
+        "properties": {
+          "instances": {
+            "type": "integer",
+            "description": "Number of database instances"
+          },
+          "status": {
+            "type": "string",
+            "description": "Overall database status"
+          },
+          "health": {
+            "type": "object",
+            "description": "Health statistics for each database"
+          },
+          "validation": {
+            "type": "object",
+            "description": "Validation results for each database"
+          }
+        }
+      },
+      "MemoryStats": {
+        "type": "object",
+        "properties": {
+          "rss": {
+            "type": "number",
+            "description": "Resident Set Size in bytes"
+          },
+          "heapTotal": {
+            "type": "number",
+            "description": "Total heap size in bytes"
+          },
+          "heapUsed": {
+            "type": "number",
+            "description": "Used heap size in bytes"
+          },
+          "external": {
+            "type": "number",
+            "description": "External memory in bytes"
+          },
+          "arrayBuffers": {
+            "type": "number",
+            "description": "Array buffer memory in bytes"
+          }
+        }
+      },
+      "TokenValidation": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Authentication token to validate"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "MigrationResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Operation success status"
+          },
+          "message": {
+            "type": "string",
+            "description": "Operation message"
+          },
+          "clearedCount": {
+            "type": "integer",
+            "description": "Number of tokens cleared"
+          }
+        },
+        "required": [
+          "success",
+          "message",
+          "clearedCount"
+        ]
+      },
+      "FeatureFlag": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "boolean",
+            "description": "Feature flag enabled status"
+          },
+          "description": {
+            "type": "string",
+            "description": "Feature flag description"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      },
+      "FeatureFlagsResponse": {
+        "type": "object",
+        "properties": {
+          "flags": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "#/components/schemas/FeatureFlag"
+                }
+              ]
+            },
+            "description": "Feature flags map"
+          },
+          "groups": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Feature flags grouped by category"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "flags"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "TokenAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "token",
+        "description": "Session token returned by `POST /login`, sent in the `token` header."
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "The same session token sent as `Authorization: Bearer <token>`."
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Personal API key issued by `POST /users/profile/api-keys`. Scoped and mode-limited; not accepted on session-only endpoints."
+      },
+      "AdminAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Admin token returned by `POST /admin/auth/login`."
+      }
+    }
+  }
+}

@@ -161,11 +161,23 @@ function toEvent(entry) {
  * how many there are", which is one bounded message. (The live tail over the same
  * log is a separate, streaming concern.) `total` is the count BEFORE the limit, so
  * a page can honestly say "showing 50 of 812".
+ *
+ * Two cursors, pointing opposite ways, and the difference matters:
+ *
+ *   since_sequence   a FILTER — "only what is newer than this". Narrows the
+ *                    query, so `total` counts within it. What a poller passes.
+ *   before_sequence  a PAGE BOUND — "start below this". Does not narrow the
+ *                    query, so `total` ignores it. What a scroll-back passes,
+ *                    handing back the lowest sequence it has already rendered.
+ *
+ * `has_more` reports whether the window still holds entries under the page that
+ * was returned, which is the only question a scroll-back has to ask.
  */
 async function listEvents(call, callback) {
   const unitId = String(call.request.unit_id || "");
   const examId = String(call.request.exam_id || "");
   const since = Number(call.request.since_sequence) || 0;
+  const before = Number(call.request.before_sequence) || 0;
   const limit = clampLimit(call.request.limit);
   try {
     const data = await db.getAll();
@@ -176,12 +188,14 @@ async function listEvents(call, callback) {
     // Sort a copy by sequence descending — the store's array is append-ordered and
     // must not be reordered in place.
     const newestFirst = [...matching].sort((a, b) => (b.seq || 0) - (a.seq || 0));
-    const page = newestFirst.slice(0, limit).map(toEvent);
+    const windowed = before > 0 ? newestFirst.filter((e) => (e.seq || 0) < before) : newestFirst;
+    const page = windowed.slice(0, limit).map(toEvent);
     callback(null, {
       events: page,
       total: matching.length,
       latest_sequence: all.reduce((max, e) => Math.max(max, e.seq || 0), 0),
       returned: page.length,
+      has_more: windowed.length > page.length,
     });
   } catch (e) {
     log.error("ListEvents failed", { unit: unitId, exam: examId, error: e.message });

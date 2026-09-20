@@ -204,6 +204,7 @@ class MessengerPage {
       suggestions: [],
       selectedIndex: 0,
     };
+    this.wiredEchoUntil = 0;
   }
 
   async init(app) {
@@ -648,6 +649,10 @@ class MessengerPage {
     if (content.length > this.maxMessageLength) {
       this._showNotification(`Message too long (max ${this.maxMessageLength} chars).`, "error");
       return;
+    }
+
+    if (this._isWiredPhrase(content)) {
+      this._activateWiredEcho();
     }
 
     const clientMessageId = `client-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -1151,7 +1156,7 @@ class MessengerPage {
       const item = document.createElement("li");
       const isOwn = Number(message.fromUserId) === Number(this.currentUser?.id);
       item.dataset.messageId = String(Number(message.id));
-      item.className = `messenger-message${isOwn ? " messenger-message--own" : ""}`;
+      item.className = `messenger-message${isOwn ? " messenger-message--own" : ""}${this._isWiredPhrase(message.content) ? " messenger-message--wired" : ""}`;
       const statusHtml = this._formatMessageStatus(message, isOwn);
       const timestampText = this._formatTimestamp(message.createdAt);
       const metaText = statusHtml ? `${timestampText} · ${statusHtml}` : timestampText;
@@ -1168,6 +1173,20 @@ class MessengerPage {
     if (scrollToEnd) {
       messageList.scrollTop = messageList.scrollHeight;
     }
+  }
+
+  _isWiredPhrase(value) {
+    return String(value || "").trim().toLowerCase() === "lain";
+  }
+
+  _activateWiredEcho() {
+    this.wiredEchoUntil = Date.now() + 120000;
+    document.body?.classList.add("messenger-wired-echo");
+    window.setTimeout(() => {
+      if (Date.now() >= this.wiredEchoUntil) {
+        document.body?.classList.remove("messenger-wired-echo");
+      }
+    }, 120000);
   }
 
   _updateMessageStatusesInPlace(updatedMessages) {

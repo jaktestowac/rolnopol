@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crew Office — Holidays - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/crew.css" />
+  </head>
+  <!--
+    Crew Office team holidays (PRD §10.1).
+
+    Three views of ONE query (CrewApi.OPERATIONS.LEAVE_BOARD): the team calendar, the
+    pending-approval queue, and the per-person balance breakdown. They are three
+    readings of the same data, so fetching them separately would be three chances to
+    render a page whose halves disagree about who is off.
+
+    The balance column is the interesting one. It is computed server-side from the
+    policy, the contract's FTE and the whole request history (§6.3) — never stored —
+    so what this page shows is derived fresh on every load rather than read from a
+    total that could have drifted.
+
+    Approvals send the VERSION the row was drawn from, so two people working the
+    queue at once get a version conflict rather than a silent double decision.
+
+    Export is CLIENT-side, like the work board's: CSV is built from data already
+    loaded and PDF is the browser's print pipeline driven by crew.css — no new REST
+    endpoint (goal G2 keeps REST to health only) and no new dependency.
+  -->
+  <body class="crew-page crew-page--crew-leave">
+    <div id="header-component"></div>
+
+    <main class="crew-shell">
+      <header class="crew-header">
+        <h1 class="crew-title"><i class="fa-solid fa-umbrella-beach"></i> Team holidays</h1>
+        <p class="crew-lede">Who is off and when, what is waiting for a decision, and how many days everyone has left.</p>
+      </header>
+
+      <!-- One tab strip for the whole module, rendered by CrewApi.renderModuleTabs. -->
+      <nav id="crewTabs" class="crew-tabs crew-no-print" aria-label="Crew Office views"></nav>
+
+      <div class="crew-toolbar crew-no-print">
+        <label class="crew-control">
+          <span class="crew-label">From</span>
+          <input id="leaveFrom" class="crew-input" type="date" />
+        </label>
+
+        <label class="crew-control">
+          <span class="crew-label">To</span>
+          <input id="leaveTo" class="crew-input" type="date" />
+        </label>
+
+        <!--
+          Month browsing. Previous/next move by WHOLE MONTHS and keep however many
+          months are on screen, so paging through a quarter stays a quarter.
+
+          Both carry VISIBLE TEXT, not just an icon. They were icon-only and were
+          reported as missing: Font Awesome comes from a CDN, so when it does not load
+          the `<i>` is empty and a button with no other content collapses to its
+          padding — an invisible control on the one row whose whole job is navigation.
+          The label is the fix; the icon is decoration on top of it.
+
+          `id="leavePrevLabel"` / `id="leaveNextLabel"` are filled in with the month
+          each arrow leads to, so you can see where you are going before you click.
+        -->
+        <div class="crew-form-actions">
+          <button id="leavePrev" class="crew-btn crew-btn--nav" type="button">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i> <span id="leavePrevLabel">Previous</span>
+          </button>
+          <button id="leaveThisMonth" class="crew-btn" type="button">This month</button>
+          <button id="leaveNext" class="crew-btn crew-btn--nav" type="button">
+            <span id="leaveNextLabel">Next</span> <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+          <button id="leaveQuarter" class="crew-btn" type="button">3 months</button>
+          <button id="leaveYear" class="crew-btn" type="button">Whole year</button>
+          <button id="leaveReload" class="crew-btn" type="button"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Reload</button>
+        </div>
+      </div>
+
+      <div class="crew-toolbar crew-no-print">
+        <div class="crew-form-actions">
+          <button
+            id="leaveRequestToggle"
+            class="crew-btn crew-btn--primary"
+            type="button"
+            aria-expanded="false"
+            aria-controls="leaveRequestPanel"
+          >
+            <i class="fa-solid fa-plus"></i> Request holiday
+          </button>
+          <button id="leavePolicyToggle" class="crew-btn" type="button" aria-expanded="false" aria-controls="leavePolicyForm">
+            <i class="fa-solid fa-sliders"></i> Leave policy
+          </button>
+          <button id="leaveExportCsv" class="crew-btn" type="button"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+          <button id="leaveExportPdf" class="crew-btn" type="button"><i class="fa-solid fa-print"></i> Print / PDF</button>
+        </div>
+      </div>
+
+      <!--
+        The leave policy, for the whole ACCOUNT rather than per crew member.
+        Entitlement, accrual, carry-over, the leave year, notice and the farm's
+        holidays are properties of the farm; what varies per person is their FTE and
+        start date, which live on their employment profile and are what the accrual is
+        pro-rated by.
+
+        Saving REPLACES the lists it shows, so both textareas are pre-filled with what
+        is currently stored — a save must never silently drop holidays somebody
+        entered last year.
+      -->
+      <section id="leavePolicyForm" class="crew-form-panel crew-no-print" hidden aria-labelledby="leavePolicyHeading">
+        <h2 id="leavePolicyHeading" class="crew-subhead">Leave policy <span class="crew-muted">(applies to your whole crew)</span></h2>
+        <form id="leavePolicyFormEl" class="crew-form" novalidate>
+          <label class="crew-control">
+            <span class="crew-label">Annual entitlement at full time <span class="crew-muted">(days)</span></span>
+            <input id="policyEntitlement" class="crew-input" type="number" min="0" max="60" step="0.5" required />
+          </label>
+
+          <label class="crew-control">
+            <span class="crew-label">Accrual</span>
+            <select id="policyAccrualMode" class="crew-select"></select>
+          </label>
+
+          <label class="crew-control">
+            <span class="crew-label">Leave year starts <span class="crew-muted">(MM-DD, day 01–28)</span></span>
+            <input id="policyLeaveYearStart" class="crew-input" type="text" placeholder="01-01" maxlength="5" required />
+          </label>
+
+          <label class="crew-control">
+            <span class="crew-label">Carry-over cap <span class="crew-muted">(days)</span></span>
+            <input id="policyCarryOverCap" class="crew-input" type="number" min="0" max="30" step="0.5" />
+          </label>
+
+          <label class="crew-control">
+            <span class="crew-label">Carry-over expires <span class="crew-muted">(MM-DD, blank for never)</span></span>
+            <input id="policyCarryOverExpires" class="crew-input" type="text" placeholder="03-31" maxlength="5" />
+          </label>
+
+          <label class="crew-control">
+            <span class="crew-label">Minimum notice <span class="crew-muted">(days)</span></span>
+            <input id="policyMinNotice" class="crew-input" type="number" min="0" max="90" step="1" />
+          </label>
+
+          <label class="crew-control crew-control--wide">
+            <span class="crew-label">
+              Public holidays
+              <span class="crew-muted">— one YYYY-MM-DD per line. Leave taken on these days is not deducted.</span>
+            </span>
+            <textarea id="policyPublicHolidays" class="crew-input crew-textarea" rows="4" spellcheck="false"></textarea>
+          </label>
+
+          <label class="crew-control crew-control--wide">
+            <span class="crew-label">
+              Blackout periods
+              <span class="crew-muted">— one <code>from,to,reason</code> per line, e.g. <code>2026-08-15,2026-09-15,Harvest</code></span>
+            </span>
+            <textarea id="policyBlackouts" class="crew-input crew-textarea" rows="3" spellcheck="false"></textarea>
+          </label>
+
+          <div class="crew-form-actions">
+            <button class="crew-btn crew-btn--primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save policy</button>
+            <button id="leavePolicyCancel" class="crew-btn" type="button">Cancel</button>
+          </div>
+        </form>
+        <p id="leavePolicyErrors" class="crew-status" role="alert" aria-live="assertive"></p>
+        <p class="crew-hint">
+          Annual leave already approved is priced when it is booked, so changing the entitlement here does not re-price a holiday somebody
+          already has.
+        </p>
+      </section>
+
+      <!--
+        The request form. Hidden until asked for, so the page opens on the calendar
+        rather than on a form nobody came here to fill in.
+      -->
+      <section id="leaveRequestPanel" class="crew-form-panel crew-no-print" hidden aria-labelledby="leaveRequestHeading">
+        <h2 id="leaveRequestHeading" class="crew-subhead">Request holiday</h2>
+        <form id="leaveRequestForm" class="crew-form" novalidate>
+          <label class="crew-control">
+            <span class="crew-label">Crew member</span>
+            <select id="leaveReqMember" class="crew-select" required></select>
+          </label>
+
+          <label class="crew-control">
+            <span class="crew-label">Type</span>
+            <select id="leaveReqType" class="crew-select"></select>
+          </label>
+
+          <label class="crew-control">
+            <span class="crew-label">From</span>
+            <input id="leaveReqFrom" class="crew-input" type="date" required />
+          </label>
+
+          <label class="crew-control">
+            <span class="crew-label">To</span>
+            <input id="leaveReqTo" class="crew-input" type="date" required />
+          </label>
+
+          <label class="crew-control crew-control--check">
+            <input id="leaveReqHalfStart" type="checkbox" />
+            <span class="crew-label">Half day at the start</span>
+          </label>
+
+          <label class="crew-control crew-control--check">
+            <input id="leaveReqHalfEnd" type="checkbox" />
+            <span class="crew-label">Half day at the end</span>
+          </label>
+
+          <label class="crew-control crew-control--wide">
+            <span class="crew-label">Note <span class="crew-muted">(optional)</span></span>
+            <input id="leaveReqReason" class="crew-input" type="text" maxlength="500" />
+          </label>
+
+          <div class="crew-form-actions">
+            <button class="crew-btn crew-btn--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Request</button>
+            <button id="leaveRequestCancel" class="crew-btn" type="button">Cancel</button>
+          </div>
+        </form>
+        <p id="leaveRequestErrors" class="crew-status" role="alert" aria-live="assertive"></p>
+      </section>
+
+      <p id="leaveSummary" class="crew-hint"></p>
+      <p id="leaveStatus" class="crew-status" role="status" aria-live="polite"></p>
+
+      <section id="leavePolicyPanel" class="crew-panel"></section>
+
+      <h2 class="crew-subhead"><i class="fa-solid fa-inbox"></i> Awaiting a decision</h2>
+      <section id="leaveApprovals" class="crew-panel"></section>
+
+      <h2 class="crew-subhead"><i class="fa-solid fa-calendar-days"></i> Team calendar</h2>
+      <section id="leaveCalendar" class="crew-panel"></section>
+
+      <h2 class="crew-subhead"><i class="fa-solid fa-scale-balanced"></i> Balances</h2>
+      <section id="leaveBalances" class="crew-panel"></section>
+    </main>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+    <script src="/js/pages/crew-api.js"></script>
+    <script src="/js/pages/crew-leave.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("crew");
+    </script>
+  </body>
+</html>

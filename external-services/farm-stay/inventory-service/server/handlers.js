@@ -9,6 +9,7 @@
 const grpc = require("@grpc/grpc-js");
 const db = require("./db");
 const { DEFAULT_HOLD_TTL_SEC } = require("../config");
+const { REGIONS } = require("../config/locations-seed");
 const { now, nowIso } = require("../../shared/clock");
 const dates = require("../../shared/dates");
 const { createLogger } = require("../../shared/logger");
@@ -19,6 +20,7 @@ const startedAt = Date.now();
 
 const VALID_TYPES = ["room", "cottage", "camping"];
 const VALID_POLICIES = ["flexible", "moderate", "strict"];
+const MAX_CITY_LEN = 60;
 
 function fail(callback, code, message, method, fields) {
   log[code === grpc.status.INTERNAL ? "error" : "warn"](`${method} failed`, { ...fields, error: message });
@@ -240,6 +242,96 @@ function addDay(date) {
   return new Date(t).toISOString().slice(0, 10);
 }
 
+// ── Locations (shared across users) ───────────────────────────────────────────
+
+const trimmed = (s) => String(s == null ? "" : s).trim();
+// A property stores only its city (`district`), so the CITY NAME identifies a
+// location — one "Kraków" in the catalog, whatever region it was filed under.
+// Compared case-insensitively so "kraków" can't shadow "Kraków".
+const cityKey = (city) => trimmed(city).toLowerCase();
+
+const BASE_CITIES = new Set(Object.values(REGIONS).flat().map(cityKey));
+
+function toCustomLocation(loc) {
+  return {
+    voivodeship: loc.voivodeship || "",
+    city: loc.city || "",
+    added_by: loc.addedBy || "",
+    added_at: loc.addedAt || "",
+  };
+}
+
+function customOf(data) {
+  return Array.isArray(data.customLocations) ? data.customLocations : [];
+}
+
+async function listLocations(call, callback) {
+  try {
+    const custom = customOf(await db.getAll());
+    const regions = Object.entries(REGIONS).map(([voivodeship, cities]) => ({ voivodeship, cities: [...cities] }));
+    callback(null, { regions, custom: custom.map(toCustomLocation), total: BASE_CITIES.size + custom.length });
+  } catch (err) {
+    fail(callback, grpc.status.INTERNAL, err.message, "ListLocations");
+  }
+}
+
+async function addLocation(call, callback) {
+  const r = call.request || {};
+  const voivodeship = trimmed(r.voivodeship);
+  const city = trimmed(r.city);
+  try {
+    if (!r.added_by) return fail(callback, grpc.status.INVALID_ARGUMENT, "added_by is required", "AddLocation");
+    if (!city) return fail(callback, grpc.status.INVALID_ARGUMENT, "city is required", "AddLocation");
+    if (city.length > MAX_CITY_LEN)
+      return fail(callback, grpc.status.INVALID_ARGUMENT, `city must be at most ${MAX_CITY_LEN} characters`, "AddLocation");
+    // The picker only offers real voivodeships; keeping the shared list to them
+    // means every custom city has a group to render under.
+    if (!Object.prototype.hasOwnProperty.call(REGIONS, voivodeship))
+      return fail(callback, grpc.status.INVALID_ARGUMENT, `"${voivodeship}" is not a Polish voivodeship`, "AddLocation");
+    if (BASE_CITIES.has(cityKey(city)))
+      return fail(callback, grpc.status.ALREADY_EXISTS, `"${city}" is already in the catalog`, "AddLocation");
+
+    const result = await db.mutate((data) => {
+      const custom = customOf(data);
+      if (custom.some((c) => cityKey(c.city) === cityKey(city))) return { value: { error: "EXISTS" } };
+      const location = { voivodeship, city, addedBy: String(r.added_by), addedAt: nowIso() };
+      return { next: { ...data, customLocations: [...custom, location] }, value: { location } };
+    });
+    if (result.error === "EXISTS") return fail(callback, grpc.status.ALREADY_EXISTS, `"${city}" is already in the catalog`, "AddLocation");
+    log.info("AddLocation", { city, voivodeship, by: r.added_by });
+    callback(null, toCustomLocation(result.location));
+  } catch (err) {
+    fail(callback, grpc.status.INTERNAL, err.message, "AddLocation");
+  }
+}
+
+async function removeLocation(call, callback) {
+  const r = call.request || {};
+  const city = trimmed(r.city);
+  try {
+    const result = await db.mutate((data) => {
+      const custom = customOf(data);
+      // Looked up by city alone (its identity); the request's voivodeship is only
+      // what the caller saw in the picker.
+      const existing = custom.find((c) => cityKey(c.city) === cityKey(city));
+      if (!existing) return { value: { error: "NOT_FOUND" } };
+      // Shared list → only the author prunes their own entry.
+      if (String(existing.addedBy) !== String(r.requested_by)) return { value: { error: "FORBIDDEN" } };
+      // A location a listing points at must stay resolvable in the pickers.
+      if (data.properties.some((p) => cityKey(p.district) === cityKey(city))) return { value: { error: "IN_USE" } };
+      return { next: { ...data, customLocations: custom.filter((c) => c !== existing) }, value: { location: existing } };
+    });
+    if (result.error === "NOT_FOUND") return fail(callback, grpc.status.NOT_FOUND, `Custom location "${city}" not found`, "RemoveLocation");
+    if (result.error === "FORBIDDEN")
+      return fail(callback, grpc.status.PERMISSION_DENIED, "Only the user who added a location can remove it", "RemoveLocation");
+    if (result.error === "IN_USE") return fail(callback, grpc.status.FAILED_PRECONDITION, "IN_USE", "RemoveLocation", { city });
+    log.info("RemoveLocation", { city, by: r.requested_by });
+    callback(null, { voivodeship: result.location.voivodeship, city: result.location.city, deleted: true });
+  } catch (err) {
+    fail(callback, grpc.status.INTERNAL, err.message, "RemoveLocation");
+  }
+}
+
 // ── Locking (atomic) ──────────────────────────────────────────────────────────
 
 async function hold(call, callback) {
@@ -364,7 +456,10 @@ module.exports = {
     Hold: hold,
     ConfirmHold: confirmHold,
     Release: release,
+    ListLocations: listLocations,
+    AddLocation: addLocation,
+    RemoveLocation: removeLocation,
   },
   // exported for unit tests
-  _internals: { isLockActive, rangeIsFree },
+  _internals: { isLockActive, rangeIsFree, cityKey },
 };

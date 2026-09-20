@@ -19,11 +19,22 @@ const fs = require("fs");
 const FS_ROOT = path.join(__dirname, "..", "..", "external-services", "farm-stay");
 
 /**
+ * Point the ecosystem's env at this test's ports + throwaway DBs, and clear those
+ * DB files so seeding is deterministic. Returns the resolved `{ ports, dbPaths }`.
+ *
+ * startEcosystem() calls this itself, so most tests never need it. Call it
+ * DIRECTLY (at module top level) when the test file also requires the Rolnopol
+ * app: booting the app in test mode seeds/restores base state, which requires the
+ * farm-stay leaf `db`/`config` modules — and a config module caches its port and
+ * DB path at require time. Set the env first, or the leaves come up on their
+ * production ports against the real data files while the gateway dials the test
+ * ports and every call 503s.
+ *
  * @param {object} opts
  * @param {number} opts.base   port base; leaves/gateway derive their ports from it
  * @param {string} opts.tag    unique slug for temp DB filenames
  */
-async function startEcosystem({ base, tag }) {
+function prepareEnv({ base, tag }) {
   const ports = {
     gateway: base,
     pricing: base + 1,
@@ -58,6 +69,17 @@ async function startEcosystem({ base, tag }) {
   process.env.INVENTORY_DB_PATH = dbPaths.inventory;
   process.env.RESERVATIONS_DB_PATH = dbPaths.reservations;
   process.env.REVIEWS_DB_PATH = dbPaths.reviews;
+
+  return { ports, dbPaths };
+}
+
+/**
+ * @param {object} opts
+ * @param {number} opts.base   port base; leaves/gateway derive their ports from it
+ * @param {string} opts.tag    unique slug for temp DB filenames
+ */
+async function startEcosystem({ base, tag }) {
+  const { ports, dbPaths } = prepareEnv({ base, tag });
 
   const inventorySvc = require(path.join(FS_ROOT, "inventory-service", "server", "index.js"));
   const reservationSvc = require(path.join(FS_ROOT, "reservation-service", "server", "index.js"));
@@ -168,4 +190,4 @@ function closeServer(server) {
   return new Promise((resolve) => server.close(resolve));
 }
 
-module.exports = { startEcosystem, FS_ROOT };
+module.exports = { startEcosystem, prepareEnv, FS_ROOT };

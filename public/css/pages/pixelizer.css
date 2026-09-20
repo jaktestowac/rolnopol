@@ -1,0 +1,872 @@
+/* Hidden operator page: /operator/tools/pixelizer
+ *
+ * Same dark-console idiom as the other operator pages (see terminal.css and
+ * shutdown.css). Everything is scoped under .pxl-page / .pxl-* so it cannot leak
+ * into the shared stylesheet.
+ *
+ * Themes: the accent colours are declared once as space-separated RGB triplets,
+ * so every rule can mix its own alpha with `rgb(var(--pxl-accent-rgb) / 0.2)`
+ * and a theme only has to override the triplets. The page script sets
+ * `data-pxl-theme` on <html>; the blocks at the end of this file do the rest. */
+
+:root {
+  --pxl-accent-rgb: 79 245 255;
+  --pxl-accent-2-rgb: 181 123 255;
+  --pxl-text-rgb: 216 244 255;
+  --pxl-bg: #03060c;
+  --pxl-bg-mid: #070d18;
+  --pxl-panel: rgba(9, 18, 32, 0.78);
+  --pxl-panel-strong: rgba(5, 11, 20, 0.94);
+  --pxl-void: #04080f;
+
+  --pxl-accent: rgb(var(--pxl-accent-rgb));
+  --pxl-accent-2: rgb(var(--pxl-accent-2-rgb));
+  --pxl-text: rgb(var(--pxl-text-rgb));
+  --pxl-text-dim: rgb(var(--pxl-text-rgb) / 0.66);
+  --pxl-text-soft: rgb(var(--pxl-text-rgb) / 0.38);
+  --pxl-line: rgb(var(--pxl-accent-rgb) / 0.22);
+  --pxl-line-soft: rgb(var(--pxl-accent-rgb) / 0.14);
+  --pxl-glow: rgb(var(--pxl-accent-rgb) / 0.24);
+  --pxl-wash: rgb(var(--pxl-accent-rgb) / 0.12);
+  --pxl-wash-soft: rgb(var(--pxl-accent-rgb) / 0.06);
+  --pxl-amber: #ffcf6b;
+  --pxl-danger: #ff8f8f;
+  --pxl-mono: "SF Mono", "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+
+.pxl-page {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% -10%, rgb(var(--pxl-accent-rgb) / 0.14), transparent 60%),
+    linear-gradient(180deg, var(--pxl-bg-mid), var(--pxl-bg) 65%, #010306);
+  color: var(--pxl-text);
+  font-family: var(--pxl-mono);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem 3rem;
+  overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------------- atmosphere */
+
+/* Three fixed decorative layers: a drifting grid, a slow aurora wash, and CRT
+   scanlines. All pointer-events: none so they never eat a click. */
+.pxl-grid,
+.pxl-aurora,
+.pxl-scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pxl-grid {
+  background-image:
+    linear-gradient(rgb(var(--pxl-accent-rgb) / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--pxl-accent-rgb) / 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
+  -webkit-mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
+  animation: pxl-grid-drift 18s linear infinite;
+}
+
+.pxl-aurora {
+  background:
+    radial-gradient(38% 30% at 18% 12%, rgb(var(--pxl-accent-2-rgb) / 0.22), transparent 70%),
+    radial-gradient(34% 28% at 84% 22%, rgb(var(--pxl-accent-rgb) / 0.18), transparent 72%);
+  filter: blur(6px);
+  animation: pxl-aurora-breathe 12s ease-in-out infinite;
+}
+
+.pxl-scanlines {
+  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+  opacity: 0.5;
+}
+
+@keyframes pxl-grid-drift {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      0 48px,
+      48px 0;
+  }
+}
+
+@keyframes pxl-aurora-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* --------------------------------------------------------------------- shell */
+
+.pxl-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1240px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.pxl-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--pxl-line);
+}
+
+.pxl-eyebrow {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--pxl-text-soft);
+}
+
+.pxl-header h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.9rem, 5vw, 2.9rem);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 0 22px rgb(var(--pxl-accent-rgb) / 0.45);
+}
+
+.pxl-header h1 span {
+  color: var(--pxl-accent);
+}
+
+.pxl-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pxl-theme {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pxl-theme__label {
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pxl-text-soft);
+}
+
+.pxl-badge {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--pxl-line);
+  border-radius: 999px;
+  background: var(--pxl-wash);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pxl-text-dim);
+}
+
+.pxl-badge--live {
+  border-color: rgb(var(--pxl-accent-rgb) / 0.55);
+  color: var(--pxl-accent);
+  box-shadow: 0 0 14px var(--pxl-glow);
+}
+
+.pxl-badge--live.is-busy {
+  border-color: rgba(255, 207, 107, 0.6);
+  color: var(--pxl-amber);
+  box-shadow: 0 0 14px rgba(255, 207, 107, 0.24);
+}
+
+.pxl-badge--live.is-error {
+  border-color: rgba(255, 118, 118, 0.6);
+  color: var(--pxl-danger);
+  box-shadow: 0 0 14px rgba(255, 118, 118, 0.22);
+}
+
+/* -------------------------------------------------------------------- panels */
+
+.pxl-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.pxl-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem;
+  border: 1px solid var(--pxl-line);
+  border-radius: 14px;
+  background: var(--pxl-panel);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.pxl-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed rgb(var(--pxl-accent-rgb) / 0.18);
+}
+
+.pxl-panel__head h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--pxl-text);
+}
+
+.pxl-panel__head i {
+  margin-right: 0.4rem;
+  color: var(--pxl-accent);
+}
+
+.pxl-panel__tag {
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pxl-text-soft);
+}
+
+/* ------------------------------------------------------------------ dropzone */
+
+.pxl-drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 1.6rem 1rem;
+  border: 1px dashed rgb(var(--pxl-accent-rgb) / 0.4);
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--pxl-wash-soft), transparent);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.pxl-drop:hover,
+.pxl-drop:focus-visible,
+.pxl-drop.is-hot {
+  border-color: var(--pxl-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 0 28px rgb(var(--pxl-accent-rgb) / 0.2);
+  outline: none;
+}
+
+.pxl-drop.is-hot {
+  background: linear-gradient(180deg, rgb(var(--pxl-accent-2-rgb) / 0.14), transparent);
+}
+
+/* Scan bar sweeping the dropzone — the page's only idle motion cue. */
+.pxl-drop__reticle {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--pxl-accent), transparent);
+  opacity: 0.7;
+  animation: pxl-scan 3.4s ease-in-out infinite;
+}
+
+@keyframes pxl-scan {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(9rem);
+  }
+}
+
+.pxl-drop__glyph {
+  font-size: 1.9rem;
+  color: var(--pxl-accent);
+  text-shadow: 0 0 18px rgb(var(--pxl-accent-rgb) / 0.5);
+}
+
+.pxl-drop__label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.pxl-drop__hint {
+  font-size: 0.66rem;
+  color: var(--pxl-text-soft);
+  text-align: center;
+}
+
+.pxl-drop__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pxl-message {
+  margin: 0;
+  min-height: 1.1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--pxl-text-dim);
+}
+
+.pxl-message.is-error {
+  color: var(--pxl-danger);
+}
+
+/* ------------------------------------------------------------------ readouts */
+
+.pxl-readout {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.7rem;
+  border: 1px solid var(--pxl-line-soft);
+  border-radius: 10px;
+  background: var(--pxl-panel-strong);
+}
+
+.pxl-readout--wide {
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.35rem 1rem;
+}
+
+.pxl-readout__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+}
+
+.pxl-readout__row dt {
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pxl-text-soft);
+}
+
+.pxl-readout__row dd {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--pxl-accent);
+}
+
+/* ------------------------------------------------------------------ viewport */
+
+.pxl-viewport {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22rem;
+  padding: 1.1rem;
+  border: 1px solid rgb(var(--pxl-accent-rgb) / 0.16);
+  border-radius: 12px;
+  background:
+    linear-gradient(rgb(var(--pxl-accent-rgb) / 0.05) 1px, transparent 1px) 0 0 / 16px 16px,
+    radial-gradient(circle at 50% 50%, rgb(var(--pxl-accent-2-rgb) / 0.1), transparent 70%),
+    var(--pxl-void);
+}
+
+.pxl-canvas {
+  display: none;
+  max-width: 100%;
+  max-height: 62vh;
+  border-radius: 4px;
+  /* The result is a mosaic: the browser must not smooth it back out when the
+     canvas is scaled to fit the viewport. */
+  image-rendering: pixelated;
+  box-shadow:
+    0 0 0 1px rgb(var(--pxl-accent-rgb) / 0.28),
+    0 20px 48px rgba(0, 0, 0, 0.55);
+  transition: filter 0.2s ease;
+}
+
+.pxl-viewport.has-image .pxl-canvas {
+  display: block;
+}
+
+.pxl-viewport.has-image .pxl-viewport__empty {
+  display: none;
+}
+
+/* Screen-only effect: a soft bloom over the whole canvas. It is deliberately
+   CSS and not baked into the buffer, so a saved PNG stays clean. */
+.pxl-viewport.is-bloom .pxl-canvas {
+  filter: saturate(1.25) contrast(1.08) brightness(1.05) drop-shadow(0 0 14px rgb(var(--pxl-accent-rgb) / 0.35));
+}
+
+.pxl-viewport__empty {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--pxl-text-soft);
+}
+
+.pxl-viewport__flag {
+  position: absolute;
+  top: 0.85rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.2rem 0.7rem;
+  border: 1px solid rgba(255, 207, 107, 0.6);
+  border-radius: 999px;
+  background: rgba(20, 12, 0, 0.85);
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--pxl-amber);
+}
+
+.pxl-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgb(var(--pxl-accent-rgb) / 0.55);
+}
+
+.pxl-corner--tl {
+  top: 6px;
+  left: 6px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.pxl-corner--tr {
+  top: 6px;
+  right: 6px;
+  border-left: 0;
+  border-bottom: 0;
+}
+
+.pxl-corner--bl {
+  bottom: 6px;
+  left: 6px;
+  border-right: 0;
+  border-top: 0;
+}
+
+.pxl-corner--br {
+  bottom: 6px;
+  right: 6px;
+  border-left: 0;
+  border-top: 0;
+}
+
+/* --------------------------------------------------------------- control deck */
+
+.pxl-deck {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.pxl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid var(--pxl-line);
+  border-radius: 14px;
+  background: var(--pxl-panel);
+  backdrop-filter: blur(10px);
+}
+
+.pxl-group legend {
+  padding: 0 0.4rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--pxl-text-dim);
+}
+
+.pxl-group legend i {
+  margin-right: 0.35rem;
+  color: var(--pxl-accent);
+}
+
+.pxl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pxl-field__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pxl-text-soft);
+}
+
+.pxl-field__label output {
+  color: var(--pxl-accent);
+  letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+/* ----------------------------------------------------------------- levels set */
+
+.pxl-levels__set {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.pxl-level {
+  display: block;
+  cursor: pointer;
+}
+
+.pxl-level input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.pxl-level__box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgb(var(--pxl-accent-rgb) / 0.2);
+  border-radius: 10px;
+  background: var(--pxl-panel-strong);
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+.pxl-level:hover .pxl-level__box {
+  border-color: rgb(var(--pxl-accent-rgb) / 0.55);
+  transform: translateY(-1px);
+}
+
+.pxl-level input:checked + .pxl-level__box {
+  border-color: var(--pxl-accent);
+  background: linear-gradient(180deg, rgb(var(--pxl-accent-2-rgb) / 0.16), var(--pxl-wash));
+  box-shadow: 0 0 22px rgb(var(--pxl-accent-rgb) / 0.2);
+}
+
+.pxl-level input:focus-visible + .pxl-level__box {
+  outline: 2px solid var(--pxl-accent-2);
+  outline-offset: 2px;
+}
+
+.pxl-level__name {
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pxl-level__note {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--pxl-text-soft);
+}
+
+/* -------------------------------------------------------------------- inputs */
+
+.pxl-select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid rgb(var(--pxl-accent-rgb) / 0.28);
+  border-radius: 8px;
+  background: var(--pxl-panel-strong);
+  color: var(--pxl-text);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.pxl-select:hover,
+.pxl-select:focus-visible {
+  border-color: var(--pxl-accent);
+  outline: none;
+}
+
+.pxl-select option {
+  background: #06101c;
+  color: var(--pxl-text);
+}
+
+.pxl-range {
+  width: 100%;
+  height: 1.2rem;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.pxl-range:focus-visible {
+  outline: 2px solid var(--pxl-accent-2);
+  outline-offset: 3px;
+}
+
+.pxl-range::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--pxl-accent), rgb(var(--pxl-accent-2-rgb) / 0.5));
+}
+
+.pxl-range::-moz-range-track {
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--pxl-accent), rgb(var(--pxl-accent-2-rgb) / 0.5));
+}
+
+.pxl-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5.5px;
+  border: 1px solid var(--pxl-accent);
+  border-radius: 3px;
+  background: #061420;
+  box-shadow: 0 0 12px var(--pxl-glow);
+}
+
+.pxl-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--pxl-accent);
+  border-radius: 3px;
+  background: #061420;
+  box-shadow: 0 0 12px var(--pxl-glow);
+}
+
+.pxl-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.pxl-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pxl-text-dim);
+}
+
+.pxl-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.pxl-toggle__box {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgb(var(--pxl-accent-rgb) / 0.45);
+  border-radius: 3px;
+  background: var(--pxl-panel-strong);
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.pxl-toggle input:checked + .pxl-toggle__box {
+  border-color: var(--pxl-accent);
+  background: var(--pxl-accent);
+  box-shadow: 0 0 12px var(--pxl-glow);
+}
+
+.pxl-toggle input:checked + .pxl-toggle__box::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: var(--pxl-bg);
+}
+
+.pxl-toggle input:focus-visible + .pxl-toggle__box {
+  outline: 2px solid var(--pxl-accent-2);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------- buttons */
+
+.pxl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.pxl-btn {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--pxl-line);
+  border-radius: 8px;
+  background: rgb(var(--pxl-accent-rgb) / 0.08);
+  color: var(--pxl-text);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    opacity 0.16s ease;
+}
+
+.pxl-btn:hover:not(:disabled),
+.pxl-btn:focus-visible:not(:disabled) {
+  border-color: var(--pxl-accent);
+  background: rgb(var(--pxl-accent-rgb) / 0.16);
+  outline: none;
+}
+
+.pxl-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pxl-btn--ghost {
+  background: transparent;
+}
+
+.pxl-btn--wide {
+  width: 100%;
+  margin-top: auto;
+}
+
+/* -------------------------------------------------------------------- footer */
+
+.pxl-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--pxl-line);
+  font-size: 0.66rem;
+  color: var(--pxl-text-soft);
+}
+
+.pxl-link {
+  color: var(--pxl-accent);
+  letter-spacing: 0.12em;
+  text-decoration: none;
+}
+
+.pxl-link:hover {
+  text-decoration: underline;
+}
+
+/* -------------------------------------------------------------------- themes */
+
+:root[data-pxl-theme="amber"] {
+  --pxl-accent-rgb: 255 179 71;
+  --pxl-accent-2-rgb: 255 107 74;
+  --pxl-text-rgb: 255 232 201;
+  --pxl-bg: #0c0703;
+  --pxl-bg-mid: #170d05;
+  --pxl-panel: rgba(32, 18, 6, 0.78);
+  --pxl-panel-strong: rgba(20, 11, 3, 0.94);
+  --pxl-void: #100903;
+}
+
+:root[data-pxl-theme="lime"] {
+  --pxl-accent-rgb: 125 255 143;
+  --pxl-accent-2-rgb: 43 215 160;
+  --pxl-text-rgb: 214 255 223;
+  --pxl-bg: #030a05;
+  --pxl-bg-mid: #06130a;
+  --pxl-panel: rgba(9, 30, 16, 0.78);
+  --pxl-panel-strong: rgba(4, 18, 9, 0.94);
+  --pxl-void: #041007;
+}
+
+:root[data-pxl-theme="magenta"] {
+  --pxl-accent-rgb: 255 95 210;
+  --pxl-accent-2-rgb: 111 123 255;
+  --pxl-text-rgb: 255 220 244;
+  --pxl-bg: #0a0410;
+  --pxl-bg-mid: #14071f;
+  --pxl-panel: rgba(28, 10, 42, 0.78);
+  --pxl-panel-strong: rgba(17, 5, 27, 0.94);
+  --pxl-void: #0d0517;
+}
+
+:root[data-pxl-theme="ice"] {
+  --pxl-accent-rgb: 207 230 255;
+  --pxl-accent-2-rgb: 127 154 181;
+  --pxl-text-rgb: 232 242 255;
+  --pxl-bg: #05080c;
+  --pxl-bg-mid: #0a1017;
+  --pxl-panel: rgba(16, 24, 34, 0.78);
+  --pxl-panel-strong: rgba(8, 13, 19, 0.94);
+  --pxl-void: #070b11;
+}
+
+/* ------------------------------------------------------------------ narrower */
+
+@media (max-width: 900px) {
+  .pxl-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pxl-viewport {
+    min-height: 15rem;
+  }
+}
+
+/* Motion here is pure decoration — drop all of it when the visitor asked for
+   less of it. */
+@media (prefers-reduced-motion: reduce) {
+  .pxl-grid,
+  .pxl-aurora,
+  .pxl-drop__reticle {
+    animation: none;
+  }
+}

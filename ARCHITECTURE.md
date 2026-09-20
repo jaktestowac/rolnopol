@@ -193,7 +193,9 @@ graph LR
     V1 --> AI["AI<br/>chatbot (Gemini / OpenRouter / mock)"]
 ```
 
-Response bodies are normalized through `helpers/response-helper.js` (`sendSuccess` / `sendError` / `formatResponseBody`). OpenAPI/Swagger is served from `/swagger.html` and `/schema/openapi.json`.
+Response bodies are normalized through `helpers/response-helper.js` (`sendSuccess` / `sendError` / `formatResponseBody`).
+
+Swagger UI is served from `/swagger.html`. It offers one definition per API version — `/schema/openapi.v1.json` and `/schema/openapi.v2.json` — in a picker rendered under the API title. Both are **generated** by `npm run schema:generate`, which walks the live Express routers; do not edit them by hand. `/schema/openapi.json` is the superseded hand-written schema, kept frozen and offered as a deprecated definition. See [schema/README.md](schema/README.md).
 
 A typical authenticated REST call:
 
@@ -291,6 +293,27 @@ Key behaviors:
 - Writes are **debounced** (`JSON_DB_WRITE_DEBOUNCE_MS`) in normal mode, **immediate** in tests.
 - On startup all databases are loaded into memory; in `NODE_ENV=test` they are restored from a **base state** (`debug-database-restore.service.js`) for deterministic tests.
 
+### A store is never left empty
+
+The singleton and its semaphore only serialize writers **inside one process**. Two processes
+writing the same file (parallel test workers, a running server plus a script) are not
+coordinated, and `fs.writeFile` truncates the target before writing, so the file is 0 bytes
+for the length of the write. That window is how `data/feature-flags.json` once ended up empty.
+
+Four things now stand between a write and an empty store:
+
+| Guard                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Where                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Writes land on `<file>.<pid>.<n>.tmp` and are **renamed** over the target, which is atomic. A reader sees the old file or the new one. Rename retries with jittered backoff, because Windows answers `EPERM` while another process holds the file.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `data/json-database.js` (`writeFileWithRetry`)      |
+| Empty or non-string content is **refused** before any file is touched, so no upstream bug can blank a populated store.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | `data/json-database.js`                             |
+| An empty or unparseable file on startup **restores defaults**, keeping unparseable content in `<file>.corrupt.bak` first. Defaults come from code (e.g. `data/feature-flags.defaults.js`), never from `require()`-ing the live JSON: a broken file used to throw a `SyntaxError` during service construction, so the app could not boot to repair it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | `data/json-database.js`, `data/database-manager.js` |
+| `npm run data:check` walks `data/` **and** every external service's own `data/`, lists each store with its size, age and contents, and flags any that is empty, unparseable or unreadable (quoting the broken content back). It also audits `database-base-state.json`: that it covers every resource the restore service resets, and that its shape still matches the stores on disk, so a store that grew a section and a snapshot that did not are caught here rather than as tests resetting to an old shape. Reports leftover `.tmp` / `.corrupt.bak` files, stores the code declares but has not written yet, and stores the reset does not cover. Exits non-zero on a broken store, a missing snapshot resource, or a snapshot holding a different kind of value than its store. `--quiet`, `--json`, `--dir <path>`. | `build/verify-data-files.js`                        |
+
+The token registry (`data/session-tokens.json`) is written the same way by
+`helpers/token.helpers.js`. Recovery for a committed store is
+`git checkout HEAD -- data/<file>.json`; anything the app owns is rebuilt from its defaults on
+the next boot once the broken file is removed.
+
 ---
 
 ## 8. Real-Time Communication (WebSockets)
@@ -378,25 +401,43 @@ Toggling a flag takes effect on the **next request** — no restart needed (e.g.
 
 `modules/plugin-runtime/index.js` discovers plugins in `plugins/`, resolves their enabled-state from a precedence chain, and attaches their hooks/routes to Express. Plugins receive injected services (`featureFlagsService`, `notificationCenter`).
 
+Discovery is decided **before** a plugin's `index.js` is required, so a directory no manifest mentions never runs any code. Reachability has to be readable from JSON: either a key in the global manifest, or `{ "autoDiscoverable": true }` in the plugin's own `plugin.manifest.json`. `autoDiscoverable` in plugin code alone is honoured only when `initialize({ allowCodeDeclaredDiscovery: true })` opts back into the old behaviour.
+
 ```mermaid
 graph TD
-    Init["pluginRuntime.initialize({ pluginsDir, services })"] --> Disc["discover plugins/*"]
-    Disc --> Res["resolve enabled state"]
-    Res --> Attach["pluginRuntime.attach(app)"]
-    Attach --> Hooks["request/response hooks + custom routes + event subs"]
+    Init["pluginRuntime.initialize({ pluginsDir, services })"] --> Down["tear down the previously loaded set"]
+    Down --> Disc["list plugins/* and read their manifests"]
+    Disc --> Gate["reachable in JSON? skip without requiring"]
+    Gate --> Req["require, resolve enabled / config / order"]
+    Req --> InitHook["init + event subs + registerRoutes"]
+    InitHook --> Attach["pluginRuntime.attach(app)"]
+    Attach --> Hooks["onRequest, onResponse, /api/v1/plugins/&lt;name&gt; routers"]
 
-    subgraph Precedence["enabled-state precedence (high → low)"]
+    subgraph Precedence["enabled / config / order precedence (high → low)"]
         G["global plugins.manifest.json"] --> L["plugin.manifest.json (per-plugin)"] --> Code["index.js code default"] --> Off["disabled if unspecified"]
     end
 ```
 
-Bundled plugins include easter eggs and observability helpers: `teapot-blocker` (HTTP 418), `secret-garden-route`, `harvest-moon-header`, `firefly-notification`, `response-size-logger`, `starlit-statistics`, `feature-flag-watcher`, and a `plugin-template` for new ones.
+Six hooks, all optional: `init`, `registerRoutes`, `onRequest`, `onResponse`, `onEvent`, `shutdown`. Only `shutdown` is awaited; the rest are synchronous, and a hook that returns a promise is logged as a mistake. The contract worth knowing before writing one:
+
+| Hook                                                      | Contract                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registerRoutes({ router, mountPath, config, services })` | An Express router mounted at `mountPath`, which the runtime resolves and injects: `/api/v1/plugins/<plugin-name>` by default, or `config.mountPath` when set (manifest-overridable like the rest of the config). The default cannot shadow a core route; a path outside the namespace is allowed and warned about. Preferred over matching paths inside `onRequest`. |
+| `onRequest`                                               | Returning `false` stops the remaining plugins. If nothing answered, the runtime continues to the route handlers instead of leaving the request hanging. One plugin throwing does not cancel the plugins ordered after it.                                                                                                                                            |
+| `onResponse`                                              | Fires for `res.json` and `res.send` (`responseType` `"json"` / `"send"`), where a returned value replaces the body, and for everything else through `res.end` (`"end"`: sendFile, redirects, streams), where hooks observe only.                                                                                                                                     |
+| `onEvent`                                                 | Filtered by `config.eventTypes` alone; `[]` means every event.                                                                                                                                                                                                                                                                                                       |
+
+`initialize()` tears the previously loaded set down first (awaiting `shutdown` on each), so a reload cannot leave a plugin's timers running with nothing holding a handle on them. `reload({ reloadModules: true })` also evicts plugin files from the require cache. `attach(app)` throws if `initialize()` has not run, rather than loading every plugin with no services. Collisions are reported at init: duplicate names, two enabled plugins sharing an `order`, or two claiming the same `config.routePath`.
+
+Bundled plugins include easter eggs and observability helpers: `teapot-blocker` (HTTP 418), `secret-garden-route`, `harvest-moon-header`, `firefly-notification`, `response-size-logger`, `starlit-statistics`, `feature-flag-watcher`, and a `plugin-template` for new ones. Everything ships disabled, and `teapot-blocker` is reachable from neither manifest, so it is never even required.
 
 ---
 
 ## 12. Chaos Engine
 
 `middleware/chaos-engine.middleware.js` + `services/chaos-engine.service.js` inject controlled failures (latency, errors, data mutation) into `/api` traffic based on configurable, runtime-reconfigurable rules (`data/chaos-engine.json`). It exists to make the API a **realistic, occasionally-flaky** target for resilience and retry testing, and has an admin UI (`chaos-engine.html`).
+
+**Mirroring** additionally copies a share of requests to `mirroring.targetUrl`, with the original request path appended. The "Human Instrumentality Dry Run" preset aims that at the app's own **shadow sink** — `routes/instrumentality-shadow.route.js` + `services/instrumentality-shadow.service.js` — which counts copies in memory, answers `204`, and stores nothing, so mirrored writes can never re-execute. Its target is built from the port this process listens on (override with `CHAOS_MIRROR_TARGET_URL`); the unlinked page at `/instrumentality-shadow` shows the running tally.
 
 ---
 

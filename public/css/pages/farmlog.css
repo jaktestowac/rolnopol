@@ -1183,11 +1183,11 @@
 }
 
 .farmlog-blog-hero__meta-item {
-  background: rgba(255,255,255,0.85);
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .farmlog-blog-info__meta-item {
-  background: rgba(255,255,255,0.85);
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .farmlog-blog-info__meta dt {
@@ -1211,11 +1211,11 @@
 }
 
 .farmlog-blog-hero__tag-row {
-  border: 1px solid rgba(148,163,184,0.12);
+  border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .farmlog-blog-hero__tag-row {
-  background: rgba(255,255,255,0.72);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .farmlog-blog-hero__tags {
@@ -1223,7 +1223,7 @@
 }
 
 .farmlog-blog-hero__tag {
-  background: rgba(241,250,244,0.92);
+  background: rgba(241, 250, 244, 0.92);
 }
 
 .farmlog-blog-hero__tag-empty {
@@ -1231,7 +1231,7 @@
 }
 
 .farmlog-blog-info__meta-item {
-  border-color: rgba(148,163,184,0.12);
+  border-color: rgba(148, 163, 184, 0.12);
 }
 
 .farmlog-blog-hero__meta-item,
@@ -1447,11 +1447,11 @@
 }
 
 .farmlog-blog-info__meta-item {
-  background: rgba(255,255,255,0.85);
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .farmlog-blog-hero__meta-item {
-  background: rgba(255,255,255,0.85);
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .farmlog-blog-hero__meta-row,
@@ -1508,7 +1508,7 @@
 }
 
 .farmlog-blog-info__note {
-  background: rgba(241,250,244,0.8);
+  background: rgba(241, 250, 244, 0.8);
 }
 
 .farmlog-blog-info__note i {
@@ -1535,477 +1535,477 @@
   border-radius: 0.65rem;
 }
 
-.farmlog-blog-tabs .btn { 
-  border-radius: 0.65rem; 
+.farmlog-blog-tabs .btn {
+  border-radius: 0.65rem;
 }
 
-.farmlog-blog-info__meta-item--wide { 
-  grid-column: span 2; 
+.farmlog-blog-info__meta-item--wide {
+  grid-column: span 2;
 }
 
-.farmlog-blog-hero__meta-item, 
-.farmlog-blog-info__meta-item { 
-  padding: 0.5rem 0.6rem; 
+.farmlog-blog-hero__meta-item,
+.farmlog-blog-info__meta-item {
+  padding: 0.5rem 0.6rem;
 }
 
-.farmlog-blog-hero__pill, 
-.farmlog-blog-info__pill { 
-  padding: 0.25rem 0.55rem; 
+.farmlog-blog-hero__pill,
+.farmlog-blog-info__pill {
+  padding: 0.25rem 0.55rem;
 }
 
-.farmlog-blog-header h1 { 
-  font-size: 1.7rem; 
+.farmlog-blog-header h1 {
+  font-size: 1.7rem;
 }
 
-.farmlog-blog-header .btn { 
-  font-size: 0.9rem; 
+.farmlog-blog-header .btn {
+  font-size: 0.9rem;
 }
 
-.farmlog-blog-hero__subtitle { 
-  font-size: 0.93rem; 
+.farmlog-blog-hero__subtitle {
+  font-size: 0.93rem;
 }
 
-.farmlog-blog-checkout .farmlog-form { 
-  gap: 0.45rem; 
+.farmlog-blog-checkout .farmlog-form {
+  gap: 0.45rem;
 }
 
 @media (max-width: 768px) {
-  .farmlog-blog-header h1 { 
-    font-size: 1.5rem; 
+  .farmlog-blog-header h1 {
+    font-size: 1.5rem;
   }
 }
 
-.farmlog-blog-hero__tag-row { 
-  gap: 0.3rem; 
+.farmlog-blog-hero__tag-row {
+  gap: 0.3rem;
 }
 
-.farmlog-blog-hero__tags { 
-  gap: 0.25rem; 
+.farmlog-blog-hero__tags {
+  gap: 0.25rem;
 }
 
 .farmlog-blog-hero__tag-empty,
-.farmlog-blog-info__note p { 
-  font-size: 0.82rem; 
+.farmlog-blog-info__note p {
+  font-size: 0.82rem;
 }
 
-.farmlog-blog-info__meta { 
-  gap: 0.45rem; 
+.farmlog-blog-info__meta {
+  gap: 0.45rem;
 }
 
-.farmlog-blog-hero__meta-row { 
-  gap: 0.45rem; 
+.farmlog-blog-hero__meta-row {
+  gap: 0.45rem;
 }
 
-.farmlog-blog-tabs .btn { 
-  padding: 0.4rem 0.6rem; 
+.farmlog-blog-tabs .btn {
+  padding: 0.4rem 0.6rem;
 }
 
-.farmlog-blog-hero__actions a { 
-  padding: 0.45rem 0.75rem; 
+.farmlog-blog-hero__actions a {
+  padding: 0.45rem 0.75rem;
 }
 
-.farmlog-blog-hero__actions { 
-  gap: 0.35rem; 
+.farmlog-blog-hero__actions {
+  gap: 0.35rem;
 }
 
-.farmlog-blog-info__note strong { 
-  font-size: 0.9rem; 
+.farmlog-blog-info__note strong {
+  font-size: 0.9rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card { 
-  padding: 0.7rem; 
+.farmlog-blog-posts .farmlog-result-card {
+  padding: 0.7rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card p { 
-  margin: 0.35rem 0; 
+.farmlog-blog-posts .farmlog-result-card p {
+  margin: 0.35rem 0;
 }
 
-.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet { 
-  font-size: 0.88rem; 
+.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet {
+  font-size: 0.88rem;
 }
 
-.farmlog-blog-info__meta-item { 
-  background: transparent; 
+.farmlog-blog-info__meta-item {
+  background: transparent;
 }
 
-.farmlog-blog-hero__meta-item { 
-  background: transparent; 
+.farmlog-blog-hero__meta-item {
+  background: transparent;
 }
 
-.farmlog-blog-info__meta-item, 
-.farmlog-blog-hero__meta-item { 
-  border: 1px solid rgba(148,163,184,0.12); 
+.farmlog-blog-info__meta-item,
+.farmlog-blog-hero__meta-item {
+  border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
-.farmlog-blog-hero__tag-row { 
-  border: 1px solid rgba(148,163,184,0.12); 
+.farmlog-blog-hero__tag-row {
+  border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
-.farmlog-blog-hero__tags { 
-  gap: 0.3rem; 
+.farmlog-blog-hero__tags {
+  gap: 0.3rem;
 }
 
-.farmlog-blog-hero__tag { 
-  padding: 0.25rem 0.55rem; 
+.farmlog-blog-hero__tag {
+  padding: 0.25rem 0.55rem;
 }
 
-.farmlog-blog-hero__pill, 
-.farmlog-blog-info__pill { 
-  font-size: 0.8rem; 
+.farmlog-blog-hero__pill,
+.farmlog-blog-info__pill {
+  font-size: 0.8rem;
 }
 
-.farmlog-blog-info__note { 
-  padding: 0.8rem 0.85rem; 
+.farmlog-blog-info__note {
+  padding: 0.8rem 0.85rem;
 }
 
-.farmlog-blog-hero__tag-empty { 
-  color: #6b7280; 
+.farmlog-blog-hero__tag-empty {
+  color: #6b7280;
 }
 
-.farmlog-blog-info__meta dd { 
-  font-size: 0.9rem; 
+.farmlog-blog-info__meta dd {
+  font-size: 0.9rem;
 }
 
-.farmlog-blog-info__note p { 
-  margin: 0; 
+.farmlog-blog-info__note p {
+  margin: 0;
 }
 
-.farmlog-blog-hero__meta-item strong, 
-.farmlog-blog-info__meta dd { 
-  font-size: 0.88rem; 
+.farmlog-blog-hero__meta-item strong,
+.farmlog-blog-info__meta dd {
+  font-size: 0.88rem;
 }
 
-.farmlog-blog-header__copy { 
-  gap: 0.2rem; 
+.farmlog-blog-header__copy {
+  gap: 0.2rem;
 }
 
-.farmlog-blog-header__actions .btn { 
-  min-width: 7rem; 
+.farmlog-blog-header__actions .btn {
+  min-width: 7rem;
 }
 
-.farmlog-blog-hero__meta-row, 
-.farmlog-blog-info__meta { 
-  gap: 0.4rem; 
+.farmlog-blog-hero__meta-row,
+.farmlog-blog-info__meta {
+  gap: 0.4rem;
 }
 
-.farmlog-blog-tabs .btn { 
-  border-radius: 0.6rem; 
+.farmlog-blog-tabs .btn {
+  border-radius: 0.6rem;
 }
 
-.farmlog-blog-tabs { 
-  padding-bottom: 0.3rem; 
+.farmlog-blog-tabs {
+  padding-bottom: 0.3rem;
 }
 
-.farmlog-blog-tabs .btn.is-active { 
-  border-bottom-color: #22c55e; 
+.farmlog-blog-tabs .btn.is-active {
+  border-bottom-color: #22c55e;
 }
 
-.farmlog-blog-info__meta-item--wide { 
-  grid-column: span 2; 
+.farmlog-blog-info__meta-item--wide {
+  grid-column: span 2;
 }
 
-.farmlog-blog-info__note strong { 
-  font-weight: 700; 
+.farmlog-blog-info__note strong {
+  font-weight: 700;
 }
 
-.farmlog-blog-hero__actions a { 
-  font-size: 0.88rem; 
+.farmlog-blog-hero__actions a {
+  font-size: 0.88rem;
 }
 
-.farmlog-blog-hero__actions { 
-  justify-content: flex-start; 
+.farmlog-blog-hero__actions {
+  justify-content: flex-start;
 }
 
-.farmlog-blog-controls__sort { 
-  width: auto; 
+.farmlog-blog-controls__sort {
+  width: auto;
 }
 
-.farmlog-blog-controls__sort span { 
-  font-size: 0.82rem; 
+.farmlog-blog-controls__sort span {
+  font-size: 0.82rem;
 }
 
-.farmlog-blog-controls__sort select { 
-  min-width: 7rem; 
+.farmlog-blog-controls__sort select {
+  min-width: 7rem;
 }
 
-.farmlog-blog-hero__tag-row { 
-  padding: 0.45rem 0.55rem; 
+.farmlog-blog-hero__tag-row {
+  padding: 0.45rem 0.55rem;
 }
 
-.farmlog-blog-hero__tag-label { 
-  font-size: 0.7rem; 
- }
-
-.farmlog-blog-hero__tag { 
-  padding: 0.25rem 0.5rem; 
+.farmlog-blog-hero__tag-label {
+  font-size: 0.7rem;
 }
 
-.farmlog-blog-hero__tag-empty { 
-  font-size: 0.82rem; 
+.farmlog-blog-hero__tag {
+  padding: 0.25rem 0.5rem;
 }
 
-.farmlog-blog-info__note { 
-  background: rgba(241,250,244,0.75); 
+.farmlog-blog-hero__tag-empty {
+  font-size: 0.82rem;
 }
 
-.farmlog-blog-info__note p { 
-  color: #475569; 
+.farmlog-blog-info__note {
+  background: rgba(241, 250, 244, 0.75);
 }
 
-.farmlog-blog-info__note i { 
-  font-size: 0.92rem; 
+.farmlog-blog-info__note p {
+  color: #475569;
 }
 
-.farmlog-blog-hero__tag-empty { 
-  display: inline-block; 
+.farmlog-blog-info__note i {
+  font-size: 0.92rem;
 }
 
-.farmlog-blog-info__meta { 
-  gap: 0.4rem; 
+.farmlog-blog-hero__tag-empty {
+  display: inline-block;
 }
 
-.farmlog-blog-hero__meta-row { 
-  gap: 0.4rem; 
+.farmlog-blog-info__meta {
+  gap: 0.4rem;
 }
 
-.farmlog-blog-hero__tag-row { 
-  gap: 0.3rem; 
+.farmlog-blog-hero__meta-row {
+  gap: 0.4rem;
 }
 
-.farmlog-blog-hero__tags { 
-  gap: 0.25rem; 
+.farmlog-blog-hero__tag-row {
+  gap: 0.3rem;
 }
 
-.farmlog-blog-hero__pill, 
-.farmlog-blog-info__pill { 
-  padding: 0.25rem 0.5rem; 
+.farmlog-blog-hero__tags {
+  gap: 0.25rem;
 }
 
-.farmlog-blog-hero__top h1 { 
-  font-size: 1.75rem; 
+.farmlog-blog-hero__pill,
+.farmlog-blog-info__pill {
+  padding: 0.25rem 0.5rem;
 }
 
-.farmlog-blog-info__note strong { 
-  line-height: 1.2; 
+.farmlog-blog-hero__top h1 {
+  font-size: 1.75rem;
 }
 
-.farmlog-blog-hero__eyebrow, 
-.farmlog-blog-info__eyebrow, 
-.farmlog-blog-compose__eyebrow { 
-  letter-spacing: 0.1em; 
+.farmlog-blog-info__note strong {
+  line-height: 1.2;
 }
 
-.farmlog-blog-posts .farmlog-result-card { 
-  padding: 0.65rem; 
+.farmlog-blog-hero__eyebrow,
+.farmlog-blog-info__eyebrow,
+.farmlog-blog-compose__eyebrow {
+  letter-spacing: 0.1em;
 }
 
-.farmlog-blog-posts .farmlog-result-card p { 
-  margin: 0.3rem 0; 
+.farmlog-blog-posts .farmlog-result-card {
+  padding: 0.65rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet { 
-  font-size: 0.86rem; 
+.farmlog-blog-posts .farmlog-result-card p {
+  margin: 0.3rem 0;
 }
 
-.farmlog-blog-footer { 
-  padding: 0.5rem 0; 
+.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet {
+  font-size: 0.86rem;
 }
 
-.farmlog-blog-hero__tag-row { 
-  padding: 0.45rem 0.55rem; 
+.farmlog-blog-footer {
+  padding: 0.5rem 0;
 }
 
-.farmlog-blog-header__actions .btn { 
-  padding: 0.45rem 0.75rem; 
+.farmlog-blog-hero__tag-row {
+  padding: 0.45rem 0.55rem;
 }
 
-.farmlog-blog-header__actions { 
-  gap: 0.3rem; 
+.farmlog-blog-header__actions .btn {
+  padding: 0.45rem 0.75rem;
 }
 
-.farmlog-blog-header h1 { 
-  font-size: 1.65rem; 
+.farmlog-blog-header__actions {
+  gap: 0.3rem;
 }
 
-.farmlog-blog-tabs .btn.is-active { 
-  border-bottom-width: 2px; 
+.farmlog-blog-header h1 {
+  font-size: 1.65rem;
 }
 
-.farmlog-blog-tabs .btn { 
-  padding: 0.4rem 0.6rem; 
+.farmlog-blog-tabs .btn.is-active {
+  border-bottom-width: 2px;
 }
 
-.farmlog-blog-info__meta-item { 
-  padding: 0.5rem 0.6rem; 
+.farmlog-blog-tabs .btn {
+  padding: 0.4rem 0.6rem;
 }
 
-.farmlog-blog-hero__meta-item { 
-  padding: 0.5rem 0.6rem; 
+.farmlog-blog-info__meta-item {
+  padding: 0.5rem 0.6rem;
 }
 
-.farmlog-blog-info__meta { 
-  gap: 0.35rem; 
+.farmlog-blog-hero__meta-item {
+  padding: 0.5rem 0.6rem;
 }
 
-.farmlog-blog-hero__meta-row { 
-  gap: 0.35rem; 
+.farmlog-blog-info__meta {
+  gap: 0.35rem;
+}
+
+.farmlog-blog-hero__meta-row {
+  gap: 0.35rem;
 }
 
 @media (max-width: 576px) {
-  .farmlog-blog-header h1 { 
-    font-size: 1.4rem; 
+  .farmlog-blog-header h1 {
+    font-size: 1.4rem;
   }
 }
 
-.farmlog-blog-page { 
-  max-width: 820px; 
+.farmlog-blog-page {
+  max-width: 820px;
 }
 
-.farmlog-detail-body { 
-  gap: 0.6rem; 
+.farmlog-detail-body {
+  gap: 0.6rem;
 }
 
-.farmlog-blog-hero__tag-empty { 
-  color: #6b7280; 
+.farmlog-blog-hero__tag-empty {
+  color: #6b7280;
 }
 
-.farmlog-blog-info__meta dd { 
-  line-height: 1.25; 
+.farmlog-blog-info__meta dd {
+  line-height: 1.25;
 }
 
-.farmlog-blog-hero__meta-row, 
-.farmlog-blog-info__meta { 
-  gap: 0.4rem; 
+.farmlog-blog-hero__meta-row,
+.farmlog-blog-info__meta {
+  gap: 0.4rem;
 }
 
-.farmlog-blog-hero__tag { 
-  background: rgba(241,250,244,0.9); 
+.farmlog-blog-hero__tag {
+  background: rgba(241, 250, 244, 0.9);
 }
 
-.farmlog-blog-info__note { 
-  padding: 0.8rem 0.85rem; 
+.farmlog-blog-info__note {
+  padding: 0.8rem 0.85rem;
 }
 
-.farmlog-blog-info__note strong { 
-  font-size: 0.9rem; 
+.farmlog-blog-info__note strong {
+  font-size: 0.9rem;
 }
 
-.farmlog-blog-info__note p { 
-  margin: 0; 
+.farmlog-blog-info__note p {
+  margin: 0;
 }
 
-.farmlog-blog-controls .farmlog-blog-controls__sort { 
-  min-width: 8rem; 
+.farmlog-blog-controls .farmlog-blog-controls__sort {
+  min-width: 8rem;
 }
 
-.farmlog-blog-controls__hint { 
-  margin: 0; 
+.farmlog-blog-controls__hint {
+  margin: 0;
 }
 
-.farmlog-blog-controls h2 { 
-  margin-bottom: 0.15rem; 
+.farmlog-blog-controls h2 {
+  margin-bottom: 0.15rem;
 }
 
-.farmlog-blog-hero__subtitle { 
-  margin-top: 0.3rem; 
+.farmlog-blog-hero__subtitle {
+  margin-top: 0.3rem;
 }
 
-.farmlog-blog-hero__tops { 
-  gap: 0.6rem; 
+.farmlog-blog-hero__tops {
+  gap: 0.6rem;
 }
 
-.farmlog-blog-hero__meta-item { 
-  line-height: 1.25; 
+.farmlog-blog-hero__meta-item {
+  line-height: 1.25;
 }
 
-.farmlog-blog-info__meta-item { 
-  line-height: 1.25; 
+.farmlog-blog-info__meta-item {
+  line-height: 1.25;
 }
 
-.farmlog-blog-hero__tag-row { 
-  border-radius: 0.8rem; 
+.farmlog-blog-hero__tag-row {
+  border-radius: 0.8rem;
 }
 
-.farmlog-blog-hero__tags { 
-  gap: 0.25rem; 
+.farmlog-blog-hero__tags {
+  gap: 0.25rem;
 }
 
-.farmlog-blog-hero__tag-label { 
-  font-size: 0.7rem; 
- }
-
-.farmlog-blog-hero__tag-row { 
-  padding: 0.45rem 0.55rem; 
+.farmlog-blog-hero__tag-label {
+  font-size: 0.7rem;
 }
 
-.farmlog-blog-header__actions .btn { 
-  font-size: 0.88rem; 
+.farmlog-blog-hero__tag-row {
+  padding: 0.45rem 0.55rem;
 }
 
-.farmlog-blog-tabs .btn .fas { 
-  margin-right: 0.35rem; 
+.farmlog-blog-header__actions .btn {
+  font-size: 0.88rem;
 }
 
-.farmlog-blog-info__meta-item--wide { 
-  grid-column: span 2; 
+.farmlog-blog-tabs .btn .fas {
+  margin-right: 0.35rem;
 }
 
-.farmlog-blog-hero__top h1 { 
-  margin: 0; 
+.farmlog-blog-info__meta-item--wide {
+  grid-column: span 2;
 }
 
-.farmlog-blog-hero__subtitle { 
-  max-width: 100%; 
+.farmlog-blog-hero__top h1 {
+  margin: 0;
 }
 
-.farmlog-blog-info__note strong { 
-  letter-spacing: 0.02em; 
+.farmlog-blog-hero__subtitle {
+  max-width: 100%;
 }
 
-.farmlog-blog-hero__meta-row, 
-.farmlog-blog-info__meta { 
-  grid-template-columns: repeat(2, minmax(0, 1fr)); 
+.farmlog-blog-info__note strong {
+  letter-spacing: 0.02em;
 }
 
-.farmlog-blog-hero__meta-item, 
-.farmlog-blog-info__meta-item { 
-  background: rgba(255,255,255,0.9); 
+.farmlog-blog-hero__meta-row,
+.farmlog-blog-info__meta {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.farmlog-blog-info__meta-item { 
-  background: rgba(255,255,255,0.88); 
+.farmlog-blog-hero__meta-item,
+.farmlog-blog-info__meta-item {
+  background: rgba(255, 255, 255, 0.9);
 }
 
-.farmlog-blog-hero__tag { 
-  background: rgba(241,250,244,0.9); 
+.farmlog-blog-info__meta-item {
+  background: rgba(255, 255, 255, 0.88);
 }
 
-.farmlog-blog-info__note { 
-  background: rgba(241,250,244,0.8); 
+.farmlog-blog-hero__tag {
+  background: rgba(241, 250, 244, 0.9);
 }
 
-.farmlog-blog-hero__tag-row { 
-  align-items: center; 
+.farmlog-blog-info__note {
+  background: rgba(241, 250, 244, 0.8);
 }
 
-.farmlog-blog-hero__tag-empty { 
-  color: #6b7280; 
+.farmlog-blog-hero__tag-row {
+  align-items: center;
 }
 
-.farmlog-blog-info__note p { 
-  color: #475569; 
+.farmlog-blog-hero__tag-empty {
+  color: #6b7280;
 }
 
-.farmlog-blog-hero__tag-label { 
-  min-width: auto; 
+.farmlog-blog-info__note p {
+  color: #475569;
 }
 
-.farmlog-blog-controls__sort select { 
-  min-width: 7.5rem; 
+.farmlog-blog-hero__tag-label {
+  min-width: auto;
+}
+
+.farmlog-blog-controls__sort select {
+  min-width: 7.5rem;
 }
 
 .farmlog-search-controls {
-  display: flex; 
+  display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
@@ -2114,504 +2114,506 @@
   }
 }
 
-.farmlog-blog-controls__sort span { 
-  font-size: 0.8rem; 
+.farmlog-blog-controls__sort span {
+  font-size: 0.8rem;
 }
 
-.farmlog-blog-hero__top { 
-  align-items: flex-start; 
+.farmlog-blog-hero__top {
+  align-items: flex-start;
 }
 
-.farmlog-blog-hero__actions { 
-  justify-content: flex-start; 
+.farmlog-blog-hero__actions {
+  justify-content: flex-start;
 }
 
-.farmlog-blog-hero__actions a { 
-  padding: 0.4rem 0.7rem; 
+.farmlog-blog-hero__actions a {
+  padding: 0.4rem 0.7rem;
 }
 
-.farmlog-blog-header__actions .btn { 
-  min-width: 6.5rem; 
+.farmlog-blog-header__actions .btn {
+  min-width: 6.5rem;
 }
 
-.farmlog-blog-header__actions { 
-  gap: 0.25rem; 
+.farmlog-blog-header__actions {
+  gap: 0.25rem;
 }
 
-.farmlog-blog-posts { 
-  gap: 0.5rem; 
+.farmlog-blog-posts {
+  gap: 0.5rem;
 }
 
-.farmlog-blog-hero__tag { 
-  line-height: 1.2; 
+.farmlog-blog-hero__tag {
+  line-height: 1.2;
 }
 
-.farmlog-blog-hero__tag-row { 
-  border-radius: 0.85rem; 
+.farmlog-blog-hero__tag-row {
+  border-radius: 0.85rem;
 }
 
-.farmlog-blog-hero__subtitle { 
-  color: #4b5563; 
+.farmlog-blog-hero__subtitle {
+  color: #4b5563;
 }
 
-.farmlog-blog-info__note strong { 
-  font-size: 0.88rem; 
+.farmlog-blog-info__note strong {
+  font-size: 0.88rem;
 }
 
-.farmlog-blog-hero__eyebrow, 
-.farmlog-blog-info__eyebrow, 
-.farmlog-blog-compose__eyebrow { 
-  font-size: 0.68rem; 
+.farmlog-blog-hero__eyebrow,
+.farmlog-blog-info__eyebrow,
+.farmlog-blog-compose__eyebrow {
+  font-size: 0.68rem;
 }
 
-.farmlog-blog-header h1 { 
-  font-size: 1.6rem; 
+.farmlog-blog-header h1 {
+  font-size: 1.6rem;
 }
 
-.farmlog-blog-tabs .btn { 
-  padding: 0.35rem 0.55rem; 
+.farmlog-blog-tabs .btn {
+  padding: 0.35rem 0.55rem;
 }
 
-.farmlog-blog-controls { 
-  grid-template-columns: 1fr auto; 
+.farmlog-blog-controls {
+  grid-template-columns: 1fr auto;
 }
 
-.farmlog-blog-controls__hint { 
-  font-size: 0.82rem; 
+.farmlog-blog-controls__hint {
+  font-size: 0.82rem;
 }
 
-.farmlog-blog-controls__sort { 
-  min-width: 7rem; 
+.farmlog-blog-controls__sort {
+  min-width: 7rem;
 }
 
-.farmlog-blog-info__meta dd { 
-  font-size: 0.88rem; 
+.farmlog-blog-info__meta dd {
+  font-size: 0.88rem;
 }
 
-.farmlog-blog-hero__meta-item strong, 
-.farmlog-blog-info__meta dd { 
-  font-size: 0.87rem; 
+.farmlog-blog-hero__meta-item strong,
+.farmlog-blog-info__meta dd {
+  font-size: 0.87rem;
 }
 
-.farmlog-blog-header__actions .btn { 
-  padding: 0.4rem 0.7rem; 
+.farmlog-blog-header__actions .btn {
+  padding: 0.4rem 0.7rem;
 }
 
-.farmlog-blog-hero__tag-row { 
-  padding: 0.45rem 0.5rem; 
+.farmlog-blog-hero__tag-row {
+  padding: 0.45rem 0.5rem;
 }
 
-.farmlog-blog-hero__tag { 
-  padding: 0.2rem 0.5rem; 
+.farmlog-blog-hero__tag {
+  padding: 0.2rem 0.5rem;
 }
 
-.farmlog-blog-hero__pill, 
-.farmlog-blog-info__pill { 
-  padding: 0.2rem 0.45rem; 
+.farmlog-blog-hero__pill,
+.farmlog-blog-info__pill {
+  padding: 0.2rem 0.45rem;
 }
 
-.farmlog-blog-controls__sort select { 
-  font-size: 0.86rem; 
+.farmlog-blog-controls__sort select {
+  font-size: 0.86rem;
 }
 
-.farmlog-blog-hero__meta-row, 
-.farmlog-blog-info__meta { 
-  gap: 0.35rem; 
+.farmlog-blog-hero__meta-row,
+.farmlog-blog-info__meta {
+  gap: 0.35rem;
 }
 
-.farmlog-blog-hero__meta-item, 
-.farmlog-blog-info__meta-item { 
-  padding: 0.45rem 0.55rem; 
+.farmlog-blog-hero__meta-item,
+.farmlog-blog-info__meta-item {
+  padding: 0.45rem 0.55rem;
 }
 
-.farmlog-blog-hero__meta-item strong, 
-.farmlog-blog-info__meta dd { 
-  font-size: 0.86rem; 
+.farmlog-blog-hero__meta-item strong,
+.farmlog-blog-info__meta dd {
+  font-size: 0.86rem;
 }
 
-.farmlog-blog-hero__tag-row { 
-  gap: 0.25rem; 
+.farmlog-blog-hero__tag-row {
+  gap: 0.25rem;
 }
 
-.farmlog-blog-hero__tag-empty { 
-  font-size: 0.8rem; 
+.farmlog-blog-hero__tag-empty {
+  font-size: 0.8rem;
 }
 
-.farmlog-blog-info__note { 
-  padding: 0.75rem 0.8rem; 
+.farmlog-blog-info__note {
+  padding: 0.75rem 0.8rem;
 }
 
-.farmlog-blog-info__note strong { 
-  line-height: 1.2; 
+.farmlog-blog-info__note strong {
+  line-height: 1.2;
 }
 
-.farmlog-blog-info__note p { 
-  color: #475569; 
+.farmlog-blog-info__note p {
+  color: #475569;
 }
 
-.farmlog-blog-controls h2 { 
-  font-size: 1rem; 
+.farmlog-blog-controls h2 {
+  font-size: 1rem;
 }
 
-.farmlog-blog-tabs .btn.is-active { 
-  border-bottom-width: 2px; 
+.farmlog-blog-tabs .btn.is-active {
+  border-bottom-width: 2px;
 }
 
-.farmlog-blog-tabs .btn { 
-  margin-bottom: -0.4rem; 
+.farmlog-blog-tabs .btn {
+  margin-bottom: -0.4rem;
 }
 
-.farmlog-blog-tabs { 
-  padding-top: 0.2rem; 
+.farmlog-blog-tabs {
+  padding-top: 0.2rem;
 }
 
-.farmlog-blog-tabs .btn { 
-  border-radius: 0.55rem; 
+.farmlog-blog-tabs .btn {
+  border-radius: 0.55rem;
 }
 
-.farmlog-blog-hero__top h1 { 
-  font-size: 1.7rem; 
+.farmlog-blog-hero__top h1 {
+  font-size: 1.7rem;
 }
 
-.farmlog-blog-controls__hint { 
-  margin-bottom: 0; 
+.farmlog-blog-controls__hint {
+  margin-bottom: 0;
 }
 
-.farmlog-blog-posts .farmlog-result-card h3 { 
-  font-size: 1rem; 
+.farmlog-blog-posts .farmlog-result-card h3 {
+  font-size: 1rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card { 
-  padding: 0.65rem; 
+.farmlog-blog-posts .farmlog-result-card {
+  padding: 0.65rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card p { 
-  margin: 0.3rem 0; 
+.farmlog-blog-posts .farmlog-result-card p {
+  margin: 0.3rem 0;
 }
 
-.farmlog-blog-hero__tag-row { 
-  padding: 0.4rem 0.5rem; 
+.farmlog-blog-hero__tag-row {
+  padding: 0.4rem 0.5rem;
 }
 
-.farmlog-blog-hero__tag { 
-  padding: 0.2rem 0.45rem; 
+.farmlog-blog-hero__tag {
+  padding: 0.2rem 0.45rem;
 }
 
-.farmlog-blog-hero__pill, 
-.farmlog-blog-info__pill { 
-  padding: 0.2rem 0.45rem; 
+.farmlog-blog-hero__pill,
+.farmlog-blog-info__pill {
+  padding: 0.2rem 0.45rem;
 }
 
-.farmlog-blog-info__meta-item { 
-  padding: 0.45rem 0.55rem; 
+.farmlog-blog-info__meta-item {
+  padding: 0.45rem 0.55rem;
 }
 
-.farmlog-blog-hero__meta-item { 
-  padding: 0.45rem 0.55rem; 
+.farmlog-blog-hero__meta-item {
+  padding: 0.45rem 0.55rem;
 }
 
-.farmlog-blog-posts { 
-  gap: 0.55rem; 
+.farmlog-blog-posts {
+  gap: 0.55rem;
 }
 
-.farmlog-blog-hero__action a { 
-  padding: 0.4rem 0.65rem; 
+.farmlog-blog-hero__action a {
+  padding: 0.4rem 0.65rem;
 }
 
-.farmlog-blog-tabs .btn.is-active { 
-  padding-bottom: 0.45rem; 
+.farmlog-blog-tabs .btn.is-active {
+  padding-bottom: 0.45rem;
 }
 
-.farmlog-blog-info__note { 
-  padding: 0.75rem 0.8rem; 
+.farmlog-blog-info__note {
+  padding: 0.75rem 0.8rem;
 }
 
-.farmlog-blog-header h1 { 
-  font-size: 1.65rem; 
+.farmlog-blog-header h1 {
+  font-size: 1.65rem;
 }
 
-.farmlog-blog-header__actions .btn { 
-  font-size: 0.88rem; 
+.farmlog-blog-header__actions .btn {
+  font-size: 0.88rem;
 }
 
-.farmlog-blog-header__actions { 
-  gap: 0.2rem; 
+.farmlog-blog-header__actions {
+  gap: 0.2rem;
 }
 
-.farmlog-blog-hero__tag-row { 
-  gap: 0.25rem; 
+.farmlog-blog-hero__tag-row {
+  gap: 0.25rem;
 }
 
-.farmlog-blog-hero__tags { 
-  gap: 0.2rem; 
+.farmlog-blog-hero__tags {
+  gap: 0.2rem;
 }
 
-.farmlog-blog-hero__tag { 
-  padding: 0.2rem 0.4rem; 
+.farmlog-blog-hero__tag {
+  padding: 0.2rem 0.4rem;
 }
 
-.farmlog-blog-hero__tag-empty { 
-  font-size: 0.78rem; 
+.farmlog-blog-hero__tag-empty {
+  font-size: 0.78rem;
 }
 
-.farmlog-blog-info__note p { 
-  color: #4b5563; 
+.farmlog-blog-info__note p {
+  color: #4b5563;
 }
 
-.farmlog-blog-info__note strong { 
-  font-size: 0.88rem; 
+.farmlog-blog-info__note strong {
+  font-size: 0.88rem;
 }
 
-.farmlog-blog-hero__meta-row, 
-.farmlog-blog-info__meta { 
-  gap: 0.35rem; 
+.farmlog-blog-hero__meta-row,
+.farmlog-blog-info__meta {
+  gap: 0.35rem;
 }
 
-.farmlog-blog-details__meta-item { 
-  padding: 0.45rem 0.55rem; 
+.farmlog-blog-details__meta-item {
+  padding: 0.45rem 0.55rem;
 }
 
-.farmlog-blog-detail { 
-  gap: 0.55rem; 
+.farmlog-blog-detail {
+  gap: 0.55rem;
 }
 
-.farmlog-blog-tabs { 
-  margin-bottom: 0.35rem; 
+.farmlog-blog-tabs {
+  margin-bottom: 0.35rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card h3 { 
-  margin-bottom: 0.35rem; 
+.farmlog-blog-posts .farmlog-result-card h3 {
+  margin-bottom: 0.35rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet { 
-  font-size: 0.85rem; 
+.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet {
+  font-size: 0.85rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card { 
-  padding: 0.65rem; 
+.farmlog-blog-posts .farmlog-result-card {
+  padding: 0.65rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card:hover { 
-  box-shadow: 0 12px 24px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.55); 
+.farmlog-blog-posts .farmlog-result-card:hover {
+  box-shadow:
+    0 12px 24px rgba(34, 197, 94, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
-.farmlog-blog-posts .farmlog-result-card::before { 
-  height: 1px; 
+.farmlog-blog-posts .farmlog-result-card::before {
+  height: 1px;
 }
 
-.farmlog-blog-hero__tag-row { 
-  padding: 0.35rem 0.45rem; 
+.farmlog-blog-hero__tag-row {
+  padding: 0.35rem 0.45rem;
 }
 
-.farmlog-blog-hero__tag { 
-  padding: 0.2rem 0.45rem; 
+.farmlog-blog-hero__tag {
+  padding: 0.2rem 0.45rem;
 }
 
-.farmlog-blog-hero__pill, 
-.farmlog-blog-info__pill { 
-  padding: 0.2rem 0.45rem; 
+.farmlog-blog-hero__pill,
+.farmlog-blog-info__pill {
+  padding: 0.2rem 0.45rem;
 }
 
-.farmlog-blog-header__actions .btn { 
-  padding: 0.4rem 0.65rem; 
+.farmlog-blog-header__actions .btn {
+  padding: 0.4rem 0.65rem;
 }
 
-.farmlog-blog-header__actions { 
-  gap: 0.2rem; 
+.farmlog-blog-header__actions {
+  gap: 0.2rem;
 }
 
-.farmlog-blog-header h1 { 
-  font-size: 1.55rem; 
+.farmlog-blog-header h1 {
+  font-size: 1.55rem;
 }
 
-.farmlog-blog-tabs .btn { 
-  padding: 0.35rem 0.55rem; 
+.farmlog-blog-tabs .btn {
+  padding: 0.35rem 0.55rem;
 }
 
-.farmlog-blog-header__copy { 
-  gap: 0.2rem; 
+.farmlog-blog-header__copy {
+  gap: 0.2rem;
 }
 
-.farmlog-blog-hero__subtitle { 
-  font-size: 0.92rem; 
+.farmlog-blog-hero__subtitle {
+  font-size: 0.92rem;
 }
 
-.farmlog-blog-hero__meta-item strong, 
-.farmlog-blog-info__meta dd { 
-  font-size: 0.85rem; 
+.farmlog-blog-hero__meta-item strong,
+.farmlog-blog-info__meta dd {
+  font-size: 0.85rem;
 }
 
-.farmlog-blog-info__note strong { 
-  font-size: 0.85rem; 
+.farmlog-blog-info__note strong {
+  font-size: 0.85rem;
 }
 
-.farmlog-blog-info__note p { 
-  font-size: 0.82rem; 
+.farmlog-blog-info__note p {
+  font-size: 0.82rem;
 }
 
-.farmlog-blog-hero__tag-empty { 
-  font-size: 0.78rem; 
+.farmlog-blog-hero__tag-empty {
+  font-size: 0.78rem;
 }
 
-.farmlog-blog-tabs .btn.is-active { 
-  padding-bottom: 0.4rem; 
+.farmlog-blog-tabs .btn.is-active {
+  padding-bottom: 0.4rem;
 }
 
-.farmlog-blog-tabs { 
-  padding-bottom: 0.25rem; 
+.farmlog-blog-tabs {
+  padding-bottom: 0.25rem;
 }
 
-.farmlog-blog-info__meta-item--wide { 
-  grid-column: span 2; 
+.farmlog-blog-info__meta-item--wide {
+  grid-column: span 2;
 }
 
-.farmlog-blog-info__meta-item { 
-  margin-bottom: 0; 
+.farmlog-blog-info__meta-item {
+  margin-bottom: 0;
 }
 
-.farmlog-blog-hero__meta-item { 
-  margin-bottom: 0; 
+.farmlog-blog-hero__meta-item {
+  margin-bottom: 0;
 }
 
-.farmlog-blog-posts .farmlog-result-card p { 
-  line-height: 1.35; 
+.farmlog-blog-posts .farmlog-result-card p {
+  line-height: 1.35;
 }
 
-.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet { 
-  margin-bottom: 0.45rem; 
+.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet {
+  margin-bottom: 0.45rem;
 }
 
-.farmlog-blog-hero__actions a { 
-  display: inline-flex; 
-  align-items: center; 
+.farmlog-blog-hero__actions a {
+  display: inline-flex;
+  align-items: center;
 }
 
-.farmlog-blog-header__actions .btn { 
-  letter-spacing: 0.01em; 
+.farmlog-blog-header__actions .btn {
+  letter-spacing: 0.01em;
 }
 
-.farmlog-blog-header h1 { 
-  line-height: 1.1; 
+.farmlog-blog-header h1 {
+  line-height: 1.1;
 }
 
-.farmlog-blog-hero__subtitle { 
-  line-height: 1.4; 
+.farmlog-blog-hero__subtitle {
+  line-height: 1.4;
 }
 
-.farmlog-blog-hero__tag-empty { 
-  opacity: 0.8; 
+.farmlog-blog-hero__tag-empty {
+  opacity: 0.8;
 }
 
-.farmlog-blog-info__note strong { 
-  letter-spacing: 0.02em; 
+.farmlog-blog-info__note strong {
+  letter-spacing: 0.02em;
 }
 
-.farmlog-blog-info__note p { 
-  line-height: 1.35; 
+.farmlog-blog-info__note p {
+  line-height: 1.35;
 }
 
-.farmlog-blog-hero__tag { 
-  line-height: 1.1; 
+.farmlog-blog-hero__tag {
+  line-height: 1.1;
 }
 
-.farmlog-blog-hero__tag-row { 
-  align-items: center; 
+.farmlog-blog-hero__tag-row {
+  align-items: center;
 }
 
-.farmlog-blog-info__note { 
-  align-items: center; 
+.farmlog-blog-info__note {
+  align-items: center;
 }
 
-.farmlog-blog-info__note i { 
-  margin-top: 0; 
+.farmlog-blog-info__note i {
+  margin-top: 0;
 }
 
-.farmlog-blog-tabs .btn { 
-  min-width: 6.5rem; 
+.farmlog-blog-tabs .btn {
+  min-width: 6.5rem;
 }
 
-.farmlog-blog-tabs .btn.is-active { 
-  border-bottom-color: #22c55e; 
+.farmlog-blog-tabs .btn.is-active {
+  border-bottom-color: #22c55e;
 }
 
-.farmlog-blog-tabs .btn { 
-  box-shadow: none; 
+.farmlog-blog-tabs .btn {
+  box-shadow: none;
 }
 
-.farmlog-blog-hero__tag-row { 
-  border: 1px solid rgba(148,163,184,0.12); 
+.farmlog-blog-hero__tag-row {
+  border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
-.farmlog-blog-header__actions { 
-  justify-content: flex-start; 
+.farmlog-blog-header__actions {
+  justify-content: flex-start;
 }
 
-.farmlog-blog-header__copy { 
-  align-items: flex-start; 
+.farmlog-blog-header__copy {
+  align-items: flex-start;
 }
 
-.farmlog-blog-header__copy p { 
-  margin-bottom: 0; 
+.farmlog-blog-header__copy p {
+  margin-bottom: 0;
 }
 
-.farmlog-blog-hero__top h1 { 
-  margin-bottom: 0.15rem; 
+.farmlog-blog-hero__top h1 {
+  margin-bottom: 0.15rem;
 }
 
-.farmlog-blog-hero__meta-row { 
-  padding: 0; 
+.farmlog-blog-hero__meta-row {
+  padding: 0;
 }
 
-.farmlog-blog-info__meta { 
-  padding: 0; 
+.farmlog-blog-info__meta {
+  padding: 0;
 }
 
-.farmlog-blog-hero__tag-label { 
-  min-width: auto; 
+.farmlog-blog-hero__tag-label {
+  min-width: auto;
 }
 
-.farmlog-blog-hero__tag-row { 
-  padding: 0.45rem 0.55rem; 
+.farmlog-blog-hero__tag-row {
+  padding: 0.45rem 0.55rem;
 }
 
-.farmlog-blog-header h1 { 
-  font-size: 1.6rem; 
+.farmlog-blog-header h1 {
+  font-size: 1.6rem;
 }
 
-.farmlog-blog-detail { 
-  gap: 0.5rem; 
+.farmlog-blog-detail {
+  gap: 0.5rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card { 
-  margin-bottom: 0.4rem; 
+.farmlog-blog-posts .farmlog-result-card {
+  margin-bottom: 0.4rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card:last-child { 
-  margin-bottom: 0; 
+.farmlog-blog-posts .farmlog-result-card:last-child {
+  margin-bottom: 0;
 }
 
-.farmlog-blog-hero__tag { 
-  padding: 0.2rem 0.45rem; 
+.farmlog-blog-hero__tag {
+  padding: 0.2rem 0.45rem;
 }
 
-.farmlog-blog-info__note p { 
-  margin: 0; 
+.farmlog-blog-info__note p {
+  margin: 0;
 }
 
-.farmlog-blog-hero__subtitle { 
-  max-width: 100%; 
+.farmlog-blog-hero__subtitle {
+  max-width: 100%;
 }
 
-.farmlog-blog-info__meta dd { 
-  margin: 0; 
+.farmlog-blog-info__meta dd {
+  margin: 0;
 }
 
-.farmlog-blog-info__note strong { 
-  display: inline-block; 
+.farmlog-blog-info__note strong {
+  display: inline-block;
 }
 
-.farmlog-blog-info__note { 
-  gap: 0.65rem; 
+.farmlog-blog-info__note {
+  gap: 0.65rem;
 }
 
 .farmlog-blog-info__meta-item {
@@ -2624,510 +2626,509 @@
   gap: 0.25rem;
 }
 
-.farmlog-blog-hero__tag-row { 
-  gap: 0.25rem; 
+.farmlog-blog-hero__tag-row {
+  gap: 0.25rem;
 }
 
-.farmlog-blog-hero__tag-label { 
-  line-height: 1.2; 
+.farmlog-blog-hero__tag-label {
+  line-height: 1.2;
 }
 
-.farmlog-blog-hero__tag-empty { 
-  display: inline-block; 
+.farmlog-blog-hero__tag-empty {
+  display: inline-block;
 }
 
-.farmlog-blog-hero__actions a { 
-  padding: 0.4rem 0.7rem; 
+.farmlog-blog-hero__actions a {
+  padding: 0.4rem 0.7rem;
 }
 
-.farmlog-blog-header__actions .btn { 
-  min-width: 6rem; 
+.farmlog-blog-header__actions .btn {
+  min-width: 6rem;
 }
 
-.farmlog-blog-tabs .btn { 
-  padding: 0.35rem 0.55rem; 
+.farmlog-blog-tabs .btn {
+  padding: 0.35rem 0.55rem;
 }
 
-.farmlog-blog-header__eyebrow { 
-  font-size: 0.72rem; 
+.farmlog-blog-header__eyebrow {
+  font-size: 0.72rem;
 }
 
-.farmlog-blog-header h1 { 
-  font-size: 1.6rem; 
+.farmlog-blog-header h1 {
+  font-size: 1.6rem;
 }
 
-.farmlog-blog-detail { 
-  gap: 0.45rem; 
+.farmlog-blog-detail {
+  gap: 0.45rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card { 
-  padding: 0.65rem; 
+.farmlog-blog-posts .farmlog-result-card {
+  padding: 0.65rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card h3 { 
-  font-size: 1rem; 
+.farmlog-blog-posts .farmlog-result-card h3 {
+  font-size: 1rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card p { 
-  line-height: 1.3; 
+.farmlog-blog-posts .farmlog-result-card p {
+  line-height: 1.3;
 }
 
-.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet { 
-  font-size: 0.85rem; 
+.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet {
+  font-size: 0.85rem;
 }
 
-.farmlog-blog-hero__tag-row { 
-  padding: 0.4rem 0.5rem; 
+.farmlog-blog-hero__tag-row {
+  padding: 0.4rem 0.5rem;
 }
 
-.farmlog-blog-hero__tag { 
-  padding: 0.2rem 0.45rem; 
+.farmlog-blog-hero__tag {
+  padding: 0.2rem 0.45rem;
 }
 
-.farmlog-blog-hero__pill, 
-.farmlog-blog-info__pill { 
-  padding: 0.2rem 0.45rem; 
+.farmlog-blog-hero__pill,
+.farmlog-blog-info__pill {
+  padding: 0.2rem 0.45rem;
 }
 
-.farmlog-blog-controls__sort select { 
-  min-width: 7rem; 
+.farmlog-blog-controls__sort select {
+  min-width: 7rem;
 }
 
-.farmlog-blog-controls__hint { 
-  font-size: 0.82rem; 
+.farmlog-blog-controls__hint {
+  font-size: 0.82rem;
 }
 
-.farmlog-blog-info__meta-item { 
-  padding: 0.45rem 0.55rem; 
+.farmlog-blog-info__meta-item {
+  padding: 0.45rem 0.55rem;
 }
 
-.farmlog-blog-hero__meta-item { 
-  padding: 0.45rem 0.55rem; 
+.farmlog-blog-hero__meta-item {
+  padding: 0.45rem 0.55rem;
 }
 
-.farmlog-blog-detail { 
-  gap: 0.45rem; 
+.farmlog-blog-detail {
+  gap: 0.45rem;
 }
 
-.farmlog-blog-tabs .btn { 
-  border-radius: 0.55rem; 
+.farmlog-blog-tabs .btn {
+  border-radius: 0.55rem;
 }
 
-.farmlog-blog-tabs { 
-  padding-bottom: 0.25rem; 
+.farmlog-blog-tabs {
+  padding-bottom: 0.25rem;
 }
 
-.farmlog-blog-tabs .btn.is-active { 
-  border-bottom-width: 2px; 
+.farmlog-blog-tabs .btn.is-active {
+  border-bottom-width: 2px;
 }
 
-.farmlog-blog-hero__top h1 { 
-  font-size: 1.7rem; 
+.farmlog-blog-hero__top h1 {
+  font-size: 1.7rem;
 }
 
-.farmlog-blog-info__note strong { 
-  font-size: 0.88rem; 
+.farmlog-blog-info__note strong {
+  font-size: 0.88rem;
 }
 
-.farmlog-blog-info__note p { 
-  font-size: 0.82rem; 
+.farmlog-blog-info__note p {
+  font-size: 0.82rem;
 }
 
-.farmlog-blog-info__note { 
-  padding: 0.75rem 0.8rem; 
+.farmlog-blog-info__note {
+  padding: 0.75rem 0.8rem;
 }
 
-.farmlog-blog-posts { 
-  gap: 0.45rem; 
+.farmlog-blog-posts {
+  gap: 0.45rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card { 
-  padding: 0.65rem; 
+.farmlog-blog-posts .farmlog-result-card {
+  padding: 0.65rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card p { 
-  margin: 0.3rem 0; 
+.farmlog-blog-posts .farmlog-result-card p {
+  margin: 0.3rem 0;
 }
 
-.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet { 
-  font-size: 0.84rem; 
+.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet {
+  font-size: 0.84rem;
 }
 
-.farmlog-blog-posts .farmlog-result-card:last-child { 
-  margin-bottom: 0; 
+.farmlog-blog-posts .farmlog-result-card:last-child {
+  margin-bottom: 0;
 }
 
-.farmlog-blog-hero__meta-row, 
-.farmlog-blog-info__meta { 
-  gap: 0.3rem; 
+.farmlog-blog-hero__meta-row,
+.farmlog-blog-info__meta {
+  gap: 0.3rem;
 }
 
-.farmlog-blog-info__note strong { 
-  display: inline-block; 
+.farmlog-blog-info__note strong {
+  display: inline-block;
 }
 
-.farmlog-blog-info__note p { 
-  margin: 0; 
+.farmlog-blog-info__note p {
+  margin: 0;
 }
 
-.farmlog-blog-info__meta dd { 
-  margin: 0; 
+.farmlog-blog-info__meta dd {
+  margin: 0;
 }
 
-.farmlog-blog-hero__tag-row { 
-  gap: 0.3rem; 
+.farmlog-blog-hero__tag-row {
+  gap: 0.3rem;
 }
 
-.farmlog-blog-hero__tag { 
-  padding: 0.2rem 0.4rem; 
+.farmlog-blog-hero__tag {
+  padding: 0.2rem 0.4rem;
 }
 
-.farmlog-blog-info__meta-item { 
-  border-radius: 0.8rem; 
+.farmlog-blog-info__meta-item {
+  border-radius: 0.8rem;
 }
 
-.farmlog-blog-hero__meta-item { 
-  border-radius: 0.8rem; 
+.farmlog-blog-hero__meta-item {
+  border-radius: 0.8rem;
 }
 
-.farmlog-blog-hero__tag-row { 
-  padding: 0.35rem 0.45rem; 
+.farmlog-blog-hero__tag-row {
+  padding: 0.35rem 0.45rem;
 }
 
-.farmlog-blog-header__actions .btn { 
-  min-width: 6rem; 
+.farmlog-blog-header__actions .btn {
+  min-width: 6rem;
 }
 
-.farmlog-blog-header__actions { 
-  gap: 0.2rem; 
+.farmlog-blog-header__actions {
+  gap: 0.2rem;
 }
 
-.farmlog-blog-hero__tag-label { 
-  font-size: 0.68rem; 
- }
+.farmlog-blog-hero__tag-label {
+  font-size: 0.68rem;
+}
 
-.farmlog-blog-hero__subtitle { 
-  font-size: 0.9rem; 
- }
+.farmlog-blog-hero__subtitle {
+  font-size: 0.9rem;
+}
 
-.farmlog-blog-header h1 { 
-  font-size: 1.55rem; 
- }
+.farmlog-blog-header h1 {
+  font-size: 1.55rem;
+}
 
-.farmlog-blog-tabs .btn { 
-  padding: 0.35rem 0.5rem; 
- }
+.farmlog-blog-tabs .btn {
+  padding: 0.35rem 0.5rem;
+}
 
-.farmlog-blog-hero__meta-item strong, 
-.farmlog-blog-info__meta dd { 
-  font-size: 0.84rem; 
- }
+.farmlog-blog-hero__meta-item strong,
+.farmlog-blog-info__meta dd {
+  font-size: 0.84rem;
+}
 
-.farmlog-blog-info__note p { 
-  font-size: 0.8rem; 
- }
+.farmlog-blog-info__note p {
+  font-size: 0.8rem;
+}
 
-.farmlog-blog-hero__tag-empty { 
-  font-size: 0.78rem; 
- }
+.farmlog-blog-hero__tag-empty {
+  font-size: 0.78rem;
+}
 
 @media (max-width: 576px) {
-  .farmlog-blog-header__actions .btn { 
-    width: 100%; 
+  .farmlog-blog-header__actions .btn {
+    width: 100%;
   }
 }
 
-.farmlog-blog-info__meta-item--wide { 
-  grid-column: span 2; 
+.farmlog-blog-info__meta-item--wide {
+  grid-column: span 2;
 }
 
-.farmlog-blog-info__meta { 
-  grid-template-columns: repeat(2, minmax(0, 1fr)); 
+.farmlog-blog-info__meta {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.farmlog-blog-hero__meta-row { 
-  grid-template-columns: repeat(2, minmax(0, 1fr)); 
+.farmlog-blog-hero__meta-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.farmlog-blog-hero__top { 
-  gap: 0.65rem; 
- }
+.farmlog-blog-hero__top {
+  gap: 0.65rem;
+}
 
-.farmlog-blog-hero__top h1 { 
-  font-size: 1.7rem; 
- }
+.farmlog-blog-hero__top h1 {
+  font-size: 1.7rem;
+}
 
-.farmlog-blog-hero__subtitle { 
-  max-width: 100%; 
- }
+.farmlog-blog-hero__subtitle {
+  max-width: 100%;
+}
 
-.farmlog-blog-info__note strong { 
-  font-size: 0.88rem; 
- }
+.farmlog-blog-info__note strong {
+  font-size: 0.88rem;
+}
 
-.farmlog-blog-info__note p { 
-  line-height: 1.3; 
- }
+.farmlog-blog-info__note p {
+  line-height: 1.3;
+}
 
-.farmlog-blog-posts { 
-  gap: 0.45rem; 
- }
+.farmlog-blog-posts {
+  gap: 0.45rem;
+}
 
-.farmlog-blog-posts .farmlog-result-card { 
-  padding: 0.65rem; 
- }
+.farmlog-blog-posts .farmlog-result-card {
+  padding: 0.65rem;
+}
 
-.farmlog-blog-posts .farmlog-result-card h3 { 
-  font-size: 0.98rem; 
- }
+.farmlog-blog-posts .farmlog-result-card h3 {
+  font-size: 0.98rem;
+}
 
-.farmlog-blog-posts .farmlog-result-card p { 
-  font-size: 0.85rem; 
- }
+.farmlog-blog-posts .farmlog-result-card p {
+  font-size: 0.85rem;
+}
 
-.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet { 
-  font-size: 0.83rem; 
- }
+.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet {
+  font-size: 0.83rem;
+}
 
-.farmlog-blog-info__meta item { 
-  padding: 0.45rem 0.55rem; 
- }
+.farmlog-blog-info__meta item {
+  padding: 0.45rem 0.55rem;
+}
 
-.farmlog-blog-hero__meta-item { 
-  padding: 0.45rem 0.55rem; 
- }
+.farmlog-blog-hero__meta-item {
+  padding: 0.45rem 0.55rem;
+}
 
-.farmlog-blog-info__meta item { 
-  padding: 0.45rem 0.55rem; 
- }
+.farmlog-blog-info__meta item {
+  padding: 0.45rem 0.55rem;
+}
 
-.farmlog-blog-hero__tag-row { 
-  gap: 0.25rem; 
- }
+.farmlog-blog-hero__tag-row {
+  gap: 0.25rem;
+}
 
-.farmlog-blog-hero__tag { 
-  padding: 0.2rem 0.45rem; 
- }
+.farmlog-blog-hero__tag {
+  padding: 0.2rem 0.45rem;
+}
 
-.farmlog-blog-hero__pill, 
-.farmlog-blog-info__pill { 
-  padding: 0.2rem 0.45rem; 
- }
+.farmlog-blog-hero__pill,
+.farmlog-blog-info__pill {
+  padding: 0.2rem 0.45rem;
+}
 
-.farmlog-blog-controls__sort select { 
-  min-width: 7rem; 
- }
+.farmlog-blog-controls__sort select {
+  min-width: 7rem;
+}
 
-.farmlog-blog-controls__sort span { 
-  font-size: 0.78rem; 
- }
+.farmlog-blog-controls__sort span {
+  font-size: 0.78rem;
+}
 
-.farmlog-blog-hero__eyebrow { 
-  font-size: 0.68rem; 
- }
+.farmlog-blog-hero__eyebrow {
+  font-size: 0.68rem;
+}
 
-.farmlog-blog-info__eyebrow { 
-  font-size: 0.68rem; 
- }
+.farmlog-blog-info__eyebrow {
+  font-size: 0.68rem;
+}
 
-.farmlog-blog-compose__eyebrow { 
-  font-size: 0.68rem; 
- }
+.farmlog-blog-compose__eyebrow {
+  font-size: 0.68rem;
+}
 
-.farmlog-blog-hero__tag-row { 
-  padding: 0.35rem 0.45rem; 
- }
+.farmlog-blog-hero__tag-row {
+  padding: 0.35rem 0.45rem;
+}
 
-.farmlog-blog-hero__tag-empty { 
-  font-size: 0.77rem; 
- }
+.farmlog-blog-hero__tag-empty {
+  font-size: 0.77rem;
+}
 
-.farmlog-blog-info__note p { 
-  font-size: 0.8rem; 
- }
+.farmlog-blog-info__note p {
+  font-size: 0.8rem;
+}
 
-.farmlog-blog-info__note strong { 
-  font-size: 0.87rem; 
- }
+.farmlog-blog-info__note strong {
+  font-size: 0.87rem;
+}
 
-.farmlog-blog-controls { 
-  gap: 0.55rem; 
- }
+.farmlog-blog-controls {
+  gap: 0.55rem;
+}
 
-.farmlog-blog-tabs { 
-  padding-bottom: 0.2rem; 
- }
+.farmlog-blog-tabs {
+  padding-bottom: 0.2rem;
+}
 
-.farmlog-blog-tabs .btn { 
-  padding: 0.35rem 0.5rem; 
- }
+.farmlog-blog-tabs .btn {
+  padding: 0.35rem 0.5rem;
+}
 
-.farmlog-blog-tabs .btn.is-active { 
-  border-bottom-width: 2px; 
- }
+.farmlog-blog-tabs .btn.is-active {
+  border-bottom-width: 2px;
+}
 
-.farmlog-blog-info__meta-item--wide { 
-  grid-column: span 2; 
- }
+.farmlog-blog-info__meta-item--wide {
+  grid-column: span 2;
+}
 
-.farmlog-blog-header__actions { 
-  gap: 0.2rem; 
- }
+.farmlog-blog-header__actions {
+  gap: 0.2rem;
+}
 
-.farmlog-blog-header__actions .btn { 
-  min-width: 6rem; 
- }
+.farmlog-blog-header__actions .btn {
+  min-width: 6rem;
+}
 
-.farmlog-blog-header__actions .btn { 
-  padding: 0.35rem 0.6rem; 
- }
+.farmlog-blog-header__actions .btn {
+  padding: 0.35rem 0.6rem;
+}
 
-.farmlog-blog-header__copy p { 
-  margin: 0; 
- }
+.farmlog-blog-header__copy p {
+  margin: 0;
+}
 
-.farmlog-blog-header__copy { 
-  gap: 0.25rem; 
- }
+.farmlog-blog-header__copy {
+  gap: 0.25rem;
+}
 
-.farmlog-blog-checkout .farmlog-form { 
-  gap: 0.45rem; 
- }
+.farmlog-blog-checkout .farmlog-form {
+  gap: 0.45rem;
+}
 
 @media (max-width: 480px) {
-  .farmlog-blog-header h1 { 
-    font-size: 1.45rem; 
- }
+  .farmlog-blog-header h1 {
+    font-size: 1.45rem;
+  }
 }
 
-.farmlog-blog-hero__tag-row { 
-  border-radius: 0.75rem; 
- }
+.farmlog-blog-hero__tag-row {
+  border-radius: 0.75rem;
+}
 
-.farmlog-blog-hero__tag { 
-  padding: 0.2rem 0.4rem; 
- }
+.farmlog-blog-hero__tag {
+  padding: 0.2rem 0.4rem;
+}
 
-.farmlog-blog-header .btn { 
-  font-size: 0.88rem; 
- }
+.farmlog-blog-header .btn {
+  font-size: 0.88rem;
+}
 
-.farmlog-blog-tabs .btn { 
-  font-size: 0.86rem; 
- }
+.farmlog-blog-tabs .btn {
+  font-size: 0.86rem;
+}
 
-.farmlog-blog-info__meta-item { 
-  font-size: 0.88rem; 
- }
+.farmlog-blog-info__meta-item {
+  font-size: 0.88rem;
+}
 
-.farmlog-blog-hero__meta-item { 
-  font-size: 0.88rem; 
- }
+.farmlog-blog-hero__meta-item {
+  font-size: 0.88rem;
+}
 
-.farmlog-blog-hero__subtitle { 
-  font-size: 0.9rem; 
- }
+.farmlog-blog-hero__subtitle {
+  font-size: 0.9rem;
+}
 
-.farmlog-blog-info__note p { 
-  font-size: 0.82rem; 
- }
+.farmlog-blog-info__note p {
+  font-size: 0.82rem;
+}
 
-.farmlog-blog-info__note strong { 
-  font-size: 0.86rem; 
- }
+.farmlog-blog-info__note strong {
+  font-size: 0.86rem;
+}
 
-.farmlog-blog-hero__eyebrow { 
-  font-size: 0.68rem; 
- }
+.farmlog-blog-hero__eyebrow {
+  font-size: 0.68rem;
+}
 
-.farmlog-blog-info__eyebrow { 
-  font-size: 0.68rem; 
- }
+.farmlog-blog-info__eyebrow {
+  font-size: 0.68rem;
+}
 
-.farmlog-blog-compose__eyebrow { 
-  font-size: 0.68rem; 
- }
+.farmlog-blog-compose__eyebrow {
+  font-size: 0.68rem;
+}
 
-.farmlog-blog-posts .farmlog-result-card { 
-  padding: 0.6rem; 
- }
+.farmlog-blog-posts .farmlog-result-card {
+  padding: 0.6rem;
+}
 
-.farmlog-blog-posts .farmlog-result-card h3 { 
-  font-size: 0.95rem; 
- }
+.farmlog-blog-posts .farmlog-result-card h3 {
+  font-size: 0.95rem;
+}
 
-.farmlog-blog-posts .farmlog-result-card p { 
-  font-size: 0.84rem; 
- }
+.farmlog-blog-posts .farmlog-result-card p {
+  font-size: 0.84rem;
+}
 
-.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet { 
-  font-size: 0.82rem; 
- }
+.farmlog-blog-posts .farmlog-result-card .farmlog-markdown-snippet {
+  font-size: 0.82rem;
+}
 
-.farmlog-blog-tabs .btn { 
-  padding: 0.3rem 0.45rem; 
- }
+.farmlog-blog-tabs .btn {
+  padding: 0.3rem 0.45rem;
+}
 
-.farmlog-blog-controls__sort select { 
-  min-width: 6.5rem; 
- }
+.farmlog-blog-controls__sort select {
+  min-width: 6.5rem;
+}
 
-.farmlog-blog-controls__hint { 
-  font-size: 0.8rem; 
- }
+.farmlog-blog-controls__hint {
+  font-size: 0.8rem;
+}
 
-.farmlog-blog-hero__tag-label { 
-  font-size: 0.68rem; 
- }
+.farmlog-blog-hero__tag-label {
+  font-size: 0.68rem;
+}
 
-.farmlog-blog-hero__tag-empty { 
-  font-size: 0.76rem; 
- }
+.farmlog-blog-hero__tag-empty {
+  font-size: 0.76rem;
+}
 
-.farmlog-blog-info__note { 
-  padding: 0.7rem 0.75rem; 
- }
+.farmlog-blog-info__note {
+  padding: 0.7rem 0.75rem;
+}
 
-.farmlog-blog-info__note p { 
-  line-height: 1.25; 
- }
+.farmlog-blog-info__note p {
+  line-height: 1.25;
+}
 
-.farmlog-blog-header__copy { 
-  gap: 0.2rem; 
- }
+.farmlog-blog-header__copy {
+  gap: 0.2rem;
+}
 
-.farmlog-blog-header__actions .btn { 
-  min-width: 5.5rem; 
- }
+.farmlog-blog-header__actions .btn {
+  min-width: 5.5rem;
+}
 
-.farmlog-blog-detail { 
-  gap: 0.4rem; 
- }
+.farmlog-blog-detail {
+  gap: 0.4rem;
+}
 
-.farmlog-blog-posts { 
-  gap: 0.4rem; 
- }
+.farmlog-blog-posts {
+  gap: 0.4rem;
+}
 
-.farmlog-blog-posts .farmlog-result-card { 
-  padding: 0.55rem; 
- }
+.farmlog-blog-posts .farmlog-result-card {
+  padding: 0.55rem;
+}
 
-.farmlog-blog-posts .farmlog-result-card p { 
-  margin: 0.25rem 0; 
- }
+.farmlog-blog-posts .farmlog-result-card p {
+  margin: 0.25rem 0;
+}
 
-.farmlog-blog-hero__tag-row { 
-  padding: 0.35rem 0.45rem; 
- }
+.farmlog-blog-hero__tag-row {
+  padding: 0.35rem 0.45rem;
+}
 
-.farmlog-blog-hero__tag { 
-  padding: 0.2rem 0.4rem; 
- }
+.farmlog-blog-hero__tag {
+  padding: 0.2rem 0.4rem;
+}
 
-.farmlog-blog-hero__pill, 
-.farmlog-blog-info__pill { 
-  padding: 0.2rem 0.4rem; 
- }
+.farmlog-blog-hero__pill,
+.farmlog-blog-info__pill {
+  padding: 0.2rem 0.4rem;
 }
 
 /* End compact adjustments */
@@ -4142,6 +4143,81 @@
   max-height: 500px;
   overflow-y: auto;
   padding-right: 0.4rem;
+}
+
+/* Feed footer: the sentinel the infinite scroll watches, its own status line, and
+   the button for a window too short to scroll. */
+.farmlog-feed-more {
+  padding: 0.7rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #4b6b4f;
+  border: 1px dashed rgba(84, 114, 74, 0.3);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.farmlog-feed-more[hidden] {
+  display: none;
+}
+
+.farmlog-feed-more[data-state="more"],
+.farmlog-feed-more[data-state="error"] {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+}
+
+.farmlog-feed-more[data-state="more"] {
+  color: #1f5c27;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.farmlog-feed-more[data-state="more"]:hover,
+.farmlog-feed-more[data-state="error"]:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.farmlog-feed-more[data-state="error"] {
+  color: #a13a3a;
+  border-color: rgba(161, 58, 58, 0.4);
+}
+
+.farmlog-feed-more[data-state="end"] {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.farmlog-feed-more:focus-visible {
+  outline: 2px solid rgba(34, 197, 94, 0.5);
+  outline-offset: 2px;
+}
+
+/* "N new posts" — deliberately above the scroll box, so arriving posts are counted
+   rather than pushed under the reader's cursor. */
+.farmlog-feed-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: start;
+  margin: 0.2rem 0 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #1f5c27;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.farmlog-feed-new:hover {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.farmlog-feed-new[hidden] {
+  display: none;
 }
 
 #publicSearchPanel .farmlog-results::-webkit-scrollbar {

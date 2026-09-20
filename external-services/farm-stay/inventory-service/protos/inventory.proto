@@ -33,6 +33,11 @@ service Inventory {
   rpc Hold(HoldRequest) returns (HoldReply);
   rpc ConfirmHold(LockRequest) returns (LockReply);
   rpc Release(LockRequest) returns (LockReply);
+  // Location catalog: fixed voivodeship→city regions + the shared, user-added
+  // custom locations (global — added by one user, usable by everyone).
+  rpc ListLocations(ListLocationsRequest) returns (LocationsReply);
+  rpc AddLocation(AddLocationRequest) returns (CustomLocation);
+  rpc RemoveLocation(RemoveLocationRequest) returns (RemoveLocationReply);
 }
 
 message Property {
@@ -140,4 +145,42 @@ message LockReply {
   string lock_id = 1;
   string kind = 2; // resulting kind, or "released"
   bool ok = 3;
+}
+
+message Region {
+  string voivodeship = 1;
+  repeated string cities = 2; // base cities only; custom ones ride in `custom`
+}
+
+message CustomLocation {
+  string voivodeship = 1;
+  string city = 2;
+  string added_by = 3; // user id that added it (only they may remove it)
+  string added_at = 4; // ISO
+}
+
+message ListLocationsRequest {}
+
+message LocationsReply {
+  repeated Region regions = 1;
+  repeated CustomLocation custom = 2;
+  int32 total = 3; // base + custom cities
+}
+
+message AddLocationRequest {
+  string voivodeship = 1;
+  string city = 2;
+  string added_by = 3;
+}
+
+message RemoveLocationRequest {
+  string voivodeship = 1;
+  string city = 2;
+  string requested_by = 3; // for ownership check
+}
+
+message RemoveLocationReply {
+  string voivodeship = 1;
+  string city = 2;
+  bool deleted = 3;
 }

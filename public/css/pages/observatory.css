@@ -294,12 +294,80 @@ body.observatory-page .footer .footer-linkedin-link {
   overflow: hidden;
 }
 
+.observatory-viewbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.observatory-viewbar .observatory-btn {
+  padding: 0 0.75rem;
+}
+
 .observatory-canvas {
   display: block;
   width: 100%;
   aspect-ratio: 1 / 1;
+  /* The dome is a drag surface: browser panning and page scroll must not steal
+     the gesture, and a wheel zoom must not scroll the page behind it. */
+  touch-action: none;
+  cursor: grab;
   border-radius: 1rem;
   background: radial-gradient(circle at center, #050916 0%, #02040c 66%, #010208 100%);
+}
+
+.observatory-canvas:active {
+  cursor: grabbing;
+}
+
+.observatory-canvas:focus-visible {
+  outline: 2px solid var(--observatory-gold);
+  outline-offset: 3px;
+}
+
+/* The state mirror. Present in the DOM for automation and absent from the page
+   for everyone else — it is data about the canvas, not content. */
+.observatory-dome-mirror {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  list-style: none;
+}
+
+/* The constellation list is long once the whole sky is catalogued; it scrolls
+   inside its panel rather than pushing the sidebar off the page. */
+#observatoryConstellationList {
+  max-height: 19rem;
+}
+
+#observatoryConstellationList .observatory-visible-item.is-active button {
+  border-color: var(--observatory-gold);
+  box-shadow: 0 0 0 1px rgba(255, 210, 124, 0.28);
+}
+
+.observatory-viewport-readout {
+  margin-top: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+}
+
+.observatory-range--time {
+  min-width: 18rem;
+}
+
+/* `?animate=0`: everything that moves on its own stops, so a screenshot of this
+   page is a screenshot of the same page next time. */
+body.observatory-page.is-frozen *,
+body.observatory-page.is-frozen *::before,
+body.observatory-page.is-frozen *::after {
+  animation: none !important;
+  transition: none !important;
 }
 
 .observatory-canvas__hud {

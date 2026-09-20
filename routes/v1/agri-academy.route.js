@@ -232,12 +232,33 @@ router.get("/agri-academy/leaderboard", gate, apiLimiter, async (req, res) => {
  * No identity is forwarded and none is needed: an entry records what happened to a
  * session, never who was sitting it, so unlike the leaderboards there is nothing
  * here for the bridge to anonymize.
+ *
+ * `?since=` pages forwards (a poll cursor) and `?before=` pages backwards (the
+ * activity page's scroll-back). Both are passed through verbatim; the leaf owns
+ * their meaning, and `hasMore` comes back with the page.
  */
 router.get("/agri-academy/units/:unitId/events", gate, apiLimiter, (req, res) =>
-  proxy(res, examCenter.listUnitEvents(req.params.unitId, { limit: req.query.limit, examId: req.query.examId, since: req.query.since })),
+  proxy(
+    res,
+    examCenter.listUnitEvents(req.params.unitId, {
+      limit: req.query.limit,
+      examId: req.query.examId,
+      since: req.query.since,
+      before: req.query.before,
+    }),
+  ),
 );
 router.get("/agri-academy/events", gate, apiLimiter, (req, res) =>
-  proxy(res, examCenter.listEvents({ limit: req.query.limit, unitId: req.query.unitId, examId: req.query.examId, since: req.query.since })),
+  proxy(
+    res,
+    examCenter.listEvents({
+      limit: req.query.limit,
+      unitId: req.query.unitId,
+      examId: req.query.examId,
+      since: req.query.since,
+      before: req.query.before,
+    }),
+  ),
 );
 
 /**

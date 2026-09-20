@@ -43,6 +43,14 @@ describe("Observatory feature-flag gating", () => {
     expect(res.body.error).toBe("Observatory not found");
   });
 
+  it("returns 404 JSON for the viewport endpoint when the flag is disabled", async () => {
+    await setObservatoryEnabled(false);
+
+    const res = await request(app).get("/api/v1/observatory/viewport").expect(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toBe("Observatory not found");
+  });
+
   it("returns 404 JSON for the SSE stream endpoint when the flag is disabled", async () => {
     await setObservatoryEnabled(false);
 

@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Pixelizer - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/pages/pixelizer.css?v=20260824-2" />
+</head>
+
+<body class="pxl-page">
+    <div class="pxl-grid" aria-hidden="true"></div>
+    <div class="pxl-aurora" aria-hidden="true"></div>
+    <div class="pxl-scanlines" aria-hidden="true"></div>
+
+    <main class="pxl-shell">
+        <header class="pxl-header">
+            <div class="pxl-header__title">
+                <span class="pxl-eyebrow">rolnopol / operator / tools</span>
+                <h1>Pixel<span>izer</span></h1>
+            </div>
+            <div class="pxl-header__meta">
+                <label class="pxl-theme">
+                    <span class="pxl-theme__label">Console</span>
+                    <select class="pxl-select" id="pxlTheme" aria-label="Console colour theme">
+                        <option value="cyan">Cyan / default</option>
+                        <option value="amber">Amber / terminal</option>
+                        <option value="lime">Lime / greenhouse</option>
+                        <option value="magenta">Magenta / synthwave</option>
+                        <option value="ice">Ice / monochrome</option>
+                    </select>
+                </label>
+                <span class="pxl-badge">no external libs</span>
+                <span class="pxl-badge pxl-badge--live" id="pxlState">idle</span>
+            </div>
+        </header>
+
+        <!-- Everything happens in this tab: the file never leaves the browser,
+             there is no upload endpoint behind this page. -->
+        <section class="pxl-stage">
+            <section class="pxl-panel pxl-panel--source" aria-labelledby="pxlSourceHeading">
+                <div class="pxl-panel__head">
+                    <h2 id="pxlSourceHeading"><i class="fa-solid fa-inbox" aria-hidden="true"></i> Source</h2>
+                    <span class="pxl-panel__tag">JPEG · PNG · GIF</span>
+                </div>
+
+                <div class="pxl-drop" id="pxlDrop" role="button" tabindex="0" aria-describedby="pxlDropHint">
+                    <span class="pxl-drop__reticle" aria-hidden="true"></span>
+                    <span class="pxl-drop__glyph" aria-hidden="true"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                    <span class="pxl-drop__label">Drop an image or click to browse</span>
+                    <span class="pxl-drop__hint" id="pxlDropHint">Max 12 MB. Animated GIFs are read as their first frame.</span>
+                    <input class="pxl-drop__input" type="file" id="pxlFile" accept="image/jpeg,image/png,image/gif" />
+                </div>
+
+                <p class="pxl-message" id="pxlMessage" role="status" aria-live="polite"></p>
+
+                <dl class="pxl-readout">
+                    <div class="pxl-readout__row"><dt>File</dt><dd id="pxlFileName">—</dd></div>
+                    <div class="pxl-readout__row"><dt>Type</dt><dd id="pxlFileType">—</dd></div>
+                    <div class="pxl-readout__row"><dt>Source</dt><dd id="pxlSourceDims">—</dd></div>
+                    <div class="pxl-readout__row"><dt>Raster</dt><dd id="pxlRasterDims">—</dd></div>
+                </dl>
+
+                <div class="pxl-actions">
+                    <button type="button" class="pxl-btn" id="pxlCompare" disabled>
+                        <i class="fa-solid fa-eye" aria-hidden="true"></i> Hold to compare
+                    </button>
+                    <button type="button" class="pxl-btn" id="pxlDownload" disabled>
+                        <i class="fa-solid fa-download" aria-hidden="true"></i> Save PNG
+                    </button>
+                    <button type="button" class="pxl-btn pxl-btn--ghost" id="pxlClear" disabled>
+                        <i class="fa-solid fa-eject" aria-hidden="true"></i> Eject
+                    </button>
+                </div>
+            </section>
+
+            <section class="pxl-panel pxl-panel--output" aria-labelledby="pxlOutputHeading">
+                <div class="pxl-panel__head">
+                    <h2 id="pxlOutputHeading"><i class="fa-solid fa-table-cells" aria-hidden="true"></i> Output</h2>
+                    <span class="pxl-panel__tag" id="pxlBlockTag">block —</span>
+                </div>
+
+                <div class="pxl-viewport" id="pxlViewport">
+                    <span class="pxl-corner pxl-corner--tl" aria-hidden="true"></span>
+                    <span class="pxl-corner pxl-corner--tr" aria-hidden="true"></span>
+                    <span class="pxl-corner pxl-corner--bl" aria-hidden="true"></span>
+                    <span class="pxl-corner pxl-corner--br" aria-hidden="true"></span>
+                    <canvas class="pxl-canvas" id="pxlCanvas" width="16" height="16" aria-label="Pixelated result"></canvas>
+                    <p class="pxl-viewport__empty" id="pxlEmpty">awaiting raster input</p>
+                    <span class="pxl-viewport__flag" id="pxlCompareFlag" hidden>source</span>
+                </div>
+
+                <dl class="pxl-readout pxl-readout--wide">
+                    <div class="pxl-readout__row"><dt>Level</dt><dd id="pxlLevelOut">—</dd></div>
+                    <div class="pxl-readout__row"><dt>Block</dt><dd id="pxlBlockOut">—</dd></div>
+                    <div class="pxl-readout__row"><dt>Blocks</dt><dd id="pxlBlockCount">—</dd></div>
+                    <div class="pxl-readout__row"><dt>Palette</dt><dd id="pxlPaletteOut">—</dd></div>
+                    <div class="pxl-readout__row"><dt>Colours</dt><dd id="pxlColourCount">—</dd></div>
+                    <div class="pxl-readout__row"><dt>Pass</dt><dd id="pxlElapsed">—</dd></div>
+                </dl>
+            </section>
+        </section>
+
+        <form class="pxl-deck" id="pxlControls">
+            <fieldset class="pxl-group pxl-group--levels">
+                <legend><i class="fa-solid fa-sliders" aria-hidden="true"></i> Pixelation</legend>
+
+                <div class="pxl-levels__set" role="radiogroup" aria-label="Pixelation level">
+                    <label class="pxl-level">
+                        <input type="radio" name="level" value="low" />
+                        <span class="pxl-level__box">
+                            <span class="pxl-level__name">Low</span>
+                            <span class="pxl-level__note">fine mosaic</span>
+                        </span>
+                    </label>
+                    <label class="pxl-level">
+                        <input type="radio" name="level" value="medium" checked />
+                        <span class="pxl-level__box">
+                            <span class="pxl-level__name">Medium</span>
+                            <span class="pxl-level__note">balanced</span>
+                        </span>
+                    </label>
+                    <label class="pxl-level">
+                        <input type="radio" name="level" value="high" />
+                        <span class="pxl-level__box">
+                            <span class="pxl-level__name">High</span>
+                            <span class="pxl-level__note">coarse blocks</span>
+                        </span>
+                    </label>
+                    <label class="pxl-level">
+                        <input type="radio" name="level" value="custom" />
+                        <span class="pxl-level__box">
+                            <span class="pxl-level__name">Custom</span>
+                            <span class="pxl-level__note">set block size</span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- The three presets scale the block with the image; this slider
+                     pins it to an exact pixel count and flips the level to Custom. -->
+                <label class="pxl-field">
+                    <span class="pxl-field__label">Block size <output id="pxlBlockValue">—</output></span>
+                    <input type="range" class="pxl-range" id="pxlBlock" min="2" max="96" step="1" value="20" />
+                </label>
+            </fieldset>
+
+            <fieldset class="pxl-group">
+                <legend><i class="fa-solid fa-palette" aria-hidden="true"></i> Colour</legend>
+
+                <label class="pxl-field">
+                    <span class="pxl-field__label">Palette</span>
+                    <select class="pxl-select" id="pxlPalette">
+                        <option value="none">True colour</option>
+                        <option value="ink">Ink — 4 greys</option>
+                        <option value="gameboy">Game Boy — 4 greens</option>
+                        <option value="amber">Amber CRT — 4 shades</option>
+                        <option value="ice">Ice — 5 cyans</option>
+                        <option value="cga">CGA — 16 colours</option>
+                        <option value="c64">C64 — 16 colours</option>
+                        <option value="sepia">Sepia — toned</option>
+                    </select>
+                </label>
+
+                <label class="pxl-field">
+                    <span class="pxl-field__label">Colour depth <output id="pxlDepthValue">off</output></span>
+                    <input type="range" class="pxl-range" id="pxlDepth" min="2" max="8" step="1" value="8" />
+                </label>
+
+                <div class="pxl-toggles">
+                    <label class="pxl-toggle">
+                        <input type="checkbox" id="pxlDither" />
+                        <span class="pxl-toggle__box"></span>
+                        <span class="pxl-toggle__text">Ordered dither</span>
+                    </label>
+                    <label class="pxl-toggle">
+                        <input type="checkbox" id="pxlInvert" />
+                        <span class="pxl-toggle__box"></span>
+                        <span class="pxl-toggle__text">Invert</span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <fieldset class="pxl-group">
+                <legend><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i> Tone</legend>
+
+                <label class="pxl-field">
+                    <span class="pxl-field__label">Brightness <output id="pxlBrightnessValue">0</output></span>
+                    <input type="range" class="pxl-range" id="pxlBrightness" min="-80" max="80" step="1" value="0" />
+                </label>
+                <label class="pxl-field">
+                    <span class="pxl-field__label">Contrast <output id="pxlContrastValue">0</output></span>
+                    <input type="range" class="pxl-range" id="pxlContrast" min="-80" max="80" step="1" value="0" />
+                </label>
+                <label class="pxl-field">
+                    <span class="pxl-field__label">Saturation <output id="pxlSaturationValue">0</output></span>
+                    <input type="range" class="pxl-range" id="pxlSaturation" min="-100" max="100" step="1" value="0" />
+                </label>
+            </fieldset>
+
+            <fieldset class="pxl-group">
+                <legend><i class="fa-solid fa-shapes" aria-hidden="true"></i> Mosaic</legend>
+
+                <label class="pxl-field">
+                    <span class="pxl-field__label">Cell shape</span>
+                    <select class="pxl-select" id="pxlShape">
+                        <option value="square">Square</option>
+                        <option value="circle">Dot</option>
+                        <option value="diamond">Diamond</option>
+                        <option value="cross">Cross</option>
+                    </select>
+                </label>
+
+                <label class="pxl-field">
+                    <span class="pxl-field__label">Cell gap <output id="pxlGutterValue">0 px</output></span>
+                    <input type="range" class="pxl-range" id="pxlGutter" min="0" max="8" step="1" value="0" />
+                </label>
+
+                <div class="pxl-toggles">
+                    <label class="pxl-toggle">
+                        <input type="checkbox" id="pxlScanlines" />
+                        <span class="pxl-toggle__box"></span>
+                        <span class="pxl-toggle__text">Scanlines</span>
+                    </label>
+                    <label class="pxl-toggle">
+                        <input type="checkbox" id="pxlBloom" />
+                        <span class="pxl-toggle__box"></span>
+                        <span class="pxl-toggle__text">CRT bloom</span>
+                    </label>
+                </div>
+
+                <button type="button" class="pxl-btn pxl-btn--ghost pxl-btn--wide" id="pxlReset">
+                    <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset controls
+                </button>
+            </fieldset>
+        </form>
+
+        <footer class="pxl-footer">
+            <a class="pxl-link" href="/">&#8592; Back to Rolnopol</a>
+            <span class="pxl-footer__note">Hidden operator tool. Pixelation runs in this tab — nothing is uploaded anywhere.</span>
+        </footer>
+    </main>
+
+    <script src="/js/pages/pixelizer-pipeline.js?v=20260824-2"></script>
+    <script src="/js/pages/pixelizer.js?v=20260824-2"></script>
+</body>
+
+</html>

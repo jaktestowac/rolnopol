@@ -142,4 +142,44 @@ describe("Assistant chat streaming API", () => {
     expect(done.data.reply).toContain("Ask me about your fields");
     expect(done.data.contextSummary).toBeNull();
   });
+
+  it("streams the Instrumentality Oracle persona when botId is supplied", async () => {
+    await setFlags({ assistantChatEnabled: true });
+    const user = await registerUser("oracle");
+
+    const res = await request(app)
+      .post("/api/v1/assistant-chat/stream")
+      .set("token", user.token)
+      .send({ message: "Tell me about the red rain", botId: "instrumentality-oracle" })
+      .expect(200);
+
+    const events = parseSse(res.text);
+    const start = events.find((e) => e.event === "start");
+    const done = events.find((e) => e.event === "done");
+
+    expect(start.data).toHaveProperty("botId", "instrumentality-oracle");
+    expect(start.data).toHaveProperty("botName", "Instrumentality Oracle");
+    expect(done.data.contextSummary).toBe("instrumentality-lore");
+    expect(done.data.reply.toLowerCase()).toContain("red rain");
+  });
+
+  it("streams the Instrumentality Oracle persona without login or assistant feature flag", async () => {
+    await setFlags({ assistantChatEnabled: false });
+
+    // "MAGI" is a retired name kept as a trigger alias, so a returning operator
+    // still reaches the quorum reply — answered in the vocabulary used now.
+    const res = await request(app)
+      .post("/api/v1/assistant-chat/stream")
+      .send({ message: "What is the MAGI quorum?", botId: "instrumentality-oracle" })
+      .expect(200);
+
+    const events = parseSse(res.text);
+    const start = events.find((e) => e.event === "start");
+    const done = events.find((e) => e.event === "done");
+
+    expect(start.data).toHaveProperty("botId", "instrumentality-oracle");
+    expect(start.data).toHaveProperty("provider", "mock");
+    expect(done.data.contextSummary).toBe("instrumentality-lore");
+    expect(done.data.reply).toContain("soil / weather / yield");
+  });
 });

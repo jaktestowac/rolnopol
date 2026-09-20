@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Commodity ticker board</title>
+    <link rel="stylesheet" href="/css/widgets/commodity-ticker.css" />
+  </head>
+
+  <!-- Same-origin embed for /financial-commodities.html. Deliberately standalone:
+     no app bootstrap, no shared services — everything a frame needs it fetches
+     itself, using the rolnopolToken cookie that the parent session already set. -->
+
+  <body class="ticker" data-frame-state="loading" data-testid="ticker-frame-body">
+    <header class="ticker__header">
+      <h1 class="ticker__title" data-testid="ticker-title">Ticker board</h1>
+      <button id="tickerRefreshBtn" class="ticker__btn" type="button" data-testid="ticker-refresh-btn">Refresh</button>
+    </header>
+
+    <!-- Nested frame: its content is only reachable after switching into the
+         outer frame first, and its status text is written by the script below. -->
+    <iframe
+      id="tickerStatusFrame"
+      class="ticker__status-frame"
+      title="Market session status"
+      data-testid="ticker-status-frame"
+      srcdoc="
+        <!doctype html>
+        <html lang='en'>
+          <head>
+            <meta charset='UTF-8' />
+            <style>
+              html, body { margin: 0; }
+              body {
+                font-family: 'Segoe UI', Tahoma, sans-serif;
+                font-size: 0.78rem;
+                color: #2f3d2b;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+              }
+              .dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #9aa694; }
+              .dot[data-session='open'] { background: #22c55e; }
+              .dot[data-session='closed'] { background: #ef4444; }
+            </style>
+          </head>
+          <body>
+            <span id='sessionDot' class='dot' data-session='unknown'></span>
+            <span id='sessionText' data-testid='ticker-session-text'>Session: checking...</span>
+          </body>
+        </html>
+    "
+    ></iframe>
+
+    <p id="tickerMessage" class="ticker__message" data-testid="ticker-message">Loading prices...</p>
+
+    <table class="ticker__table" data-testid="ticker-table" hidden>
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Mid</th>
+          <th>Spread</th>
+        </tr>
+      </thead>
+      <tbody id="tickerBody"></tbody>
+    </table>
+
+    <script src="/js/widgets/commodity-ticker.js"></script>
+  </body>
+</html>

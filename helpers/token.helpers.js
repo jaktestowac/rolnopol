@@ -56,13 +56,27 @@ function persistTokenStorage(options = {}) {
   const serialized = JSON.stringify(serializeTokenStorage(), null, 2);
   const attempts = Number.isInteger(options.attempts) ? options.attempts : 3;
   let lastError = null;
+  let sequence = 0;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
+    // Written to a temp file and renamed over the target, the same way the JSON databases
+    // are: writeFileSync truncates first, so an interrupted write (or a second process
+    // writing the same path) would otherwise leave a 0-byte token registry behind, and the
+    // next boot would read no sessions at all.
+    sequence += 1;
+    const tempFile = `${TOKEN_STORAGE_FILE}.${process.pid}.${sequence}.tmp`;
+
     try {
       ensureTokenStorageDirectoryExists();
-      fs.writeFileSync(TOKEN_STORAGE_FILE, serialized, "utf8");
+      fs.writeFileSync(tempFile, serialized, "utf8");
+      fs.renameSync(tempFile, TOKEN_STORAGE_FILE);
       return true;
     } catch (error) {
+      try {
+        fs.unlinkSync(tempFile);
+      } catch {
+        // The temp file may never have been created.
+      }
       lastError = error;
       if (!isTransientTokenStorageError(error) || attempt === attempts) {
         break;

@@ -101,7 +101,11 @@ class DatabaseManager {
    * Get feature flags database singleton
    */
   getFeatureFlagsDatabase() {
-    const defaultFlags = require("./feature-flags.json");
+    // Do not require("./feature-flags.json") here: an empty or half-written file would throw
+    // a SyntaxError before JSONDatabase ever got the chance to restore it from defaults, and
+    // the app would fail to boot over the one file it could have repaired.
+    const { FEATURE_FLAGS_DEFAULT_DATA } = require("./feature-flags.defaults");
+    const defaultFlags = JSON.parse(JSON.stringify(FEATURE_FLAGS_DEFAULT_DATA));
     return this.getDatabase("feature-flags", "feature-flags.json", defaultFlags);
   }
 

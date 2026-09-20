@@ -66,6 +66,52 @@ For testing and demonstration purposes, the application includes several pre-con
 
 API documentation is available at: **http://localhost:3000/api-docs**
 
+# Features
+
+Rolnopol is not just a REST API to hit — it is a **full protocol and testing playground**. Almost every technique a test automation engineer needs to practice has a working target here, in one `npm i && npm run start`.
+
+| Area                   | What you can practice                                                                                                                                | Where                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **REST API**           | 45 route modules, versioned surface (`/api/v1`, `/api/v2`), normalized response envelopes, pagination, filtering, id validation, rate limiting       | `/api-docs` (Swagger UI + OpenAPI schema)                                  |
+| **GraphQL**            | Queries & mutations, custom scalars, depth and cost limits, SDL introspection over `GET`                                                             | `POST /api/graphql/crew` (Crew Office)                                     |
+| **WebSockets**         | Three independent gateways with JWT-authenticated upgrades, heartbeats, payload caps and per-user rate limits                                        | `/api/v1/messages/ws`, `/api/v1/notifications/ws`, `/api/v1/greenhouse/ws` |
+| **Server-Sent Events** | Long-lived streams, keep-alive heartbeats, reconnection, streamed AI responses                                                                       | Weather Live, Observatory, AgriAcademy exam clock, chatbot streaming       |
+| **gRPC**               | 7 `.proto` services, unary + **server-streaming** RPCs, and bridges that re-stream gRPC to the browser as SSE/NDJSON                                 | Greenhouse, TaskLab, FarmStay, AgriAcademy (`npm run greenhouse`, …)       |
+| **Microservices**      | Independent services on their own ports, gateway orchestration, health aggregation, graceful degradation, injected outages                           | FarmStay (5 services), AgriAcademy (6 services)                            |
+| **Auth & security**    | User JWT (header/cookie), admin JWT, **personal API keys with scopes**, **2FA (TOTP + QR + backup codes)**, strong password policy, token revocation | `/api/v1/login`, account security page, `x-api-key`                        |
+| **Webhooks**           | Outbound HTTP deliveries with attempt counts and delivery activity logs — plus a built-in sink to receive your own calls                             | Integrations page, `POST /api/v1/testing/webhooks/sink`                    |
+| **Resilience / chaos** | Inject latency, error statuses, stateful failures, request mirroring and scoped traffic rules at runtime — no restart                                | Chaos Engine UI (`/chaos-engine.html`)                                     |
+| **Feature flags**      | 47 runtime toggles gating pages, endpoints and whole modules — via UI, API, or a persistent `.ini` file                                              | `/feature-flags.html` (see below)                                          |
+| **Observability**      | Prometheus metrics endpoint, in-app log viewer with runtime log-level switching, 404 statistics, service monitor                                     | `/backend.html`, `GET /api/v1/metrics`                                     |
+| **Files & exports**    | PDF and CSV report generation, base64 image uploads, JSON data exports                                                                               | Financial, Weather, Profile avatar                                         |
+| **AI / LLM**           | Chat assistants with mock, Gemini or OpenRouter providers, function/tool calling and token streaming                                                 | Porky assistant, alerts & docs AI widgets                                  |
+| **Test isolation**     | Restore the whole JSON database to a known base state between runs                                                                                   | `POST /api/debug/database/restore-base`                                    |
+
+**And plenty more to explore:** internal messenger, notification center (multi-channel pub/sub), marketplace and commodities trading, Farmlog blog space, interactive farm map, task manager, Pet Buddy, the Farm Defence game, Labyrinth, Operator Terminal, Observatory sky dome, a plugin runtime with request hooks — plus **intentional bugs, edge cases and hidden easter eggs** (yes, there is an HTTP 418) waiting to be found.
+
+## Persistent Feature Flags (`feature-flags.ini`)
+
+Feature flags are normally toggled at runtime on **http://localhost:3000/feature-flags.html**. To pin some of them permanently, copy the example file in the project root and edit it:
+
+```bash
+cp feature-flags.example.ini feature-flags.ini
+```
+
+```ini
+[settings]
+mode = enforce          ; enforce (default) | seed | off
+
+[flags]
+crewOfficeEnabled = true
+messengerEnabled = false
+```
+
+- The file **outranks** `data/feature-flags.json`, so pinned flags survive restarts, "Reset to defaults", and a full database restore.
+- In the default `enforce` mode those flags are read-only: the Feature Flags page shows them as 🔒 **Pinned** and the API answers `409` to a change. Use `mode = seed` to set values at startup but keep them editable afterwards, or `mode = off` to ignore the file.
+- Accepted values: `true`/`false`, `1`/`0`, `on`/`off`, `yes`/`no` (case-insensitive).
+- Active overrides and any problems with the file are logged as warnings at startup and shown on the Feature Flags page. **An invalid file never blocks startup** — the valid entries are applied and the rest is reported.
+- The file is git-ignored and is **skipped entirely under `NODE_ENV=test`**, so it never affects test runs.
+
 # Deployment
 
 Instructions how to deploy presented service to various free hosting sites.

@@ -1,0 +1,175 @@
+# Documents pillar — the contract, the certificate scan, the licence photo (#100).
+#
+# The sixth pillar, added the way the fifth was: one directory and one line in
+# `registry.js`. Nothing here redeclares `Query`, `Mutation` or `CrewMember`.
+#
+# This is the only pillar that takes BYTES, and the shape below is built around
+# three consequences of that.
+#
+#   1. **Bytes go in through `Upload` and never come back out.** There is no field
+#      anywhere in this file that returns file content. A document is metadata plus
+#      a `downloadPath`; the bytes leave through `GET /api/v1/crew/documents/:id`,
+#      which is the one place the ownership check, the status check and the
+#      `Content-Disposition` header all live together. A base64 field would be an
+#      easy convenience and would quietly duplicate that gate.
+#
+#   2. **A batch upload half-succeeds, and says so.** `uploadCrewDocuments` answers
+#      with `accepted` AND `rejected` rather than failing the whole request on one
+#      bad file. Five files where the third is a .exe is a normal thing for a user
+#      to do, and "the request succeeded and some of the work did not" is a real
+#      outcome that a client has to render — so the schema makes it unavoidable.
+#      Note the corollary: a caller who only reads `accepted` silently loses data,
+#      which is exactly the mistake worth making visible in a practice target.
+#
+#   3. **A document is not usable the moment it lands.** Every upload arrives
+#      PENDING and is scanned; only then is it AVAILABLE (or REJECTED). The state
+#      is derived from the clock on every read rather than flipped by a timer, so
+#      it is deterministic under a fixed clock and cannot be lost to a restart.
+
+"Where a document sits in its short life. PENDING is not an error — it is the scan."
+enum DocumentStatus {
+  "Uploaded, scan not finished. Not downloadable yet."
+  PENDING
+  "Scan passed. Downloadable."
+  AVAILABLE
+  "Scan failed. Kept, never downloadable, and `scanDetail` says why."
+  REJECTED
+  """
+  The record is here and its bytes are not.
+
+  Reachable because the two are written separately and on purpose (see decision 3
+  in `service.js`): a record whose blob is missing is detectable and repairable,
+  which is the failure worth having. Surfaced as a status so a client can say so
+  in the row instead of offering a download that answers 500.
+  """
+  MISSING
+}
+
+"What the file IS, as a closed list — a personnel file is not a free-text folder."
+enum DocumentKind {
+  CONTRACT
+  CERTIFICATE
+  LICENCE
+  IDENTITY
+  OTHER
+}
+
+"Why one file in a batch was refused. Every value is the caller's to fix."
+enum UploadRejectionCode {
+  "The extension is not on the allow-list."
+  UNSUPPORTED_EXTENSION
+  "The declared Content-Type does not match the extension."
+  TYPE_MISMATCH
+  "Over the per-file byte cap."
+  FILE_TOO_LARGE
+  "Zero bytes."
+  EMPTY_FILE
+  "More files in one request than the batch allows."
+  TOO_MANY_FILES
+  "The filename is missing, or resolves to nothing once path segments are stripped."
+  INVALID_FILENAME
+}
+
+"""
+One file attached to one crew member.
+
+`status` and `downloadPath` are computed on read, never stored: status because it
+is a function of the clock (see the scan note above), and downloadPath because a
+stored URL is a second source of truth for where a thing lives.
+"""
+type CrewDocument {
+  id: ID!
+  staffId: ID!
+  kind: DocumentKind!
+  "The name the file was uploaded under, verbatim. Never used as a path."
+  filename: String!
+  contentType: String!
+  sizeBytes: Int!
+  "SHA-256 of the stored bytes, hex. Lets a download be verified against the record."
+  checksum: String!
+  status: DocumentStatus!
+  "Why the scan refused it. Null unless status is REJECTED."
+  scanDetail: String
+  uploadedAt: DateTime!
+  "When the scan completes — in the future while the document is still PENDING."
+  scanCompletesAt: DateTime!
+  "Where the bytes are. Only fetchable once status is AVAILABLE."
+  downloadPath: String!
+  """
+  Whether this document may be rendered IN the page rather than only saved.
+
+  A narrower question than "was it accepted?", and the server answers it so no
+  client has to keep its own copy of the rule. False for anything the preview
+  list does not cover, whatever its status.
+  """
+  previewable: Boolean!
+  """
+  The same bytes served `Content-Disposition: inline`, for an <img>, an <iframe>
+  or a text pane. Null when `previewable` is false — a path that would always
+  come back as an attachment is worse than no path.
+  """
+  previewPath: String
+}
+
+"A crew member's personnel file."
+type CrewDocumentFolder {
+  items: [CrewDocument!]!
+  "Every document, including PENDING and REJECTED ones."
+  totalCount: Int!
+  "Bytes stored for this member, across every document."
+  totalBytes: Int!
+}
+
+"One file the upload refused, named so the caller can retry just that one."
+type RejectedUpload {
+  filename: String!
+  code: UploadRejectionCode!
+  reason: String!
+  "Bytes received before the refusal. Zero when the file never arrived intact."
+  sizeBytes: Int!
+}
+
+"""
+The result of a batch upload: partial success, spelled out.
+
+Not a union, unlike this module's other mutation results — a union would force
+the caller to pick one outcome, and the honest outcome here is usually "some of
+each". The failure modes a union WOULD carry (unknown member, unusable session)
+stay as errors, because they refuse the whole batch rather than a file in it.
+"""
+type UploadCrewDocumentsResult {
+  staffId: ID!
+  accepted: [CrewDocument!]!
+  rejected: [RejectedUpload!]!
+  "The folder as it stands after this upload, so a client need not re-query."
+  folder: CrewDocumentFolder!
+}
+
+input UploadCrewDocumentsInput {
+  staffId: ID!
+  kind: DocumentKind = OTHER
+  "One or more multipart file parts. See the GraphQL multipart request spec."
+  files: [Upload!]!
+}
+
+extend type CrewMember {
+  documents: CrewDocumentFolder!
+}
+
+extend type Query {
+  "One document by id, scoped to the caller. Null when it is not theirs."
+  crewDocument(id: ID!): CrewDocument
+}
+
+extend type Mutation {
+  """
+  Attach one or more files to a crew member.
+
+  Sent as a `multipart/form-data` request per the GraphQL multipart request
+  specification: an `operations` part holding this mutation with `null` in every
+  file position, a `map` part wiring file parts to those positions, and one part
+  per file. An `application/json` request cannot call it — `Upload` refuses any
+  value that did not come through a multipart part.
+  """
+  uploadCrewDocuments(input: UploadCrewDocumentsInput!): UploadCrewDocumentsResult!
+}

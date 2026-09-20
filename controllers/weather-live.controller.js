@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 const { formatResponseBody } = require("../helpers/response-helper");
 const { logError, logDebug } = require("../helpers/logger-api");
 const createWeatherLiveService = require("../services/weather-live.service");
@@ -25,11 +27,26 @@ const MAX_LIMIT = 10000;
  *   - `?limit=N` closes the stream after N `conditions` frames — this makes the
  *     otherwise never-ending stream testable with supertest, and is also handy
  *     for bounded demos. `?variance=0` disables sub-daily jitter (base values
- *     verbatim), `?intervalMs=` controls cadence, `?seed=` varies the jitter.
+ *     verbatim), `?intervalMs=` controls cadence, `?seed=` pins the jitter to a
+ *     reproducible series (omit it and each connection gets a fresh random seed,
+ *     so reconnecting never replays the same numbers).
  */
 class WeatherLiveController {
   _todayIso() {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  /**
+   * The jitter RNG is seeded with `region:date:seed:tick`, and `tick` restarts at
+   * 0 for every request/connection — so a constant seed would make each reconnect
+   * replay the identical series. Callers that want reproducibility pass `?seed=`;
+   * everyone else gets a fresh one per request, minted here.
+   */
+  _resolveSeed(rawSeed) {
+    if (typeof rawSeed === "string" && rawSeed.length > 0) {
+      return rawSeed;
+    }
+    return crypto.randomBytes(8).toString("hex");
   }
 
   _resolveParams(req) {
@@ -39,7 +56,7 @@ class WeatherLiveController {
     const requestedDate = String(req.query.date || "");
     const date = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : this._todayIso();
 
-    const seed = typeof req.query.seed === "string" ? req.query.seed : "";
+    const seed = this._resolveSeed(req.query.seed);
 
     const requestedVariance = Number(req.query.variance);
     const variance = Number.isFinite(requestedVariance) ? Math.max(0, Math.min(3, requestedVariance)) : 1;
@@ -70,7 +87,8 @@ class WeatherLiveController {
       return res.status(200).json(
         formatResponseBody({
           data: {
-            seed: date,
+            // Echoed so a caller can replay this exact snapshot via ?seed=.
+            seed,
             conditions: frame.conditions,
             alerts: frame.alerts,
           },
@@ -182,7 +200,7 @@ class WeatherLiveController {
       }
 
       if (limit && conditionsSent >= limit) {
-        sendEvent("complete", { conditionsSent });
+        sendEvent("complete", { conditionsSent, seed });
         cleanup();
         try {
           res.end();

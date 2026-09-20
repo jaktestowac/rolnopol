@@ -1,5 +1,6 @@
 const { randomUUID } = require("crypto");
 const { logInfo, logError } = require("../../../helpers/logger-api");
+const { NotificationThrottle } = require("./notification-throttle");
 
 class NotificationDispatcher {
   constructor(eventBus, deps, config = {}) {
@@ -10,6 +11,9 @@ class NotificationDispatcher {
     this.inAppDispatcher = deps.inAppDispatcher;
     this.webhookDispatcher = deps.webhookDispatcher;
     this.sleep = deps.sleep || ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+    // Enforces the `dedupe` and `rateLimit` fields every policy declares.
+    // Injectable so a test can drive its clock instead of waiting windows out.
+    this.throttle = deps.throttle || new NotificationThrottle();
 
     this.queue = [];
     this.queueSequence = 0;
@@ -30,6 +34,7 @@ class NotificationDispatcher {
       events_failed: 0,
       notifications_delivered: 0,
       notifications_failed: 0,
+      events_suppressed: 0,
       avgProcessingTimeMs: 0,
       processingSamples: 0,
     };
@@ -138,6 +143,27 @@ class NotificationDispatcher {
         });
         this.metrics.events_processed += 1;
         this._trackProcessingTime(startedAt);
+        return;
+      }
+
+      // The policy's dedupe and rateLimit windows, applied HERE: after the policy
+      // is known and before anything is created, so a suppressed event costs no
+      // notification row and no channel call. The event itself is still on the
+      // timeline with a reason — suppression is a visible outcome, not a silence.
+      const verdict = this.throttle.check(event, policy);
+      if (!verdict.allowed) {
+        await this.eventStore.updateStatus(storedEvent.id, "suppressed", {
+          note: verdict.reason,
+          error: verdict.detail,
+        });
+        this.metrics.events_suppressed += 1;
+        this.metrics.events_processed += 1;
+        this._trackProcessingTime(startedAt);
+        logInfo("NotificationDispatcher suppressed an event", {
+          eventType: event.type,
+          reason: verdict.reason,
+          detail: verdict.detail,
+        });
         return;
       }
 

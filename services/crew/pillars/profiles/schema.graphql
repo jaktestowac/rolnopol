@@ -1,0 +1,182 @@
+# Profiles pillar — the foundation (PRD §8.1).
+#
+# It contributes `CrewMember.profile` plus the roster queries and the three
+# employment mutations. As the FOUNDATION pillar it declares `type Mutation`;
+# every later pillar writes `extend type Mutation` (see registry.js).
+#
+# NOTE: there is deliberately NO deleteCrewMember, fireCrewMember, terminate, or
+# assignToField mutation, and there never will be. Ending employment writes an end
+# date to this overlay and leaves the staff record and its assignments intact
+# (§8.1.2). Removing a person is the existing staff page's job.
+
+enum CrewRole {
+  STOCKPERSON
+  TRACTOR_DRIVER
+  AGRONOMIST
+  DAIRY_HAND
+  MECHANIC
+  SEASONAL_PICKER
+  MANAGER
+}
+
+enum EmploymentType {
+  PERMANENT
+  FIXED_TERM
+  SEASONAL
+  CONTRACTOR
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  PROBATION
+  NOTICE
+  ENDED
+}
+
+type EmergencyContact {
+  name: String!
+  phone: String!
+}
+
+"The employment attributes `staff.json` does not have. Everything else needs them."
+type CrewProfile {
+  id: ID!
+  role: CrewRole!
+  employmentType: EmploymentType!
+  "0.1–1.0. Drives leave accrual pro-rata."
+  fte: Float!
+  contractedHoursPerWeek: Int
+  startDate: Date!
+  "Set by recordEmploymentEnd. The staff record is never deleted."
+  endDate: Date
+  endReason: String
+  emergencyContact: EmergencyContact
+  notes: String
+  "Computed from the clock, never stored."
+  employmentStatus: EmploymentStatus!
+  tenureDays: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  "Pass back as expectedVersion to make a write conditional."
+  version: Int!
+}
+
+input CrewFilter {
+  role: CrewRole
+  employmentType: EmploymentType
+  status: EmploymentStatus
+  "Include members whose staff record was deleted from under the overlay."
+  includeOrphaned: Boolean
+}
+
+type CrewConnection {
+  nodes: [CrewMember!]!
+  totalCount: Int!
+  "True when `first` cut the list short."
+  hasMore: Boolean!
+}
+
+extend type CrewMember {
+  "Null is not an error: a staff member without a profile is still on the roster."
+  profile: CrewProfile
+}
+
+extend type Query {
+  crew(filter: CrewFilter, first: Int): CrewConnection!
+  "Null for an unknown id AND for one owned by someone else — existence is not disclosed."
+  crewMember(staffId: ID!): CrewMember
+}
+
+input EmergencyContactInput {
+  name: NonEmptyString!
+  phone: NonEmptyString!
+}
+
+input HireCrewMemberInput {
+  name: NonEmptyString!
+  surname: NonEmptyString!
+  age: Int!
+  role: CrewRole!
+  employmentType: EmploymentType!
+  fte: Float!
+  contractedHoursPerWeek: Int
+  startDate: Date!
+  emergencyContact: EmergencyContactInput
+}
+
+input CrewProfileInput {
+  staffId: ID!
+  role: CrewRole
+  employmentType: EmploymentType
+  fte: Float
+  contractedHoursPerWeek: Int
+  startDate: Date
+  endDate: Date
+  emergencyContact: EmergencyContactInput
+  notes: String
+  expectedVersion: Int
+}
+
+type FieldError {
+  field: String!
+  message: String!
+}
+
+"Both stores were written."
+type CrewMemberHired {
+  crewMember: CrewMember!
+}
+
+"""
+The staff record was created but the profile write failed.
+This is a SUCCESS-shaped outcome, not an error: the member exists and can be
+completed later. Nothing is rolled back by deletion — that is forbidden (§8.1.1).
+"""
+type CrewMemberHiredWithoutProfile {
+  staffId: ID!
+  reason: String!
+  code: String!
+}
+
+"Nothing was written anywhere."
+type HireValidationFailed {
+  fieldErrors: [FieldError!]!
+}
+
+union HireResult = CrewMemberHired | CrewMemberHiredWithoutProfile | HireValidationFailed
+
+type CrewProfileUpserted {
+  crewMember: CrewMember!
+}
+
+type ProfileValidationFailed {
+  fieldErrors: [FieldError!]!
+}
+
+type MemberNotFound {
+  staffId: ID!
+}
+
+type VersionConflict {
+  staffId: ID!
+  expectedVersion: Int!
+  actualVersion: Int!
+}
+
+union UpsertCrewProfileResult = CrewProfileUpserted | ProfileValidationFailed | MemberNotFound | VersionConflict
+
+"Employment ended in the overlay. The staff record and its assignments are untouched."
+type EmploymentEnded {
+  crewMember: CrewMember!
+  lastDay: Date!
+}
+
+union RecordEmploymentEndResult = EmploymentEnded | ProfileValidationFailed | MemberNotFound | VersionConflict
+
+type Mutation {
+  "The ONLY write to staff.json in this module, and it only ever creates."
+  hireCrewMember(input: HireCrewMemberInput!): HireResult!
+  upsertCrewProfile(input: CrewProfileInput!): UpsertCrewProfileResult!
+  "Records an end date. NOT firing — see the note at the top of this file."
+  recordEmploymentEnd(staffId: ID!, lastDay: Date!, reason: String, expectedVersion: Int): RecordEmploymentEndResult!
+}

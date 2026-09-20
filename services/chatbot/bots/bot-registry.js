@@ -1,17 +1,20 @@
 const farmAssistantBot = require("./farm-assistant.bot");
 const alertsGuideBot = require("./alerts-guide.bot");
 const docsGuideBot = require("./docs-guide.bot");
+const instrumentalityOracleBot = require("./instrumentality-oracle.bot");
 const terminalPorkyBot = require("./terminal-porky.bot");
 
 const DEFAULT_BOT_ID = "farm-assistant";
 const ALERTS_GUIDE_BOT_ID = "alerts-guide";
 const DOCS_GUIDE_BOT_ID = "docs-guide";
+const INSTRUMENTALITY_ORACLE_BOT_ID = "instrumentality-oracle";
 const TERMINAL_PORKY_BOT_ID = "terminal-porky";
 
 const BOT_PROFILES = Object.freeze({
   [farmAssistantBot.id]: farmAssistantBot,
   [alertsGuideBot.id]: alertsGuideBot,
   [docsGuideBot.id]: docsGuideBot,
+  [instrumentalityOracleBot.id]: instrumentalityOracleBot,
   [terminalPorkyBot.id]: terminalPorkyBot,
 });
 
@@ -44,6 +47,7 @@ module.exports = {
   DEFAULT_BOT_ID,
   ALERTS_GUIDE_BOT_ID,
   DOCS_GUIDE_BOT_ID,
+  INSTRUMENTALITY_ORACLE_BOT_ID,
   TERMINAL_PORKY_BOT_ID,
   normalizeBotId,
   listBotProfiles,

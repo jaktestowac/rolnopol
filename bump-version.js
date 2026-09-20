@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 const fs = require("fs");
 const path = require("path");
+const { spawnSync } = require("child_process");
 
 const rootDir = path.resolve(__dirname);
-const jsonFiles = ["app-data.json", "public/schema/openapi.json"].map((file) => path.resolve(rootDir, file));
+// public/schema/*.json is deliberately absent: those files are generated, and
+// `info.version` in them is read from package.json. Patching them here would
+// leave them differing from generator output and trip the contract test.
+const jsonFiles = ["app-data.json"].map((file) => path.resolve(rootDir, file));
 const lockFile = path.resolve(rootDir, "package-lock.json");
 
 function readJson(filePath) {
@@ -81,6 +85,22 @@ function updatePackageLock(filePath, newVersion) {
   console.log(`Updated ${filePath}`);
 }
 
+/**
+ * Re-emit the OpenAPI documents so `info.version` follows package.json. Run as
+ * a child process so it reads the freshly written package.json rather than a
+ * copy this process may already have cached.
+ */
+function regenerateSchema() {
+  const result = spawnSync(process.execPath, [path.resolve(rootDir, "build/generate-openapi.js")], {
+    cwd: rootDir,
+    stdio: "inherit",
+  });
+
+  if (result.status !== 0) {
+    throw new Error("Failed to regenerate the OpenAPI schema");
+  }
+}
+
 function main() {
   const bump = process.argv[2] || "patch";
   const packageJsonPath = path.resolve(rootDir, "package.json");
@@ -103,6 +123,7 @@ function main() {
 
   jsonFiles.forEach((file) => updateJsonFile(path.resolve(file), newVersion));
   updatePackageLock(path.resolve(lockFile), newVersion);
+  regenerateSchema();
 
   const verified = readJson(packageJsonPath).version === newVersion;
   if (!verified) {

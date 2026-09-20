@@ -97,7 +97,7 @@ class EventStore {
   async stats() {
     const data = await this.db.getAll();
     const events = Array.isArray(data?.events) ? data.events : [];
-    const counts = { total: events.length, received: 0, processing: 0, processed: 0, failed: 0 };
+    const counts = { total: events.length, received: 0, processing: 0, processed: 0, failed: 0, suppressed: 0 };
 
     for (const event of events) {
       if (Object.prototype.hasOwnProperty.call(counts, event.status)) {

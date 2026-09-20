@@ -1,3 +1,10 @@
+const FARMLOG_FEED_PAGE_SIZE = 10;
+const FARMLOG_FEED_MAX_PAGE_SIZE = 100;
+// How often the head of the feed is re-read to count what arrived. Long enough not
+// to be a poll trace, short enough that a tester who publishes a post sees the pill
+// without wondering whether the feature works.
+const FARMLOG_FEED_POLL_MS = 12000;
+
 class FarmlogBasePage {
   constructor() {
     this.authService = null;
@@ -517,6 +524,33 @@ class FarmlogHubPage extends FarmlogBasePage {
     this.userPanelCollapsed = true;
     this.userPanelCollapseStorageKey = "farmlog:user-panel-collapsed";
     this.desktopPanelMediaQuery = typeof window !== "undefined" ? window.matchMedia("(min-width: 901px)") : null;
+
+    // ── The discovery feed ───────────────────────────────────────────────────
+    //
+    // The Posts tab is an infinite feed with two interchangeable paging modes over
+    // one endpoint. Offset is the default because it is what most apps ship and
+    // what most readers have silently suffered: it counts rows from the top, so a
+    // post published above the window shifts everything down and the next page
+    // repeats a row (a delete skips one). Cursor resumes after a named post and
+    // cannot do either. Nothing here de-duplicates — the duplicates ARE the lesson,
+    // and every card carries `data-post-id` so the set can be asserted on.
+    this.feed = { ...this._feedPreferences(), page: 0, cursor: null, hasMore: false, total: 0, loading: false, failed: false };
+    this.feedNewCount = 0;
+    this.feedNewCapped = false;
+    this._feedObserver = null;
+    this._feedFooterNode = null;
+    this._feedPollTimer = null;
+  }
+
+  /** `?paging=cursor` / `?size=` make the twin and the window size shareable. */
+  _feedPreferences() {
+    const search = typeof window !== "undefined" && window.location ? window.location.search : "";
+    const params = new URLSearchParams(search || "");
+    const size = Number(params.get("size"));
+    return {
+      mode: String(params.get("paging") || "").toLowerCase() === "cursor" ? "cursor" : "offset",
+      size: Number.isFinite(size) && size > 0 ? Math.min(Math.floor(size), FARMLOG_FEED_MAX_PAGE_SIZE) : FARMLOG_FEED_PAGE_SIZE,
+    };
   }
 
   _isBlogActive(blog) {
@@ -537,6 +571,7 @@ class FarmlogHubPage extends FarmlogBasePage {
     this._renderSearchControls();
     this._applyUserPanelCollapseState();
     await this._loadInitialData();
+    this._startFeedPolling();
   }
 
   requiresAuthentication() {
@@ -566,12 +601,37 @@ class FarmlogHubPage extends FarmlogBasePage {
         this.activeTab = button.getAttribute("data-result-tab") || "blogs";
         this._renderSearchControls();
         this._renderSearchResults();
+        this._renderFeedNewPill();
       });
     });
 
     if (postSortEl) {
       postSortEl.addEventListener("change", () => {
         this.postSort = postSortEl.value || "newest";
+        this._performSearch();
+      });
+    }
+
+    const pagingModeEl = document.getElementById("farmlogPagingMode");
+    if (pagingModeEl) {
+      pagingModeEl.addEventListener("change", () => {
+        this.feed.mode = pagingModeEl.value === "cursor" ? "cursor" : "offset";
+        // Keep the mode in the URL so a run can be reproduced, and a bug report can
+        // say which twin it was seen against.
+        if (typeof window !== "undefined" && window.history && window.location) {
+          const next = new URL(window.location.href);
+          if (this.feed.mode === "cursor") next.searchParams.set("paging", "cursor");
+          else next.searchParams.delete("paging");
+          window.history.replaceState(null, "", next);
+        }
+        this._performSearch();
+      });
+    }
+
+    const feedNewBtn = document.getElementById("farmlogFeedNew");
+    if (feedNewBtn) {
+      feedNewBtn.addEventListener("click", () => {
+        this._clearFeedNewCount();
         this._performSearch();
       });
     }
@@ -759,17 +819,31 @@ class FarmlogHubPage extends FarmlogBasePage {
       return;
     }
 
-    controls.hidden = !this.farmlogEngagementEnabled || this.activeTab === "blogs";
-    postSortWrap.hidden = !this.farmlogEngagementEnabled || this.activeTab !== "posts";
-    topPeriodWrap.hidden = !this.farmlogEngagementEnabled || this.activeTab !== "top-posts";
+    // Paging belongs to the feed, not to engagement, so the Posts tab shows it even
+    // with likes turned off — the twin is the point of the tab.
+    const pagingWrap = document.getElementById("farmlogPagingWrap");
+    const showPaging = this.activeTab === "posts";
+    const showSort = this.farmlogEngagementEnabled && this.activeTab === "posts";
+    const showPeriod = this.farmlogEngagementEnabled && this.activeTab === "top-posts";
+
+    controls.hidden = !showPaging && !showSort && !showPeriod;
+    postSortWrap.hidden = !showSort;
+    topPeriodWrap.hidden = !showPeriod;
+    if (pagingWrap) {
+      pagingWrap.hidden = !showPaging;
+    }
 
     const postSortEl = document.getElementById("farmlogPostsSort");
     const topPeriodEl = document.getElementById("farmlogTopPeriod");
+    const pagingModeEl = document.getElementById("farmlogPagingMode");
     if (postSortEl) {
       postSortEl.value = this.postSort;
     }
     if (topPeriodEl) {
       topPeriodEl.value = this.topPostsPeriod;
+    }
+    if (pagingModeEl) {
+      pagingModeEl.value = this.feed.mode;
     }
   }
 
@@ -786,9 +860,89 @@ class FarmlogHubPage extends FarmlogBasePage {
       return;
     }
 
+    // Liking a post used to reload everything. That was survivable when the feed was
+    // one fixed list; with paging it would throw away every page the reader had
+    // scrolled for. So a post the loaded window already holds is patched in place,
+    // and only anything else falls back to the full reload.
+    // Only a post action can patch a post card. A blog favorite answers with a BLOG,
+    // and blog ids and post ids are both small integers from separate sequences — so
+    // matching on id alone would happily patch post 3 with blog 3.
+    if (button.getAttribute("data-post") && this._patchFeedPost(updatedEntity)) {
+      return;
+    }
+
     await this._runWithPreservedScroll(() => this._loadInitialData(), {
       elementIds: ["searchBlogsResults", "searchPostsResults", "searchTopPostsResults"],
     });
+  }
+
+  /**
+   * Replace one post in the loaded feed and re-render just its card(s).
+   *
+   * Cards, plural: in offset mode the same post can legitimately be on screen twice,
+   * because that is what offset paging over a live list does. Patching one and
+   * leaving the other stale would quietly repair the symptom this feed exists to
+   * show, so every copy is updated.
+   */
+  _patchFeedPost(updated) {
+    if (!updated || updated.id == null) return false;
+
+    const id = String(updated.id);
+    let found = false;
+    this.postResults = this.postResults.map((post) => {
+      if (String(post?.id) !== id) return post;
+      found = true;
+      return { ...post, ...updated };
+    });
+    if (!found) return false;
+
+    const panel = document.getElementById("searchPostsResults");
+    if (!panel) return false;
+
+    const merged = this.postResults.find((post) => String(post?.id) === id);
+    const cards = panel.querySelectorAll(`[data-post-id="${CSS && CSS.escape ? CSS.escape(id) : id}"]`);
+    if (!cards.length) return false;
+    cards.forEach((card) => card.replaceWith(...this._nodesFromHtml(this._postCardHtml(merged))));
+    return true;
+  }
+
+  _nodesFromHtml(html) {
+    const template = document.createElement("template");
+    template.innerHTML = String(html).trim();
+    return Array.from(template.content.childNodes);
+  }
+
+  /**
+   * The query for one window of the feed. `page` is read in offset mode and
+   * `cursor` in cursor mode — passing both is harmless and keeps the call sites
+   * from having to know which mode is live.
+   */
+  _postFeedQuery({ page = 0, cursor = null } = {}) {
+    const queryInput = document.getElementById("farmlogSearchInput");
+    const params = { q: (queryInput?.value || "").trim(), size: this.feed.size };
+
+    if (this.farmlogEngagementEnabled && this.postSort !== "newest") {
+      params.sort = this.postSort;
+    }
+
+    if (this.feed.mode === "cursor") {
+      params.paging = "cursor";
+      if (cursor) params.cursor = cursor;
+    } else {
+      params.page = page;
+    }
+
+    return params;
+  }
+
+  _applyFeedMeta(paging) {
+    const meta = paging || {};
+    this.feed.page = Number.isFinite(Number(meta.page)) ? Number(meta.page) : this.feed.page;
+    this.feed.cursor = meta.nextCursor || null;
+    this.feed.hasMore = meta.hasMore === true;
+    this.feed.total = Number.isFinite(Number(meta.total)) ? Number(meta.total) : 0;
+    this.feed.unstableSort = meta.unstableSort === true;
+    this.feed.failed = false;
   }
 
   async _performSearch() {
@@ -799,14 +953,18 @@ class FarmlogHubPage extends FarmlogBasePage {
     this._setStatus("Searching public blogs and posts...");
     this._showSkeletonLoaders();
 
-    const postQuery = { q: query };
-    if (this.farmlogEngagementEnabled && this.postSort !== "newest") {
-      postQuery.sort = this.postSort;
-    }
+    // A search always restarts the feed at the top: a window is only meaningful
+    // against the query that produced it.
+    this.feed.page = 0;
+    this.feed.cursor = null;
+    this.feed.hasMore = false;
+    this.feed.failed = false;
+    this.feed.loading = false;
+    this._clearFeedNewCount();
 
     const requests = [
       this.apiService.get("blogs/search", { requiresAuth: isLoggedIn, query: { q: query } }),
-      this.apiService.get("blogs/posts/search", { requiresAuth: isLoggedIn, query: postQuery }),
+      this.apiService.get("blogs/posts/search", { requiresAuth: isLoggedIn, query: this._postFeedQuery({ page: 0 }) }),
     ];
 
     if (this.farmlogEngagementEnabled) {
@@ -827,6 +985,7 @@ class FarmlogHubPage extends FarmlogBasePage {
 
     this.blogResults = Array.isArray(blogsResponse.data?.data) ? blogsResponse.data.data : [];
     this.postResults = Array.isArray(postsResponse.data?.data) ? postsResponse.data.data : [];
+    this._applyFeedMeta(postsResponse.data?.meta?.paging);
     this.topPostResults = this.farmlogEngagementEnabled && Array.isArray(topPostsResponse?.data?.data) ? topPostsResponse.data.data : [];
 
     this.blogSlugById = new Map();
@@ -1190,25 +1349,13 @@ class FarmlogHubPage extends FarmlogBasePage {
     if (postsPanel) {
       postsPanel.hidden = this.activeTab !== "posts";
       postsPanel.innerHTML = this.postResults.length
-        ? this.postResults
-            .map((post) => {
-              const snippetHtml = this._renderMarkdownWithLimit(post.content || "", 140);
-              const resolvedBlogSlug = post.blogSlug || this.blogSlugById.get(post.blogId) || "unknown-blog";
-              const engagementMarkup = this._renderPostEngagementActions(post, resolvedBlogSlug);
-
-              return `
-                <article class="farmlog-result-card">
-                  <h3><a href="${this._toPostLink(resolvedBlogSlug, post.slug)}">${this._escapeHtml(post.title)}</a></h3>
-                  <p><strong>Author:</strong> ${this._escapeHtml(post.authorName || "Unknown")}</p>
-                  <p><strong>Blog:</strong> <a href="${this._toBlogLink(resolvedBlogSlug)}">${this._escapeHtml(resolvedBlogSlug)}</a></p>
-                  <div class="farmlog-markdown-snippet">${snippetHtml}</div>
-                  <p><strong>Created:</strong> ${this._formatDate(post.createdAt)}</p>
-                  ${engagementMarkup}
-                </article>
-              `;
-            })
-            .join("")
+        ? this.postResults.map((post) => this._postCardHtml(post)).join("")
         : "<p class='farmlog-empty'>No public posts found.</p>";
+      // The footer is one long-lived node so the observer never has to be told about
+      // a replacement, and so an appended page can be inserted in front of it.
+      postsPanel.appendChild(this._feedFooterNodeEl());
+      this._renderFeedFooter();
+      this._observeFeedSentinel(postsPanel);
     }
 
     if (topPostsPanel) {
@@ -1253,6 +1400,195 @@ class FarmlogHubPage extends FarmlogBasePage {
           : `<p class='farmlog-empty'>No most-liked posts found for the last ${this._escapeHtml(this._getPeriodLabel(this.topPostsPeriod))}.</p>`;
       }
     }
+  }
+
+  /**
+   * One feed card. Shared by the full render and the append path so a post cannot
+   * look different depending on which page it arrived on. `data-post-id` is the
+   * hook that makes "did this window repeat a row?" answerable from the DOM.
+   */
+  _postCardHtml(post) {
+    const snippetHtml = this._renderMarkdownWithLimit(post.content || "", 140);
+    const resolvedBlogSlug = post.blogSlug || this.blogSlugById.get(post.blogId) || "unknown-blog";
+    const engagementMarkup = this._renderPostEngagementActions(post, resolvedBlogSlug);
+
+    return `
+      <article class="farmlog-result-card" data-post-id="${this._escapeHtml(String(post.id ?? ""))}" data-testid="feed-post">
+        <h3><a href="${this._toPostLink(resolvedBlogSlug, post.slug)}">${this._escapeHtml(post.title)}</a></h3>
+        <p><strong>Author:</strong> ${this._escapeHtml(post.authorName || "Unknown")}</p>
+        <p><strong>Blog:</strong> <a href="${this._toBlogLink(resolvedBlogSlug)}">${this._escapeHtml(resolvedBlogSlug)}</a></p>
+        <div class="farmlog-markdown-snippet">${snippetHtml}</div>
+        <p><strong>Created:</strong> ${this._formatDate(post.createdAt)}</p>
+        ${engagementMarkup}
+      </article>
+    `;
+  }
+
+  // ── Feed: footer, sentinel, appending ────────────────────────────────────────
+
+  _feedFooterNodeEl() {
+    if (this._feedFooterNode) return this._feedFooterNode;
+    const node = document.createElement("div");
+    node.className = "farmlog-feed-more";
+    node.id = "farmlogFeedMore";
+    node.setAttribute("data-testid", "feed-more");
+    node.addEventListener("click", () => this._activateFeedFooter());
+    node.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      this._activateFeedFooter();
+    });
+    this._feedFooterNode = node;
+    return node;
+  }
+
+  _renderFeedFooter() {
+    const node = this._feedFooterNode;
+    if (!node) return;
+
+    const shown = this.postResults.length;
+    const total = this.feed.total;
+    const count = total ? `${shown} of ${total}` : `${shown}`;
+    let state = "end";
+    let text = shown ? `End of the feed — ${count} loaded` : "";
+
+    if (this.feed.loading) {
+      state = "loading";
+      text = "Loading more posts…";
+    } else if (this.feed.failed) {
+      state = "error";
+      text = "Could not load more posts — retry";
+    } else if (this.feed.hasMore) {
+      state = "more";
+      text = `↓ Load more posts (${count})`;
+    }
+
+    node.dataset.state = state;
+    node.textContent = text;
+    node.hidden = !text;
+    const actionable = state === "more" || state === "error";
+    node.setAttribute("role", actionable ? "button" : "status");
+    node.tabIndex = actionable ? 0 : -1;
+  }
+
+  _activateFeedFooter() {
+    if (this.feed.failed) {
+      this.feed.failed = false;
+      this._renderFeedFooter();
+    }
+    this._loadMorePosts();
+  }
+
+  _observeFeedSentinel(panel) {
+    if (typeof IntersectionObserver !== "function" || !panel) return;
+    if (this._feedObserver) this._feedObserver.disconnect();
+    this._feedObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) this._onFeedSentinelReached();
+      },
+      { root: panel, rootMargin: "160px" },
+    );
+    this._feedObserver.observe(this._feedFooterNodeEl());
+  }
+
+  // Scrolling only loads when there is scrolling to do. A results box shorter than
+  // one page shows its sentinel from the start, and auto-loading there would quietly
+  // turn "10 per page" into "however many fit".
+  _onFeedSentinelReached() {
+    const panel = document.getElementById("searchPostsResults");
+    if (!panel || panel.hidden) return;
+    if (panel.scrollHeight <= panel.clientHeight + 4) return;
+    this._loadMorePosts();
+  }
+
+  async _loadMorePosts() {
+    if (this.feed.loading || this.feed.failed || !this.feed.hasMore) return;
+
+    this.feed.loading = true;
+    this._renderFeedFooter();
+
+    const query = this._postFeedQuery({ page: this.feed.page + 1, cursor: this.feed.cursor });
+    const response = await this.apiService.get("blogs/posts/search", {
+      requiresAuth: !!this._getCurrentUserId(),
+      query,
+    });
+
+    this.feed.loading = false;
+
+    if (!response.success || !Array.isArray(response.data?.data)) {
+      this.feed.failed = true;
+      this._renderFeedFooter();
+      return;
+    }
+
+    const page = response.data.data;
+    // Appended verbatim — no de-duplication. In offset mode a post published above
+    // the window pushes a row down into this page too, and swallowing that here
+    // would hide the exact behaviour the cursor twin exists to contrast with.
+    this.postResults = this.postResults.concat(page);
+    this._applyFeedMeta(response.data?.meta?.paging);
+
+    // Appending in place rather than re-rendering the panel: assigning innerHTML on
+    // a scrolled container resets scrollTop, which would throw the reader back to
+    // the top of the feed on every page.
+    const panel = document.getElementById("searchPostsResults");
+    if (panel && page.length) {
+      this._feedFooterNodeEl().insertAdjacentHTML("beforebegin", page.map((post) => this._postCardHtml(post)).join(""));
+    }
+    this._renderFeedFooter();
+  }
+
+  // ── Feed: posts that arrive while you are reading ────────────────────────────
+
+  _startFeedPolling() {
+    if (this._feedPollTimer || typeof setInterval !== "function") return;
+    this._feedPollTimer = setInterval(() => this._pollFeedHead(), FARMLOG_FEED_POLL_MS);
+  }
+
+  _clearFeedNewCount() {
+    this.feedNewCount = 0;
+    this.feedNewCapped = false;
+    this._renderFeedNewPill();
+  }
+
+  _renderFeedNewPill() {
+    const pill = document.getElementById("farmlogFeedNew");
+    const label = document.getElementById("farmlogFeedNewLabel");
+    if (!pill) return;
+    const show = this.feedNewCount > 0 && this.activeTab === "posts";
+    pill.hidden = !show;
+    if (show && label) {
+      const suffix = this.feedNewCapped ? "+" : "";
+      label.textContent = `${this.feedNewCount}${suffix} new post${this.feedNewCount === 1 && !this.feedNewCapped ? "" : "s"}`;
+    }
+  }
+
+  /**
+   * Re-reads the head of the feed and counts what the loaded window has never seen.
+   *
+   * Only under `newest`: with `most-liked` the top of the list moves because likes
+   * moved, and calling that "new posts" would be a lie. Bounded by one page, so the
+   * label caps at "10+" rather than pretending to know.
+   */
+  async _pollFeedHead() {
+    if (this.activeTab !== "posts" || this.feed.loading || this.postSort !== "newest") return;
+    if (typeof document !== "undefined" && document.hidden) return;
+    if (!this.apiService) return;
+
+    const query = this._postFeedQuery({ page: 0 });
+    delete query.cursor;
+
+    const response = await this.apiService.get("blogs/posts/search", {
+      requiresAuth: !!this._getCurrentUserId(),
+      query,
+    });
+    if (!response.success || !Array.isArray(response.data?.data)) return;
+
+    const known = new Set(this.postResults.map((post) => String(post.id)));
+    const fresh = response.data.data.filter((post) => !known.has(String(post.id)));
+    this.feedNewCount = fresh.length;
+    this.feedNewCapped = fresh.length > 0 && fresh.length === response.data.data.length && this.feed.hasMore;
+    this._renderFeedNewPill();
   }
 
   _showSkeletonLoaders() {

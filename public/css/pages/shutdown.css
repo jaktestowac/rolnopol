@@ -1,0 +1,573 @@
+/* Hidden operator page: /operator/shutdown
+ *
+ * Same dark-console idiom as the other operator pages (see terminal.css), but on
+ * a red "reactor" palette — this page stops the application, and it should look
+ * like it. Everything is scoped under .shutdown-page / .shutdown-* so it cannot
+ * leak into the shared stylesheet. */
+
+:root {
+  --shutdown-bg: #0a0405;
+  --shutdown-bg-mid: #120608;
+  --shutdown-panel: rgba(24, 8, 10, 0.82);
+  --shutdown-panel-strong: rgba(12, 4, 5, 0.95);
+  --shutdown-red: #ff5f57;
+  --shutdown-red-soft: rgba(255, 95, 87, 0.6);
+  --shutdown-red-faint: rgba(255, 95, 87, 0.14);
+  --shutdown-amber: #ffcc66;
+  --shutdown-green: #8cff8c;
+  --shutdown-text: #ffd9d6;
+  --shutdown-text-dim: rgba(255, 217, 214, 0.68);
+  --shutdown-text-soft: rgba(255, 217, 214, 0.42);
+  --shutdown-border: rgba(255, 95, 87, 0.28);
+  --shutdown-mono: "SF Mono", "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+
+.shutdown-page {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 95, 87, 0.12), transparent 55%),
+    linear-gradient(180deg, var(--shutdown-bg-mid), var(--shutdown-bg) 60%, #050203);
+  color: var(--shutdown-text);
+  font-family: var(--shutdown-mono);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------------- atmosphere */
+
+.shutdown-vignette,
+.shutdown-scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shutdown-vignette {
+  background: radial-gradient(circle at 50% 45%, transparent 40%, rgba(0, 0, 0, 0.72) 100%);
+}
+
+.shutdown-scanlines {
+  background: repeating-linear-gradient(180deg, rgba(255, 95, 87, 0.05) 0 1px, transparent 1px 3px);
+  opacity: 0.5;
+  mix-blend-mode: screen;
+}
+
+/* -------------------------------------------------------------------- layout */
+
+.shutdown-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 980px;
+  border: 1px solid var(--shutdown-border);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, var(--shutdown-panel), var(--shutdown-panel-strong));
+  box-shadow:
+    0 0 0 1px rgba(255, 95, 87, 0.06),
+    0 30px 80px rgba(0, 0, 0, 0.7);
+  padding: 1.1rem 1.25rem 1rem;
+}
+
+.shutdown-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--shutdown-border);
+  padding-bottom: 0.8rem;
+}
+
+.shutdown-header__eyebrow {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--shutdown-text-soft);
+}
+
+.shutdown-header h1 {
+  margin: 0.2rem 0 0;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 18px rgba(255, 95, 87, 0.35);
+}
+
+.shutdown-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.shutdown-badge {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--shutdown-border);
+  background: rgba(255, 95, 87, 0.08);
+  color: var(--shutdown-text-dim);
+  white-space: nowrap;
+}
+
+.shutdown-badge--gate {
+  border-color: rgba(140, 255, 140, 0.35);
+  background: rgba(140, 255, 140, 0.08);
+  color: var(--shutdown-green);
+}
+
+.shutdown-badge--gate.is-remote {
+  border-color: var(--shutdown-red-soft);
+  background: rgba(255, 95, 87, 0.12);
+  color: var(--shutdown-red);
+}
+
+.shutdown-console {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  padding: 1.25rem 0 0.9rem;
+  align-items: center;
+}
+
+@media (max-width: 780px) {
+  .shutdown-console {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ------------------------------------------------------------ safety + arming */
+
+.shutdown-reactor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.shutdown-arm {
+  text-align: center;
+}
+
+.shutdown-arm__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 0;
+  padding: 0.25rem;
+  color: var(--shutdown-text-dim);
+  font-family: inherit;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.shutdown-arm__track {
+  position: relative;
+  width: 3rem;
+  height: 1.35rem;
+  border-radius: 1rem;
+  border: 1px solid var(--shutdown-border);
+  background: rgba(0, 0, 0, 0.5);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.shutdown-arm__thumb {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.18rem;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  background: var(--shutdown-text-soft);
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.shutdown-arm__switch[aria-checked="true"] .shutdown-arm__track {
+  border-color: var(--shutdown-red);
+  background: rgba(255, 95, 87, 0.22);
+}
+
+.shutdown-arm__switch[aria-checked="true"] .shutdown-arm__thumb {
+  transform: translateX(1.62rem);
+  background: var(--shutdown-red);
+  box-shadow: 0 0 12px var(--shutdown-red);
+}
+
+.shutdown-arm__state {
+  color: var(--shutdown-green);
+}
+
+.shutdown-arm__switch[aria-checked="true"] .shutdown-arm__state {
+  color: var(--shutdown-red);
+}
+
+.shutdown-arm__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.7rem;
+  color: var(--shutdown-text-soft);
+}
+
+.shutdown-arm__switch:focus-visible,
+.shutdown-button:focus-visible,
+.shutdown-retry:focus-visible,
+.shutdown-link:focus-visible {
+  outline: 2px solid var(--shutdown-amber);
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------------------------- the big button */
+
+.shutdown-button-wrap {
+  position: relative;
+  width: 210px;
+  height: 210px;
+  display: grid;
+  place-items: center;
+}
+
+.shutdown-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--shutdown-red-faint);
+}
+
+.shutdown-ring--outer {
+  inset: 0;
+}
+
+.shutdown-ring--mid {
+  inset: 22px;
+}
+
+.shutdown-page.is-armed .shutdown-ring {
+  border-color: var(--shutdown-red-soft);
+  animation: shutdown-pulse 2.4s ease-in-out infinite;
+}
+
+.shutdown-page.is-armed .shutdown-ring--mid {
+  animation-delay: 0.4s;
+}
+
+@keyframes shutdown-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
+/* The progress ring is drawn with stroke-dashoffset, driven from JS while the
+   button is held. Rotated so it fills clockwise from the top. */
+.shutdown-progress {
+  position: absolute;
+  inset: 27px;
+  width: calc(100% - 54px);
+  height: calc(100% - 54px);
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.shutdown-progress__track,
+.shutdown-progress__fill {
+  fill: none;
+  stroke-width: 4;
+}
+
+.shutdown-progress__track {
+  stroke: rgba(255, 95, 87, 0.14);
+}
+
+.shutdown-progress__fill {
+  stroke: var(--shutdown-red);
+  stroke-linecap: round;
+  stroke-dasharray: 339.292;
+  stroke-dashoffset: 339.292;
+  filter: drop-shadow(0 0 6px rgba(255, 95, 87, 0.8));
+  transition: stroke-dashoffset 0.08s linear;
+}
+
+.shutdown-button {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  border: 1px solid var(--shutdown-border);
+  background: radial-gradient(circle at 50% 35%, #2a0c0e, #150507 70%);
+  color: var(--shutdown-text-soft);
+  font-family: inherit;
+  cursor: not-allowed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  transition:
+    transform 0.12s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.shutdown-button__glyph {
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+.shutdown-button__label {
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.shutdown-page.is-armed .shutdown-button {
+  cursor: pointer;
+  color: var(--shutdown-red);
+  border-color: var(--shutdown-red);
+  box-shadow:
+    0 0 24px rgba(255, 95, 87, 0.35),
+    inset 0 0 22px rgba(255, 95, 87, 0.18);
+}
+
+.shutdown-page.is-holding .shutdown-button {
+  transform: scale(0.95);
+  box-shadow:
+    0 0 44px rgba(255, 95, 87, 0.6),
+    inset 0 0 30px rgba(255, 95, 87, 0.35);
+}
+
+.shutdown-page.is-firing .shutdown-button {
+  animation: shutdown-shake 0.4s linear 2;
+}
+
+.shutdown-page.is-denied .shutdown-shell {
+  animation: shutdown-shake 0.32s linear 2;
+  border-color: var(--shutdown-red);
+}
+
+@keyframes shutdown-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.shutdown-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--shutdown-text-soft);
+  text-align: center;
+  max-width: 26ch;
+}
+
+.shutdown-countdown {
+  min-height: 1.4rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  color: var(--shutdown-amber);
+  text-shadow: 0 0 14px rgba(255, 204, 102, 0.5);
+}
+
+/* ------------------------------------------------------------------ log panel */
+
+.shutdown-log-wrap {
+  border: 1px solid var(--shutdown-border);
+  border-radius: 0.7rem;
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.shutdown-log-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid var(--shutdown-border);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--shutdown-text-soft);
+}
+
+.shutdown-state {
+  color: var(--shutdown-green);
+}
+
+.shutdown-state.is-warn {
+  color: var(--shutdown-amber);
+}
+
+.shutdown-state.is-error {
+  color: var(--shutdown-red);
+}
+
+.shutdown-log {
+  height: 260px;
+  overflow-y: auto;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.74rem;
+  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.shutdown-log__line {
+  display: flex;
+  gap: 0.5rem;
+  color: var(--shutdown-text-dim);
+  word-break: break-word;
+}
+
+.shutdown-log__time {
+  color: var(--shutdown-text-soft);
+  flex: 0 0 auto;
+}
+
+.shutdown-log__line--ok .shutdown-log__body {
+  color: var(--shutdown-green);
+}
+
+.shutdown-log__line--warn .shutdown-log__body {
+  color: var(--shutdown-amber);
+}
+
+.shutdown-log__line--error .shutdown-log__body {
+  color: var(--shutdown-red);
+}
+
+/* --------------------------------------------------------------------- footer */
+
+.shutdown-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--shutdown-border);
+  padding-top: 0.7rem;
+  font-size: 0.7rem;
+  color: var(--shutdown-text-soft);
+}
+
+.shutdown-link {
+  color: var(--shutdown-text-dim);
+  text-decoration: none;
+}
+
+.shutdown-link:hover {
+  color: var(--shutdown-red);
+}
+
+/* -------------------------------------------------------------------- curtain */
+
+.shutdown-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: none;
+  place-items: center;
+  background: radial-gradient(circle at 50% 40%, rgba(40, 6, 8, 0.96), rgba(0, 0, 0, 0.99));
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.shutdown-page.is-down .shutdown-curtain {
+  display: grid;
+  animation: shutdown-fade-in 0.6s ease both;
+}
+
+@keyframes shutdown-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.shutdown-curtain__glyph {
+  font-size: 3.4rem;
+  color: var(--shutdown-red);
+  text-shadow: 0 0 26px rgba(255, 95, 87, 0.6);
+}
+
+.shutdown-curtain h2 {
+  margin: 0.6rem 0 0.3rem;
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
+}
+
+.shutdown-curtain p {
+  margin: 0 0 0.9rem;
+  color: var(--shutdown-text-dim);
+  font-size: 0.8rem;
+}
+
+.shutdown-curtain__cmd {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--shutdown-border);
+  border-radius: 0.4rem;
+  background: rgba(255, 95, 87, 0.08);
+  color: var(--shutdown-text);
+  font-size: 0.8rem;
+}
+
+.shutdown-retry {
+  display: block;
+  margin: 1rem auto 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.45rem;
+  border: 1px solid var(--shutdown-border);
+  background: transparent;
+  color: var(--shutdown-text-dim);
+  font-family: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.shutdown-retry:hover {
+  color: var(--shutdown-red);
+  border-color: var(--shutdown-red);
+}
+
+/* Respect the OS setting — the pulse and shake are decoration, not information;
+   every state is also carried by text and colour. */
+@media (prefers-reduced-motion: reduce) {
+  .shutdown-page.is-armed .shutdown-ring,
+  .shutdown-page.is-firing .shutdown-button,
+  .shutdown-page.is-denied .shutdown-shell,
+  .shutdown-page.is-down .shutdown-curtain {
+    animation: none;
+  }
+
+  .shutdown-progress__fill {
+    transition: none;
+  }
+}

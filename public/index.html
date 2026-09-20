@@ -121,6 +121,480 @@
       display: block !important;
     }
 
+    html.home-instrumentality-prefers-instrumentality body {
+      padding-top: 0;
+      background:
+        radial-gradient(circle at 76% 18%, rgba(232, 229, 223, 0.07), transparent 24rem),
+        radial-gradient(circle at 18% 84%, rgba(232, 229, 223, 0.035), transparent 19rem),
+        linear-gradient(180deg, #101012, #060607);
+      color: #e8e5df;
+    }
+
+    html.home-instrumentality-prefers-instrumentality #header-component,
+    html.home-instrumentality-prefers-instrumentality #footer-component,
+    html.home-instrumentality-prefers-instrumentality #home-legacy-header,
+    html.home-instrumentality-prefers-instrumentality #home-legacy-main,
+    html.home-instrumentality-prefers-instrumentality .js-home-modern-main {
+      display: none !important;
+    }
+
+    html.home-instrumentality-prefers-instrumentality .container {
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    html.home-instrumentality-prefers-instrumentality .js-home-instrumentality-main {
+      display: grid !important;
+    }
+
+    .home-instrumentality-main {
+      --hi-graphite: #101012;
+      --hi-deep: #060607;
+      --hi-bone: #e8e5df;
+      --hi-white: #fffaf0;
+      --hi-mid: #77747c;
+      --hi-dim: #4a484f;
+      --hi-hair: rgba(232, 229, 223, 0.1);
+      --hi-veil: rgba(232, 229, 223, 0.035);
+      --hi-glow: rgba(255, 250, 240, 0.18);
+      --hi-mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+      --hi-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      position: relative;
+      min-height: 100vh;
+      grid-template-columns: clamp(3.5rem, 12vw, 8rem) minmax(0, 1fr);
+      max-width: 78rem;
+      margin: 0 auto;
+      overflow: hidden;
+      color: var(--hi-bone);
+      font-family: var(--hi-sans);
+      font-weight: 300;
+      isolation: isolate;
+    }
+
+    .home-instrumentality-main::before,
+    .home-instrumentality-main::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .home-instrumentality-main::before {
+      background:
+        linear-gradient(rgba(232, 229, 223, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232, 229, 223, 0.018) 1px, transparent 1px);
+      background-size: 4rem 4rem;
+      mask-image: radial-gradient(circle at 62% 32%, black, transparent 72%);
+    }
+
+    .home-instrumentality-main::after {
+      background: repeating-linear-gradient(180deg,
+          rgba(255, 250, 240, 0.018) 0,
+          rgba(255, 250, 240, 0.018) 1px,
+          transparent 1px,
+          transparent 4px);
+      mix-blend-mode: screen;
+      opacity: 0.42;
+    }
+
+    .home-instrumentality-rail,
+    .home-instrumentality-panel {
+      position: relative;
+      z-index: 1;
+    }
+
+    .home-instrumentality-rail {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      padding: 2.5rem 0;
+      border-right: 1px solid var(--hi-hair);
+      font-family: var(--hi-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+    }
+
+    .home-instrumentality-rail::before {
+      content: "";
+      position: absolute;
+      top: 12%;
+      right: -1px;
+      width: 1px;
+      height: 7rem;
+      background: linear-gradient(transparent, var(--hi-white), transparent);
+      opacity: 0.45;
+      animation: hi-rail-trace 7s linear infinite;
+    }
+
+    .home-instrumentality-rail-id,
+    .home-instrumentality-rail-state {
+      writing-mode: vertical-rl;
+      rotate: 180deg;
+    }
+
+    .home-instrumentality-rail-id {
+      color: var(--hi-mid);
+    }
+
+    .home-instrumentality-rail-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.9rem;
+      color: var(--hi-dim);
+    }
+
+    .home-instrumentality-dot {
+      width: 4px;
+      height: 4px;
+      background: var(--hi-bone);
+      animation: hi-blink 4.5s steps(1, end) infinite;
+    }
+
+    .home-instrumentality-panel {
+      overflow: hidden;
+      padding: clamp(2.5rem, 9vh, 5rem) clamp(1.5rem, 7vw, 6rem) 3rem;
+    }
+
+    .home-instrumentality-panel::before,
+    .home-instrumentality-panel::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .home-instrumentality-panel::before {
+      inset: 0;
+      background:
+        linear-gradient(115deg, transparent 0 28%, rgba(232, 229, 223, 0.04) 28.2%, transparent 28.8% 100%),
+        linear-gradient(90deg, transparent 0 6rem, rgba(232, 229, 223, 0.04) 6rem 6.06rem, transparent 6.06rem);
+      opacity: 0.65;
+    }
+
+    .home-instrumentality-panel::after {
+      top: 1.5rem;
+      right: clamp(1.1rem, 4vw, 3rem);
+      width: min(34rem, 52vw);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 250, 240, 0.5), transparent);
+      box-shadow:
+        0 1.5rem 0 rgba(232, 229, 223, 0.055),
+        0 3rem 0 rgba(232, 229, 223, 0.035);
+      animation: hi-scanline 9s ease-in-out infinite;
+    }
+
+    .home-instrumentality-glyph {
+      position: absolute;
+      top: -14vmin;
+      right: -16vmin;
+      width: 52vmin;
+      aspect-ratio: 1;
+      pointer-events: none;
+      filter: drop-shadow(0 0 1.8rem rgba(232, 229, 223, 0.06));
+    }
+
+    .home-instrumentality-glyph span {
+      position: absolute;
+      inset: 0;
+      border: 1px solid var(--hi-hair);
+    }
+
+    .home-instrumentality-glyph span:first-child {
+      rotate: 12deg;
+      animation: hi-glyph-drift 18s linear infinite;
+    }
+
+    .home-instrumentality-glyph span:last-child {
+      inset: 18%;
+      rotate: -7deg;
+      border-color: rgba(232, 229, 223, 0.05);
+      animation: hi-glyph-drift 24s linear infinite reverse;
+    }
+
+    .home-instrumentality-title {
+      position: relative;
+      margin: 0;
+      font-family: var(--hi-mono);
+      font-size: 0.62rem;
+      font-weight: 400;
+      letter-spacing: 0.46em;
+      text-transform: uppercase;
+      color: var(--hi-mid);
+    }
+
+    .home-instrumentality-nav {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 3rem;
+      margin: 0 0 clamp(2.2rem, 7vh, 4rem);
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--hi-hair);
+      font-family: var(--hi-mono);
+    }
+
+    .home-instrumentality-nav::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      bottom: -1px;
+      width: min(16rem, 42vw);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 250, 240, 0.55), transparent);
+      opacity: 0.5;
+    }
+
+    .home-instrumentality-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      color: var(--hi-bone);
+      font-size: 0.68rem;
+      letter-spacing: 0.24em;
+      text-decoration: none;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .home-instrumentality-brand::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      background: var(--hi-bone);
+      box-shadow: 0 0 1.3rem var(--hi-glow);
+    }
+
+    .home-instrumentality-nav-list {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.2rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .home-instrumentality-nav-list li {
+      display: flex;
+    }
+
+    .home-instrumentality-nav-link,
+    .home-instrumentality-logout {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      min-height: 2.2rem;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--hi-mid);
+      cursor: pointer;
+      font: 400 0.58rem/1 var(--hi-mono);
+      letter-spacing: 0.16em;
+      padding: 0.55rem 0.65rem;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition:
+        color 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .home-instrumentality-nav-link:hover,
+    .home-instrumentality-nav-link:focus-visible,
+    .home-instrumentality-nav-link.is-active,
+    .home-instrumentality-logout:hover,
+    .home-instrumentality-logout:focus-visible {
+      border-color: rgba(232, 229, 223, 0.22);
+      background: rgba(232, 229, 223, 0.035);
+      color: var(--hi-bone);
+      outline: none;
+      box-shadow: inset 0 0 0 1px rgba(232, 229, 223, 0.025);
+    }
+
+    .home-instrumentality-nav-link i,
+    .home-instrumentality-logout i {
+      font-size: 0.72rem;
+    }
+
+    .home-instrumentality-nav-toggle {
+      display: none;
+      width: 2.5rem;
+      height: 2.5rem;
+      border: 1px solid rgba(232, 229, 223, 0.16);
+      background: rgba(232, 229, 223, 0.02);
+      color: var(--hi-bone);
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .home-instrumentality-nav-toggle span {
+      display: block;
+      width: 1.2rem;
+      height: 1px;
+      margin: 0.28rem auto;
+      background: currentColor;
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .home-instrumentality-nav-toggle.is-open span:nth-child(1) {
+      transform: translateY(0.29rem) rotate(45deg);
+    }
+
+    .home-instrumentality-nav-toggle.is-open span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .home-instrumentality-nav-toggle.is-open span:nth-child(3) {
+      transform: translateY(-0.29rem) rotate(-45deg);
+    }
+
+    .home-instrumentality-display {
+      position: relative;
+      max-width: 12ch;
+      margin: clamp(2.2rem, 8vh, 4.5rem) 0 0;
+      font-size: clamp(4.2rem, 16vw, 9rem);
+      font-weight: 100;
+      line-height: 0.86;
+      letter-spacing: -0.055em;
+      text-shadow:
+        0 0 1px rgba(255, 250, 240, 0.45),
+        0 0 4rem rgba(255, 250, 240, 0.09);
+    }
+
+    .home-instrumentality-lede {
+      position: relative;
+      max-width: 28rem;
+      margin: clamp(2rem, 7vh, 4rem) 0 0;
+      color: var(--hi-mid);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      font-weight: 200;
+      line-height: 1.75;
+    }
+
+    .home-instrumentality-grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 1px;
+      margin: clamp(3rem, 9vh, 5rem) 0 0;
+      background: var(--hi-hair);
+      box-shadow: 0 1.6rem 4rem rgba(0, 0, 0, 0.28);
+    }
+
+    .home-instrumentality-kpi {
+      position: relative;
+      min-height: 9rem;
+      padding: 1.2rem;
+      background:
+        linear-gradient(145deg, rgba(232, 229, 223, 0.045), transparent 38%),
+        var(--hi-graphite);
+      overflow: hidden;
+    }
+
+    .home-instrumentality-kpi::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 2.6rem;
+      height: 2.6rem;
+      border-top: 1px solid rgba(232, 229, 223, 0.2);
+      border-right: 1px solid rgba(232, 229, 223, 0.2);
+    }
+
+    .home-instrumentality-kpi__label,
+    .home-instrumentality-actions,
+    .home-instrumentality-advanced {
+      font-family: var(--hi-mono);
+    }
+
+    .home-instrumentality-kpi__label {
+      color: var(--hi-dim);
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .home-instrumentality-kpi__value {
+      margin-top: 2rem;
+      color: var(--hi-bone);
+      font-size: clamp(1.55rem, 4vw, 2.35rem);
+      font-weight: 200;
+      line-height: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .home-instrumentality-advanced {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--hi-hair);
+    }
+
+    .home-instrumentality-advanced div {
+      color: var(--hi-mid);
+      font-size: 0.66rem;
+      letter-spacing: 0.08em;
+    }
+
+    .home-instrumentality-advanced strong {
+      display: block;
+      margin-top: 0.3rem;
+      color: var(--hi-bone);
+      font-size: 0.9rem;
+      font-weight: 400;
+    }
+
+    .home-instrumentality-actions {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: clamp(2rem, 6vh, 3.5rem);
+    }
+
+    .home-instrumentality-actions a {
+      min-width: 8rem;
+      border: 1px solid rgba(232, 229, 223, 0.25);
+      background: var(--hi-bone);
+      color: var(--hi-graphite);
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      padding: 0.82rem 0.95rem;
+      text-align: center;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      clip-path: polygon(0.5rem 0, 100% 0, 100% calc(100% - 0.5rem), calc(100% - 0.5rem) 100%, 0 100%, 0 0.5rem);
+    }
+
+    .home-instrumentality-actions a:last-child {
+      background: transparent;
+      color: var(--hi-mid);
+    }
+
+    .home-instrumentality-actions a:hover,
+    .home-instrumentality-actions a:focus-visible {
+      background: transparent;
+      color: var(--hi-bone);
+      border-color: var(--hi-bone);
+      box-shadow: 0 0 1.4rem rgba(255, 250, 240, 0.12);
+    }
+
     .home-modern-hero {
       position: relative;
       overflow: hidden;
@@ -371,6 +845,60 @@
       }
     }
 
+    @keyframes hi-rail-trace {
+      0% {
+        transform: translateY(-6rem);
+        opacity: 0;
+      }
+
+      18%,
+      74% {
+        opacity: 0.45;
+      }
+
+      100% {
+        transform: translateY(62vh);
+        opacity: 0;
+      }
+    }
+
+    @keyframes hi-scanline {
+
+      0%,
+      100% {
+        opacity: 0.18;
+        transform: translateY(0);
+      }
+
+      45% {
+        opacity: 0.58;
+        transform: translateY(4.5rem);
+      }
+    }
+
+    @keyframes hi-glyph-drift {
+      from {
+        transform: rotate(0deg) scale(1);
+      }
+
+      to {
+        transform: rotate(360deg) scale(1.02);
+      }
+    }
+
+    @keyframes hi-blink {
+
+      0%,
+      92% {
+        opacity: 1;
+      }
+
+      93%,
+      100% {
+        opacity: 0.15;
+      }
+    }
+
     .home-modern-header__wave {
       position: absolute;
       bottom: -1px;
@@ -379,6 +907,66 @@
       height: 50px;
       pointer-events: none;
       z-index: 1;
+    }
+
+    @media (max-width: 56rem) {
+      .home-instrumentality-main {
+        grid-template-columns: 3.4rem minmax(0, 1fr);
+      }
+
+      .home-instrumentality-nav {
+        align-items: flex-start;
+      }
+
+      .home-instrumentality-nav-toggle {
+        display: block;
+        flex: 0 0 auto;
+      }
+
+      .home-instrumentality-nav-list {
+        position: absolute;
+        top: calc(100% + 0.75rem);
+        right: 0;
+        left: 0;
+        display: none;
+        justify-content: flex-start;
+        gap: 0.35rem;
+        padding: 0.75rem;
+        border: 1px solid var(--hi-hair);
+        background:
+          linear-gradient(145deg, rgba(232, 229, 223, 0.045), transparent 38%),
+          rgba(16, 16, 18, 0.96);
+        box-shadow: 0 1.6rem 4rem rgba(0, 0, 0, 0.34);
+      }
+
+      .home-instrumentality-nav-list.is-open {
+        display: flex;
+      }
+
+      .home-instrumentality-nav-list li {
+        flex: 1 1 9rem;
+      }
+
+      .home-instrumentality-nav-link,
+      .home-instrumentality-logout {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .home-instrumentality-grid,
+      .home-instrumentality-advanced {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .home-instrumentality-rail::before,
+      .home-instrumentality-dot,
+      .home-instrumentality-panel::after,
+      .home-instrumentality-glyph span {
+        animation: none;
+      }
     }
   </style>
   <script>
@@ -400,6 +988,11 @@
         const flags = parsed.flags;
         const timestamp = Number(parsed.timestamp);
         const isFresh = Number.isFinite(timestamp) && Date.now() - timestamp < FEATURE_FLAGS_MAX_AGE_MS;
+
+        if (isFresh && flags && flags.homeInstrumentalityRestyleEnabled === true) {
+          document.documentElement.classList.add("home-instrumentality-prefers-instrumentality");
+          return;
+        }
 
         if (isFresh && flags && flags.homeModernRestyleEnabled === true) {
           document.documentElement.classList.add("home-modern-prefers-modern");
@@ -638,6 +1231,7 @@
     </main>
 
     <main class="main home-modern-main js-home-modern-main" data-feature-flag="homeModernRestyleEnabled" data-feature-flag-default="false" style="display: none; padding-top: 0"></main>
+    <main class="home-instrumentality-main js-home-instrumentality-main" data-feature-flag="homeInstrumentalityRestyleEnabled" data-feature-flag-default="false" style="display: none"></main>
 
     <!-- Dynamic Footer Component -->
     <div id="footer-component"></div>
@@ -857,6 +1451,10 @@
           video: document.getElementById("modern-home-welcome-video"),
           skeleton: document.getElementById("modern-home-welcome-video-skeleton"),
         },
+        {
+          video: document.getElementById("instrumentality-home-welcome-video"),
+          skeleton: document.getElementById("instrumentality-home-welcome-video-skeleton"),
+        },
       ];
 
       videoPairs.forEach(({ video, skeleton }) => {
@@ -885,8 +1483,12 @@
     document.addEventListener("DOMContentLoaded", function () {
       const legacyMain = document.getElementById("home-legacy-main");
       const modernMain = document.querySelector(".js-home-modern-main");
+      const instrumentalityMain = document.querySelector(".js-home-instrumentality-main");
       if (modernMain && modernMain.id !== "home-modern-main") {
         modernMain.id = "home-modern-main";
+      }
+      if (instrumentalityMain && instrumentalityMain.id !== "home-instrumentality-main") {
+        instrumentalityMain.id = "home-instrumentality-main";
       }
 
       if (modernMain) {
@@ -1010,24 +1612,271 @@
         }, 0);
       }
 
-      if (!legacyMain || !modernMain) {
+      if (instrumentalityMain) {
+        instrumentalityMain.innerHTML = `
+          <aside class="home-instrumentality-rail" aria-label="Rolnopol signal rail">
+            <span class="home-instrumentality-rail-id">Rolnopol</span>
+            <span class="home-instrumentality-dot" aria-hidden="true"></span>
+            <span class="home-instrumentality-rail-state">homepage-restyle</span>
+          </aside>
+
+          <section class="home-instrumentality-panel">
+            <div class="home-instrumentality-glyph" aria-hidden="true">
+              <span></span>
+              <span></span>
+            </div>
+
+            <nav class="home-instrumentality-nav" aria-label="Instrumentality navigation">
+              <a class="home-instrumentality-brand" href="/">Rolnopol</a>
+              <button class="home-instrumentality-nav-toggle" type="button" aria-expanded="false" aria-controls="home-instrumentality-nav-list" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+              </button>
+              <ul id="home-instrumentality-nav-list" class="home-instrumentality-nav-list"></ul>
+            </nav>
+
+            <p class="home-instrumentality-title">Instrumentality protocol / agricultural surface</p>
+            <h1 class="home-instrumentality-display">Rolnopol</h1>
+            <p class="home-instrumentality-lede">
+              Manage your farms, resources, and transactions in a secure, modern environment. Empowering staff and admins for the future of agriculture. 
+            </p>
+
+            <div data-feature-flag="homeWelcomeVideoEnabled" data-feature-flag-default="false" style="position: relative; max-width: 42rem; margin-top: 2rem">
+              <div class="welcome-video-block" style="width: 100%; max-width: none; border-radius: 0; border: 1px solid rgba(232, 229, 223, 0.1); box-shadow: 0 1.6rem 4rem rgba(0, 0, 0, 0.28)">
+                <div id="instrumentality-home-welcome-video-skeleton" class="welcome-video-skeleton" aria-hidden="true" style="background: linear-gradient(110deg, rgba(232, 229, 223, 0.035) 8%, rgba(232, 229, 223, 0.08) 18%, rgba(232, 229, 223, 0.035) 33%)"></div>
+                <video id="instrumentality-home-welcome-video" class="welcome-video" style="display: none" controls preload="metadata">
+                  <source src="/images/rolnopol_ad.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+
+            <div class="home-instrumentality-grid">
+              <article class="home-instrumentality-kpi" title="Total number of registered users in the Rolnopol agricultural management system">
+                <div class="home-instrumentality-kpi__label">Users</div>
+                <div id="instrumentality-stat-users" class="home-instrumentality-kpi__value">-</div>
+              </article>
+              <article class="home-instrumentality-kpi" title="Total number of farms and agricultural properties managed through the platform">
+                <div class="home-instrumentality-kpi__label">Farms</div>
+                <div id="instrumentality-stat-farms" class="home-instrumentality-kpi__value">-</div>
+              </article>
+              <article class="home-instrumentality-kpi" title="Total agricultural land area managed across all farms">
+                <div class="home-instrumentality-kpi__label">Area</div>
+                <div id="instrumentality-stat-area" class="home-instrumentality-kpi__value">-</div>
+              </article>
+              <article class="home-instrumentality-kpi" title="Total number of staff members and workers employed across all agricultural operations">
+                <div class="home-instrumentality-kpi__label">Staff</div>
+                <div id="instrumentality-stat-staff" class="home-instrumentality-kpi__value">-</div>
+              </article>
+              <article class="home-instrumentality-kpi" title="Total number of livestock animals including cattle, pigs, chickens, and other farm animals">
+                <div class="home-instrumentality-kpi__label">Animals</div>
+                <div id="instrumentality-stat-animals" class="home-instrumentality-kpi__value">-</div>
+              </article>
+            </div>
+
+            <div class="home-instrumentality-advanced" data-feature-flag="homeStatsSectionEnabled" data-feature-flag-default="false">
+              <div>Avg area / farm<strong id="instrumentality-advanced-stat-area-per-farm">-</strong></div>
+              <div>Animals / staff<strong id="instrumentality-advanced-stat-animals-per-staff">-</strong></div>
+              <div>Avg offer value<strong id="instrumentality-advanced-stat-offer-value">-</strong></div>
+              <div>Completed deals<strong id="instrumentality-advanced-stat-completed-transactions">-</strong></div>
+            </div>
+
+            <nav class="home-instrumentality-actions" aria-label="Homepage actions">
+              <a href="/register.html">Start free</a>
+              <a href="/login.html">Sign in</a>
+            </nav>
+          </section>
+        `;
+
+        const escapeInstrumentalityNavText = (value) =>
+          String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+
+        const navItem = (href, iconClass, label, testId, options = {}) => {
+          const active = options.active ? " is-active" : "";
+          return `
+            <li>
+              <a href="${href}" class="home-instrumentality-nav-link${active}" title="${label}" aria-label="${label}" data-testid="${testId}">
+                <i class="${iconClass}" aria-hidden="true"></i>
+                <span>${label}</span>
+              </a>
+            </li>
+          `;
+        };
+
+        const syncInstrumentalityNav = async () => {
+          const navList = document.getElementById("home-instrumentality-nav-list");
+          const toggle = instrumentalityMain.querySelector(".home-instrumentality-nav-toggle");
+          if (!navList || !toggle) {
+            return;
+          }
+
+          const flags = typeof getNavFeatureFlagState === "function" ? await getNavFeatureFlagState() : {};
+          const token = typeof getCookie === "function" ? getCookie("rolnopolToken") : null;
+          const isLogged = typeof getCookie === "function" ? getCookie("rolnopolIsLogged") : null;
+          const username = typeof getCookie === "function" ? getCookie("rolnopolUserLabel") || getCookie("rolnopolUsername") : "";
+          const authenticated = Boolean(token && (isLogged === "true" || isLogged === true));
+          const links = [
+            navItem("/", "fas fa-home", "Home", "instrumentality-nav-home", { active: true }),
+          ];
+
+          if (authenticated) {
+            links.push(
+              navItem("/staff-fields-main.html", "fas fa-seedling", "Staff & Fields", "instrumentality-nav-staff-fields"),
+              navItem("/financial.html", "fas fa-coins", "Financial", "instrumentality-nav-financial"),
+              navItem("/marketplace.html", "fas fa-store", "Marketplace", "instrumentality-nav-marketplace"),
+            );
+          }
+
+          if (flags.rolnopolMapEnabled && authenticated) {
+            links.push(navItem("/rolnopolmap.html", "fas fa-map", "Map", "instrumentality-nav-map"));
+          }
+          if (flags.alertsEnabled) {
+            links.push(navItem("/alerts.html", "fas fa-bell", "Alerts", "instrumentality-nav-alerts"));
+          }
+          if (flags.rolnopolFarmlogEnabled) {
+            links.push(navItem("/farmlog.html", "fas fa-feather-pointed", "Farmlog", "instrumentality-nav-farmlog"));
+          }
+          if (flags.taskManagerEnabled && authenticated) {
+            links.push(navItem("/tasks.html", "fas fa-list-check", "Tasks", "instrumentality-nav-tasks"));
+          }
+          if (flags.taskLabEnabled && authenticated) {
+            links.push(navItem("/tasklab.html", "fa-solid fa-clipboard-check", "TaskLab", "instrumentality-nav-tasklab"));
+          }
+          if (flags.weatherPageEnabled) {
+            links.push(navItem("/weather.html", "fas fa-cloud-sun-rain", "Weather", "instrumentality-nav-weather"));
+          }
+          if (flags.weatherLiveStreamEnabled) {
+            links.push(navItem("/weather-live.html", "fas fa-satellite-dish", "Weather Live", "instrumentality-nav-weather-live"));
+          }
+          if (flags.messengerEnabled && authenticated) {
+            links.push(navItem("/messenger.html", "fas fa-comments", "Messenger", "instrumentality-nav-messenger"));
+          }
+          if (flags.greenhouseControlRoomEnabled) {
+            links.push(navItem("/greenhouse.html", "fa-solid fa-cubes", "Greenhouse", "instrumentality-nav-greenhouse"));
+          }
+          if (flags.farmStayEnabled) {
+            links.push(navItem("/farm-stay.html", "fa-solid fa-tractor", "FarmStay", "instrumentality-nav-farm-stay"));
+          }
+          if (flags.agriAcademyEnabled) {
+            links.push(navItem("/agri-academy-units.html", "fa-solid fa-graduation-cap", "AgriAcademy", "instrumentality-nav-agri-academy"));
+          }
+          if (flags.observatoryEnabled) {
+            links.push(navItem("/operator/observatory.html", "fa-solid fa-star", "Observatory", "instrumentality-nav-observatory"));
+          }
+          if (flags.crewOfficeEnabled && authenticated) {
+            links.push(navItem("/crew.html", "fa-solid fa-people-group", "Crew", "instrumentality-nav-crew"));
+          }
+
+          links.push(
+            navItem("/docs.html", "fas fa-book", "Docs", "instrumentality-nav-docs"),
+            navItem("/swagger.html", "fas fa-code", "API", "instrumentality-nav-api"),
+          );
+
+          if (authenticated) {
+            links.push(`
+              <li>
+                <a href="/profile.html" class="home-instrumentality-nav-link" title="Profile" aria-label="Profile" data-testid="instrumentality-nav-profile">
+                  <i class="fas fa-user" aria-hidden="true"></i>
+                  <span>${escapeInstrumentalityNavText(username || "Profile")}</span>
+                </a>
+              </li>
+              <li>
+                <button type="button" class="home-instrumentality-logout" data-testid="instrumentality-nav-logout" title="Logout" aria-label="Logout">
+                  <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                  <span>Logout</span>
+                </button>
+              </li>
+            `);
+          } else {
+            links.push(
+              navItem("/register.html", "fas fa-user-plus", "Register", "instrumentality-nav-register"),
+              navItem("/login.html", "fas fa-sign-in-alt", "Login", "instrumentality-nav-login"),
+            );
+          }
+
+          navList.innerHTML = links.join("");
+          navList.querySelector(".home-instrumentality-logout")?.addEventListener("click", (event) => {
+            event.preventDefault();
+            if (typeof logout === "function") {
+              logout();
+            } else {
+              window.location.href = "/login.html";
+            }
+          });
+
+          const nextToggle = toggle.cloneNode(true);
+          toggle.parentNode.replaceChild(nextToggle, toggle);
+          nextToggle.addEventListener("click", () => {
+            const open = !navList.classList.contains("is-open");
+            navList.classList.toggle("is-open", open);
+            nextToggle.classList.toggle("is-open", open);
+            nextToggle.setAttribute("aria-expanded", open ? "true" : "false");
+          });
+        };
+
+        syncInstrumentalityNav().catch(() => {
+          // Keep the instrumentality page usable even if feature flag navigation fails.
+        });
+        window.__syncHomeInstrumentalityNav = syncInstrumentalityNav;
+
+        setTimeout(() => {
+          const instrumentalityVideo = document.getElementById("instrumentality-home-welcome-video");
+          const instrumentalitySkeleton = document.getElementById("instrumentality-home-welcome-video-skeleton");
+          if (instrumentalityVideo && instrumentalitySkeleton) {
+            const revealInstrumentalityVideo = () => {
+              instrumentalityVideo.style.display = "block";
+              instrumentalityVideo.classList.add("is-loaded");
+              instrumentalitySkeleton.classList.add("is-hidden");
+            };
+
+            if (instrumentalityVideo.readyState >= 1) {
+              revealInstrumentalityVideo();
+            } else {
+              instrumentalityVideo.addEventListener("loadeddata", revealInstrumentalityVideo, { once: true });
+              instrumentalityVideo.addEventListener("error", revealInstrumentalityVideo, { once: true });
+            }
+          }
+        }, 0);
+      }
+
+      if (!legacyMain || !modernMain || !instrumentalityMain) {
         return;
       }
 
       const legacyHeader = document.getElementById("home-legacy-header");
 
-      const applyToggle = (enabled) => {
-        document.documentElement.classList.toggle("home-modern-prefers-modern", enabled === true);
+      const applyToggle = (mode) => {
+        const instrumentalityEnabled = mode === "instrumentality";
+        const modernEnabled = mode === "modern";
 
-        if (enabled) {
+        document.documentElement.classList.toggle("home-instrumentality-prefers-instrumentality", instrumentalityEnabled);
+        document.documentElement.classList.toggle("home-modern-prefers-modern", modernEnabled);
+
+        if (instrumentalityEnabled) {
           legacyMain.style.display = "none";
           if (legacyHeader) legacyHeader.style.display = "none";
+          modernMain.style.display = "none";
+          instrumentalityMain.style.removeProperty("display");
+          instrumentalityMain.setAttribute("data-feature-flag-enabled", "true");
+          instrumentalityMain.removeAttribute("data-feature-flag-hidden");
+        } else if (modernEnabled) {
+          legacyMain.style.display = "none";
+          if (legacyHeader) legacyHeader.style.display = "none";
+          instrumentalityMain.style.display = "none";
           modernMain.style.removeProperty("display");
           modernMain.setAttribute("data-feature-flag-enabled", "true");
           modernMain.removeAttribute("data-feature-flag-hidden");
         } else {
           legacyMain.style.removeProperty("display");
           if (legacyHeader) legacyHeader.style.removeProperty("display");
+          modernMain.style.display = "none";
+          instrumentalityMain.style.display = "none";
         }
       };
 
@@ -1047,10 +1896,12 @@
           return;
         }
         try {
+          const instrumentalityEnabled = await featureFlagsService.isEnabled("homeInstrumentalityRestyleEnabled", false);
           const modernEnabled = await featureFlagsService.isEnabled("homeModernRestyleEnabled", false);
-          applyToggle(modernEnabled === true);
+          applyToggle(instrumentalityEnabled === true ? "instrumentality" : modernEnabled === true ? "modern" : "legacy");
         } catch (error) {
           // Keep legacy layout on failure.
+          applyToggle("legacy");
         }
       };
 
@@ -1070,6 +1921,9 @@
           if (eventBus) {
             eventBus.on("feature-flags:changed", () => {
               checkAndApplyModernLayout(featureFlagsService);
+              if (typeof window.__syncHomeInstrumentalityNav === "function") {
+                window.__syncHomeInstrumentalityNav().catch(() => {});
+              }
             });
           }
         }
@@ -1311,6 +2165,10 @@
           if (modernUsersElement) {
             animateValue(modernUsersElement, 0, safeUsers, 1500, false, "users");
           }
+          const instrumentalityUsersElement = document.getElementById("instrumentality-stat-users");
+          if (instrumentalityUsersElement) {
+            animateValue(instrumentalityUsersElement, 0, safeUsers, 1500, false, "users");
+          }
         }
         if (farmsElement && stats.farms !== undefined) {
           const safeFarms = safeValue(stats.farms);
@@ -1318,6 +2176,10 @@
           const modernFarmsElement = document.getElementById("modern-stat-farms");
           if (modernFarmsElement) {
             animateValue(modernFarmsElement, 0, safeFarms, 1500, false, "farms");
+          }
+          const instrumentalityFarmsElement = document.getElementById("instrumentality-stat-farms");
+          if (instrumentalityFarmsElement) {
+            animateValue(instrumentalityFarmsElement, 0, safeFarms, 1500, false, "farms");
           }
         }
         if (areaElement && stats.area !== undefined) {
@@ -1327,6 +2189,10 @@
           if (modernAreaElement) {
             animateValue(modernAreaElement, 0, safeArea, 1500, true);
           }
+          const instrumentalityAreaElement = document.getElementById("instrumentality-stat-area");
+          if (instrumentalityAreaElement) {
+            animateValue(instrumentalityAreaElement, 0, safeArea, 1500, true);
+          }
         }
         if (staffElement && stats.staff !== undefined) {
           const safeStaff = safeValue(stats.staff);
@@ -1335,6 +2201,10 @@
           if (modernStaffElement) {
             animateValue(modernStaffElement, 0, safeStaff, 1500, false, "staff");
           }
+          const instrumentalityStaffElement = document.getElementById("instrumentality-stat-staff");
+          if (instrumentalityStaffElement) {
+            animateValue(instrumentalityStaffElement, 0, safeStaff, 1500, false, "staff");
+          }
         }
         if (animalsElement && stats.animals !== undefined) {
           const safeAnimals = safeValue(stats.animals);
@@ -1342,6 +2212,10 @@
           const modernAnimalsElement = document.getElementById("modern-stat-animals");
           if (modernAnimalsElement) {
             animateValue(modernAnimalsElement, 0, safeAnimals, 1500, false, "animals");
+          }
+          const instrumentalityAnimalsElement = document.getElementById("instrumentality-stat-animals");
+          if (instrumentalityAnimalsElement) {
+            animateValue(instrumentalityAnimalsElement, 0, safeAnimals, 1500, false, "animals");
           }
         }
 
@@ -1366,6 +2240,10 @@
         const modernAdvancedAnimalsPerStaffElement = document.getElementById("modern-advanced-stat-animals-per-staff");
         const modernAdvancedOfferValueElement = document.getElementById("modern-advanced-stat-offer-value");
         const modernAdvancedCompletedTransactionsElement = document.getElementById("modern-advanced-stat-completed-transactions");
+        const instrumentalityAdvancedAreaPerFarmElement = document.getElementById("instrumentality-advanced-stat-area-per-farm");
+        const instrumentalityAdvancedAnimalsPerStaffElement = document.getElementById("instrumentality-advanced-stat-animals-per-staff");
+        const instrumentalityAdvancedOfferValueElement = document.getElementById("instrumentality-advanced-stat-offer-value");
+        const instrumentalityAdvancedCompletedTransactionsElement = document.getElementById("instrumentality-advanced-stat-completed-transactions");
 
         if (advancedAreaPerFarmElement) {
           advancedAreaPerFarmElement.textContent = `${areaPerFarmValue.toLocaleString("pl-PL", {
@@ -1391,8 +2269,20 @@
             maximumFractionDigits: 2,
           })} ha`;
         }
+        if (instrumentalityAdvancedAreaPerFarmElement) {
+          instrumentalityAdvancedAreaPerFarmElement.textContent = `${areaPerFarmValue.toLocaleString("pl-PL", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 2,
+          })} ha`;
+        }
         if (modernAdvancedAnimalsPerStaffElement) {
           modernAdvancedAnimalsPerStaffElement.textContent = animalsPerStaffValue.toLocaleString("pl-PL", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 2,
+          });
+        }
+        if (instrumentalityAdvancedAnimalsPerStaffElement) {
+          instrumentalityAdvancedAnimalsPerStaffElement.textContent = animalsPerStaffValue.toLocaleString("pl-PL", {
             minimumFractionDigits: 1,
             maximumFractionDigits: 2,
           });
@@ -1400,8 +2290,14 @@
         if (modernAdvancedOfferValueElement) {
           modernAdvancedOfferValueElement.textContent = formatCurrency(avgOfferValue);
         }
+        if (instrumentalityAdvancedOfferValueElement) {
+          instrumentalityAdvancedOfferValueElement.textContent = formatCurrency(avgOfferValue);
+        }
         if (modernAdvancedCompletedTransactionsElement) {
           modernAdvancedCompletedTransactionsElement.textContent = completedTransactions.toLocaleString("pl-PL");
+        }
+        if (instrumentalityAdvancedCompletedTransactionsElement) {
+          instrumentalityAdvancedCompletedTransactionsElement.textContent = completedTransactions.toLocaleString("pl-PL");
         }
 
         // Show staff info if available with safe values
@@ -1464,6 +2360,11 @@
           { id: "modern-stat-area", isArea: true, type: "" },
           { id: "modern-stat-staff", isArea: false, type: "staff" },
           { id: "modern-stat-animals", isArea: false, type: "animals" },
+          { id: "instrumentality-stat-users", isArea: false, type: "users" },
+          { id: "instrumentality-stat-farms", isArea: false, type: "farms" },
+          { id: "instrumentality-stat-area", isArea: true, type: "" },
+          { id: "instrumentality-stat-staff", isArea: false, type: "staff" },
+          { id: "instrumentality-stat-animals", isArea: false, type: "animals" },
         ];
         elements.forEach((item) => {
           const element = document.getElementById(item.id);
@@ -1483,6 +2384,10 @@
           "modern-advanced-stat-animals-per-staff",
           "modern-advanced-stat-offer-value",
           "modern-advanced-stat-completed-transactions",
+          "instrumentality-advanced-stat-area-per-farm",
+          "instrumentality-advanced-stat-animals-per-staff",
+          "instrumentality-advanced-stat-offer-value",
+          "instrumentality-advanced-stat-completed-transactions",
         ];
         advancedFallbackIds.forEach((id) => {
           const element = document.getElementById(id);

@@ -32,7 +32,10 @@ describe("json-database concurrency", () => {
     const db = new JSONDatabase(filePath, []);
     await db.initialize();
 
+    // Writes land on a temp file and are renamed over the target, so a stubbed writeFile
+    // needs a stubbed rename beside it: there is no temp file for the real one to move.
     const writeSpy = vi.spyOn(fs, "writeFile").mockRejectedValueOnce(new Error("disk full")).mockResolvedValue(undefined);
+    const renameSpy = vi.spyOn(fs, "rename").mockResolvedValue(undefined);
 
     await expect(db.add({ name: "first" })).rejects.toThrow("Failed to persist database");
 
@@ -40,6 +43,7 @@ describe("json-database concurrency", () => {
 
     await expect(db.add({ name: "second" })).resolves.toMatchObject({ name: "second" });
     writeSpy.mockRestore();
+    renameSpy.mockRestore();
   });
 
   it("serializes concurrent add operations without data loss", async () => {

@@ -719,3 +719,105 @@
   background: #16a34a;
   border-color: #16a34a;
 }
+
+/* --- feature-flags.ini overrides --------------------------------------- */
+/* Flags pinned by the persistent config file in the project root. */
+
+.flags-override-banner {
+  margin-bottom: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.05));
+  color: var(--flag-text);
+}
+
+.flags-override-banner.is-hidden {
+  display: none;
+}
+
+.flags-override-banner__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #92400e;
+}
+
+.flags-override-banner__text {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  color: var(--flag-text-secondary);
+}
+
+.flags-override-banner code {
+  font-size: 0.72rem;
+  padding: 0.05rem 0.25rem;
+  border-radius: 0.2rem;
+  background: rgba(146, 64, 14, 0.1);
+}
+
+.flags-override-banner__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.flags-override-banner__flag {
+  font-size: 0.7rem;
+}
+
+#flagsPinnedMeta.is-hidden {
+  display: none;
+}
+
+.flags-card--pinned {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.07), rgba(245, 158, 11, 0.02));
+}
+
+.flags-badge--pinned {
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  gap: 0.2rem;
+}
+
+.flags-toggle--pinned {
+  cursor: not-allowed;
+}
+
+.flags-toggle--pinned input {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* An invalid feature-flags.ini warns without blocking anything. */
+
+.flags-override-banner--problems {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.04));
+}
+
+.flags-override-banner--problems .flags-override-banner__head {
+  color: #b91c1c;
+}
+
+.flags-override-banner--problems code {
+  background: rgba(185, 28, 28, 0.1);
+}
+
+.flags-override-banner__problems {
+  margin-top: 0.5rem;
+}
+
+.flags-override-banner__problem-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.73rem;
+  color: var(--flag-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}

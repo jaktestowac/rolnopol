@@ -107,13 +107,26 @@ message EventQuery {
   string exam_id = 2; // "" = every exam
   int32 limit = 3; // 0 = server default; clamped to a maximum
   int64 since_sequence = 4; // 0 = from the start; else only entries ABOVE it
+  // Scroll-back: only entries BELOW it. 0 = start at the newest.
+  //
+  // This is a PAGE BOUND, not a filter — the opposite of `since_sequence`, which
+  // narrows what the query is about. `total` therefore ignores it, so a view can
+  // page backwards through history and keep saying "showing 150 of 812" honestly
+  // while it does. Hand back the LOWEST sequence you have rendered to read the
+  // page below it.
+  int64 before_sequence = 5;
 }
 
 message EventList {
   repeated ExamEvent events = 1; // newest first
-  int32 total = 2; // entries matching the filter, BEFORE the limit
+  int32 total = 2; // entries matching the filter, BEFORE the limit and IGNORING before_sequence
   int64 latest_sequence = 3; // the log's high-water mark (a poll cursor)
   int32 returned = 4;
+  // True when matching entries exist BELOW the last one returned — the signal a
+  // scroll-back view needs to know whether another page is worth asking for.
+  // Derived from the window, so it answers "is there more history", never "is
+  // there more log" (the tail answers that one).
+  bool has_more = 5;
 }
 
 message WatchEventsRequest {

@@ -32,6 +32,7 @@ describe("feature-flags.service", () => {
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
         homeModernRestyleEnabled: false,
+        homeInstrumentalityRestyleEnabled: false,
         messengerEnabled: false,
         assistantChatEnabled: false,
         notificationCenterEnabled: false,
@@ -91,6 +92,7 @@ describe("feature-flags.service", () => {
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
         homeModernRestyleEnabled: false,
+        homeInstrumentalityRestyleEnabled: false,
         messengerEnabled: false,
         assistantChatEnabled: false,
         notificationCenterEnabled: false,
@@ -155,6 +157,7 @@ describe("feature-flags.service", () => {
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
         homeModernRestyleEnabled: false,
+        homeInstrumentalityRestyleEnabled: false,
         messengerEnabled: false,
         assistantChatEnabled: false,
         notificationCenterEnabled: false,
@@ -220,6 +223,7 @@ describe("feature-flags.service", () => {
           messengerEnabled: false,
           assistantChatEnabled: false,
           homeModernRestyleEnabled: false,
+          homeInstrumentalityRestyleEnabled: false,
           weatherPageEnabled: false,
           weatherWeatherDataExport: false,
           weatherUserInsightsEnabled: false,
@@ -258,6 +262,7 @@ describe("feature-flags.service", () => {
         homeWelcomeVideoEnabled: false,
         homeStatsSectionEnabled: false,
         homeModernRestyleEnabled: false,
+        homeInstrumentalityRestyleEnabled: false,
         cookieConsentBannerEnabled: false,
         messengerEnabled: false,
         assistantChatEnabled: false,
@@ -340,7 +345,10 @@ describe("feature-flags.service", () => {
       marketplaceEnabled: true,
     });
 
-    expect(result).toEqual(next);
+    // Reads also carry the feature-flags.ini projection (see feature-flags.service.ini.test.js).
+    expect(result).toMatchObject(next);
+    expect(result.storedFlags).toEqual(next.flags);
+    expect(result.overrides.active).toBe(false);
     expect(replaceSpy).toHaveBeenCalled();
     expect(getAllSpy).toHaveBeenCalled();
 
@@ -364,7 +372,9 @@ describe("feature-flags.service", () => {
 
     const result = await featureFlagsService.replaceAllFlags({});
 
-    expect(result).toEqual(next);
+    expect(result).toMatchObject(next);
+    expect(result.storedFlags).toEqual({});
+    expect(result.overrides.active).toBe(false);
     expect(replaceSpy).toHaveBeenCalled();
     expect(getAllSpy).toHaveBeenCalled();
 

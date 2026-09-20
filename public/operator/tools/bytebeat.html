@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Bytebeat Console - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/pages/bytebeat.css?v=20260825-1" />
+</head>
+
+<body class="btb-page">
+    <div class="btb-scanlines" aria-hidden="true"></div>
+    <div class="btb-glow" aria-hidden="true"></div>
+
+    <main class="btb-shell">
+        <header class="btb-header">
+            <div class="btb-header__title">
+                <span class="btb-eyebrow">rolnopol / operator / tools</span>
+                <h1 class="btb-title">BYTEBEAT<span>//</span>CONSOLE</h1>
+                <p class="btb-tagline">one-line music machine &mdash; the low byte of t is the speaker</p>
+            </div>
+            <div class="btb-header__meta">
+                <label class="btb-tube">
+                    <span class="btb-tube__label">Tube</span>
+                    <select class="btb-select" id="btbTube" aria-label="Tube colour scheme">
+                        <option value="phosphor">Phosphor / green</option>
+                        <option value="amber">Amber / vintage</option>
+                        <option value="ice">Ice / blue</option>
+                        <option value="violet">Violet / plasma</option>
+                    </select>
+                </label>
+                <span class="btb-chip">no eval, no external libs</span>
+                <span class="btb-chip btb-chip--live" id="btbState">holding</span>
+            </div>
+        </header>
+
+        <!-- Everything happens in this tab: the formula is compiled by our own
+             parser (never eval), audio is synthesized locally and the WAV is
+             written byte by byte. There is no endpoint behind this page. -->
+        <section class="btb-viewport" id="btbViewport" aria-label="Oscilloscope">
+            <span class="btb-hud btb-hud--tl" aria-hidden="true"></span>
+            <span class="btb-hud btb-hud--tr" aria-hidden="true"></span>
+            <span class="btb-hud btb-hud--bl" aria-hidden="true"></span>
+            <span class="btb-hud btb-hud--br" aria-hidden="true"></span>
+
+            <div class="btb-telemetry btb-telemetry--left" aria-hidden="true">
+                <span>T</span><strong id="btbTHud">0</strong>
+            </div>
+            <div class="btb-telemetry btb-telemetry--right" aria-hidden="true">
+                <span>CLOCK</span><strong id="btbSecHud">0.0s</strong>
+            </div>
+
+            <canvas class="btb-scope" id="btbScope" width="960" height="320"></canvas>
+        </section>
+
+        <form class="btb-deck" id="btbControls">
+            <fieldset class="btb-pod btb-pod--formula">
+                <legend><i class="fa-solid fa-terminal" aria-hidden="true"></i> Formula</legend>
+
+                <label class="btb-field">
+                    <span class="btb-field__label">Expression of t</span>
+                    <textarea class="btb-formula" id="btbFormula" rows="3" spellcheck="false" autocomplete="off"
+                        aria-label="Bytebeat formula">t*(42&amp;t&gt;&gt;10)</textarea>
+                </label>
+
+                <p class="btb-error" id="btbError" hidden></p>
+
+                <label class="btb-field">
+                    <span class="btb-field__label">Preset shelf</span>
+                    <select class="btb-select btb-select--wide" id="btbPreset">
+                        <option value="">custom formula</option>
+                    </select>
+                </label>
+
+                <p class="btb-note">Operators: <code>+ - * / % &lt;&lt; &gt;&gt; &gt;&gt;&gt; &amp; | ^ ~
+                        ! ?: &amp;&amp; || == != &lt; &gt;</code> and parentheses; the only variable is
+                    <code>t</code>. The formula never touches <code>eval</code> &mdash; it runs through the
+                    console's own parser.</p>
+
+                <button type="button" class="btb-btn btb-btn--ghost btb-btn--wide" id="btbReset">
+                    <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset console
+                </button>
+            </fieldset>
+
+            <fieldset class="btb-pod btb-pod--transport">
+                <legend><i class="fa-solid fa-sliders" aria-hidden="true"></i> Transport</legend>
+
+                <div class="btb-transport">
+                    <button type="button" class="btb-btn btb-btn--play" id="btbPlay">
+                        <i class="fa-solid fa-play" aria-hidden="true"></i> Play
+                    </button>
+                    <button type="button" class="btb-btn btb-btn--ghost" id="btbRewind">
+                        <i class="fa-solid fa-backward-fast" aria-hidden="true"></i> t=0
+                    </button>
+                </div>
+
+                <label class="btb-field">
+                    <span class="btb-field__label">Volume <output id="btbVolumeValue">60%</output></span>
+                    <input type="range" class="btb-range" id="btbVolume" min="0" max="100" step="1" value="60" />
+                </label>
+
+                <label class="btb-field">
+                    <span class="btb-field__label">Formula rate</span>
+                    <select class="btb-select btb-select--wide" id="btbRate">
+                        <option value="8000" selected>8000 Hz &mdash; the classic</option>
+                        <option value="11025">11025 Hz</option>
+                        <option value="16000">16000 Hz</option>
+                        <option value="22050">22050 Hz</option>
+                        <option value="32000">32000 Hz</option>
+                        <option value="44100">44100 Hz</option>
+                    </select>
+                </label>
+
+                <label class="btb-field">
+                    <span class="btb-field__label">Dialect</span>
+                    <select class="btb-select btb-select--wide" id="btbMode">
+                        <option value="byte" selected>Bytebeat &mdash; v &amp; 255, unsigned</option>
+                        <option value="signed">Signed &mdash; v as a signed byte</option>
+                        <option value="float">Floatbeat &mdash; v clamped to &plusmn;1</option>
+                    </select>
+                </label>
+
+                <dl class="btb-readout">
+                    <div class="btb-readout__row"><dt>Scope range</dt><dd id="btbRangeOut">&mdash;</dd></div>
+                    <div class="btb-readout__row"><dt>Clipped</dt><dd id="btbClipOut">&mdash;</dd></div>
+                </dl>
+            </fieldset>
+
+            <fieldset class="btb-pod btb-pod--export">
+                <legend><i class="fa-solid fa-compact-disc" aria-hidden="true"></i> Export</legend>
+
+                <label class="btb-field">
+                    <span class="btb-field__label">Duration (seconds, from t=0)</span>
+                    <input type="number" class="btb-number" id="btbDuration" min="1" max="60" step="1" value="10" />
+                </label>
+
+                <label class="btb-field">
+                    <span class="btb-field__label">Bit depth</span>
+                    <select class="btb-select btb-select--wide" id="btbBits">
+                        <option value="8" selected>8-bit unsigned &mdash; the real thing</option>
+                        <option value="16">16-bit signed</option>
+                    </select>
+                </label>
+
+                <dl class="btb-readout">
+                    <div class="btb-readout__row"><dt>Wav size</dt><dd id="btbWavOut">&mdash;</dd></div>
+                </dl>
+
+                <p class="btb-message" id="btbMessage" role="status" aria-live="polite"></p>
+
+                <button type="button" class="btb-btn btb-btn--wide" id="btbSaveWav">
+                    <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Save .wav
+                </button>
+
+                <p class="btb-note">The RIFF header is written by hand, all 44 bytes of it. An 8-bit export
+                    at 8000 Hz is the sound exactly as the formula means it.</p>
+            </fieldset>
+        </form>
+
+        <footer class="btb-footer">
+            <a class="btb-link" href="/">&#8592; Back to Rolnopol</a>
+            <span class="btb-footer__note">Hidden operator tool. The music is computed in this tab &mdash; nothing is uploaded anywhere.</span>
+        </footer>
+    </main>
+
+    <script src="/js/pages/bytebeat-pipeline.js?v=20260825-1"></script>
+    <script src="/js/pages/bytebeat.js?v=20260825-1"></script>
+</body>
+
+</html>

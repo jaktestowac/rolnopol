@@ -1,5 +1,5 @@
 const { formatResponseBody } = require("../helpers/response-helper");
-const { logError } = require("../helpers/logger-api");
+const { logError, logWarning } = require("../helpers/logger-api");
 const featureFlagsService = require("../services/feature-flags.service");
 
 class FeatureFlagsController {
@@ -16,18 +16,42 @@ class FeatureFlagsController {
     }
   }
 
+  // A rejected write against a pinned flag is expected behaviour, not a fault,
+  // so it stays at WARN instead of polluting the error log.
+  _logWriteError(prefix, error) {
+    if (error?.code === featureFlagsService.PINNED_FLAG_ERROR_CODE) {
+      logWarning(`${prefix} ${error.message}`);
+      return;
+    }
+    logError(prefix, error);
+  }
+
+  // A write that tries to change a flag pinned by feature-flags.ini is a
+  // conflict, not a bad request: the payload is well formed, the file just
+  // outranks it. See services/feature-flag-ini.service.js.
+  _resolveWriteError(error, fallbackMessage) {
+    const errorMessage = typeof error?.message === "string" ? error.message : "";
+
+    if (error?.code === featureFlagsService.PINNED_FLAG_ERROR_CODE) {
+      return { status: 409, message: errorMessage, conflicts: error.conflicts || [] };
+    }
+
+    if (errorMessage.includes("Validation failed")) {
+      return { status: 400, message: errorMessage };
+    }
+
+    return { status: 500, message: fallbackMessage };
+  }
+
   async patchFeatureFlags(req, res) {
     try {
       const flags = req.body?.flags;
       const data = await featureFlagsService.updateFlags(flags);
       return res.status(200).json(formatResponseBody({ data }));
     } catch (error) {
-      logError("Error updating feature flags:", error);
-      const errorMessage = typeof error?.message === "string" ? error.message : "";
-      const isValidation = errorMessage.includes("Validation failed");
-      const status = isValidation ? 400 : 500;
-      const message = isValidation ? errorMessage : "Failed to update feature flags";
-      return res.status(status).json(formatResponseBody({ error: message }));
+      this._logWriteError("Error updating feature flags:", error);
+      const { status, message, conflicts } = this._resolveWriteError(error, "Failed to update feature flags");
+      return res.status(status).json(formatResponseBody(conflicts ? { error: message, details: conflicts } : { error: message }));
     }
   }
 
@@ -37,12 +61,9 @@ class FeatureFlagsController {
       const data = await featureFlagsService.replaceAllFlags(flags);
       return res.status(200).json(formatResponseBody({ data }));
     } catch (error) {
-      logError("Error replacing feature flags:", error);
-      const errorMessage = typeof error?.message === "string" ? error.message : "";
-      const isValidation = errorMessage.includes("Validation failed");
-      const status = isValidation ? 400 : 500;
-      const message = isValidation ? errorMessage : "Failed to replace feature flags";
-      return res.status(status).json(formatResponseBody({ error: message }));
+      this._logWriteError("Error replacing feature flags:", error);
+      const { status, message, conflicts } = this._resolveWriteError(error, "Failed to replace feature flags");
+      return res.status(status).json(formatResponseBody(conflicts ? { error: message, details: conflicts } : { error: message }));
     }
   }
 

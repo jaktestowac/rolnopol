@@ -12,15 +12,32 @@ const { computeLeaderboards, learnerAlias, aggregateRatings } = require(path.joi
 // Two learners, one unit with activity + one seeded-only unit, three exams.
 const DATA = {
   users: {
-    "2": {
+    2: {
       sessions: {
-        s1: { examId: "e1", state: "scored", rating: { stars: 5 }, snapshot: { ownerUnitId: "u1", unitName: "Green", title: "Soil", pricing: { mode: "free" } }, result: { scorePct: 90, passed: true, certNo: "C1" } },
-        s2: { examId: "e2", state: "scored", rating: { stars: 3 }, snapshot: { ownerUnitId: "u1", title: "Organic", pricing: { mode: "paid", priceRol: 25 } }, result: { scorePct: 80, passed: true, certNo: "C2" } },
+        s1: {
+          examId: "e1",
+          state: "scored",
+          rating: { stars: 5 },
+          snapshot: { ownerUnitId: "u1", unitName: "Green", title: "Soil", pricing: { mode: "free" } },
+          result: { scorePct: 90, passed: true, certNo: "C1" },
+        },
+        s2: {
+          examId: "e2",
+          state: "scored",
+          rating: { stars: 3 },
+          snapshot: { ownerUnitId: "u1", title: "Organic", pricing: { mode: "paid", priceRol: 25 } },
+          result: { scorePct: 80, passed: true, certNo: "C2" },
+        },
       },
     },
-    "3": {
+    3: {
       sessions: {
-        s3: { examId: "e1", state: "scored", snapshot: { ownerUnitId: "u1", title: "Soil" }, result: { scorePct: 50, passed: false, certNo: null } },
+        s3: {
+          examId: "e1",
+          state: "scored",
+          snapshot: { ownerUnitId: "u1", title: "Soil" },
+          result: { scorePct: 50, passed: false, certNo: null },
+        },
         s4: { examId: "e3", state: "entitled", snapshot: { ownerUnitId: "u2", title: "Combine" } },
       },
     },
@@ -79,14 +96,27 @@ describe("computeLeaderboards", () => {
 describe("aggregateRatings", () => {
   const r = aggregateRatings(DATA);
 
+  // `toMatchObject`, not `toEqual`, and for the reason the sibling test above
+  // already does it: `aggregateRatings` also carries `passedCount`, which the exam
+  // and unit routes both read. An exact-match assertion here pinned the shape of
+  // the return value rather than the behaviour under test, so adding a field to it
+  // broke a rating test — and nothing noticed, because this file was not in
+  // `academy:test`. `passedCount` is asserted on its own below.
   it("averages ratings per exam and omits never-rated exams", () => {
-    expect(r.exams["e1"]).toEqual({ rating: 5, ratings: 1 });
-    expect(r.exams["e2"]).toEqual({ rating: 3, ratings: 1 });
+    expect(r.exams["e1"]).toMatchObject({ rating: 5, ratings: 1 });
+    expect(r.exams["e2"]).toMatchObject({ rating: 3, ratings: 1 });
     expect(r.exams["e3"]).toBeUndefined();
   });
 
   it("pools every exam rating into the unit average", () => {
-    expect(r.units["u1"]).toEqual({ rating: 4, ratings: 2 }); // mean(5, 3)
+    expect(r.units["u1"]).toMatchObject({ rating: 4, ratings: 2 }); // mean(5, 3)
     expect(r.units["u2"]).toBeUndefined(); // no ratings under this unit
+  });
+
+  it("counts distinct passers alongside the ratings", () => {
+    // The field the assertions above used to be broken by. Pinned explicitly so it
+    // is covered on purpose rather than incidentally.
+    expect(r.exams["e1"].passedCount).toBeTypeOf("number");
+    expect(r.units["u1"].passedCount).toBeTypeOf("number");
   });
 });

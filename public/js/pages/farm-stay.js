@@ -14,29 +14,12 @@
   const $ = (id) => document.getElementById(id);
   let lastSearch = null; // remember search params to re-run after a booking
 
-  // Polish voivodeships → cities. The value stored on a property is the city
-  // (property.district); the voivodeship is only the dropdown grouping.
-  const PL_LOCATIONS = {
-    Dolnośląskie: ["Wrocław", "Karpacz", "Wałbrzych"],
-    "Kujawsko-Pomorskie": ["Bydgoszcz", "Toruń"],
-    Lubelskie: ["Lublin", "Kazimierz Dolny"],
-    Lubuskie: ["Zielona Góra"],
-    Łódzkie: ["Łódź"],
-    Małopolskie: ["Kraków", "Zakopane", "Tarnów"],
-    Mazowieckie: ["Warszawa", "Płock", "Radom"],
-    Opolskie: ["Opole"],
-    Podkarpackie: ["Rzeszów", "Ustrzyki Dolne"],
-    Podlaskie: ["Białystok", "Augustów"],
-    Pomorskie: ["Gdańsk", "Sopot", "Gdynia"],
-    Śląskie: ["Katowice", "Wisła"],
-    Świętokrzyskie: ["Kielce"],
-    "Warmińsko-Mazurskie": ["Olsztyn", "Giżycko"],
-    Wielkopolskie: ["Poznań"],
-    Zachodniopomorskie: ["Szczecin", "Kołobrzeg"],
-  };
-
-  // localStorage key for user-added custom locations
-  const CUSTOM_LOC_KEY = "farmStay_customLocs";
+  // Location catalog fetched from the backend — GET /locations. `regions` are the
+  // fixed Polish voivodeships → cities (the value stored on a property is the
+  // city, property.district; the voivodeship is only the dropdown grouping);
+  // `custom` are user-added cities, shared by ALL users, each flagged `mine` when
+  // the current user added it (only then may they remove it).
+  let locations = { regions: [], custom: [] };
 
   // Presentation catalog (stay types, policies, amenities, card-photo themes)
   // fetched from the backend — GET /catalog — so the option lists and their
@@ -82,19 +65,12 @@
     return String(Math.round((Number(n) + Number.EPSILON) * 100) / 100);
   }
 
-  // ── Custom locations ─────────────────────────────────────────────────────────
-  function loadCustomLocs() {
-    try {
-      const raw = JSON.parse(localStorage.getItem(CUSTOM_LOC_KEY) || "[]");
-      // Migrate legacy plain-string entries to {voi, city} objects
-      return raw.map((item) => (typeof item === "string" ? { voi: "Custom", city: item } : item));
-    } catch {
-      return [];
-    }
+  // ── Locations ────────────────────────────────────────────────────────────────
+  async function loadLocations() {
+    const { ok, body } = await api("GET", "/locations");
+    if (ok && Array.isArray(body?.regions)) locations = { regions: body.regions, custom: body.custom || [] };
   }
-  function saveCustomLocs(locs) {
-    localStorage.setItem(CUSTOM_LOC_KEY, JSON.stringify(locs));
-  }
+
   function refreshAllLocationSelects() {
     populateLocationSelect($("fsDistrict"), { includeAny: true });
     populateLocationSelect($("lDistrict"), { includeAny: false });
@@ -102,65 +78,90 @@
 
   function populateLocationSelect(sel, { includeAny } = {}) {
     if (!sel) return;
-    const custom = loadCustomLocs();
+    const custom = locations.custom;
+    const previous = sel.value; // a repopulate (after add/remove) keeps the pick
     const frag = [];
     if (includeAny) frag.push('<option value="">Anywhere in Poland</option>');
-    for (const [voi, cities] of Object.entries(PL_LOCATIONS)) {
-      const extra = custom.filter((c) => c.voi === voi).map((c) => c.city);
-      frag.push(`<optgroup label="${voi}">`);
-      for (const c of [...cities, ...extra]) frag.push(`<option value="${c}">${c}</option>`);
+    for (const { voivodeship, cities } of locations.regions) {
+      const extra = custom.filter((c) => c.voivodeship === voivodeship).map((c) => c.city);
+      frag.push(`<optgroup label="${esc(voivodeship)}">`);
+      for (const c of [...(cities || []), ...extra]) frag.push(`<option value="${esc(c)}">${esc(c)}</option>`);
       frag.push("</optgroup>");
     }
     // Custom entries whose region isn't a standard one go to a fallback group
-    const knownRegions = new Set(Object.keys(PL_LOCATIONS));
-    const orphans = custom.filter((c) => !knownRegions.has(c.voi));
+    const knownRegions = new Set(locations.regions.map((r) => r.voivodeship));
+    const orphans = custom.filter((c) => !knownRegions.has(c.voivodeship));
     if (orphans.length) {
       frag.push('<optgroup label="Custom">');
-      for (const c of orphans) frag.push(`<option value="${c.city}">${c.city}</option>`);
+      for (const c of orphans) frag.push(`<option value="${esc(c.city)}">${esc(c.city)}</option>`);
       frag.push("</optgroup>");
     }
     sel.innerHTML = frag.join("");
+    if (previous) sel.value = previous;
   }
 
+  function populateVoivodeshipSelect() {
+    const sel = $("lCustomVoi");
+    if (!sel) return;
+    sel.innerHTML =
+      '<option value="">Voivodeship…</option>' +
+      locations.regions.map((r) => `<option value="${esc(r.voivodeship)}">${esc(r.voivodeship)}</option>`).join("");
+  }
+
+  // Every custom location is platform-wide, so the list shows other users' cities
+  // too; the remove button only appears on the ones this user added.
   function renderCustomLocs() {
     const el = $("fsCustomLocs");
     if (!el) return;
-    const locs = loadCustomLocs();
+    const locs = locations.custom;
     if (!locs.length) {
       el.innerHTML = '<span class="fs-note">None yet.</span>';
       return;
     }
     el.innerHTML = locs
-      .map(
-        (c) =>
-          `<span class="fs-chip fs-chip-loc">${esc(c.city)} <span class="fs-chip-voi">(${esc(c.voi)})</span><button class="fs-chip-rm" data-city="${esc(c.city)}" data-voi="${esc(c.voi)}" title="Remove">&times;</button></span>`,
-      )
+      .map((c) => {
+        const rm = c.mine
+          ? `<button class="fs-chip-rm" data-city="${esc(c.city)}" data-voi="${esc(c.voivodeship)}" title="Remove">&times;</button>`
+          : "";
+        return `<span class="fs-chip fs-chip-loc" title="Added by ${esc(c.addedBy)}">${esc(c.city)} <span class="fs-chip-voi">(${esc(c.voivodeship)})</span>${rm}</span>`;
+      })
       .join("");
-    el.querySelectorAll("[data-city]").forEach((b) =>
-      b.addEventListener("click", () => {
-        const remaining = loadCustomLocs().filter((x) => !(x.city === b.dataset.city && x.voi === b.dataset.voi));
-        saveCustomLocs(remaining);
-        refreshAllLocationSelects();
-        renderCustomLocs();
-      }),
-    );
+    el.querySelectorAll("[data-city]").forEach((b) => b.addEventListener("click", () => removeCustomLoc(b.dataset.voi, b.dataset.city)));
   }
 
-  function addCustomLoc() {
+  async function addCustomLoc() {
     const cityInput = $("lCustomLoc");
     const voiSel = $("lCustomVoi");
     const city = cityInput?.value.trim();
-    const voi = voiSel?.value;
-    if (!city || !voi) return;
-    const locs = loadCustomLocs();
-    if (!locs.some((l) => l.city === city && l.voi === voi)) {
-      locs.push({ voi, city });
-      saveCustomLocs(locs);
-      refreshAllLocationSelects();
-      renderCustomLocs();
+    const voivodeship = voiSel?.value;
+    if (!city || !voivodeship) return banner("Pick a voivodeship and type a city.");
+    const { ok, status, body } = await api("POST", "/locations", { voivodeship, city });
+    if (!ok) {
+      return banner(status === 409 ? `"${city}" is already on the list.` : body?.error || "Could not add the location.");
     }
+    await refreshLocations();
+    banner(`Added ${city} — everyone can use it now.`);
     cityInput.value = "";
     cityInput.focus();
+  }
+
+  async function removeCustomLoc(voivodeship, city) {
+    const query = `?voivodeship=${encodeURIComponent(voivodeship)}&city=${encodeURIComponent(city)}`;
+    const { ok, status, body } = await api("DELETE", `/locations${query}`);
+    if (!ok) {
+      if (status === 409) return banner(`${city} is still used by a listing.`);
+      return banner(body?.error || "Could not remove the location.");
+    }
+    await refreshLocations();
+  }
+
+  // Re-read the shared list, then rebuild everything that renders it. The
+  // voivodeship picker is left alone — regions are fixed, and rebuilding it would
+  // drop the region the user has selected for their next entry.
+  async function refreshLocations() {
+    await loadLocations();
+    refreshAllLocationSelects();
+    renderCustomLocs();
   }
 
   // ── HTTP helper ──────────────────────────────────────────────────────────────
@@ -1350,8 +1351,6 @@
 
   // ── Init ────────────────────────────────────────────────────────────────────
   async function init() {
-    populateLocationSelect($("fsDistrict"), { includeAny: true });
-    populateLocationSelect($("lDistrict"), { includeAny: false });
     initTabs();
     defaultDates();
     $("fsSearchForm").addEventListener("submit", doSearch);
@@ -1365,16 +1364,6 @@
       if (e.target === $("fsModal")) closeModal();
     });
 
-    // Populate region picker in the custom location form
-    const voiSel = $("lCustomVoi");
-    if (voiSel) {
-      voiSel.innerHTML =
-        '<option value="">Region…</option>' +
-        Object.keys(PL_LOCATIONS)
-          .map((v) => `<option value="${esc(v)}">${esc(v)}</option>`)
-          .join("");
-    }
-
     // Custom location handlers
     const addLocBtn = $("lAddCustomLoc");
     if (addLocBtn) addLocBtn.addEventListener("click", addCustomLoc);
@@ -1386,11 +1375,13 @@
           addCustomLoc();
         }
       });
-    renderCustomLocs();
 
-    // Load the backend catalog before rendering anything that depends on it
+    // Load the backend catalogs before rendering anything that depends on them
     // (pickers, type/policy selects, and card photo gradients in search).
-    await loadCatalog();
+    await Promise.all([loadCatalog(), loadLocations()]);
+    populateVoivodeshipSelect();
+    refreshAllLocationSelects();
+    renderCustomLocs();
     populateTypeAndPolicySelects();
     renderAmenityPicker();
     renderPhotoPicker();

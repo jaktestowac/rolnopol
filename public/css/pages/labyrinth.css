@@ -70,6 +70,21 @@ body.labyrinth-page[data-labyrinth-theme="graphite"] {
   --labyrinth-discovered: rgba(225, 229, 239, 0.7);
 }
 
+body.labyrinth-page.labyrinth-lux-mode {
+  --labyrinth-accent: #d9d1c7;
+  --labyrinth-accent-soft: rgba(217, 209, 199, 0.14);
+  --labyrinth-bg: #090807;
+  --labyrinth-panel: rgba(20, 18, 16, 0.88);
+  --labyrinth-border: rgba(217, 209, 199, 0.16);
+  --labyrinth-wall: #302a25;
+}
+
+body.labyrinth-page.labyrinth-lux-mode .labyrinth-title::after {
+  content: " // LUX";
+  color: rgba(217, 209, 199, 0.55);
+  font-weight: 500;
+}
+
 .labyrinth-shell {
   width: min(1220px, calc(100vw - 1rem));
   margin: 0 auto;

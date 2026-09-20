@@ -222,6 +222,16 @@ router.get("/farm-stay/health", (req, res) => proxy(res, farmStay.healthAll()));
 // Presentation catalog (types, policies, amenities, photo themes) for the UI.
 router.get("/farm-stay/catalog", (req, res) => proxy(res, farmStay.getCatalog(userOf(req))));
 
+// Location catalog for the pickers: fixed voivodeship→city regions plus the
+// custom locations users add. Custom locations are shared platform-wide (they
+// live in the inventory service), so one user's city is everyone's city; only
+// its author can remove it.
+router.get("/farm-stay/locations", (req, res) => proxy(res, farmStay.listLocations(userOf(req))));
+router.post("/farm-stay/locations", (req, res) => proxy(res, farmStay.addLocation(userOf(req), req.body)));
+router.delete("/farm-stay/locations", (req, res) =>
+  proxy(res, farmStay.removeLocation(userOf(req), { voivodeship: req.query.voivodeship, city: req.query.city })),
+);
+
 // Balance passthrough so the page can show finite ROL without a second service.
 router.get("/farm-stay/balance", async (req, res) => {
   await ensureAccount(userOf(req));

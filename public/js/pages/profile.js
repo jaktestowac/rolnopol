@@ -18,6 +18,8 @@ class ProfilePage {
     this.twoFactorProfileInfoEnabled = false;
     this.selectedAvatarFile = null;
     this.selectedAvatarPreview = "";
+    // Nested dragenter/dragleave pairs would otherwise flicker the dropzone highlight
+    this._dragDepth = 0;
   }
 
   /**
@@ -1014,10 +1016,99 @@ class ProfilePage {
       await this._handleAvatarFileSelection(event);
     });
 
+    this._setupAvatarDropzone(modal, fileInput);
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       await this._uploadAvatar();
     });
+  }
+
+  _setupAvatarDropzone(modal, fileInput) {
+    const dropzone = document.getElementById("avatarDropzone");
+
+    if (!dropzone) {
+      return;
+    }
+
+    // Dropping anywhere else in the dialog would make the browser navigate to the file.
+    ["dragover", "drop"].forEach((eventName) => {
+      modal.addEventListener(eventName, (event) => {
+        if (!dropzone.contains(event.target)) {
+          event.preventDefault();
+        }
+      });
+    });
+
+    dropzone.addEventListener("click", () => {
+      fileInput.click();
+    });
+
+    dropzone.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    dropzone.addEventListener("dragenter", (event) => {
+      event.preventDefault();
+      this._dragDepth = (this._dragDepth || 0) + 1;
+      this._setAvatarDropzoneState("dragover");
+    });
+
+    dropzone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "copy";
+      }
+      this._setAvatarDropzoneState("dragover");
+    });
+
+    dropzone.addEventListener("dragleave", (event) => {
+      event.preventDefault();
+      this._dragDepth = Math.max(0, (this._dragDepth || 0) - 1);
+      if (this._dragDepth === 0) {
+        this._setAvatarDropzoneState("");
+      }
+    });
+
+    dropzone.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      this._dragDepth = 0;
+      this._setAvatarDropzoneState("");
+      await this._handleAvatarFileDrop(event);
+    });
+  }
+
+  _setAvatarDropzoneState(state) {
+    const dropzone = document.getElementById("avatarDropzone");
+    if (!dropzone) {
+      return;
+    }
+
+    dropzone.classList.toggle("avatar-dropzone--dragover", state === "dragover");
+    dropzone.classList.toggle("avatar-dropzone--invalid", state === "invalid");
+  }
+
+  async _handleAvatarFileDrop(event) {
+    const files = Array.from(event?.dataTransfer?.files || []);
+
+    if (files.length === 0) {
+      this._clearAvatarSelection();
+      this._setAvatarUploadMessage("Drop an image file, not other content", "error");
+      this._setAvatarDropzoneState("invalid");
+      return;
+    }
+
+    if (files.length > 1) {
+      this._clearAvatarSelection();
+      this._setAvatarUploadMessage("Drop a single image file", "error");
+      this._setAvatarDropzoneState("invalid");
+      return;
+    }
+
+    await this._applyAvatarFile(files[0]);
   }
 
   _openAvatarModal() {
@@ -1065,6 +1156,8 @@ class ProfilePage {
       uploadBtn.disabled = true;
     }
 
+    this._dragDepth = 0;
+    this._setAvatarDropzoneState("");
     this._refreshAvatarPreview();
   }
 
@@ -1154,6 +1247,32 @@ class ProfilePage {
 
   async _handleAvatarFileSelection(event) {
     const file = event?.target?.files?.[0];
+
+    if (!file) {
+      this._clearAvatarSelection();
+      return;
+    }
+
+    await this._applyAvatarFile(file);
+  }
+
+  _syncAvatarFileInput(file) {
+    const fileInput = document.getElementById("avatarFileInput");
+
+    if (!fileInput || typeof DataTransfer !== "function") {
+      return;
+    }
+
+    try {
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      fileInput.files = transfer.files;
+    } catch {
+      // Browsers that refuse programmatic FileList assignment still upload from selectedAvatarFile.
+    }
+  }
+
+  async _applyAvatarFile(file) {
     const uploadBtn = document.getElementById("confirmAvatarUpload");
 
     if (!file) {
@@ -1165,8 +1284,12 @@ class ProfilePage {
     if (!validation.isValid) {
       this._clearAvatarSelection();
       this._setAvatarUploadMessage(validation.error, "error");
+      this._setAvatarDropzoneState("invalid");
       return;
     }
+
+    this._syncAvatarFileInput(file);
+    this._setAvatarDropzoneState("");
 
     this.selectedAvatarFile = file;
     this.selectedAvatarPreview = await this._readAvatarAsDataUrl(file);

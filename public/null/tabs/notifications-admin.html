@@ -231,6 +231,7 @@
                     <option value="processing">processing</option>
                     <option value="processed">processed</option>
                     <option value="failed">failed</option>
+                    <option value="suppressed">suppressed</option>
                 </select>
 
                 <input id="typeFilter" class="filter-input" type="text" placeholder="Type filter (contains)" />
@@ -866,7 +867,7 @@
                                 ? "badge-success-enhanced"
                                 : event.status === "failed"
                                     ? "badge-danger-enhanced"
-                                    : event.status === "processing"
+                                    : event.status === "processing" || event.status === "suppressed"
                                         ? "badge-warning-enhanced"
                                         : "badge-info-enhanced";
 

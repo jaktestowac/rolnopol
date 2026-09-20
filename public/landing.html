@@ -1,0 +1,1117 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Rolnopol - futuristic farm and resource management." />
+  <title>Rolnopol Instrumentality Landing</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <style>
+    :root {
+      --graphite: #101012;
+      --deep: #060607;
+      --bone: #e8e5df;
+      --white: #fffaf0;
+      --mid: #858189;
+      --dim: #4a484f;
+      --hair: rgba(232, 229, 223, 0.12);
+      --veil: rgba(232, 229, 223, 0.04);
+      --glow: rgba(255, 250, 240, 0.18);
+      --mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--deep);
+      color: var(--bone);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: var(--deep);
+      color: var(--bone);
+      font-family: var(--sans);
+      font-weight: 300;
+      line-height: 1.5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body::before {
+      background:
+        linear-gradient(rgba(232, 229, 223, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232, 229, 223, 0.018) 1px, transparent 1px);
+      background-size: 4rem 4rem;
+      mask-image: radial-gradient(circle at 60% 30%, black, transparent 72%);
+    }
+
+    body::after {
+      background: repeating-linear-gradient(180deg,
+          rgba(255, 250, 240, 0.018) 0,
+          rgba(255, 250, 240, 0.018) 1px,
+          transparent 1px,
+          transparent 4px);
+      opacity: 0.42;
+      mix-blend-mode: screen;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .page-shell {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+    }
+
+    .signal-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 78% 18%, rgba(232, 229, 223, 0.08), transparent 24rem),
+        radial-gradient(circle at 20% 84%, rgba(232, 229, 223, 0.04), transparent 20rem),
+        linear-gradient(180deg, var(--graphite), var(--deep));
+    }
+
+    .landing-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: center;
+      padding: 1rem clamp(1rem, 4vw, 2rem) 0;
+      pointer-events: none;
+    }
+
+    .landing-nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      width: min(76rem, 100%);
+      min-height: 3.2rem;
+      border: 1px solid var(--hair);
+      background: rgba(6, 6, 7, 0.62);
+      backdrop-filter: blur(16px);
+      box-shadow:
+        inset 0 0 0 1px rgba(232, 229, 223, 0.02),
+        0 1.4rem 3rem rgba(0, 0, 0, 0.22);
+      pointer-events: auto;
+    }
+
+    .landing-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0 1rem;
+      color: var(--bone);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.24em;
+      text-decoration: none;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .landing-brand::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      background: var(--bone);
+      box-shadow: 0 0 1.3rem var(--glow);
+      animation: blink 4.2s steps(1, end) infinite;
+    }
+
+    .landing-nav__links {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.1rem;
+      margin: 0;
+      padding: 0.35rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .landing-nav__links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      min-height: 2.35rem;
+      border: 1px solid transparent;
+      color: var(--mid);
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.16em;
+      padding: 0.58rem 0.7rem;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition:
+        color 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .landing-nav__links a:hover,
+    .landing-nav__links a:focus-visible,
+    .landing-nav__links a[aria-current="page"] {
+      border-color: rgba(232, 229, 223, 0.22);
+      background: rgba(232, 229, 223, 0.035);
+      color: var(--bone);
+      outline: none;
+      box-shadow: inset 0 0 0 1px rgba(232, 229, 223, 0.025);
+    }
+
+    .landing-nav__toggle {
+      display: none;
+      width: 2.75rem;
+      height: 2.75rem;
+      margin-right: 0.35rem;
+      border: 1px solid rgba(232, 229, 223, 0.16);
+      background: transparent;
+      color: var(--bone);
+      cursor: pointer;
+    }
+
+    .landing-nav__toggle span {
+      display: block;
+      width: 1.2rem;
+      height: 1px;
+      margin: 0.28rem auto;
+      background: currentColor;
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .landing-nav__toggle.is-open span:nth-child(1) {
+      transform: translateY(0.29rem) rotate(45deg);
+    }
+
+    .landing-nav__toggle.is-open span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .landing-nav__toggle.is-open span:nth-child(3) {
+      transform: translateY(-0.29rem) rotate(-45deg);
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: clamp(3.5rem, 10vw, 7rem) minmax(0, 1fr);
+      min-height: 88vh;
+      width: min(78rem, 100%);
+      margin: 0 auto;
+      padding-top: 5.8rem;
+    }
+
+    .rail {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      padding: 2.5rem 0;
+      border-right: 1px solid var(--hair);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+    }
+
+    .rail::before,
+    .rail::after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      width: 1px;
+      background: linear-gradient(transparent, var(--white), transparent);
+      opacity: 0.45;
+    }
+
+    .rail::before {
+      top: 12%;
+      height: 7rem;
+      animation: railTrace 7s linear infinite;
+    }
+
+    .rail::after {
+      bottom: 11%;
+      height: 3rem;
+    }
+
+    .rail span {
+      writing-mode: vertical-rl;
+      rotate: 180deg;
+      color: var(--dim);
+    }
+
+    .rail span:first-child {
+      color: var(--mid);
+    }
+
+    .hero-panel {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      padding: clamp(2rem, 8vh, 4.5rem) clamp(1.5rem, 7vw, 6rem) 2.8rem;
+    }
+
+    .hero-panel::before,
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .hero-panel::before {
+      inset: 0;
+      background:
+        linear-gradient(115deg, transparent 0 28%, rgba(232, 229, 223, 0.04) 28.2%, transparent 28.8% 100%),
+        linear-gradient(90deg, transparent 0 6rem, rgba(232, 229, 223, 0.04) 6rem 6.06rem, transparent 6.06rem);
+      opacity: 0.65;
+    }
+
+    .hero-panel::after {
+      top: 1.5rem;
+      right: clamp(1.1rem, 4vw, 3rem);
+      width: min(34rem, 52vw);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 250, 240, 0.5), transparent);
+      box-shadow:
+        0 1.5rem 0 rgba(232, 229, 223, 0.055),
+        0 3rem 0 rgba(232, 229, 223, 0.035);
+      animation: scanline 9s ease-in-out infinite;
+    }
+
+    .glyph {
+      position: absolute;
+      top: -15vmin;
+      right: -17vmin;
+      width: 54vmin;
+      aspect-ratio: 1;
+      pointer-events: none;
+      filter: drop-shadow(0 0 1.8rem rgba(232, 229, 223, 0.06));
+    }
+
+    .glyph span {
+      position: absolute;
+      inset: 0;
+      border: 1px solid var(--hair);
+    }
+
+    .glyph span:first-child {
+      rotate: 12deg;
+      animation: glyphDrift 18s linear infinite;
+    }
+
+    .glyph span:last-child {
+      inset: 18%;
+      rotate: -7deg;
+      border-color: rgba(232, 229, 223, 0.05);
+      animation: glyphDrift 24s linear infinite reverse;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 56rem;
+    }
+
+    .kicker {
+      margin: 0;
+      color: var(--mid);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.42em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 8ch;
+      margin: clamp(2.4rem, 8vh, 4.8rem) 0 0;
+      color: var(--bone);
+      font-size: clamp(4.4rem, 17vw, 10.5rem);
+      font-weight: 100;
+      line-height: 0.84;
+      letter-spacing: -0.055em;
+      text-shadow:
+        0 0 1px rgba(255, 250, 240, 0.45),
+        0 0 4rem rgba(255, 250, 240, 0.09);
+    }
+
+    .lede {
+      max-width: 32rem;
+      margin: clamp(2rem, 7vh, 4rem) 0 0;
+      color: var(--mid);
+      font-size: clamp(1.05rem, 2vw, 1.28rem);
+      font-weight: 200;
+      line-height: 1.75;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: clamp(2rem, 6vh, 3.5rem);
+      font-family: var(--mono);
+    }
+
+    .action-link {
+      min-width: 9rem;
+      border: 1px solid rgba(232, 229, 223, 0.25);
+      background: var(--bone);
+      color: var(--graphite);
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      padding: 0.9rem 1rem;
+      text-align: center;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+      clip-path: polygon(0.5rem 0, 100% 0, 100% calc(100% - 0.5rem), calc(100% - 0.5rem) 100%, 0 100%, 0 0.5rem);
+    }
+
+    .action-link--ghost {
+      background: transparent;
+      color: var(--mid);
+    }
+
+    .action-link:hover,
+    .action-link:focus-visible {
+      background: transparent;
+      color: var(--bone);
+      border-color: var(--bone);
+      outline: none;
+      box-shadow: 0 0 1.4rem rgba(255, 250, 240, 0.12);
+    }
+
+    .hud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      max-width: 46rem;
+      margin: clamp(2.5rem, 8vh, 4.6rem) 0 0;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .hud span {
+      position: relative;
+      padding: 0.42rem 0.7rem 0.42rem 1rem;
+      border: 1px solid rgba(232, 229, 223, 0.09);
+      background:
+        linear-gradient(90deg, rgba(232, 229, 223, 0.08), transparent 68%),
+        rgba(232, 229, 223, 0.012);
+      clip-path: polygon(0.55rem 0, 100% 0, 100% calc(100% - 0.35rem), calc(100% - 0.35rem) 100%, 0 100%, 0 0.55rem);
+    }
+
+    .hud span::before {
+      content: "";
+      position: absolute;
+      left: 0.42rem;
+      top: 50%;
+      width: 3px;
+      height: 3px;
+      background: var(--bone);
+      transform: translateY(-50%);
+      opacity: 0.58;
+    }
+
+    .section {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--hair);
+      background:
+        linear-gradient(180deg, rgba(6, 6, 7, 0.52), rgba(6, 6, 7, 0.9)),
+        rgba(6, 6, 7, 0.76);
+    }
+
+    .section-inner {
+      width: min(78rem, 100%);
+      margin: 0 auto;
+      padding: clamp(3rem, 10vh, 6rem) clamp(1.25rem, 4vw, 3rem);
+    }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(18rem, 1.2fr);
+      gap: clamp(1.5rem, 5vw, 4rem);
+      align-items: end;
+    }
+
+    .section-label {
+      margin: 0;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      margin: 1.4rem 0 0;
+      color: var(--bone);
+      font-size: clamp(2.4rem, 7vw, 5rem);
+      font-weight: 100;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+
+    .section-copy {
+      margin: 0;
+      color: var(--mid);
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      font-weight: 200;
+      line-height: 1.75;
+    }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      margin-top: clamp(3rem, 8vh, 5rem);
+      background: var(--hair);
+      box-shadow: 0 1.6rem 4rem rgba(0, 0, 0, 0.28);
+    }
+
+    .module {
+      position: relative;
+      min-height: 15rem;
+      padding: clamp(1.2rem, 3vw, 2rem);
+      background:
+        linear-gradient(145deg, rgba(232, 229, 223, 0.045), transparent 38%),
+        var(--graphite);
+      overflow: hidden;
+      text-decoration: none;
+      transition:
+        background 0.24s ease,
+        transform 0.24s ease;
+    }
+
+    .module::before,
+    .module::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .module::before {
+      top: 0;
+      right: 0;
+      width: 3.2rem;
+      height: 3.2rem;
+      border-top: 1px solid rgba(232, 229, 223, 0.2);
+      border-right: 1px solid rgba(232, 229, 223, 0.2);
+    }
+
+    .module::after {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 250, 240, 0.3), transparent);
+      opacity: 0;
+      transition: opacity 0.24s ease;
+    }
+
+    .module:hover,
+    .module:focus-visible {
+      background:
+        linear-gradient(145deg, rgba(255, 250, 240, 0.075), transparent 42%),
+        var(--graphite);
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .module:hover::after,
+    .module:focus-visible::after {
+      opacity: 1;
+    }
+
+    .module span,
+    .module h3 {
+      font-family: var(--mono);
+    }
+
+    .module span {
+      color: var(--dim);
+      font-size: 0.62rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .module h3 {
+      margin: 3rem 0 0;
+      color: var(--bone);
+      font-size: 0.8rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .module p {
+      margin: 1.3rem 0 0;
+      color: var(--mid);
+      font-weight: 200;
+      line-height: 1.7;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1px;
+      margin-top: clamp(3rem, 8vh, 5rem);
+      background: var(--hair);
+    }
+
+    .flow-item {
+      position: relative;
+      min-height: 9rem;
+      padding: 1.4rem;
+      background: rgba(16, 16, 18, 0.92);
+      overflow: hidden;
+    }
+
+    .flow-item::before {
+      content: attr(data-step);
+      display: block;
+      margin-bottom: 2rem;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .flow-item strong {
+      display: block;
+      color: var(--bone);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 400;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .flow-item p {
+      max-width: 32rem;
+      margin: 1rem 0 0;
+      color: var(--mid);
+      font-weight: 200;
+    }
+
+    .footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--hair);
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      width: min(78rem, 100%);
+      margin: 0 auto;
+      padding: 2rem clamp(1.25rem, 4vw, 3rem);
+      flex-wrap: wrap;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(1.5rem);
+      transition:
+        opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes railTrace {
+      0% {
+        transform: translateY(-6rem);
+        opacity: 0;
+      }
+
+      18%,
+      74% {
+        opacity: 0.45;
+      }
+
+      100% {
+        transform: translateY(62vh);
+        opacity: 0;
+      }
+    }
+
+    @keyframes scanline {
+      0%,
+      100% {
+        opacity: 0.18;
+        transform: translateY(0);
+      }
+
+      45% {
+        opacity: 0.58;
+        transform: translateY(4.5rem);
+      }
+    }
+
+    @keyframes glyphDrift {
+      from {
+        transform: rotate(0deg) scale(1);
+      }
+
+      to {
+        transform: rotate(360deg) scale(1.02);
+      }
+    }
+
+    @keyframes blink {
+      0%,
+      92% {
+        opacity: 1;
+      }
+
+      93%,
+      100% {
+        opacity: 0.15;
+      }
+    }
+
+    @media (max-width: 64rem) {
+      .module-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .section-heading,
+      .flow {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 48rem) {
+      .landing-nav {
+        padding-top: 0.75rem;
+      }
+
+      .landing-nav__inner {
+        align-items: flex-start;
+        position: relative;
+      }
+
+      .landing-nav__toggle {
+        display: block;
+        flex: 0 0 auto;
+      }
+
+      .landing-nav__links {
+        position: absolute;
+        top: calc(100% + 0.75rem);
+        right: 0;
+        left: 0;
+        display: none;
+        justify-content: flex-start;
+        gap: 0.35rem;
+        padding: 0.75rem;
+        border: 1px solid var(--hair);
+        background:
+          linear-gradient(145deg, rgba(232, 229, 223, 0.045), transparent 38%),
+          rgba(16, 16, 18, 0.96);
+      }
+
+      .landing-nav__links.is-open {
+        display: flex;
+      }
+
+      .landing-nav__links li {
+        flex: 1 1 9rem;
+      }
+
+      .landing-nav__links a {
+        width: 100%;
+      }
+
+      .hero {
+        grid-template-columns: 3.3rem minmax(0, 1fr);
+        min-height: 86vh;
+      }
+
+      .hero-panel {
+        padding-right: 1.2rem;
+      }
+
+      .module-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .module {
+        min-height: auto;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      .rail::before,
+      .hero-panel::after,
+      .glyph span,
+      .landing-brand::before {
+        animation: none;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="signalCanvas" class="signal-canvas" aria-hidden="true"></canvas>
+
+  <div class="page-shell">
+    <nav class="landing-nav" aria-label="Primary navigation">
+      <div class="landing-nav__inner">
+        <a class="landing-brand" href="/">Rolnopol</a>
+        <button class="landing-nav__toggle" type="button" aria-expanded="false" aria-controls="landingNavLinks" aria-label="Toggle navigation">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <ul id="landingNavLinks" class="landing-nav__links">
+          <li><a href="/index2.html" aria-current="page"><i class="fas fa-house" aria-hidden="true"></i>Home</a></li>
+          <li><a href="/staff-fields-main.html"><i class="fas fa-seedling" aria-hidden="true"></i>Fields</a></li>
+          <li><a href="/financial.html"><i class="fas fa-coins" aria-hidden="true"></i>Finance</a></li>
+          <li><a href="/marketplace.html"><i class="fas fa-store" aria-hidden="true"></i>Market</a></li>
+          <li><a href="/docs.html"><i class="fas fa-book" aria-hidden="true"></i>Docs</a></li>
+          <li><a href="/swagger.html"><i class="fas fa-code" aria-hidden="true"></i>API</a></li>
+          <li><a href="/login.html"><i class="fas fa-sign-in-alt" aria-hidden="true"></i>Login</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <aside class="rail" aria-hidden="true">
+          <span>Rolnopol</span>
+          <span>farm signal</span>
+        </aside>
+
+        <div class="hero-panel">
+          <div class="glyph" aria-hidden="true">
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="hero-content">
+            <p class="kicker">Instrumentality layer / agricultural command</p>
+            <h1 id="hero-title">Rolnopol</h1>
+            <p class="lede">
+              A quiet control surface for farms, resources, teams, weather, money, and marketplace flow. Built for testers who want real systems with strange edges and useful signals.
+            </p>
+
+            <div class="hero-actions" aria-label="Primary actions">
+              <a class="action-link" href="/register.html">Start free</a>
+              <a class="action-link action-link--ghost" href="/docs.html">Read docs</a>
+            </div>
+
+            <div class="hud" aria-label="Platform highlights">
+              <span>REST + GraphQL</span>
+              <span>Feature flags</span>
+              <span>JSON stores</span>
+              <span>Operational modules</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="modules" class="section">
+        <div class="section-inner">
+          <div class="section-heading reveal">
+            <div>
+              <p class="section-label">Surface map</p>
+              <h2 class="section-title">Signals, not clutter.</h2>
+            </div>
+            <p class="section-copy">
+              The main systems stay one click away: staff and fields, finance, marketplace, docs, and API exploration. The visual layer is severe, but the workflow stays direct.
+            </p>
+          </div>
+
+          <div class="module-grid">
+            <a class="module reveal" href="/staff-fields-main.html">
+              <span>01 / Fields</span>
+              <h3>Farm operations</h3>
+              <p>Manage staff, fields, assignments, animals, charts, and exports from the core agricultural workspace.</p>
+            </a>
+            <a class="module reveal" href="/financial.html">
+              <span>02 / Ledger</span>
+              <h3>Financial tracking</h3>
+              <p>Track transactions, reports, balances, and optional commodity market surfaces.</p>
+            </a>
+            <a class="module reveal" href="/marketplace.html">
+              <span>03 / Exchange</span>
+              <h3>Marketplace</h3>
+              <p>Move offers through active, unavailable, sold, and cancelled states in a live test surface.</p>
+            </a>
+            <a class="module reveal" href="/docs.html">
+              <span>04 / Reference</span>
+              <h3>Documentation</h3>
+              <p>Explore feature-aware documentation that changes as flags expose more of the system.</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-inner">
+          <div class="section-heading reveal">
+            <div>
+              <p class="section-label">Execution model</p>
+              <h2 class="section-title">A farm app with test depth.</h2>
+            </div>
+            <p class="section-copy">
+              Rolnopol keeps the friendly farm-management surface, then layers in flags, hidden routes, failure modes, and multi-protocol modules for realistic automation practice.
+            </p>
+          </div>
+
+          <div class="flow">
+            <div class="flow-item reveal" data-step="01">
+              <strong>Enter the surface</strong>
+              <p>Use the main app paths directly, or move through this alternate landing page as a darker command center.</p>
+            </div>
+            <div class="flow-item reveal" data-step="02">
+              <strong>Toggle capabilities</strong>
+              <p>Feature flags expose or hide modules, navigation entries, documentation sections, and page controls.</p>
+            </div>
+            <div class="flow-item reveal" data-step="03">
+              <strong>Exercise contracts</strong>
+              <p>REST, GraphQL, static pages, auth, exports, and optional external services give tests room to breathe.</p>
+            </div>
+            <div class="flow-item reveal" data-step="04">
+              <strong>Observe outcomes</strong>
+              <p>Use the UI, Swagger explorer, docs, logs, and backend surfaces to inspect what changed.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>Rolnopol / index2 experiment</span>
+        <span>Instrumentality visual protocol</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const navToggle = document.querySelector(".landing-nav__toggle");
+      const navLinks = document.getElementById("landingNavLinks");
+
+      navToggle?.addEventListener("click", () => {
+        const open = !navLinks.classList.contains("is-open");
+        navLinks.classList.toggle("is-open", open);
+        navToggle.classList.toggle("is-open", open);
+        navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+
+      navLinks?.addEventListener("click", (event) => {
+        if (event.target.closest("a")) {
+          navLinks.classList.remove("is-open");
+          navToggle?.classList.remove("is-open");
+          navToggle?.setAttribute("aria-expanded", "false");
+        }
+      });
+
+      const revealItems = Array.from(document.querySelectorAll(".reveal"));
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.12 },
+        );
+        revealItems.forEach((item) => observer.observe(item));
+      } else {
+        revealItems.forEach((item) => item.classList.add("is-visible"));
+      }
+
+      const canvas = document.getElementById("signalCanvas");
+      const ctx = canvas.getContext("2d", { alpha: true });
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let width = 0;
+      let height = 0;
+      let dpr = 1;
+      let points = [];
+      let pointer = { x: 0, y: 0, active: false };
+      let raf = 0;
+
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const count = Math.max(52, Math.min(120, Math.floor((width * height) / 15000)));
+        points = Array.from({ length: count }, (_, index) => ({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          baseX: Math.random() * width,
+          baseY: Math.random() * height,
+          speed: 0.18 + Math.random() * 0.42,
+          phase: Math.random() * Math.PI * 2,
+          radius: index % 7 === 0 ? 2 : 1,
+        }));
+      }
+
+      function draw(time) {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "rgba(6, 6, 7, 0.22)";
+        ctx.fillRect(0, 0, width, height);
+
+        const t = time * 0.001;
+        const lineDistance = Math.max(120, Math.min(210, width * 0.16));
+
+        for (const point of points) {
+          point.x = point.baseX + Math.cos(t * point.speed + point.phase) * 18;
+          point.y = point.baseY + Math.sin(t * point.speed * 0.8 + point.phase) * 14;
+
+          if (pointer.active) {
+            const dx = pointer.x - point.x;
+            const dy = pointer.y - point.y;
+            const distance = Math.hypot(dx, dy);
+            if (distance < 180) {
+              const pull = (180 - distance) / 180;
+              point.x -= dx * pull * 0.08;
+              point.y -= dy * pull * 0.08;
+            }
+          }
+        }
+
+        ctx.lineWidth = 1;
+        for (let i = 0; i < points.length; i += 1) {
+          for (let j = i + 1; j < points.length; j += 1) {
+            const a = points[i];
+            const b = points[j];
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const distance = Math.hypot(dx, dy);
+            if (distance < lineDistance) {
+              const opacity = (1 - distance / lineDistance) * 0.12;
+              ctx.strokeStyle = "rgba(232, 229, 223, " + opacity.toFixed(3) + ")";
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        for (const point of points) {
+          ctx.fillStyle = "rgba(232, 229, 223, 0.58)";
+          ctx.shadowColor = "rgba(255, 250, 240, 0.22)";
+          ctx.shadowBlur = 12;
+          ctx.fillRect(point.x - point.radius / 2, point.y - point.radius / 2, point.radius, point.radius);
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.strokeStyle = "rgba(232, 229, 223, 0.07)";
+        ctx.lineWidth = 1;
+        const size = Math.min(width, height) * 0.44;
+        const cx = width * 0.76;
+        const cy = height * 0.26;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(t * 0.035);
+        ctx.strokeRect(-size / 2, -size / 2, size, size);
+        ctx.rotate(-0.23);
+        ctx.strokeRect(-size * 0.32, -size * 0.32, size * 0.64, size * 0.64);
+        ctx.restore();
+
+        if (!reducedMotion.matches) {
+          raf = requestAnimationFrame(draw);
+        }
+      }
+
+      window.addEventListener("resize", resize);
+      window.addEventListener("pointermove", (event) => {
+        pointer = { x: event.clientX, y: event.clientY, active: true };
+      });
+      window.addEventListener("pointerleave", () => {
+        pointer.active = false;
+      });
+
+      resize();
+      if (reducedMotion.matches) {
+        draw(0);
+      } else {
+        raf = requestAnimationFrame(draw);
+      }
+
+      reducedMotion.addEventListener?.("change", () => {
+        cancelAnimationFrame(raf);
+        draw(0);
+      });
+    })();
+  </script>
+</body>
+
+</html>

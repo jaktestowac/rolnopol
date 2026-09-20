@@ -1,0 +1,10 @@
+{
+  "dutyTypes": [],
+  "shifts": [],
+  "workLog": [],
+  "counters": {
+    "lastDutyTypeId": 0,
+    "lastShiftId": 0,
+    "lastWorkLogId": 0
+  }
+}

@@ -102,6 +102,17 @@ const adminDashboardLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Self-description for the OpenAPI generator (build/generate-openapi.js). Route
+// files receive these as opaque middleware functions, so the generator has no
+// other way to tell that an operation is throttled (and therefore can answer
+// 429). Names match the `type` argument of createRateLimiter. Runtime ignores them.
+apiLimiter.rateLimitType = "api";
+apiHighLimiter.rateLimitType = "high";
+strictLimiter.rateLimitType = "strict";
+authLimiter.rateLimitType = "auth";
+verifyLimiter.rateLimitType = "verify";
+adminDashboardLimiter.rateLimitType = "admin";
+
 module.exports = {
   apiLimiter,
   apiHighLimiter,

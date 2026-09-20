@@ -473,7 +473,7 @@ class AlertsService {
     const pest = this._pick(rnd, ["aphids", "flea beetle", "wireworm", "leaf miner"]);
     const trap = this._randInt(rnd, 5, 60);
     const threshold = this._randInt(rnd, 20, 50);
-    let title = `Pest Pressure: ${pest}`;
+    let title = trap >= threshold + 8 ? `Pattern Blue: ${pest} Activity` : `Pest Pressure: ${pest}`;
     title = this._pickAltTitle(rnd, "pest", title);
     const action =
       trap >= threshold

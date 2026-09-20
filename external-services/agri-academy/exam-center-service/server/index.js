@@ -1143,6 +1143,17 @@ function buildApp({
    * and never who was sitting it, so there is no taker identity to strip. Do not
    * add one to `SessionClockSnapshot` without revisiting this.
    *
+   * Paging is by sequence, in both directions, and the two are not symmetrical:
+   *
+   *   ?since=<seq>    only entries newer than it — a poll cursor, and part of the
+   *                   filter, so `total` counts within it.
+   *   ?before=<seq>   the page below one already read — scroll-back. NOT part of
+   *                   the filter: `total` ignores it, and `hasMore` says whether
+   *                   another page of history exists under this one.
+   *
+   * A view that does both — the activity page tails live at the top while paging
+   * history at the bottom — holds one cursor of each kind at the same time.
+   *
    * Leaf unreachable → 503 with a named error, as every other downstream does. The
    * page degrades to "activity unavailable"; nothing else on it is affected.
    */
@@ -1174,13 +1185,23 @@ function buildApp({
       total: Number(reply.total) || 0,
       returned: Number(reply.returned) || 0,
       latestSequence: Number(reply.latest_sequence) || 0,
+      // Scroll-back's "another page exists below this one". Always present, so a
+      // caller never has to infer it from `returned === limit` (which is wrong on
+      // the page that happens to land exactly on the boundary).
+      hasMore: !!reply.has_more,
     });
   };
 
   app.get("/v1/events", (req, res) =>
     eventsFor(
       res,
-      { unitId: req.query.unitId || "", examId: req.query.examId || "", limit: req.query.limit, sinceSequence: req.query.since },
+      {
+        unitId: req.query.unitId || "",
+        examId: req.query.examId || "",
+        limit: req.query.limit,
+        sinceSequence: req.query.since,
+        beforeSequence: req.query.before,
+      },
       "events",
     ),
   );
@@ -1193,7 +1214,13 @@ function buildApp({
     if (unit.status !== 200) return res.status(404).json({ error: "UNIT_NOT_FOUND" });
     return eventsFor(
       res,
-      { unitId: req.params.unitId, examId: req.query.examId || "", limit: req.query.limit, sinceSequence: req.query.since },
+      {
+        unitId: req.params.unitId,
+        examId: req.query.examId || "",
+        limit: req.query.limit,
+        sinceSequence: req.query.since,
+        beforeSequence: req.query.before,
+      },
       "unit events",
     );
   });

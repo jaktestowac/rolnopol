@@ -81,6 +81,7 @@ class FarmDefencePage {
     this.tickSpeed = SPEED_OPTIONS.includes(savedSpeed) ? savedSpeed : 1;
     this.autoWave = loadPreference(FD_AUTOWAVE_STORAGE_KEY, "false") === "true";
     this.autoWaveTimer = null;
+    this.unitLabelMode = false;
   }
 
   init() {
@@ -230,6 +231,12 @@ class FarmDefencePage {
     // Keyboard
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape") this._closeAllModals();
+      if (!e.defaultPrevented && !e.altKey && !e.ctrlKey && !e.metaKey && String(e.key || "").toLowerCase() === "u") {
+        this.unitLabelMode = !this.unitLabelMode;
+        this._renderTowerPicker(this.state || {}, { force: true });
+        this._renderGrid(this.state || {});
+        this._notify(this.unitLabelMode ? "Emergency unit labels armed." : "Emergency unit labels cleared.");
+      }
     });
 
     // Visibility
@@ -581,10 +588,11 @@ class FarmDefencePage {
       case "exit":
         return { className: "is-path is-discovered is-visible is-exit", icon: "fa-home", label: "Exit" };
       case "tower":
+        const towerType = cell.s || "archer";
         return {
-          className: `is-tower is-discovered is-visible is-${cell.s || "archer"}`,
+          className: `is-tower is-discovered is-visible is-${towerType}`,
           icon: cell.icon || "fa-chess-rook",
-          label: cell.label || "Tower",
+          label: this.unitLabelMode ? this._getUnitTowerLabel(towerType) : cell.label || "Tower",
         };
       case "enemy":
         return {
@@ -660,14 +668,14 @@ class FarmDefencePage {
 
   // ── Tower picker ─────────────────────────────────────────────────
 
-  _renderTowerPicker(snapshot) {
+  _renderTowerPicker(snapshot, options = {}) {
     if (!this.controls.towerPicker) return;
     const types = snapshot.capabilities?.towerTypes || [];
     const defs = snapshot.capabilities?.towerDefs || {};
 
     // Only rebuild if types changed
     const currentTypes = Array.from(this.controls.towerPicker.querySelectorAll(".fd-tower-btn")).map((b) => b.dataset.towerType);
-    if (JSON.stringify(currentTypes) === JSON.stringify(types)) return;
+    if (options.force !== true && JSON.stringify(currentTypes) === JSON.stringify(types)) return;
 
     this.controls.towerPicker.innerHTML = "";
     for (const type of types) {
@@ -676,12 +684,23 @@ class FarmDefencePage {
       btn.type = "button";
       btn.className = `fd-tower-btn is-${type}${type === this.selectedTowerType ? " is-selected" : ""}`;
       btn.dataset.towerType = type;
-      btn.innerHTML = `<i class="fas ${def.icon || "fa-chess-rook"}"></i> ${def.label || type} <small>${def.cost || "?"}g</small>`;
+      const label = this.unitLabelMode ? this._getUnitTowerLabel(type) : def.label || type;
+      btn.innerHTML = `<i class="fas ${def.icon || "fa-chess-rook"}"></i> ${escapeHtml(label)} <small>${def.cost || "?"}g</small>`;
       btn.title = def.description || "";
       btn.setAttribute("aria-label", `${def.label || type} tower, costs ${def.cost} gold`);
       btn.addEventListener("click", () => this._selectTowerType(type));
       this.controls.towerPicker.appendChild(btn);
     }
+  }
+
+  _getUnitTowerLabel(type) {
+    const unitLabels = {
+      archer: "Unit-00",
+      cannon: "Unit-01",
+      frost: "Unit-02",
+      tesla: "Unit-03",
+    };
+    return unitLabels[String(type || "").toLowerCase()] || "Unit-00";
   }
 
   _selectTowerType(type) {

@@ -11,7 +11,7 @@ const { sendNotFound, sendInternalError } = require("../helpers/response-helper"
 function requireFeatureFlag(flagName, options = {}) {
   const resourceName = options.resourceName || "Resource";
 
-  return async (req, res, next) => {
+  const middleware = async (req, res, next) => {
     try {
       const data = await featureFlagsService.getFeatureFlags();
       const enabled = data?.flags?.[flagName] === true;
@@ -27,6 +27,14 @@ function requireFeatureFlag(flagName, options = {}) {
       return sendInternalError(req, res);
     }
   };
+
+  // Self-description for the OpenAPI generator (build/generate-openapi.js). The
+  // flag name lives inside this closure, so without these tags the generator
+  // could not tell which endpoints are gated or by what. Runtime ignores them.
+  middleware.featureFlag = flagName;
+  middleware.resourceName = resourceName;
+
+  return middleware;
 }
 
 module.exports = {

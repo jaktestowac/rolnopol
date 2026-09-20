@@ -76,6 +76,24 @@ describe("Weather Live API (SSE)", () => {
     expect(condA).toEqual(condB);
   });
 
+  it("GET /api/v1/weather/live mints a fresh seed per request but honors an explicit one", async () => {
+    const base = "/api/v1/weather/live?region=PL-14&date=2026-08-13";
+
+    const a = await request(app).get(base).expect(200);
+    const b = await request(app).get(base).expect(200);
+    // No ?seed= — each request gets its own, so reconnects never replay a series.
+    expect(typeof a.body.data.seed).toBe("string");
+    expect(a.body.data.seed).not.toBe(b.body.data.seed);
+
+    const pinned = `${base}&seed=fixed-seed`;
+    const c = await request(app).get(pinned).expect(200);
+    const d = await request(app).get(pinned).expect(200);
+    expect(c.body.data.seed).toBe("fixed-seed");
+    const { observedAt: _c, ...condC } = c.body.data.conditions;
+    const { observedAt: _d, ...condD } = d.body.data.conditions;
+    expect(condC).toEqual(condD);
+  });
+
   it("GET /api/v1/weather/live/stream streams SSE conditions frames and closes at the limit", async () => {
     const res = await request(app)
       .get("/api/v1/weather/live/stream?region=PL-14&date=2026-08-13&intervalMs=250&limit=3")

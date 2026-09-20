@@ -138,6 +138,47 @@ function isPathExcluded(path, excludedPrefixes) {
   });
 }
 
+// Headers that describe the ORIGINAL connection or body, not the copy. Forwarding
+// them makes the mirror lie (wrong Host) or contradict itself (a content-length
+// from a body we re-serialize), and fetch rejects some outright.
+const MIRROR_STRIPPED_HEADERS = new Set([
+  "host",
+  "content-length",
+  "connection",
+  "keep-alive",
+  "transfer-encoding",
+  "upgrade",
+  "te",
+  "trailer",
+  "expect",
+  "accept-encoding",
+]);
+
+const METHODS_WITHOUT_BODY = new Set(["GET", "HEAD"]);
+
+function mirrorHeaders(originalHeaders) {
+  const headers = {};
+  for (const [name, value] of Object.entries(originalHeaders || {})) {
+    if (MIRROR_STRIPPED_HEADERS.has(String(name).toLowerCase())) continue;
+    if (typeof value === "string") headers[name] = value;
+    else if (Array.isArray(value)) headers[name] = value.join(", ");
+  }
+  return headers;
+}
+
+/**
+ * The body to mirror, or `undefined` for none. GET/HEAD must not carry one —
+ * `express.json()` leaves `req.body` as `{}` on a bodyless request, and sending
+ * that made fetch throw "Request with GET/HEAD method cannot have body", so every
+ * mirrored read used to fail before it left the process.
+ */
+function mirrorBody(method, body) {
+  if (METHODS_WITHOUT_BODY.has(method)) return undefined;
+  if (body === undefined || body === null) return undefined;
+  if (typeof body === "object" && Object.keys(body).length === 0) return undefined;
+  return JSON.stringify(body);
+}
+
 // Perform actual HTTP mirror request asynchronously
 async function performMirrorRequest(method, path, originalReq, targetUrl, mirrorRecord) {
   if (!targetUrl) {
@@ -151,19 +192,16 @@ async function performMirrorRequest(method, path, originalReq, targetUrl, mirror
 
   try {
     const fullUrl = `${targetUrl}${path}`;
-    const fetchOptions = {
-      method: method || "GET",
-      signal: controller.signal,
-      timeout: 5000,
-    };
-
-    // Copy relevant headers and body if present
-    if (originalReq.body) {
-      fetchOptions.headers = originalReq.headers;
-      fetchOptions.body = JSON.stringify(originalReq.body);
-    } else if (originalReq.headers) {
-      fetchOptions.headers = originalReq.headers;
+    const verb = String(method || "GET").toUpperCase();
+    const headers = mirrorHeaders(originalReq.headers);
+    const body = mirrorBody(verb, originalReq.body);
+    if (body !== undefined && !headers["content-type"]) {
+      headers["content-type"] = "application/json";
     }
+
+    // The AbortController above is the timeout; `fetch` has no `timeout` option.
+    const fetchOptions = { method: verb, headers, signal: controller.signal };
+    if (body !== undefined) fetchOptions.body = body;
 
     const response = await fetch(fullUrl, fetchOptions);
 

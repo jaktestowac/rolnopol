@@ -108,8 +108,8 @@ const app = express();
 const path = require("path");
 const { formatResponseBody } = require("../helpers/response-helper");
 const { PORT } = require("../data/settings");
-const { logDebug, logInfo, logError } = require("../helpers/logger-api");
-const { initializeDatabases, cleanupDatabases } = require("../data/database-init");
+const { logDebug, logInfo, logWarning, logError } = require("../helpers/logger-api");
+const { initializeDatabases } = require("../data/database-init");
 const versionMiddleware = require("../middleware/version.middleware");
 const { restoreAllDatabasesFromBaseState, seedMissingDatabasesFromBaseState } = require("../services/debug-database-restore.service");
 const packageJson = require("../package.json");
@@ -177,6 +177,18 @@ const dbManager = require("../data/database-manager");
 let dbInitializationPromise = null;
 let isDatabaseReady = false;
 
+// Apply the persistent feature-flag overrides from `feature-flags.ini` in the
+// repo root. The file outranks the JSON store: it is seeded into the store here
+// and re-applied on every read by feature-flags.service.js, so pinned flags
+// cannot be changed from the UI or the API. Skipped under NODE_ENV=test.
+//
+// The routine itself lives in feature-flags.service.js so it can be unit tested;
+// the loggers are injected because logWarning also feeds the in-memory log list
+// rendered on /backend.html — the override is visible in the application, not
+// only on the console. It never throws: an invalid file is a warning, and the
+// app boots normally on whatever the file got right.
+const applyFeatureFlagIniOverrides = () => featureFlagsService.applyIniOverridesAtBoot({ logWarning, logDebug });
+
 const initializeAllDatabases = async () => {
   try {
     const databases = [
@@ -213,6 +225,10 @@ const initializeAllDatabases = async () => {
         logError("Failed to restore database state in test environment", restoreError);
       }
     }
+
+    // Runs before the ready flag flips so no request can observe the store
+    // without its feature-flags.ini overrides applied.
+    await applyFeatureFlagIniOverrides();
 
     isDatabaseReady = true;
   } catch (error) {
@@ -258,55 +274,16 @@ logDebug("Plugins loaded on startup", {
   disabled: startupPlugins.filter((plugin) => !plugin.enabled).map((plugin) => plugin.name),
 });
 
-// Graceful shutdown handling
-const serviceLauncher = require("../services/service-launcher.service");
+// Graceful shutdown handling. The sequence itself lives in
+// services/app-shutdown.service.js because the localhost-only
+// GET /api/v1/shutdown endpoint has to run exactly the same teardown.
+const { shutdownApplication } = require("../services/app-shutdown.service");
 
-// Stop any external services started from the Kraken dashboard so they aren't
-// orphaned (still holding their ports) when the app goes down. This is the
-// graceful path; service-launcher also has a synchronous process 'exit' backstop
-// for crash/forced-exit paths.
-const stopLaunchedServices = async () => {
-  try {
-    await serviceLauncher.shutdownAll();
-  } catch (error) {
-    logError("Error stopping launched external services during shutdown:", error);
-  }
-};
-
-process.on("SIGINT", async () => {
-  logDebug("Received SIGINT. Graceful shutdown...");
-  await stopLaunchedServices();
-  await pluginRuntime.shutdown();
-  notificationWebSocketService.close();
-  messengerWebSocketService.close();
-  greenhouseWebSocketService.close();
-  await notificationCenter.stop();
-  await cleanupDatabases();
-  process.exit(0);
-});
-
-process.on("SIGTERM", async () => {
-  logDebug("Received SIGTERM. Graceful shutdown...");
-  await stopLaunchedServices();
-  await pluginRuntime.shutdown();
-  notificationWebSocketService.close();
-  messengerWebSocketService.close();
-  greenhouseWebSocketService.close();
-  await notificationCenter.stop();
-  await cleanupDatabases();
-  process.exit(0);
-});
-
-process.on("SIGHUP", async () => {
-  logDebug("Received SIGHUP. Graceful shutdown...");
-  await stopLaunchedServices();
-  await pluginRuntime.shutdown();
-  notificationWebSocketService.close();
-  messengerWebSocketService.close();
-  greenhouseWebSocketService.close();
-  await notificationCenter.stop();
-  await cleanupDatabases();
-  process.exit(0);
+["SIGINT", "SIGTERM", "SIGHUP"].forEach((signal) => {
+  process.on(signal, () => {
+    logDebug(`Received ${signal}. Graceful shutdown...`);
+    void shutdownApplication({ reason: signal });
+  });
 });
 
 // Middleware for parsing request bodies
@@ -339,7 +316,9 @@ app.use((req, res, next) => {
 try {
   // eslint-disable-next-line global-require
   const startupFlags = require("../data/feature-flags.json");
-  const isMetricsEnabled = startupFlags?.flags?.prometheusMetricsEnabled === true;
+  // feature-flags.ini outranks the persisted store, so resolve through it here too.
+  const effectiveStartupFlags = featureFlagsService.applyIniOverrides(startupFlags?.flags);
+  const isMetricsEnabled = effectiveStartupFlags?.prometheusMetricsEnabled === true;
 
   prometheusMetrics.setEnabled(isMetricsEnabled);
   logInfo(`Prometheus request observer hot-toggle initialized: ${isMetricsEnabled ? "enabled" : "disabled"}`);
@@ -678,6 +657,87 @@ app.get(
   },
 );
 
+// Feature-gate the Crew Office pages before static serving. `/crew` is the
+// friendly entry point that redirects to the roster.
+//
+// TWO deliberate departures from every other page gate in this file, both from
+// PRD §9.1 — Crew Office is built entirely on user-owned `staff` data, so there
+// is no meaningful anonymous view of it:
+//
+//   1. The gate checks the FLAG *and* a valid SESSION, and fails both cases the
+//      same way — the HTML 404. To a visitor who could never use the module, an
+//      enabled Crew Office is indistinguishable from one that does not exist
+//      (§9.1.3, §12 rule 1b). No other module gates a page on auth server-side;
+//      this one does because the requirement is stronger, and it reuses the
+//      existing token extraction and the existing 404 path rather than adding a
+//      new mechanism.
+//   2. A failed flag read fails CLOSED (404), where the gates above fall through
+//      to `next()`. For a module whose contract is "when off, it does not exist",
+//      serving the page on an internal error would break that contract; a 404 on
+//      an unreadable flag store is the honest answer.
+//
+// The client-side `isLoggedIn()` redirect in the page controllers is UX only
+// (§9.1.4) — the barrier is here and in the router's `authenticateSessionUser`.
+const CREW_PAGES = [
+  "/crew",
+  "/crew.html",
+  "/crew-member.html",
+  "/crew-work.html",
+  "/crew-leave.html",
+  "/crew-tools.html",
+  "/crew-explorer.html",
+];
+
+// Mirrors `extractSessionToken` in middleware/auth.middleware.js. Duplicated
+// rather than imported because that helper is module-private and Crew Office
+// modifies no existing middleware (§12.1 — four touched files, and that is not
+// one of them). The cookie fallback is what makes a plain browser navigation
+// carry identity: `cookie-parser` is already mounted above and the login
+// controller already sets `rolnopolToken`.
+const crewSessionTokenOf = (req) => {
+  const authHeader = req.headers.authorization;
+  let token = req.headers.token;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1];
+  }
+  if (!token && req.cookies && req.cookies.rolnopolToken) {
+    token = req.cookies.rolnopolToken;
+  }
+
+  return typeof token === "string" && token.trim().length > 0 ? token.trim() : null;
+};
+
+app.get(CREW_PAGES, async (req, res, next) => {
+  const deny = () => {
+    notFoundStatsModule.incrementHtml(req.originalUrl);
+    return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+  };
+
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    if (data?.flags?.crewOfficeEnabled !== true) {
+      return deny();
+    }
+
+    const { isUserLogged } = require("../helpers/token.helpers");
+    const token = crewSessionTokenOf(req);
+    if (!token || !isUserLogged(token)) {
+      // Anonymous, expired, and forged all land here — same 404 as flag-off.
+      return deny();
+    }
+
+    if (req.path === "/crew") {
+      return res.redirect(302, "/crew.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Crew Office feature gate check failed", { error });
+    return deny();
+  }
+});
+
 // Feature-gate Farmlog UI pages before static serving
 app.get(
   ["/farmlog", "/farmlog.html", "/farmlog-blog", "/farmlog-blog.html", "/farmlog-post", "/farmlog-post.html"],
@@ -740,6 +800,35 @@ app.get(["/operator/terminal", "/operator/terminal.html"], (req, res, next) => {
   return next();
 });
 
+// Hidden operator shutdown console entry point.
+//
+// Unlike the other hidden operator pages this one is gated, and gated the way
+// Crew Office gates its pages: a caller who could never use it gets the HTML 404
+// and cannot tell the page from one that does not exist. The gate is the same
+// `isLocalRequest` the endpoint itself uses, so page and endpoint agree — no
+// point serving a console whose only button is guaranteed to be refused.
+//
+// It must stay above `express.static` below, otherwise /operator/shutdown.html
+// would be served straight off disk and skip the gate entirely.
+app.get(["/operator/shutdown", "/operator/shutdown.html"], (req, res, next) => {
+  const { isLocalRequest } = require("../middleware/localhost-only.middleware");
+
+  if (!isLocalRequest(req)) {
+    logWarning("Shutdown console hidden: request did not originate from localhost", {
+      path: req.originalUrl,
+      remoteAddress: req.socket?.remoteAddress || null,
+    });
+    notFoundStatsModule.incrementHtml(req.originalUrl);
+    return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+  }
+
+  if (req.path === "/operator/shutdown") {
+    return res.redirect(302, "/operator/shutdown.html");
+  }
+
+  return next();
+});
+
 // Public hidden Farmer's Tape Recorder entry point
 app.get(["/operator/tape-recorder", "/operator/tape-recorder.html"], (req, res, next) => {
   if (req.path === "/operator/tape-recorder") {
@@ -758,6 +847,95 @@ app.get(["/operator/labyrinth", "/operator/labyrinth.html"], (req, res, next) =>
   return next();
 });
 
+// Feature-gate the Rolnopol Survival game page before static serving. The page
+// itself also checks for a session and bounces to /login.html (WP-38); this gate
+// is about the module being switched off entirely (WP-44).
+app.get(["/operator/survival", "/operator/survival.html"], async (req, res, next) => {
+  try {
+    const data = await featureFlagsService.getFeatureFlags();
+    const enabled = data?.flags?.survivalGameEnabled === true;
+
+    if (!enabled) {
+      notFoundStatsModule.incrementHtml(req.originalUrl);
+      return res.status(404).sendFile(path.join(__dirname, "../public/404.html"));
+    }
+
+    if (req.path === "/operator/survival") {
+      return res.redirect(302, "/operator/survival.html");
+    }
+
+    return next();
+  } catch (error) {
+    logError("Rolnopol Survival feature gate check failed", { error });
+    return next();
+  }
+});
+
+// Public hidden Pixelizer tool entry point. The page does all of its work in the
+// browser, so there is no endpoint behind it — only the extension-less alias.
+app.get(["/operator/tools/pixelizer", "/operator/tools/pixelizer.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/pixelizer") {
+    return res.redirect(302, "/operator/tools/pixelizer.html");
+  }
+
+  return next();
+});
+
+// Public hidden Metadata Peeler tool entry point. Like the Pixelizer it does all
+// of its work in the browser — the file's bytes never reach this process — so
+// there is no endpoint behind it, only the extension-less alias.
+app.get(["/operator/tools/metadata-peeler", "/operator/tools/metadata-peeler.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/metadata-peeler") {
+    return res.redirect(302, "/operator/tools/metadata-peeler.html");
+  }
+
+  return next();
+});
+
+// Public hidden Glitch Machine tool entry point. Like the other tools it does
+// all of its work in the browser — corruption is written in the tab, never
+// here — so there is no endpoint behind it, only the extension-less alias.
+app.get(["/operator/tools/glitch-machine", "/operator/tools/glitch-machine.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/glitch-machine") {
+    return res.redirect(302, "/operator/tools/glitch-machine.html");
+  }
+
+  return next();
+});
+
+// Public hidden Noise Loom tool entry point. Like the other tools it does all
+// of its work in the browser — the texture is woven in the tab, never here —
+// so there is no endpoint behind it, only the extension-less alias.
+app.get(["/operator/tools/noise-loom", "/operator/tools/noise-loom.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/noise-loom") {
+    return res.redirect(302, "/operator/tools/noise-loom.html");
+  }
+
+  return next();
+});
+
+// Public hidden Bytebeat Console tool entry point. Like the other tools it does
+// all of its work in the browser — formulas are parsed and played in the tab,
+// never here — so there is no endpoint behind it, only the extension-less alias.
+app.get(["/operator/tools/bytebeat", "/operator/tools/bytebeat.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/bytebeat") {
+    return res.redirect(302, "/operator/tools/bytebeat.html");
+  }
+
+  return next();
+});
+
+// Public hidden Spectrogram Bench tool entry point. The WAV is read, unpacked
+// and transformed in the browser — the samples never reach this process — so
+// there is no endpoint behind it, only the extension-less alias.
+app.get(["/operator/tools/spectrogram-bench", "/operator/tools/spectrogram-bench.html"], (req, res, next) => {
+  if (req.path === "/operator/tools/spectrogram-bench") {
+    return res.redirect(302, "/operator/tools/spectrogram-bench.html");
+  }
+
+  return next();
+});
+
 // Public hidden Farm Defence prototype entry point
 app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
   if (req.path === "/operator/fd") {
@@ -765,6 +943,40 @@ app.get(["/operator/fd", "/operator/fd.html"], (req, res, next) => {
   }
 
   return next();
+});
+
+// Public hidden Instrumentality Protocol entry points.
+const instrumentalityPages = {
+  empty: path.join(__dirname, "../public/instrumentality/empty.html"),
+  core: path.join(__dirname, "../public/instrumentality/core.html"),
+  apocrypha: path.join(__dirname, "../public/instrumentality/apocrypha.html"),
+  chat: path.join(__dirname, "../public/instrumentality/chat.html"),
+};
+
+function serveInstrumentalityPage(pageName) {
+  return (req, res) => {
+    return res.sendFile(instrumentalityPages[pageName]);
+  };
+}
+
+app.get(["/instrumentality", "/instrumentality/"], (req, res) => {
+  return res.redirect(302, "/instrumentality/empty");
+});
+app.get(["/instrumentality/empty", "/instrumentality/empty.html"], serveInstrumentalityPage("empty"));
+app.get(["/instrumentality/core", "/instrumentality/core.html"], serveInstrumentalityPage("core"));
+app.get(["/instrumentality/apocrypha", "/instrumentality/apocrypha.html"], serveInstrumentalityPage("apocrypha"));
+app.get(["/instrumentality/chat", "/instrumentality/chat.html"], serveInstrumentalityPage("chat"));
+
+app.get(["/operator/instrumentality-core", "/operator/instrumentality-core.html"], (req, res) => {
+  return res.redirect(302, "/instrumentality/core");
+});
+
+app.get(["/operator/instrumentality-apocrypha", "/operator/instrumentality-apocrypha.html"], (req, res) => {
+  return res.redirect(302, "/instrumentality/apocrypha");
+});
+
+app.get(["/operator/instrumentality-chat", "/operator/instrumentality-chat.html"], (req, res) => {
+  return res.redirect(302, "/instrumentality/chat");
 });
 
 // Feature-gate the Observatory page before static serving
@@ -791,6 +1003,22 @@ app.get(
     }
   },
 );
+
+// Chaos Engine mirror sink + its (unlinked) page. Mounted before static so the
+// extension-less path serves the page and the wildcard can swallow mirrored
+// requests — see routes/instrumentality-shadow.route.js.
+app.get("/instrumentality/shadow.html", (req, res) => {
+  return res.redirect(302, "/instrumentality/shadow");
+});
+app.get("/instrumentality-shadow.html", (req, res) => {
+  return res.redirect(302, "/instrumentality/shadow");
+});
+app.get("/instrumentality-shadow", (req, res) => {
+  const query = req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : "";
+  return res.redirect(302, `/instrumentality/shadow${query}`);
+});
+app.use("/instrumentality/shadow", require("../routes/instrumentality-shadow.route"));
+app.use("/instrumentality-shadow", require("../routes/instrumentality-shadow.route"));
 
 // Serve static files
 app.use(express.static(path.join(__dirname, "../public")));
@@ -885,6 +1113,21 @@ app.get("/api/notfound-stats", (req, res) => {
     },
   });
 });
+
+// Crew Office GraphQL endpoint — POST /api/graphql/crew (PRD §7.1).
+//
+// Mounted here rather than under /api/v1 because the path in the contract is
+// /api/graphql/crew, and routes/v1 is mounted at /api/v1. Loaded defensively for
+// the same reason every optional subsystem is: the app must boot and serve every
+// existing endpoint even if the graph module is broken (§12 rule 6).
+let crewGraphqlRoute;
+try {
+  crewGraphqlRoute = require("../routes/crew-graphql.route");
+} catch (error) {
+  logError("[startup] Failed to load crew-graphql.route — Crew Office graph unavailable:", error.message);
+  crewGraphqlRoute = express.Router();
+}
+app.use("/api/graphql", crewGraphqlRoute);
 
 // 404 handler for API routes
 app.use("/api", (req, res) => {

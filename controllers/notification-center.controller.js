@@ -58,7 +58,10 @@ class NotificationCenterController {
         const normalized = value.trim().toLowerCase();
         if (!normalized || normalized === "all") return undefined;
 
-        const allowed = new Set(["enqueued", "received", "processing", "processed", "failed"]);
+        // "suppressed" is what the dispatcher records when a policy's dedupe or
+        // rateLimit window refused the event. It never became a notification, but
+        // it is still on the timeline and must be filterable like any other state.
+        const allowed = new Set(["enqueued", "received", "processing", "processed", "failed", "suppressed"]);
         return allowed.has(normalized) ? normalized : undefined;
       };
 

@@ -1,0 +1,10 @@
+{
+  "courses": [],
+  "enrollments": [],
+  "certifications": [],
+  "counters": {
+    "lastCourseId": 0,
+    "lastEnrollmentId": 0,
+    "lastCertificationId": 0
+  }
+}

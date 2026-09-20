@@ -1,0 +1,10 @@
+{
+  "tools": [],
+  "issuances": [],
+  "serviceRecords": [],
+  "counters": {
+    "lastToolId": 0,
+    "lastIssuanceId": 0,
+    "lastServiceRecordId": 0
+  }
+}

@@ -4,8 +4,27 @@ const {
   CHAOS_ENGINE_DEFAULT_CUSTOM_CONFIG,
   CHAOS_ENGINE_DEFAULT_DATA,
 } = require("../data/chaos-engine.defaults");
+const { PORT } = require("../data/settings");
 
-const ALLOWED_MODES = ["off", "custom", "level1", "level2", "level3", "level4", "level5"];
+/**
+ * Where the Instrumentality preset mirrors traffic to.
+ *
+ * Mirroring dials this from inside the app process, so a hardcoded host:port is
+ * wrong the moment the app moves (a different PORT, a container, a remote box).
+ * Loopback + the port this process actually listens on is the only pair that
+ * always resolves to "this app"; `CHAOS_MIRROR_TARGET_URL` overrides it when the
+ * shadow should live somewhere else entirely (another host, a capture proxy).
+ *
+ * The path matters too: the middleware appends the original request path to this
+ * URL, so aiming it at the API root would re-execute mirrored writes. It points at
+ * the shadow sink, which counts copies and discards them.
+ */
+const INSTRUMENTALITY_MIRROR_TARGET = String(process.env.CHAOS_MIRROR_TARGET_URL || `http://127.0.0.1:${PORT}/instrumentality/shadow`).replace(
+  /\/+$/,
+  "",
+);
+
+const ALLOWED_MODES = ["off", "custom", "level1", "level2", "level3", "level4", "level5", "instrumentality"];
 // modes supported by the middleware when responseLoss.enabled is true
 // * timeout  - return a 504 after a configurable delay (existing behaviour)
 // * drop     - immediately destroy the socket (simulates TCP RST/connection reset)
@@ -100,6 +119,25 @@ const PRESET_DEFINITIONS = {
         statusCodes: [500, 502, 503, 504],
         message: "Chaos L5: complete synthetic disorder",
       },
+      scope: DEFAULT_SCOPE,
+    },
+  },
+  instrumentality: {
+    label: "Human Instrumentality Dry Run",
+    description: "A theatrical reliability drill: latency, mirroring, and controlled 503 responses.",
+    config: {
+      enabled: true,
+      latency: { enabled: true, probability: 0.35, minMs: 120, maxMs: 420 },
+      responseLoss: { enabled: false, probability: 0, mode: "timeout", timeoutMs: 1600 },
+      errorInjection: {
+        enabled: true,
+        probability: 0.04,
+        statusCodes: [503],
+        randomStatus: false,
+        message: "Instrumentality dry run: controlled synthetic service pause",
+      },
+      stateful: { enabled: true, requestCount: 7 },
+      mirroring: { enabled: true, probability: 0.25, targetUrl: INSTRUMENTALITY_MIRROR_TARGET },
       scope: DEFAULT_SCOPE,
     },
   },

@@ -192,6 +192,37 @@
                     <div id="portfolioSummary" class="commodities-summary"></div>
                 </div>
             </section>
+
+            <section id="marketDeskSection" class="glass commodities-card commodities-card--wide" data-testid="market-desk-section" hidden>
+                <div class="commodities-card__header">
+                    <h2><i class="fas fa-window-restore"></i> Market desk</h2>
+                    <button id="reloadTickerFrameBtn" class="btn btn-compact btn-outline" type="button" aria-label="Reload ticker frame" data-testid="reload-ticker-frame-btn">
+                        <i class="fas fa-rotate"></i>
+                    </button>
+                </div>
+
+                <div class="commodities-desk">
+                    <!-- Embedded board: same-origin iframe, itself holding a nested srcdoc frame. -->
+                    <div class="commodities-desk__panel">
+                        <h3 class="commodities-desk__title">Embedded ticker board</h3>
+                        <iframe id="tickerFrame" class="commodities-desk__frame" src="/widgets/commodity-ticker.html" title="Commodity ticker board" data-testid="commodity-ticker-frame" loading="lazy"></iframe>
+                        <p id="tickerFrameStatus" class="commodities-desk__hint" aria-live="polite" data-testid="ticker-frame-status">
+                            Waiting for the ticker frame...
+                        </p>
+                    </div>
+
+                    <!-- Shadow DOM: one open root, one closed root. -->
+                    <div class="commodities-desk__panel">
+                        <h3 class="commodities-desk__title">Quantity converter</h3>
+                        <commodity-converter id="commodityConverter" data-testid="commodity-converter">
+                            <span slot="note">Slotted from the page, rendered inside the open shadow root.</span>
+                        </commodity-converter>
+                        <div class="commodities-desk__badge-row">
+                            <commodity-spread-badge id="commoditySpreadBadge" data-testid="commodity-spread-badge"></commodity-spread-badge>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <div id="footer-component"></div>
@@ -208,6 +239,7 @@
     <script src="/js/components/notification.js"></script>
     <script src="/js/components/navigation.js"></script>
     <script src="/js/components/form.js"></script>
+    <script src="/js/components/commodity-shadow-widgets.js"></script>
     <script src="/js/components.js"></script>
 
     <script src="/js/api.js"></script>

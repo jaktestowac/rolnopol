@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Noise Loom - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="/css/pages/noise-loom.css?v=20260825-1" />
+</head>
+
+<body class="nlm-page">
+    <div class="nlm-threads" aria-hidden="true"></div>
+    <div class="nlm-weft" aria-hidden="true"></div>
+
+    <main class="nlm-shell">
+        <header class="nlm-header">
+            <div class="nlm-header__title">
+                <span class="nlm-eyebrow">rolnopol / operator / tools</span>
+                <h1 class="nlm-title">NOISE<span>//</span>LOOM</h1>
+                <p class="nlm-tagline">procedural textures &mdash; every thread hangs off one seeded hash</p>
+            </div>
+            <div class="nlm-header__meta">
+                <label class="nlm-dye">
+                    <span class="nlm-dye__label">Dye</span>
+                    <select class="nlm-select" id="nlmDye" aria-label="Dye colour scheme">
+                        <option value="indigo">Indigo / gold</option>
+                        <option value="ember">Ember / copper</option>
+                        <option value="verdigris">Verdigris / lime</option>
+                        <option value="bone">Bone / mono</option>
+                    </select>
+                </label>
+                <span class="nlm-chip">no external libs</span>
+                <span class="nlm-chip nlm-chip--live" id="nlmState">idle</span>
+            </div>
+        </header>
+
+        <!-- Everything is computed in this tab: there is no upload endpoint
+             behind this page and nothing is fetched to make the texture. -->
+        <section class="nlm-viewport" id="nlmViewport" aria-label="Woven texture">
+            <span class="nlm-hud nlm-hud--tl" aria-hidden="true"></span>
+            <span class="nlm-hud nlm-hud--tr" aria-hidden="true"></span>
+            <span class="nlm-hud nlm-hud--bl" aria-hidden="true"></span>
+            <span class="nlm-hud nlm-hud--br" aria-hidden="true"></span>
+
+            <div class="nlm-telemetry nlm-telemetry--left" aria-hidden="true">
+                <span>SEED</span><strong id="nlmSeedHud">--------</strong>
+            </div>
+            <div class="nlm-telemetry nlm-telemetry--right" aria-hidden="true">
+                <span>PASS</span><strong id="nlmPassHud">&mdash;</strong>
+            </div>
+
+            <canvas class="nlm-cloth" id="nlmCanvas" width="512" height="512"></canvas>
+        </section>
+
+        <form class="nlm-deck" id="nlmControls">
+            <fieldset class="nlm-pod nlm-pod--field">
+                <legend><i class="fa-solid fa-wave-square" aria-hidden="true"></i> Field</legend>
+
+                <label class="nlm-field">
+                    <span class="nlm-field__label">Noise</span>
+                    <select class="nlm-select nlm-select--wide" id="nlmField">
+                        <option value="value">Value / clouds</option>
+                        <option value="perlin" selected>Perlin / gradient</option>
+                        <option value="worley">Worley / cellular</option>
+                    </select>
+                </label>
+
+                <label class="nlm-field">
+                    <span class="nlm-field__label">Cells across <output id="nlmCellsValue">6</output></span>
+                    <input type="range" class="nlm-range" id="nlmCells" min="2" max="24" step="1" value="6" />
+                </label>
+
+                <label class="nlm-field">
+                    <span class="nlm-field__label">Octaves <output id="nlmOctavesValue">5</output></span>
+                    <input type="range" class="nlm-range" id="nlmOctaves" min="1" max="8" step="1" value="5" />
+                </label>
+
+                <label class="nlm-field">
+                    <span class="nlm-field__label">Gain <output id="nlmGainValue">50%</output></span>
+                    <input type="range" class="nlm-range" id="nlmGain" min="25" max="75" step="1" value="50" />
+                </label>
+
+                <label class="nlm-field">
+                    <span class="nlm-field__label">Domain warp <output id="nlmWarpValue">25%</output></span>
+                    <input type="range" class="nlm-range nlm-range--hot" id="nlmWarp" min="0" max="100" step="1" value="25" />
+                </label>
+
+                <label class="nlm-field">
+                    <span class="nlm-field__label">Transform</span>
+                    <select class="nlm-select nlm-select--wide" id="nlmTransform">
+                        <option value="linear" selected>Linear</option>
+                        <option value="ridged">Ridged</option>
+                        <option value="billow">Billow</option>
+                        <option value="terrace">Terrace</option>
+                    </select>
+                </label>
+
+                <button type="button" class="nlm-btn nlm-btn--ghost nlm-btn--wide" id="nlmReset">
+                    <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reset loom
+                </button>
+            </fieldset>
+
+            <fieldset class="nlm-pod nlm-pod--finish">
+                <legend><i class="fa-solid fa-palette" aria-hidden="true"></i> Finish</legend>
+
+                <label class="nlm-field">
+                    <span class="nlm-field__label">Palette</span>
+                    <select class="nlm-select nlm-select--wide" id="nlmPalette">
+                        <option value="mono">Mono / raw field</option>
+                        <option value="abyss" selected>Abyss / deep water</option>
+                        <option value="ember">Ember / heat</option>
+                        <option value="verdant">Verdant / moss</option>
+                        <option value="rust">Rust / oxide</option>
+                        <option value="signal">Signal / duotone</option>
+                    </select>
+                </label>
+
+                <canvas class="nlm-swatch" id="nlmSwatch" width="220" height="14" aria-label="Palette gradient preview"></canvas>
+
+                <div class="nlm-ops">
+                    <label class="nlm-op">
+                        <input type="checkbox" id="nlmSeamless" checked />
+                        <span class="nlm-op__box"><i class="fa-solid fa-border-none" aria-hidden="true"></i> Seamless</span>
+                    </label>
+                    <label class="nlm-op">
+                        <input type="checkbox" id="nlmInvert" />
+                        <span class="nlm-op__box"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i> Invert</span>
+                    </label>
+                    <label class="nlm-op">
+                        <input type="checkbox" id="nlmTile" />
+                        <span class="nlm-op__box"><i class="fa-solid fa-table-cells" aria-hidden="true"></i> Tile &times;2</span>
+                    </label>
+                </div>
+
+                <label class="nlm-field">
+                    <span class="nlm-field__label">Texture size</span>
+                    <select class="nlm-select nlm-select--wide" id="nlmSize">
+                        <option value="256">256 &times; 256</option>
+                        <option value="512" selected>512 &times; 512</option>
+                        <option value="1024">1024 &times; 1024</option>
+                    </select>
+                </label>
+
+                <dl class="nlm-readout">
+                    <div class="nlm-readout__row"><dt>Field range</dt><dd id="nlmRangeOut">&mdash;</dd></div>
+                    <div class="nlm-readout__row"><dt>Pass</dt><dd id="nlmPassOut">&mdash;</dd></div>
+                    <div class="nlm-readout__row"><dt>Texture</dt><dd id="nlmTexOut">&mdash;</dd></div>
+                    <div class="nlm-readout__row"><dt>Weaves</dt><dd id="nlmWeaveOut">0</dd></div>
+                </dl>
+            </fieldset>
+
+            <fieldset class="nlm-pod nlm-pod--thread">
+                <legend><i class="fa-solid fa-fingerprint" aria-hidden="true"></i> Thread</legend>
+
+                <div class="nlm-seedbar">
+                    <label class="nlm-seedbar__field">
+                        <span class="nlm-field__label">Hex seed</span>
+                        <input type="text" class="nlm-seed-input" id="nlmSeed" maxlength="8" spellcheck="false"
+                            autocomplete="off" placeholder="C0FFEE00" aria-label="Texture seed in hex" />
+                    </label>
+                    <button type="button" class="nlm-btn nlm-btn--dice" id="nlmReroll" aria-label="Roll a new seed">
+                        <i class="fa-solid fa-dice-five" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <label class="nlm-field">
+                    <span class="nlm-field__label">Recipe</span>
+                    <input type="text" class="nlm-recipe-input" id="nlmRecipe" spellcheck="false" autocomplete="off"
+                        placeholder="LOOM1.&hellip;" aria-label="Texture recipe" />
+                </label>
+
+                <p class="nlm-message" id="nlmMessage" role="status" aria-live="polite"></p>
+
+                <div class="nlm-actions">
+                    <button type="button" class="nlm-btn" id="nlmRecipeCopy">
+                        <i class="fa-solid fa-copy" aria-hidden="true"></i> Copy recipe
+                    </button>
+                    <button type="button" class="nlm-btn" id="nlmSavePng">
+                        <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Save .png
+                    </button>
+                </div>
+
+                <p class="nlm-note">A recipe is the whole loom in one line &mdash; paste it back to re-weave the
+                    exact texture, byte for byte. Seamless textures repeat with no visible seam; the tile
+                    check shows the repeat without leaving the page.</p>
+            </fieldset>
+        </form>
+
+        <footer class="nlm-footer">
+            <a class="nlm-link" href="/">&#8592; Back to Rolnopol</a>
+            <span class="nlm-footer__note">Hidden operator tool. The texture is woven in this tab &mdash; nothing is uploaded anywhere.</span>
+        </footer>
+    </main>
+
+    <script src="/js/pages/noise-loom-pipeline.js?v=20260825-1"></script>
+    <script src="/js/pages/noise-loom.js?v=20260825-1"></script>
+</body>
+
+</html>

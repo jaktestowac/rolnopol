@@ -73,14 +73,16 @@
     rebootPhaseTimer: null,
     rebootResetTimer: null,
     rebootSequenceId: 0,
+    promptIdentity: "guest@archive",
+    promptSuffix: "$",
   };
   let bootSequenceRendered = false;
 
   function getShellPromptLabel(pathValue = state.currentPath) {
     if (typeof formatTerminalPromptLabel === "function") {
       return formatTerminalPromptLabel(pathValue, {
-        identity: "guest@archive",
-        suffix: "$",
+        identity: state.promptIdentity || "guest@archive",
+        suffix: state.promptSuffix || "$",
       });
     }
 
@@ -521,6 +523,16 @@
 
     if (result?.metadata?.porky) {
       applyPorkyMetadata(result.metadata, originalCommand);
+    }
+
+    if (result?.metadata?.terminalMode) {
+      const mode = result.metadata.terminalMode;
+      state.promptIdentity = String(mode.identity || state.promptIdentity || "guest@archive");
+      state.promptSuffix = String(mode.suffix || state.promptSuffix || "$");
+      if (mode.className && terminalShell?.classList) {
+        terminalShell.classList.add(String(mode.className));
+      }
+      syncInputRowMode();
     }
 
     const terminalEffect = getTerminalEffectFromResult(result);

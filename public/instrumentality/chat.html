@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>INSTRUMENTALITY - ORACLE</title>
+  <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+  <link rel="stylesheet" href="/css/pages/instrumentality-shadow.css" />
+</head>
+
+<body class="ish-body">
+  <div class="ish-frame ish-core-frame ish-oracle-frame">
+    <aside class="ish-rail">
+      <span class="ish-rail-id">oracle channel</span>
+      <span class="ish-rail-state"><i class="ish-dot" aria-hidden="true"></i>listening</span>
+    </aside>
+
+    <main class="ish-panel ish-core-panel ish-oracle-panel">
+      <div class="ish-glyph ish-core-glyph" aria-hidden="true"><span></span><span></span></div>
+      <div class="ish-signal-field" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div>
+
+      <p class="ish-core-kicker">Operator uplink / consensus response layer</p>
+      <h1 class="ish-core-title ish-oracle-title">Ask the Core</h1>
+      <p class="ish-core-lede ish-oracle-lede">
+        The channel answers in recovered fragments: part archive, part warning, part machine prayer. Every question
+        touches the mirror before it reaches the core.
+      </p>
+
+      <div class="ish-hud ish-core-hud ish-oracle-hud" aria-hidden="true">
+        <span>oracle bus awake</span>
+        <span>phase lock 13</span>
+        <span>reply vector cold</span>
+      </div>
+
+      <section class="ish-oracle-shell" aria-label="Instrumentality Oracle chat">
+        <div class="ish-oracle-statusbar">
+          <span class="ish-oracle-conn">
+            <span id="ishOracleConnDot" class="ish-oracle-dot ish-oracle-dot--idle" aria-hidden="true"></span>
+            <span id="ishOracleConnLabel" aria-live="polite">Ready</span>
+          </span>
+          <span id="ishOracleProvider" class="ish-oracle-provider"></span>
+        </div>
+
+        <div id="ishOracleMessages" class="ish-oracle-messages" aria-live="polite"></div>
+
+        <form id="ishOracleForm" class="ish-oracle-form">
+          <label class="ish-oracle-input-wrap">
+            <span>operator input</span>
+            <input id="ishOracleInput" class="ish-oracle-input" type="text" maxlength="1024" placeholder="Ask about the quorum, red rain..." aria-label="Message to the Instrumentality Oracle" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" required />
+          </label>
+          <div class="ish-oracle-actions">
+            <button id="ishOracleSend" class="ish-oracle-button" type="submit">transmit</button>
+            <button id="ishOracleStop" class="ish-oracle-button ish-oracle-button--ghost" type="button" hidden>sever</button>
+          </div>
+        </form>
+      </section>
+
+      <footer class="ish-foot">
+        <span><a href="/instrumentality/core">return to project core</a></span>
+        <span><a href="/instrumentality/shadow">return to mirror sink</a></span>
+      </footer>
+    </main>
+  </div>
+
+  <script src="/js/pages/instrumentality-chat.js"></script>
+</body>
+
+</html>

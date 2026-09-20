@@ -1,0 +1,386 @@
+{
+  "crewInfo": { "pillars": ["profiles", "leave", "training", "work"] },
+  "leavePolicy": {
+    "annualEntitlementDaysFullTime": 26,
+    "accrualMode": "MONTHLY",
+    "carryOverCapDays": 5,
+    "carryOverExpiresOn": "03-31",
+    "leaveYearStart": "01-01",
+    "minNoticeDays": 3,
+    "publicHolidays": [],
+    "blackoutWindows": [],
+    "version": 1
+  },
+  "leaveCalendar": [
+    { "date": "2026-08-01", "weekend": true, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-02", "weekend": true, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-03", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-04", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-05", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-06", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-07", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-08", "weekend": true, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-09", "weekend": true, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-10", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-11", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-12", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-13", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-14", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-15", "weekend": true, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-16", "weekend": true, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-17", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-18", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-19", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-20", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-21", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-22", "weekend": true, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-23", "weekend": true, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    {
+      "date": "2026-08-24",
+      "weekend": false,
+      "publicHoliday": false,
+      "blackoutReason": null,
+      "absences": [
+        {
+          "staffId": "19",
+          "name": "Halina",
+          "surname": "Kowalska",
+          "type": "ANNUAL",
+          "status": "REQUESTED",
+          "requestId": "1",
+          "halfDay": false
+        },
+        {
+          "staffId": "20",
+          "name": "Marek",
+          "surname": "Nowak",
+          "type": "ANNUAL",
+          "status": "REQUESTED",
+          "requestId": "2",
+          "halfDay": false
+        }
+      ]
+    },
+    {
+      "date": "2026-08-25",
+      "weekend": false,
+      "publicHoliday": false,
+      "blackoutReason": null,
+      "absences": [
+        {
+          "staffId": "19",
+          "name": "Halina",
+          "surname": "Kowalska",
+          "type": "ANNUAL",
+          "status": "REQUESTED",
+          "requestId": "1",
+          "halfDay": false
+        },
+        {
+          "staffId": "20",
+          "name": "Marek",
+          "surname": "Nowak",
+          "type": "ANNUAL",
+          "status": "REQUESTED",
+          "requestId": "2",
+          "halfDay": false
+        }
+      ]
+    },
+    {
+      "date": "2026-08-26",
+      "weekend": false,
+      "publicHoliday": false,
+      "blackoutReason": null,
+      "absences": [
+        {
+          "staffId": "19",
+          "name": "Halina",
+          "surname": "Kowalska",
+          "type": "ANNUAL",
+          "status": "REQUESTED",
+          "requestId": "1",
+          "halfDay": false
+        },
+        {
+          "staffId": "20",
+          "name": "Marek",
+          "surname": "Nowak",
+          "type": "ANNUAL",
+          "status": "REQUESTED",
+          "requestId": "2",
+          "halfDay": false
+        }
+      ]
+    },
+    {
+      "date": "2026-08-27",
+      "weekend": false,
+      "publicHoliday": false,
+      "blackoutReason": null,
+      "absences": [
+        {
+          "staffId": "19",
+          "name": "Halina",
+          "surname": "Kowalska",
+          "type": "ANNUAL",
+          "status": "REQUESTED",
+          "requestId": "1",
+          "halfDay": false
+        },
+        {
+          "staffId": "20",
+          "name": "Marek",
+          "surname": "Nowak",
+          "type": "ANNUAL",
+          "status": "REQUESTED",
+          "requestId": "2",
+          "halfDay": false
+        }
+      ]
+    },
+    {
+      "date": "2026-08-28",
+      "weekend": false,
+      "publicHoliday": false,
+      "blackoutReason": null,
+      "absences": [
+        {
+          "staffId": "19",
+          "name": "Halina",
+          "surname": "Kowalska",
+          "type": "ANNUAL",
+          "status": "REQUESTED",
+          "requestId": "1",
+          "halfDay": false
+        },
+        { "staffId": "20", "name": "Marek", "surname": "Nowak", "type": "ANNUAL", "status": "REQUESTED", "requestId": "2", "halfDay": true }
+      ]
+    },
+    { "date": "2026-08-29", "weekend": true, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-30", "weekend": true, "publicHoliday": false, "blackoutReason": null, "absences": [] },
+    { "date": "2026-08-31", "weekend": false, "publicHoliday": false, "blackoutReason": null, "absences": [] }
+  ],
+  "pendingLeaveApprovals": [
+    {
+      "id": "1",
+      "staffId": "19",
+      "type": "ANNUAL",
+      "from": "2026-08-24",
+      "to": "2026-08-28",
+      "halfDayStart": false,
+      "halfDayEnd": false,
+      "workingDays": 5,
+      "reason": null,
+      "createdAt": "2026-07-30T12:07:27.306Z",
+      "version": 1
+    },
+    {
+      "id": "2",
+      "staffId": "20",
+      "type": "ANNUAL",
+      "from": "2026-08-24",
+      "to": "2026-08-28",
+      "halfDayStart": false,
+      "halfDayEnd": true,
+      "workingDays": 4.5,
+      "reason": null,
+      "createdAt": "2026-07-30T12:07:27.475Z",
+      "version": 1
+    }
+  ],
+  "crew": {
+    "totalCount": 9,
+    "nodes": [
+      {
+        "staffId": "1",
+        "name": "Mike",
+        "surname": "Mayer",
+        "orphaned": false,
+        "profile": null,
+        "leave": {
+          "balance": {
+            "leaveYear": 2026,
+            "entitlement": 0,
+            "accrued": 0,
+            "carriedOver": 0,
+            "taken": 0,
+            "booked": 0,
+            "expiringSoon": 0,
+            "carryOverExpiresOn": "2026-03-31",
+            "remaining": 0
+          },
+          "nextBooked": null
+        }
+      },
+      {
+        "staffId": "2",
+        "name": "Ted",
+        "surname": "Bun",
+        "orphaned": false,
+        "profile": null,
+        "leave": {
+          "balance": {
+            "leaveYear": 2026,
+            "entitlement": 0,
+            "accrued": 0,
+            "carriedOver": 0,
+            "taken": 0,
+            "booked": 0,
+            "expiringSoon": 0,
+            "carryOverExpiresOn": "2026-03-31",
+            "remaining": 0
+          },
+          "nextBooked": null
+        }
+      },
+      {
+        "staffId": "3",
+        "name": "Bruno",
+        "surname": "Sutz",
+        "orphaned": false,
+        "profile": null,
+        "leave": {
+          "balance": {
+            "leaveYear": 2026,
+            "entitlement": 0,
+            "accrued": 0,
+            "carriedOver": 0,
+            "taken": 0,
+            "booked": 0,
+            "expiringSoon": 0,
+            "carryOverExpiresOn": "2026-03-31",
+            "remaining": 0
+          },
+          "nextBooked": null
+        }
+      },
+      {
+        "staffId": "7",
+        "name": "Long",
+        "surname": "Smith",
+        "orphaned": false,
+        "profile": null,
+        "leave": {
+          "balance": {
+            "leaveYear": 2026,
+            "entitlement": 0,
+            "accrued": 0,
+            "carriedOver": 0,
+            "taken": 0,
+            "booked": 0,
+            "expiringSoon": 0,
+            "carryOverExpiresOn": "2026-03-31",
+            "remaining": 0
+          },
+          "nextBooked": null
+        }
+      },
+      {
+        "staffId": "8",
+        "name": "John",
+        "surname": "Doe",
+        "orphaned": false,
+        "profile": null,
+        "leave": {
+          "balance": {
+            "leaveYear": 2026,
+            "entitlement": 0,
+            "accrued": 0,
+            "carriedOver": 0,
+            "taken": 0,
+            "booked": 0,
+            "expiringSoon": 0,
+            "carryOverExpiresOn": "2026-03-31",
+            "remaining": 0
+          },
+          "nextBooked": null
+        }
+      },
+      {
+        "staffId": "9",
+        "name": "Jane",
+        "surname": "Smith",
+        "orphaned": false,
+        "profile": null,
+        "leave": {
+          "balance": {
+            "leaveYear": 2026,
+            "entitlement": 0,
+            "accrued": 0,
+            "carriedOver": 0,
+            "taken": 0,
+            "booked": 0,
+            "expiringSoon": 0,
+            "carryOverExpiresOn": "2026-03-31",
+            "remaining": 0
+          },
+          "nextBooked": null
+        }
+      },
+      {
+        "staffId": "10",
+        "name": "Alice",
+        "surname": "Johnson",
+        "orphaned": false,
+        "profile": null,
+        "leave": {
+          "balance": {
+            "leaveYear": 2026,
+            "entitlement": 0,
+            "accrued": 0,
+            "carriedOver": 0,
+            "taken": 0,
+            "booked": 0,
+            "expiringSoon": 0,
+            "carryOverExpiresOn": "2026-03-31",
+            "remaining": 0
+          },
+          "nextBooked": null
+        }
+      },
+      {
+        "staffId": "19",
+        "name": "Halina",
+        "surname": "Kowalska",
+        "orphaned": false,
+        "profile": { "role": "TRACTOR_DRIVER", "fte": 1, "employmentStatus": "ACTIVE" },
+        "leave": {
+          "balance": {
+            "leaveYear": 2026,
+            "entitlement": 26,
+            "accrued": 15,
+            "carriedOver": 0,
+            "taken": 0,
+            "booked": 5,
+            "expiringSoon": 0,
+            "carryOverExpiresOn": "2026-03-31",
+            "remaining": 10
+          },
+          "nextBooked": { "id": "1", "from": "2026-08-24", "to": "2026-08-28", "type": "ANNUAL", "status": "REQUESTED" }
+        }
+      },
+      {
+        "staffId": "20",
+        "name": "Marek",
+        "surname": "Nowak",
+        "orphaned": false,
+        "profile": { "role": "DAIRY_HAND", "fte": 0.5, "employmentStatus": "ACTIVE" },
+        "leave": {
+          "balance": {
+            "leaveYear": 2026,
+            "entitlement": 13,
+            "accrued": 7.5,
+            "carriedOver": 0,
+            "taken": 0,
+            "booked": 4.5,
+            "expiringSoon": 0,
+            "carryOverExpiresOn": "2026-03-31",
+            "remaining": 3
+          },
+          "nextBooked": { "id": "2", "from": "2026-08-24", "to": "2026-08-28", "type": "ANNUAL", "status": "REQUESTED" }
+        }
+      }
+    ]
+  }
+}

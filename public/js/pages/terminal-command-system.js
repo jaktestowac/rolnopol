@@ -1640,6 +1640,34 @@
     });
 
     registry.register({
+      name: "connect",
+      description: "Open a hidden terminal link",
+      aliases: ["dial"],
+      usage: "connect wired",
+      category: "hidden",
+      hidden: true,
+      examples: ["connect wired"],
+      handler: (context) => {
+        const target = splitCommandTarget(context?.args).toLowerCase();
+        if (target !== "wired") {
+          return buildCommandError("Usage: connect wired", "No carrier on that hidden link.");
+        }
+
+        return {
+          type: "text",
+          content: ["carrier detected", "layer handshake accepted", "prompt identity shifted to wired@archive"].join("\n"),
+          metadata: {
+            terminalMode: {
+              identity: "wired@archive",
+              suffix: "$",
+              className: "terminal-wired-mode",
+            },
+          },
+        };
+      },
+    });
+
+    registry.register({
       name: "version",
       description: "Show terminal version",
       aliases: ["ver"],

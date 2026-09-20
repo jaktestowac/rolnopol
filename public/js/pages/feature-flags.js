@@ -6,6 +6,13 @@ class FeatureFlagsPage {
     this.groups = {};
     this.experimentalFlags = new Set();
     this.updatedAt = null;
+    // Flags pinned by the persistent feature-flags.ini file — read-only here.
+    this.pinnedFlags = new Set();
+    this.overrides = null;
+    this.overrideProblems = [];
+    this.overrideBannerEl = null;
+    this.pinnedMetaEl = null;
+    this.pinnedFlagsCountEl = null;
     this.listEl = null;
     this.statusEl = null;
     this.updatedAtEl = null;
@@ -47,6 +54,9 @@ class FeatureFlagsPage {
     this.searchInput = document.getElementById("flagsSearchInput");
     this.searchClearBtn = document.getElementById("flagsSearchClearBtn");
     this.searchResultsEl = document.getElementById("flagsSearchResults");
+    this.overrideBannerEl = document.getElementById("flagsOverrideBanner");
+    this.pinnedMetaEl = document.getElementById("flagsPinnedMeta");
+    this.pinnedFlagsCountEl = document.getElementById("pinnedFlagsCount");
   }
 
   _bindEvents() {
@@ -132,6 +142,148 @@ class FeatureFlagsPage {
     return key === "__proto__" || key === "constructor" || key === "prototype";
   }
 
+  _escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (char) => {
+      switch (char) {
+        case "&":
+          return "&amp;";
+        case "<":
+          return "&lt;";
+        case ">":
+          return "&gt;";
+        case '"':
+          return "&quot;";
+        default:
+          return "&#39;";
+      }
+    });
+  }
+
+  // Flags listed in the persistent feature-flags.ini file are pinned: the file
+  // outranks this page, so their toggles are shown locked instead of pretending
+  // a change would stick.
+  _readOverrides(payload) {
+    const overrides = payload?.overrides && typeof payload.overrides === "object" ? payload.overrides : null;
+    this.overrides = overrides;
+
+    const isEnforcing = !!overrides?.active && overrides?.enforcing !== false;
+    const keys = isEnforcing && Array.isArray(overrides?.keys) ? overrides.keys.filter((key) => typeof key === "string") : [];
+    this.pinnedFlags = new Set(keys);
+
+    // Problems are reported whether or not anything ended up pinned, so a file
+    // that is entirely broken is still visible here instead of only in the log.
+    this.overrideProblems = Array.isArray(overrides?.problems)
+      ? overrides.problems.filter((problem) => problem && typeof problem.message === "string")
+      : [];
+  }
+
+  _isPinned(flagKey) {
+    return this.pinnedFlags.has(flagKey);
+  }
+
+  _renderOverrideBanner() {
+    const problems = this.overrideProblems || [];
+    const pinnedCount = this.pinnedFlags.size;
+
+    if (this.pinnedFlagsCountEl) {
+      this.pinnedFlagsCountEl.textContent = String(pinnedCount);
+    }
+    if (this.pinnedMetaEl) {
+      this.pinnedMetaEl.classList.toggle("is-hidden", pinnedCount === 0);
+    }
+    if (!this.overrideBannerEl) {
+      return;
+    }
+
+    if (pinnedCount === 0 && problems.length === 0) {
+      this.overrideBannerEl.classList.add("is-hidden");
+      this.overrideBannerEl.classList.remove("flags-override-banner--problems");
+      this.overrideBannerEl.innerHTML = "";
+      return;
+    }
+
+    const source = this._escapeHtml(this.overrides?.source || "feature-flags.ini");
+    let html = "";
+
+    if (pinnedCount > 0) {
+      const keys = [...this.pinnedFlags]
+        .map((key) => `<code class="flags-override-banner__flag">${this._escapeHtml(key)}</code>`)
+        .join(" ");
+
+      html += `
+      <div class="flags-override-banner__head">
+        <i class="fas fa-lock" aria-hidden="true"></i>
+        <strong>${pinnedCount} flag${pinnedCount === 1 ? "" : "s"} overridden by <code>${source}</code></strong>
+      </div>
+      <p class="flags-override-banner__text">
+        These values come from the persistent configuration file <code>${source}</code> in the project root and cannot be changed here.
+      </p>
+      <div class="flags-override-banner__flags">${keys}</div>
+    `;
+    }
+
+    if (problems.length > 0) {
+      const items = problems.map((problem) => `<li>${this._escapeHtml(problem.message)}</li>`).join("");
+
+      html += `
+      <div class="flags-override-banner__problems">
+        <div class="flags-override-banner__head">
+          <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+          <strong>${problems.length} problem${problems.length === 1 ? "" : "s"} in <code>${source}</code></strong>
+        </div>
+        <p class="flags-override-banner__text">
+          The app started normally and applied the valid entries. Fix the file and restart to apply the rest.
+        </p>
+        <ul class="flags-override-banner__problem-list">${items}</ul>
+      </div>
+    `;
+    }
+
+    this.overrideBannerEl.innerHTML = html;
+    this.overrideBannerEl.classList.toggle("flags-override-banner--problems", pinnedCount === 0);
+    this.overrideBannerEl.classList.remove("is-hidden");
+  }
+
+  _renderFlagCard(flagKey) {
+    const flag = this.flags[flagKey];
+    if (!flag) {
+      return "";
+    }
+
+    const safeKey = this._escapeHtml(flagKey);
+    const isEnabled = typeof flag === "object" ? flag.value : flag;
+    const description = typeof flag === "object" ? flag.description : "";
+    const isExperimental = this.experimentalFlags.has(String(flagKey));
+    const isPinned = this._isPinned(String(flagKey));
+
+    const experimentalBadge = isExperimental
+      ? '<span class="flags-badge flags-badge--experimental" title="Experimental feature - may change or be removed in future releases">Experimental</span>'
+      : "";
+
+    const source = this._escapeHtml(this.overrides?.source || "feature-flags.ini");
+    const storedValue = typeof flag === "object" && flag.storedValue !== undefined ? flag.storedValue : null;
+    const storedHint =
+      isPinned && storedValue !== null && storedValue !== isEnabled ? ` (stored value: ${storedValue ? "On" : "Off"})` : "";
+    const pinnedBadge = isPinned
+      ? `<span class="flags-badge flags-badge--pinned" title="Pinned by ${source}${storedHint} - edit the file and restart to change it"><i class="fas fa-lock" aria-hidden="true"></i> Pinned</span>`
+      : "";
+
+    return `
+          <div class="flags-card${isPinned ? " flags-card--pinned" : ""}">
+            <div class="flags-card__info">
+              <div class="flags-card__name">${safeKey}</div>
+              ${description ? `<p class="flags-card__description">${description}</p>` : ""}
+            </div>
+            <label class="flags-toggle${isPinned ? " flags-toggle--pinned" : ""}">
+              <input class="flag-toggle-input" type="checkbox" data-flag="${safeKey}" ${isEnabled ? "checked" : ""} ${isPinned ? "disabled" : ""} />
+              <span>${isEnabled ? "On" : "Off"}</span>
+              ${pinnedBadge}
+              ${experimentalBadge}
+            </label>
+          </div>
+        `;
+  }
+
   async _loadFlags() {
     try {
       const response = await this.featureFlagsService.getFlags({ descriptions: true });
@@ -146,13 +298,17 @@ class FeatureFlagsPage {
       this.flags = payload.flags || {};
       this.allFlags = JSON.parse(JSON.stringify(this.flags));
       this.groups = payload.groups || {};
-      this.experimentalFlags = new Set(Array.isArray(payload.experimentalFlags) ? payload.experimentalFlags.filter((key) => typeof key === "string") : []);
+      this.experimentalFlags = new Set(
+        Array.isArray(payload.experimentalFlags) ? payload.experimentalFlags.filter((key) => typeof key === "string") : [],
+      );
       this.updatedAt = payload.updatedAt || null;
+      this._readOverrides(payload);
 
       if (this.searchInput && this.searchInput.value !== this.searchQuery) {
         this.searchInput.value = this.searchQuery;
       }
 
+      this._renderOverrideBanner();
       this._applySearchFilter();
     } catch (error) {
       this._setStatus("Failed to load feature flags", true);
@@ -269,30 +425,7 @@ class FeatureFlagsPage {
       html += `<div class="flags-group"><h3 class="flags-group__title">${groupTitle}</h3><div class="flags-group__items">`;
 
       for (const flagKey of flagKeys) {
-        const flag = this.flags[flagKey];
-        if (!flag) continue;
-
-        const safeKey = String(flagKey);
-        const isEnabled = typeof flag === "object" ? flag.value : flag;
-        const description = typeof flag === "object" ? flag.description : "";
-        const isExperimental = this.experimentalFlags.has(safeKey);
-        const experimentalBadge = isExperimental
-          ? '<span class="flags-badge flags-badge--experimental" title="Experimental feature - may change or be removed in future releases">Experimental</span>'
-          : "";
-
-        html += `
-          <div class="flags-card">
-            <div class="flags-card__info">
-              <div class="flags-card__name">${safeKey}</div>
-              ${description ? `<p class="flags-card__description">${description}</p>` : ""}
-            </div>
-            <label class="flags-toggle">
-              <input class="flag-toggle-input" type="checkbox" data-flag="${safeKey}" ${isEnabled ? "checked" : ""} />
-              <span>${isEnabled ? "On" : "Off"}</span>
-              ${experimentalBadge}
-            </label>
-          </div>
-        `;
+        html += this._renderFlagCard(flagKey);
       }
 
       html += "</div></div>";
@@ -304,30 +437,7 @@ class FeatureFlagsPage {
       html += '<div class="flags-group"><h3 class="flags-group__title">Other</h3><div class="flags-group__items">';
 
       for (const flagKey of filteredUngroupedFlags) {
-        const flag = this.flags[flagKey];
-        if (!flag) continue;
-
-        const safeKey = String(flagKey);
-        const isEnabled = typeof flag === "object" ? flag.value : flag;
-        const description = typeof flag === "object" ? flag.description : "";
-        const isExperimental = this.experimentalFlags.has(safeKey);
-        const experimentalBadge = isExperimental
-          ? '<span class="flags-badge flags-badge--experimental" title="Experimental feature - may change or be removed in future releases">Experimental</span>'
-          : "";
-
-        html += `
-          <div class="flags-card">
-            <div class="flags-card__info">
-              <div class="flags-card__name">${safeKey}</div>
-              ${description ? `<p class="flags-card__description">${description}</p>` : ""}
-            </div>
-            <label class="flags-toggle">
-              <input class="flag-toggle-input" type="checkbox" data-flag="${safeKey}" ${isEnabled ? "checked" : ""} />
-              <span>${isEnabled ? "On" : "Off"}</span>
-              ${experimentalBadge}
-            </label>
-          </div>
-        `;
+        html += this._renderFlagCard(flagKey);
       }
 
       html += "</div></div>";
@@ -337,6 +447,13 @@ class FeatureFlagsPage {
   }
 
   async _toggleFlag(flagKey, nextValue) {
+    if (this._isPinned(flagKey)) {
+      const source = this.overrides?.source || "feature-flags.ini";
+      this._setStatus(`${flagKey} is pinned by ${source} and cannot be changed here.`, true);
+      await this._loadFlags();
+      return;
+    }
+
     try {
       const response = await this.featureFlagsService.updateFlags({
         [flagKey]: !!nextValue,
@@ -359,9 +476,19 @@ class FeatureFlagsPage {
 
   async _setAllFlags(value) {
     const flagsToUpdate = {};
+    let skippedPinned = 0;
 
     for (const [key, flagData] of Object.entries(this.allFlags || {})) {
       if (this._isUnsafeKey(key)) {
+        continue;
+      }
+      // Pinned flags are left out entirely so a bulk action still succeeds
+      // for everything the app is actually allowed to change.
+      if (this._isPinned(key)) {
+        const currentValue = typeof flagData === "object" ? !!flagData.value : !!flagData;
+        if (currentValue !== value) {
+          skippedPinned += 1;
+        }
         continue;
       }
       const currentValue = typeof flagData === "object" ? !!flagData.value : !!flagData;
@@ -370,8 +497,10 @@ class FeatureFlagsPage {
       }
     }
 
+    const pinnedSuffix = skippedPinned > 0 ? ` ${skippedPinned} pinned flag${skippedPinned === 1 ? "" : "s"} left unchanged.` : "";
+
     if (Object.keys(flagsToUpdate).length === 0) {
-      this._setStatus(`All flags are already ${value ? "enabled" : "disabled"}.`);
+      this._setStatus(`All flags are already ${value ? "enabled" : "disabled"}.${pinnedSuffix}`);
       return;
     }
 
@@ -386,7 +515,7 @@ class FeatureFlagsPage {
       }
 
       await this._loadFlags();
-      this._setStatus(`All flags ${value ? "enabled" : "disabled"}.`);
+      this._setStatus(`All flags ${value ? "enabled" : "disabled"}.${pinnedSuffix}`);
     } catch (error) {
       this._setStatus("Failed to update feature flags", true);
       await this._loadFlags();
@@ -419,7 +548,12 @@ class FeatureFlagsPage {
 
       // Reload flags with descriptions to maintain them after reset
       await this._loadFlags();
-      this._setStatus("Feature flags reset to defaults.");
+      const pinnedCount = this.pinnedFlags.size;
+      const pinnedSuffix =
+        pinnedCount > 0
+          ? ` ${pinnedCount} flag${pinnedCount === 1 ? "" : "s"} still pinned by ${this.overrides?.source || "feature-flags.ini"}.`
+          : "";
+      this._setStatus(`Feature flags reset to defaults.${pinnedSuffix}`);
     } catch (error) {
       this._setStatus("Failed to reset feature flags", true);
       await this._loadFlags();

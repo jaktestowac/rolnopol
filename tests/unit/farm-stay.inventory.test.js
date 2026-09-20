@@ -181,6 +181,82 @@ describe("farm-stay inventory — GetCalendar", () => {
   });
 });
 
+describe("farm-stay inventory — shared location catalog", () => {
+  it("lists the fixed regions plus the seeded sample custom location", async () => {
+    const res = await call("ListLocations", {});
+    expect(res.regions.length).toBe(16);
+    expect(res.regions.find((r) => r.voivodeship === "Małopolskie").cities).toContain("Zakopane");
+    expect(res.custom).toEqual([
+      { voivodeship: "Podlaskie", city: "Supraśl", added_by: "seed-host", added_at: "2026-01-01T00:00:00.000Z" },
+    ]);
+    expect(res.total).toBe(res.regions.reduce((n, r) => n + r.cities.length, 0) + 1);
+  });
+
+  it("adds a custom location that every caller then sees", async () => {
+    const added = await call("AddLocation", { voivodeship: "Lubuskie", city: "Łagów", added_by: "alice" });
+    expect(added).toMatchObject({ voivodeship: "Lubuskie", city: "Łagów", added_by: "alice" });
+    expect(added.added_at).not.toBe("");
+
+    // Not scoped to alice — the list is the platform's, so bob sees it too.
+    const seenByBob = await call("ListLocations", {});
+    expect(seenByBob.custom.map((c) => c.city)).toContain("Łagów");
+  });
+
+  it("rejects duplicates (case-insensitively) and unknown voivodeships", async () => {
+    await expect(call("AddLocation", { voivodeship: "Lubuskie", city: "łagów", added_by: "bob" })).rejects.toMatchObject({
+      code: grpc.status.ALREADY_EXISTS,
+    });
+    await expect(call("AddLocation", { voivodeship: "Małopolskie", city: "Kraków", added_by: "bob" })).rejects.toMatchObject({
+      code: grpc.status.ALREADY_EXISTS,
+    });
+    // A city identifies a location (a property stores only its district/city), so
+    // filing an existing city under another region is still a duplicate.
+    await expect(call("AddLocation", { voivodeship: "Mazowieckie", city: "Kraków", added_by: "bob" })).rejects.toMatchObject({
+      code: grpc.status.ALREADY_EXISTS,
+    });
+    await expect(call("AddLocation", { voivodeship: "Pomorskie", city: "Łagów", added_by: "bob" })).rejects.toMatchObject({
+      code: grpc.status.ALREADY_EXISTS,
+    });
+    await expect(call("AddLocation", { voivodeship: "Bavaria", city: "München", added_by: "bob" })).rejects.toMatchObject({
+      code: grpc.status.INVALID_ARGUMENT,
+    });
+    await expect(call("AddLocation", { voivodeship: "Lubuskie", city: "  ", added_by: "bob" })).rejects.toMatchObject({
+      code: grpc.status.INVALID_ARGUMENT,
+    });
+  });
+
+  it("only the author may remove a custom location", async () => {
+    await expect(call("RemoveLocation", { voivodeship: "Lubuskie", city: "Łagów", requested_by: "bob" })).rejects.toMatchObject({
+      code: grpc.status.PERMISSION_DENIED,
+    });
+    await expect(call("RemoveLocation", { voivodeship: "Podlaskie", city: "Nowhere", requested_by: "alice" })).rejects.toMatchObject({
+      code: grpc.status.NOT_FOUND,
+    });
+  });
+
+  it("refuses to remove a location a listing still points at", async () => {
+    const p = await call("CreateProperty", {
+      host_id: "alice",
+      name: "Łagów Lakehouse",
+      district: "Łagów",
+      type: "cottage",
+      capacity: 2,
+      base_price: 80,
+      policy: "flexible",
+    });
+    await expect(call("RemoveLocation", { voivodeship: "Lubuskie", city: "Łagów", requested_by: "alice" })).rejects.toMatchObject({
+      code: grpc.status.FAILED_PRECONDITION,
+      details: "IN_USE",
+    });
+
+    await call("DeleteProperty", { id: p.id, host_id: "alice" });
+    const removed = await call("RemoveLocation", { voivodeship: "Lubuskie", city: "Łagów", requested_by: "alice" });
+    expect(removed.deleted).toBe(true);
+    const after = await call("ListLocations", {});
+    expect(after.custom.map((c) => c.city)).not.toContain("Łagów");
+  });
+});
+
 describe("farm-stay inventory — listings CRUD with ownership", () => {
   let createdId;
 

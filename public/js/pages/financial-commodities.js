@@ -6,6 +6,7 @@ class FinancialCommoditiesPage {
     this.sellableHoldings = new Map();
     this.availableSymbols = [];
     this.tradingEnabled = false;
+    this.marketDeskEnabled = false;
   }
 
   async init(app) {
@@ -34,6 +35,7 @@ class FinancialCommoditiesPage {
     }
 
     await this._syncTradingGate();
+    await this._syncMarketDeskGate();
 
     this._bindEvents();
     await this.loadCurrentPrices();
@@ -82,6 +84,27 @@ class FinancialCommoditiesPage {
     }
   }
 
+  async _syncMarketDeskGate() {
+    const section = document.getElementById("marketDeskSection");
+
+    const applyVisibility = (enabled) => {
+      this.marketDeskEnabled = enabled === true;
+      if (section) section.hidden = !this.marketDeskEnabled;
+    };
+
+    if (!this.featureFlagsService || typeof this.featureFlagsService.isEnabled !== "function") {
+      applyVisibility(false);
+      return;
+    }
+
+    try {
+      const enabled = await this.featureFlagsService.isEnabled("financialCommoditiesMarketDeskEnabled", false);
+      applyVisibility(enabled);
+    } catch (error) {
+      applyVisibility(false);
+    }
+  }
+
   _bindEvents() {
     document.getElementById("refreshPricesBtn")?.addEventListener("click", () => this.loadCurrentPrices());
     document.getElementById("refreshPortfolioBtn")?.addEventListener("click", () => this.loadPortfolio());
@@ -92,6 +115,59 @@ class FinancialCommoditiesPage {
       event.preventDefault();
       this.loadHistory();
     });
+
+    this._bindMarketDeskEvents();
+  }
+
+  _bindMarketDeskEvents() {
+    if (!this.marketDeskEnabled) return;
+
+    const frame = document.getElementById("tickerFrame");
+    const status = document.getElementById("tickerFrameStatus");
+
+    // Re-pointing src tears the old document down: anything still holding a
+    // handle into the frame is now looking at a detached document.
+    document.getElementById("reloadTickerFrameBtn")?.addEventListener("click", () => {
+      if (!frame) return;
+      if (status) status.textContent = "Reloading the ticker frame...";
+      frame.src = `/widgets/commodity-ticker.html?reloaded=${Date.now()}`;
+    });
+
+    window.addEventListener("message", (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.source !== "commodity-ticker") return;
+      if (!status) return;
+
+      if (event.data.type === "prices-loaded") {
+        status.textContent = `Ticker frame loaded ${event.data.count} symbols (hour ${event.data.hourStartUtc || "-"}).`;
+      } else if (event.data.type === "prices-failed") {
+        status.textContent = "The ticker frame failed to load prices.";
+      }
+    });
+  }
+
+  _syncMarketDeskWidgets(prices) {
+    if (!this.marketDeskEnabled) return;
+
+    const converter = document.getElementById("commodityConverter");
+    const badge = document.getElementById("commoditySpreadBadge");
+    const list = Array.isArray(prices) ? prices : [];
+
+    // The custom elements upgrade asynchronously; before that they are plain
+    // unknown elements and the assignment would be shadowed by the class field.
+    customElements
+      .whenDefined("commodity-converter")
+      .then(() => {
+        if (converter) converter.prices = list;
+      })
+      .catch(() => {});
+
+    customElements
+      .whenDefined("commodity-spread-badge")
+      .then(() => {
+        if (badge) badge.prices = list;
+      })
+      .catch(() => {});
   }
 
   _syncSellForm(holdings) {
@@ -229,6 +305,7 @@ class FinancialCommoditiesPage {
 
       const prices = Array.isArray(response?.data?.data?.prices) ? response.data.data.prices : [];
       this._syncGeneralSymbolSelects(prices.map((item) => item?.symbol));
+      this._syncMarketDeskWidgets(prices);
       prices.forEach((item) => {
         const row = document.createElement("tr");
         const midPrice = Number(item.price || 0);
@@ -254,6 +331,7 @@ class FinancialCommoditiesPage {
       loading.hidden = true;
     } catch (err) {
       this._syncGeneralSymbolSelects([]);
+      this._syncMarketDeskWidgets([]);
       loading.hidden = true;
       error.hidden = false;
       stamp.textContent = "";

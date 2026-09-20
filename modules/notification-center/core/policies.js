@@ -352,6 +352,153 @@ const policies = {
       message: `Assignment #${event.payload?.assignmentId || "n/a"} was removed.`,
     }),
   },
+  [EVENT_TYPES.STAFF_UPDATED]: {
+    id: "policy.staff.updated",
+    eventType: EVENT_TYPES.STAFF_UPDATED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 40, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Staff Updated",
+      message: `Staff member ${event.payload?.name || `#${event.payload?.staffId || "n/a"}`} has been updated.`,
+    }),
+  },
+  [EVENT_TYPES.STAFF_DELETED]: {
+    id: "policy.staff.deleted",
+    eventType: EVENT_TYPES.STAFF_DELETED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 20, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Staff Deleted",
+      message: `Staff member #${event.payload?.staffId || "n/a"} has been removed.`,
+    }),
+  },
+  [EVENT_TYPES.ANIMAL_UPDATED]: {
+    id: "policy.animal.updated",
+    eventType: EVENT_TYPES.ANIMAL_UPDATED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 40, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Animal Updated",
+      message: `Animal #${event.payload?.animalId || "n/a"} (${event.payload?.type || "unknown"}) has been updated.`,
+    }),
+  },
+  [EVENT_TYPES.ANIMAL_DELETED]: {
+    id: "policy.animal.deleted",
+    eventType: EVENT_TYPES.ANIMAL_DELETED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 0 },
+    rateLimit: { max: 20, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Animal Deleted",
+      message: `Animal #${event.payload?.animalId || "n/a"} has been removed.`,
+    }),
+  },
+  // Crew Office (PRD §8). Both channels.
+  //
+  // The webhook channel was held back at first over `crew.route.js` refusing
+  // personal API keys while `crew:read`/`crew:write` scopes do not exist — the
+  // worry being that a subscription would route crew data around that gate.
+  // Reading the delivery path settled it: `listActiveSubscriptionsForDelivery`
+  // filters on `Number(record.userId) === Number(userId)`, so a webhook only ever
+  // receives its OWN owner's events. This is the owner forwarding data they can
+  // already read over GraphQL to a URL they registered themselves, not a third
+  // party reaching in. Nothing about the scopes question changes, because the
+  // scopes question was never about this path.
+  //
+  // No new setting was needed to expose them: subscriptions already carry an
+  // `eventTypes` list and the creation form already renders a checkbox per
+  // catalogued event. `webhook-event-catalog.service.js` filters on exactly the
+  // `channels` below, so adding "webhook" here is what puts these six in the
+  // picker.
+  [EVENT_TYPES.CREW_LEAVE_APPROVED]: {
+    id: "policy.crew.leave.approved",
+    eventType: EVENT_TYPES.CREW_LEAVE_APPROVED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 60 },
+    rateLimit: { max: 50, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Leave Approved",
+      message: `Leave for crew member #${event.payload?.staffId || "n/a"} (${event.payload?.from || "?"} to ${event.payload?.to || "?"}) was approved.`,
+    }),
+  },
+  [EVENT_TYPES.CREW_LEAVE_REJECTED]: {
+    id: "policy.crew.leave.rejected",
+    eventType: EVENT_TYPES.CREW_LEAVE_REJECTED,
+    priority: "normal",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 60 },
+    rateLimit: { max: 50, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Leave Rejected",
+      message: `Leave for crew member #${event.payload?.staffId || "n/a"} was rejected: ${event.payload?.reason || "no reason given"}.`,
+    }),
+  },
+  [EVENT_TYPES.CREW_EMPLOYMENT_ENDED]: {
+    id: "policy.crew.employment.ended",
+    eventType: EVENT_TYPES.CREW_EMPLOYMENT_ENDED,
+    priority: "high",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 3600 },
+    rateLimit: { max: 20, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Employment Ended",
+      message: `Employment for crew member #${event.payload?.staffId || "n/a"} ends on ${event.payload?.lastDay || "an unrecorded date"}.`,
+    }),
+  },
+  [EVENT_TYPES.CREW_CERTIFICATION_REVOKED]: {
+    id: "policy.crew.certification.revoked",
+    eventType: EVENT_TYPES.CREW_CERTIFICATION_REVOKED,
+    priority: "high",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 3600 },
+    rateLimit: { max: 30, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Certification Revoked",
+      message: `${event.payload?.courseName || "A certification"} for crew member #${event.payload?.staffId || "n/a"} was revoked, leaving ${event.payload?.gapCount ?? 0} compliance gap(s).`,
+    }),
+  },
+  [EVENT_TYPES.CREW_TOOL_ISSUED]: {
+    id: "policy.crew.tool.issued",
+    eventType: EVENT_TYPES.CREW_TOOL_ISSUED,
+    priority: "low",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 60 },
+    rateLimit: { max: 100, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Tool Issued",
+      message: `${event.payload?.toolName || `Tool #${event.payload?.toolId || "n/a"}`} was issued to crew member #${event.payload?.staffId || "n/a"}, due back ${event.payload?.dueBack || "on an unrecorded date"}.`,
+    }),
+  },
+  [EVENT_TYPES.CREW_TOOL_RETURNED]: {
+    id: "policy.crew.tool.returned",
+    eventType: EVENT_TYPES.CREW_TOOL_RETURNED,
+    priority: "low",
+    channels: ["in-app", "webhook"],
+    dedupe: { seconds: 60 },
+    rateLimit: { max: 100, windowSeconds: 86400 },
+    processingDelayMs: 1500,
+    template: (event) => ({
+      title: "Tool Returned",
+      message: `${event.payload?.toolName || `Tool #${event.payload?.toolId || "n/a"}`} came back ${event.payload?.condition || "in an unrecorded condition"}${event.payload?.late ? " and was late" : ""}.`,
+    }),
+  },
 };
 
 module.exports = policies;

@@ -64,6 +64,26 @@ describe("AgriAcademy HTML page gating", () => {
     expect(eventsPage.text).toContain("Exam Activity");
   });
 
+  it("the taker page puts Popular below the catalog and routes every view switch through one place", async () => {
+    await setEnabled(true);
+    const taker = await request(app).get("/agri-academy.html").expect(200);
+    // Popular is social proof, not a second catalog: it must render AFTER the
+    // catalog, the attempt/result panels and the taker's own certificates.
+    const at = (needle) => taker.text.indexOf(needle);
+    expect(at('id="catalog"')).toBeGreaterThan(-1);
+    expect(at('id="popular"')).toBeGreaterThan(at('id="certsSection"'));
+    expect(at('id="certsSection"')).toBeGreaterThan(at('id="result"'));
+    // …and as a compact list rather than a grid of cards.
+    expect(taker.text).toContain('id="popularRow" class="pop-list"');
+    // One function owns section visibility. Enrolling from Popular used to leave
+    // #popular and #certsSection on screen, so the panel it opened rendered below
+    // the fold and the click looked dead.
+    expect(taker.text).toContain("function showView(");
+    for (const id of ['$("popular").classList.toggle("hidden"', '$("certsSection").classList.toggle("hidden"']) {
+      expect(taker.text).toContain(id);
+    }
+  });
+
   it("the activity page ships its filters and the unit pages link to it", async () => {
     await setEnabled(true);
     const events = await request(app).get("/agri-academy-events.html").expect(200);
@@ -71,6 +91,13 @@ describe("AgriAcademy HTML page gating", () => {
       expect(events.text).toContain(id);
     }
     expect(events.text).toContain("/api/v1/agri-academy/events");
+    // Live tail AND scroll-back: the scroll viewport, the sentinel the history loader
+    // watches, the detach affordance, and the backwards cursor that feeds them.
+    for (const id of ['id="logScroll"', 'id="older"', 'id="jumpLive"']) {
+      expect(events.text).toContain(id);
+    }
+    expect(events.text).toContain("before:");
+    expect(events.text).toContain("IntersectionObserver");
     // Every unit profile carries its own activity panel plus the link out to the
     // all-units page — that pairing is the whole navigation contract here.
     const unit = await request(app).get("/agri-academy-unit.html").expect(200);

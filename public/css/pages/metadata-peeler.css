@@ -1,0 +1,1074 @@
+/* Hidden operator page: /operator/tools/metadata-peeler
+ *
+ * Same dark-console idiom as the other operator tools (see pixelizer.css and
+ * terminal.css). Everything is scoped under .mdp-page / .mdp-* so it cannot leak
+ * into the shared stylesheet.
+ *
+ * Themes: the accent colours are declared once as space-separated RGB triplets,
+ * so every rule can mix its own alpha with `rgb(var(--mdp-accent-rgb) / 0.2)`
+ * and a theme only has to override the triplets. The page script sets
+ * `data-mdp-theme` on <html>; the blocks at the end of this file do the rest.
+ *
+ * The severity colours (--mdp-danger, --mdp-amber, --mdp-ok) are deliberately
+ * *not* themed: a finding that means "this file holds your home address" has to
+ * read as a warning in every colourway. */
+
+:root {
+  --mdp-accent-rgb: 79 245 255;
+  --mdp-accent-2-rgb: 181 123 255;
+  --mdp-text-rgb: 216 244 255;
+  --mdp-bg: #03060c;
+  --mdp-bg-mid: #070d18;
+  --mdp-panel: rgba(9, 18, 32, 0.78);
+  --mdp-panel-strong: rgba(5, 11, 20, 0.94);
+  --mdp-void: #04080f;
+
+  --mdp-accent: rgb(var(--mdp-accent-rgb));
+  --mdp-accent-2: rgb(var(--mdp-accent-2-rgb));
+  --mdp-text: rgb(var(--mdp-text-rgb));
+  --mdp-text-dim: rgb(var(--mdp-text-rgb) / 0.66);
+  --mdp-text-soft: rgb(var(--mdp-text-rgb) / 0.38);
+  --mdp-line: rgb(var(--mdp-accent-rgb) / 0.22);
+  --mdp-line-soft: rgb(var(--mdp-accent-rgb) / 0.14);
+  --mdp-glow: rgb(var(--mdp-accent-rgb) / 0.24);
+  --mdp-wash: rgb(var(--mdp-accent-rgb) / 0.12);
+  --mdp-wash-soft: rgb(var(--mdp-accent-rgb) / 0.06);
+  --mdp-amber: #ffcf6b;
+  --mdp-danger: #ff8f8f;
+  --mdp-ok: #8ef2b0;
+  --mdp-mono: "SF Mono", "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+
+.mdp-page {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% -10%, rgb(var(--mdp-accent-rgb) / 0.14), transparent 60%),
+    linear-gradient(180deg, var(--mdp-bg-mid), var(--mdp-bg) 65%, #010306);
+  color: var(--mdp-text);
+  font-family: var(--mdp-mono);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem 3rem;
+  overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------------- atmosphere */
+
+/* Three fixed decorative layers: a drifting grid, a slow aurora wash, and CRT
+   scanlines. All pointer-events: none so they never eat a click. */
+.mdp-grid,
+.mdp-aurora,
+.mdp-scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mdp-grid {
+  background-image:
+    linear-gradient(rgb(var(--mdp-accent-rgb) / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--mdp-accent-rgb) / 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
+  -webkit-mask-image: radial-gradient(circle at 50% 30%, #000 0%, transparent 78%);
+  animation: mdp-grid-drift 18s linear infinite;
+}
+
+.mdp-aurora {
+  background:
+    radial-gradient(38% 30% at 18% 12%, rgb(var(--mdp-accent-2-rgb) / 0.22), transparent 70%),
+    radial-gradient(34% 28% at 84% 22%, rgb(var(--mdp-accent-rgb) / 0.18), transparent 72%);
+  filter: blur(6px);
+  animation: mdp-aurora-breathe 12s ease-in-out infinite;
+}
+
+.mdp-scanlines {
+  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+  opacity: 0.5;
+}
+
+@keyframes mdp-grid-drift {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      0 48px,
+      48px 0;
+  }
+}
+
+@keyframes mdp-aurora-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* --------------------------------------------------------------------- shell */
+
+.mdp-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1320px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.mdp-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--mdp-line);
+}
+
+.mdp-eyebrow {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--mdp-text-soft);
+}
+
+.mdp-header h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.7rem, 4.6vw, 2.7rem);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 0 22px rgb(var(--mdp-accent-rgb) / 0.45);
+}
+
+.mdp-header h1 span {
+  color: var(--mdp-accent);
+}
+
+.mdp-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mdp-theme {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mdp-theme__label {
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mdp-text-soft);
+}
+
+.mdp-badge {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--mdp-line);
+  border-radius: 999px;
+  background: var(--mdp-wash);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mdp-text-dim);
+}
+
+.mdp-badge--live {
+  border-color: rgb(var(--mdp-accent-rgb) / 0.55);
+  color: var(--mdp-accent);
+  box-shadow: 0 0 14px var(--mdp-glow);
+}
+
+.mdp-badge--live.is-busy {
+  border-color: rgba(255, 207, 107, 0.6);
+  color: var(--mdp-amber);
+  box-shadow: 0 0 14px rgba(255, 207, 107, 0.24);
+}
+
+.mdp-badge--live.is-error {
+  border-color: rgba(255, 118, 118, 0.6);
+  color: var(--mdp-danger);
+  box-shadow: 0 0 14px rgba(255, 118, 118, 0.22);
+}
+
+/* -------------------------------------------------------------------- panels */
+
+.mdp-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.mdp-map {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.mdp-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem;
+  border: 1px solid var(--mdp-line);
+  border-radius: 14px;
+  background: var(--mdp-panel);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.mdp-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed rgb(var(--mdp-accent-rgb) / 0.18);
+}
+
+.mdp-panel__head h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--mdp-text);
+}
+
+.mdp-panel__head i {
+  margin-right: 0.4rem;
+  color: var(--mdp-accent);
+}
+
+.mdp-panel__tag {
+  flex: none;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mdp-text-soft);
+}
+
+.mdp-panel__tag--high {
+  color: var(--mdp-danger);
+}
+
+.mdp-panel__tag--warn {
+  color: var(--mdp-amber);
+}
+
+.mdp-panel__tag--info {
+  color: var(--mdp-accent);
+}
+
+.mdp-panel__tag--clean {
+  color: var(--mdp-ok);
+}
+
+/* ------------------------------------------------------------------ dropzone */
+
+.mdp-drop {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 1.6rem 1rem;
+  border: 1px dashed rgb(var(--mdp-accent-rgb) / 0.4);
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--mdp-wash-soft), transparent);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.mdp-drop:hover,
+.mdp-drop:focus-visible,
+.mdp-drop.is-hot {
+  border-color: var(--mdp-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 0 28px rgb(var(--mdp-accent-rgb) / 0.2);
+  outline: none;
+}
+
+.mdp-drop.is-hot {
+  background: linear-gradient(180deg, rgb(var(--mdp-accent-2-rgb) / 0.14), transparent);
+}
+
+/* Scan bar sweeping the dropzone — the page's only idle motion cue. */
+.mdp-drop__reticle {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--mdp-accent), transparent);
+  opacity: 0.7;
+  animation: mdp-scan 3.4s ease-in-out infinite;
+}
+
+@keyframes mdp-scan {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(9rem);
+  }
+}
+
+.mdp-drop__glyph {
+  font-size: 1.9rem;
+  color: var(--mdp-accent);
+  text-shadow: 0 0 18px rgb(var(--mdp-accent-rgb) / 0.5);
+}
+
+.mdp-drop__label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.mdp-drop__hint {
+  font-size: 0.66rem;
+  color: var(--mdp-text-soft);
+  text-align: center;
+}
+
+.mdp-drop__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mdp-message {
+  margin: 0;
+  min-height: 1.1rem;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  color: var(--mdp-text-dim);
+}
+
+.mdp-message.is-error {
+  color: var(--mdp-danger);
+}
+
+.mdp-note {
+  margin: 0;
+  font-size: 0.62rem;
+  line-height: 1.6;
+  color: var(--mdp-text-soft);
+}
+
+.mdp-note.is-error {
+  color: var(--mdp-amber);
+}
+
+.mdp-empty {
+  margin: 0;
+  padding: 1.2rem 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--mdp-text-soft);
+}
+
+/* ------------------------------------------------------------------ readouts */
+
+.mdp-readout {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.7rem;
+  border: 1px solid var(--mdp-line-soft);
+  border-radius: 10px;
+  background: var(--mdp-panel-strong);
+}
+
+.mdp-readout--wide {
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.35rem 1rem;
+}
+
+.mdp-readout__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  min-width: 0;
+}
+
+.mdp-readout__row dt {
+  flex: none;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mdp-text-soft);
+}
+
+.mdp-readout__row dd {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--mdp-accent);
+}
+
+/* ------------------------------------------------------------------ findings */
+
+.mdp-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mdp-finding {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--mdp-line-soft);
+  border-left-width: 3px;
+  border-radius: 8px;
+  background: var(--mdp-panel-strong);
+}
+
+.mdp-finding__level {
+  flex: none;
+  width: 3.2rem;
+  padding-top: 0.1rem;
+  font-size: 0.56rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mdp-finding__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.mdp-finding__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.mdp-finding__detail {
+  font-size: 0.66rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  color: var(--mdp-text-dim);
+}
+
+.mdp-finding--high {
+  border-left-color: var(--mdp-danger);
+  background: linear-gradient(90deg, rgba(255, 118, 118, 0.1), var(--mdp-panel-strong) 60%);
+}
+
+.mdp-finding--high .mdp-finding__level,
+.mdp-finding--high .mdp-finding__label {
+  color: var(--mdp-danger);
+}
+
+.mdp-finding--warn {
+  border-left-color: var(--mdp-amber);
+}
+
+.mdp-finding--warn .mdp-finding__level {
+  color: var(--mdp-amber);
+}
+
+.mdp-finding--info {
+  border-left-color: rgb(var(--mdp-accent-rgb) / 0.7);
+}
+
+.mdp-finding--info .mdp-finding__level {
+  color: var(--mdp-accent);
+}
+
+.mdp-finding--clean {
+  border-left-color: var(--mdp-ok);
+}
+
+.mdp-finding--clean .mdp-finding__level,
+.mdp-finding--clean .mdp-finding__label {
+  color: var(--mdp-ok);
+}
+
+/* -------------------------------------------------------------------- frames */
+
+/* The visible image beside the thumbnail its own metadata carries. When the two
+   disagree, the finding above is not theoretical. */
+.mdp-frames {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+.mdp-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.5rem;
+  border: 1px solid var(--mdp-line-soft);
+  border-radius: 10px;
+  background:
+    linear-gradient(rgb(var(--mdp-accent-rgb) / 0.05) 1px, transparent 1px) 0 0 / 16px 16px,
+    var(--mdp-void);
+}
+
+.mdp-frame__img {
+  display: block;
+  max-width: 12rem;
+  max-height: 9rem;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+.mdp-frame figcaption {
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mdp-text-soft);
+}
+
+.mdp-frame--alert {
+  border-color: rgba(255, 207, 107, 0.5);
+  box-shadow: 0 0 18px rgba(255, 207, 107, 0.14);
+}
+
+.mdp-frame--alert figcaption {
+  color: var(--mdp-amber);
+}
+
+/* --------------------------------------------------------------- control deck */
+
+.mdp-deck {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.mdp-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid var(--mdp-line);
+  border-radius: 14px;
+  background: var(--mdp-panel);
+  backdrop-filter: blur(10px);
+}
+
+.mdp-group legend {
+  padding: 0 0.4rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--mdp-text-dim);
+}
+
+.mdp-group legend i {
+  margin-right: 0.35rem;
+  color: var(--mdp-accent);
+}
+
+.mdp-group--strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.5rem 1.2rem;
+}
+
+.mdp-group--strip legend {
+  grid-column: 1 / -1;
+}
+
+.mdp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mdp-field__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mdp-text-soft);
+}
+
+/* -------------------------------------------------------------------- inputs */
+
+.mdp-select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid rgb(var(--mdp-accent-rgb) / 0.28);
+  border-radius: 8px;
+  background: var(--mdp-panel-strong);
+  color: var(--mdp-text);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.mdp-select:hover,
+.mdp-select:focus-visible {
+  border-color: var(--mdp-accent);
+  outline: none;
+}
+
+.mdp-select option {
+  background: #06101c;
+  color: var(--mdp-text);
+}
+
+.mdp-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.mdp-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.mdp-toggle__box {
+  position: relative;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 0.15rem;
+  border: 1px solid rgb(var(--mdp-accent-rgb) / 0.45);
+  border-radius: 3px;
+  background: var(--mdp-panel-strong);
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.mdp-toggle input:checked + .mdp-toggle__box {
+  border-color: var(--mdp-accent);
+  background: var(--mdp-accent);
+  box-shadow: 0 0 12px var(--mdp-glow);
+}
+
+.mdp-toggle input:checked + .mdp-toggle__box::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: var(--mdp-bg);
+}
+
+.mdp-toggle input:focus-visible + .mdp-toggle__box {
+  outline: 2px solid var(--mdp-accent-2);
+  outline-offset: 2px;
+}
+
+.mdp-toggle__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--mdp-text-dim);
+}
+
+.mdp-toggle__text em {
+  font-size: 0.58rem;
+  font-style: normal;
+  letter-spacing: 0.04em;
+  color: var(--mdp-text-soft);
+}
+
+/* Removing one of these changes how a decoder renders the image, not just what
+   the file says about it. */
+.mdp-toggle--risky .mdp-toggle__text em {
+  color: rgba(255, 207, 107, 0.72);
+}
+
+.mdp-toggle--risky input:checked + .mdp-toggle__box {
+  border-color: var(--mdp-amber);
+  background: var(--mdp-amber);
+  box-shadow: 0 0 12px rgba(255, 207, 107, 0.3);
+}
+
+/* ------------------------------------------------------------------- buttons */
+
+.mdp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: auto;
+}
+
+.mdp-btn {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--mdp-line);
+  border-radius: 8px;
+  background: rgb(var(--mdp-accent-rgb) / 0.08);
+  color: var(--mdp-text);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    opacity 0.16s ease;
+}
+
+.mdp-btn:hover:not(:disabled),
+.mdp-btn:focus-visible:not(:disabled) {
+  border-color: var(--mdp-accent);
+  background: rgb(var(--mdp-accent-rgb) / 0.16);
+  outline: none;
+}
+
+.mdp-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.mdp-btn--ghost {
+  background: transparent;
+}
+
+/* -------------------------------------------------------------------- blocks */
+
+.mdp-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 26rem;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.mdp-block {
+  display: grid;
+  grid-template-columns: 5.4rem minmax(6rem, 10rem) minmax(0, 1fr) 4.6rem 4.4rem;
+  align-items: baseline;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid transparent;
+  border-left: 2px solid rgb(var(--mdp-accent-rgb) / 0.25);
+  border-radius: 6px;
+  background: var(--mdp-panel-strong);
+  color: var(--mdp-text-dim);
+  font: inherit;
+  font-size: 0.66rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.14s ease,
+    background 0.14s ease,
+    opacity 0.14s ease;
+}
+
+.mdp-block:hover,
+.mdp-block:focus-visible {
+  border-color: rgb(var(--mdp-accent-rgb) / 0.5);
+  background: var(--mdp-wash-soft);
+  outline: none;
+}
+
+.mdp-block.is-selected {
+  border-color: var(--mdp-accent);
+  border-left-color: var(--mdp-accent);
+  background: linear-gradient(90deg, var(--mdp-wash), var(--mdp-panel-strong) 70%);
+  color: var(--mdp-text);
+}
+
+.mdp-block.is-essential {
+  border-left-color: rgb(var(--mdp-text-rgb) / 0.2);
+}
+
+.mdp-block.is-warning {
+  border-left-color: var(--mdp-amber);
+}
+
+/* What the current toggle selection would remove. Struck through rather than
+   hidden: the point is to see the peel before committing to it. */
+.mdp-block.is-dropped {
+  opacity: 0.45;
+  border-left-color: var(--mdp-danger);
+}
+
+.mdp-block.is-dropped .mdp-block__label,
+.mdp-block.is-dropped .mdp-block__detail {
+  text-decoration: line-through;
+}
+
+.mdp-block__offset {
+  color: var(--mdp-text-soft);
+  letter-spacing: 0.04em;
+}
+
+.mdp-block__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mdp-accent);
+}
+
+.mdp-block__detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.62rem;
+  color: var(--mdp-text-soft);
+}
+
+.mdp-block__size {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mdp-block__flag {
+  text-align: right;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mdp-text-soft);
+}
+
+/* ----------------------------------------------------------------- hex panel */
+
+.mdp-detail__title {
+  margin: 0;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  color: var(--mdp-accent);
+}
+
+.mdp-hex {
+  margin: 0;
+  padding: 0.75rem;
+  max-height: 18rem;
+  overflow: auto;
+  border: 1px solid var(--mdp-line-soft);
+  border-radius: 10px;
+  background: var(--mdp-void);
+  color: var(--mdp-text-dim);
+  font-family: var(--mdp-mono);
+  font-size: 0.62rem;
+  line-height: 1.6;
+  white-space: pre;
+  tab-size: 4;
+}
+
+.mdp-hex:focus-visible {
+  outline: 2px solid var(--mdp-accent-2);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------- exif tables */
+
+.mdp-exif {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1rem;
+}
+
+.mdp-ifd {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.7rem;
+  border: 1px solid var(--mdp-line-soft);
+  border-radius: 10px;
+  background: var(--mdp-panel-strong);
+}
+
+.mdp-ifd__name {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mdp-accent);
+}
+
+.mdp-ifd__offset {
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: var(--mdp-text-soft);
+}
+
+.mdp-tags {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.64rem;
+}
+
+.mdp-tags tr + tr td {
+  border-top: 1px solid rgb(var(--mdp-accent-rgb) / 0.08);
+}
+
+.mdp-tags td {
+  padding: 0.25rem 0.3rem;
+  vertical-align: top;
+}
+
+.mdp-tags__name {
+  width: 40%;
+  color: var(--mdp-text-dim);
+}
+
+.mdp-tags__type {
+  width: 22%;
+  font-size: 0.58rem;
+  color: var(--mdp-text-soft);
+}
+
+.mdp-tags__value {
+  color: var(--mdp-text);
+  overflow-wrap: anywhere;
+}
+
+/* -------------------------------------------------------------------- footer */
+
+.mdp-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--mdp-line);
+  font-size: 0.66rem;
+  color: var(--mdp-text-soft);
+}
+
+.mdp-link {
+  color: var(--mdp-accent);
+  letter-spacing: 0.12em;
+  text-decoration: none;
+}
+
+.mdp-link:hover {
+  text-decoration: underline;
+}
+
+/* -------------------------------------------------------------------- themes */
+
+:root[data-mdp-theme="amber"] {
+  --mdp-accent-rgb: 255 179 71;
+  --mdp-accent-2-rgb: 255 107 74;
+  --mdp-text-rgb: 255 232 201;
+  --mdp-bg: #0c0703;
+  --mdp-bg-mid: #170d05;
+  --mdp-panel: rgba(32, 18, 6, 0.78);
+  --mdp-panel-strong: rgba(20, 11, 3, 0.94);
+  --mdp-void: #100903;
+}
+
+:root[data-mdp-theme="lime"] {
+  --mdp-accent-rgb: 125 255 143;
+  --mdp-accent-2-rgb: 43 215 160;
+  --mdp-text-rgb: 214 255 223;
+  --mdp-bg: #030a05;
+  --mdp-bg-mid: #06130a;
+  --mdp-panel: rgba(9, 30, 16, 0.78);
+  --mdp-panel-strong: rgba(4, 18, 9, 0.94);
+  --mdp-void: #041007;
+}
+
+:root[data-mdp-theme="magenta"] {
+  --mdp-accent-rgb: 255 95 210;
+  --mdp-accent-2-rgb: 111 123 255;
+  --mdp-text-rgb: 255 220 244;
+  --mdp-bg: #0a0410;
+  --mdp-bg-mid: #14071f;
+  --mdp-panel: rgba(28, 10, 42, 0.78);
+  --mdp-panel-strong: rgba(17, 5, 27, 0.94);
+  --mdp-void: #0d0517;
+}
+
+:root[data-mdp-theme="ice"] {
+  --mdp-accent-rgb: 207 230 255;
+  --mdp-accent-2-rgb: 127 154 181;
+  --mdp-text-rgb: 232 242 255;
+  --mdp-bg: #05080c;
+  --mdp-bg-mid: #0a1017;
+  --mdp-panel: rgba(16, 24, 34, 0.78);
+  --mdp-panel-strong: rgba(8, 13, 19, 0.94);
+  --mdp-void: #070b11;
+}
+
+/* ------------------------------------------------------------------ narrower */
+
+@media (max-width: 1100px) {
+  .mdp-deck {
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .mdp-stage,
+  .mdp-map {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The note column is the first thing to go: offset, name and size carry the
+     structure on their own. */
+  .mdp-block {
+    grid-template-columns: 5rem minmax(0, 1fr) 4.4rem 4rem;
+  }
+
+  .mdp-block__detail {
+    display: none;
+  }
+}
+
+/* Motion here is pure decoration — drop all of it when the visitor asked for
+   less of it. */
+@media (prefers-reduced-motion: reduce) {
+  .mdp-grid,
+  .mdp-aurora,
+  .mdp-drop__reticle {
+    animation: none;
+  }
+}

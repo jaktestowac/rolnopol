@@ -59,10 +59,12 @@ fi
 print_status "Bumping version: $current_version -> $new_version"
 
 # 3. Update only JSON files with "version" field (excluding package-lock.json)
+# public/schema/*.json is absent on purpose: those are generated in step 5 from
+# package.json, so sed-patching them here would leave them differing from
+# generator output and trip tests/unit/openapi-contract.test.js.
 json_files=(
     "package.json"
     "app-data.json"
-    "public/schema/openapi.json"
 )
 
 for file in "${json_files[@]}"; do
@@ -101,6 +103,17 @@ NODE
     fi
 else
     print_warning "File not found: package-lock.json"
+fi
+
+# 5. Re-emit the OpenAPI documents so info.version follows package.json
+if command -v node >/dev/null 2>&1; then
+    if node build/generate-openapi.js >/dev/null; then
+        print_success "Regenerated public/schema/openapi*.json"
+    else
+        print_warning "Failed to regenerate the OpenAPI schema"
+    fi
+else
+    print_warning "Node.js not available; OpenAPI schema not regenerated."
 fi
 
 # Verify the update by checking package.json

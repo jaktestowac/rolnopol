@@ -176,15 +176,91 @@
           animation: none;
         }
       }
+      /* The "N new entries" pill, shown only while the view is detached from the
+         top and the tail has landed something the visitor cannot see. */
+      .jump {
+        position: absolute;
+        top: 52px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 3;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #1d3a29;
+        color: var(--accent-2);
+        border: 1px solid #2f6144;
+        border-radius: 999px;
+        padding: 8px 16px;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+      }
+      .jump:hover {
+        border-color: var(--accent-2);
+      }
+      .jump[hidden] {
+        display: none;
+      }
       /* Log table */
       .log {
+        position: relative;
         border: 1px solid var(--border);
         border-radius: 16px;
         background: var(--card);
         overflow: hidden;
       }
+      /* The scroll viewport: the tail lands at the top, history pages in at the
+         bottom, and both live in this one box. */
       .scroll {
-        overflow-x: auto;
+        overflow: auto;
+        max-height: min(62vh, 640px);
+        overscroll-behavior: contain;
+      }
+      thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+      /* Scroll-back sentinel: the row the observer watches, and the only place the
+         history loader ever reports itself. */
+      .older {
+        padding: 14px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+        border-top: 1px solid var(--border);
+        /* Matches the table, so the sentinel still spans the row width when the
+           viewport is scrolled sideways on a narrow screen. */
+        min-width: 720px;
+      }
+      .older[data-state="more"],
+      .older[data-state="error"] {
+        cursor: pointer;
+        user-select: none;
+      }
+      .older[data-state="more"] {
+        color: var(--accent-2);
+        font-weight: 600;
+      }
+      .older[data-state="more"]:hover,
+      .older[data-state="error"]:hover {
+        background: #1a2b20;
+      }
+      .older:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+      }
+      .older[data-state="error"] {
+        color: var(--down);
+      }
+      .older[data-state="end"] {
+        color: #6f8a7a;
+        font-style: italic;
+      }
+      .older[hidden] {
+        display: none;
       }
       table {
         width: 100%;
@@ -321,9 +397,10 @@
             <option value="abandoned">Abandoned</option>
           </select>
         </label>
-        <label>
-          Show
-          <select id="limitFilter" aria-label="Number of entries">
+        <label title="How many entries one page reads — scroll or use the control under the last row for the next page">
+          Per page
+          <select id="limitFilter" aria-label="Entries per page" data-testid="activity-page-size">
+            <option value="10">10</option>
             <option value="25">25</option>
             <option value="50" selected>50</option>
             <option value="100">100</option>
@@ -339,7 +416,10 @@
       </div>
 
       <div class="log">
-        <div class="scroll">
+        <button id="jumpLive" class="jump" type="button" hidden data-testid="activity-jump-live">
+          <i class="fa-solid fa-arrow-up"></i> <span id="jumpLiveLabel">New entries</span>
+        </button>
+        <div class="scroll" id="logScroll" data-testid="activity-scroll">
           <table>
             <thead>
               <tr>
@@ -352,21 +432,12 @@
                 <th>Clock</th>
               </tr>
             </thead>
-            <tbody id="rows"></tbody>
+            <tbody id="rows" data-testid="activity-rows"></tbody>
           </table>
+          <div id="older" class="older" data-testid="activity-older" data-state="idle" hidden></div>
         </div>
         <div id="logState" class="state">Loading activity…</div>
       </div>
-
-      <p class="footnote">
-        This table is <strong>live</strong>: it loads the latest entries once, then streams every new one as it happens (the pill toggles
-        the stream off if you would rather hold the view still). The <code>state</code> filter is applied in this page; the unit filter and
-        the entry count are applied by the service. Entries appear only when a session's clock actually changes, so consecutive identical
-        snapshots collapse — this is a timeline, not a poll trace.
-        <br />
-        Looking for one unit in particular? Open its profile from the <a href="/agri-academy-units.html">certification units</a> directory —
-        every unit page carries its own activity panel.
-      </p>
     </main>
 
     <div id="footer-component"></div>
@@ -400,10 +471,39 @@
         const params = new URLSearchParams(location.search);
         let unitFilter = params.get("unit") || "";
 
+        // ── Two cursors, pointing opposite ways ───────────────────────────────────
+        //
+        // This view is a live tail AND a history reader over the same log, so it holds
+        // one cursor of each kind at once and must never confuse them:
+        //
+        //   cursor   the highest sequence seen. Handed to the SSE tail as `?since=`,
+        //            and the guard that makes a replayed entry a no-op.
+        //   oldest   the lowest sequence rendered. Handed to REST as `?before=` to
+        //            read the page below the window — scroll-back.
+        //
+        // `total` comes from the service and does NOT move with `?before=`, which is
+        // what lets "Showing 150 of 812" stay true while paging into history.
         let stream = null; // the open EventSource, when the tail is running
-        let cursor = 0; // highest sequence this page has rendered (the tail's cursor)
-        let total = 0; // matching entries the service reported, kept in step live
+        let cursor = 0;
+        let oldest = 0;
+        let hasMore = false; // the service says history exists below the oldest row
+        let loadingOlder = false;
+        let olderFailed = false; // a failed page stops the auto-chain until asked again
+        let total = 0; // entries the service counts for this filter, kept in step live
+        let scanned = 0; // entries pulled from the service, before this page's state filter
+        let rendered = 0; // rows actually in the table
+        let pending = []; // live entries held back while the view is detached from the top
+        let following = true; // the view sits at the top, so the tail may write into it
         let liveOn = true;
+
+        // A window that never trims grows without bound while the tail runs; a window
+        // that trims while somebody is reading history throws away what they scrolled
+        // for. So trim only from the BOTTOM, only while following, and hand the history
+        // cursor back to the row that is now last — the window stays self-consistent.
+        const MAX_ROWS = 1000;
+        const FOLLOW_EPS = 12; // px from the top that still counts as "at the top"
+        const CHAIN_MAX = 10; // history pages one scroll may pull (a state filter empties many)
+        const NEAR_BOTTOM = 200; // px of runway before the sentinel counts as reached
 
         const STATE_META = {
           awaiting_payment: { label: "Awaiting payment", cls: "badge--pay" },
@@ -435,8 +535,11 @@
           const unitCell = ev.unitId
             ? `<a class="unit-link" href="/agri-academy-unit.html?unit=${encodeURIComponent(ev.unitId)}">${esc(ev.unitName || ev.unitId)}</a>`
             : `<span class="mono">—</span>`;
+          // `data-seq` is not decoration: it is the history cursor, readable from the
+          // DOM, so an observer outside this page can tell which window it is looking
+          // at without replaying the fetches that produced it.
           return `
-                <tr${isNew ? ' class="is-new"' : ""}>
+                <tr${isNew ? ' class="is-new"' : ""} data-seq="${Number(ev.sequence) || 0}" data-state="${esc(ev.state || "")}" data-testid="activity-row">
                   <td class="seq">${Number(ev.sequence) || 0}</td>
                   <td>${esc(when(ev.at))}</td>
                   <td class="wrap">${unitCell}</td>
@@ -447,23 +550,86 @@
                 </tr>`;
         }
 
+        // The count separates the two numbers a reader actually needs. Without a state
+        // filter they are the same question; with one, "how many did I match" and "how
+        // far into the log did I have to read to match them" come apart, and pretending
+        // otherwise is how a paged view starts lying about its own totals.
         function setCount() {
-          const rows = $("rows").rows.length;
-          $("count").textContent = `Showing ${rows} of ${total} ${total === 1 ? "entry" : "entries"}`;
-        }
-
-        function render(events, shownTotal, filteredOut) {
-          const tbody = $("rows");
-          total = shownTotal;
-          if (!events.length) {
-            tbody.innerHTML = "";
-            $("logState").style.display = "block";
-            $("logState").textContent = filteredOut ? "No entries match this filter." : "No exam activity recorded yet.";
-            setCount();
+          if ($("stateFilter").value) {
+            $("count").textContent = `Showing ${rendered} matching · read ${scanned} of ${total}`;
             return;
           }
-          $("logState").style.display = "none";
-          tbody.innerHTML = events.map((ev) => rowHtml(ev, false)).join("");
+          $("count").textContent = `Showing ${rendered} of ${total} ${total === 1 ? "entry" : "entries"}`;
+        }
+
+        function setEmpty(text) {
+          const el = $("logState");
+          el.style.display = text ? "block" : "none";
+          if (text) el.textContent = text;
+        }
+
+        /** The scroll-back sentinel doubles as its own status line and its own button. */
+        function setOlder(state, text) {
+          const el = $("older");
+          const actionable = state === "more" || state === "error";
+          el.dataset.state = state;
+          el.textContent = text || "";
+          el.hidden = !text;
+          el.setAttribute("role", actionable ? "button" : "status");
+          el.tabIndex = actionable ? 0 : -1;
+        }
+
+        function restOfLog() {
+          if (olderFailed) return setOlder("error", "Could not load older entries — retry");
+          // "More" is a real control, not a caption. Scrolling to it loads the next
+          // page when the window can scroll at all; when a page is shorter than the
+          // viewport there is nothing to scroll, and the click is the only way — so
+          // it has to be clickable, and say so.
+          if (hasMore) return setOlder("more", "↓ Load older entries");
+          setOlder("end", rendered ? "Beginning of the log" : "");
+        }
+
+        // ── Following ─────────────────────────────────────────────────────────────
+        //
+        // The tail may only write into the table while the view is at the top. Anywhere
+        // else, an arriving entry would push every row the visitor is reading downwards
+        // mid-read — so entries are held, counted on a button, and released when they
+        // scroll back (or ask for them). This is the whole reason a live list and a
+        // scrolled list can share one container.
+        const isAtTop = () => $("logScroll").scrollTop <= FOLLOW_EPS;
+
+        function setJump() {
+          const btn = $("jumpLive");
+          btn.hidden = pending.length === 0;
+          if (pending.length) $("jumpLiveLabel").textContent = `${pending.length} new ${pending.length === 1 ? "entry" : "entries"}`;
+        }
+
+        function trim() {
+          const tbody = $("rows");
+          if (tbody.rows.length <= MAX_ROWS) return;
+          while (tbody.rows.length > MAX_ROWS) tbody.deleteRow(-1);
+          rendered = tbody.rows.length;
+          // What was just dropped off the bottom is history again, so the scroll-back
+          // cursor moves back up with it and `hasMore` becomes true by construction.
+          oldest = Number(tbody.rows[tbody.rows.length - 1]?.dataset.seq) || oldest;
+          hasMore = true;
+          restOfLog();
+        }
+
+        function flushPending() {
+          if (!pending.length) return;
+          // Buffered newest-last; the table is newest-first.
+          const html = pending
+            .slice()
+            .reverse()
+            .map((ev) => rowHtml(ev, true))
+            .join("");
+          pending = [];
+          $("rows").insertAdjacentHTML("afterbegin", html);
+          rendered = $("rows").rows.length;
+          setEmpty("");
+          trim();
+          setJump();
           setCount();
         }
 
@@ -481,20 +647,25 @@
         }
 
         function onEntry(ev) {
-          if (!ev || Number(ev.sequence) <= cursor) return; // already rendered
+          if (!ev || Number(ev.sequence) <= cursor) return; // already seen
           cursor = Number(ev.sequence);
-          // The state filter is this page's own, so an entry it excludes is not part
-          // of the view at all — neither rendered nor counted (`total` mirrors what
-          // the initial render counted, which is also filtered).
-          const stateWanted = $("stateFilter").value;
-          if (stateWanted && ev.state !== stateWanted) return;
+          // `total` and `scanned` count the log, not the view: an entry the state
+          // filter hides still happened, and still cost a read. Only `rendered` counts
+          // rows. Conflating the three is what makes a filtered infinite list unable
+          // to say anything true about itself.
           total += 1;
-          const tbody = $("rows");
-          $("logState").style.display = "none";
-          tbody.insertAdjacentHTML("afterbegin", rowHtml(ev, true));
-          // The newest N is what this view promises, so the oldest row makes room.
-          const limit = Number($("limitFilter").value) || 50;
-          while (tbody.rows.length > limit) tbody.deleteRow(-1);
+          scanned += 1;
+          const stateWanted = $("stateFilter").value;
+          if (stateWanted && ev.state !== stateWanted) return setCount();
+          if (!following) {
+            pending.push(ev);
+            setJump();
+            return setCount();
+          }
+          $("rows").insertAdjacentHTML("afterbegin", rowHtml(ev, true));
+          rendered += 1;
+          setEmpty("");
+          trim();
           setCount();
         }
 
@@ -566,37 +737,133 @@
           }
         }
 
-        // A reload re-reads the page AND re-opens the tail: the unit filter is applied
-        // by the service, so the subscription itself has to change with it, and the
-        // fresh page's high-water mark becomes the new cursor.
+        // ── Scroll-back ───────────────────────────────────────────────────────────
+        //
+        // History is read with the SAME unary route the first page came from, just
+        // bounded by `?before=`. Rows land at the BOTTOM, below the viewport, so this
+        // direction can never move what is being read — which is precisely why the
+        // tail goes up and history goes down.
+        /** Reads one page below `oldest`. Returns how many ROWS it put on screen. */
+        async function loadOlder() {
+          if (loadingOlder || olderFailed || !hasMore || !oldest) return 0;
+          loadingOlder = true;
+          let added = 0;
+          setOlder("loading", "Loading older entries…");
+          const stateWanted = $("stateFilter").value;
+          const query = new URLSearchParams({ limit: $("limitFilter").value, before: String(oldest) });
+          if (unitFilter) query.set("unitId", unitFilter);
+          try {
+            const res = await fetch("/api/v1/agri-academy/events?" + query.toString(), { credentials: "include" });
+            const body = await res.json().catch(() => null);
+            if (!res.ok || !body || !Array.isArray(body.events)) {
+              olderFailed = true;
+              return setOlder(
+                "error",
+                res.status === 503 ? "The exam-events service is unavailable — retry" : "Could not load older entries — retry",
+              );
+            }
+            const page = body.events;
+            scanned += page.length;
+            // The cursor follows the PAGE, not the rendered rows: a page the state
+            // filter empties still has to advance it, or the next request asks for the
+            // same window forever.
+            if (page.length) oldest = Number(page[page.length - 1].sequence) || oldest;
+            hasMore = !!body.hasMore;
+            total = Number(body.total) || total;
+            const shown = stateWanted ? page.filter((e) => e.state === stateWanted) : page;
+            added = shown.length;
+            if (added) {
+              $("rows").insertAdjacentHTML("beforeend", shown.map((ev) => rowHtml(ev, false)).join(""));
+              rendered = $("rows").rows.length;
+              setEmpty("");
+            }
+            restOfLog();
+            if (!rendered && !hasMore) setEmpty(stateWanted ? "No entries match this filter." : "No exam activity recorded yet.");
+            setCount();
+          } catch {
+            olderFailed = true;
+            setOlder("error", "Could not reach the AgriAcademy service — retry");
+          } finally {
+            loadingOlder = false;
+          }
+          return added;
+        }
+
+        const canScroll = () => $("logScroll").scrollHeight > $("logScroll").clientHeight + 4;
+
+        function sentinelReached() {
+          const el = $("older");
+          if (el.hidden) return false;
+          return el.getBoundingClientRect().top <= $("logScroll").getBoundingClientRect().bottom + NEAR_BOTTOM;
+        }
+
+        // One page per request — "show 10" must mean 10, not "10 and then however
+        // many more happen to fit". The ONE case that chains is a page the state
+        // filter emptied: it rendered nothing, so it answered nothing, and an
+        // `IntersectionObserver` will not re-fire for a sentinel that never stopped
+        // intersecting. Capped, so a filter matching nothing cannot walk the whole log.
+        async function loadMore() {
+          let guard = 0;
+          while (hasMore && !olderFailed && !loadingOlder && guard < CHAIN_MAX) {
+            guard += 1;
+            if ((await loadOlder()) !== 0) break;
+          }
+        }
+
+        // The scroll path. Deliberately does nothing when the window cannot scroll:
+        // with a page shorter than the viewport the sentinel is on screen from the
+        // start, and auto-loading there is what silently turned "10" into "14".
+        function autoLoadMore() {
+          if (!canScroll() || !sentinelReached()) return;
+          loadMore();
+        }
+
+        // A reload re-reads the first page AND re-opens the tail: the unit filter is
+        // applied by the service, so the subscription itself has to change with it, and
+        // the fresh page's high-water mark becomes the new live cursor while its oldest
+        // row becomes the new history cursor.
         async function load() {
           const btn = $("refreshBtn");
           btn.disabled = true;
           stopLive();
-          const limit = $("limitFilter").value;
+          pending = [];
+          following = true;
+          olderFailed = false;
+          cursor = oldest = total = scanned = rendered = 0;
+          hasMore = false;
+          setJump();
+          setOlder("idle", "");
           const stateWanted = $("stateFilter").value;
-          const query = new URLSearchParams({ limit });
+          const query = new URLSearchParams({ limit: $("limitFilter").value });
           if (unitFilter) query.set("unitId", unitFilter);
           try {
             const res = await fetch("/api/v1/agri-academy/events?" + query.toString(), { credentials: "include" });
             const body = await res.json().catch(() => null);
             if (!res.ok || !body || !Array.isArray(body.events)) {
               $("rows").innerHTML = "";
-              $("logState").style.display = "block";
-              $("logState").textContent =
-                res.status === 503 ? "The exam-events service is unavailable right now." : "Could not load exam activity.";
+              setEmpty(res.status === 503 ? "The exam-events service is unavailable right now." : "Could not load exam activity.");
               $("count").textContent = "—";
               setLive("off", "Live unavailable");
               return;
             }
             cursor = Number(body.latestSequence) || 0;
+            total = Number(body.total) || 0;
+            hasMore = !!body.hasMore;
+            scanned = body.events.length;
+            if (body.events.length) oldest = Number(body.events[body.events.length - 1].sequence) || 0;
             const shown = stateWanted ? body.events.filter((e) => e.state === stateWanted) : body.events;
-            render(shown, stateWanted ? shown.length : body.total, !!stateWanted && !shown.length);
+            $("rows").innerHTML = shown.map((ev) => rowHtml(ev, false)).join("");
+            rendered = $("rows").rows.length;
+            $("logScroll").scrollTop = 0;
+            setEmpty(rendered || hasMore ? "" : stateWanted ? "No entries match this filter." : "No exam activity recorded yet.");
+            restOfLog();
+            setCount();
             startLive();
+            // Nothing else is fetched here. One page is what the page size asked for;
+            // the sentinel below the last row is how the reader asks for the next.
           } catch {
             $("rows").innerHTML = "";
-            $("logState").style.display = "block";
-            $("logState").textContent = "Could not reach the AgriAcademy service.";
+            setEmpty("Could not reach the AgriAcademy service.");
             $("count").textContent = "—";
             setLive("off", "Live unavailable");
           } finally {
@@ -627,6 +894,51 @@
             setLive("off", "Live off");
           }
         });
+        // Scrolling does two jobs at once: it decides whether the tail may write into
+        // the table, and it pulls history when the bottom comes into range.
+        $("logScroll").addEventListener("scroll", () => {
+          const atTop = isAtTop();
+          if (atTop !== following) {
+            following = atTop;
+            if (following) flushPending();
+          }
+          autoLoadMore();
+        });
+
+        $("jumpLive").addEventListener("click", () => {
+          following = true;
+          flushPending();
+          $("logScroll").scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        // The sentinel takes the click in both of its actionable states: a failed page
+        // parks the loader (rather than retrying on every scroll event) and is retried
+        // here, and "Load older entries" is the manual path for a window too short to
+        // scroll.
+        function sentinelActivated() {
+          if (olderFailed) {
+            olderFailed = false;
+            restOfLog();
+            return void loadMore();
+          }
+          if (hasMore) loadMore();
+        }
+        $("older").addEventListener("click", sentinelActivated);
+        $("older").addEventListener("keydown", (ev) => {
+          if (ev.key !== "Enter" && ev.key !== " ") return;
+          ev.preventDefault();
+          sentinelActivated();
+        });
+
+        if ("IntersectionObserver" in window) {
+          new IntersectionObserver(
+            (entries) => {
+              if (entries.some((e) => e.isIntersecting)) autoLoadMore();
+            },
+            { root: $("logScroll"), rootMargin: `${NEAR_BOTTOM}px` },
+          ).observe($("older"));
+        }
+
         // Leaving the page open in a background tab keeps one stream per visitor, so
         // it is closed on unload rather than left for the leaf to notice.
         window.addEventListener("beforeunload", stopLive);
