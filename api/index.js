@@ -838,6 +838,16 @@ app.get(["/operator/tape-recorder", "/operator/tape-recorder.html"], (req, res, 
   return next();
 });
 
+// Public hidden WebMCP practice page. Always on: no flag, no login. It talks
+// only to the isolated /api/v1/practice/* endpoints.
+app.get(["/practice/webmcp-demo", "/practice/webmcp-demo.html"], (req, res, next) => {
+  if (req.path === "/practice/webmcp-demo") {
+    return res.redirect(302, "/practice/webmcp-demo.html");
+  }
+
+  return next();
+});
+
 // Public hidden labyrinth prototype entry point
 app.get(["/operator/labyrinth", "/operator/labyrinth.html"], (req, res, next) => {
   if (req.path === "/operator/labyrinth") {

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>WebMCP demo - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="/css/pages/webmcp-demo.css?v=20261012-1" />
+    <link rel="stylesheet" href="/css/pages/webmcp-explainer.css?v=20261013-1" />
+  </head>
+  <body>
+    <main class="page" data-testid="webmcp-demo">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow"><a href="/practice/" data-testid="back-to-catalog">← All practice pages</a></p>
+          <h1>WebMCP demo</h1>
+          <p class="lead">
+            This page registers three <a href="https://webmachinelearning.github.io/webmcp/" target="_blank" rel="noopener">WebMCP</a> tools
+            for a small greenhouse. An AI agent in the browser can call them, and you can run them yourself from the tool console.
+            Each browser tab gets its own greenhouse, kept in server memory. Nothing else in Rolnopol changes.
+          </p>
+        </div>
+        <div class="session">
+          <button id="contextMode" type="button" class="badge" data-testid="context-mode"></button>
+          <span class="session__id">Session <code id="sessionId" data-testid="session-id"></code></span>
+          <button id="resetButton" type="button" class="btn" data-testid="reset-button">Reset greenhouse</button>
+        </div>
+      </header>
+
+      <section class="card" aria-labelledby="toolsHeading">
+        <h2 id="toolsHeading">Tools on this page</h2>
+        <div class="tool-grid">
+          <article class="tool">
+            <h3><code>practice.greenhouse.getStatus</code></h3>
+            <p class="tool__tags"><span class="tag">readOnlyHint</span><span class="tag tag--warn">untrustedContentHint</span></p>
+            <p>Returns the beds, the harvest total and the notice board. Visitors write the notice board, and one note is a prompt injection, so the tool marks its output as untrusted.</p>
+          </article>
+          <article class="tool">
+            <h3><code>practice.greenhouse.waterBed</code></h3>
+            <p class="tool__tags"><span class="tag">changes state</span></p>
+            <p>Waters one bed. The agent runs it without asking you, and the beds below update.</p>
+          </article>
+          <article class="tool">
+            <h3><code>practice.greenhouse.harvestBed</code></h3>
+            <p class="tool__tags"><span class="tag tag--danger">consequentialHint</span></p>
+            <p>Harvests a fully grown bed. You can't undo a harvest, so the page asks you to confirm first.</p>
+          </article>
+        </div>
+      </section>
+
+      <div class="layout">
+        <section class="card" aria-labelledby="greenhouseHeading">
+          <div class="card__header">
+            <h2 id="greenhouseHeading">Greenhouse</h2>
+            <span>Harvested: <strong id="totalHarvested" data-testid="total-harvested">0 kg</strong></span>
+          </div>
+          <div id="beds" class="beds" data-testid="beds"></div>
+
+          <h3 class="subheading">Notice board</h3>
+          <p class="muted notices__note">Visitors write these notes. Tools mark them as untrusted.</p>
+          <ul id="noticeBoard" class="notices" data-testid="notice-board"></ul>
+        </section>
+
+        <section class="card" aria-labelledby="consoleHeading">
+          <h2 id="consoleHeading">Tool console</h2>
+          <p class="muted">Pick a tool and run it through <code>document.modelContext</code>, the same call an agent makes.</p>
+          <label for="toolSelect">Tool</label>
+          <select id="toolSelect" data-testid="tool-select"></select>
+          <p id="toolDescription" class="tool-description" data-testid="tool-description"></p>
+          <label for="toolInput">Input as JSON</label>
+          <textarea id="toolInput" rows="5" spellcheck="false" data-testid="tool-input"></textarea>
+          <button id="runTool" type="button" class="btn btn--primary" data-testid="run-tool">Run tool</button>
+          <label for="toolOutput">Result</label>
+          <pre id="toolOutput" class="output" data-testid="tool-output" aria-live="polite"></pre>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="logHeading">
+        <h2 id="logHeading">Activity</h2>
+        <ul id="activityLog" class="activity" data-testid="activity-log"></ul>
+      </section>
+
+      <section class="card" aria-labelledby="devtoolsHeading">
+        <h2 id="devtoolsHeading">From DevTools or a test</h2>
+        <pre class="output"><code>(await document.modelContext.getTools()).map((t) =&gt; t.name);
+JSON.parse(await document.modelContext.executeTool("practice.greenhouse.waterBed", { bedId: "B", liters: 3 }));</code></pre>
+        <p class="muted">
+          With native WebMCP, pass the tool object from <code>getTools()</code> instead of its name. The page calls
+          <code>/api/v1/practice/webmcp-demo/*</code> and sends the <code>x-practice-session-id</code> header.
+        </p>
+      </section>
+    </main>
+
+    <dialog id="confirmDialog" class="confirm" aria-labelledby="confirmTitle">
+      <form method="dialog">
+        <p class="eyebrow">Request from an AI agent</p>
+        <h2 id="confirmTitle"></h2>
+        <p id="confirmMessage"></p>
+        <ul id="confirmDetails"></ul>
+        <div class="confirm__actions">
+          <button value="cancel" class="btn" data-testid="confirm-cancel">Cancel</button>
+          <button value="confirm" class="btn btn--danger" data-testid="confirm-ok">Harvest</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/js/pages/webmcp-explainer.js?v=20261013-1"></script>
+    <script src="/js/pages/webmcp-demo.js?v=20261012-1"></script>
+  </body>
+</html>

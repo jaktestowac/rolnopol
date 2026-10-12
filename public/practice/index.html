@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <title>Practice pages - Rolnopol</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/pages/practice-catalog.css?v=20261012-1" />
+  </head>
+
+  <body class="bg-agri-pattern practice-catalog-page">
+    <!-- Dynamic Header Component -->
+    <div id="header-component"></div>
+
+    <div class="container practice-container">
+      <header class="header glass practice-hero">
+        <h1 class="practice-hero__icon">
+          <span class="bg-agri-gradient"><i class="fas fa-flask" aria-hidden="true"></i></span>
+        </h1>
+        <div class="practice-hero__text">
+          <span class="main-title">Practice pages</span>
+          <span class="practice-hero__subtitle">Self-contained sandboxes for practising test automation.</span>
+        </div>
+      </header>
+
+      <main class="main" data-testid="practice-catalog">
+        <section class="glass futuristic-card practice-toolbar" aria-label="Search and filters">
+          <div class="practice-toolbar__row">
+            <label class="practice-search" for="practiceSearch">
+              <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+              <span class="sr-only">Search practice pages</span>
+              <input
+                id="practiceSearch"
+                type="search"
+                placeholder="Search by name, topic or tag"
+                aria-keyshortcuts="/"
+                title="Press / to jump here"
+                autocomplete="off"
+                data-testid="practice-search"
+              />
+            </label>
+
+            <div class="practice-views" role="group" aria-label="View">
+              <button type="button" class="practice-view" data-view="large" aria-pressed="false" title="Large cards" data-testid="view-large">
+                <i class="fas fa-table-cells-large" aria-hidden="true"></i><span>Large</span>
+              </button>
+              <button type="button" class="practice-view" data-view="small" aria-pressed="true" title="Small cards" data-testid="view-small">
+                <i class="fas fa-table-cells" aria-hidden="true"></i><span>Small</span>
+              </button>
+              <button type="button" class="practice-view" data-view="compact" aria-pressed="false" title="Compact list" data-testid="view-compact">
+                <i class="fas fa-list" aria-hidden="true"></i><span>Compact</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="practice-toolbar__row practice-toolbar__filters">
+            <label class="practice-field">
+              <span>Category</span>
+              <select id="practiceCategory" data-testid="practice-category"><option value="all">All categories</option></select>
+            </label>
+            <label class="practice-field">
+              <span>Difficulty</span>
+              <select id="practiceDifficulty" data-testid="practice-difficulty"><option value="all">Any difficulty</option></select>
+            </label>
+            <label class="practice-field">
+              <span>Sort by</span>
+              <select id="practiceSort" data-testid="practice-sort">
+                <option value="title">Name, A to Z</option>
+                <option value="newest">Newest first</option>
+                <option value="difficulty">Difficulty</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="practice-toolbar__row practice-toolbar__tags">
+            <span class="practice-toolbar__label">Tags</span>
+            <div id="practiceTagFilters" class="practice-tag-filters" data-testid="practice-tag-filters"></div>
+          </div>
+
+          <div class="practice-toolbar__row practice-toolbar__summary">
+            <span id="practiceCount" aria-live="polite" data-testid="practice-count">Loading…</span>
+            <button id="practiceClear" type="button" class="btn btn-outline btn-compact" hidden data-testid="practice-clear">
+              <i class="fas fa-xmark" aria-hidden="true"></i> Clear filters
+            </button>
+          </div>
+        </section>
+
+        <p id="practiceStatus" class="practice-status" role="alert" hidden data-testid="practice-status"></p>
+        <section id="practiceResults" class="practice-results practice-results--small" aria-label="Practice pages" data-testid="practice-results"></section>
+      </main>
+
+      <div id="footer-component"></div>
+    </div>
+
+    <!-- Core Modules -->
+    <script src="/js/core/event-bus.js"></script>
+    <script src="/js/core/storage.js"></script>
+    <script src="/js/core/app.js"></script>
+
+    <!-- Services -->
+    <script src="/js/services/api-service.js"></script>
+    <script src="/js/services/auth-service.js"></script>
+    <script src="/js/services/feature-flags-service.js"></script>
+
+    <!-- Components -->
+    <script src="/js/components/notification.js"></script>
+    <script src="/js/components/navigation.js"></script>
+    <script src="/js/components/form.js"></script>
+    <script src="/js/components.js"></script>
+
+    <!-- Legacy API -->
+    <script src="/js/api.js"></script>
+
+    <!-- Utilities -->
+    <script src="/js/utils/error-logger.js"></script>
+    <script src="/js/utils/utils.js"></script>
+    <script src="/js/utils/router.js"></script>
+    <script src="/js/utils/global-compat.js"></script>
+
+    <!-- Main Application -->
+    <script src="/js/app.js"></script>
+    <script src="/js/utils/init-navigation.js"></script>
+    <script>
+      initNavigation("practice");
+    </script>
+    <script src="/js/pages/practice-catalog.js?v=20261012-1"></script>
+  </body>
+</html>

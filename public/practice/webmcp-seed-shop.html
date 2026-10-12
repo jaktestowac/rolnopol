@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>WebMCP seed shop - Rolnopol</title>
+    <link rel="icon" type="image/png" href="/images/logo/favicon.png" />
+    <link rel="stylesheet" href="/css/pages/webmcp-seed-shop.css?v=20261012-1" />
+    <link rel="stylesheet" href="/css/pages/webmcp-explainer.css?v=20261013-1" />
+  </head>
+  <body>
+    <main class="page" data-testid="webmcp-seed-shop">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow"><a href="/practice/" data-testid="back-to-catalog">← All practice pages</a></p>
+          <h1>WebMCP seed shop</h1>
+          <p class="lead">
+            The tools on this page change with the cart. Listing seeds and adding to the cart always work. Removing an item and placing
+            the order only exist while the cart has something in it, so an agent sees them appear and disappear. The shop runs in your
+            browser and resets when you reload.
+          </p>
+        </div>
+        <button id="contextMode" type="button" class="badge" data-testid="context-mode"></button>
+      </header>
+
+      <div class="layout">
+        <section class="card" aria-labelledby="seedsHeading">
+          <h2 id="seedsHeading">Seeds</h2>
+          <ul id="seeds" class="seeds" data-testid="seeds"></ul>
+
+          <div class="card__header">
+            <h2 id="cartHeading">Cart</h2>
+            <span>Total <strong id="cartTotal" data-testid="cart-total">0 ROL</strong></span>
+          </div>
+          <ul id="cart" class="cart" aria-labelledby="cartHeading" data-testid="cart"></ul>
+          <button id="placeOrder" type="button" class="btn btn--primary" data-testid="place-order" disabled>Place order</button>
+
+          <h2 class="subheading" id="ordersHeading">Orders</h2>
+          <ul id="orders" class="orders" aria-labelledby="ordersHeading" data-testid="orders"></ul>
+        </section>
+
+        <div class="stack">
+          <section class="card" aria-labelledby="registeredHeading">
+            <h2 id="registeredHeading">Registered right now</h2>
+            <p class="muted">Add something to the cart and watch two more tools appear.</p>
+            <ul id="registeredTools" class="registered" data-testid="registered-tools"></ul>
+          </section>
+
+          <section class="card" aria-labelledby="consoleHeading">
+            <h2 id="consoleHeading">Tool console</h2>
+            <p class="muted">Pick a registered tool and run it through <code>document.modelContext</code>, the same call an agent makes.</p>
+            <label for="toolSelect">Tool</label>
+            <select id="toolSelect" data-testid="tool-select"></select>
+            <p id="toolDescription" class="tool-description" data-testid="tool-description"></p>
+            <label for="toolInput">Input as JSON</label>
+            <textarea id="toolInput" rows="4" spellcheck="false" data-testid="tool-input"></textarea>
+            <button id="runTool" type="button" class="btn btn--primary" data-testid="run-tool">Run tool</button>
+            <label for="toolOutput">Result</label>
+            <pre id="toolOutput" class="output" data-testid="tool-output" aria-live="polite"></pre>
+          </section>
+        </div>
+      </div>
+
+      <section class="card" aria-labelledby="logHeading">
+        <h2 id="logHeading">Activity</h2>
+        <ul id="activityLog" class="activity" data-testid="activity-log"></ul>
+      </section>
+    </main>
+
+    <dialog id="confirmDialog" class="confirm" aria-labelledby="confirmTitle">
+      <form method="dialog">
+        <p class="eyebrow">Request from an AI agent</p>
+        <h2 id="confirmTitle"></h2>
+        <p id="confirmMessage"></p>
+        <ul id="confirmDetails"></ul>
+        <div class="confirm__actions">
+          <button value="cancel" class="btn" data-testid="confirm-cancel">Cancel</button>
+          <button value="confirm" class="btn btn--primary" data-testid="confirm-ok">Place order</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/js/pages/webmcp-explainer.js?v=20261013-1"></script>
+    <script src="/js/pages/webmcp-seed-shop.js?v=20261012-1"></script>
+  </body>
+</html>

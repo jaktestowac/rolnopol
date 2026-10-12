@@ -243,6 +243,11 @@ async function chaosEngineMiddleware(req, res, next) {
       return next();
     }
 
+    // practice endpoints are isolated test fixtures and must always answer normally
+    if (req.path && req.path.startsWith("/v1/practice/")) {
+      return next();
+    }
+
     // if chaos engine is not enabled, skip all chaos logic and just call next()
     if (!runtimeConfig.enabled) {
       return next();
