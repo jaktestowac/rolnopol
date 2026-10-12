@@ -63,6 +63,10 @@ const FEATURE_FLAG_DESCRIPTIONS = {
     "Enable or disable the whole Crew Office module (GraphQL crew management over the existing staff records — pages, graph endpoint, module-owned stores, and all four pillars: work, holidays, training, tools) for logged-in users only",
   survivalGameEnabled:
     "Enable or disable Rolnopol Survival (the hex survival game page and its expedition-record REST API) for logged-in users only",
+  webMcpEnabled:
+    "Enable or disable WebMCP tools: pages register farm, marketplace, finance, weather, alerts and login actions with the browser's model context (document.modelContext) so AI agents can call them",
+  webMcpDemoLoginEnabled:
+    "Enable or disable the rolnopol.auth.loginAsDemo WebMCP tool on the login page, which logs in with a built-in demo account (testing only; requires webMcpEnabled)",
 };
 
 const FEATURE_FLAG_GROUPS = {
@@ -103,6 +107,7 @@ const FEATURE_FLAG_GROUPS = {
   observatory: ["observatoryEnabled"],
   crewOffice: ["crewOfficeEnabled"],
   survival: ["survivalGameEnabled"],
+  webMcp: ["webMcpEnabled", "webMcpDemoLoginEnabled"],
 };
 
 const EXPERIMENTAL_FEATURE_FLAGS = [
@@ -146,6 +151,8 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "observatoryEnabled",
   "crewOfficeEnabled",
   "survivalGameEnabled",
+  "webMcpEnabled",
+  "webMcpDemoLoginEnabled",
 ];
 
 // The flag defaults live in data/feature-flags.defaults.js so that the database manager can

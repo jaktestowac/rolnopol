@@ -49,7 +49,9 @@
     "agriAcademyEnabled": false,
     "observatoryEnabled": false,
     "crewOfficeEnabled": false,
-    "survivalGameEnabled": true
+    "survivalGameEnabled": true,
+    "webMcpEnabled": true,
+    "webMcpDemoLoginEnabled": true
   },
   "updatedAt": "2026-08-27T20:16:05.910Z"
 }

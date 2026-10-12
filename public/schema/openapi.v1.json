@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Rolnopol API v1",
-    "version": "1.116.0",
+    "version": "1.117.0",
     "description": "Stable production API for the Rolnopol service.\n\n**Generated** from the live Express router by `npm run schema:generate` — do not edit by hand.\n\nOperations marked with `x-feature-flag` are gated: they answer **404** while their flag is off. Flags are listed at `GET /api/v1/feature-flags` and toggled via `PATCH /api/v1/admin/feature-flags`.",
     "contact": {
       "name": "API Support",
@@ -128,6 +128,9 @@
     {
       "name": "Platform",
       "description": "Endpoints served at `/api` rather than under a version prefix."
+    },
+    {
+      "name": "Practice"
     },
     {
       "name": "Services Monitor"
@@ -11186,6 +11189,204 @@
         "description": "Basic connectivity test"
       }
     },
+    "/practice/catalog": {
+      "get": {
+        "tags": [
+          "Practice"
+        ],
+        "operationId": "getPracticeCatalog",
+        "summary": "List the practice pages",
+        "responses": {
+          "200": {
+            "description": "Practice pages with their categories, difficulty and tags"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "description": "Catalog shown on /practice/. Always available: no login, no feature flag."
+      }
+    },
+    "/practice/webmcp-demo/beds/{bedId}/harvest": {
+      "post": {
+        "tags": [
+          "Practice"
+        ],
+        "operationId": "postPracticeWebmcpDemoBedsByBedIdHarvest",
+        "summary": "Harvest a fully grown practice greenhouse bed",
+        "responses": {
+          "200": {
+            "description": "Harvest record and the cleared bed"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound",
+            "description": "Unknown bed"
+          },
+          "409": {
+            "description": "Bed is not fully grown yet"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "bedId",
+            "in": "path",
+            "required": true,
+            "description": "Bed id: A, B or C",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "A",
+                "B",
+                "C"
+              ]
+            }
+          },
+          {
+            "name": "x-practice-session-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,64}$"
+            }
+          }
+        ]
+      }
+    },
+    "/practice/webmcp-demo/beds/{bedId}/water": {
+      "post": {
+        "tags": [
+          "Practice"
+        ],
+        "operationId": "postPracticeWebmcpDemoBedsByBedIdWater",
+        "summary": "Water a practice greenhouse bed",
+        "responses": {
+          "200": {
+            "description": "Updated bed, with a warning when it is waterlogged"
+          },
+          "400": {
+            "description": "Invalid liters or session id"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound",
+            "description": "Unknown bed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "bedId",
+            "in": "path",
+            "required": true,
+            "description": "Bed id: A, B or C",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "A",
+                "B",
+                "C"
+              ]
+            }
+          },
+          {
+            "name": "x-practice-session-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,64}$"
+            }
+          }
+        ],
+        "description": "Each litre raises moisture by 8 and growth by 5 points (capped at 100).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "liters"
+                ],
+                "properties": {
+                  "liters": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/practice/webmcp-demo/reset": {
+      "post": {
+        "tags": [
+          "Practice"
+        ],
+        "operationId": "postPracticeWebmcpDemoReset",
+        "summary": "Reset the WebMCP practice greenhouse for this session",
+        "responses": {
+          "200": {
+            "description": "Fresh sandbox state"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-practice-session-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,64}$"
+            }
+          }
+        ]
+      }
+    },
+    "/practice/webmcp-demo/state": {
+      "get": {
+        "tags": [
+          "Practice"
+        ],
+        "operationId": "getPracticeWebmcpDemoState",
+        "summary": "Read the WebMCP practice greenhouse",
+        "responses": {
+          "200": {
+            "description": "Beds, notice board and harvest log"
+          },
+          "400": {
+            "description": "Malformed session id"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "description": "Backs the hidden /practice/webmcp-demo.html page. Always available: no login, no feature flag. State is in memory and separate per x-practice-session-id (a missing header uses one shared sandbox). The notice board contains deliberately untrusted text, including a prompt-injection sample.",
+        "parameters": [
+          {
+            "name": "x-practice-session-id",
+            "in": "header",
+            "required": false,
+            "description": "Sandbox id, 8-64 characters of letters, digits, '-' or '_'",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,64}$"
+            }
+          }
+        ]
+      }
+    },
     "/register": {
       "post": {
         "tags": [
@@ -14736,7 +14937,7 @@
                   "properties": {
                     "version": {
                       "type": "string",
-                      "example": "1.116.0"
+                      "example": "1.117.0"
                     }
                   }
                 }

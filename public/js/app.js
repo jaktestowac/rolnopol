@@ -11,6 +11,35 @@
     return page;
   }
 
+  const WEBMCP_SCRIPTS = [
+    "/js/webmcp/webmcp-service.js",
+    "/js/webmcp/tools/global-tools.js",
+    "/js/webmcp/tools/auth-tools.js",
+    "/js/webmcp/tools/farm-tools.js",
+    "/js/webmcp/tools/marketplace-tools.js",
+    "/js/webmcp/tools/finance-tools.js",
+  ];
+  // Written by the auth.openLogin WebMCP tool, read once by the login page.
+  const WEBMCP_LOGIN_EMAIL_KEY = "rolnopol.webmcp.loginEmail";
+  const WEBMCP_RETURN_TO_KEY = "rolnopol.webmcp.returnTo";
+
+  // Only same-origin paths such as "/marketplace.html" (never "//host" or "/\host").
+  function toSafeReturnPath(value) {
+    if (typeof value !== "string") return null;
+    return /^\/(?![/\\])[A-Za-z0-9._~/-]*(\?[A-Za-z0-9._~=&%-]*)?$/.test(value) ? value : null;
+  }
+  window.RolnopolWebMcpReturnPath = toSafeReturnPath;
+
+  function takeSessionValue(key) {
+    try {
+      const value = window.sessionStorage.getItem(key);
+      window.sessionStorage.removeItem(key);
+      return value;
+    } catch (error) {
+      return null;
+    }
+  }
+
   // Wait for DOM to be ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initializeApp);
@@ -135,6 +164,9 @@
 
       // Setup global assistant chat widget (auth + feature-flag gated)
       initializeAssistantChatWidget();
+
+      // Expose page actions to AI agents (browser support + feature-flag gated)
+      initializeWebMcp();
     } catch (error) {
       errorLogger.logCritical("Application Initialization", error, {
         showToUser: false,
@@ -333,6 +365,14 @@
       const defaultSubmitText = submitButton ? submitButton.innerHTML : "Login";
       let twoFactorStepActive = false;
 
+      const webMcpEmail = takeSessionValue(WEBMCP_LOGIN_EMAIL_KEY);
+      if (webMcpEmail && emailInput && !emailInput.value) {
+        emailInput.value = webMcpEmail;
+        if (passwordInput && typeof passwordInput.focus === "function") {
+          passwordInput.focus();
+        }
+      }
+
       const hideTwoFactorStep = () => {
         twoFactorStepActive = false;
 
@@ -442,7 +482,7 @@
           // Wait for authentication to be properly set before redirecting
           const isAuthenticated = await authService.waitForAuth(3000);
           if (isAuthenticated) {
-            window.location.href = "/profile.html";
+            window.location.href = toSafeReturnPath(takeSessionValue(WEBMCP_RETURN_TO_KEY)) || "/profile.html";
           } else {
             errorLogger.log("Authentication", "Authentication failed to set properly", { showToUser: true });
           }
@@ -786,6 +826,39 @@
     // Setup welcome message for authenticated users
     if (authService && authService.isAuthenticated()) {
       setupAuthenticatedWelcome();
+    }
+  }
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`Failed to load ${src}`));
+      document.head.appendChild(script);
+    });
+  }
+
+  /**
+   * WebMCP: register page actions as tools an AI agent can call (see js/webmcp/webmcp-service.js).
+   * The scripts load only in browsers that implement the API; tools register only
+   * while the webMcpEnabled flag is on.
+   */
+  async function initializeWebMcp() {
+    const hasModelContext = !!(document.modelContext || navigator.modelContext);
+    if (!hasModelContext || Utils.isSwaggerPage()) {
+      return;
+    }
+
+    try {
+      for (const src of WEBMCP_SCRIPTS) {
+        await loadScript(src);
+      }
+      const service = new window.RolnopolWebMcp.WebMcpService({ app: window.App, page: getCurrentPageName() });
+      window.App.registerModule("webMcp", service);
+      await service.start();
+    } catch (error) {
+      console.warn("[WebMCP] Initialization failed:", error);
     }
   }
 

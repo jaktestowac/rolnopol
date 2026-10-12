@@ -1616,4 +1616,86 @@ module.exports = [
       ],
     },
   },
+
+  // ---------------------------------------------------------------------------
+  // AI agents
+  // ---------------------------------------------------------------------------
+  {
+    flag: "webMcpEnabled",
+    section: {
+      section: "webmcp-tools",
+      title: "WebMCP Tools for AI Agents",
+      content: [
+        heading("Overview", [
+          p(
+            "Rolnopol pages register WebMCP tools (https://webmachinelearning.github.io/webmcp/) with the browser's model context, so an AI agent running in the browser can call page actions directly instead of clicking through the UI. Tools run inside the page with the user's own session; there is no separate server or token.",
+          ),
+          ul([
+            "Nothing loads unless the browser exposes document.modelContext (or navigator.modelContext in early previews) and the page is served over HTTPS or localhost.",
+            "Every tool name starts with 'rolnopol.'; tools register per page and only for the flags and login state they need.",
+            "Tool calls never redirect to the login page: an expired session comes back as { ok: false, error: 'not_authenticated' }.",
+            "Invalid input comes back as { ok: false, error: 'invalid_input', details: [...] } before any request is made.",
+          ]),
+        ]),
+        heading("Tools", [
+          table(
+            ["Page", "Tools", "Notes"],
+            [
+              ["Every page", "farm.getOverview, weather.getForecast, alerts.list, auth.getStatus, auth.openLogin, auth.logout", "Weather needs weatherPageEnabled, alerts need alertsEnabled"],
+              ["/staff-fields-main.html", "fields.list/create/update, staff.list/create, animals.list/add/move, assignments.list/assign/unassign", "Input limits match the page forms"],
+              ["/staff-fields-assign.html", "assignments.list/assign/unassign", "One field per staff member"],
+              ["/staff-fields-export.html", "export.download", "Needs staffFieldsExportEnabled"],
+              ["/marketplace.html", "marketplace.searchOffers, createOffer, cancelOffer, buyOffer", "Writes ask the user to confirm"],
+              ["/financial.html", "finance.getSummary, listTransactions, transfer", "Transfers ask the user to confirm"],
+              ["/financial-commodities.html", "commodities.getPrices, commodities.trade", "Trading needs financialCommoditiesTradingEnabled"],
+              ["/login.html, /register.html", "auth.loginAsDemo, auth.getPasswordRules, auth.prefillRegistration", "loginAsDemo needs webMcpDemoLoginEnabled"],
+            ],
+          ),
+        ]),
+        heading("Safety rules", [
+          ul([
+            "Tools that move money or ownership, or log the user out, carry consequentialHint and open an in-page dialog; the call returns 'user_cancelled' unless the user confirms.",
+            "Tools that return text written by other users (offer descriptions, transfer descriptions) carry untrustedContentHint.",
+            "No tool accepts or returns a password, a 2FA code, a card number, a CVV, a session token or an API key. Income transactions are not exposed because they need card data.",
+            "auth.openLogin only pre-fills the email; the user types the password. Its returnTo accepts same-origin paths only.",
+          ]),
+        ]),
+        heading("Scenario: call a tool from DevTools", [
+          scenario([
+            "Use a browser with WebMCP enabled (for example Chrome with the WebMCP testing flag) and open Rolnopol on localhost.",
+            "Turn on webMcpEnabled on the Feature Flags page and log in.",
+            "Open /marketplace.html and list the tools: await document.modelContext.getTools().",
+            "Run rolnopol.marketplace.buyOffer with an offer id and check that the confirmation dialog appears before anything is bought.",
+          ]),
+        ]),
+      ],
+    },
+  },
+  {
+    flag: "webMcpDemoLoginEnabled",
+    section: {
+      section: "webmcp-demo-login",
+      title: "WebMCP Demo Login",
+      content: [
+        heading("Overview", [
+          p(
+            "Adds the rolnopol.auth.loginAsDemo WebMCP tool to /login.html. It logs in with one of the public demo accounts, so an agent-driven test can start from a logged-out browser without real credentials passing through the agent.",
+          ),
+          table(
+            ["account", "Email", "Data"],
+            [
+              ["empty-user", "emptyuser@rolnopol.demo.pl", "No farm data"],
+              ["demo-user", "demo@example.com", "Sample fields, staff, animals and money"],
+              ["demo-user-2", "test@example.com", "Sample fields, staff, animals and money"],
+            ],
+          ),
+          callout(
+            "warning",
+            "Testing only",
+            "The tool takes an account name, never a password. It also needs webMcpEnabled, and it is not registered for a user who is already logged in. Keep this flag off outside test environments.",
+          ),
+        ]),
+      ],
+    },
+  },
 ];

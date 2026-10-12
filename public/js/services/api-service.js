@@ -40,7 +40,16 @@ class ApiService {
    * @returns {Promise} API response with success/error handling
    */
   async request(method, endpoint, options = {}) {
-    const { body, headers = {}, requiresAuth = false, timeout = 15000, throwOnError = false, query, suppressErrorEvents = false } = options;
+    const {
+      body,
+      headers = {},
+      requiresAuth = false,
+      timeout = 15000,
+      throwOnError = false,
+      query,
+      suppressErrorEvents = false,
+      noAuthRedirect = false,
+    } = options;
 
     let url = this.getApiUrl(endpoint);
     if (query && typeof query === "object") {
@@ -101,6 +110,10 @@ class ApiService {
         }
 
         // Redirect to login page for authentication errors
+        // (callers such as WebMCP tools opt out and handle the error themselves)
+        if ((response.status === 401 || response.status === 403) && noAuthRedirect) {
+          return apiError;
+        }
         if (response.status === 401 || response.status === 403) {
           // Clear any existing authentication data
           if (this.storage) {

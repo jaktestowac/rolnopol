@@ -62,6 +62,8 @@ const PREDEFINED_FEATURE_FLAGS = {
   observatoryEnabled: false,
   crewOfficeEnabled: false,
   survivalGameEnabled: true,
+  webMcpEnabled: true,
+  webMcpDemoLoginEnabled: true,
 };
 
 /** The shape of the file itself, not just the flag map. */

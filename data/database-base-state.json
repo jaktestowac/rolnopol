@@ -1684,7 +1684,9 @@
         "farmStayEnabled": false,
         "agriAcademyEnabled": false,
         "observatoryEnabled": false,
-        "crewOfficeEnabled": false
+        "crewOfficeEnabled": false,
+        "webMcpEnabled": true,
+        "webMcpDemoLoginEnabled": true
       },
       "updatedAt": "2026-07-21T20:43:51.995Z"
     },
