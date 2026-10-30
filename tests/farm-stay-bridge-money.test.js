@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import request from "supertest";
-const { startEcosystem } = require("./helpers/farm-stay-harness");
+const { startEcosystem, prepareEnv } = require("./helpers/farm-stay-harness");
 
 // This suite exercises the Rolnopol bridge (routes/v1/farm-stay.route.js) against
 // a REAL FarmStay ecosystem, but with an IN-MEMORY financial service so no real
@@ -9,6 +9,10 @@ const { startEcosystem } = require("./helpers/farm-stay-harness");
 // charge-failure window + reconciliation, resilient host payout, and the
 // structured error contract.
 const GATEWAY_PORT = 4460;
+const ECO = { base: GATEWAY_PORT, tag: "money" };
+// Before the app is required: booting it loads the leaf configs, which cache their
+// ports and DB paths — without this every bridge call 503s (see prepareEnv).
+prepareEnv(ECO);
 process.env.FARM_STAY_TARGET = `http://localhost:${GATEWAY_PORT}`;
 process.env.FARM_STAY_CLIENT_TIMEOUT_MS = "3000";
 
@@ -81,7 +85,7 @@ let originalFlags;
 beforeAll(async () => {
   originalFlags = await getFlags();
   installFinancialFake();
-  eco = await startEcosystem({ base: GATEWAY_PORT, tag: "money" });
+  eco = await startEcosystem(ECO);
   await setFlag(true);
 });
 

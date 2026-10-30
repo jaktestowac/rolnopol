@@ -121,6 +121,7 @@ const TOOL_ICONS = [
   "plug",
   "battery",
   "fire_extinguisher",
+  "first_aid",
 ];
 
 /**

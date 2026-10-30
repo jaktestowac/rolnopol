@@ -85,6 +85,7 @@ enum ToolIcon {
   PLUG
   BATTERY
   FIRE_EXTINGUISHER
+  FIRST_AID
 }
 
 "Where a tool sits against its service interval."

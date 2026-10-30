@@ -381,7 +381,13 @@ describe("Crew Office — leave pillar", () => {
     it("refuses a request with too little notice", async () => {
       const { staffId } = await setup();
       const tomorrow = shift(today(), 1);
-      const data = await graphData({ query: REQUEST_LEAVE, variables: { input: ask(staffId, { from: tomorrow, to: tomorrow }) }, token });
+      // Run through to day 4, not just tomorrow: on a Friday or Saturday tomorrow alone is all
+      // weekend, and the "no chargeable days" validation fires before the notice check does.
+      const data = await graphData({
+        query: REQUEST_LEAVE,
+        variables: { input: ask(staffId, { from: tomorrow, to: shift(today(), 4) }) },
+        token,
+      });
 
       expect(data.requestLeave.__typename).toBe("InsufficientNotice");
       expect(data.requestLeave).toMatchObject({ minNoticeDays: 3, requestedStart: tomorrow, earliestStart: shift(today(), 3) });
