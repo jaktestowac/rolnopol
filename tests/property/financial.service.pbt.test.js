@@ -1,6 +1,7 @@
 import { describe, test, expect, vi } from "vitest";
 import fc from "fast-check";
 const financial = require("../../services/financial.service");
+const { roundMoney } = require("../../helpers/ledger");
 
 describe("FinancialService property-based tests", () => {
   test("_getMaxTransactionId handles empty and mixed transaction collections", () => {
@@ -127,13 +128,15 @@ describe("FinancialService property-based tests", () => {
           vi.spyOn(financial, "_getNextTransactionId").mockResolvedValue(9001);
           vi.spyOn(financial, "_saveAccounts").mockResolvedValue();
 
-          if (type === "expense" && amount > initialBalance) {
+          // Amounts are stored rounded to cents.
+          const storedAmount = roundMoney(amount);
+          if (type === "expense" && storedAmount > initialBalance) {
             await expect(financial.addTransaction(1, { type, amount, description: "test", category: "general" })).rejects.toThrow(
               "Insufficient funds",
             );
           } else {
             const tx = await financial.addTransaction(1, { type, amount, description: "test", category: "general" });
-            expect(tx).toMatchObject({ id: 9001, type, amount });
+            expect(tx).toMatchObject({ id: 9001, type, amount: storedAmount });
           }
 
           financial._getAccounts.mockRestore();

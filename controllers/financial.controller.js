@@ -638,7 +638,8 @@ class FinancialController {
       const { transactionId } = req.params;
       const account = await financialService.getAccount(req.user.userId);
 
-      const transaction = account.transactions.find((t) => t.id === transactionId);
+      // Route params are strings; stored transaction ids are numbers.
+      const transaction = account.transactions.find((t) => t.id === Number(transactionId));
 
       if (!transaction) {
         return res.status(404).json(

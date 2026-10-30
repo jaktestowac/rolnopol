@@ -73,6 +73,14 @@ class CommoditiesService {
     return Number(amount.toFixed(4));
   }
 
+  // A tiny quantity of a cheap commodity can round to 0.00 ROL. The ledger
+  // refuses a zero amount, so such a trade would fail halfway; reject it upfront.
+  _assertTradeValue(value) {
+    if (!(value >= 0.01)) {
+      throw new Error("Validation failed: trade value must be at least 0.01 ROL");
+    }
+  }
+
   _normalizeSymbolsFromQuery(rawSymbols) {
     if (!rawSymbols) {
       return pricingService.getSupportedSymbols();
@@ -114,6 +122,7 @@ class CommoditiesService {
 
     const quote = pricingService.getExecutionQuote(symbol, "buy", quantity);
     const totalCost = Number((quote.executionPrice * quantity).toFixed(2));
+    this._assertTradeValue(totalCost);
 
     const account = await financialService.getAccount(userNumericId);
     if (!account || Number(account.balance) < totalCost) {
@@ -231,6 +240,7 @@ class CommoditiesService {
 
       const quote = pricingService.getExecutionQuote(symbol, "sell", quantity);
       const totalProceeds = Number((quote.executionPrice * quantity).toFixed(2));
+      this._assertTradeValue(totalProceeds);
       const soldCostBasis = Number(((totalInvested * quantity) / Math.max(holdingQuantity, 0.0001)).toFixed(2));
       const realizedProfitLoss = Number((totalProceeds - soldCostBasis).toFixed(2));
 
@@ -271,13 +281,20 @@ class CommoditiesService {
       };
     });
 
-    await financialService.addTransaction(userNumericId, {
-      type: "income",
-      amount: result.totalProceeds,
-      description: `Sell ${symbol} x ${quantity}`,
-      category: "commodities",
-      referenceId: symbol,
-    });
+    try {
+      await financialService.addTransaction(userNumericId, {
+        type: "income",
+        amount: result.totalProceeds,
+        description: `Sell ${symbol} x ${quantity}`,
+        category: "commodities",
+        referenceId: symbol,
+      });
+    } catch (error) {
+      // The holding was already reduced; if the seller cannot be paid, give the
+      // sold quantity back at its original cost basis.
+      await this._withStoreLock(() => this._addToHolding(userNumericId, symbol, quantity, result.soldCostBasis));
+      throw error;
+    }
 
     return result;
   }

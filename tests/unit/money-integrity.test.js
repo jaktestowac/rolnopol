@@ -289,3 +289,164 @@ describe("commodities.service buy refund", () => {
     expect(ledger.transactionsOf(2).map((t) => t.type)).toEqual(["income", "expense", "income"]);
   });
 });
+
+describe("commodities.service trading integrity", () => {
+  // In-memory holdings store; replaceAll yields like the real persist does.
+  function useHoldings(holdings) {
+    let state = { holdings, metadata: { version: 1 } };
+    vi.spyOn(commoditiesService.db, "getAll").mockImplementation(async () => state);
+    vi.spyOn(commoditiesService.db, "replaceAll").mockImplementation(async (next) => {
+      await new Promise((resolve) => setImmediate(resolve));
+      state = next;
+    });
+    return { holdingOf: (userId, symbol) => state.holdings.find((h) => h.userId === userId && h.symbol === symbol) };
+  }
+
+  function quoteAt(executionPrice) {
+    vi.spyOn(pricingService, "normalizeSymbol").mockReturnValue("GOLD");
+    vi.spyOn(adminControls, "validateTrade").mockImplementation(() => {});
+    vi.spyOn(pricingService, "getExecutionQuote").mockReturnValue({
+      executionPrice,
+      midPrice: executionPrice,
+      spreadPct: 0,
+      liquidityImpactPct: 0,
+      hourStartUtc: "h",
+    });
+  }
+
+  it("two concurrent sells of the whole holding pay out only once", async () => {
+    const ledger = useInMemoryLedger([account(1, 2, 0)]);
+    const store = useHoldings([{ userId: 2, symbol: "GOLD", quantity: 2, totalInvested: 200, avgBuyPrice: 100 }]);
+    quoteAt(100);
+
+    const results = await Promise.allSettled([
+      commoditiesService.sellCommodity(2, { symbol: "gold", quantity: 2 }),
+      commoditiesService.sellCommodity(2, { symbol: "gold", quantity: 2 }),
+    ]);
+
+    expect(results.map((r) => r.status).sort()).toEqual(["fulfilled", "rejected"]);
+    expect(results.find((r) => r.status === "rejected").reason.message).toContain("Insufficient quantity");
+    expect(ledger.balanceOf(2)).toBe(200);
+    expect(store.holdingOf(2, "GOLD")).toBeUndefined();
+  });
+
+  it("two concurrent buys cannot spend the same balance", async () => {
+    const ledger = useInMemoryLedger([account(1, 2, 300)]);
+    const store = useHoldings([]);
+    quoteAt(100);
+
+    const results = await Promise.allSettled([
+      commoditiesService.buyCommodity(2, { symbol: "gold", quantity: 2 }),
+      commoditiesService.buyCommodity(2, { symbol: "gold", quantity: 2 }),
+    ]);
+
+    expect(results.map((r) => r.status).sort()).toEqual(["fulfilled", "rejected"]);
+    expect(results.find((r) => r.status === "rejected").reason.message).toContain("Insufficient funds");
+    expect(ledger.balanceOf(2)).toBe(100);
+    expect(store.holdingOf(2, "GOLD").quantity).toBe(2);
+  });
+
+  it("gives the sold quantity back when the seller cannot be paid", async () => {
+    useInMemoryLedger([account(1, 2, 0)]);
+    const store = useHoldings([{ userId: 2, symbol: "GOLD", quantity: 3, totalInvested: 300, avgBuyPrice: 100 }]);
+    quoteAt(120);
+    vi.spyOn(financialService, "addTransaction").mockRejectedValue(new Error("ledger unavailable"));
+
+    await expect(commoditiesService.sellCommodity(2, { symbol: "gold", quantity: 2 })).rejects.toThrow("ledger unavailable");
+
+    expect(store.holdingOf(2, "GOLD")).toMatchObject({ quantity: 3, totalInvested: 300, avgBuyPrice: 100 });
+  });
+
+  it("rejects a buy worth less than one cent before charging anything", async () => {
+    const ledger = useInMemoryLedger([account(1, 2, 50)]);
+    const store = useHoldings([]);
+    quoteAt(35);
+
+    await expect(commoditiesService.buyCommodity(2, { symbol: "gold", quantity: "0.0001" })).rejects.toThrow(
+      "Validation failed: trade value must be at least 0.01 ROL",
+    );
+
+    expect(ledger.transactionsOf(2)).toHaveLength(1);
+    expect(store.holdingOf(2, "GOLD")).toBeUndefined();
+  });
+
+  it("rejects a sell worth less than one cent without touching the holding", async () => {
+    const ledger = useInMemoryLedger([account(1, 2, 0)]);
+    const store = useHoldings([{ userId: 2, symbol: "GOLD", quantity: 1, totalInvested: 35, avgBuyPrice: 35 }]);
+    quoteAt(35);
+
+    await expect(commoditiesService.sellCommodity(2, { symbol: "gold", quantity: "0.0001" })).rejects.toThrow(
+      "Validation failed: trade value must be at least 0.01 ROL",
+    );
+
+    expect(store.holdingOf(2, "GOLD").quantity).toBe(1);
+    expect(ledger.balanceOf(2)).toBe(0);
+  });
+});
+
+describe("money edge cases", () => {
+  it("allows spending the exact balance but not one cent more", async () => {
+    const ledger = useInMemoryLedger([account(1, 2, 10.5)]);
+
+    await expect(financialService.addTransaction(2, { type: "expense", amount: 10.51, description: "x" })).rejects.toThrow(
+      "Insufficient funds",
+    );
+    await financialService.addTransaction(2, { type: "expense", amount: 10.5, description: "x" });
+
+    expect(ledger.balanceOf(2)).toBe(0);
+  });
+
+  it("does not debit the sender when the recipient does not exist", async () => {
+    const ledger = useInMemoryLedger([account(1, 2, 100)]);
+
+    await expect(financialService.transferFunds(2, 999, 10, "ghost")).rejects.toThrow("Recipient user does not exist");
+
+    expect(ledger.balanceOf(2)).toBe(100);
+    expect(ledger.transactionsOf(2)).toHaveLength(1);
+  });
+
+  it.each([["Infinity"], [-5], [0], ["1e400"], [null]])("rejects offer price %s", async (price) => {
+    vi.spyOn(marketplaceService.usersDb, "read").mockResolvedValue([{ id: 1 }]);
+
+    await expect(marketplaceService.createOffer(1, { itemType: "animal", itemId: 50, price })).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it("leaves everything untouched when the buyer cannot afford the offer", async () => {
+    const ledger = useInMemoryLedger([account(1, 8, 0), account(2, 17, 30)]);
+    const market = {
+      offers: [{ id: 1, sellerId: 8, itemType: "animal", itemId: 50, price: 40, status: "active" }],
+      transactions: [],
+      counters: { lastOfferId: 1, lastTransactionId: 0 },
+    };
+    const animals = [{ id: 50, userId: 8, fieldId: null }];
+    vi.spyOn(marketplaceService.marketplaceDb, "read").mockResolvedValue(market);
+    const marketWrite = vi.spyOn(marketplaceService.marketplaceDb, "write").mockResolvedValue();
+    vi.spyOn(marketplaceService.animalsDb, "read").mockResolvedValue(animals);
+    const animalsWrite = vi.spyOn(marketplaceService.animalsDb, "write").mockResolvedValue();
+
+    await expect(marketplaceService.buyItem(17, 1)).rejects.toMatchObject({ statusCode: 400 });
+
+    expect(ledger.balanceOf(8)).toBe(0);
+    expect(ledger.balanceOf(17)).toBe(30);
+    expect(market.offers[0].status).toBe("active");
+    expect(animals[0].userId).toBe(8);
+    expect(marketWrite).not.toHaveBeenCalled();
+    expect(animalsWrite).not.toHaveBeenCalled();
+  });
+
+  it("refuses to sell an item the seller no longer owns, and moves no money", async () => {
+    const ledger = useInMemoryLedger([account(1, 8, 0), account(2, 17, 100)]);
+    const market = {
+      offers: [{ id: 1, sellerId: 8, itemType: "animal", itemId: 50, price: 40, status: "active" }],
+      transactions: [],
+      counters: { lastOfferId: 1, lastTransactionId: 0 },
+    };
+    vi.spyOn(marketplaceService.marketplaceDb, "read").mockResolvedValue(market);
+    vi.spyOn(marketplaceService.animalsDb, "read").mockResolvedValue([{ id: 50, userId: 99, fieldId: null }]);
+
+    await expect(marketplaceService.buyItem(17, 1)).rejects.toMatchObject({ statusCode: 404 });
+
+    expect(ledger.balanceOf(8)).toBe(0);
+    expect(ledger.balanceOf(17)).toBe(100);
+  });
+});
