@@ -93,3 +93,30 @@ describe("ledger property-based tests", () => {
     );
   });
 });
+
+describe("commodity pricing property-based tests", () => {
+  const pricingService = require("../../services/commodities-pricing.service");
+  const SYMBOLS = ["GOLD", "SILVER", "PLATINUM", "PALLADIUM", "ETHERIUM", "MARKER_FRAGMENT", "ISHIMURA_ALLOY"];
+
+  test("selling a quantity never pays more than buying it cost in the same hour", () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...SYMBOLS),
+        fc.integer({ min: 1, max: 50000 }).map((q) => q / 10000),
+        fc.integer({ min: -2000, max: 2000 }),
+        (symbol, quantity, hourOffset) => {
+          const at = new Date(Date.UTC(2026, 9, 30, 12) + hourOffset * 3600 * 1000);
+          const buy = pricingService.getExecutionQuote(symbol, "buy", quantity, at);
+          const sell = pricingService.getExecutionQuote(symbol, "sell", quantity, at);
+          // Same rounding the trading service applies to cost and proceeds.
+          const cost = Number((buy.executionPrice * quantity).toFixed(2));
+          const proceeds = Number((sell.executionPrice * quantity).toFixed(2));
+
+          expect(sell.executionPrice).toBeLessThanOrEqual(buy.executionPrice);
+          expect(proceeds).toBeLessThanOrEqual(cost);
+        },
+      ),
+      { numRuns: 500 },
+    );
+  });
+});

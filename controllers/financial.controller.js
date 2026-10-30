@@ -71,7 +71,12 @@ class FinancialController {
 
   _escapeCsv(value) {
     if (value === null || value === undefined) return "";
-    const str = String(value);
+    let str = String(value);
+    // A spreadsheet runs a cell starting with = + - @ (or a tab/CR) as a formula.
+    // Prefix such text with ' so it opens as text; plain numbers stay numbers.
+    if (/^[=+\-@\t\r]/.test(str) && !/^-?\d+(\.\d+)?$/.test(str)) {
+      str = `'${str}`;
+    }
     if (/[",\n\r]/.test(str)) {
       return `"${str.replace(/"/g, '""')}"`;
     }
@@ -163,6 +168,18 @@ class FinancialController {
             error: "Invalid transaction type. Must be 'income' or 'expense'",
           }),
         );
+      }
+
+      // Category is free text that ends up in the user's page, the admin console and
+      // the CSV export, so keep it to plain words (no markup, no formula prefix).
+      if (category !== undefined && category !== null && category !== "") {
+        if (typeof category !== "string" || !/^[A-Za-z0-9][A-Za-z0-9 _-]{0,29}$/.test(category)) {
+          return res.status(400).json(
+            formatResponseBody({
+              error: "Invalid category: use up to 30 letters, digits, spaces, '-' or '_', starting with a letter or digit",
+            }),
+          );
+        }
       }
 
       // For income, card details are mandatory and validated; they are NOT persisted nor returned

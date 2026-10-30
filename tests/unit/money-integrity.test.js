@@ -450,3 +450,27 @@ describe("money edge cases", () => {
     expect(ledger.balanceOf(17)).toBe(100);
   });
 });
+
+describe("financial CSV escaping", () => {
+  const financialController = require("../../controllers/financial.controller");
+
+  it.each([
+    ["=1+1", "'=1+1"],
+    ["+cmd", "'+cmd"],
+    ["-SUM(1,2)", `"'-SUM(1,2)"`],
+    ["@A1", "'@A1"],
+    ["\tTAB", "'\tTAB"],
+  ])("prefixes formula-like text %j", (input, expected) => {
+    expect(financialController._escapeCsv(input)).toBe(expected);
+  });
+
+  it.each([
+    ["-12.5", "-12.5"],
+    ["42", "42"],
+    ["Feed for cows", "Feed for cows"],
+    ['say "hi", farmer', '"say ""hi"", farmer"'],
+    [null, ""],
+  ])("leaves %j as plain CSV", (input, expected) => {
+    expect(financialController._escapeCsv(input)).toBe(expected);
+  });
+});

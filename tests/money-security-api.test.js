@@ -37,7 +37,14 @@ describe("Money API security", () => {
     originalFlags = res.body.data.flags;
     await request(app)
       .patch("/api/v1/feature-flags")
-      .send({ flags: { financialCommoditiesEnabled: true, financialCommoditiesTradingEnabled: true } })
+      .send({
+        flags: {
+          financialCommoditiesEnabled: true,
+          financialCommoditiesTradingEnabled: true,
+          personalApiKeysEnabled: true,
+          financialCsvExportEnabled: true,
+        },
+      })
       .expect(200);
   });
 
@@ -124,6 +131,111 @@ describe("Money API security", () => {
       expect(await historyOf(buyer)).toContain(`"id":${purchaseId},`);
       expect(await historyOf(seller)).toContain(`"id":${purchaseId},`);
       expect(await historyOf(outsider)).not.toContain(`"id":${purchaseId},`);
+    });
+  });
+
+  describe("personal API keys", () => {
+    async function createKey(user, scopes, mode) {
+      const res = await request(app)
+        .post("/api/v1/users/profile/api-keys")
+        .set("token", user.token)
+        .send({ label: "Money key", scopes, mode })
+        .expect(201);
+      return res.body.data.rawKey;
+    }
+
+    it("a key scoped to fields cannot read or move money", async () => {
+      const owner = await registerUser("keyfields");
+      const recipient = await registerUser("keyrcpt");
+      await deposit(owner, 50);
+      const key = await createKey(owner, ["fields"], "write");
+
+      await request(app).get("/api/v1/financial/account").set("X-API-Key", key).expect(403);
+      await request(app)
+        .post("/api/v1/financial/transfer")
+        .set("X-API-Key", key)
+        .send({ toUserId: recipient.id, amount: 10, description: "Key transfer" })
+        .expect(403);
+      await request(app).post("/api/v1/marketplace/buy").set("X-API-Key", key).send({ offerId: 1 }).expect(403);
+
+      expect(await balanceOf(owner)).toBe(50);
+    });
+
+    it("a read-only key can see the balance but cannot transfer", async () => {
+      const owner = await registerUser("keyread");
+      const recipient = await registerUser("keyrdrcpt");
+      await deposit(owner, 50);
+      const key = await createKey(owner, ["all"], "read");
+
+      const account = await request(app).get("/api/v1/financial/account").set("X-API-Key", key).expect(200);
+      expect(account.body.data.account.balance).toBe(50);
+      await request(app)
+        .post("/api/v1/financial/transfer")
+        .set("X-API-Key", key)
+        .send({ toUserId: recipient.id, amount: 10, description: "Key transfer" })
+        .expect(403);
+
+      expect(await balanceOf(owner)).toBe(50);
+    });
+
+    it("a revoked key stops working", async () => {
+      const owner = await registerUser("keyrevoke");
+      const created = await request(app)
+        .post("/api/v1/users/profile/api-keys")
+        .set("token", owner.token)
+        .send({ label: "Revoke me", scopes: ["all"], mode: "read" })
+        .expect(201);
+
+      await request(app).delete(`/api/v1/users/profile/api-keys/${created.body.data.key.id}`).set("token", owner.token).expect(200);
+
+      await request(app).get("/api/v1/financial/account").set("X-API-Key", created.body.data.rawKey).expect(403);
+    });
+  });
+
+  describe("stored content injection", () => {
+    it.each([
+      ['<img src=x onerror="alert(1)">'],
+      ["=HYPERLINK(evil)"],
+      ["-SUM(1,2)"],
+      ["x".repeat(31)],
+      [{ nested: "object" }],
+    ])("rejects transaction category %j", async (category) => {
+      const user = await registerUser("category");
+
+      const res = await request(app)
+        .post("/api/v1/financial/transactions")
+        .set("token", user.token)
+        .send({ type: "income", amount: 5, description: "Category test", category, cardNumber: "4242424242424242", cvv: "123" });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain("Invalid category");
+      expect(await balanceOf(user)).toBe(0);
+    });
+
+    it("accepts the categories the UI offers", async () => {
+      const user = await registerUser("categoryok");
+      for (const category of ["general", "equipment", "livestock", "crops", "maintenance"]) {
+        await request(app)
+          .post("/api/v1/financial/transactions")
+          .set("token", user.token)
+          .send({ type: "income", amount: 1, description: "Category ok", category, cardNumber: "4242424242424242", cvv: "123" })
+          .expect(201);
+      }
+      expect(await balanceOf(user)).toBe(5);
+    });
+
+    it("CSV export neutralises descriptions that a spreadsheet would run as formulas", async () => {
+      const user = await registerUser("csv");
+      await request(app)
+        .post("/api/v1/financial/transactions")
+        .set("token", user.token)
+        .send({ type: "income", amount: 7, description: "-SUM(1,2)", cardNumber: "4242424242424242", cvv: "123" })
+        .expect(201);
+
+      const res = await request(app).get("/api/v1/financial/export/csv").set("token", user.token).expect(200);
+
+      expect(res.text).toContain(`"'-SUM(1,2)"`);
+      expect(res.text).not.toMatch(/(^|,)"?-SUM/m);
     });
   });
 
