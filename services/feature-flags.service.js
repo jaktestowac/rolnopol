@@ -1,5 +1,6 @@
 const dbManager = require("../data/database-manager");
 const prometheusMetrics = require("../helpers/prometheus-metrics");
+const syntheticTraffic = require("../middleware/synthetic-traffic.middleware");
 const featureFlagIni = require("./feature-flag-ini.service");
 
 const FEATURE_FLAG_DESCRIPTIONS = {
@@ -26,6 +27,8 @@ const FEATURE_FLAG_DESCRIPTIONS = {
   financialCommoditiesMarketDeskEnabled:
     "Enable or disable the Market desk on the commodities page: an embedded same-origin ticker iframe with a nested frame, plus the shadow-DOM converter and spread badge (Requires financialCommoditiesEnabled to be enabled)",
   prometheusMetricsEnabled: "Enable or disable Prometheus metrics collection endpoint /api/v1/metrics",
+  syntheticMonitoringEnabled:
+    "Enable or disable recognition of synthetic monitoring traffic (X-Synthetic-Test / X-Synthetic-Token headers) in responses, logs and metrics",
   homeWelcomeVideoEnabled: "Enable or disable the homepage welcome promotional video",
   homeStatsSectionEnabled: "Enable or disable advanced statistics section on the homepage",
   homeModernRestyleEnabled: "Enable or disable modern redesigned homepage layout and styling",
@@ -80,7 +83,7 @@ const FEATURE_FLAG_GROUPS = {
   contact: ["contactFormEnabled"],
   export: ["staffFieldsExportEnabled", "financialReportsEnabled", "financialCsvExportEnabled", "weatherWeatherDataExport"],
   financial: ["financialCommoditiesEnabled", "financialCommoditiesTradingEnabled", "financialCommoditiesMarketDeskEnabled"],
-  monitoring: ["prometheusMetricsEnabled"],
+  monitoring: ["prometheusMetricsEnabled", "syntheticMonitoringEnabled"],
   communication: ["messengerEnabled", "assistantChatEnabled", "terminalPorkySplitPersonalityEnabled"],
   notifications: ["notificationCenterEnabled"],
   weather: [
@@ -128,6 +131,7 @@ const EXPERIMENTAL_FEATURE_FLAGS = [
   "financialCommoditiesTradingEnabled",
   "financialCommoditiesMarketDeskEnabled",
   "prometheusMetricsEnabled",
+  "syntheticMonitoringEnabled",
   "messengerEnabled",
   "assistantChatEnabled",
   "notificationCenterEnabled",
@@ -173,9 +177,12 @@ class FeatureFlagsService {
     this.db = dbManager.getFeatureFlagsDatabase();
   }
 
-  _syncPrometheusMetricsToggle(flags) {
+  _syncRuntimeToggles(flags) {
     const enabled = flags?.prometheusMetricsEnabled === true;
     prometheusMetrics.setEnabled(enabled);
+    // Same hot-toggle pattern: the synthetic-traffic middleware runs on every request,
+    // so it reads an in-memory switch instead of the flag store.
+    syntheticTraffic.setEnabled(flags?.syntheticMonitoringEnabled !== false);
   }
 
   _isUnsafeKey(key) {
@@ -412,7 +419,7 @@ class FeatureFlagsService {
 
     // feature-flags.ini wins over the persisted store on every read.
     const effective = this._withIniOverrides(resolved);
-    this._syncPrometheusMetricsToggle(effective.flags);
+    this._syncRuntimeToggles(effective.flags);
     return effective;
   }
 
@@ -546,7 +553,7 @@ class FeatureFlagsService {
     });
 
     const normalizedUpdated = this._withIniOverrides(this._normalize(updated));
-    this._syncPrometheusMetricsToggle(normalizedUpdated.flags);
+    this._syncRuntimeToggles(normalizedUpdated.flags);
     return normalizedUpdated;
   }
 
@@ -567,7 +574,7 @@ class FeatureFlagsService {
     await this.db.replaceAll(next);
     const data = await this.db.getAll();
     const normalizedData = this._withIniOverrides(this._normalize(data));
-    this._syncPrometheusMetricsToggle(normalizedData.flags);
+    this._syncRuntimeToggles(normalizedData.flags);
     return normalizedData;
   }
 
@@ -582,7 +589,7 @@ class FeatureFlagsService {
     await this.db.replaceAll(next);
     const data = await this.db.getAll();
     const normalizedData = this._withIniOverrides(this._normalize(data));
-    this._syncPrometheusMetricsToggle(normalizedData.flags);
+    this._syncRuntimeToggles(normalizedData.flags);
     return normalizedData;
   }
 }

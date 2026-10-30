@@ -50,8 +50,13 @@ function getRouteLabel(req) {
   return req.path || req.originalUrl || "/";
 }
 
-function getMetricKey(method, route, statusCode) {
-  return `${method}|${route}|${statusCode}`;
+// `traffic` comes from middleware/synthetic-traffic.middleware.js: user | synthetic | synthetic_verified.
+function getTrafficLabel(req) {
+  return (req && req.syntheticTraffic) || "user";
+}
+
+function getMetricKey(method, route, statusCode, traffic) {
+  return `${method}|${route}|${statusCode}|${traffic}`;
 }
 
 function getOrInitDurationEntry(key) {
@@ -82,7 +87,7 @@ function observeRequest(req, res, next) {
     const method = req.method || "UNKNOWN";
     const route = getRouteLabel(req);
     const statusCode = String(res.statusCode || 0);
-    const key = getMetricKey(method, route, statusCode);
+    const key = getMetricKey(method, route, statusCode, getTrafficLabel(req));
 
     requestCounters.set(key, (requestCounters.get(key) || 0) + 1);
 
@@ -107,11 +112,11 @@ function observeRequest(req, res, next) {
   next();
 }
 
-function recordChaosEvent(effect, mode, route) {
+function recordChaosEvent(effect, mode, route, traffic = "user") {
   if (!metricsEnabled) {
     return;
   }
-  const key = `${effect}|${mode}|${route}`;
+  const key = `${effect}|${mode}|${route}|${traffic}`;
   chaosCounters.set(key, (chaosCounters.get(key) || 0) + 1);
 }
 
@@ -183,29 +188,33 @@ function collect() {
   lines.push("# TYPE rolnopol_http_requests_total counter");
 
   for (const [key, count] of requestCounters.entries()) {
-    const [method, route, statusCode] = key.split("|");
-    lines.push(`rolnopol_http_requests_total${buildLabels({ method, route, status_code: statusCode })} ${count}`);
+    const [method, route, statusCode, traffic] = key.split("|");
+    lines.push(`rolnopol_http_requests_total${buildLabels({ method, route, status_code: statusCode, traffic })} ${count}`);
   }
 
   lines.push("# HELP rolnopol_http_request_duration_seconds HTTP request duration in seconds.");
   lines.push("# TYPE rolnopol_http_request_duration_seconds histogram");
 
   for (const [key, entry] of requestDuration.entries()) {
-    const [method, route, statusCode] = key.split("|");
+    const [method, route, statusCode, traffic] = key.split("|");
     let cumulative = 0;
 
     for (let i = 0; i < DEFAULT_BUCKETS.length; i += 1) {
       cumulative += entry.buckets[i];
       lines.push(
-        `rolnopol_http_request_duration_seconds_bucket${buildLabels({ method, route, status_code: statusCode, le: String(DEFAULT_BUCKETS[i]) })} ${cumulative}`,
+        `rolnopol_http_request_duration_seconds_bucket${buildLabels({ method, route, status_code: statusCode, traffic, le: String(DEFAULT_BUCKETS[i]) })} ${cumulative}`,
       );
     }
 
     lines.push(
-      `rolnopol_http_request_duration_seconds_bucket${buildLabels({ method, route, status_code: statusCode, le: "+Inf" })} ${entry.count}`,
+      `rolnopol_http_request_duration_seconds_bucket${buildLabels({ method, route, status_code: statusCode, traffic, le: "+Inf" })} ${entry.count}`,
     );
-    lines.push(`rolnopol_http_request_duration_seconds_sum${buildLabels({ method, route, status_code: statusCode })} ${entry.sum}`);
-    lines.push(`rolnopol_http_request_duration_seconds_count${buildLabels({ method, route, status_code: statusCode })} ${entry.count}`);
+    lines.push(
+      `rolnopol_http_request_duration_seconds_sum${buildLabels({ method, route, status_code: statusCode, traffic })} ${entry.sum}`,
+    );
+    lines.push(
+      `rolnopol_http_request_duration_seconds_count${buildLabels({ method, route, status_code: statusCode, traffic })} ${entry.count}`,
+    );
   }
 
   // chatbot request counters
@@ -253,8 +262,8 @@ function collect() {
   lines.push("# HELP rolnopol_chaos_events_total Total number of chaos engine events triggered.");
   lines.push("# TYPE rolnopol_chaos_events_total counter");
   for (const [key, count] of chaosCounters.entries()) {
-    const [effect, mode, route] = key.split("|");
-    lines.push(`rolnopol_chaos_events_total${buildLabels({ effect, mode, route })} ${count}`);
+    const [effect, mode, route, traffic] = key.split("|");
+    lines.push(`rolnopol_chaos_events_total${buildLabels({ effect, mode, route, traffic })} ${count}`);
   }
 
   return `${lines.join("\n")}\n`;

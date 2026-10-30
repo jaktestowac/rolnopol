@@ -5,6 +5,7 @@ const {
   HIGH_RATE_LIMIT_WINDOW_MS,
   HIGH_RATE_LIMIT_MAX_REQUESTS,
 } = require("../data/settings");
+const { isVerifiedSynthetic } = require("../middleware/synthetic-traffic.middleware");
 
 const IS_TEST_ENV = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
 const TEST_SAFE_MAX_REQUESTS = 1_000_000;
@@ -28,6 +29,9 @@ const apiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // A verified synthetic monitor (X-Synthetic-Token) is exempt here. Auth, verify,
+  // strict and admin limiters deliberately keep throttling it.
+  skip: isVerifiedSynthetic,
 });
 
 const apiHighLimiter = rateLimit({
@@ -40,6 +44,9 @@ const apiHighLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // A verified synthetic monitor (X-Synthetic-Token) is exempt here. Auth, verify,
+  // strict and admin limiters deliberately keep throttling it.
+  skip: isVerifiedSynthetic,
 });
 
 /**

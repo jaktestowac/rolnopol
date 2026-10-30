@@ -20,6 +20,8 @@ const settings = {
   ADMIN_LOGIN_MAX_ATTEMPTS: 3,
   ADMIN_LOGIN_BLOCK_DURATION_MS: 60 * 1000, // 1 minute
   JWT_SECRET: process.env.JWT_SECRET || "your-super-secret-jwt-key-change-this-in-production",
+  // No default on purpose: unset means X-Synthetic-Token never verifies, so the header alone grants nothing.
+  SYNTHETIC_TOKEN: process.env.SYNTHETIC_TOKEN || "",
   FORBIDDEN_USERNAMES: [
     "admin",
     "superadmin",

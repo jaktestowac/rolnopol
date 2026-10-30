@@ -152,6 +152,9 @@ const MIRROR_STRIPPED_HEADERS = new Set([
   "trailer",
   "expect",
   "accept-encoding",
+  // A secret, not a description: the mirror target is external and must never learn
+  // the synthetic monitoring token. X-Synthetic-Test is harmless and still forwarded.
+  "x-synthetic-token",
 ]);
 
 const METHODS_WITHOUT_BODY = new Set(["GET", "HEAD"]);
@@ -212,7 +215,7 @@ async function performMirrorRequest(method, path, originalReq, targetUrl, mirror
       status: response.status,
     });
 
-    prometheusMetrics.recordChaosEvent("mirroring-success", "custom", path);
+    prometheusMetrics.recordChaosEvent("mirroring-success", "custom", path, originalReq?.syntheticTraffic);
     mirrorRecord.status = "success";
     mirrorRecord.statusCode = response.status;
   } catch (error) {
@@ -222,7 +225,7 @@ async function performMirrorRequest(method, path, originalReq, targetUrl, mirror
       path,
     });
 
-    prometheusMetrics.recordChaosEvent("mirroring-failure", "custom", path);
+    prometheusMetrics.recordChaosEvent("mirroring-failure", "custom", path, originalReq?.syntheticTraffic);
     mirrorRecord.status = "failed";
     mirrorRecord.error = error instanceof Error ? error.message : String(error);
   } finally {
@@ -354,7 +357,7 @@ async function chaosEngineMiddleware(req, res, next) {
         res.setHeader("X-Chaos-Latency-Ms", String(waitMs));
       }
       // record event and log
-      prometheusMetrics.recordChaosEvent("latency", currentMode, path);
+      prometheusMetrics.recordChaosEvent("latency", currentMode, path, req.syntheticTraffic);
     }
 
     const responseLoss = runtimeConfig.responseLoss || {};
@@ -363,7 +366,7 @@ async function chaosEngineMiddleware(req, res, next) {
       res.setHeader("X-Chaos-Effect", "response-loss");
 
       // record metric & log before effect
-      prometheusMetrics.recordChaosEvent("response-loss", currentMode, path);
+      prometheusMetrics.recordChaosEvent("response-loss", currentMode, path, req.syntheticTraffic);
 
       // modes that simply kill the socket immediately
       if (mode === "drop" || mode === "reset") {
@@ -406,7 +409,7 @@ async function chaosEngineMiddleware(req, res, next) {
         if (statefulCounter > threshold) {
           statefulCounter = 0;
           res.setHeader("X-Chaos-Effect", "stateful-trigger");
-          prometheusMetrics.recordChaosEvent("stateful-trigger", currentMode, path);
+          prometheusMetrics.recordChaosEvent("stateful-trigger", currentMode, path, req.syntheticTraffic);
           return res.status(500).json(formatResponseBody({ error: "Chaos Engine stateful fault" }));
         }
       }
@@ -418,7 +421,7 @@ async function chaosEngineMiddleware(req, res, next) {
       const mirrorRecord = { method, path, timestamp: Date.now(), status: "pending" };
       mirroredRequests.push(mirrorRecord);
       res.setHeader("X-Chaos-Mirrored", "1");
-      prometheusMetrics.recordChaosEvent("mirroring", currentMode, path);
+      prometheusMetrics.recordChaosEvent("mirroring", currentMode, path, req.syntheticTraffic);
 
       // Send mirror request asynchronously (fire-and-forget)
       setImmediate(() => {
@@ -448,7 +451,7 @@ async function chaosEngineMiddleware(req, res, next) {
 
       res.setHeader("X-Chaos-Effect", "error-injection");
       // record metric & log
-      prometheusMetrics.recordChaosEvent("error-injection", currentMode, path);
+      prometheusMetrics.recordChaosEvent("error-injection", currentMode, path, req.syntheticTraffic);
 
       return res.status(statusCode).json(formatResponseBody({ error: message }));
     }
@@ -466,4 +469,5 @@ async function chaosEngineMiddleware(req, res, next) {
 
 // expose helpers on the exported function
 chaosEngineMiddleware.getMirroredRequests = getMirroredRequests;
+chaosEngineMiddleware.mirrorHeaders = mirrorHeaders;
 module.exports = chaosEngineMiddleware;

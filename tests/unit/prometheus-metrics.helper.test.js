@@ -59,9 +59,11 @@ describe("helpers/prometheus-metrics", () => {
     res.emitFinish();
 
     const output = metrics.collect();
-    expect(output).not.toContain('rolnopol_http_requests_total{method="GET",route="/disabled-observation",status_code="204"}');
     expect(output).not.toContain(
-      'rolnopol_http_request_duration_seconds_count{method="GET",route="/disabled-observation",status_code="204"}',
+      'rolnopol_http_requests_total{method="GET",route="/disabled-observation",status_code="204",traffic="user"}',
+    );
+    expect(output).not.toContain(
+      'rolnopol_http_request_duration_seconds_count{method="GET",route="/disabled-observation",status_code="204",traffic="user"}',
     );
   });
 
@@ -84,12 +86,14 @@ describe("helpers/prometheus-metrics", () => {
 
     const infMatch = output.match(
       new RegExp(
-        `rolnopol_http_request_duration_seconds_bucket\\{method="GET",route="${escapedRoute}",status_code="200",le="\\+Inf"\\}\\s+(\\d+)`,
+        `rolnopol_http_request_duration_seconds_bucket\\{method="GET",route="${escapedRoute}",status_code="200",traffic="user",le="\\+Inf"\\}\\s+(\\d+)`,
       ),
     );
 
     const countMatch = output.match(
-      new RegExp(`rolnopol_http_request_duration_seconds_count\\{method="GET",route="${escapedRoute}",status_code="200"\\}\\s+(\\d+)`),
+      new RegExp(
+        `rolnopol_http_request_duration_seconds_count\\{method="GET",route="${escapedRoute}",status_code="200",traffic="user"\\}\\s+(\\d+)`,
+      ),
     );
 
     expect(infMatch).not.toBeNull();
@@ -126,5 +130,39 @@ describe("helpers/prometheus-metrics", () => {
     expect(counterLine).toContain(`route="${expectedEscapedRoute}"`);
     expect(counterLine).not.toContain("\nline");
     expect(counterLine).toContain("\\nline");
+  });
+
+  it("keeps synthetic monitoring traffic in its own series via the traffic label", async () => {
+    const metrics = await loadFreshMetricsModule();
+    metrics.setEnabled(true);
+
+    for (const syntheticTraffic of [undefined, "synthetic", "synthetic_verified", "synthetic_verified"]) {
+      const req = { ...createMockReq({ path: "/traffic-split" }), syntheticTraffic };
+      const res = createMockRes(200);
+      metrics.observeRequest(req, res, () => {});
+      res.emitFinish();
+    }
+
+    const output = metrics.collect();
+    const base = 'rolnopol_http_requests_total{method="GET",route="/traffic-split",status_code="200"';
+    expect(output).toContain(`${base},traffic="user"} 1`);
+    expect(output).toContain(`${base},traffic="synthetic"} 1`);
+    expect(output).toContain(`${base},traffic="synthetic_verified"} 2`);
+    expect(output).toContain(
+      'rolnopol_http_request_duration_seconds_count{method="GET",route="/traffic-split",status_code="200",traffic="synthetic_verified"} 2',
+    );
+  });
+
+  it("labels chaos events with the traffic that triggered them, defaulting to user", async () => {
+    const metrics = await loadFreshMetricsModule();
+    metrics.setEnabled(true);
+
+    metrics.recordChaosEvent("error-injection", "custom", "/v1/about", "synthetic_verified");
+    metrics.recordChaosEvent("error-injection", "custom", "/v1/about");
+
+    const output = metrics.collect();
+    const base = 'rolnopol_chaos_events_total{effect="error-injection",mode="custom",route="/v1/about"';
+    expect(output).toContain(`${base},traffic="synthetic_verified"} 1`);
+    expect(output).toContain(`${base},traffic="user"} 1`);
   });
 });

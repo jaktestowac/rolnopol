@@ -10,7 +10,7 @@ async function resetChaosEngine() {
 function getRouteCounter(metricsText, route, method = "GET", statusCode = "200") {
   const escapedRoute = route.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const pattern = new RegExp(
-    `rolnopol_http_requests_total\\{method="${method}",route="${escapedRoute}",status_code="${statusCode}"\\}\\s+(\\d+)`,
+    `rolnopol_http_requests_total\\{method="${method}",route="${escapedRoute}",status_code="${statusCode}",traffic="user"\\}\\s+(\\d+)`,
   );
   const match = metricsText.match(pattern);
   return match ? Number(match[1]) : 0;
@@ -18,7 +18,9 @@ function getRouteCounter(metricsText, route, method = "GET", statusCode = "200")
 
 function getChaosCounter(metricsText, effect, route) {
   const escapedRoute = route.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const pattern = new RegExp(`rolnopol_chaos_events_total\\{effect="${effect}",mode="([^"]+)",route="${escapedRoute}"\\}\\s+(\\d+)`);
+  const pattern = new RegExp(
+    `rolnopol_chaos_events_total\\{effect="${effect}",mode="([^"]+)",route="${escapedRoute}",traffic="user"\\}\\s+(\\d+)`,
+  );
   const match = metricsText.match(pattern);
   return match ? Number(match[2]) : 0;
 }

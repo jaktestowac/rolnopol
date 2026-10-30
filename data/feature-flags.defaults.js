@@ -32,6 +32,7 @@ const PREDEFINED_FEATURE_FLAGS = {
   financialCommoditiesTradingEnabled: false,
   financialCommoditiesMarketDeskEnabled: false,
   prometheusMetricsEnabled: false,
+  syntheticMonitoringEnabled: false,
   homeWelcomeVideoEnabled: false,
   homeStatsSectionEnabled: false,
   homeModernRestyleEnabled: false,

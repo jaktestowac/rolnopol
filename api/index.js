@@ -119,6 +119,7 @@ const featureFlagsService = require("../services/feature-flags.service");
 const messengerWebSocketService = require("../services/messenger-ws.service");
 const notificationWebSocketService = require("../services/notification-ws.service");
 const chaosEngineMiddleware = require("../middleware/chaos-engine.middleware");
+const syntheticTrafficMiddleware = require("../middleware/synthetic-traffic.middleware");
 const notificationCenter = require("../modules/notification-center");
 const pluginRuntime = require("../modules/plugin-runtime");
 // Eagerly load services that register user-lifecycle hooks (financial-account
@@ -293,6 +294,9 @@ app.use(express.json());
 // Cookie parser middleware
 app.use(cookieParser());
 
+// Synthetic monitoring traffic tagging (req.syntheticTraffic) - must run before plugins, logging, metrics and chaos
+app.use(syntheticTrafficMiddleware);
+
 // Plugin runtime middleware (request/response hooks)
 pluginRuntime.attach(app);
 
@@ -319,9 +323,12 @@ try {
   // feature-flags.ini outranks the persisted store, so resolve through it here too.
   const effectiveStartupFlags = featureFlagsService.applyIniOverrides(startupFlags?.flags);
   const isMetricsEnabled = effectiveStartupFlags?.prometheusMetricsEnabled === true;
+  const isSyntheticMonitoringEnabled = effectiveStartupFlags?.syntheticMonitoringEnabled !== false;
 
   prometheusMetrics.setEnabled(isMetricsEnabled);
   logInfo(`Prometheus request observer hot-toggle initialized: ${isMetricsEnabled ? "enabled" : "disabled"}`);
+  syntheticTrafficMiddleware.setEnabled(isSyntheticMonitoringEnabled);
+  logInfo(`Synthetic monitoring hot-toggle initialized: ${isSyntheticMonitoringEnabled ? "enabled" : "disabled"}`);
 } catch (error) {
   prometheusMetrics.setEnabled(false);
   logError("Failed to load startup feature flags for Prometheus observer. Using disabled default.", { error });

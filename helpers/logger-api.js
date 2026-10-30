@@ -193,7 +193,11 @@ function logError(message, error = null) {
 function logRequest(req) {
   if (settings.LOG_REQUEST && shouldLog("REQUEST")) {
     const timestamp = new Date().toISOString();
-    console.log(`[REQUEST] ${timestamp} - ${req.method} ${req.originalUrl}`);
+    // Set by middleware/synthetic-traffic.middleware.js; absent means a regular user request.
+    const traffic = req.syntheticTraffic || "user";
+    const synthetic = traffic !== "user";
+    const prefix = synthetic ? "[REQUEST][SYNTHETIC]" : "[REQUEST]";
+    console.log(`${prefix} ${timestamp} - ${req.method} ${req.originalUrl}`);
     let sanitizedBody = null;
     if (req.body && Object.keys(req.body).length > 0) {
       sanitizedBody = { ...req.body };
@@ -207,6 +211,8 @@ function logRequest(req) {
       method: req.method,
       url: req.originalUrl,
       body: sanitizedBody,
+      synthetic,
+      verified: traffic === "synthetic_verified",
     });
   }
 }

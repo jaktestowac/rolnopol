@@ -1558,6 +1558,71 @@ module.exports = [
     },
   },
   {
+    flag: "syntheticMonitoringEnabled",
+    section: {
+      section: "synthetic-monitoring",
+      title: "Synthetic Monitoring",
+      content: [
+        heading("Overview", [
+          p(
+            "Synthetic monitoring means running scripted scenarios (for example Playwright tests) against a live app on a schedule, so failures and slowdowns show up before users report them. Rolnopol recognises that traffic and keeps it apart from real users in responses, logs and metrics. Writing, scheduling and alerting on the monitor is up to you.",
+          ),
+          callout(
+            "info",
+            "Not anomaly detection",
+            "A synthetic monitor only checks the scenarios you wrote. Automatically spotting unusual patterns in real production metrics is a different technique: anomaly detection.",
+          ),
+        ]),
+        heading("Marking traffic", [
+          table(
+            ["Request headers", "Classified as", "What it gets"],
+            [
+              ["none, or X-Synthetic-Test with any value other than true", "user", "nothing"],
+              ["X-Synthetic-Test: true (case-insensitive)", "synthetic", "a label in logs and metrics"],
+              ["X-Synthetic-Token: <SYNTHETIC_TOKEN> (with or without X-Synthetic-Test)", "synthetic_verified", "a label, plus no general API rate limit"],
+              ["X-Synthetic-Token with a wrong value, or no token configured on the server", "synthetic", "a label only — the request is never rejected"],
+            ],
+          ),
+          p(
+            "The token is read from the SYNTHETIC_TOKEN environment variable (for example in .env) and has no default: until you set it, nothing can be verified.",
+          ),
+          callout(
+            "warning",
+            "Headers are easy to fake",
+            "Anyone can send X-Synthetic-Test: true, so on its own it only labels the request. Anything that changes behaviour needs the secret token, checked on the server.",
+          ),
+        ]),
+        heading("What your monitor can assert on", [
+          ul([
+            "Response header X-Synthetic-Traffic: synthetic | synthetic_verified (absent for user traffic).",
+            "Response header X-Synthetic-Verified: true | false — the quickest way to notice a wrong or missing token.",
+            'Metrics (needs prometheusMetricsEnabled): rolnopol_http_requests_total, rolnopol_http_request_duration_seconds and rolnopol_chaos_events_total carry a traffic label. Use {traffic="user"} for real users only, and sum without(traffic) (...) for all traffic.',
+            "Logs (needs LOG_REQUEST=true): request entries carry synthetic and verified fields; GET /api/logs?synthetic=true or ?synthetic=false filters them.",
+          ]),
+        ]),
+        heading("Playwright example", [
+          scenario(
+            [
+              "In the spec or config: test.use({ extraHTTPHeaders: { 'X-Synthetic-Test': 'true', 'X-Synthetic-Token': process.env.SYNTHETIC_TOKEN } })",
+              "Open a page: const response = await page.goto('/'); then expect(page.getByRole('main')).toBeVisible()",
+              "Check that Rolnopol saw a monitor: expect(response.headers()['x-synthetic-traffic']).toBe('synthetic_verified')",
+              "API checks work the same way through the request fixture, e.g. await request.get('/api/v1/healthcheck').",
+            ],
+            "A minimal health-check monitor",
+          ),
+        ]),
+        heading("What is not bypassed", [
+          ul([
+            "The Chaos Engine applies to monitors exactly as to users — catching injected latency and errors is the point of a monitor.",
+            "Login, verification, strict and admin rate limits still throttle verified monitors; only the general API limiters skip them.",
+            "Chaos request mirroring forwards X-Synthetic-Test but never X-Synthetic-Token.",
+          ]),
+          p("Turning this flag off makes Rolnopol ignore both headers, without a restart."),
+        ]),
+      ],
+    },
+  },
+  {
     flag: "survivalGameEnabled",
     section: {
       section: "survival-game",

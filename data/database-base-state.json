@@ -1656,6 +1656,7 @@
         "financialCommoditiesTradingEnabled": false,
         "financialCommoditiesMarketDeskEnabled": false,
         "prometheusMetricsEnabled": false,
+        "syntheticMonitoringEnabled": true,
         "homeWelcomeVideoEnabled": false,
         "homeStatsSectionEnabled": false,
         "homeModernRestyleEnabled": false,
