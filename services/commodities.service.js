@@ -128,49 +128,19 @@ class CommoditiesService {
       referenceId: symbol,
     });
 
-    const updatedHolding = await this._withStoreLock(async () => {
-      const store = await this._readStore();
-      const holdings = Array.isArray(store.holdings) ? store.holdings : [];
-
-      const existingIndex = holdings.findIndex(
-        (item) => Number(item.userId) === userNumericId && String(item.symbol || "").toUpperCase() === symbol,
-      );
-
-      let entry;
-      if (existingIndex >= 0) {
-        const current = holdings[existingIndex];
-        const previousQuantity = Number(current.quantity || 0);
-        const previousInvested = Number(current.totalInvested || 0);
-        const nextQuantity = Number((previousQuantity + quantity).toFixed(4));
-        const nextInvested = Number((previousInvested + totalCost).toFixed(2));
-
-        entry = {
-          ...current,
-          userId: userNumericId,
-          symbol,
-          quantity: nextQuantity,
-          totalInvested: nextInvested,
-          avgBuyPrice: Number((nextInvested / nextQuantity).toFixed(2)),
-          updatedAt: new Date().toISOString(),
-        };
-
-        holdings[existingIndex] = entry;
-      } else {
-        entry = {
-          userId: userNumericId,
-          symbol,
-          quantity,
-          totalInvested: totalCost,
-          avgBuyPrice: Number((totalCost / quantity).toFixed(2)),
-          updatedAt: new Date().toISOString(),
-        };
-
-        holdings.push(entry);
-      }
-
-      await this._writeStore({ ...store, holdings });
-      return entry;
-    });
+    const updatedHolding = await this._withStoreLock(() => this._addToHolding(userNumericId, symbol, quantity, totalCost)).catch(
+      async (error) => {
+        // The buyer already paid; if the holding cannot be recorded, give the money back.
+        await financialService.addTransaction(userNumericId, {
+          type: "income",
+          amount: totalCost,
+          description: `Refund: buy ${symbol} x ${quantity} failed`,
+          category: "commodities",
+          referenceId: symbol,
+        });
+        throw error;
+      },
+    );
 
     return {
       symbol,
@@ -183,6 +153,50 @@ class CommoditiesService {
       executedAtHour: quote.hourStartUtc,
       holding: updatedHolding,
     };
+  }
+
+  async _addToHolding(userNumericId, symbol, quantity, totalCost) {
+    const store = await this._readStore();
+    const holdings = Array.isArray(store.holdings) ? store.holdings : [];
+
+    const existingIndex = holdings.findIndex(
+      (item) => Number(item.userId) === userNumericId && String(item.symbol || "").toUpperCase() === symbol,
+    );
+
+    let entry;
+    if (existingIndex >= 0) {
+      const current = holdings[existingIndex];
+      const previousQuantity = Number(current.quantity || 0);
+      const previousInvested = Number(current.totalInvested || 0);
+      const nextQuantity = Number((previousQuantity + quantity).toFixed(4));
+      const nextInvested = Number((previousInvested + totalCost).toFixed(2));
+
+      entry = {
+        ...current,
+        userId: userNumericId,
+        symbol,
+        quantity: nextQuantity,
+        totalInvested: nextInvested,
+        avgBuyPrice: Number((nextInvested / nextQuantity).toFixed(2)),
+        updatedAt: new Date().toISOString(),
+      };
+
+      holdings[existingIndex] = entry;
+    } else {
+      entry = {
+        userId: userNumericId,
+        symbol,
+        quantity,
+        totalInvested: totalCost,
+        avgBuyPrice: Number((totalCost / quantity).toFixed(2)),
+        updatedAt: new Date().toISOString(),
+      };
+
+      holdings.push(entry);
+    }
+
+    await this._writeStore({ ...store, holdings });
+    return entry;
   }
 
   async sellCommodity(userId, payload = {}) {

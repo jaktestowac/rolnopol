@@ -2,6 +2,8 @@ const dbManager = require("../data/database-manager");
 const logger = require("../helpers/logger-api");
 const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
+const financialService = require("./financial.service");
+const { withLedgerLock, roundMoney } = require("../helpers/ledger");
 
 const publishEvent = (event) => {
   publishNotificationEvent(event, {
@@ -99,7 +101,8 @@ class MarketplaceService {
         statusCode: 400,
         message: 'Invalid item type. Must be "field" or "animal"',
       };
-    if (price <= 0) throw { statusCode: 400, message: "Price must be greater than 0" };
+    const numericPrice = roundMoney(parseFloat(price));
+    if (!Number.isFinite(numericPrice) || numericPrice <= 0) throw { statusCode: 400, message: "Price must be greater than 0" };
     if (description && description.length > 300)
       throw {
         statusCode: 400,
@@ -133,13 +136,16 @@ class MarketplaceService {
       const fallback = Number.isInteger(marketplaceData.counters.lastListingId) ? marketplaceData.counters.lastListingId : 0;
       marketplaceData.counters.lastOfferId = fallback;
     }
+    // A counter behind the stored offers would hand out an id that already
+    // exists, and buying "offer N" would then match another seller's offer.
+    marketplaceData.counters.lastOfferId = Math.max(marketplaceData.counters.lastOfferId, this._maxId(marketplaceData.offers));
 
     const newOffer = {
       id: ++marketplaceData.counters.lastOfferId,
       sellerId: Number(userId),
       itemType,
       itemId: Number(itemId),
-      price: parseFloat(price),
+      price: numericPrice,
       description: description || "",
       status: "active",
       createdAt: new Date().toISOString(),
@@ -167,6 +173,12 @@ class MarketplaceService {
 
   async buyItem(buyerId, offerId) {
     if (!offerId) throw { statusCode: 400, message: "Missing required field: offerId" };
+    // The offer-status check, the balance check and the payment run as one step,
+    // so two buyers cannot both buy the same offer or spend the same balance.
+    return withLedgerLock(() => this._buyItemUnlocked(buyerId, offerId));
+  }
+
+  async _buyItemUnlocked(buyerId, offerId) {
     const marketplaceData = await this.marketplaceDb.read();
     const offer = marketplaceData.offers.find((o) => o.id === offerId && o.status === "active");
     if (!offer) throw { statusCode: 404, message: "Offer not found or not available" };
@@ -270,6 +282,10 @@ class MarketplaceService {
   }
 
   // --- Private helpers ---
+  _maxId(records) {
+    return (Array.isArray(records) ? records : []).reduce((max, r) => (Number.isInteger(r?.id) && r.id > max ? r.id : max), 0);
+  }
+
   async _checkItemAvailability(itemType, itemId) {
     try {
       const numericItemId = Number(itemId);
@@ -369,7 +385,21 @@ class MarketplaceService {
   }
 
   async _processPurchase(offer, buyerId) {
+    const price = roundMoney(offer.price);
+    // Money moves first: the buyer debit re-checks funds and is the step most
+    // likely to fail. If the item then cannot change hands, undo the payment.
+    await this._updateFinancialBalances(offer.sellerId, buyerId, price);
+    try {
+      await this._transferItemOwnership(offer.itemType, offer.itemId, offer.sellerId, buyerId);
+    } catch (error) {
+      await this._reverseFinancialBalances(offer.sellerId, buyerId, price);
+      throw error;
+    }
     const marketplaceData = await this.marketplaceDb.read();
+    marketplaceData.counters.lastTransactionId = Math.max(
+      Number(marketplaceData.counters.lastTransactionId) || 0,
+      this._maxId(marketplaceData.transactions),
+    );
     const transaction = {
       id: ++marketplaceData.counters.lastTransactionId,
       offerId: offer.id,
@@ -377,14 +407,13 @@ class MarketplaceService {
       buyerId: Number(buyerId),
       itemType: offer.itemType,
       itemId: Number(offer.itemId),
-      price: offer.price,
+      price,
       status: "completed",
       createdAt: new Date().toISOString(),
     };
-    offer.status = "sold";
-    offer.updatedAt = new Date().toISOString();
-    await this._transferItemOwnership(offer.itemType, offer.itemId, offer.sellerId, buyerId);
-    await this._updateFinancialBalances(offer.sellerId, buyerId, offer.price);
+    const storedOffer = marketplaceData.offers.find((o) => o.id === offer.id) || offer;
+    storedOffer.status = "sold";
+    storedOffer.updatedAt = new Date().toISOString();
     marketplaceData.transactions.push(transaction);
     await this.marketplaceDb.write(marketplaceData);
 
@@ -431,51 +460,53 @@ class MarketplaceService {
     }
   }
 
+  // Payment goes through the financial service so both sides are found the same
+  // way regardless of whether an account stores its userId as a number or a
+  // string, and the buyer's debit is overdraft-checked.
   async _updateFinancialBalances(sellerId, buyerId, amount) {
     try {
-      const financial = await this.financialDb.read();
-      const sellerAccount = financial.accounts.find(
-        (acc) => acc.userId === sellerId.toString() || acc.userId === Number(sellerId).toString(),
-      );
-      if (sellerAccount) {
-        const balanceBefore = sellerAccount.balance;
-        sellerAccount.balance += amount;
-        sellerAccount.updatedAt = new Date().toISOString();
-        const sellerTransaction = {
-          id: ++financial.counters.lastTransactionId,
+      // A seller without an account yet still gets paid: getAccount creates it.
+      await financialService.getAccount(sellerId);
+      await financialService.addTransaction(buyerId, {
+        type: "expense",
+        amount,
+        description: "Marketplace purchase",
+        category: "marketplace",
+      });
+      try {
+        await financialService.addTransaction(sellerId, {
           type: "income",
-          amount: amount,
+          amount,
           description: "Marketplace sale",
           category: "marketplace",
-          referenceId: null,
-          timestamp: new Date().toISOString(),
-          balanceBefore: balanceBefore,
-          balanceAfter: sellerAccount.balance,
-        };
-        sellerAccount.transactions.push(sellerTransaction);
-      }
-      const buyerAccount = financial.accounts.find((acc) => acc.userId === buyerId.toString() || acc.userId === Number(buyerId).toString());
-      if (buyerAccount) {
-        const balanceBefore = buyerAccount.balance;
-        buyerAccount.balance -= amount;
-        buyerAccount.updatedAt = new Date().toISOString();
-        const buyerTransaction = {
-          id: ++financial.counters.lastTransactionId,
-          type: "expense",
-          amount: amount,
-          description: "Marketplace purchase",
+        });
+      } catch (creditError) {
+        await financialService.addTransaction(buyerId, {
+          type: "income",
+          amount,
+          description: "Marketplace purchase reversal",
           category: "marketplace",
-          referenceId: null,
-          timestamp: new Date().toISOString(),
-          balanceBefore: balanceBefore,
-          balanceAfter: buyerAccount.balance,
-        };
-        buyerAccount.transactions.push(buyerTransaction);
+        });
+        throw creditError;
       }
-      await this.financialDb.write(financial);
     } catch (error) {
       throw new Error(`Failed to update financial balances: ${error.message}`);
     }
+  }
+
+  async _reverseFinancialBalances(sellerId, buyerId, amount) {
+    await financialService.addTransaction(sellerId, {
+      type: "expense",
+      amount,
+      description: "Marketplace sale reversal",
+      category: "marketplace",
+    });
+    await financialService.addTransaction(buyerId, {
+      type: "income",
+      amount,
+      description: "Marketplace purchase reversal",
+      category: "marketplace",
+    });
   }
 }
 

@@ -1,6 +1,7 @@
 const { formatResponseBody } = require("../helpers/response-helper");
 const { logError } = require("../helpers/logger-api");
 const financialService = require("../services/financial.service");
+const { sameUserId } = require("../helpers/ledger");
 
 class FinancialController {
   _round2(value) {
@@ -375,7 +376,7 @@ class FinancialController {
         );
       }
 
-      if (req.user.userId === toUserId) {
+      if (sameUserId(req.user.userId, toUserId)) {
         return res.status(400).json(
           formatResponseBody({
             error: "Cannot transfer funds to yourself",
@@ -424,6 +425,7 @@ class FinancialController {
       else if (error.message.includes("Insufficient funds")) statusCode = 400;
       else if (error.message.includes("Cannot transfer more than")) statusCode = 400;
       else if (error.message.includes("Recipient user does not exist")) statusCode = 400;
+      else if (error.message.includes("Cannot transfer funds to yourself")) statusCode = 400;
       res.status(statusCode).json(
         formatResponseBody({
           error: error.message,

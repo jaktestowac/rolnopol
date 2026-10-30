@@ -4,6 +4,7 @@ const { FINANCE_INTEGRITY_CALCULATION } = require("../data/settings");
 const JSONDatabase = require("../data/json-database");
 const { publishNotificationEvent } = require("../helpers/notification-publisher");
 const { EVENT_TYPES } = require("../modules/notification-center/core/contracts");
+const { withLedgerLock, roundMoney, sameUserId } = require("../helpers/ledger");
 
 class FinancialService {
   constructor() {
@@ -51,9 +52,9 @@ class FinancialService {
     for (const tx of account.transactions) {
       tx.balanceBefore = runningBalance;
       if (tx.type === "income") {
-        runningBalance += tx.amount;
+        runningBalance = roundMoney(runningBalance + tx.amount);
       } else if (tx.type === "expense") {
-        runningBalance -= tx.amount;
+        runningBalance = roundMoney(runningBalance - tx.amount);
       }
       tx.balanceAfter = runningBalance;
     }
@@ -227,26 +228,31 @@ class FinancialService {
    * Add a transaction to user's account
    */
   async addTransaction(userId, transactionData) {
+    return withLedgerLock(() => this._addTransactionUnlocked(userId, transactionData));
+  }
+
+  async _addTransactionUnlocked(userId, transactionData) {
     try {
       const { type, amount, description, category, referenceId } = transactionData;
       if (!type || !amount || !description) {
         throw new Error("Missing required transaction fields");
       }
-      if (amount <= 0) {
+      const numericAmount = roundMoney(parseFloat(amount));
+      if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
         throw new Error("Transaction amount must be positive");
       }
       const accounts = await this._getAccounts();
       const numericUserId = parseInt(userId, 10);
       const account = accounts.find((acc) => parseInt(acc.userId, 10) === numericUserId);
       if (!account) throw new Error("Account not found");
-      if (type === "expense" && account.balance < amount) {
+      if (type === "expense" && account.balance < numericAmount) {
         throw new Error("Insufficient funds: overdraft is not allowed");
       }
       const newTransactionId = await this._getNextTransactionId();
       const transaction = {
         id: newTransactionId,
         type: type,
-        amount: parseFloat(amount),
+        amount: numericAmount,
         description: description,
         category: category || "general",
         referenceId: referenceId || null,
@@ -263,9 +269,9 @@ class FinancialService {
       } else {
         // Simple balance update without full recalculation
         if (type === "income") {
-          account.balance += parseFloat(amount);
+          account.balance = roundMoney(account.balance + numericAmount);
         } else if (type === "expense") {
-          account.balance -= parseFloat(amount);
+          account.balance = roundMoney(account.balance - numericAmount);
         }
       }
 
@@ -519,12 +525,20 @@ class FinancialService {
    * Transfer funds between users (for marketplace/giełda functionality)
    */
   async transferFunds(fromUserId, toUserId, amount, description) {
+    return withLedgerLock(() => this._transferFundsUnlocked(fromUserId, toUserId, amount, description));
+  }
+
+  async _transferFundsUnlocked(fromUserId, toUserId, amount, description) {
     try {
-      if (amount <= 0) {
+      amount = roundMoney(amount);
+      if (!Number.isFinite(amount) || amount <= 0) {
         throw new Error("Transfer amount must be positive");
       }
       if (amount > 999.99) {
         throw new Error("Cannot transfer more than 999.99 ROL at once");
+      }
+      if (sameUserId(fromUserId, toUserId)) {
+        throw new Error("Cannot transfer funds to yourself");
       }
       const fromAccount = await this.getAccount(fromUserId);
       if (fromAccount.balance < amount) {
@@ -543,14 +557,26 @@ class FinancialService {
         category: "transfer",
         referenceId: toUserId,
       });
-      // Add income transaction to receiver
-      await this.addTransaction(toUserId, {
-        type: "income",
-        amount: amount,
-        description: `Transfer from user: ${description}`,
-        category: "transfer",
-        referenceId: fromUserId,
-      });
+      // Add income transaction to receiver; if that fails, give the sender
+      // the money back so a transfer never debits without crediting.
+      try {
+        await this.addTransaction(toUserId, {
+          type: "income",
+          amount: amount,
+          description: `Transfer from user: ${description}`,
+          category: "transfer",
+          referenceId: fromUserId,
+        });
+      } catch (creditError) {
+        await this.addTransaction(fromUserId, {
+          type: "income",
+          amount: amount,
+          description: `Transfer reversal: ${description}`,
+          category: "transfer",
+          referenceId: toUserId,
+        });
+        throw creditError;
+      }
 
       const numericFromUserId = parseInt(fromUserId, 10);
       const numericToUserId = parseInt(toUserId, 10);
