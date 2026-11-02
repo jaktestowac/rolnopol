@@ -1,8 +1,16 @@
-# 🌱 Rolnopol - Introduction
+<p align="center">
+  <img src="./assets/rolnopol-hero.svg" alt="Rolnopol - test automation playground" width="100%">
+</p>
 
 <p align="center">
-  <img src="./assets/rolnopol-app.png" alt="Rolnopol" width="400" height="400">
+  <a href="https://github.com/jaktestowac/rolnopol"><img src="https://img.shields.io/github/package-json/v/jaktestowac/rolnopol?style=for-the-badge&label=version&labelColor=03120c&color=2bffa0" alt="Version"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-22%2B-2bffa0?style=for-the-badge&logo=nodedotjs&logoColor=7dffb0&labelColor=03120c" alt="Node 22+"></a>
+  <a href="https://hub.docker.com/r/jaktestowac/rolnopol"><img src="https://img.shields.io/docker/pulls/jaktestowac/rolnopol?style=for-the-badge&logo=docker&logoColor=00e5ff&labelColor=03120c&color=00e5ff" alt="Docker pulls"></a>
+  <a href="https://github.com/jaktestowac/rolnopol/stargazers"><img src="https://img.shields.io/github/stars/jaktestowac/rolnopol?style=for-the-badge&logo=github&labelColor=03120c&color=eaff6b" alt="GitHub stars"></a>
+  <a href="#swagger-ui"><img src="https://img.shields.io/badge/API-Swagger-ff2bd6?style=for-the-badge&logo=swagger&logoColor=ffb8f0&labelColor=03120c" alt="Swagger"></a>
 </p>
+
+# 🌱 Rolnopol - Introduction
 
 > [!TIP]
 > 💡 Choose your language:
@@ -19,6 +27,10 @@ A realistic farming management application designed for **test automation practi
 
 > [!NOTE]
 > 🏗️ Curious how it all fits together? See **[ARCHITECTURE.md](./ARCHITECTURE.md)** for component, request-flow, auth, WebSocket, and Farm Defence diagrams (rendered with Mermaid).
+
+<p align="center">
+  <img src="./assets/rolnopol-app.png" alt="Rolnopol" height="300" style="border-radius: 8px;">
+</p>
 
 # Table of Contents
 

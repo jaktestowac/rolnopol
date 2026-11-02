@@ -1,0 +1,207 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="Rolnopol - test automation playground">
+  <title>Rolnopol - test automation playground</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#03060f"/>
+      <stop offset="0.55" stop-color="#071a24"/>
+      <stop offset="0.67" stop-color="#0c3b2e"/>
+      <stop offset="0.67" stop-color="#020806"/>
+      <stop offset="1" stop-color="#03120c"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eaff6b"/>
+      <stop offset="0.5" stop-color="#5dff9d"/>
+      <stop offset="1" stop-color="#00d9ff"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#d6ffe4"/>
+      <stop offset="0.55" stop-color="#7dffb0"/>
+      <stop offset="1" stop-color="#18e0c8"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5dff9d" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#5dff9d" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#5dff9d" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="horizonGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3dffa0" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#3dffa0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gridFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.15"/>
+      <stop offset="0.35" stop-color="#fff" stop-opacity="1"/>
+    </linearGradient>
+    <mask id="gridMask">
+      <rect x="0" y="280" width="1200" height="140" fill="url(#gridFade)"/>
+    </mask>
+    <mask id="sunStripes">
+      <rect x="400" y="120" width="400" height="160" fill="#fff"/>
+      <rect x="400" y="214" width="400" height="3" fill="#000"/>
+      <rect x="400" y="228" width="400" height="5" fill="#000"/>
+      <rect x="400" y="242" width="400" height="7" fill="#000"/>
+      <rect x="400" y="256" width="400" height="9" fill="#000"/>
+      <rect x="400" y="270" width="400" height="11" fill="#000"/>
+    </mask>
+    <filter id="glow" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="sunBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#000" fill-opacity="0.22"/>
+    </pattern>
+  </defs>
+
+  <style>
+    .mono { font-family: "JetBrains Mono", "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; }
+    .sans { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+    .hud { fill: #5dff9d; font-size: 13px; letter-spacing: 2px; }
+    .chip { fill: #c9ffe0; font-size: 13px; letter-spacing: 1px; }
+    .cap { fill: #8fe9ff; font-size: 12px; letter-spacing: 1px; }
+    .twinkle { animation: tw 3s ease-in-out infinite; }
+    .t2 { animation-delay: -1s; } .t3 { animation-delay: -2s; } .t4 { animation-delay: -0.5s; }
+    @keyframes tw { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+    .blink { animation: bl 1.1s steps(1) infinite; }
+    @keyframes bl { 50% { opacity: 0; } }
+    .glitchA { animation: ga 4s infinite; }
+    .glitchB { animation: gb 4s infinite; }
+    @keyframes ga { 0%, 88%, 100% { transform: translate(0, 0); opacity: 0; } 89% { transform: translate(-6px, 2px); opacity: 0.8; } 91% { transform: translate(5px, -1px); opacity: 0.8; } 93% { transform: translate(0, 0); opacity: 0; } }
+    @keyframes gb { 0%, 88%, 100% { transform: translate(0, 0); opacity: 0; } 89% { transform: translate(6px, -2px); opacity: 0.8; } 91% { transform: translate(-4px, 1px); opacity: 0.8; } 93% { transform: translate(0, 0); opacity: 0; } }
+    .pulse { animation: pu 4s ease-in-out infinite; transform-origin: 600px 280px; }
+    @keyframes pu { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.9; } }
+  </style>
+
+  <!-- sky and ground -->
+  <rect width="1200" height="420" fill="url(#sky)"/>
+
+  <!-- stars -->
+  <g fill="#bfffe0">
+    <circle class="twinkle" cx="80" cy="60" r="1.4"/>
+    <circle class="twinkle t2" cx="190" cy="130" r="1"/>
+    <circle class="twinkle t3" cx="300" cy="45" r="1.6"/>
+    <circle class="twinkle t4" cx="420" cy="100" r="1"/>
+    <circle class="twinkle t2" cx="860" cy="55" r="1.3"/>
+    <circle class="twinkle" cx="960" cy="140" r="1"/>
+    <circle class="twinkle t3" cx="1060" cy="80" r="1.6"/>
+    <circle class="twinkle t4" cx="1140" cy="170" r="1"/>
+    <circle class="twinkle t3" cx="130" cy="210" r="1"/>
+    <circle class="twinkle" cx="1110" cy="230" r="1.2"/>
+    <circle class="twinkle t2" cx="740" cy="30" r="1"/>
+    <circle class="twinkle t4" cx="520" cy="40" r="1.1"/>
+  </g>
+
+  <!-- sun -->
+  <circle class="pulse" cx="600" cy="280" r="150" fill="#3dffa0" filter="url(#sunBlur)" opacity="0.6"/>
+  <circle cx="600" cy="280" r="130" fill="url(#sun)" mask="url(#sunStripes)"/>
+
+  <!-- distant hills -->
+  <path d="M0 280 L0 262 Q 90 236 180 258 T 360 252 Q 420 244 470 262 L 470 280 Z" fill="#04140e" stroke="#2bd98a" stroke-width="1.2" stroke-opacity="0.7"/>
+  <path d="M1200 280 L1200 258 Q 1110 230 1020 254 T 840 250 Q 780 242 730 262 L 730 280 Z" fill="#04140e" stroke="#2bd98a" stroke-width="1.2" stroke-opacity="0.7"/>
+
+  <!-- horizon -->
+  <ellipse cx="600" cy="280" rx="620" ry="26" fill="url(#horizonGlow)"/>
+  <line x1="0" y1="280" x2="1200" y2="280" stroke="#7dffb0" stroke-width="2" filter="url(#softGlow)"/>
+
+  <!-- perspective field grid -->
+  <g mask="url(#gridMask)" stroke="#2bffa0" stroke-width="1.3" fill="none" opacity="0.85">
+    <g>
+      <line x1="600" y1="280" x2="-1200" y2="420"/>
+      <line x1="600" y1="280" x2="-900" y2="420"/>
+      <line x1="600" y1="280" x2="-600" y2="420"/>
+      <line x1="600" y1="280" x2="-300" y2="420"/>
+      <line x1="600" y1="280" x2="0" y2="420"/>
+      <line x1="600" y1="280" x2="200" y2="420"/>
+      <line x1="600" y1="280" x2="400" y2="420"/>
+      <line x1="600" y1="280" x2="600" y2="420"/>
+      <line x1="600" y1="280" x2="800" y2="420"/>
+      <line x1="600" y1="280" x2="1000" y2="420"/>
+      <line x1="600" y1="280" x2="1200" y2="420"/>
+      <line x1="600" y1="280" x2="1500" y2="420"/>
+      <line x1="600" y1="280" x2="1800" y2="420"/>
+      <line x1="600" y1="280" x2="2100" y2="420"/>
+      <line x1="600" y1="280" x2="2400" y2="420"/>
+    </g>
+    <g>
+      <line x1="0" x2="1200" y1="280" y2="280"><animate attributeName="y1" values="280;420" dur="3s" begin="0s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/><animate attributeName="y2" values="280;420" dur="3s" begin="0s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/></line>
+      <line x1="0" x2="1200" y1="280" y2="280"><animate attributeName="y1" values="280;420" dur="3s" begin="-0.5s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/><animate attributeName="y2" values="280;420" dur="3s" begin="-0.5s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/></line>
+      <line x1="0" x2="1200" y1="280" y2="280"><animate attributeName="y1" values="280;420" dur="3s" begin="-1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/><animate attributeName="y2" values="280;420" dur="3s" begin="-1s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/></line>
+      <line x1="0" x2="1200" y1="280" y2="280"><animate attributeName="y1" values="280;420" dur="3s" begin="-1.5s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/><animate attributeName="y2" values="280;420" dur="3s" begin="-1.5s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/></line>
+      <line x1="0" x2="1200" y1="280" y2="280"><animate attributeName="y1" values="280;420" dur="3s" begin="-2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/><animate attributeName="y2" values="280;420" dur="3s" begin="-2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/></line>
+      <line x1="0" x2="1200" y1="280" y2="280"><animate attributeName="y1" values="280;420" dur="3s" begin="-2.5s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/><animate attributeName="y2" values="280;420" dur="3s" begin="-2.5s" repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keySplines="0.6 0 1 1"/></line>
+    </g>
+  </g>
+
+  <!-- scanning beam -->
+  <rect x="-300" y="0" width="300" height="420" fill="url(#beam)" opacity="0.5">
+    <animate attributeName="x" values="-300;1200" dur="6s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- HUD corners -->
+  <g stroke="#5dff9d" stroke-width="2" fill="none" opacity="0.8">
+    <path d="M24 56 V24 H56"/>
+    <path d="M1144 24 H1176 V56"/>
+    <path d="M24 364 V396 H56"/>
+    <path d="M1176 364 V396 H1144"/>
+  </g>
+  <text class="mono hud" x="70" y="40">// FARM_OS ONLINE<tspan class="blink"> █</tspan></text>
+  <text class="mono hud" x="1130" y="40" text-anchor="end">LOCALHOST:3000 ▸ API</text>
+
+  <!-- leaf sigil -->
+  <g transform="translate(600 46)" filter="url(#softGlow)">
+    <path d="M0 18 C -14 8 -14 -10 0 -18 C 14 -10 14 8 0 18 Z" fill="none" stroke="#7dffb0" stroke-width="2"/>
+    <path d="M0 18 V -12" stroke="#7dffb0" stroke-width="1.5"/>
+  </g>
+
+  <!-- title -->
+  <g class="sans" font-size="112" font-weight="900" letter-spacing="14" text-anchor="middle">
+    <text class="glitchA" x="606" y="160" fill="#ff2bd6">ROLNOPOL</text>
+    <text class="glitchB" x="606" y="160" fill="#00e5ff">ROLNOPOL</text>
+    <text x="606" y="160" fill="url(#title)" stroke="#03120c" stroke-width="2" filter="url(#glow)">ROLNOPOL</text>
+  </g>
+
+  <!-- tagline -->
+  <rect x="330" y="182" width="540" height="32" rx="16" fill="#03120c" fill-opacity="0.85" stroke="#2bd98a" stroke-opacity="0.6"/>
+  <text class="mono" x="600" y="203" text-anchor="middle" fill="#eaff6b" font-size="15" letter-spacing="3">TEST AUTOMATION PLAYGROUND · v1</text>
+
+  <!-- capability chips -->
+  <g class="mono cap" text-anchor="middle">
+    <rect x="345" y="226" width="140" height="26" rx="13" fill="#03060f" fill-opacity="0.85" stroke="#00e5ff" stroke-opacity="0.45"/>
+    <text x="415" y="243">MICROSERVICES</text>
+    <rect x="495" y="226" width="100" height="26" rx="13" fill="#03060f" fill-opacity="0.85" stroke="#00e5ff" stroke-opacity="0.45"/>
+    <text x="545" y="243">AI·LLM</text>
+    <rect x="605" y="226" width="100" height="26" rx="13" fill="#03060f" fill-opacity="0.85" stroke="#00e5ff" stroke-opacity="0.45"/>
+    <text x="655" y="243">2FA·AUTH</text>
+    <rect x="715" y="226" width="140" height="26" rx="13" fill="#03060f" fill-opacity="0.85" stroke="#00e5ff" stroke-opacity="0.45"/>
+    <text x="785" y="243">FEATURE FLAGS</text>
+  </g>
+
+  <!-- protocol chips -->
+  <g class="mono chip" text-anchor="middle">
+    <rect x="165" y="352" width="100" height="30" rx="6" fill="#03120c" fill-opacity="0.9" stroke="#2bffa0" stroke-opacity="0.7"/>
+    <text x="215" y="372">REST</text>
+    <rect x="275" y="352" width="100" height="30" rx="6" fill="#03120c" fill-opacity="0.9" stroke="#2bffa0" stroke-opacity="0.7"/>
+    <text x="325" y="372">GRAPHQL</text>
+    <rect x="385" y="352" width="100" height="30" rx="6" fill="#03120c" fill-opacity="0.9" stroke="#2bffa0" stroke-opacity="0.7"/>
+    <text x="435" y="372">WEBSOCKET</text>
+    <rect x="495" y="352" width="100" height="30" rx="6" fill="#03120c" fill-opacity="0.9" stroke="#2bffa0" stroke-opacity="0.7"/>
+    <text x="545" y="372">SSE</text>
+    <rect x="605" y="352" width="100" height="30" rx="6" fill="#03120c" fill-opacity="0.9" stroke="#2bffa0" stroke-opacity="0.7"/>
+    <text x="655" y="372">gRPC</text>
+    <rect x="715" y="352" width="100" height="30" rx="6" fill="#03120c" fill-opacity="0.9" stroke="#2bffa0" stroke-opacity="0.7"/>
+    <text x="765" y="372">WEBHOOKS</text>
+    <rect x="825" y="352" width="100" height="30" rx="6" fill="#03120c" fill-opacity="0.9" stroke="#2bffa0" stroke-opacity="0.7"/>
+    <text x="875" y="372">CHAOS</text>
+    <rect x="935" y="352" width="100" height="30" rx="6" fill="#03120c" fill-opacity="0.9" stroke="#ff2bd6" stroke-opacity="0.8"/>
+    <text x="985" y="372" fill="#ffb8f0">BUGS ◆</text>
+  </g>
+
+  <!-- CRT scanlines -->
+  <rect width="1200" height="420" fill="url(#scan)" pointer-events="none"/>
+</svg>
