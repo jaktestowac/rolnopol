@@ -3,11 +3,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/jaktestowac/rolnopol"><img src="https://img.shields.io/github/package-json/v/jaktestowac/rolnopol?style=for-the-badge&label=version&labelColor=03120c&color=2bffa0" alt="Version"></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-22%2B-2bffa0?style=for-the-badge&logo=nodedotjs&logoColor=7dffb0&labelColor=03120c" alt="Node 22+"></a>
-  <a href="https://hub.docker.com/r/jaktestowac/rolnopol"><img src="https://img.shields.io/docker/pulls/jaktestowac/rolnopol?style=for-the-badge&logo=docker&logoColor=00e5ff&labelColor=03120c&color=00e5ff" alt="Docker pulls"></a>
-  <a href="https://github.com/jaktestowac/rolnopol/stargazers"><img src="https://img.shields.io/github/stars/jaktestowac/rolnopol?style=for-the-badge&logo=github&labelColor=03120c&color=eaff6b" alt="GitHub stars"></a>
-  <a href="#swagger-ui"><img src="https://img.shields.io/badge/API-Swagger-ff2bd6?style=for-the-badge&logo=swagger&logoColor=ffb8f0&labelColor=03120c" alt="Swagger"></a>
+  <a href="https://github.com/jaktestowac/rolnopol"><img src="https://img.shields.io/github/package-json/v/jaktestowac/rolnopol?style=for-the-badge&label=version&labelColor=03120c&color=0f9f74" alt="Version"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-22%2B-3c873a?style=for-the-badge&logo=nodedotjs&logoColor=9be37a&labelColor=03120c" alt="Node 22+"></a>
+  <a href="https://hub.docker.com/r/jaktestowac/rolnopol"><img src="https://img.shields.io/docker/pulls/jaktestowac/rolnopol?style=for-the-badge&logo=docker&logoColor=7fd8ff&labelColor=03120c&color=0a84c1" alt="Docker pulls"></a>
+  <a href="https://github.com/jaktestowac/rolnopol/stargazers"><img src="https://img.shields.io/github/stars/jaktestowac/rolnopol?style=for-the-badge&logo=github&logoColor=ffd970&labelColor=03120c&color=b07d0a" alt="GitHub stars"></a>
+  <a href="#swagger-ui"><img src="https://img.shields.io/badge/API-Swagger-a3248f?style=for-the-badge&logo=swagger&logoColor=ff9ce8&labelColor=03120c" alt="Swagger"></a>
 </p>
 
 # 🌱 Rolnopol - Introduction
