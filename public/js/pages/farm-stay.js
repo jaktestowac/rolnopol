@@ -314,7 +314,7 @@
       meta.textContent = "";
       if (status === 401) return banner("Please log in to use FarmStay.", true);
       if (status === 503)
-        return banner("Search is unavailable — the inventory service is down. Try `farmstay:control start inventory`.", true);
+        return banner("Search is unavailable — the inventory service is down. Try `npm run farmstay` in the project root.", true);
       return banner(body?.error || `Search failed (HTTP ${status}).`);
     }
     clearBanner();

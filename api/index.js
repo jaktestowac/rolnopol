@@ -1037,6 +1037,14 @@ app.get("/instrumentality-shadow", (req, res) => {
 app.use("/instrumentality/shadow", require("../routes/instrumentality-shadow.route"));
 app.use("/instrumentality-shadow", require("../routes/instrumentality-shadow.route"));
 
+// Short, memorable entry points to the backend tools (also linked from the footer)
+app.get(["/flags", "/feature-flags"], (req, res) => {
+  return res.redirect(302, "/feature-flags.html");
+});
+app.get("/backend", (req, res) => {
+  return res.redirect(302, "/backend.html");
+});
+
 // Serve static files
 app.use(express.static(path.join(__dirname, "../public")));
 
